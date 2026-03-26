@@ -114,14 +114,14 @@ Current implementation is functional but does not satisfy strict SRP boundaries.
 
 ### P2
 
-3. Infinite unresolved path for adapters without `lookupRunRef`
+1. Infinite unresolved path for adapters without `lookupRunRef`
    - PENDING intents stay unresolved forever when provider lookup is unsupported/throws; this is intentional but operationally risky without explicit escalation policy.
    - References:
      - `RunMaintenanceService.ts:250`
      - `RunMaintenanceService.ts:269`
    - Current behavior is covered, but no guardrail for backlog growth.
 
-4. Domain constants drift risk
+2. Domain constants drift risk
    - Maintenance reasons/messages remain inline and can diverge from the canonical contract vocabulary.
    - References:
      - `RunMaintenanceService.ts:95`
@@ -131,7 +131,7 @@ Current implementation is functional but does not satisfy strict SRP boundaries.
 
 ### P3
 
-5. Test suite overlap increases maintenance cost
+1. Test suite overlap increases maintenance cost
    - Before deduplication, reconciliation scenarios were duplicated across two suites with near-identical fixtures.
    - References:
      - `RunMaintenanceService.test.ts:469`
