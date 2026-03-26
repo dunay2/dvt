@@ -41,6 +41,9 @@ export type AppContext = {
 };
 
 const REQUEST_SPAN = Symbol('requestSpan');
+const RUNTIME_ADAPTER_KEYS = Object.freeze({
+  temporal: 'temporal',
+} as const);
 
 type RequestWithSpan = FastifyRequest & {
   [REQUEST_SPAN]?: ISpan;
@@ -157,7 +160,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
     runtimeAdaptersReadyProbe = () => {
       if (env.TEMPORAL_ADDRESS) {
-        return protectedModule.adapters.has('temporal')
+        return protectedModule.adapters.has(RUNTIME_ADAPTER_KEYS.temporal)
           ? READINESS_PROBE_STATUS.ready
           : READINESS_PROBE_STATUS.unavailable;
       }
