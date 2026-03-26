@@ -30,6 +30,8 @@ export async function evaluateReadinessByPorts(
     };
   }
 
+  // Disabled reconciler is not an automatic ready state. Readiness still depends on
+  // infrastructure ports (for example DB and runtime adapters) for deployment safety.
   const databaseProbeStatus = await ports.checkDatabaseReady();
   if (databaseProbeStatus === READINESS_PROBE_STATUS.notConfigured) {
     return {

@@ -51,7 +51,6 @@ export function withWatchdogSweepSignalHooks(
         healthHooks.onSweepSuccess?.();
       },
       onSweepFailure: () => {
-        getWatchdog()?.markSweepSignal();
         healthHooks.onSweepFailure?.();
       },
     });

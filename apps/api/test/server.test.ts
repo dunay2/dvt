@@ -286,6 +286,32 @@ describe('reconciler bootstrap health wiring', () => {
     expect(harness.getHealth()).toEqual({ status: 'healthy' });
   });
 
+  it('marks watchdog sweep signal only on successful sweeps', async () => {
+    const runtime: IntentReconcilerRuntimeHandle = {
+      start: vi.fn(),
+      stop: vi.fn(async () => {}),
+    };
+    const markSweepSignal = vi.fn();
+    const watchdog = {
+      markSweepSignal,
+      stop: vi.fn(),
+    };
+    let capturedHooks: ReconcilerRuntimeHealthHooks | undefined;
+    const baseCreateRuntime = vi.fn(async (_env, _logger, _observability, hooks) => {
+      capturedHooks = hooks;
+      return runtime;
+    });
+    const createRuntime = withWatchdogSweepSignalHooks(baseCreateRuntime, () => watchdog);
+
+    await createRuntime({} as Env, {} as FastifyBaseLogger, {} as IObservability, {});
+
+    capturedHooks?.onSweepFailure?.();
+    expect(markSweepSignal).not.toHaveBeenCalled();
+
+    capturedHooks?.onSweepSuccess?.();
+    expect(markSweepSignal).toHaveBeenCalledTimes(1);
+  });
+
   it('sets bootstrap_failed when runtime creation throws', async () => {
     const harness = createHarness();
     const createRuntime = vi.fn(async () => {
