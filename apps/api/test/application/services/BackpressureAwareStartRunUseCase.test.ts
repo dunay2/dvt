@@ -131,7 +131,10 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw new TenantBackpressureError('tenant-1', { pendingEventsPerTenant: 10, outboxOldestAgeMs: 0 });
+          throw new TenantBackpressureError('tenant-1', {
+            pendingEventsPerTenant: 10,
+            outboxOldestAgeMs: 0,
+          });
         },
       },
       telemetry: {
@@ -213,7 +216,10 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw new SystemBackpressureError({ pendingEventsPerTenant: 0, outboxOldestAgeMs: 99_000 });
+          throw new SystemBackpressureError({
+            pendingEventsPerTenant: 0,
+            outboxOldestAgeMs: 99_000,
+          });
         },
       },
       telemetry,
