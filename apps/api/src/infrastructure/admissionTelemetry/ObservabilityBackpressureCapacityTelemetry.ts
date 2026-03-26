@@ -25,8 +25,19 @@ export class ObservabilityBackpressureCapacityTelemetry implements IBackpressure
   }
 
   public recordSnapshot(snapshot: BackpressureCapacitySnapshot): void {
-    const labels = { source: snapshot.source };
-    this.pendingEventsGauge.set(snapshot.pendingEventsCount, labels);
-    this.outboxOldestAgeGauge.set(snapshot.outboxOldestAgeMs, labels);
+    try {
+      const labels = { source: snapshot.source };
+      this.pendingEventsGauge.set(snapshot.pendingEventsCount, labels);
+      this.outboxOldestAgeGauge.set(snapshot.outboxOldestAgeMs, labels);
+    } catch (err) {
+      try {
+        this.deps.observability.logs.warn({
+          msg: 'backpressure.capacity_telemetry_drop',
+          attributes: { error: String(err) },
+        });
+      } catch {
+        // Logger unavailable — ignore silently.
+      }
+    }
   }
 }
