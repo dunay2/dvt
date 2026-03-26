@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-25
+last_reviewed: 2026-03-26
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -11,7 +11,7 @@ expected_outcome:
 tasks:
   - task_id: S05
     priority: P0
-    status: done
+    status: queued
     objective: add payloadVersion and per-eventType schema validation.
     dependency: none
     target: Add explicit payload version handling in the envelope flow.

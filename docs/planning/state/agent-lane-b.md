@@ -2,7 +2,7 @@
 title: Agent Lane B - Event Contract And Traceability
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-25
+last_reviewed: 2026-03-26
 planning_type: status
 ---
 
@@ -88,7 +88,7 @@ Stabilize event payload versioning and lineage wiring.
 
 > Source of truth: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
-- [x] `P0` `S05`: add payloadVersion and per-eventType schema validation.
+- [ ] `P0` `S05`: add payloadVersion and per-eventType schema validation.
 - [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
 - [x] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
 - [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.

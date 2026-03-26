@@ -1,8 +1,8 @@
 ---
 title: Gap 4 PR3 Resilience Envelope
-status: Review
+status: Done
 owner: Architecture / API / Delivery
-last_reviewed: 2026-03-20
+last_reviewed: 2026-03-26
 planning_type: proposal
 ---
 
@@ -76,4 +76,4 @@ Implementation note:
 | Cache wrapper      | Implemented | Low TTL, instance-local, and fallback snapshots are not re-cached           |
 | Circuit breaker    | Implemented | 5 failures, 30s open, 1 probe, and fail-counting stays scoped to live reads |
 | Persisted fallback | Implemented | Advisory, freshness-enforced, and reused across hot restart per replica     |
-| Review readiness   | Review      | Remains independent from projected snapshot work                            |
+| Review readiness   | Done        | Baseline merged; remains independent from projected snapshot work           |
