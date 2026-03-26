@@ -43,12 +43,29 @@ export type {
   PostgresBackpressureSnapshot,
   PostgresBackpressureSnapshotReaderConfig,
 } from './PostgresBackpressureSnapshotReader.js';
+export type {
+  RunEventAppendResult,
+  RunEventReadRepository,
+  RunEventRepositoryDeps,
+  RunEventWriteRepository,
+  SqlCommandExecutor,
+} from './RunEventWriteRepository.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
 export { PostgresPlanStore } from './PostgresPlanStore.js';
 export { PostgresBackpressureSnapshotReader } from './PostgresBackpressureSnapshotReader.js';
 export { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 export { PostgresRunEventStore } from './PostgresRunEventStore.js';
+export {
+  InvalidListEventsLimitError,
+  InvalidRunEventEnvelopeError,
+  InvalidRunEventSchemaError,
+  InvalidRunEventTenantError,
+  InvalidRunSequenceValueError,
+  RUN_EVENT_STORE_ERROR_CODE,
+  RUN_EVENT_STORE_MESSAGE_KEY,
+  RUN_EVENT_STORE_ERROR_NAME,
+} from './runEventStoreErrors.js';
 export { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 export { PostgresStartRunIntentStore } from './PostgresStartRunIntentStore.js';
 export { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';

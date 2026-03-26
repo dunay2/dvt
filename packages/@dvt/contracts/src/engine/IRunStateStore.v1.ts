@@ -27,7 +27,7 @@ export interface RunEventInputBase {
   engineAttemptId: number;
   logicalAttemptId: number;
   idempotencyKey: string;
-  payloadVersion?: number;
+  payloadVersion: 1;
   payload?: Record<string, unknown>;
 }
 

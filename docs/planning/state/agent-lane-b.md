@@ -88,7 +88,8 @@ Stabilize event payload versioning and lineage wiring.
 
 > Source of truth: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
-- [ ] `P0` `S05`: add payloadVersion and per-eventType schema validation.
+- [ ] `P0` `S05`: S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level write-boundary schema gating.
+- [ ] `P0` `S05-F1`: add per-eventType payload-content schema validation at write boundary.
 - [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
 - [x] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
 - [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.
@@ -98,7 +99,8 @@ Stabilize event payload versioning and lineage wiring.
 
 ## Dependencies
 
-- `S05` is the primary contract foundation for this lane.
+- `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
+- `S05-F1` closes deferred payload-content schema enforcement.
 - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
 - `RC-B5` is a prerequisite to DLQ alerting + automated replay.
 - `RC-F2` is independent — CI-only change with no runtime risk.

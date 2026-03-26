@@ -56,6 +56,9 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
 
 - Keep `G5.3` language explicit: this slice proves at-least-once ordered
   delivery semantics, not end-to-end exactly-once.
+- Keep run-event write boundaries hardened across engine and adapter-postgres:
+  typed schema failures, tenant/run guards, and safe `runSeq` parsing must
+  remain part of the mandatory regression surface.
 - Execute `pnpm test:adapter-postgres` against a real PostgreSQL integration
   environment and report the pass/skip state honestly in closeout evidence.
 - Gather at least minimal query-level evidence for the hardened PostgreSQL
@@ -77,4 +80,7 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
 - `packages/@dvt/delivery/test/OutboxWorker.test.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+- `packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts`
+- `packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts`
 - `docs/risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md`

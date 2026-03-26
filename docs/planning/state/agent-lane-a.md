@@ -92,6 +92,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - [x] `P0` `S02`: split IRunStateStore into write/read/maintenance roles.
 - [x] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
 - [x] `P1` `S19`: isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated query port.
+- [ ] `P2` `S19-F1`: remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid O(N)-per-row behavior at high run concurrency.
 - [ ] `P2` `S18-F1`: harden the explicit state-store role bundle into a root-owned boundary and prevent convenience rewiring drift.
 - [x] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
 - [x] `P1` `S13`: remove duplicate estimateRunRef declaration.
@@ -105,6 +106,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - `S02` depends on `RC-A6`.
 - `S18` depends on `S02`.
 - `S19` depends on `S18`.
+- `S19-F1` depends on `S19`.
 - `S18-F1` depends on `S18`.
 - `Schema migration rollback` depends on `S02`.
 - `S13` is independent and can run in parallel.

@@ -24,7 +24,19 @@ import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 import { PostgresSchemaManager, type PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
-import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
+import {
+  beginTransactionSql,
+  commitTransactionSql,
+  listStaleSnapshotRunsSql,
+  rollbackTransactionSql,
+  setLocalStatementTimeoutSql,
+} from './PostgresStateStoreAdapterSql.js';
+import type {
+  RunEventReadRepository,
+  RunEventRepositoryDeps,
+  RunEventWriteRepository,
+} from './RunEventWriteRepository.js';
+import { normalizeSchema } from './sqlUtils.js';
 import type {
   AppendResult,
   DeadLetterRecord,
@@ -53,6 +65,9 @@ export interface PostgresAdapterConfig {
   assumeSchemaReady?: boolean;
   outboxShardCount?: number;
   outboxClaimTimeoutMs?: number;
+  runEventRepositoryFactory?: (
+    deps: RunEventRepositoryDeps
+  ) => RunEventWriteRepository & RunEventReadRepository;
 }
 
 /**
@@ -78,7 +93,7 @@ export class PostgresStateStoreAdapter
   private readonly schemaManager: PostgresSchemaManager;
   private readonly outboxStore: PostgresOutboxStore;
   private readonly metadataRepo: PostgresRunMetadataRepository;
-  private readonly eventStore: PostgresRunEventStore;
+  private readonly runEventRepository: RunEventWriteRepository & RunEventReadRepository;
   private readonly snapshotStore: PostgresRunSnapshotStore;
   readonly lineageOutboxStore: PostgresLineageOutboxStore;
 
@@ -115,7 +130,15 @@ export class PostgresStateStoreAdapter
       (fn) => this.withClient(fn)
     );
     this.metadataRepo = new PostgresRunMetadataRepository(this.schema, (fn) => this.withClient(fn));
-    this.eventStore = new PostgresRunEventStore(this.schema, this.now, (fn) => this.withClient(fn));
+    const runEventRepositoryFactory =
+      config.runEventRepositoryFactory ??
+      ((deps: RunEventRepositoryDeps): RunEventWriteRepository & RunEventReadRepository =>
+        new PostgresRunEventStore(deps.schema, deps.now, deps.withClient));
+    this.runEventRepository = runEventRepositoryFactory({
+      schema: this.schema,
+      now: this.now,
+      withClient: (fn) => this.withClient(fn),
+    });
     this.snapshotStore = new PostgresRunSnapshotStore(
       this.schema,
       this.now,
@@ -175,16 +198,16 @@ export class PostgresStateStoreAdapter
   private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.connect();
     try {
-      await client.query('BEGIN');
+      await client.query(beginTransactionSql());
       if (this.statementTimeoutMs > 0) {
-        await client.query('SET LOCAL statement_timeout = $1', [this.statementTimeoutMs]);
+        await client.query(setLocalStatementTimeoutSql(), [this.statementTimeoutMs]);
       }
       const result = await fn(client);
-      await client.query('COMMIT');
+      await client.query(commitTransactionSql());
       return result;
     } catch (error) {
       try {
-        await client.query('ROLLBACK');
+        await client.query(rollbackTransactionSql());
       } catch {
         // Connection may already be torn down during shutdown interruption.
       }
@@ -211,11 +234,12 @@ export class PostgresStateStoreAdapter
 
   private async appendEventsTxWithClient(
     client: PoolClient,
+    tenantId: string,
     runId: RunId,
     envelopes: EventInput[]
   ): Promise<AppendResult> {
     const { appended, deduped, lastAppendedRunSeq, baseRunSeq } =
-      await this.eventStore.appendWithClient(client, runId, envelopes);
+      await this.runEventRepository.append(client, tenantId, runId, envelopes);
     await this.snapshotStore.updateWithClient(
       client,
       runId,
@@ -229,8 +253,8 @@ export class PostgresStateStoreAdapter
   async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
     this.ready();
     return this.withTransaction(async (client) => {
-      await this.resolveAndSetTenantContext(client, runId);
-      const append = await this.appendEventsTxWithClient(client, runId, envelopes);
+      const tenantId = await this.resolveAndSetTenantContext(client, runId);
+      const append = await this.appendEventsTxWithClient(client, tenantId, runId, envelopes);
       await this.outboxStore.enqueueWithClient(client, runId, append.appended);
       return append;
     });
@@ -244,6 +268,7 @@ export class PostgresStateStoreAdapter
         await this.metadataRepo.insertWithClient(client, input.metadata);
         const append = await this.appendEventsTxWithClient(
           client,
+          input.metadata.tenantId,
           input.metadata.runId as RunId,
           input.firstEvents
         );
@@ -303,7 +328,7 @@ export class PostgresStateStoreAdapter
     options?: ListEventsOptions
   ): Promise<EventEnvelope[]> {
     this.ready();
-    return this.eventStore.listEvents(tenantId, runId, options);
+    return this.runEventRepository.listEvents(tenantId, runId, options);
   }
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
@@ -350,17 +375,7 @@ export class PostgresStateStoreAdapter
     this.ready();
     return this.withClient(async (client) => {
       const result = await client.query<{ run_id: string; tenant_id: string }>(
-        `SELECT m.run_id, m.tenant_id
-           FROM ${quoteIdentifier(this.schema)}.run_metadata m
-           LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
-          WHERE s.run_id IS NULL
-             OR s.last_run_seq < (
-                  SELECT MAX(e.run_seq)
-                    FROM ${quoteIdentifier(this.schema)}.run_events e
-                   WHERE e.run_id = m.run_id
-                )
-          ORDER BY m.created_at ASC
-          LIMIT $1`,
+        listStaleSnapshotRunsSql(this.schema),
         [batchSize]
       );
       return result.rows.map((row) => ({ runId: row.run_id, tenantId: row.tenant_id }));

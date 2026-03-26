@@ -41,6 +41,18 @@ tasks:
       query port.
     dependency: S18
     target: Keep maintenance write-only and expose the staleness query separately.
+  - task_id: S19-F1
+    priority: P2
+    status: queued
+    objective:
+      remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid
+      O(N)-per-row behavior at high run concurrency.
+    dependency: S19
+    target: >-
+      Phase 1 replaces correlated MAX(run_seq) polling with `run_event_heads(run_id, tenant_id,
+      latest_run_seq)` maintained in the event-append transaction. Phase 2 (optional) moves
+      projector discovery to a push-based snapshot work queue. Lock the rollout with EXPLAIN-backed
+      performance coverage at the 5000-concurrent-runs target load.
   - task_id: S18-F1
     priority: P2
     status: queued
@@ -99,6 +111,7 @@ dependency_notes: |
   - `S02` depends on `RC-A6`.
   - `S18` depends on `S02`.
   - `S19` depends on `S18`.
+  - `S19-F1` depends on `S19`.
   - `S18-F1` depends on `S18`.
   - `Schema migration rollback` depends on `S02`.
   - `S13` is independent and can run in parallel.

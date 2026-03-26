@@ -11,10 +11,18 @@ expected_outcome:
 tasks:
   - task_id: S05
     priority: P0
-    status: queued
-    objective: add payloadVersion and per-eventType schema validation.
+    status: review
+    objective:
+      'S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level
+      write-boundary schema gating.'
     dependency: none
-    target: Add explicit payload version handling in the envelope flow.
+    target: Merge PR #623 and lock envelope boundary behavior.
+  - task_id: S05-F1
+    priority: P0
+    status: queued
+    objective: add per-eventType payload-content schema validation at write boundary.
+    dependency: S05
+    target: Add payload schema map and AJV/runtime validation per eventType.
   - task_id: RC-B1
     priority: P1
     status: done
@@ -57,7 +65,8 @@ tasks:
     dependency: none
     target: Single source of truth for adapter scope detection + path-matcher tests.
 dependency_notes: |
-  - `S05` is the primary contract foundation for this lane.
+  - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
+  - `S05-F1` closes deferred payload-content schema enforcement.
   - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
   - `RC-B5` is a prerequisite to DLQ alerting + automated replay.
   - `RC-F2` is independent — CI-only change with no runtime risk.

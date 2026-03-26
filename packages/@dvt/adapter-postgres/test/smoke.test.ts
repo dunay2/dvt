@@ -21,6 +21,7 @@ import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '../src/index.js';
+import { RUN_EVENT_STORE_ERROR_CODE } from '../src/runEventStoreErrors.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 import type { EventInput, RunBootstrapInput, RunId } from '../src/types.js';
 
@@ -63,6 +64,7 @@ function makeEvent(
     logicalAttemptId: 1,
     emittedAt: NOW,
     idempotencyKey: overrides.idempotencyKey,
+    payloadVersion: overrides.payloadVersion ?? 1,
     payload: overrides.payload,
   };
 }
@@ -90,7 +92,16 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Suite Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
-  const schema = `dvt_it_${Date.now()}`;
+  const schemaPrefix = `dvt_it_${Date.now()}`;
+  const createdSchemas = new Set<string>();
+  let schemaCounter = 0;
+
+  function allocateSchema(): string {
+    schemaCounter += 1;
+    const schema = `${schemaPrefix}_${schemaCounter}`;
+    createdSchemas.add(schema);
+    return schema;
+  }
 
   afterAll(async () => {
     const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
@@ -98,7 +109,9 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     const client = new Client({ connectionString });
     await client.connect();
     try {
-      await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
+      for (const schema of createdSchemas) {
+        await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
+      }
     } finally {
       await client.end();
     }
@@ -108,6 +121,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
     options?: { outboxShardCount?: number; outboxClaimTimeoutMs?: number }
   ): Promise<void> {
+    const schema = allocateSchema();
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => NOW,
@@ -127,6 +141,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
     options?: { outboxClaimTimeoutMs?: number }
   ): Promise<void> {
+    const schema = allocateSchema();
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => nowRef.value,
@@ -237,6 +252,76 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(second.deduped).toHaveLength(1);
       expect(second.lastSeq).toBe(2);
       await expect(adapter.listEvents('t1', 'run-idemp')).resolves.toHaveLength(2);
+    }));
+
+  test('appendAndEnqueueTx: rejects events whose payload runId does not match target run', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-mismatch-guard'));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid('run-mismatch-guard'), [
+          makeEvent({
+            runId: 'other-run',
+            eventType: 'RunStarted',
+            idempotencyKey: 'other-run:started',
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventEnvelopeError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_ENVELOPE,
+      });
+
+      await expect(adapter.listEvents('t1', 'run-mismatch-guard')).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: rejects events whose payload tenantId does not match run tenant', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-tenant-mismatch-guard', 'tenant-a'));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid('run-tenant-mismatch-guard'), [
+          makeEvent({
+            runId: 'run-tenant-mismatch-guard',
+            tenantId: 'tenant-b',
+            eventType: 'RunStarted',
+            idempotencyKey: 'run-tenant-mismatch-guard:started',
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventTenantError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_TENANT,
+      });
+
+      await expect(
+        adapter.listEvents('tenant-a', 'run-tenant-mismatch-guard')
+      ).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: does not consume runSeq slots for deduped entries within the same batch', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-idemp-batch'));
+
+      const started = makeEvent({
+        runId: 'run-idemp-batch',
+        eventType: 'RunStarted',
+        idempotencyKey: 'run-idemp-batch:started',
+      });
+
+      await adapter.appendAndEnqueueTx(rid('run-idemp-batch'), [started]);
+
+      const second = await adapter.appendAndEnqueueTx(rid('run-idemp-batch'), [
+        started,
+        makeEvent({
+          runId: 'run-idemp-batch',
+          eventType: 'RunCancelRequested',
+          idempotencyKey: 'run-idemp-batch:cancel-req',
+        }),
+      ]);
+
+      expect(second.deduped).toHaveLength(1);
+      expect(second.appended).toHaveLength(1);
+      expect(second.appended[0]?.runSeq).toBe(3);
+      expect(second.lastSeq).toBe(3);
     }));
 
   // Ã¢â€â‚¬Ã¢â€â‚¬ Snapshot write-through (W0-7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -532,7 +617,6 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
           runId: 'run-dlq-block',
           eventType: 'RunStarted',
           idempotencyKey: 'run-dlq-block:started',
-          payload: { synthetic: 'payload-marker' },
         }),
       ]);
 

@@ -38,6 +38,43 @@ export class InvalidRunIdError extends DvtError {
   }
 }
 
+export interface InvalidRunEventInputParams {
+  reason: string;
+  index?: number;
+  runId?: string;
+}
+
+export class InvalidRunEventInputError extends DvtError {
+  constructor(params: InvalidRunEventInputParams) {
+    const { reason, index, runId } = params;
+    const messageKey = ENGINE_ERROR_MESSAGE_KEY.INVALID_RUN_EVENT_INPUT;
+    const messageParams = {
+      reason,
+      ...(index === undefined ? {} : { index }),
+      ...(runId === undefined ? {} : { runId }),
+    };
+    super(ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT, messageKey, runId, {
+      details: messageParams,
+      messageKey,
+      messageParams,
+    });
+    this.name = 'InvalidRunEventInputError';
+  }
+}
+
+export class RunSequenceOverflowError extends DvtError {
+  constructor(runId: string, attemptedRunSeq: number) {
+    const messageKey = ENGINE_ERROR_MESSAGE_KEY.RUN_SEQUENCE_OVERFLOW;
+    const messageParams = { runId, attemptedRunSeq };
+    super(ENGINE_ERROR_CODE.RUN_SEQUENCE_OVERFLOW, messageKey, runId, {
+      details: messageParams,
+      messageKey,
+      messageParams,
+    });
+    this.name = 'RunSequenceOverflowError';
+  }
+}
+
 export class RunMetadataNotFoundError extends DvtError {
   constructor(runId: string) {
     const messageKey = ENGINE_ERROR_MESSAGE_KEY.RUN_METADATA_NOT_FOUND;

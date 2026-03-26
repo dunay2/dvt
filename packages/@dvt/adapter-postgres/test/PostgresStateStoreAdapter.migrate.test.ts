@@ -165,8 +165,13 @@ describe('PostgresStateStoreAdapter migration state', () => {
     await adapter.migrate();
 
     const sqls = client.queries.map((q) => q.sql);
-    expect(sqls.some((s) => s.includes('pg_advisory_lock'))).toBe(true);
-    expect(sqls.some((s) => s.includes('pg_advisory_unlock'))).toBe(true);
+    const lockSql = sqls.find((s) => s.includes('pg_advisory_lock'));
+    const unlockSql = sqls.find((s) => s.includes('pg_advisory_unlock'));
+
+    expect(lockSql).toBeDefined();
+    expect(unlockSql).toBeDefined();
+    expect(lockSql).toContain('left(md5($1), 16)');
+    expect(unlockSql).toContain('left(md5($1), 16)');
   });
 
   it('records each step in schema_migrations with component and version', async () => {

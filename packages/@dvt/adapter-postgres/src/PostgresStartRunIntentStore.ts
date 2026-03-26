@@ -104,6 +104,7 @@ const MIN_ORPHAN_LIMIT = 1;
 const MAX_ORPHAN_LIMIT = 1000;
 const INVALID_ORPHAN_LIMIT_MESSAGE = 'INVALID_LIMIT: listOrphaned limit must be between 1 and 1000';
 const ACTIVE_INTENT_UNIQUE_INDEX = 'start_run_intents_active_run_uniq';
+const PG_SQLSTATE_UNIQUE_VIOLATION = '23505';
 
 export interface PostgresStartRunIntentStoreConfig {
   connectionString?: string;
@@ -449,9 +450,24 @@ function toIntent(state: PersistedIntentState): StartRunIntent {
 }
 
 function isActiveIntentConflict(error: unknown): boolean {
+  if (!isPgErrorLike(error)) {
+    return false;
+  }
+
   return (
-    error instanceof DatabaseError &&
-    error.code === '23505' &&
-    error.constraint === ACTIVE_INTENT_UNIQUE_INDEX
+    error.code === PG_SQLSTATE_UNIQUE_VIOLATION && error.constraint === ACTIVE_INTENT_UNIQUE_INDEX
   );
+}
+
+function isPgErrorLike(error: unknown): error is DatabaseError {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  if (!('code' in error)) {
+    return false;
+  }
+  if (!('constraint' in error)) {
+    return false;
+  }
+  return true;
 }

@@ -10,7 +10,7 @@
  */
 import { TextDecoder } from 'node:util';
 
-import { parsePlanRef, parseResolvedRunContext } from '@dvt/contracts';
+import { parsePlanRef, parseResolvedRunContext, RUN_EVENT_PAYLOAD_VERSION } from '@dvt/contracts';
 import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
@@ -202,7 +202,7 @@ export function createActivities(
       const envelopeBase = {
         eventId: deps.idempotency.eventId(),
         eventType,
-        payloadVersion: 1,
+        payloadVersion: RUN_EVENT_PAYLOAD_VERSION,
         emittedAt: deps.clock.nowIsoUtc(),
         tenantId: ctx.tenantId,
         projectId: ctx.projectId,
