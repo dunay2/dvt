@@ -92,7 +92,16 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Suite Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
-  const schema = `dvt_it_${Date.now()}`;
+  const schemaPrefix = `dvt_it_${Date.now()}`;
+  const createdSchemas = new Set<string>();
+  let schemaCounter = 0;
+
+  function allocateSchema(): string {
+    schemaCounter += 1;
+    const schema = `${schemaPrefix}_${schemaCounter}`;
+    createdSchemas.add(schema);
+    return schema;
+  }
 
   afterAll(async () => {
     const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
@@ -100,7 +109,9 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     const client = new Client({ connectionString });
     await client.connect();
     try {
-      await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
+      for (const schema of createdSchemas) {
+        await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
+      }
     } finally {
       await client.end();
     }
@@ -110,6 +121,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
     options?: { outboxShardCount?: number; outboxClaimTimeoutMs?: number }
   ): Promise<void> {
+    const schema = allocateSchema();
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => NOW,
@@ -129,6 +141,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
     options?: { outboxClaimTimeoutMs?: number }
   ): Promise<void> {
+    const schema = allocateSchema();
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => nowRef.value,
@@ -604,7 +617,6 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
           runId: 'run-dlq-block',
           eventType: 'RunStarted',
           idempotencyKey: 'run-dlq-block:started',
-          payload: { synthetic: 'payload-marker' },
         }),
       ]);
 
