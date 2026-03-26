@@ -44,6 +44,8 @@ export function buildMaintenanceContext(tenantId: string): {
   };
 }
 
+export type RunMaintenanceTraceContext = ReturnType<typeof buildMaintenanceContext>;
+
 export type RunMaintenanceListRunsQuery = {
   tenantId: import('@dvt/contracts').TenantId;
   status: import('./RunMaintenanceDomainConstants.js').RunMaintenanceRunStatus;
