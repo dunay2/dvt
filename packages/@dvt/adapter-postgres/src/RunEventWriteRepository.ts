@@ -7,6 +7,8 @@
  * @version 1.0.0
  * @date 2026-03-26
  */
+import type { PoolClient } from 'pg';
+
 import type { EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
 
 export interface SqlCommandExecutor {
@@ -21,6 +23,12 @@ export interface RunEventAppendResult {
   deduped: EventEnvelope[];
   lastAppendedRunSeq: number | null;
   baseRunSeq: number;
+}
+
+export interface RunEventRepositoryDeps {
+  schema: string;
+  now: () => string;
+  withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
 }
 
 export interface RunEventWriteRepository {

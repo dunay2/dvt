@@ -24,7 +24,27 @@ export interface ListPersistedEventsOptions {
   limit?: number;
 }
 
-export class PostgresRunEventStorage {
+export interface RunEventStoragePort {
+  acquireRunLock(executor: SqlCommandExecutor, runId: RunId): Promise<void>;
+  readMaxRunSeq(executor: SqlCommandExecutor, runId: RunId): Promise<number>;
+  insertEvent(
+    executor: SqlCommandExecutor,
+    runId: RunId,
+    envelope: EventEnvelope
+  ): Promise<boolean>;
+  selectExistingEvent(
+    executor: SqlCommandExecutor,
+    runId: RunId,
+    idempotencyKey: string
+  ): Promise<EventEnvelope | null>;
+  listEvents(
+    tenantId: string,
+    runId: string,
+    options: ListPersistedEventsOptions
+  ): Promise<EventEnvelope[]>;
+}
+
+export class PostgresRunEventStorage implements RunEventStoragePort {
   constructor(
     private readonly schema: string,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>

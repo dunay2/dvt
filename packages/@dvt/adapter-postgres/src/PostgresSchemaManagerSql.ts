@@ -9,6 +9,7 @@
 import { quoteIdentifier } from './sqlUtils.js';
 
 const COMPONENT = 'core';
+const ADVISORY_LOCK_KEY_SQL = "(('x' || left(md5($1), 16))::bit(64)::bigint)";
 
 function sq(schema: string): string {
   return quoteIdentifier(schema);
@@ -19,11 +20,12 @@ export function coreComponent(): string {
 }
 
 export function advisoryLockSql(): string {
-  return 'SELECT pg_advisory_lock(hashtext($1))';
+  // Use a 64-bit key derived from md5 text input to reduce lock-key collision risk.
+  return `SELECT pg_advisory_lock(${ADVISORY_LOCK_KEY_SQL})`;
 }
 
 export function advisoryUnlockSql(): string {
-  return 'SELECT pg_advisory_unlock(hashtext($1))';
+  return `SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY_SQL})`;
 }
 
 export function beginTransactionSql(): string {

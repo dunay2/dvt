@@ -31,7 +31,11 @@ import {
   rollbackTransactionSql,
   setLocalStatementTimeoutSql,
 } from './PostgresStateStoreAdapterSql.js';
-import type { RunEventReadRepository, RunEventWriteRepository } from './RunEventWriteRepository.js';
+import type {
+  RunEventReadRepository,
+  RunEventRepositoryDeps,
+  RunEventWriteRepository,
+} from './RunEventWriteRepository.js';
 import { normalizeSchema } from './sqlUtils.js';
 import type {
   AppendResult,
@@ -61,11 +65,9 @@ export interface PostgresAdapterConfig {
   assumeSchemaReady?: boolean;
   outboxShardCount?: number;
   outboxClaimTimeoutMs?: number;
-  runEventRepositoryFactory?: (deps: {
-    schema: string;
-    now: () => string;
-    withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
-  }) => RunEventWriteRepository & RunEventReadRepository;
+  runEventRepositoryFactory?: (
+    deps: RunEventRepositoryDeps
+  ) => RunEventWriteRepository & RunEventReadRepository;
 }
 
 /**
@@ -130,11 +132,7 @@ export class PostgresStateStoreAdapter
     this.metadataRepo = new PostgresRunMetadataRepository(this.schema, (fn) => this.withClient(fn));
     const runEventRepositoryFactory =
       config.runEventRepositoryFactory ??
-      ((deps: {
-        schema: string;
-        now: () => string;
-        withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
-      }): RunEventWriteRepository & RunEventReadRepository =>
+      ((deps: RunEventRepositoryDeps): RunEventWriteRepository & RunEventReadRepository =>
         new PostgresRunEventStore(deps.schema, deps.now, deps.withClient));
     this.runEventRepository = runEventRepositoryFactory({
       schema: this.schema,

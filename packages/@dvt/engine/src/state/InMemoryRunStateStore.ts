@@ -78,7 +78,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
       throw new RunAlreadyExistsError(input.metadata.runId);
     }
 
-    this.assertBootstrapFirstEvents(input.metadata.runId, input.firstEvents);
+    assertEventsMatchRunId(input.metadata.runId, input.firstEvents);
     const retryLineageCheckpoint = captureRetryLineageCheckpoint(
       this.nextRetryAttemptByOriginRunId,
       input.metadata
@@ -226,10 +226,6 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     }
 
     return reserveRetryAttemptFromSource(this.nextRetryAttemptByOriginRunId, sourceMeta);
-  }
-
-  private assertBootstrapFirstEvents(runId: string, firstEvents: RunEventInput[]): void {
-    assertEventsMatchRunId(runId, firstEvents);
   }
 
   private assertRunExists(runId: string): void {

@@ -8,7 +8,7 @@
  */
 import type { PoolClient } from 'pg';
 
-import { PostgresRunEventStorage } from './PostgresRunEventStorage.js';
+import { PostgresRunEventStorage, type RunEventStoragePort } from './PostgresRunEventStorage.js';
 import { validateAndEnrichEnvelope } from './runEventEnvelopePolicy.js';
 import { InvalidListEventsLimitError } from './runEventStoreErrors.js';
 import type {
@@ -24,14 +24,15 @@ import type { EventEnvelope, EventInput, ListEventsOptions, RunId } from './type
 // ---------------------------------------------------------------------------
 
 export class PostgresRunEventStore implements RunEventWriteRepository, RunEventReadRepository {
-  private readonly storage: PostgresRunEventStorage;
+  private readonly storage: RunEventStoragePort;
 
   constructor(
     schema: string,
     private readonly now: () => string,
-    private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
+    private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
+    storage?: RunEventStoragePort
   ) {
-    this.storage = new PostgresRunEventStorage(schema, this.withClient);
+    this.storage = storage ?? new PostgresRunEventStorage(schema, this.withClient);
   }
 
   async append(

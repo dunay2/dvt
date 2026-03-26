@@ -46,6 +46,7 @@ export type {
 export type {
   RunEventAppendResult,
   RunEventReadRepository,
+  RunEventRepositoryDeps,
   RunEventWriteRepository,
   SqlCommandExecutor,
 } from './RunEventWriteRepository.js';

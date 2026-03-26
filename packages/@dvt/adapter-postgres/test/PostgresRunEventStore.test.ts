@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import type { RunEventStoragePort } from '../src/PostgresRunEventStorage.js';
 import { PostgresRunEventStore } from '../src/PostgresRunEventStore.js';
 import {
+  InvalidRunSequenceValueError,
   RUN_EVENT_STORE_ERROR_CODE,
   RUN_EVENT_STORE_MESSAGE_KEY,
 } from '../src/runEventStoreErrors.js';
-import type { EventEnvelope, EventInput } from '../src/types.js';
+import type { SqlCommandExecutor } from '../src/RunEventWriteRepository.js';
+import type { EventEnvelope, EventInput, RunId } from '../src/types.js';
 
 const TEST_SCHEMA = 'dvt';
 const TEST_NOW_ISO = '2026-02-22T00:00:00.000Z';
@@ -17,51 +20,60 @@ const TEST_PROJECT_ID = 'project-a';
 const TEST_ENVIRONMENT_ID = 'env-a';
 const TEST_PLAN_ID = 'plan-a';
 const TEST_PLAN_VERSION = '1.0.0';
+const TEST_UNSAFE_MAX_RUN_SEQ = '9007199254740992';
 
-const SQL_MARKER = {
-  advisoryLock: 'pg_advisory_xact_lock',
-  maxRunSeq: 'COALESCE(MAX(run_seq), 0) AS max_seq',
-  insertIntoRunEvents: 'INSERT INTO',
-  runEventsTable: 'run_events',
-  selectByIdempotency: 'WHERE run_id = $1 AND idempotency_key = $2',
-} as const;
+const NOOP_SQL_EXECUTOR: SqlCommandExecutor = {
+  async query<T = unknown>(): Promise<{ rows: T[]; rowCount?: number | null }> {
+    return { rows: [] };
+  },
+};
 
-class InMemorySqlExecutor {
-  private readonly byIdempotency = new Map<string, EventEnvelope>();
-  private readonly ordered: EventEnvelope[] = [];
+class InMemoryRunEventStorage implements RunEventStoragePort {
+  private readonly byRunAndIdempotency = new Map<string, EventEnvelope>();
   private maxRunSeq = 0;
 
-  async query<T = unknown>(
-    text: string,
-    params?: readonly unknown[]
-  ): Promise<{ rows: T[]; rowCount?: number | null }> {
-    if (text.includes(SQL_MARKER.advisoryLock)) {
-      return { rows: [] };
-    }
+  async acquireRunLock(_executor: SqlCommandExecutor, _runId: RunId): Promise<void> {
+    // no-op for append policy tests
+  }
 
-    if (text.includes(SQL_MARKER.maxRunSeq)) {
-      return { rows: [{ max_seq: this.maxRunSeq } as T] };
-    }
+  async readMaxRunSeq(_executor: SqlCommandExecutor, _runId: RunId): Promise<number> {
+    return this.maxRunSeq;
+  }
 
-    if (text.includes(SQL_MARKER.insertIntoRunEvents) && text.includes(SQL_MARKER.runEventsTable)) {
-      const idempotencyKey = String(params?.[13]);
-      const payload = JSON.parse(String(params?.[14])) as EventEnvelope;
-      if (this.byIdempotency.has(idempotencyKey)) {
-        return { rows: [], rowCount: 0 };
-      }
-      this.byIdempotency.set(idempotencyKey, payload);
-      this.ordered.push(payload);
-      this.maxRunSeq = Math.max(this.maxRunSeq, payload.runSeq);
-      return { rows: [{ payload } as T], rowCount: 1 };
+  async insertEvent(
+    _executor: SqlCommandExecutor,
+    runId: RunId,
+    envelope: EventEnvelope
+  ): Promise<boolean> {
+    const key = this.key(runId, envelope.idempotencyKey);
+    if (this.byRunAndIdempotency.has(key)) {
+      return false;
     }
+    this.byRunAndIdempotency.set(key, envelope);
+    this.maxRunSeq = Math.max(this.maxRunSeq, envelope.runSeq);
+    return true;
+  }
 
-    if (text.includes(SQL_MARKER.selectByIdempotency)) {
-      const idempotencyKey = String(params?.[1]);
-      const payload = this.byIdempotency.get(idempotencyKey);
-      return { rows: payload ? ([{ payload }] as T[]) : [] };
-    }
+  async selectExistingEvent(
+    _executor: SqlCommandExecutor,
+    runId: RunId,
+    idempotencyKey: string
+  ): Promise<EventEnvelope | null> {
+    return this.byRunAndIdempotency.get(this.key(runId, idempotencyKey)) ?? null;
+  }
 
-    return { rows: [] };
+  async listEvents(): Promise<EventEnvelope[]> {
+    return [];
+  }
+
+  private key(runId: RunId, idempotencyKey: string): string {
+    return `${runId}::${idempotencyKey}`;
+  }
+}
+
+class UnsafeMaxRunSequenceStorage extends InMemoryRunEventStorage {
+  override async readMaxRunSeq(_executor: SqlCommandExecutor, runId: RunId): Promise<number> {
+    throw new InvalidRunSequenceValueError(runId, TEST_UNSAFE_MAX_RUN_SEQ);
   }
 }
 
@@ -87,6 +99,19 @@ function makeEvent(
 
 async function unusedWithClient<T>(_fn: (client: never) => Promise<T>): Promise<T> {
   throw new Error('unused_with_client');
+}
+
+function makeAppendStoreHarness(storage: RunEventStoragePort = new InMemoryRunEventStorage()): {
+  store: PostgresRunEventStore;
+  executor: SqlCommandExecutor;
+} {
+  const store = new PostgresRunEventStore(
+    TEST_SCHEMA,
+    () => TEST_NOW_ISO,
+    unusedWithClient,
+    storage
+  );
+  return { store, executor: NOOP_SQL_EXECUTOR };
 }
 
 function makeListStoreHarness(rows: EventEnvelope[] = []): {
@@ -116,8 +141,7 @@ function makeListStoreHarness(rows: EventEnvelope[] = []): {
 
 describe('PostgresRunEventStore append invariants', () => {
   it('throws typed stable error when event schema is invalid', async () => {
-    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
-    const executor = new InMemorySqlExecutor();
+    const { store, executor } = makeAppendStoreHarness();
     const invalidSchemaEnvelope = {
       ...makeEvent({ runId: TEST_RUN_ID, idempotencyKey: `${TEST_RUN_ID}:invalid-schema` }),
       payloadVersion: 2,
@@ -133,8 +157,7 @@ describe('PostgresRunEventStore append invariants', () => {
   });
 
   it('throws typed stable error when event runId mismatches target runId', async () => {
-    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
-    const executor = new InMemorySqlExecutor();
+    const { store, executor } = makeAppendStoreHarness();
 
     await expect(
       store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
@@ -147,8 +170,7 @@ describe('PostgresRunEventStore append invariants', () => {
   });
 
   it('throws typed stable error when event tenantId mismatches target tenantId', async () => {
-    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
-    const executor = new InMemorySqlExecutor();
+    const { store, executor } = makeAppendStoreHarness();
 
     await expect(
       store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
@@ -165,8 +187,7 @@ describe('PostgresRunEventStore append invariants', () => {
   });
 
   it('does not consume runSeq slots for deduped entries in the same append flow', async () => {
-    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
-    const executor = new InMemorySqlExecutor();
+    const { store, executor } = makeAppendStoreHarness();
 
     await store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
       makeEvent({
@@ -202,21 +223,7 @@ describe('PostgresRunEventStore append invariants', () => {
   });
 
   it('throws typed stable error when persisted max run sequence is unsafe', async () => {
-    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
-    const executor = {
-      async query<T = unknown>(
-        text: string,
-        _params?: readonly unknown[]
-      ): Promise<{ rows: T[]; rowCount?: number | null }> {
-        if (text.includes(SQL_MARKER.advisoryLock)) {
-          return { rows: [] };
-        }
-        if (text.includes(SQL_MARKER.maxRunSeq)) {
-          return { rows: [{ max_seq: '9007199254740992' }] as T[] };
-        }
-        return { rows: [] };
-      },
-    };
+    const { store, executor } = makeAppendStoreHarness(new UnsafeMaxRunSequenceStorage());
 
     await expect(
       store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
