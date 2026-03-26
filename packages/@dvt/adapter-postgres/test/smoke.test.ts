@@ -21,6 +21,7 @@ import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '../src/index.js';
+import { RUN_EVENT_STORE_ERROR_CODE } from '../src/runEventStoreErrors.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 import type { EventInput, RunBootstrapInput, RunId } from '../src/types.js';
 
@@ -251,9 +252,35 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
             idempotencyKey: 'other-run:started',
           }),
         ])
-      ).rejects.toThrow('INVALID_EVENT: runId mismatch at index 0');
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventEnvelopeError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_ENVELOPE,
+      });
 
       await expect(adapter.listEvents('t1', 'run-mismatch-guard')).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: rejects events whose payload tenantId does not match run tenant', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-tenant-mismatch-guard', 'tenant-a'));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid('run-tenant-mismatch-guard'), [
+          makeEvent({
+            runId: 'run-tenant-mismatch-guard',
+            tenantId: 'tenant-b',
+            eventType: 'RunStarted',
+            idempotencyKey: 'run-tenant-mismatch-guard:started',
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventTenantError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_TENANT,
+      });
+
+      await expect(
+        adapter.listEvents('tenant-a', 'run-tenant-mismatch-guard')
+      ).resolves.toHaveLength(1);
     }));
 
   test('appendAndEnqueueTx: does not consume runSeq slots for deduped entries within the same batch', () =>

@@ -22,11 +22,28 @@
  */
 import { Pool, type PoolClient } from 'pg';
 
+import {
+  advisoryLockSql,
+  advisoryUnlockSql,
+  beginTransactionSql,
+  commitTransactionSql,
+  coreComponent,
+  createSchemaMigrationsIndexSql,
+  createSchemaMigrationsTableSql,
+  createSchemaSql,
+  deleteAppliedStepSql,
+  insertAppliedStepSql,
+  loadAppliedVersionsSql,
+  rollbackTransactionSql,
+  setLocalStatementTimeoutSql,
+  setTenantContextSql,
+  stepAlreadyAppliedSql,
+} from './PostgresSchemaManagerSql.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type MigrationState = 'not_called' | 'in_progress' | 'ready';
 
-const COMPONENT = 'core';
+const COMPONENT = coreComponent();
 
 // ---------------------------------------------------------------------------
 // Named migration steps
@@ -616,7 +633,7 @@ export class PostgresSchemaManager {
     const client = await this.pool.connect();
     let hasLock = false;
     try {
-      await client.query('SELECT pg_advisory_lock(hashtext($1))', [`${this.schema}:${COMPONENT}`]);
+      await client.query(advisoryLockSql(), [`${this.schema}:${COMPONENT}`]);
       hasLock = true;
 
       for (const plannedStep of plan.steps) {
@@ -625,9 +642,7 @@ export class PostgresSchemaManager {
       }
     } finally {
       if (hasLock) {
-        await client.query('SELECT pg_advisory_unlock(hashtext($1))', [
-          `${this.schema}:${COMPONENT}`,
-        ]);
+        await client.query(advisoryUnlockSql(), [`${this.schema}:${COMPONENT}`]);
       }
       client.release();
     }
@@ -654,7 +669,7 @@ export class PostgresSchemaManager {
 
   /** Sets `dvt.tenant_id` as a transaction-local Postgres config parameter. */
   static async setTenantContext(client: PoolClient, tenantId: string): Promise<void> {
-    await client.query(`SELECT set_config('dvt.tenant_id', $1, true)`, [tenantId]);
+    await client.query(setTenantContextSql(), [tenantId]);
   }
 
   // ---------------------------------------------------------------------------
@@ -670,7 +685,7 @@ export class PostgresSchemaManager {
     const client = await this.pool.connect();
     let hasLock = false;
     try {
-      await client.query('SELECT pg_advisory_lock(hashtext($1))', [`${this.schema}:${COMPONENT}`]);
+      await client.query(advisoryLockSql(), [`${this.schema}:${COMPONENT}`]);
       hasLock = true;
 
       for (const step of MIGRATION_STEPS) {
@@ -678,9 +693,7 @@ export class PostgresSchemaManager {
       }
     } finally {
       if (hasLock) {
-        await client.query('SELECT pg_advisory_unlock(hashtext($1))', [
-          `${this.schema}:${COMPONENT}`,
-        ]);
+        await client.query(advisoryUnlockSql(), [`${this.schema}:${COMPONENT}`]);
       }
       client.release();
     }
@@ -689,20 +702,9 @@ export class PostgresSchemaManager {
   private async ensureMigrationsTable(): Promise<void> {
     const client = await this.pool.connect();
     try {
-      await client.query(`CREATE SCHEMA IF NOT EXISTS ${sq(this.schema)}`);
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS ${sq(this.schema)}.schema_migrations (
-          component TEXT NOT NULL,
-          version TEXT NOT NULL,
-          description TEXT NOT NULL,
-          applied_at TIMESTAMPTZ NOT NULL,
-          PRIMARY KEY (component, version)
-        )
-      `);
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS schema_migrations_component_applied_idx
-        ON ${sq(this.schema)}.schema_migrations (component, applied_at DESC)
-      `);
+      await client.query(createSchemaSql(this.schema));
+      await client.query(createSchemaMigrationsTableSql(this.schema));
+      await client.query(createSchemaMigrationsIndexSql(this.schema));
     } finally {
       client.release();
     }
@@ -763,14 +765,9 @@ export class PostgresSchemaManager {
 
     const client = await this.pool.connect();
     try {
-      const result = await client.query<{ version: string }>(
-        `
-          SELECT version
-          FROM ${sq(this.schema)}.schema_migrations
-          WHERE component = $1
-        `,
-        [COMPONENT]
-      );
+      const result = await client.query<{ version: string }>(loadAppliedVersionsSql(this.schema), [
+        COMPONENT,
+      ]);
       const appliedSet = new Set(result.rows.map((row) => row.version));
       return MIGRATION_STEPS.filter((step) => appliedSet.has(step.version)).map(
         (step) => step.version
@@ -781,37 +778,27 @@ export class PostgresSchemaManager {
   }
 
   private async applyStep(client: PoolClient, step: MigrationStep): Promise<void> {
-    const exists = await client.query<{ exists: boolean }>(
-      `
-        SELECT EXISTS (
-          SELECT 1
-          FROM ${sq(this.schema)}.schema_migrations
-          WHERE component = $1
-            AND version = $2
-        ) AS exists
-      `,
-      [COMPONENT, step.version]
-    );
+    const exists = await client.query<{ exists: boolean }>(stepAlreadyAppliedSql(this.schema), [
+      COMPONENT,
+      step.version,
+    ]);
     if (exists.rows[0]?.exists) return;
 
-    await client.query('BEGIN');
+    await client.query(beginTransactionSql());
     try {
       if (this.statementTimeoutMs > 0) {
-        await client.query('SET LOCAL statement_timeout = $1', [this.statementTimeoutMs]);
+        await client.query(setLocalStatementTimeoutSql(), [this.statementTimeoutMs]);
       }
       await step.run(client, this.schema);
-      await client.query(
-        `
-          INSERT INTO ${sq(this.schema)}.schema_migrations (component, version, description, applied_at)
-          VALUES ($1, $2, $3, NOW())
-          ON CONFLICT (component, version) DO NOTHING
-        `,
-        [COMPONENT, step.version, step.description]
-      );
-      await client.query('COMMIT');
+      await client.query(insertAppliedStepSql(this.schema), [
+        COMPONENT,
+        step.version,
+        step.description,
+      ]);
+      await client.query(commitTransactionSql());
     } catch (error) {
       try {
-        await client.query('ROLLBACK');
+        await client.query(rollbackTransactionSql());
       } catch {
         // Connection may be torn down.
       }
@@ -820,24 +807,17 @@ export class PostgresSchemaManager {
   }
 
   private async rollbackStep(client: PoolClient, step: MigrationStep): Promise<void> {
-    await client.query('BEGIN');
+    await client.query(beginTransactionSql());
     try {
       if (this.statementTimeoutMs > 0) {
-        await client.query('SET LOCAL statement_timeout = $1', [this.statementTimeoutMs]);
+        await client.query(setLocalStatementTimeoutSql(), [this.statementTimeoutMs]);
       }
       await step.rollback(client, this.schema);
-      await client.query(
-        `
-          DELETE FROM ${sq(this.schema)}.schema_migrations
-          WHERE component = $1
-            AND version = $2
-        `,
-        [COMPONENT, step.version]
-      );
-      await client.query('COMMIT');
+      await client.query(deleteAppliedStepSql(this.schema), [COMPONENT, step.version]);
+      await client.query(commitTransactionSql());
     } catch (error) {
       try {
-        await client.query('ROLLBACK');
+        await client.query(rollbackTransactionSql());
       } catch {
         // Connection may be torn down.
       }

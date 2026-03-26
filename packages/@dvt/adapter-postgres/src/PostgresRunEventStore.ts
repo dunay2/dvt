@@ -10,13 +10,17 @@ import { parseRunEventWrite } from '@dvt/contracts';
 import type { RunEventWriteSchemaT } from '@dvt/contracts';
 import type { PoolClient } from 'pg';
 
-import type { AppendWithClientResult, RunEventWriteRepository } from './RunEventWriteRepository.js';
-import { quoteIdentifier } from './sqlUtils.js';
+import {
+  advisoryLockSql,
+  insertEventSql,
+  listEventsSql,
+  maxRunSeqSql,
+  selectExistingEventSql,
+} from './PostgresRunEventStoreSql.js';
+import { InvalidRunEventEnvelopeError, InvalidRunEventTenantError } from './runEventStoreErrors.js';
+import type { RunEventReadRepository, SqlCommandExecutor } from './RunEventWriteRepository.js';
+import type { RunEventAppendResult, RunEventWriteRepository } from './RunEventWriteRepository.js';
 import type { EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
-
-const POSTGRES_RUN_EVENT_STORE_ERROR = {
-  invalidEvent: 'INVALID_EVENT',
-} as const;
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -38,22 +42,24 @@ interface MaxSeqRow {
 // PostgresRunEventStore
 // ---------------------------------------------------------------------------
 
-export class PostgresRunEventStore implements RunEventWriteRepository {
+export class PostgresRunEventStore implements RunEventWriteRepository, RunEventReadRepository {
   constructor(
     private readonly schema: string,
     private readonly now: () => string,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
   ) {}
 
-  async appendWithClient(
-    client: PoolClient,
+  async append(
+    executor: SqlCommandExecutor,
+    tenantId: string,
     runId: RunId,
     envelopes: EventInput[]
-  ): Promise<AppendWithClientResult> {
-    await this.acquireRunLock(client, runId);
-    const baseRunSeq = await this.getMaxRunSeq(client, runId);
+  ): Promise<RunEventAppendResult> {
+    await this.acquireRunLock(executor, runId);
+    const baseRunSeq = await this.getMaxRunSeq(executor, runId);
     const { appended, deduped, lastAppendedRunSeq } = await this.insertAndDedupEvents(
-      client,
+      executor,
+      tenantId,
       runId,
       envelopes,
       baseRunSeq
@@ -80,17 +86,7 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
     }
 
     const result = await this.withClient((client) =>
-      client.query<EventPayloadRow>(
-        `
-          SELECT payload
-          FROM ${quoteIdentifier(this.schema)}.run_events
-          WHERE tenant_id = $1 AND run_id = $2
-          ${afterSeqClause}
-          ORDER BY run_seq ASC
-          ${limitClause}
-        `,
-        params
-      )
+      client.query<EventPayloadRow>(listEventsSql(this.schema, afterSeqClause, limitClause), params)
     );
 
     return result.rows.map((row: EventPayloadRow) => row.payload);
@@ -100,25 +96,20 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  private async acquireRunLock(client: PoolClient, runId: RunId): Promise<void> {
+  private async acquireRunLock(executor: SqlCommandExecutor, runId: RunId): Promise<void> {
     // Use 64-bit MD5-derived lock key to avoid hashtext()'s 32-bit collision space.
     // Birthday bound is now ~2^32 rather than ~2^16 concurrent distinct runIds.
-    await client.query(
-      `SELECT pg_advisory_xact_lock(('x' || left(md5($1), 16))::bit(64)::bigint)`,
-      [runId]
-    );
+    await executor.query(advisoryLockSql(), [runId]);
   }
 
-  private async getMaxRunSeq(client: PoolClient, runId: RunId): Promise<number> {
-    const seqResult = await client.query<MaxSeqRow>(
-      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(this.schema)}.run_events WHERE run_id = $1`,
-      [runId]
-    );
+  private async getMaxRunSeq(executor: SqlCommandExecutor, runId: RunId): Promise<number> {
+    const seqResult = await executor.query<MaxSeqRow>(maxRunSeqSql(this.schema), [runId]);
     return Number(seqResult.rows[0]?.max_seq ?? 0);
   }
 
   private async insertAndDedupEvents(
-    client: PoolClient,
+    executor: SqlCommandExecutor,
+    tenantId: string,
     runId: RunId,
     envelopes: EventInput[],
     baseRunSeq: number
@@ -135,8 +126,9 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
     for (const [index, envelope] of envelopes.entries()) {
       const validated = parseRunEventWrite(envelope);
       this.assertEnvelopeRunIdMatchesBatchRunId(validated, runId, index);
+      this.assertEnvelopeTenantIdMatchesRunTenant(validated, runId, tenantId, index);
       const withSeq = this.enrichEnvelopeWithSeq(validated, nextRunSeq);
-      const inserted = await this.processEnvelopeInsertion(client, runId, withSeq, {
+      const inserted = await this.processEnvelopeInsertion(executor, runId, withSeq, {
         appended,
         deduped,
         setLastAppendedRunSeq: (runSeq) => {
@@ -152,7 +144,7 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
   }
 
   private async processEnvelopeInsertion(
-    client: PoolClient,
+    executor: SqlCommandExecutor,
     runId: RunId,
     withSeq: EventEnvelope,
     result: {
@@ -161,7 +153,7 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
       setLastAppendedRunSeq(runSeq: number): void;
     }
   ): Promise<boolean> {
-    const inserted = await this.tryInsertEvent(client, runId, withSeq);
+    const inserted = await this.tryInsertEvent(executor, runId, withSeq);
 
     if (inserted) {
       result.appended.push(withSeq);
@@ -169,7 +161,7 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
       return true;
     }
 
-    const existing = await this.getExistingEvent(client, runId, withSeq.idempotencyKey);
+    const existing = await this.getExistingEvent(executor, runId, withSeq.idempotencyKey);
     if (existing) {
       result.deduped.push(existing);
     }
@@ -182,9 +174,18 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
     index: number
   ): void {
     if (envelope.runId !== runId) {
-      throw new Error(
-        `${POSTGRES_RUN_EVENT_STORE_ERROR.invalidEvent}: runId mismatch at index ${index}`
-      );
+      throw new InvalidRunEventEnvelopeError(runId, index, envelope.runId);
+    }
+  }
+
+  private assertEnvelopeTenantIdMatchesRunTenant(
+    envelope: RunEventWriteSchemaT,
+    runId: RunId,
+    tenantId: string,
+    index: number
+  ): void {
+    if (envelope.tenantId !== tenantId) {
+      throw new InvalidRunEventTenantError(runId, index, tenantId, envelope.tenantId);
     }
   }
 
@@ -197,68 +198,39 @@ export class PostgresRunEventStore implements RunEventWriteRepository {
   }
 
   private async tryInsertEvent(
-    client: PoolClient,
+    executor: SqlCommandExecutor,
     runId: RunId,
     withSeq: EventEnvelope
   ): Promise<boolean> {
-    const inserted = await client.query<EventPayloadRow>(
-      `
-        INSERT INTO ${quoteIdentifier(this.schema)}.run_events (
-          run_id,
-          run_seq,
-          event_type,
-          emitted_at,
-          tenant_id,
-          project_id,
-          environment_id,
-          engine_attempt_id,
-          logical_attempt_id,
-          plan_id,
-          plan_version,
-          persisted_at,
-          step_id,
-          idempotency_key,
-          payload
-        )
-        VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz, $13, $14, $15::jsonb)
-        ON CONFLICT (run_id, idempotency_key) DO NOTHING
-        RETURNING payload
-      `,
-      [
-        runId,
-        withSeq.runSeq,
-        withSeq.eventType,
-        withSeq.emittedAt,
-        withSeq.tenantId,
-        withSeq.projectId,
-        withSeq.environmentId,
-        withSeq.engineAttemptId,
-        withSeq.logicalAttemptId,
-        withSeq.planId,
-        withSeq.planVersion,
-        withSeq.persistedAt,
-        'stepId' in withSeq ? withSeq.stepId : null,
-        withSeq.idempotencyKey,
-        JSON.stringify(withSeq),
-      ]
-    );
+    const inserted = await executor.query<EventPayloadRow>(insertEventSql(this.schema), [
+      runId,
+      withSeq.runSeq,
+      withSeq.eventType,
+      withSeq.emittedAt,
+      withSeq.tenantId,
+      withSeq.projectId,
+      withSeq.environmentId,
+      withSeq.engineAttemptId,
+      withSeq.logicalAttemptId,
+      withSeq.planId,
+      withSeq.planVersion,
+      withSeq.persistedAt,
+      'stepId' in withSeq ? withSeq.stepId : null,
+      withSeq.idempotencyKey,
+      JSON.stringify(withSeq),
+    ]);
     return (inserted.rowCount ?? 0) > 0;
   }
 
   private async getExistingEvent(
-    client: PoolClient,
+    executor: SqlCommandExecutor,
     runId: RunId,
     idempotencyKey: string
   ): Promise<EventEnvelope | null> {
-    const result = await client.query<EventPayloadRow>(
-      `
-        SELECT payload
-        FROM ${quoteIdentifier(this.schema)}.run_events
-        WHERE run_id = $1 AND idempotency_key = $2
-        LIMIT 1
-      `,
-      [runId, idempotencyKey]
-    );
+    const result = await executor.query<EventPayloadRow>(selectExistingEventSql(this.schema), [
+      runId,
+      idempotencyKey,
+    ]);
     return result.rows[0]?.payload ?? null;
   }
 }
