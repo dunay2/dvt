@@ -1,6 +1,6 @@
 import process from 'node:process';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { buildApp } from '../src/app.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
@@ -36,7 +36,7 @@ describe('buildApp', () => {
     await app.close();
   });
 
-  it('returns ready on /readyz when reconciler is disabled', async () => {
+  it('returns 503 on /readyz when database dependency is not configured', async () => {
     process.env.OBS_ENABLED = 'false';
     process.env.NODE_ENV = 'test';
     process.env.DVT_READYZ_ENABLED = 'true';
@@ -47,10 +47,11 @@ describe('buildApp', () => {
         method: 'GET',
         url: '/readyz',
       });
-      expect(res.statusCode).toBe(HTTP_STATUS.ok);
+      expect(res.statusCode).toBe(HTTP_STATUS.serviceUnavailable);
       expect(res.json()).toEqual({
-        ok: true,
-        status: 'ready',
+        ok: false,
+        status: 'not_ready',
+        reasonCode: 'database_not_configured',
       });
       await app.close();
     } finally {
@@ -113,6 +114,39 @@ describe('buildApp', () => {
       delete process.env.DVT_READYZ_ENABLED;
       delete process.env.DATABASE_URL;
       delete process.env.DVT_INTENT_RECONCILER_ENABLED;
+    }
+  });
+
+  it('emits structured readiness event when database probe fails', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_READYZ_ENABLED = 'true';
+    process.env.DATABASE_URL = 'postgres://user:pass@127.0.0.1:1/dvt';
+
+    try {
+      const { app } = await buildApp();
+      const warnSpy = vi.spyOn(app.log, 'warn');
+      const res = await app.inject({
+        method: 'GET',
+        url: '/readyz',
+      });
+
+      expect(res.statusCode).toBe(HTTP_STATUS.serviceUnavailable);
+      expect(res.json()).toEqual({
+        ok: false,
+        status: 'not_ready',
+        reasonCode: 'database_unavailable',
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'api.health.readiness.database_probe_failed',
+        })
+      );
+
+      await app.close();
+    } finally {
+      delete process.env.DVT_READYZ_ENABLED;
+      delete process.env.DATABASE_URL;
     }
   });
 

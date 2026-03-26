@@ -21,7 +21,12 @@ import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
-import { createHealthReadinessPorts } from './routes/healthReadinessPorts.js';
+import {
+  createHealthReadinessPorts,
+  HEALTH_READINESS_EVENTS,
+  READINESS_PROBE_STATUS,
+  type ReadinessProbeStatus,
+} from './routes/healthReadinessPorts.js';
 import { versionRoutes } from './routes/version.js';
 import {
   RECONCILER_HEALTH_STATUS,
@@ -68,8 +73,15 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     getIntentReconcilerHealth: () => intentReconcilerHealth,
   };
 
-  let runtimeAdaptersReadyProbe = () => true;
-  const readinessPorts = createHealthReadinessPorts(env, () => runtimeAdaptersReadyProbe());
+  let runtimeAdaptersReadyProbe: () => ReadinessProbeStatus = () =>
+    READINESS_PROBE_STATUS.notConfigured;
+  const readinessPorts = createHealthReadinessPorts({
+    databaseUrl: env.DATABASE_URL,
+    checkRuntimeAdaptersReady: () => runtimeAdaptersReadyProbe(),
+    onDatabaseProbeFailure: (error) => {
+      app.log.warn({ event: HEALTH_READINESS_EVENTS.databaseProbeFailed, err: error });
+    },
+  });
 
   app.addHook('onRequest', async (request) => {
     const span = observability.traces.startSpan('api.request', {
@@ -145,9 +157,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
     runtimeAdaptersReadyProbe = () => {
       if (env.TEMPORAL_ADDRESS) {
-        return protectedModule.adapters.has('temporal');
+        return protectedModule.adapters.has('temporal')
+          ? READINESS_PROBE_STATUS.ready
+          : READINESS_PROBE_STATUS.unavailable;
       }
-      return protectedModule.adapters.size > 0;
+      return protectedModule.adapters.size > 0
+        ? READINESS_PROBE_STATUS.ready
+        : READINESS_PROBE_STATUS.unavailable;
     };
     registerOperationalHooks(app, protectedModule);
 

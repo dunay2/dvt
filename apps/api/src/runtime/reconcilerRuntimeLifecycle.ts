@@ -3,10 +3,7 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { AppContext } from '../app.js';
 
 import type { IntentReconcilerRuntimeHandle } from './intentReconcilerRuntime.js';
-import {
-  RECONCILER_HEALTH_REASON_CODE,
-  RECONCILER_HEALTH_STATUS,
-} from './reconcilerHealth.js';
+import { RECONCILER_HEALTH_REASON_CODE, RECONCILER_HEALTH_STATUS } from './reconcilerHealth.js';
 import {
   buildReconcilerHealthHooks,
   DEFAULT_CREATE_INTENT_RECONCILER_RUNTIME,

@@ -12,8 +12,7 @@ import {
 
 type PublicIntentReconcilerHealth =
   | {
-      status:
-        (typeof CONTRACT_RECONCILER_HEALTH_STATUS)[keyof typeof CONTRACT_RECONCILER_HEALTH_STATUS];
+      status: (typeof CONTRACT_RECONCILER_HEALTH_STATUS)[keyof typeof CONTRACT_RECONCILER_HEALTH_STATUS];
     }
   | {
       status: (typeof CONTRACT_RECONCILER_HEALTH_STATUS)['degraded'];

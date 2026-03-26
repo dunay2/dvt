@@ -1,3 +1,8 @@
+import {
+  RECONCILER_HEALTH_REASON_CODE as RUNTIME_RECONCILER_HEALTH_REASON_CODE,
+  RECONCILER_HEALTH_STATUS as RUNTIME_RECONCILER_HEALTH_STATUS,
+} from '../runtime/reconcilerHealth.js';
+
 import { HTTP_STATUS_CODE } from './httpStatus.js';
 
 export const OVERALL_HEALTH_STATUS = Object.freeze({
@@ -10,12 +15,7 @@ export const OVERALL_HEALTH_STATUS_VALUES = Object.freeze([
   OVERALL_HEALTH_STATUS.degraded,
 ] as const);
 
-export const RECONCILER_HEALTH_STATUS = Object.freeze({
-  starting: 'starting',
-  healthy: 'healthy',
-  disabled: 'disabled',
-  degraded: 'degraded',
-} as const);
+export const RECONCILER_HEALTH_STATUS = RUNTIME_RECONCILER_HEALTH_STATUS;
 
 export const NON_DEGRADED_RECONCILER_STATUS_VALUES = Object.freeze([
   RECONCILER_HEALTH_STATUS.starting,
@@ -23,10 +23,7 @@ export const NON_DEGRADED_RECONCILER_STATUS_VALUES = Object.freeze([
   RECONCILER_HEALTH_STATUS.disabled,
 ] as const);
 
-export const RECONCILER_HEALTH_REASON_CODE = Object.freeze({
-  bootstrapFailed: 'bootstrap_failed',
-  runtimeUnavailable: 'runtime_unavailable',
-} as const);
+export const RECONCILER_HEALTH_REASON_CODE = RUNTIME_RECONCILER_HEALTH_REASON_CODE;
 
 export const RECONCILER_HEALTH_REASON_CODE_VALUES = Object.freeze([
   RECONCILER_HEALTH_REASON_CODE.bootstrapFailed,
@@ -41,14 +38,18 @@ export const READINESS_STATUS = Object.freeze({
 export const READINESS_REASON_CODE = Object.freeze({
   reconcilerStarting: 'reconciler_starting',
   reconcilerDegraded: 'reconciler_degraded',
+  databaseNotConfigured: 'database_not_configured',
   databaseUnavailable: 'database_unavailable',
+  adapterNotConfigured: 'adapter_not_configured',
   adapterUnavailable: 'adapter_unavailable',
 } as const);
 
 export const READINESS_REASON_CODE_VALUES = Object.freeze([
   READINESS_REASON_CODE.reconcilerStarting,
   READINESS_REASON_CODE.reconcilerDegraded,
+  READINESS_REASON_CODE.databaseNotConfigured,
   READINESS_REASON_CODE.databaseUnavailable,
+  READINESS_REASON_CODE.adapterNotConfigured,
   READINESS_REASON_CODE.adapterUnavailable,
 ] as const);
 

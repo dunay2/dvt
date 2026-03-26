@@ -9,10 +9,7 @@ import {
   HTTP_STATUS,
   READYZ_RESPONSE_SCHEMA,
 } from './healthContract.js';
-import {
-  resolveOverallHealthStatus,
-  toPublicIntentReconcilerHealth,
-} from './healthPresenter.js';
+import { resolveOverallHealthStatus, toPublicIntentReconcilerHealth } from './healthPresenter.js';
 import { evaluateReadinessByPorts } from './healthReadinessPolicy.js';
 import type { HealthReadinessPorts } from './healthReadinessPorts.js';
 
