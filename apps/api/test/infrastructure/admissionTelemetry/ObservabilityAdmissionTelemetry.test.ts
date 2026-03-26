@@ -125,8 +125,8 @@ describe('ObservabilityAdmissionTelemetry', () => {
 
     const decisionLabels = decisionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
     const rejectionLabels = rejectionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(Object.keys(decisionLabels).sort()).toEqual(['decision', 'mode']);
-    expect(Object.keys(rejectionLabels).sort()).toEqual(['code', 'decision', 'mode']);
+    expect(Object.keys(decisionLabels).sort((a, b) => a.localeCompare(b))).toEqual(['decision', 'mode']);
+    expect(Object.keys(rejectionLabels).sort((a, b) => a.localeCompare(b))).toEqual(['code', 'decision', 'mode']);
   });
 
   it('swallows observability errors and does not throw', async () => {
