@@ -1,5 +1,4 @@
 import {
-  RECONCILER_HEALTH_REASON_CODE,
   RECONCILER_HEALTH_STATUS as RUNTIME_RECONCILER_HEALTH_STATUS,
   type ReconcilerHealthReasonCode,
   type ReconcilerHealthState,
@@ -35,6 +34,6 @@ export function toPublicIntentReconcilerHealth(
   }
   return {
     status: CONTRACT_RECONCILER_HEALTH_STATUS.degraded,
-    reasonCode: reconciler.reasonCode ?? RECONCILER_HEALTH_REASON_CODE.runtimeUnavailable,
+    reasonCode: reconciler.reasonCode,
   };
 }
