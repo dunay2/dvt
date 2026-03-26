@@ -54,7 +54,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       },
       telemetry: {
-        async recordDecision() {
+        async record() {
           calls.push('telemetry');
         },
       },
@@ -82,7 +82,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
   it('returns duplicate before admission and delegate', async () => {
     const admissionGuard = { assertAdmissible: vi.fn() };
     const delegate = { execute: vi.fn() };
-    const telemetry = { recordDecision: vi.fn().mockResolvedValue(undefined) };
+    const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
     const useCase = new BackpressureAwareStartRunUseCase({
       duplicateProbe: {
         async findExisting() {
@@ -108,7 +108,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
     });
     expect(admissionGuard.assertAdmissible).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
-    expect(telemetry.recordDecision).toHaveBeenCalledWith(
+    expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({
         decision: 'duplicate',
         duplicateOf: 'intent',
@@ -130,7 +130,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       },
       telemetry: {
-        async recordDecision() {
+        async record() {
           return undefined;
         },
       },
@@ -168,7 +168,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       },
       telemetry: {
-        async recordDecision() {
+        async record() {
           return undefined;
         },
       },
@@ -201,7 +201,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       }),
     };
-    const telemetry = { recordDecision: vi.fn().mockResolvedValue(undefined) };
+    const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
     const useCase = new BackpressureAwareStartRunUseCase({
       duplicateProbe: {
         async findExisting() {
@@ -225,7 +225,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
       value: { kind: 'accepted', runId: 'run-1', accepted: true },
     });
     expect(delegate.execute).toHaveBeenCalledOnce();
-    expect(telemetry.recordDecision).toHaveBeenCalledWith(
+    expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({
         decision: 'would_reject_system',
         code: 'SYSTEM_BACKPRESSURE',

@@ -1,5 +1,6 @@
 import {
   ADMISSION_TELEMETRY_DECISION,
+  type AdmissionDecisionRecord,
   type AdmissionTelemetry,
 } from '../ports/AdmissionTelemetry.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
@@ -38,12 +39,6 @@ type AdmissionErrorCode =
   | typeof START_RUN_BACKPRESSURE_CODE.system
   | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable;
 
-type AdmissionDecision =
-  | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectTenant
-  | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectSystem
-  | typeof ADMISSION_TELEMETRY_DECISION.rejectTenant
-  | typeof ADMISSION_TELEMETRY_DECISION.rejectSystem;
-
 export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
@@ -76,7 +71,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
 
     // Future rate limiter ordering, if enabled: duplicate -> backpressure -> rate limiter -> engine.
     const result = await this.deps.delegate.execute(command, context);
-    await this.recordDelegateDecisionIfNeeded(result, {
+    void this.recordDelegateDecisionIfNeeded(result, {
       requestId: context.requestId,
       tenantId,
       runId: command.runId,
@@ -106,7 +101,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
           : START_RUN_DUPLICATE_OF.intent,
     };
 
-    await this.recordTelemetry({
+    await this.record({
       requestId: context.requestId,
       tenantId,
       runId: duplicate.runId,
@@ -136,30 +131,43 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
         throw error;
       }
 
-      await this.recordTelemetry({
-        requestId: context.requestId,
-        tenantId,
-        runId: command.runId,
-        mode: this.deps.mode,
-        decision: this.buildAdmissionDecision(reject),
-        retryAfterSeconds: reject.retryAfterSeconds,
-        code: reject.code,
-      });
+      await this.record(
+        this.buildRejectionRecord(reject, {
+          requestId: context.requestId,
+          tenantId,
+          runId: command.runId,
+        })
+      );
 
       return this.deps.mode === ADMISSION_MODE.observe ? null : reject;
     }
   }
 
-  private buildAdmissionDecision(reject: AdmissionRejectResult): AdmissionDecision {
-    if (this.deps.mode === ADMISSION_MODE.observe) {
-      return reject.kind === START_RUN_RESULT_KIND.tenantBackpressure
-        ? ADMISSION_TELEMETRY_DECISION.wouldRejectTenant
-        : ADMISSION_TELEMETRY_DECISION.wouldRejectSystem;
+  private buildRejectionRecord(
+    reject: AdmissionRejectResult,
+    context: { requestId: string; tenantId: string; runId: string }
+  ): AdmissionDecisionRecord {
+    const mode = this.deps.mode;
+    const isObserve = mode === ADMISSION_MODE.observe;
+    const base = { ...context, mode, retryAfterSeconds: reject.retryAfterSeconds };
+
+    if (reject.kind === START_RUN_RESULT_KIND.tenantBackpressure) {
+      return {
+        ...base,
+        decision: isObserve
+          ? ADMISSION_TELEMETRY_DECISION.wouldRejectTenant
+          : ADMISSION_TELEMETRY_DECISION.rejectTenant,
+        code: reject.code,
+      };
     }
 
-    return reject.kind === START_RUN_RESULT_KIND.tenantBackpressure
-      ? ADMISSION_TELEMETRY_DECISION.rejectTenant
-      : ADMISSION_TELEMETRY_DECISION.rejectSystem;
+    return {
+      ...base,
+      decision: isObserve
+        ? ADMISSION_TELEMETRY_DECISION.wouldRejectSystem
+        : ADMISSION_TELEMETRY_DECISION.rejectSystem,
+      code: reject.code,
+    };
   }
 
   private toAdmissionRejectResult(error: unknown): AdmissionRejectResult | null {
@@ -188,11 +196,9 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     return null;
   }
 
-  private async recordTelemetry(
-    input: Parameters<AdmissionTelemetry['recordDecision']>[0]
-  ): Promise<void> {
+  private async record(event: AdmissionDecisionRecord): Promise<void> {
     try {
-      await this.deps.telemetry.recordDecision(input);
+      await this.deps.telemetry.record(event);
     } catch {
       // Telemetry must not break command admission.
     }
@@ -211,7 +217,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     }
 
     if (result.value.kind === START_RUN_RESULT_KIND.duplicate) {
-      await this.recordTelemetry({
+      await this.record({
         requestId: context.requestId,
         tenantId: context.tenantId,
         runId: context.runId,
@@ -222,7 +228,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
       return;
     }
 
-    await this.recordTelemetry({
+    await this.record({
       requestId: context.requestId,
       tenantId: context.tenantId,
       runId: context.runId,
