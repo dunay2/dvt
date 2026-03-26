@@ -17,6 +17,9 @@ interface StartRunIntentSchemaMigration {
 }
 
 const MIGRATION_COMPONENT = 'start_run_intents';
+const ADVISORY_LOCK_KEY_SQL = "(('x' || left(md5($1), 16))::bit(64)::bigint)";
+const ACQUIRE_ADVISORY_LOCK_SQL = `SELECT pg_advisory_lock(${ADVISORY_LOCK_KEY_SQL})`;
+const RELEASE_ADVISORY_LOCK_SQL = `SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY_SQL})`;
 
 export interface StartRunIntentSchemaManagerConfig {
   pool: Pool;
@@ -51,9 +54,7 @@ export class StartRunIntentSchemaManager {
     let hasLock = false;
     try {
       await this.ensureMigrationTable(client, schemaLiteral);
-      await client.query('SELECT pg_advisory_lock(hashtext($1))', [
-        `${this.schema}:${MIGRATION_COMPONENT}`,
-      ]);
+      await client.query(ACQUIRE_ADVISORY_LOCK_SQL, [`${this.schema}:${MIGRATION_COMPONENT}`]);
       hasLock = true;
 
       for (const migration of migrations) {
@@ -95,9 +96,7 @@ export class StartRunIntentSchemaManager {
       }
     } finally {
       if (hasLock) {
-        await client.query('SELECT pg_advisory_unlock(hashtext($1))', [
-          `${this.schema}:${MIGRATION_COMPONENT}`,
-        ]);
+        await client.query(RELEASE_ADVISORY_LOCK_SQL, [`${this.schema}:${MIGRATION_COMPONENT}`]);
       }
       client.release();
     }

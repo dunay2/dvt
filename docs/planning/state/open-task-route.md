@@ -17,7 +17,7 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 0
+- `review`: 1
 - `queued`: 29
 - `blocked`: 1
 - `done`: tracked in closeouts and evidence (not listed here)
@@ -27,25 +27,25 @@ Authoritative task source remains:
 Pick from this list when you want immediate execution with no hard dependency
 block in the workboard.
 
-| Priority | Task ID  | Why now                                                                         | Next action                                                         |
-| -------- | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `P0`     | `G4-PR4` | Unblocked after `G4-PR3` closure; keeps Gap 4 momentum and unlocks PR5.         | Start operability rollout, metrics, and runbook closure.            |
-| `P1`     | `S03`    | `S02` is closed; start-run extraction is now unblocked again.                   | Execute `StartRunCoordinator` extraction.                           |
-| `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                          | Add payload version handling in envelope flow.                      |
-| `P1`     | `S07`    | No blockers; unlocks `S11`.                                                     | Normalize lineage job naming + sink shape.                          |
-| `P1`     | `S08`    | `S09` is now closed (PR #595); plan storage ownership is unblocked.             | Start `PostgresPlanStore` ownership slice.                          |
-| `P1`     | `S16`    | `RC-A4` is merged; runtime planVersion validation is now unblocked.             | Wire policy into `validateStartRunPreconditions`.                   |
-| `P1`     | `RC-F2`  | CI relevance policy drift is still open and has no blockers.                    | Externalize patterns and add path-matcher tests.                    |
-| `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.                 | Add scheduled retry (`next_attempt_at`) with exponential backoff.   |
-| `P2`     | `S19-F1` | Stale snapshot query still uses correlated polling pattern at high concurrency. | Replace correlated stale-snapshot selector with scalable strategy.  |
-| `P2`     | `RC-D1A` | `RC-D1` is closed; compatibility and watchdog integration still need closure.   | Add `/healthz` compatibility policy and watchdog integration tests. |
-| `P2`     | `DHM`    | Modularization backlog reduces helper sprawl and clarifies current seams.       | Start with `WS5`, then follow the dependency order in the proposal. |
-| `P2`     | `F4`     | DDD finding still open and currently only documented.                           | Freeze `WorkflowSnapshot` role and versioning rule.                 |
-| `P2`     | `F5`     | DDD boundary finding still open.                                                | Move/remove engine-side provider selection env handling.            |
-| `P2`     | `S17`    | Multi-worker safety depends on claim path semantics today.                      | Harden outbox contract/runtime to require claim/lease semantics.    |
-| `P2`     | `A1`     | Review-validated gap with no current owner slice.                               | Define realtime run-status delivery contract.                       |
-| `P2`     | `A2`     | Per-process limiter does not hold in horizontal deployments.                    | Design distributed tenant rate-limiter rollout.                     |
-| `P2`     | `R7`     | Unblocks `R6` dependency gate currently marked external.                        | Close DSL/interpreter governance decision.                          |
+| Priority | Task ID  | Why now                                                                         | Next action                                                            |
+| -------- | -------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `P0`     | `G4-PR4` | Unblocked after `G4-PR3` closure; keeps Gap 4 momentum and unlocks PR5.         | Start operability rollout, metrics, and runbook closure.               |
+| `P1`     | `S03`    | `S02` is closed; start-run extraction is now unblocked again.                   | Execute `StartRunCoordinator` extraction.                              |
+| `P1`     | `S05-F1` | `S05-part-1` is in review; payload-content schema enforcement remains open.     | Add per-eventType payload-content schema validation at write boundary. |
+| `P1`     | `S07`    | No blockers; unlocks `S11`.                                                     | Normalize lineage job naming + sink shape.                             |
+| `P1`     | `S08`    | `S09` is now closed (PR #595); plan storage ownership is unblocked.             | Start `PostgresPlanStore` ownership slice.                             |
+| `P1`     | `S16`    | `RC-A4` is merged; runtime planVersion validation is now unblocked.             | Wire policy into `validateStartRunPreconditions`.                      |
+| `P1`     | `RC-F2`  | CI relevance policy drift is still open and has no blockers.                    | Externalize patterns and add path-matcher tests.                       |
+| `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.                 | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
+| `P2`     | `S19-F1` | Stale snapshot query still uses correlated polling pattern at high concurrency. | Replace correlated stale-snapshot selector with scalable strategy.     |
+| `P2`     | `RC-D1A` | `RC-D1` is closed; compatibility and watchdog integration still need closure.   | Add `/healthz` compatibility policy and watchdog integration tests.    |
+| `P2`     | `DHM`    | Modularization backlog reduces helper sprawl and clarifies current seams.       | Start with `WS5`, then follow the dependency order in the proposal.    |
+| `P2`     | `F4`     | DDD finding still open and currently only documented.                           | Freeze `WorkflowSnapshot` role and versioning rule.                    |
+| `P2`     | `F5`     | DDD boundary finding still open.                                                | Move/remove engine-side provider selection env handling.               |
+| `P2`     | `S17`    | Multi-worker safety depends on claim path semantics today.                      | Harden outbox contract/runtime to require claim/lease semantics.       |
+| `P2`     | `A1`     | Review-validated gap with no current owner slice.                               | Define realtime run-status delivery contract.                          |
+| `P2`     | `A2`     | Per-process limiter does not hold in horizontal deployments.                    | Design distributed tenant rate-limiter rollout.                        |
+| `P2`     | `R7`     | Unblocks `R6` dependency gate currently marked external.                        | Close DSL/interpreter governance decision.                             |
 
 ## Blocked Or Gated Next
 
@@ -77,7 +77,8 @@ flowchart LR
   S19F1[S19-F1]
   F4[F4]
   F5[F5]
-  S05[S05]
+  S05[S05-part-1]
+  S05 --> S05F1[S05-F1]
 
   S07[S07] --> S11[S11]
   S08[S08]
