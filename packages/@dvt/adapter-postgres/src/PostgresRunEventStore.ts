@@ -6,10 +6,17 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { parseRunEventWrite } from '@dvt/contracts';
+import type { RunEventWriteSchemaT } from '@dvt/contracts';
 import type { PoolClient } from 'pg';
 
+import type { AppendWithClientResult, RunEventWriteRepository } from './RunEventWriteRepository.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
+
+const POSTGRES_RUN_EVENT_STORE_ERROR = {
+  invalidEvent: 'INVALID_EVENT',
+} as const;
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -27,18 +34,11 @@ interface MaxSeqRow {
 // Result types (internal)
 // ---------------------------------------------------------------------------
 
-interface AppendWithClientResult {
-  appended: EventEnvelope[];
-  deduped: EventEnvelope[];
-  lastAppendedRunSeq: number | null;
-  baseRunSeq: number;
-}
-
 // ---------------------------------------------------------------------------
 // PostgresRunEventStore
 // ---------------------------------------------------------------------------
 
-export class PostgresRunEventStore {
+export class PostgresRunEventStore implements RunEventWriteRepository {
   constructor(
     private readonly schema: string,
     private readonly now: () => string,
@@ -132,16 +132,20 @@ export class PostgresRunEventStore {
     let lastAppendedRunSeq: number | null = null;
     let nextRunSeq = baseRunSeq + 1;
 
-    for (const envelope of envelopes) {
-      const withSeq = this.enrichEnvelopeWithSeq(envelope, nextRunSeq);
-      await this.processEnvelopeInsertion(client, runId, withSeq, {
+    for (const [index, envelope] of envelopes.entries()) {
+      const validated = parseRunEventWrite(envelope);
+      this.assertEnvelopeRunIdMatchesBatchRunId(validated, runId, index);
+      const withSeq = this.enrichEnvelopeWithSeq(validated, nextRunSeq);
+      const inserted = await this.processEnvelopeInsertion(client, runId, withSeq, {
         appended,
         deduped,
         setLastAppendedRunSeq: (runSeq) => {
           lastAppendedRunSeq = runSeq;
         },
       });
-      nextRunSeq += 1;
+      if (inserted) {
+        nextRunSeq += 1;
+      }
     }
 
     return { appended, deduped, lastAppendedRunSeq };
@@ -156,22 +160,35 @@ export class PostgresRunEventStore {
       deduped: EventEnvelope[];
       setLastAppendedRunSeq(runSeq: number): void;
     }
-  ): Promise<void> {
+  ): Promise<boolean> {
     const inserted = await this.tryInsertEvent(client, runId, withSeq);
 
     if (inserted) {
       result.appended.push(withSeq);
       result.setLastAppendedRunSeq(withSeq.runSeq);
-      return;
+      return true;
     }
 
     const existing = await this.getExistingEvent(client, runId, withSeq.idempotencyKey);
     if (existing) {
       result.deduped.push(existing);
     }
+    return false;
   }
 
-  private enrichEnvelopeWithSeq(envelope: EventInput, runSeq: number): EventEnvelope {
+  private assertEnvelopeRunIdMatchesBatchRunId(
+    envelope: RunEventWriteSchemaT,
+    runId: RunId,
+    index: number
+  ): void {
+    if (envelope.runId !== runId) {
+      throw new Error(
+        `${POSTGRES_RUN_EVENT_STORE_ERROR.invalidEvent}: runId mismatch at index ${index}`
+      );
+    }
+  }
+
+  private enrichEnvelopeWithSeq(envelope: RunEventWriteSchemaT, runSeq: number): EventEnvelope {
     return {
       ...envelope,
       runSeq,

@@ -24,6 +24,7 @@ import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 import { PostgresSchemaManager, type PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
+import type { RunEventWriteRepository } from './RunEventWriteRepository.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import type {
   AppendResult,
@@ -53,6 +54,11 @@ export interface PostgresAdapterConfig {
   assumeSchemaReady?: boolean;
   outboxShardCount?: number;
   outboxClaimTimeoutMs?: number;
+  runEventWriteRepositoryFactory?: (deps: {
+    schema: string;
+    now: () => string;
+    withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
+  }) => RunEventWriteRepository;
 }
 
 /**
@@ -78,7 +84,7 @@ export class PostgresStateStoreAdapter
   private readonly schemaManager: PostgresSchemaManager;
   private readonly outboxStore: PostgresOutboxStore;
   private readonly metadataRepo: PostgresRunMetadataRepository;
-  private readonly eventStore: PostgresRunEventStore;
+  private readonly eventStore: RunEventWriteRepository;
   private readonly snapshotStore: PostgresRunSnapshotStore;
   readonly lineageOutboxStore: PostgresLineageOutboxStore;
 
@@ -115,7 +121,19 @@ export class PostgresStateStoreAdapter
       (fn) => this.withClient(fn)
     );
     this.metadataRepo = new PostgresRunMetadataRepository(this.schema, (fn) => this.withClient(fn));
-    this.eventStore = new PostgresRunEventStore(this.schema, this.now, (fn) => this.withClient(fn));
+    const runEventWriteRepositoryFactory =
+      config.runEventWriteRepositoryFactory ??
+      ((deps: {
+        schema: string;
+        now: () => string;
+        withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
+      }): RunEventWriteRepository =>
+        new PostgresRunEventStore(deps.schema, deps.now, deps.withClient));
+    this.eventStore = runEventWriteRepositoryFactory({
+      schema: this.schema,
+      now: this.now,
+      withClient: (fn) => this.withClient(fn),
+    });
     this.snapshotStore = new PostgresRunSnapshotStore(
       this.schema,
       this.now,

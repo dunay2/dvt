@@ -43,6 +43,7 @@ export type {
   PostgresBackpressureSnapshot,
   PostgresBackpressureSnapshotReaderConfig,
 } from './PostgresBackpressureSnapshotReader.js';
+export type { AppendWithClientResult, RunEventWriteRepository } from './RunEventWriteRepository.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
 export { PostgresPlanStore } from './PostgresPlanStore.js';
