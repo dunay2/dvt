@@ -34,6 +34,10 @@ export const RUN_MAINTENANCE_METRIC = {
   intentExpiredAfterCancelTotal: 'dvt.intent.expired_after_cancel_total',
   intentExpiredTotal: 'dvt.intent.expired_total',
   intentCancelledTotal: 'dvt.intent.cancelled_total',
+  intentDeferredLookupUnsupportedTotal: 'dvt.intent.deferred_lookup_unsupported_total',
+  intentDeferredLookupFailedTotal: 'dvt.intent.deferred_lookup_failed_total',
+  intentDeferredBootstrappedWithoutWorkflowTotal:
+    'dvt.intent.deferred_bootstrapped_without_workflow_total',
 } as const;
 
 export const RUN_MAINTENANCE_OPERATION = {

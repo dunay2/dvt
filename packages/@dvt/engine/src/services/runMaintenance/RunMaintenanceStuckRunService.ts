@@ -1,4 +1,4 @@
-import type { EventType, RunEventInput, RunMetadata } from '../../contracts/runEvents.js';
+import type { RunMetadata } from '../../contracts/runEvents.js';
 import type {
   DetectStuckCancellingRunsOptions,
   DetectStuckRunsOptions,
@@ -19,9 +19,14 @@ import {
   RUN_MAINTENANCE_RUN_FAILED_REASON,
   RUN_MAINTENANCE_RUN_STATUS,
 } from './RunMaintenanceDomainConstants.js';
+import { RunMaintenanceEventFactory } from './RunMaintenanceEventFactory.js';
 
 export class RunMaintenanceStuckRunService {
-  constructor(private readonly deps: RunMaintenanceServiceDeps) {}
+  private readonly eventFactory: RunMaintenanceEventFactory;
+
+  constructor(private readonly deps: RunMaintenanceServiceDeps) {
+    this.eventFactory = new RunMaintenanceEventFactory(this.deps);
+  }
 
   async detectStuckRuns(options: DetectStuckRunsOptions): Promise<DetectStuckRunsResult> {
     const { thresholdMs, tenantId, limit, dryRun } = options;
@@ -52,7 +57,10 @@ export class RunMaintenanceStuckRunService {
       if (dryRun) continue;
 
       await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
-        this.buildRunFailedEvent(meta, RUN_MAINTENANCE_RUN_FAILED_REASON.queuedTimeout),
+        this.eventFactory.buildRunFailedEvent(
+          meta,
+          RUN_MAINTENANCE_RUN_FAILED_REASON.queuedTimeout
+        ),
       ]);
 
       this.safeIncrementCounter(RUN_MAINTENANCE_METRIC.queuedTimeoutTotal, {
@@ -114,7 +122,10 @@ export class RunMaintenanceStuckRunService {
       if (dryRun) continue;
 
       await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
-        this.buildRunFailedEvent(meta, RUN_MAINTENANCE_RUN_FAILED_REASON.cancellationTimeout),
+        this.eventFactory.buildRunFailedEvent(
+          meta,
+          RUN_MAINTENANCE_RUN_FAILED_REASON.cancellationTimeout
+        ),
       ]);
 
       this.safeIncrementCounter(RUN_MAINTENANCE_METRIC.cancellationTimeoutTotal, {
@@ -152,42 +163,6 @@ export class RunMaintenanceStuckRunService {
     } catch {
       return listRuns();
     }
-  }
-
-  private buildRunFailedEvent(
-    meta: RunMetadata,
-    reason: (typeof RUN_MAINTENANCE_RUN_FAILED_REASON)[keyof typeof RUN_MAINTENANCE_RUN_FAILED_REASON]
-  ): RunEventInput {
-    return this.buildRunEvent(meta, RUN_MAINTENANCE_EVENT_TYPE.runFailed, { reason });
-  }
-
-  private buildRunEvent(
-    meta: RunMetadata,
-    eventType: EventType,
-    payload?: RunEventInput['payload']
-  ): RunEventInput {
-    return {
-      eventId: this.deps.idempotency.eventId(),
-      eventType,
-      payloadVersion: RUN_MAINTENANCE_NUMERIC.eventPayloadVersion,
-      emittedAt: this.deps.clock.nowIsoUtc(),
-      tenantId: meta.tenantId,
-      projectId: meta.projectId,
-      environmentId: meta.environmentId,
-      runId: meta.runId,
-      planId: meta.planId,
-      planVersion: meta.planVersion,
-      engineAttemptId: RUN_MAINTENANCE_NUMERIC.engineAttemptId,
-      logicalAttemptId: meta.logicalAttemptId,
-      idempotencyKey: this.deps.idempotency.runEventKey({
-        eventType,
-        runId: meta.runId,
-        logicalAttemptId: meta.logicalAttemptId,
-        planId: meta.planId,
-        planVersion: meta.planVersion,
-      }),
-      ...(payload === undefined ? {} : { payload }),
-    };
   }
 
   private safeIncrementCounter(name: string, labels: Readonly<Record<string, string>>): void {

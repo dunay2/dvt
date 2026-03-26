@@ -37,6 +37,7 @@ export class RunMaintenanceOrphanedIntentService {
     const expired: string[] = [];
     const cancelled: string[] = [];
     const cancelFailed: string[] = [];
+    const deferred: string[] = [];
 
     for (const intent of orphaned) {
       if (dryRun) continue;
@@ -51,9 +52,12 @@ export class RunMaintenanceOrphanedIntentService {
       if (outcome.cancelFailed !== undefined) {
         cancelFailed.push(outcome.cancelFailed);
       }
+      if (outcome.deferred !== undefined) {
+        deferred.push(outcome.deferred);
+      }
     }
 
-    return { inspected: orphaned.length, expired, cancelled, cancelFailed };
+    return { inspected: orphaned.length, expired, cancelled, cancelFailed, deferred };
   }
 
   private async reconcileOrphanedIntent(
@@ -82,6 +86,10 @@ export class RunMaintenanceOrphanedIntentService {
     const adapter = this.deps.adapters.get(intent.provider);
 
     if (adapter?.lookupRunRef === undefined) {
+      this.safeIncrementCounter(RUN_MAINTENANCE_METRIC.intentDeferredLookupUnsupportedTotal, {
+        provider: intent.provider,
+        operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+      });
       this.safeLogWarn({
         msg: RUN_MAINTENANCE_MESSAGE.pendingIntentLookupUnsupported,
         context: traceContext,
@@ -92,13 +100,17 @@ export class RunMaintenanceOrphanedIntentService {
           hasBootstrappedRun: String(existingMeta !== null),
         },
       });
-      return {};
+      return { deferred: intent.intentId };
     }
 
     let runRef: typeof intent.engineRunRef | null = null;
     try {
       runRef = await adapter.lookupRunRef(intent.runId, intent.tenantId);
     } catch (lookupErr) {
+      this.safeIncrementCounter(RUN_MAINTENANCE_METRIC.intentDeferredLookupFailedTotal, {
+        provider: intent.provider,
+        operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+      });
       this.safeLogWarn({
         msg: RUN_MAINTENANCE_MESSAGE.pendingIntentLookupFailed,
         context: traceContext,
@@ -109,7 +121,7 @@ export class RunMaintenanceOrphanedIntentService {
           provider: intent.provider,
         },
       });
-      return {};
+      return { deferred: intent.intentId };
     }
 
     if (runRef !== null) {
@@ -142,6 +154,13 @@ export class RunMaintenanceOrphanedIntentService {
     }
 
     if (existingMeta !== null) {
+      this.safeIncrementCounter(
+        RUN_MAINTENANCE_METRIC.intentDeferredBootstrappedWithoutWorkflowTotal,
+        {
+          provider: intent.provider,
+          operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+        }
+      );
       this.safeLogWarn({
         msg: RUN_MAINTENANCE_MESSAGE.pendingIntentBootstrappedWithoutWorkflow,
         context: traceContext,
@@ -151,7 +170,7 @@ export class RunMaintenanceOrphanedIntentService {
           provider: intent.provider,
         },
       });
-      return {};
+      return { deferred: intent.intentId };
     }
 
     await this.deps.intentStore.markExpired(intent.intentId);

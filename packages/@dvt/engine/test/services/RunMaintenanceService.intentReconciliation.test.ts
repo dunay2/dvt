@@ -157,6 +157,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.expired).toEqual([]);
     expect(result.cancelled).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([]);
   });
 
   it('expires a PENDING intent older than threshold', async () => {
@@ -179,6 +180,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.expired).toEqual([intentId]);
     expect(result.cancelled).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([]);
 
     const intent = await intentStore.getIntent(intentId);
     expect(intent?.status).toBe('EXPIRED');
@@ -202,6 +204,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
 
     expect(result.inspected).toBe(0);
     expect(result.expired).toEqual([]);
+    expect(result.deferred).toEqual([]);
 
     const intent = await intentStore.getIntent(intentId);
     expect(intent?.status).toBe('PENDING');
@@ -249,6 +252,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.cancelled).toEqual([]);
     expect(result.expired).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual(['pending-intent-with-meta']);
     expect(cancelledRefs).toEqual([]);
 
     const intent = await intentStore.getIntent('pending-intent-with-meta');
@@ -276,6 +280,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.expired).toEqual([]);
     expect(result.cancelled).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([intentId]);
 
     const intent = await intentStore.getIntent(intentId);
     expect(intent?.status).toBe('PENDING');
@@ -314,6 +319,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.cancelled).toEqual([intentId]);
     expect(result.expired).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([]);
     expect(cancelledRefs).toHaveLength(1);
     expect(cancelledRefs[0].runId).toBe('orphan-dispatched-1');
 
@@ -360,6 +366,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     // Should be in cancelled (resolved) - not cancelFailed
     expect(result.cancelled).toContain(manualIntentId);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([]);
 
     const intent = await intentStore.getIntent(manualIntentId);
     expect(intent?.status).toBe('RESOLVED');
@@ -397,6 +404,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.cancelFailed).toEqual([intentId]);
     expect(result.cancelled).toEqual([]);
     expect(result.expired).toEqual([]);
+    expect(result.deferred).toEqual([]);
 
     // Intent should remain DISPATCHED (not resolved) so it's retried next sweep
     const intent = await intentStore.getIntent(intentId);
@@ -430,6 +438,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
 
     expect(result.cancelFailed).toEqual([intentId]);
     expect(result.cancelled).toEqual([]);
+    expect(result.deferred).toEqual([]);
   });
 
   it('dryRun does not transition any intents', async () => {
@@ -470,6 +479,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.expired).toEqual([]);
     expect(result.cancelled).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([]);
 
     // Verify nothing changed
     const pendingIntent = await intentStore.getIntent(pendingId);
@@ -545,6 +555,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.expired).toEqual([pendingId]);
     expect(result.cancelled).toEqual([dispatchedId]);
     expect(result.cancelFailed).toEqual([]);
+    expect(result.deferred).toEqual([]);
 
     expect(cancelledRefs).toHaveLength(1);
     expect(cancelledRefs[0].runId).toBe('mixed-dispatched');
@@ -564,5 +575,6 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.inspected).toBe(0);
     expect(result.expired).toEqual([]);
     expect(result.cancelled).toEqual([]);
+    expect(result.deferred).toEqual([]);
   });
 });

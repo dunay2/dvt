@@ -44,6 +44,11 @@ export interface ReconcileOrphanedIntentsResult {
   cancelled: string[];
   /** Intent IDs where cancellation failed (will be retried next sweep). */
   cancelFailed: string[];
+  /**
+   * Intent IDs intentionally left unresolved by policy (for example: lookup unsupported,
+   * lookup failure, or run already bootstrapped without provider workflow).
+   */
+  deferred: string[];
 }
 
 export interface IRunMaintenanceService {

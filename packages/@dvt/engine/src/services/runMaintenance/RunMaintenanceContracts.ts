@@ -27,6 +27,7 @@ export type ReconcileOrphanedIntentOutcome = {
   readonly expired?: string;
   readonly cancelled?: string;
   readonly cancelFailed?: string;
+  readonly deferred?: string;
 };
 
 export function buildMaintenanceContext(tenantId: string): {

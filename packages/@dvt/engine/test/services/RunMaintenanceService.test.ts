@@ -563,7 +563,13 @@ describe('RunMaintenanceService', () => {
     it('returns empty result when no orphaned intents exist', async () => {
       const { service } = createFixture();
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
-      expect(result).toEqual({ inspected: 0, expired: [], cancelled: [], cancelFailed: [] });
+      expect(result).toEqual({
+        inspected: 0,
+        expired: [],
+        cancelled: [],
+        cancelFailed: [],
+        deferred: [],
+      });
     });
 
     it('keeps PENDING intent unresolved when adapter does not implement lookupRunRef', async () => {
@@ -575,6 +581,7 @@ describe('RunMaintenanceService', () => {
       expect(result.expired).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual(['i-p1']);
       expect((await intentStore.getIntent('i-p1'))?.status).toBe('PENDING');
     });
 
@@ -586,6 +593,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.expired).toEqual(['i-p2']);
       expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual([]);
       expect((await intentStore.getIntent('i-p2'))?.status).toBe('EXPIRED');
     });
 
@@ -600,6 +608,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.expired).toEqual(['i-p3']);
       expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('run-with-wf-1');
       expect((await intentStore.getIntent('i-p3'))?.status).toBe('EXPIRED');
     });
@@ -614,6 +623,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toEqual(['i-p4']);
       expect(result.expired).toEqual([]);
+      expect(result.deferred).toEqual([]);
       // Intent stays PENDING for retry on next sweep (INV-INTENT-011)
       expect((await intentStore.getIntent('i-p4'))?.status).toBe('PENDING');
     });
@@ -654,6 +664,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelled).toContain('i-d1');
+      expect(result.deferred).toEqual([]);
       expect(cancelLog).toHaveLength(0); // no actual workflow cancel
       expect((await intentStore.getIntent('i-d1'))?.status).toBe('RESOLVED');
     });
@@ -676,6 +687,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelled).toContain('i-d2');
+      expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('dispatched-orphan-1');
       expect((await intentStore.getIntent('i-d2'))?.status).toBe('RESOLVED');
     });
@@ -696,6 +708,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toContain('i-d3');
       expect(result.cancelled).toHaveLength(0);
+      expect(result.deferred).toEqual([]);
     });
 
     it('skips intents newer than threshold', async () => {
@@ -720,6 +733,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.inspected).toBe(1);
       expect(result.expired).toHaveLength(0);
+      expect(result.deferred).toHaveLength(0);
       expect((await intentStore.getIntent('i-dry1'))?.status).toBe('PENDING');
     });
 
@@ -755,6 +769,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.expired).toHaveLength(2);
       expect(result.cancelFailed).toHaveLength(0);
+      expect(result.deferred).toHaveLength(0);
       expect(cancelLogTemporal).toContain('run-temporal-mp');
       expect(cancelLogMock).toContain('run-mock-mp');
     });
@@ -781,6 +796,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toContain('i-no-adapter');
       expect(result.cancelled).toHaveLength(0);
+      expect(result.deferred).toHaveLength(0);
     });
   });
 
