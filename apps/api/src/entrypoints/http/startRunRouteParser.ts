@@ -1,6 +1,10 @@
 import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
 
-import type { StartRunCommand, StartRunPlanRef } from '../../application/ports/auth.js';
+import {
+  START_RUN_TARGET_ADAPTER,
+  type StartRunCommand,
+  type StartRunPlanRef,
+} from '../../application/ports/startRunCommandContract.js';
 import {
   type AuthorizationAction,
   EnvironmentId,
@@ -116,9 +120,14 @@ function parsePlanRef(
 
 function parseTargetAdapter(
   raw: unknown
-): { readonly ok: true; readonly value: 'temporal' | 'mock' } | { readonly ok: false } {
+):
+  | { readonly ok: true; readonly value: StartRunCommand['targetAdapter'] }
+  | { readonly ok: false } {
   const normalized = asNonEmptyTrimmedStringOrUndefined(raw);
-  if (normalized === 'temporal' || normalized === 'mock') {
+  if (
+    normalized === START_RUN_TARGET_ADAPTER.temporal ||
+    normalized === START_RUN_TARGET_ADAPTER.mock
+  ) {
     return { ok: true, value: normalized };
   }
   return { ok: false };
@@ -196,7 +205,7 @@ function validatePlannerSourceSelection(
 function buildPlanRefCommand(
   rawPlanRef: unknown,
   runId: string,
-  targetAdapter: 'temporal' | 'mock',
+  targetAdapter: StartRunCommand['targetAdapter'],
   selection: ReadonlyArray<string>
 ): ParseStartRunFieldResult<StartRunCommand> {
   const planRef = parsePlanRef(rawPlanRef);
@@ -218,7 +227,7 @@ function buildPlanRefCommand(
 function buildPlannerBackedCommand(
   record: Record<string, unknown>,
   runId: string,
-  targetAdapter: 'temporal' | 'mock',
+  targetAdapter: StartRunCommand['targetAdapter'],
   selection: ReadonlyArray<string>
 ): ParseStartRunFieldResult<StartRunCommand> {
   const plannerInput = parsePlannerInput(record, selection);

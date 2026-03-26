@@ -1,9 +1,8 @@
-import type {
-  AuthorizedCommandExecutionContext,
-  IStartRunUseCase,
-  StartRunCommand,
-  StartRunResult,
-} from '../ports/auth.js';
+import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
+import type { StartRunCommand } from '../ports/startRunCommandContract.js';
+import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+
+const NOT_IMPLEMENTED_ERROR_MESSAGE = 'StartRun use case is not yet implemented';
 
 /**
  * Placeholder until the engine-backed StartRun use case is wired.
@@ -14,7 +13,7 @@ export class NotImplementedStartRunUseCase implements IStartRunUseCase {
   public async execute(
     _command: StartRunCommand,
     _context: AuthorizedCommandExecutionContext
-  ): Promise<StartRunResult> {
-    throw new Error('StartRun use case is not yet implemented');
+  ): Promise<StartRunUseCaseResult> {
+    throw new Error(NOT_IMPLEMENTED_ERROR_MESSAGE);
   }
 }

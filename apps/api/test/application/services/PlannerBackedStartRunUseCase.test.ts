@@ -62,7 +62,10 @@ describe('PlannerBackedStartRunUseCase', () => {
       })),
     };
     const delegate = {
-      execute: vi.fn(async () => ({ kind: 'accepted' as const, runId: 'run-1', accepted: true })),
+      execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
     };
 
     const useCase = new PlannerBackedStartRunUseCase({
@@ -75,9 +78,12 @@ describe('PlannerBackedStartRunUseCase', () => {
     const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
 
     expect(result).toEqual({
-      kind: 'accepted',
-      runId: 'run-1',
-      accepted: true,
+      ok: true,
+      value: {
+        kind: 'accepted',
+        runId: 'run-1',
+        accepted: true,
+      },
     });
     expect(planner.buildPlan).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -116,7 +122,10 @@ describe('PlannerBackedStartRunUseCase', () => {
       markInvalid: vi.fn(async () => {}),
     };
     const delegate = {
-      execute: vi.fn(async () => ({ kind: 'accepted' as const, runId: 'run-1', accepted: true })),
+      execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
     };
 
     const useCase = new PlannerBackedStartRunUseCase({
@@ -133,11 +142,14 @@ describe('PlannerBackedStartRunUseCase', () => {
     const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
 
     expect(result).toEqual({
-      kind: 'plan_rejected',
-      accepted: false,
-      code: 'MISSING_CAPABILITY',
-      reason: 'Missing adapter capability: workflow.pause',
-      cause: 'workflow.pause',
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'MISSING_CAPABILITY',
+        reason: 'Missing adapter capability: workflow.pause',
+        cause: 'workflow.pause',
+      },
     });
     expect(planStore.markInvalid).toHaveBeenCalledWith(STORED_PLAN_REF, rejection);
     expect(planStore.markValid).not.toHaveBeenCalled();
@@ -146,7 +158,10 @@ describe('PlannerBackedStartRunUseCase', () => {
 
   it('delegates directly when the command already carries a planRef', async () => {
     const delegate = {
-      execute: vi.fn(async () => ({ kind: 'accepted' as const, runId: 'run-1', accepted: true })),
+      execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
     };
     const planner = {
       buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
@@ -176,9 +191,12 @@ describe('PlannerBackedStartRunUseCase', () => {
     const result = await useCase.execute(command, AUTHORIZED_CONTEXT);
 
     expect(result).toEqual({
-      kind: 'accepted',
-      runId: 'run-1',
-      accepted: true,
+      ok: true,
+      value: {
+        kind: 'accepted',
+        runId: 'run-1',
+        accepted: true,
+      },
     });
     expect(planner.buildPlan).not.toHaveBeenCalled();
     expect(delegate.execute).toHaveBeenCalledWith(command, AUTHORIZED_CONTEXT);

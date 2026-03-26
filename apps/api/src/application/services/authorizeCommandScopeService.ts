@@ -5,10 +5,11 @@ import type {
   DeniedReason,
   RequestedScope,
 } from '../../domain/auth/types.js';
-import type {
-  AuthorizedExecutionContext,
-  IAuthAuditPort,
-  IPrincipalAccessRepository,
+import {
+  AUTH_AUDIT_EVENT_TYPE,
+  type AuthorizedExecutionContext,
+  type IAuthAuditPort,
+  type IPrincipalAccessRepository,
 } from '../ports/auth.js';
 
 export class AuthorizeCommandScopeService {
@@ -36,7 +37,7 @@ export class AuthorizeCommandScopeService {
 
     if (effectiveAccess === null) {
       await this.audit.record({
-        eventType: 'AUTH_DENIED',
+        eventType: AUTH_AUDIT_EVENT_TYPE.denied,
         requestId,
         principalId: principal.principalId,
         principalType: principal.principalType,
@@ -51,7 +52,7 @@ export class AuthorizeCommandScopeService {
     const outcome = this.policy.evaluate(principal, effectiveAccess, requestedScope);
     if (outcome.kind === 'deny') {
       await this.audit.record({
-        eventType: 'AUTH_DENIED',
+        eventType: AUTH_AUDIT_EVENT_TYPE.denied,
         requestId,
         principalId: principal.principalId,
         principalType: principal.principalType,
@@ -72,7 +73,7 @@ export class AuthorizeCommandScopeService {
     };
 
     await this.audit.record({
-      eventType: 'AUTH_GRANTED',
+      eventType: AUTH_AUDIT_EVENT_TYPE.granted,
       requestId,
       principalId: principal.principalId,
       principalType: principal.principalType,
