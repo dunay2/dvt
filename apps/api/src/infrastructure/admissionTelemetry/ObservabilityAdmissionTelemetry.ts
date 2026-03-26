@@ -55,8 +55,12 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
           attributes: this.toLogAttributes(event),
         });
       }
-    } catch {
+    } catch (err) {
       // Telemetry must not break command admission.
+      this.deps.observability.logs.warn({
+        msg: 'admission.telemetry_drop',
+        attributes: { error: String(err) },
+      });
     }
   }
 
