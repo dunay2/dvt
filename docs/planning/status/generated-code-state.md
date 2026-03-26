@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-03-26.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 429   |
-| Total test files             | 173   |
+| Total source files           | 445   |
+| Total test files             | 172   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
