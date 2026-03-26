@@ -4,28 +4,27 @@ import { buildApp } from './app.js';
 import { createIntentReconcilerRuntime } from './runtime/intentReconcilerRuntime.js';
 import {
   DEFAULT_RECONCILER_HEALTH_POLICY,
-  bootstrapIntentReconciler,
+  computeReconcilerHealthPollMs,
   computeReconcilerHealthStaleMs,
+} from './runtime/reconcilerHealthPolicy.js';
+import {
   startReconcilerHealthWatchdog,
-  withWatchdogSweepSignalHooks,
   type ReconcilerHealthWatchdog,
-} from './runtime/reconcilerBootstrap.js';
-
-export {
-  DEFAULT_RECONCILER_HEALTH_POLICY,
+} from './runtime/reconcilerHealthWatchdog.js';
+import {
   bootstrapIntentReconciler,
-  buildReconcilerHealthHooks,
-  computeReconcilerHealthStaleMs,
-  evaluateAndMarkReconcilerHealthStale,
-  shouldMarkReconcilerRuntimeUnavailable,
-  startReconcilerHealthWatchdog,
   withWatchdogSweepSignalHooks,
-} from './runtime/reconcilerBootstrap.js';
+} from './runtime/reconcilerRuntimeBootstrap.js';
+
+const SERVER_LOG_EVENTS = {
+  listening: 'api.server.listening',
+} as const;
 
 async function main(): Promise<void> {
   const { app, ctx } = await buildApp();
-  let reconcilerRuntimePromise: Promise<Awaited<ReturnType<typeof bootstrapIntentReconciler>>> | null =
-    null;
+  let reconcilerRuntimePromise: Promise<
+    Awaited<ReturnType<typeof bootstrapIntentReconciler>>
+  > | null = null;
   let watchdog: ReconcilerHealthWatchdog | null = null;
 
   app.addHook('onClose', async () => {
@@ -46,7 +45,7 @@ async function main(): Promise<void> {
     port: ctx.env.PORT,
     host: ctx.env.HOST,
   });
-  app.log.info({ address }, 'server listening');
+  app.log.info({ event: SERVER_LOG_EVENTS.listening, address });
 
   const createRuntimeWithHealthSignal = withWatchdogSweepSignalHooks(
     createIntentReconcilerRuntime,
@@ -58,10 +57,7 @@ async function main(): Promise<void> {
   if (reconcilerRuntime === null) return;
 
   const staleMs = computeReconcilerHealthStaleMs(ctx.env, DEFAULT_RECONCILER_HEALTH_POLICY);
-  const pollMs = Math.max(
-    DEFAULT_RECONCILER_HEALTH_POLICY.minWatchdogPollMs,
-    Math.floor(staleMs / DEFAULT_RECONCILER_HEALTH_POLICY.watchdogPollDivisor)
-  );
+  const pollMs = computeReconcilerHealthPollMs(staleMs, DEFAULT_RECONCILER_HEALTH_POLICY);
   watchdog = startReconcilerHealthWatchdog(
     {
       getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,

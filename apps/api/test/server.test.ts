@@ -8,15 +8,17 @@ import type {
   ReconcilerRuntimeHealthHooks,
 } from '../src/runtime/intentReconcilerRuntime.js';
 import type { ReconcilerHealthState } from '../src/runtime/reconcilerHealth.js';
+import { computeReconcilerHealthStaleMs } from '../src/runtime/reconcilerHealthPolicy.js';
+import {
+  evaluateAndMarkReconcilerHealthStale,
+  shouldMarkReconcilerRuntimeUnavailable,
+} from '../src/runtime/reconcilerHealthStateMachine.js';
+import { startReconcilerHealthWatchdog } from '../src/runtime/reconcilerHealthWatchdog.js';
 import {
   bootstrapIntentReconciler,
   buildReconcilerHealthHooks,
-  computeReconcilerHealthStaleMs,
-  evaluateAndMarkReconcilerHealthStale,
-  startReconcilerHealthWatchdog,
-  shouldMarkReconcilerRuntimeUnavailable,
   withWatchdogSweepSignalHooks,
-} from '../src/server.js';
+} from '../src/runtime/reconcilerRuntimeBootstrap.js';
 
 function createHarness(): {
   ctx: {
@@ -74,7 +76,10 @@ describe('reconciler bootstrap health wiring', () => {
         } as unknown as IObservability,
       };
       const hooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
-      const watchdog = startReconcilerHealthWatchdog(ctx, logger, { staleMs: 5_000, pollMs: 1_000 });
+      const watchdog = startReconcilerHealthWatchdog(ctx, logger, {
+        staleMs: 5_000,
+        pollMs: 1_000,
+      });
 
       nowMs = 7_500;
       vi.advanceTimersByTime(6_000);
@@ -135,11 +140,16 @@ describe('reconciler bootstrap health wiring', () => {
       } as unknown as IObservability,
     };
 
-    const watchdog = startReconcilerHealthWatchdog(ctx, logger, { staleMs: 5_000, pollMs: 1_000 }, {
-      now: () => 1_000,
-      setInterval: setIntervalSpy,
-      clearInterval: clearIntervalSpy,
-    });
+    const watchdog = startReconcilerHealthWatchdog(
+      ctx,
+      logger,
+      { staleMs: 5_000, pollMs: 1_000 },
+      {
+        now: () => 1_000,
+        setInterval: setIntervalSpy,
+        clearInterval: clearIntervalSpy,
+      }
+    );
 
     watchdog.stop();
 
@@ -173,7 +183,10 @@ describe('reconciler bootstrap health wiring', () => {
         } as unknown as IObservability,
       };
 
-      const watchdog = startReconcilerHealthWatchdog(ctx, logger, { staleMs: 5_000, pollMs: 1_000 });
+      const watchdog = startReconcilerHealthWatchdog(ctx, logger, {
+        staleMs: 5_000,
+        pollMs: 1_000,
+      });
       watchdog.stop();
 
       nowMs = 9_000;
@@ -279,19 +292,25 @@ describe('reconciler bootstrap health wiring', () => {
 
   it('marks runtime unavailable only when non-degraded health exceeds stale threshold', () => {
     expect(
-      shouldMarkReconcilerRuntimeUnavailable({ status: 'healthy' }, {
-        staleMs: 5_000,
-        lastSweepSignalAtMs: 1_000,
-        nowMs: 5_000,
-      })
+      shouldMarkReconcilerRuntimeUnavailable(
+        { status: 'healthy' },
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 5_000,
+        }
+      )
     ).toBe(false);
 
     expect(
-      shouldMarkReconcilerRuntimeUnavailable({ status: 'starting' }, {
-        staleMs: 5_000,
-        lastSweepSignalAtMs: 1_000,
-        nowMs: 7_000,
-      })
+      shouldMarkReconcilerRuntimeUnavailable(
+        { status: 'starting' },
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 7_000,
+        }
+      )
     ).toBe(true);
 
     expect(
@@ -308,11 +327,14 @@ describe('reconciler bootstrap health wiring', () => {
 
   it('does not mark runtime unavailable when elapsed time equals stale threshold', () => {
     expect(
-      shouldMarkReconcilerRuntimeUnavailable({ status: 'starting' }, {
-        staleMs: 5_000,
-        lastSweepSignalAtMs: 1_000,
-        nowMs: 6_000,
-      })
+      shouldMarkReconcilerRuntimeUnavailable(
+        { status: 'starting' },
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 6_000,
+        }
+      )
     ).toBe(false);
   });
 
@@ -341,7 +363,7 @@ describe('reconciler bootstrap health wiring', () => {
         staleMs: 5_000,
         lastSweepSignalAtMs: 1_000,
         nowMs: 7_000,
-      },
+      }
     );
 
     expect(marked).toBe(true);
@@ -379,7 +401,7 @@ describe('reconciler bootstrap health wiring', () => {
         staleMs: 10_000,
         lastSweepSignalAtMs: 1_000,
         nowMs: 5_000,
-      },
+      }
     );
 
     expect(marked).toBe(false);
@@ -487,7 +509,11 @@ describe('reconciler bootstrap health wiring', () => {
         setIntentReconcilerHealth: healthCtx.setIntentReconcilerHealth,
       };
 
-      const reconcilerRuntime = await bootstrapIntentReconciler(bootstrapCtx, logger, createRuntime);
+      const reconcilerRuntime = await bootstrapIntentReconciler(
+        bootstrapCtx,
+        logger,
+        createRuntime
+      );
 
       expect(reconcilerRuntime).toBe(runtime);
       expect(health).toEqual({ status: 'starting' });
