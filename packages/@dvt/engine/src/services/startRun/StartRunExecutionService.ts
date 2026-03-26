@@ -6,12 +6,12 @@ import type { IRunStateStoreWrite } from '../../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../../ports/IStartRunIntentStore.js';
 import type { IClock } from '../../utils/clock.js';
 
+import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
 import {
   PostStartIntentPersistenceError,
   type StartRunFailurePolicy,
 } from './StartRunFailurePolicy.js';
-import { START_RUN_MESSAGE } from './StartRunMessages.js';
 import type { StartRunTraceContext } from './StartRunTypes.js';
 
 export interface StartRunExecutionServiceDeps {

@@ -11,3 +11,7 @@ export const START_RUN_MESSAGE = {
     'Skipping RunFailed emission after startRun error because intent remains pending',
   runFailedEmissionFailed: 'RunFailed emission failed after startRun error',
 } as const;
+
+export const START_RUN_FAILURE_REASON = {
+  startRunFailure: 'START_RUN_FAILURE',
+} as const;

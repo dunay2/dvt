@@ -6,8 +6,8 @@ import type { IRunStateStoreRead, IRunStateStoreWrite } from '../../ports/IRunSt
 import type { IStartRunIntentStore } from '../../ports/IStartRunIntentStore.js';
 import type { IClock } from '../../utils/clock.js';
 
+import { START_RUN_FAILURE_REASON, START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
-import { START_RUN_MESSAGE } from './StartRunMessages.js';
 import type { StartRunErrorContext, StartRunTraceContext } from './StartRunTypes.js';
 
 export class PostStartIntentPersistenceError extends Error {
@@ -170,22 +170,22 @@ export class StartRunFailurePolicy {
         throw error;
       }
 
-      await this.emitRunEvent(failMeta, 'RunFailed', { reason: 'START_RUN_FAILURE' }).catch(
-        (emitErr: unknown) => {
-          try {
-            this.deps.observability.logs.error({
-              msg: START_RUN_MESSAGE.runFailedEmissionFailed,
-              context: traceContext,
-              err: emitErr instanceof Error ? emitErr.message : String(emitErr),
-              attributes: {
-                error: toErrorMessage(emitErr),
-              },
-            });
-          } catch {
-            // no-op: observability reporting must not hide the domain error.
-          }
+      await this.emitRunEvent(failMeta, 'RunFailed', {
+        reason: START_RUN_FAILURE_REASON.startRunFailure,
+      }).catch((emitErr: unknown) => {
+        try {
+          this.deps.observability.logs.error({
+            msg: START_RUN_MESSAGE.runFailedEmissionFailed,
+            context: traceContext,
+            err: emitErr instanceof Error ? emitErr.message : String(emitErr),
+            attributes: {
+              error: toErrorMessage(emitErr),
+            },
+          });
+        } catch {
+          // no-op: observability reporting must not hide the domain error.
         }
-      );
+      });
     }
     throw error;
   }

@@ -9,10 +9,10 @@ import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import type { IClock } from '../utils/clock.js';
 
+import { START_RUN_MESSAGE } from './startRun/StartRunDomainConstants.js';
 import { StartRunEventFactory } from './startRun/StartRunEventFactory.js';
 import { StartRunExecutionService } from './startRun/StartRunExecutionService.js';
 import { StartRunFailurePolicy } from './startRun/StartRunFailurePolicy.js';
-import { START_RUN_MESSAGE } from './startRun/StartRunMessages.js';
 import type { StartRunErrorContext, StartRunTraceContext } from './startRun/StartRunTypes.js';
 import { StartRunValidationPolicy } from './startRun/StartRunValidationPolicy.js';
 
