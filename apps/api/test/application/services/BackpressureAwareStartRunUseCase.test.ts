@@ -1,3 +1,8 @@
+import {
+  BackpressureSnapshotUnavailableError,
+  SystemBackpressureError,
+  TenantBackpressureError,
+} from '@dvt/delivery';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BackpressureAwareStartRunUseCase } from '../../../src/application/services/BackpressureAwareStartRunUseCase.js';
@@ -126,7 +131,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw Object.assign(new Error('tenant pressure'), { code: 'TENANT_BACKPRESSURE' });
+          throw new TenantBackpressureError('tenant-1', { pendingEventsPerTenant: 10, outboxOldestAgeMs: 0 });
         },
       },
       telemetry: {
@@ -162,9 +167,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw Object.assign(new Error('snapshot unavailable'), {
-            code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
-          });
+          throw new BackpressureSnapshotUnavailableError('tenant-1', new Error('db timeout'));
         },
       },
       telemetry: {
@@ -210,7 +213,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw Object.assign(new Error('system pressure'), { code: 'SYSTEM_BACKPRESSURE' });
+          throw new SystemBackpressureError({ pendingEventsPerTenant: 0, outboxOldestAgeMs: 99_000 });
         },
       },
       telemetry,
