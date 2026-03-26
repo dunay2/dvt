@@ -63,7 +63,12 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
       const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
 
       expect(() =>
-        telemetry.recordSnapshot({ tenantId: 't', pendingEventsCount: 1, outboxOldestAgeMs: 0, source: 'live' })
+        telemetry.recordSnapshot({
+          tenantId: 't',
+          pendingEventsCount: 1,
+          outboxOldestAgeMs: 0,
+          source: 'live',
+        })
       ).not.toThrow();
       expect(warn).toHaveBeenCalledWith(
         expect.objectContaining({ msg: 'backpressure.capacity_telemetry_drop' })
@@ -95,7 +100,12 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
       const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
 
       expect(() =>
-        telemetry.recordSnapshot({ tenantId: 't', pendingEventsCount: 1, outboxOldestAgeMs: 0, source: 'live' })
+        telemetry.recordSnapshot({
+          tenantId: 't',
+          pendingEventsCount: 1,
+          outboxOldestAgeMs: 0,
+          source: 'live',
+        })
       ).not.toThrow();
     });
   });
