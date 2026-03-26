@@ -3,15 +3,17 @@ import type { Attributes, IObservability } from '@dvt/observability';
 import type {
   AdmissionDecisionRecord,
   AdmissionTelemetry,
+  AdmissionTelemetryDecision,
 } from '../../application/ports/AdmissionTelemetry.js';
+import { ADMISSION_TELEMETRY_DECISION } from '../../application/ports/AdmissionTelemetry.js';
 
 import { ADMISSION_TELEMETRY_METRICS } from './admissionTelemetryMetrics.js';
 
-const REJECTION_DECISIONS = new Set([
-  'reject_tenant',
-  'reject_system',
-  'would_reject_tenant',
-  'would_reject_system',
+const REJECTION_DECISIONS = new Set<AdmissionTelemetryDecision>([
+  ADMISSION_TELEMETRY_DECISION.rejectTenant,
+  ADMISSION_TELEMETRY_DECISION.rejectSystem,
+  ADMISSION_TELEMETRY_DECISION.wouldRejectTenant,
+  ADMISSION_TELEMETRY_DECISION.wouldRejectSystem,
 ]);
 
 export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
