@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { PostgresRunEventStore } from '../src/PostgresRunEventStore.js';
-import { RUN_EVENT_STORE_ERROR_CODE } from '../src/runEventStoreErrors.js';
+import {
+  RUN_EVENT_STORE_ERROR_CODE,
+  RUN_EVENT_STORE_MESSAGE_KEY,
+} from '../src/runEventStoreErrors.js';
 import type { EventEnvelope, EventInput } from '../src/types.js';
 
 const TEST_SCHEMA = 'dvt';
@@ -86,7 +89,10 @@ async function unusedWithClient<T>(_fn: (client: never) => Promise<T>): Promise<
   throw new Error('unused_with_client');
 }
 
-function makeListStoreHarness(rows: EventEnvelope[] = []) {
+function makeListStoreHarness(rows: EventEnvelope[] = []): {
+  store: PostgresRunEventStore;
+  calls: Array<{ text: string; params?: readonly unknown[] }>;
+} {
   const calls: Array<{ text: string; params?: readonly unknown[] }> = [];
   const store = new PostgresRunEventStore(
     TEST_SCHEMA,
@@ -109,6 +115,23 @@ function makeListStoreHarness(rows: EventEnvelope[] = []) {
 }
 
 describe('PostgresRunEventStore append invariants', () => {
+  it('throws typed stable error when event schema is invalid', async () => {
+    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
+    const executor = new InMemorySqlExecutor();
+    const invalidSchemaEnvelope = {
+      ...makeEvent({ runId: TEST_RUN_ID, idempotencyKey: `${TEST_RUN_ID}:invalid-schema` }),
+      payloadVersion: 2,
+    } as unknown as EventInput;
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [invalidSchemaEnvelope])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventSchemaError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_EVENT_SCHEMA,
+    });
+  });
+
   it('throws typed stable error when event runId mismatches target runId', async () => {
     const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
     const executor = new InMemorySqlExecutor();
@@ -176,6 +199,38 @@ describe('PostgresRunEventStore append invariants', () => {
     expect(result.appended[0]?.runSeq).toBe(2);
     expect(result.appended[1]?.runSeq).toBe(3);
     expect(result.lastAppendedRunSeq).toBe(3);
+  });
+
+  it('throws typed stable error when persisted max run sequence is unsafe', async () => {
+    const store = new PostgresRunEventStore(TEST_SCHEMA, () => TEST_NOW_ISO, unusedWithClient);
+    const executor = {
+      async query<T = unknown>(
+        text: string,
+        _params?: readonly unknown[]
+      ): Promise<{ rows: T[]; rowCount?: number | null }> {
+        if (text.includes(SQL_MARKER.advisoryLock)) {
+          return { rows: [] };
+        }
+        if (text.includes(SQL_MARKER.maxRunSeq)) {
+          return { rows: [{ max_seq: '9007199254740992' }] as T[] };
+        }
+        return { rows: [] };
+      },
+    };
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+        makeEvent({
+          runId: TEST_RUN_ID,
+          idempotencyKey: `${TEST_RUN_ID}:started`,
+          eventType: 'RunStarted',
+        }),
+      ])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunSequenceValueError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_RUN_SEQUENCE_VALUE,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_RUN_SEQUENCE_VALUE,
+    });
   });
 });
 

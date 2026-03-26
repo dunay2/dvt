@@ -51,7 +51,15 @@ export function assertRunEventInput(event: RunEventInput, index: number): void {
     });
   }
 
-  parseRunEventWrite(event);
+  try {
+    parseRunEventWrite(event);
+  } catch {
+    throw new InvalidRunEventInputError({
+      reason: 'schema_validation_failed',
+      index,
+      runId: event.runId,
+    });
+  }
 }
 
 export function assertEventRunIdMatches(runId: string, event: RunEventInput, index: number): void {

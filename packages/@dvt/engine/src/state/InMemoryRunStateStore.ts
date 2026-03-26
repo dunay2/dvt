@@ -20,6 +20,12 @@ import type {
 } from '../ports/IRunStateStore.js';
 
 import {
+  captureRetryLineageCheckpoint,
+  initializeRetryLineageFromMetadata,
+  reserveRetryAttemptFromSource,
+  restoreRetryLineageCheckpoint,
+} from './retryLineagePolicy.js';
+import {
   assertEventRunIdMatches,
   assertEventsMatchRunId,
   assertRunEventInput,
@@ -73,11 +79,14 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     }
 
     this.assertBootstrapFirstEvents(input.metadata.runId, input.firstEvents);
-    const retryLineageCheckpoint = this.captureRetryLineageCheckpoint(input.metadata);
+    const retryLineageCheckpoint = captureRetryLineageCheckpoint(
+      this.nextRetryAttemptByOriginRunId,
+      input.metadata
+    );
 
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
-    this.initializeRetryLineage(input.metadata);
+    initializeRetryLineageFromMetadata(this.nextRetryAttemptByOriginRunId, input.metadata);
     // Seed empty snapshot so getSnapshot never returns null for a bootstrapped run.
     this.snapshotByRunId.set(
       input.metadata.runId,
@@ -90,7 +99,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
       this.metadataByRunId.delete(input.metadata.runId);
       this.snapshotByRunId.delete(input.metadata.runId);
       this.snapshotLastRunSeqByRunId.delete(input.metadata.runId);
-      this.restoreRetryLineageCheckpoint(retryLineageCheckpoint);
+      restoreRetryLineageCheckpoint(this.nextRetryAttemptByOriginRunId, retryLineageCheckpoint);
       throw error;
     }
   }
@@ -216,50 +225,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
       throw new RunNotFoundError(sourceRunId);
     }
 
-    const originRunId = sourceMeta.originRunId ?? sourceMeta.runId;
-    const nextAttempt = this.nextRetryAttemptByOriginRunId.get(originRunId) ?? 2;
-    this.nextRetryAttemptByOriginRunId.set(originRunId, nextAttempt + 1);
-
-    return {
-      parentRunId: sourceMeta.runId,
-      originRunId,
-      logicalAttemptId: nextAttempt,
-    };
-  }
-
-  private initializeRetryLineage(meta: RunMetadata): void {
-    const originRunId = meta.originRunId ?? meta.runId;
-    const nextAttempt = meta.logicalAttemptId + 1;
-    const current = this.nextRetryAttemptByOriginRunId.get(originRunId) ?? 2;
-    if (nextAttempt > current) {
-      this.nextRetryAttemptByOriginRunId.set(originRunId, nextAttempt);
-      return;
-    }
-    if (!this.nextRetryAttemptByOriginRunId.has(originRunId)) {
-      this.nextRetryAttemptByOriginRunId.set(originRunId, current);
-    }
-  }
-
-  private captureRetryLineageCheckpoint(meta: RunMetadata): {
-    originRunId: string;
-    previousNextAttempt: number | undefined;
-  } {
-    const originRunId = meta.originRunId ?? meta.runId;
-    return {
-      originRunId,
-      previousNextAttempt: this.nextRetryAttemptByOriginRunId.get(originRunId),
-    };
-  }
-
-  private restoreRetryLineageCheckpoint(checkpoint: {
-    originRunId: string;
-    previousNextAttempt: number | undefined;
-  }): void {
-    if (checkpoint.previousNextAttempt === undefined) {
-      this.nextRetryAttemptByOriginRunId.delete(checkpoint.originRunId);
-      return;
-    }
-    this.nextRetryAttemptByOriginRunId.set(checkpoint.originRunId, checkpoint.previousNextAttempt);
+    return reserveRetryAttemptFromSource(this.nextRetryAttemptByOriginRunId, sourceMeta);
   }
 
   private assertBootstrapFirstEvents(runId: string, firstEvents: RunEventInput[]): void {
