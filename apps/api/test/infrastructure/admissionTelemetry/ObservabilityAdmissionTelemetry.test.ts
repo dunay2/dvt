@@ -316,6 +316,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
 
   describe('error resilience', () => {
     it('resolves even when counter.add throws at record time', async () => {
+      const warn = vi.fn();
       const observability = {
         metrics: {
           counter: () => ({
@@ -328,7 +329,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
         },
         logs: {
           info: vi.fn(),
-          warn: vi.fn(),
+          warn,
           debug: vi.fn(),
           error: vi.fn(),
         },
@@ -338,6 +339,9 @@ describe('ObservabilityAdmissionTelemetry', () => {
       const telemetry = new ObservabilityAdmissionTelemetry({ observability });
 
       await expect(telemetry.record({ ...COMMON, decision: 'accept' })).resolves.toBeUndefined();
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({ msg: 'admission.telemetry_drop' })
+      );
     });
   });
 });
