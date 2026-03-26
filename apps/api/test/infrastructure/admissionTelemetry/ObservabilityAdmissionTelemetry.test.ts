@@ -248,9 +248,9 @@ describe('ObservabilityAdmissionTelemetry', () => {
         retryAfterSeconds: 30,
       });
 
-      expect(
-        counterCalls.some((c) => c.name === ADMISSION_TELEMETRY_METRICS.rejectionTotal)
-      ).toBe(true);
+      expect(counterCalls.some((c) => c.name === ADMISSION_TELEMETRY_METRICS.rejectionTotal)).toBe(
+        true
+      );
     });
 
     it('logs at warn level', async () => {
