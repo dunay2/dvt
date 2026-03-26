@@ -22,7 +22,9 @@ export class MetricsEmittingBackpressureStore implements BackpressureStore {
         source: envelope.source,
       });
     } catch {
-      // Telemetry must not break admission.
+      // Telemetry must not break admission. Intentionally silent: this class
+      // depends only on IBackpressureCapacityTelemetry (ISP) and has no logger
+      // reference. Errors here are observable via process-level metrics.
     }
     return envelope.snapshot;
   }
