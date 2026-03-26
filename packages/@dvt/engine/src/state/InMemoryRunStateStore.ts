@@ -1,7 +1,7 @@
 /**
  * @baseline ADR-0003
  */
-import { RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
+import { InvalidRunIdError, RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -19,6 +19,15 @@ import type {
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
 
+import {
+  assertEventRunIdMatches,
+  assertEventsMatchRunId,
+  assertRunEventInput,
+  assertRunSequenceWithinSafeRange,
+  cloneWorkflowSnapshot,
+  createDefaultWorkflowSnapshot,
+  IN_MEMORY_PERSISTED_AT_EPOCH_ISO,
+} from './runEventWritePolicy.js';
 import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
 
 export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalenessQuery {
@@ -63,39 +72,43 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
       throw new RunAlreadyExistsError(input.metadata.runId);
     }
 
+    this.assertBootstrapFirstEvents(input.metadata.runId, input.firstEvents);
+    const retryLineageCheckpoint = this.captureRetryLineageCheckpoint(input.metadata);
+
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
     this.initializeRetryLineage(input.metadata);
     // Seed empty snapshot so getSnapshot never returns null for a bootstrapped run.
-    this.snapshotByRunId.set(input.metadata.runId, {
-      runId: input.metadata.runId,
-      status: 'PENDING',
-      paused: false,
-      cancelling: false,
-      gatewayDecisions: {},
-      steps: {},
-    });
+    this.snapshotByRunId.set(
+      input.metadata.runId,
+      createDefaultWorkflowSnapshot(input.metadata.runId)
+    );
     this.snapshotLastRunSeqByRunId.set(input.metadata.runId, 0);
-    return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
+    try {
+      return await this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
+    } catch (error) {
+      this.metadataByRunId.delete(input.metadata.runId);
+      this.snapshotByRunId.delete(input.metadata.runId);
+      this.snapshotLastRunSeqByRunId.delete(input.metadata.runId);
+      this.restoreRetryLineageCheckpoint(retryLineageCheckpoint);
+      throw error;
+    }
   }
 
   async appendAndEnqueueTx(runId: string, eventsToAppend: RunEventInput[]): Promise<AppendResult> {
+    this.assertRunExists(runId);
+
     const events = this.eventsByRunId.get(runId) ?? [];
     const baseRunSeq = events.length;
-    const idx = this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
+    const idx = new Map<string, RunEventPersisted>(this.idempIndexByRunId.get(runId));
 
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
-    const persistedAt = '1970-01-01T00:00:00.000Z';
+    const persistedAt = IN_MEMORY_PERSISTED_AT_EPOCH_ISO;
 
     for (const [i, env] of eventsToAppend.entries()) {
-      const record = env as unknown as Record<string, unknown>;
-      if (Object.hasOwn(record, 'runSeq')) {
-        throw new Error(`INVALID_EVENT_WRITE_SHAPE: runSeq forbidden at index ${i}`);
-      }
-      if (Object.hasOwn(record, 'persistedAt')) {
-        throw new Error(`INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden at index ${i}`);
-      }
+      assertRunEventInput(env, i);
+      assertEventRunIdMatches(runId, env, i);
 
       const existing = idx.get(env.idempotencyKey);
       if (existing) {
@@ -103,31 +116,29 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
         continue;
       }
 
-      const runSeq = events.length + appended.length + 1;
+      const runSeq = baseRunSeq + appended.length + 1;
+      assertRunSequenceWithinSafeRange(runSeq, runId);
       const withSeq: RunEventPersisted = { ...env, runSeq, persistedAt };
       appended.push(withSeq);
       idx.set(withSeq.idempotencyKey, withSeq);
     }
 
-    // "Transactional" commit (single mutation point)
     const committed = events.concat(appended);
+    let nextSnapshot: WorkflowSnapshot | null = null;
+    if (appended.length > 0) {
+      const currentSnapshot =
+        this.snapshotByRunId.get(runId) ?? createDefaultWorkflowSnapshot(runId);
+      nextSnapshot = cloneWorkflowSnapshot(currentSnapshot);
+      for (const e of appended) {
+        applyRunEvent(nextSnapshot, e);
+      }
+    }
+
+    // "Transactional" commit (single mutation point)
     this.eventsByRunId.set(runId, committed);
     this.idempIndexByRunId.set(runId, idx);
-
-    // Incrementally update the materialized snapshot for each appended event.
-    if (appended.length > 0) {
-      const snap: WorkflowSnapshot = this.snapshotByRunId.get(runId) ?? {
-        runId,
-        status: 'PENDING',
-        paused: false,
-        cancelling: false,
-        gatewayDecisions: {},
-        steps: {},
-      };
-      for (const e of appended) {
-        applyRunEvent(snap, e);
-      }
-      this.snapshotByRunId.set(runId, snap);
+    if (nextSnapshot) {
+      this.snapshotByRunId.set(runId, nextSnapshot);
     }
     this.snapshotLastRunSeqByRunId.set(runId, committed.at(-1)?.runSeq ?? 0);
 
@@ -176,14 +187,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     const events = (this.eventsByRunId.get(runId) ?? [])
       .slice()
       .sort((a, b) => a.runSeq - b.runSeq);
-    const snap: WorkflowSnapshot = {
-      runId,
-      status: 'PENDING',
-      paused: false,
-      cancelling: false,
-      gatewayDecisions: {},
-      steps: {},
-    };
+    const snap: WorkflowSnapshot = createDefaultWorkflowSnapshot(runId);
     for (const e of events) {
       applyRunEvent(snap, e);
     }
@@ -233,6 +237,41 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     }
     if (!this.nextRetryAttemptByOriginRunId.has(originRunId)) {
       this.nextRetryAttemptByOriginRunId.set(originRunId, current);
+    }
+  }
+
+  private captureRetryLineageCheckpoint(meta: RunMetadata): {
+    originRunId: string;
+    previousNextAttempt: number | undefined;
+  } {
+    const originRunId = meta.originRunId ?? meta.runId;
+    return {
+      originRunId,
+      previousNextAttempt: this.nextRetryAttemptByOriginRunId.get(originRunId),
+    };
+  }
+
+  private restoreRetryLineageCheckpoint(checkpoint: {
+    originRunId: string;
+    previousNextAttempt: number | undefined;
+  }): void {
+    if (checkpoint.previousNextAttempt === undefined) {
+      this.nextRetryAttemptByOriginRunId.delete(checkpoint.originRunId);
+      return;
+    }
+    this.nextRetryAttemptByOriginRunId.set(checkpoint.originRunId, checkpoint.previousNextAttempt);
+  }
+
+  private assertBootstrapFirstEvents(runId: string, firstEvents: RunEventInput[]): void {
+    assertEventsMatchRunId(runId, firstEvents);
+  }
+
+  private assertRunExists(runId: string): void {
+    if (!runId) {
+      throw new InvalidRunIdError(runId);
+    }
+    if (!this.metadataByRunId.has(runId)) {
+      throw new RunNotFoundError(runId);
     }
   }
 }

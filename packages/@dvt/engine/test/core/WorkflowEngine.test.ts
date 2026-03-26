@@ -45,6 +45,7 @@ function makeRunEventInput(args: {
   engineAttemptId: number;
   emittedAt: string;
   idempotencyKey: string;
+  payloadVersion: number;
 } {
   return {
     eventId: args.eventId,
@@ -59,6 +60,7 @@ function makeRunEventInput(args: {
     engineAttemptId: 1,
     emittedAt: '2026-02-12T00:00:00.000Z',
     idempotencyKey: args.idempotencyKey,
+    payloadVersion: 1,
   };
 }
 function makePlanRef(): PlanRef {
@@ -678,7 +680,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       } as unknown as StoreEventInput;
 
       await expect(store.appendAndEnqueueTx(runId, [invalidWithRunSeq])).rejects.toThrow(
-        /INVALID_EVENT_WRITE_SHAPE: runSeq forbidden/
+        /engine\.error\.invalid_run_event_input/
       );
 
       const invalidWithPersistedAt = {
@@ -692,7 +694,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       } as unknown as StoreEventInput;
 
       await expect(store.appendAndEnqueueTx(runId, [invalidWithPersistedAt])).rejects.toThrow(
-        /INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden/
+        /engine\.error\.invalid_run_event_input/
       );
     });
   });
@@ -719,6 +721,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           engineAttemptId: 1,
           emittedAt: '2026-02-12T00:00:00.000Z',
           idempotencyKey: 'a4-gw-start-1',
+          payloadVersion: 1,
         },
         {
           eventId: 'evt-gw-complete-1',
@@ -734,6 +737,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           engineAttemptId: 1,
           emittedAt: '2026-02-12T00:00:01.000Z',
           idempotencyKey: 'a4-gw-complete-1',
+          payloadVersion: 1,
           payload: { gatewayDecision: true },
         },
       ]);

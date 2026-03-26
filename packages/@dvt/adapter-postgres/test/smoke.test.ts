@@ -239,6 +239,50 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await expect(adapter.listEvents('t1', 'run-idemp')).resolves.toHaveLength(2);
     }));
 
+  test('appendAndEnqueueTx: rejects events whose payload runId does not match target run', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-mismatch-guard'));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid('run-mismatch-guard'), [
+          makeEvent({
+            runId: 'other-run',
+            eventType: 'RunStarted',
+            idempotencyKey: 'other-run:started',
+          }),
+        ])
+      ).rejects.toThrow('INVALID_EVENT: runId mismatch at index 0');
+
+      await expect(adapter.listEvents('t1', 'run-mismatch-guard')).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: does not consume runSeq slots for deduped entries within the same batch', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-idemp-batch'));
+
+      const started = makeEvent({
+        runId: 'run-idemp-batch',
+        eventType: 'RunStarted',
+        idempotencyKey: 'run-idemp-batch:started',
+      });
+
+      await adapter.appendAndEnqueueTx(rid('run-idemp-batch'), [started]);
+
+      const second = await adapter.appendAndEnqueueTx(rid('run-idemp-batch'), [
+        started,
+        makeEvent({
+          runId: 'run-idemp-batch',
+          eventType: 'RunCancelRequested',
+          idempotencyKey: 'run-idemp-batch:cancel-req',
+        }),
+      ]);
+
+      expect(second.deduped).toHaveLength(1);
+      expect(second.appended).toHaveLength(1);
+      expect(second.appended[0]?.runSeq).toBe(3);
+      expect(second.lastSeq).toBe(3);
+    }));
+
   // Ã¢â€â‚¬Ã¢â€â‚¬ Snapshot write-through (W0-7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   test('getSnapshot: returns PENDING snapshot after bootstrapRunTx', () =>

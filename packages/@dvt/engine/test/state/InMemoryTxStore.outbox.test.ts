@@ -34,6 +34,7 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
         engineAttemptId: 1,
         emittedAt: '2026-03-11T00:00:00.000Z',
         idempotencyKey: `${runId}:queued`,
+        payloadVersion: 1,
       },
     ],
   };
@@ -53,6 +54,7 @@ function makeStarted(runId: string, idempotencyKey: string, tenantId = 't1'): Ru
     engineAttemptId: 1,
     emittedAt: '2026-03-11T00:00:00.000Z',
     idempotencyKey,
+    payloadVersion: 1,
   };
 }
 

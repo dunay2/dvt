@@ -22,11 +22,16 @@ export {
 } from './errors/adapterErrors.js';
 export type { TargetAdapterMismatchParams } from './errors/adapterErrors.js';
 export {
+  InvalidRunEventInputError,
   InvalidRunIdError,
   InvalidStateTransitionError,
+  RunSequenceOverflowError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
   RunNotFoundError,
 } from './errors/runErrors.js';
-export type { InvalidStateTransitionParams } from './errors/runErrors.js';
+export type {
+  InvalidRunEventInputParams,
+  InvalidStateTransitionParams,
+} from './errors/runErrors.js';
 export { InvalidSchemaVersionError, PlanUriNotAllowedError } from './errors/planErrors.js';

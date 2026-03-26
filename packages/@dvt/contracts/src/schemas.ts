@@ -209,7 +209,7 @@ const RunEventCommonSchema = z.object({
   engineAttemptId: z.number().int().positive(),
   logicalAttemptId: z.number().int().positive(),
   idempotencyKey: z.string().min(1),
-  payloadVersion: z.literal(RUN_EVENT_PAYLOAD_VERSION).default(RUN_EVENT_PAYLOAD_VERSION),
+  payloadVersion: z.literal(RUN_EVENT_PAYLOAD_VERSION),
 });
 
 const RunQueuedEventWriteSchema = RunEventCommonSchema.extend({

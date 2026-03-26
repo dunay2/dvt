@@ -38,6 +38,7 @@ function makeRunQueuedEventInput(runId: string): {
   engineAttemptId: number;
   emittedAt: string;
   idempotencyKey: string;
+  payloadVersion: number;
 } {
   return {
     eventId: `evt-${runId}`,
@@ -52,6 +53,7 @@ function makeRunQueuedEventInput(runId: string): {
     engineAttemptId: 1,
     emittedAt: '2026-02-12T00:00:00.000Z',
     idempotencyKey: `queued-${runId}`,
+    payloadVersion: 1,
   };
 }
 function makePlanRef(): PlanRef {

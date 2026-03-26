@@ -37,6 +37,7 @@ function makeBootstrap(runId: string, createdAt: string): RunBootstrapInput {
         engineAttemptId: 1,
         emittedAt: createdAt,
         idempotencyKey: `${runId}:queued`,
+        payloadVersion: 1,
       },
     ],
   };

@@ -17,6 +17,8 @@ export const ENGINE_ERROR_MESSAGE_KEY = {
   PLAN_URI_NOT_ALLOWED: 'engine.error.plan_uri_not_allowed',
   INVALID_STATE_TRANSITION: 'engine.error.invalid_state_transition',
   UNSUPPORTED_PLAN_VERSION: 'engine.error.unsupported_plan_version',
+  INVALID_RUN_EVENT_INPUT: 'engine.error.invalid_run_event_input',
+  RUN_SEQUENCE_OVERFLOW: 'engine.error.run_sequence_overflow',
 } as const satisfies Record<EngineErrorCode, string>;
 
 export type EngineErrorMessageKey =
@@ -42,6 +44,8 @@ interface EngineErrorMessageParamMap {
     stepId?: string;
   };
   UNSUPPORTED_PLAN_VERSION: { planVersion: string; supportedVersions: readonly string[] };
+  INVALID_RUN_EVENT_INPUT: { reason: string; index?: number; runId?: string };
+  RUN_SEQUENCE_OVERFLOW: { runId: string; attemptedRunSeq: number };
 }
 
 export type EngineErrorMessageParams<C extends EngineErrorCode = EngineErrorCode> = Readonly<
@@ -111,6 +115,16 @@ export function defaultEngineErrorMessage<C extends EngineErrorCode>(
     case 'UNSUPPORTED_PLAN_VERSION': {
       const p = params as EngineErrorMessageParams<'UNSUPPORTED_PLAN_VERSION'>;
       return `Unsupported plan version "${p.planVersion}". Supported versions: ${p.supportedVersions.join(', ')}`;
+    }
+    case 'INVALID_RUN_EVENT_INPUT': {
+      const p = params as EngineErrorMessageParams<'INVALID_RUN_EVENT_INPUT'>;
+      const location = p.index === undefined ? '' : ` at index ${p.index}`;
+      const run = p.runId === undefined ? '' : ` (runId=${p.runId})`;
+      return `Invalid run event input: ${p.reason}${location}${run}`;
+    }
+    case 'RUN_SEQUENCE_OVERFLOW': {
+      const p = params as EngineErrorMessageParams<'RUN_SEQUENCE_OVERFLOW'>;
+      return `Run sequence overflow for runId=${p.runId}: attempted runSeq=${p.attemptedRunSeq}`;
     }
   }
   return assertNever(code);

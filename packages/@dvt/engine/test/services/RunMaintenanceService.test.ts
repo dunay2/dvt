@@ -296,6 +296,7 @@ async function makeCancellingRun(
         planId: 'p',
         planVersion: '1.0',
       }),
+      payloadVersion: 1,
     },
   ]);
 
@@ -729,6 +730,7 @@ describe('RunMaintenanceService', () => {
             planId: 'p',
             planVersion: '1.0',
           }),
+          payloadVersion: 1,
         },
       ]);
 

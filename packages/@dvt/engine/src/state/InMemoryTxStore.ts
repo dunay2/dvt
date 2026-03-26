@@ -8,7 +8,7 @@ import type {
   OutboxRecord,
 } from '@dvt/contracts';
 
-import { RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
+import { InvalidRunIdError, RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -27,11 +27,18 @@ import type {
 } from '../ports/IRunStateStore.js';
 
 import { InMemoryOutboxState } from './InMemoryOutboxState.js';
+import {
+  assertEventRunIdMatches,
+  assertEventsMatchRunId,
+  assertRunEventInput,
+  assertRunSequenceWithinSafeRange,
+  cloneWorkflowSnapshot,
+  createDefaultWorkflowSnapshot,
+  IN_MEMORY_PERSISTED_AT_EPOCH_ISO,
+} from './runEventWritePolicy.js';
 import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
 
 export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage {
-  private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
-
   private readonly metadataByRunId = new Map<string, RunMetadata>();
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
@@ -51,43 +58,12 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     this.outbox = new InMemoryOutboxState(outboxDeps);
   }
 
-  private createDefaultSnapshot(runId: string): WorkflowSnapshot {
-    return {
-      runId,
-      status: 'PENDING',
-      paused: false,
-      cancelling: false,
-      gatewayDecisions: {},
-      steps: {},
-    };
-  }
-
   private assertRunExists(runId: string): void {
     if (!runId) {
-      throw new Error('INVALID_RUN_ID');
+      throw new InvalidRunIdError(runId);
     }
     if (!this.metadataByRunId.has(runId)) {
       throw new RunNotFoundError(runId);
-    }
-  }
-
-  private assertEventInput(event: RunEventInput, index: number): void {
-    if (!event?.idempotencyKey) {
-      throw new Error(`INVALID_EVENT: missing idempotencyKey at index ${index}`);
-    }
-    if (!event?.runId) {
-      throw new Error(`INVALID_EVENT: missing runId at index ${index}`);
-    }
-    if (event.runId.trim() === '') {
-      throw new Error(`INVALID_EVENT: empty runId at index ${index}`);
-    }
-
-    const record = event as unknown as Record<string, unknown>;
-    if (Object.hasOwn(record, 'runSeq')) {
-      throw new Error(`INVALID_EVENT_WRITE_SHAPE: runSeq forbidden at index ${index}`);
-    }
-    if (Object.hasOwn(record, 'persistedAt')) {
-      throw new Error(`INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden at index ${index}`);
     }
   }
 
@@ -98,7 +74,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
   }
 
   async saveProviderRef(
-    _tenantId: string,
+    tenantId: string,
     runId: string,
     runRef: {
       providerWorkflowId: string;
@@ -109,7 +85,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     }
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
-    if (!current) throw new RunNotFoundError(runId);
+    if (!current || current.tenantId !== tenantId) throw new RunNotFoundError(runId);
     const updated = {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
@@ -132,15 +108,26 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       throw new RunAlreadyExistsError(input.metadata.runId);
     }
 
+    this.assertBootstrapFirstEvents(input.metadata.runId, input.firstEvents);
+    const retryLineageCheckpoint = this.captureRetryLineageCheckpoint(input.metadata);
+
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
     this.initializeRetryLineage(input.metadata);
     this.snapshotByRunId.set(
       input.metadata.runId,
-      this.createDefaultSnapshot(input.metadata.runId)
+      createDefaultWorkflowSnapshot(input.metadata.runId)
     );
     this.snapshotLastRunSeqByRunId.set(input.metadata.runId, 0);
-    return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
+    try {
+      return await this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
+    } catch (error) {
+      this.metadataByRunId.delete(input.metadata.runId);
+      this.snapshotByRunId.delete(input.metadata.runId);
+      this.snapshotLastRunSeqByRunId.delete(input.metadata.runId);
+      this.restoreRetryLineageCheckpoint(retryLineageCheckpoint);
+      throw error;
+    }
   }
 
   /**
@@ -159,18 +146,16 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       return { appended: [], deduped: [], lastSeq: baseRunSeq };
     }
 
-    const idempotencyIndex =
-      this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
+    const currentIdempotencyIndex = this.idempIndexByRunId.get(runId);
+    const idempotencyIndex = new Map<string, RunEventPersisted>(currentIdempotencyIndex);
 
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
-    const persistedAt = InMemoryTxStore.EPOCH_ISO;
+    const persistedAt = IN_MEMORY_PERSISTED_AT_EPOCH_ISO;
 
     for (const [i, event] of eventsToAppend.entries()) {
-      this.assertEventInput(event, i);
-      if (event.runId !== runId) {
-        throw new Error(`INVALID_EVENT: runId mismatch at index ${i}`);
-      }
+      assertRunEventInput(event, i);
+      assertEventRunIdMatches(runId, event, i);
 
       const existing = idempotencyIndex.get(event.idempotencyKey);
       if (existing) {
@@ -179,33 +164,34 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       }
 
       const runSeq = baseRunSeq + appended.length + 1;
-      if (runSeq > Number.MAX_SAFE_INTEGER) {
-        throw new Error(`RUN_SEQUENCE_OVERFLOW: ${runId}`);
-      }
+      assertRunSequenceWithinSafeRange(runSeq, runId);
 
       const withSeq: RunEventPersisted = { ...event, runSeq, persistedAt };
       appended.push(withSeq);
       idempotencyIndex.set(withSeq.idempotencyKey, withSeq);
     }
 
-    // Commit events
     const committed = [...existingEvents, ...appended];
-    this.eventsByRunId.set(runId, committed);
-    this.idempIndexByRunId.set(runId, idempotencyIndex);
-
-    // Incrementally update the materialized snapshot.
+    let nextSnapshot: WorkflowSnapshot | null = null;
     if (appended.length > 0) {
-      const snap: WorkflowSnapshot =
-        this.snapshotByRunId.get(runId) ?? this.createDefaultSnapshot(runId);
+      const currentSnapshot =
+        this.snapshotByRunId.get(runId) ?? createDefaultWorkflowSnapshot(runId);
+      nextSnapshot = cloneWorkflowSnapshot(currentSnapshot);
       for (const e of appended) {
-        applyRunEvent(snap, e);
+        applyRunEvent(nextSnapshot, e);
       }
-      this.snapshotByRunId.set(runId, snap);
     }
-    this.snapshotLastRunSeqByRunId.set(runId, committed.at(-1)?.runSeq ?? 0);
 
     // Commit outbox in the same "transaction"
     await this.outbox.enqueueTx(runId, appended);
+
+    // Commit events
+    this.eventsByRunId.set(runId, committed);
+    this.idempIndexByRunId.set(runId, idempotencyIndex);
+    if (nextSnapshot) {
+      this.snapshotByRunId.set(runId, nextSnapshot);
+    }
+    this.snapshotLastRunSeqByRunId.set(runId, committed.at(-1)?.runSeq ?? 0);
 
     return {
       appended,
@@ -252,7 +238,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     const events = (this.eventsByRunId.get(runId) ?? [])
       .slice()
       .sort((a, b) => a.runSeq - b.runSeq);
-    const snap: WorkflowSnapshot = this.createDefaultSnapshot(runId);
+    const snap: WorkflowSnapshot = createDefaultWorkflowSnapshot(runId);
     for (const e of events) {
       applyRunEvent(snap, e);
     }
@@ -343,5 +329,31 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     if (!this.nextRetryAttemptByOriginRunId.has(originRunId)) {
       this.nextRetryAttemptByOriginRunId.set(originRunId, current);
     }
+  }
+
+  private captureRetryLineageCheckpoint(meta: RunMetadata): {
+    originRunId: string;
+    previousNextAttempt: number | undefined;
+  } {
+    const originRunId = meta.originRunId ?? meta.runId;
+    return {
+      originRunId,
+      previousNextAttempt: this.nextRetryAttemptByOriginRunId.get(originRunId),
+    };
+  }
+
+  private restoreRetryLineageCheckpoint(checkpoint: {
+    originRunId: string;
+    previousNextAttempt: number | undefined;
+  }): void {
+    if (checkpoint.previousNextAttempt === undefined) {
+      this.nextRetryAttemptByOriginRunId.delete(checkpoint.originRunId);
+      return;
+    }
+    this.nextRetryAttemptByOriginRunId.set(checkpoint.originRunId, checkpoint.previousNextAttempt);
+  }
+
+  private assertBootstrapFirstEvents(runId: string, firstEvents: RunEventInput[]): void {
+    assertEventsMatchRunId(runId, firstEvents);
   }
 }
