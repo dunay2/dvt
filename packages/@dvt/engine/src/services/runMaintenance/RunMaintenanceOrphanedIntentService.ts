@@ -10,7 +10,6 @@ import {
   RUN_MAINTENANCE_OPERATION,
 } from './RunMaintenanceDomainConstants.js';
 import { RunMaintenanceObservabilityFacade } from './RunMaintenanceObservabilityFacade.js';
-
 type ReconcileOrphanedIntentsOptions =
   import('../../ports/IRunMaintenanceService.js').ReconcileOrphanedIntentsOptions;
 type ReconcileOrphanedIntentsResult =
@@ -61,7 +60,12 @@ export class RunMaintenanceOrphanedIntentService {
     const deferred: string[] = [];
 
     for (const intent of orphaned) {
-      if (dryRun) continue;
+      if (dryRun) {
+        // Dry-run is read-only; report inspected intents as deferred because reconciliation
+        // is intentionally not executed and no state transition can be applied.
+        deferred.push(intent.intentId);
+        continue;
+      }
       const outcome = await this.reconcileIntent(intent, traceContext);
       if (outcome.expired !== undefined) expired.push(outcome.expired);
       if (outcome.cancelled !== undefined) cancelled.push(outcome.cancelled);

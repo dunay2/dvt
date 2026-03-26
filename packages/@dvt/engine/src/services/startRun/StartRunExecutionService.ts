@@ -1,10 +1,3 @@
-import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
-import type { IObservability } from '@dvt/observability';
-
-import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
-import type { IRunStateStoreWrite } from '../../ports/IRunStateStore.js';
-import type { IStartRunIntentStore } from '../../ports/IStartRunIntentStore.js';
-import type { IClock } from '../../utils/clock.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
@@ -14,6 +7,15 @@ import {
   type StartRunFailurePolicy,
 } from './StartRunFailurePolicy.js';
 import type { StartRunTraceContext } from './StartRunTypes.js';
+
+type EngineRunRef = import('@dvt/contracts').EngineRunRef;
+type PlanRef = import('@dvt/contracts').PlanRef;
+type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
+type IObservability = import('@dvt/observability').IObservability;
+type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
+type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IRunStateStoreWrite;
+type IStartRunIntentStore = import('../../ports/IStartRunIntentStore.js').IStartRunIntentStore;
+type IClock = import('../../utils/clock.js').IClock;
 
 export interface StartRunExecutionServiceDeps {
   stateStoreWrite: IRunStateStoreWrite;
@@ -230,6 +232,8 @@ export class StartRunExecutionService {
     timeoutMs: number,
     operation: string
   ): Promise<T> {
+    // Intentionally local: startRun execution has a dedicated failure/compensation flow
+    // and should keep timeout handling co-located with that policy.
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {

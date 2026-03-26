@@ -869,7 +869,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.inspected).toBe(1);
       expect(result.expired).toHaveLength(0);
-      expect(result.deferred).toHaveLength(0);
+      expect(result.deferred).toEqual(['i-dry1']);
       expect((await intentStore.getIntent('i-dry1'))?.status).toBe('PENDING');
     });
 

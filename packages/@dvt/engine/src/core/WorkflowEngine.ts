@@ -483,6 +483,8 @@ export class WorkflowEngine implements IWorkflowEngine {
     timeoutMs: number,
     operation: string
   ): Promise<T> {
+    // Intentionally local: core engine operations (cancel/status/signal) use this generic
+    // timeout guard independently from startRun-specific execution semantics.
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {

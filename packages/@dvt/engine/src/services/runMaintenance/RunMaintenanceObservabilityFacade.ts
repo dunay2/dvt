@@ -1,5 +1,4 @@
 import { RUN_MAINTENANCE_NUMERIC } from './RunMaintenanceDomainConstants.js';
-
 type RunMaintenanceServiceDeps = import('./RunMaintenanceContracts.js').RunMaintenanceServiceDeps;
 
 export class RunMaintenanceObservabilityFacade {

@@ -47,6 +47,8 @@ export interface ReconcileOrphanedIntentsResult {
   /**
    * Intent IDs intentionally left unresolved by policy (for example: lookup unsupported,
    * lookup failure, or run already bootstrapped without provider workflow).
+   * In `dryRun` mode, inspected intent IDs are returned as deferred because no mutation
+   * is executed.
    */
   deferred: string[];
 }
