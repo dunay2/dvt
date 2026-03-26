@@ -41,6 +41,7 @@ import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { StartRunCoordinator } from '../services/StartRunCoordinator.js';
 import type { IClock } from '../utils/clock.js';
+import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
@@ -560,21 +561,6 @@ function buildTraceContext(
     ...(planId ? { planId } : {}),
     ...(adapter ? { adapter } : {}),
   };
-}
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  if (error === null) return 'null';
-  if (error === undefined) return 'undefined';
-  if (typeof error === 'object') {
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return Object.prototype.toString.call(error);
-    }
-  }
-  return `${error}`;
 }
 
 function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {

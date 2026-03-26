@@ -5,6 +5,7 @@ import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import type { IRunStateStoreWrite } from '../../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../../ports/IStartRunIntentStore.js';
 import type { IClock } from '../../utils/clock.js';
+import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
@@ -242,19 +243,4 @@ export class StartRunExecutionService {
       if (timeoutId) clearTimeout(timeoutId);
     }
   }
-}
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  if (error === null) return 'null';
-  if (error === undefined) return 'undefined';
-  if (typeof error === 'object') {
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return Object.prototype.toString.call(error);
-    }
-  }
-  return `${error}`;
 }
