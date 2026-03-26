@@ -4,7 +4,10 @@ import { buildMaintenanceContext } from './RunMaintenanceContracts.js';
 import {
   RUN_MAINTENANCE_CONTEXT,
   RUN_MAINTENANCE_INTENT_STATUS,
+  RUN_MAINTENANCE_MESSAGE,
+  RUN_MAINTENANCE_METRIC,
   RUN_MAINTENANCE_NUMERIC,
+  RUN_MAINTENANCE_OPERATION,
 } from './RunMaintenanceDomainConstants.js';
 import { RunMaintenanceObservabilityFacade } from './RunMaintenanceObservabilityFacade.js';
 
@@ -19,22 +22,23 @@ type RunMaintenanceServiceDeps = import('./RunMaintenanceContracts.js').RunMaint
 type RunMaintenanceTraceContext = import('./RunMaintenanceContracts.js').RunMaintenanceTraceContext;
 
 export class RunMaintenanceOrphanedIntentService {
+  private readonly observability: RunMaintenanceObservabilityFacade;
   private readonly pendingPolicy: PendingIntentReconciliationPolicy;
   private readonly dispatchedPolicy: DispatchedIntentReconciliationPolicy;
 
   constructor(private readonly deps: RunMaintenanceServiceDeps) {
-    const observability = new RunMaintenanceObservabilityFacade(this.deps.observability);
+    this.observability = new RunMaintenanceObservabilityFacade(this.deps.observability);
     this.pendingPolicy = new PendingIntentReconciliationPolicy({
       adapters: this.deps.adapters,
       intentStore: this.deps.intentStore,
       stateStoreRead: this.deps.stateStoreRead,
-      observability,
+      observability: this.observability,
     });
     this.dispatchedPolicy = new DispatchedIntentReconciliationPolicy({
       adapters: this.deps.adapters,
       intentStore: this.deps.intentStore,
       stateStoreRead: this.deps.stateStoreRead,
-      observability,
+      observability: this.observability,
     });
   }
 
@@ -78,6 +82,19 @@ export class RunMaintenanceOrphanedIntentService {
     if (intent.status === RUN_MAINTENANCE_INTENT_STATUS.dispatched) {
       return this.dispatchedPolicy.reconcile(intent, traceContext);
     }
+    this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentUnexpectedStatusTotal, {
+      operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+    });
+    this.observability.warn({
+      msg: RUN_MAINTENANCE_MESSAGE.unexpectedIntentStatus,
+      context: traceContext,
+      attributes: {
+        intentId: intent.intentId,
+        runId: intent.runId,
+        provider: intent.provider,
+        status: intent.status,
+      },
+    });
     return Promise.resolve({});
   }
 }

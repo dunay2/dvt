@@ -18,6 +18,8 @@ export const RUN_MAINTENANCE_MESSAGE = {
     'Cannot cancel orphaned intent: adapter or engineRunRef missing',
   dispatchedIntentCancelled: 'Cancelled orphaned provider workflow from DISPATCHED intent',
   dispatchedIntentCancelFailed: 'Failed to cancel orphaned provider workflow',
+  unexpectedIntentStatus:
+    'Skipping orphaned intent with unexpected status (not PENDING or DISPATCHED)',
 } as const;
 
 export const RUN_MAINTENANCE_RUN_FAILED_REASON = {
@@ -38,6 +40,7 @@ export const RUN_MAINTENANCE_METRIC = {
   intentDeferredLookupFailedTotal: 'dvt.intent.deferred_lookup_failed_total',
   intentDeferredBootstrappedWithoutWorkflowTotal:
     'dvt.intent.deferred_bootstrapped_without_workflow_total',
+  intentUnexpectedStatusTotal: 'dvt.intent.unexpected_status_total',
 } as const;
 
 export const RUN_MAINTENANCE_OPERATION = {
