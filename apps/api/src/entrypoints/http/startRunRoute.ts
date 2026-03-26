@@ -3,12 +3,8 @@
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 
 import { mapStartRunFacadeResult } from './authErrorMapper.js';
+import { extractBearerToken } from './extractBearerToken.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
-
-function extractBearerToken(authorizationHeader: string | undefined): string | undefined {
-  const match = authorizationHeader?.match(/^Bearer\s+(.+)$/i);
-  return match?.[1];
-}
 
 export async function startRunRoute(
   request: FastifyRequest<{ Body: unknown }>,

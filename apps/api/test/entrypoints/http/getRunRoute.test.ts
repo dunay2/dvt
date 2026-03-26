@@ -136,6 +136,26 @@ describe('getRunRoute', () => {
     expect(reply.send).toHaveBeenCalledWith({ error: 'FORBIDDEN', code: 'MISSING_TENANT_SCOPE' });
   });
 
+  it('returns 400 when tenantId is present but invalid', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await getRunRoute(
+      {
+        id: 'req-4b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: '   ' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_TENANT_ID' });
+  });
+
   it('returns 400 when enriched query value is invalid', async () => {
     const deps = createDeps();
     const reply = createReply();

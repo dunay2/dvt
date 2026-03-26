@@ -93,6 +93,20 @@ describe('listRunsRoute', () => {
     expect(reply.send).toHaveBeenCalledWith({ error: 'FORBIDDEN', code: 'MISSING_TENANT_SCOPE' });
   });
 
+  it('returns 400 when tenantId is present but invalid', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await listRunsRoute(
+      { id: 'req-2b', headers: {}, query: { tenantId: '   ', limit: '25' } } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_TENANT_ID' });
+  });
+
   it('returns 400 when limit is not numeric', async () => {
     const deps = createDeps();
     const reply = createReply();
@@ -133,5 +147,23 @@ describe('listRunsRoute', () => {
 
     expect(reply.code).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'UNSUPPORTED_CURSOR' });
+  });
+
+  it('returns 400 when projectId is invalid', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await listRunsRoute(
+      {
+        id: 'req-6',
+        headers: {},
+        query: { tenantId: 'tenant-a', projectId: '   ', limit: '25' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_PROJECT_ID' });
   });
 });
