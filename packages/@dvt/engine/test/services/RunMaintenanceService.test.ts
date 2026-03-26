@@ -112,6 +112,55 @@ function createFixture(observability: IObservability = createNoopObservability()
   return { engine, service, store, intentStore, clock, idempotency };
 }
 
+class UnknownStatusIntentStore extends InMemoryStartRunIntentStore {
+  override async listOrphaned(): Promise<
+    Awaited<ReturnType<InMemoryStartRunIntentStore['listOrphaned']>>
+  > {
+    return [
+      {
+        intentId: 'i-unknown',
+        tenantId: 't',
+        runId: 'run-unknown',
+        provider: 'temporal',
+        status: 'UNKNOWN_STATUS',
+      },
+    ] as Awaited<ReturnType<InMemoryStartRunIntentStore['listOrphaned']>>;
+  }
+}
+
+function createFixtureWithIntentStore(
+  intentStore: InMemoryStartRunIntentStore,
+  observability: IObservability = createNoopObservability()
+): {
+  service: RunMaintenanceService;
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+  clock: SequenceClock;
+  idempotency: IdempotencyKeyBuilder;
+} {
+  const store = new InMemoryTxStore();
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+  const authorizer = new AllowAllAuthorizer();
+  const idempotency = new IdempotencyKeyBuilder();
+
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+    ['temporal', makeTemporalAdapter()],
+  ]);
+
+  const service = new RunMaintenanceService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    intentStore,
+    adapters,
+    authorizer,
+    clock,
+    idempotency,
+    observability,
+  });
+
+  return { service, store, intentStore, clock, idempotency };
+}
+
 function createThrowingObservability(): IObservability {
   return {
     metrics: {
@@ -610,18 +659,10 @@ describe('RunMaintenanceService', () => {
 
     it('signals unexpected intent status with warn and metric without failing the sweep', async () => {
       const spy = { warnMessages: [] as string[], counterNames: [] as string[] };
-      const { service, intentStore } = createFixture(createStatusSignalObservability(spy));
-
-      intentStore.listOrphaned = async () =>
-        [
-          {
-            intentId: 'i-unknown',
-            tenantId: 't',
-            runId: 'run-unknown',
-            provider: 'temporal',
-            status: 'UNKNOWN_STATUS',
-          },
-        ] as Awaited<ReturnType<typeof intentStore.listOrphaned>>;
+      const { service } = createFixtureWithIntentStore(
+        new UnknownStatusIntentStore(),
+        createStatusSignalObservability(spy)
+      );
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 

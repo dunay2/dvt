@@ -71,18 +71,19 @@ Current implementation is functional but does not satisfy strict SRP boundaries.
 4. P2 constants drift risk: **Closed**
 5. P3 test overlap reduction: **Closed (with follow-up)**
    - Duplicate reconciliation suite removed; canonical suite retained.
-   - Follow-up still required for explicit coverage intent note.
+   - Coverage intent note recorded in this review.
 
 ### Residual status
 
 1. Unexpected intent status branch explicit test: **Closed**
 2. Canonical test file breadth/fixture coupling: **Partial**
+   - Status-signaling branch now uses an explicit test fixture (`UnknownStatusIntentStore`) instead of runtime monkey patch.
 3. Coverage-delta rationale after deduplication in explicit evidence note: **Closed**
 
 ## Coverage Delta Note (2026-03-26)
 
 - Deduplication removed `RunMaintenanceService.intentReconciliation.test.ts` intentionally.
-- Aggregate suite moved from **283** to **271** tests after deduplication and follow-up hardening.
+- Aggregate suite moved from **283** to **272** tests after deduplication and follow-up hardening.
 - Rationale:
   - duplicated reconciliation scenarios were consolidated into `RunMaintenanceService.test.ts`
   - one explicit test was added for unexpected intent-status signaling (`warn` + metric)
@@ -102,7 +103,7 @@ Current implementation is functional but does not satisfy strict SRP boundaries.
    - Test gap:
      - Existing fixtures only use `createNoopObservability` and do not assert throw-path resilience.
      - `RunMaintenanceService.test.ts:101`
-     - `RunMaintenanceService.intentReconciliation.test.ts:144`
+     - (legacy duplicate suite removed in this slice)
 
 2. Weak type boundary for `RunFailed` payload reason
    - `buildRunEvent` accepts `payload?: Record<string, unknown>`, so reason literals are not compile-time constrained to canonical failure reasons.
@@ -131,10 +132,10 @@ Current implementation is functional but does not satisfy strict SRP boundaries.
 ### P3
 
 5. Test suite overlap increases maintenance cost
-   - `RunMaintenanceService.test.ts` and `RunMaintenanceService.intentReconciliation.test.ts` duplicate several reconciliation scenarios with near-identical fixtures.
+   - Before deduplication, reconciliation scenarios were duplicated across two suites with near-identical fixtures.
    - References:
      - `RunMaintenanceService.test.ts:469`
-     - `RunMaintenanceService.intentReconciliation.test.ts:150`
+     - `RunMaintenanceService.intentReconciliation.test.ts` (removed by deduplication)
 
 ## Recommended Execution Order
 
