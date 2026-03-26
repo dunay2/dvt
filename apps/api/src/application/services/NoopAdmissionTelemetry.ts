@@ -1,9 +1,7 @@
-import type { AdmissionTelemetry } from '../ports/AdmissionTelemetry.js';
+import type { AdmissionDecisionRecord, AdmissionTelemetry } from '../ports/AdmissionTelemetry.js';
 
 export class NoopAdmissionTelemetry implements AdmissionTelemetry {
-  public async recordDecision(
-    _input: Parameters<AdmissionTelemetry['recordDecision']>[0]
-  ): Promise<void> {
+  public async record(_event: AdmissionDecisionRecord): Promise<void> {
     return undefined;
   }
 }
