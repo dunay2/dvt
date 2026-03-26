@@ -1,17 +1,8 @@
-import type { IObservability } from '@dvt/observability';
-import type { FastifyBaseLogger } from 'fastify';
-
-import type { ReconcilerHealthState } from './reconcilerHealth.js';
-
-const RECONCILER_HEALTH_EVENTS = {
-  stale: 'api.reconciler.health.stale',
-} as const;
-
-export type ReconcilerHealthReadContext = {
-  getIntentReconcilerHealth: () => ReconcilerHealthState;
-  setIntentReconcilerHealth: (health: ReconcilerHealthState) => void;
-  observability: IObservability;
-};
+import {
+  RECONCILER_HEALTH_REASON_CODE,
+  RECONCILER_HEALTH_STATUS,
+  type ReconcilerHealthState,
+} from './reconcilerHealth.js';
 
 export type ReconcilerHealthStaleWindow = {
   staleMs: number;
@@ -19,32 +10,38 @@ export type ReconcilerHealthStaleWindow = {
   nowMs: number;
 };
 
+export type ReconcilerHealthTransitionReason = 'runtime_unavailable_stale';
+
+export type ReconcilerHealthTransition = {
+  nextHealth: ReconcilerHealthState;
+  reason: ReconcilerHealthTransitionReason;
+};
+
 export function shouldMarkReconcilerRuntimeUnavailable(
   current: ReconcilerHealthState,
   window: ReconcilerHealthStaleWindow
 ): boolean {
-  if (current.status === 'disabled' || current.status === 'degraded') {
+  if (
+    current.status === RECONCILER_HEALTH_STATUS.disabled ||
+    current.status === RECONCILER_HEALTH_STATUS.degraded
+  ) {
     return false;
   }
   return window.nowMs - window.lastSweepSignalAtMs > window.staleMs;
 }
 
-export function evaluateAndMarkReconcilerHealthStale(
-  ctx: ReconcilerHealthReadContext,
-  logger: FastifyBaseLogger,
+export function evaluateReconcilerHealthStaleTransition(
+  currentHealth: ReconcilerHealthState,
   window: ReconcilerHealthStaleWindow
-): boolean {
-  const currentHealth = ctx.getIntentReconcilerHealth();
+): ReconcilerHealthTransition | null {
   if (!shouldMarkReconcilerRuntimeUnavailable(currentHealth, window)) {
-    return false;
+    return null;
   }
-  ctx.setIntentReconcilerHealth({ status: 'degraded', reasonCode: 'runtime_unavailable' });
-  ctx.observability.metrics.counter('dvt.intent.reconcile.health_stale_total').add(1);
-  logger.error({
-    event: RECONCILER_HEALTH_EVENTS.stale,
-    staleMs: window.staleMs,
-    lastSweepSignalAtMs: window.lastSweepSignalAtMs,
-    nowMs: window.nowMs,
-  });
-  return true;
+  return {
+    nextHealth: {
+      status: RECONCILER_HEALTH_STATUS.degraded,
+      reasonCode: RECONCILER_HEALTH_REASON_CODE.runtimeUnavailable,
+    },
+    reason: 'runtime_unavailable_stale',
+  };
 }

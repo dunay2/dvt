@@ -15,6 +15,7 @@ import {
   bootstrapIntentReconciler,
   withWatchdogSweepSignalHooks,
 } from './runtime/reconcilerRuntimeBootstrap.js';
+import { RECONCILER_RUNTIME_EVENTS } from './runtime/reconcilerRuntimeTelemetry.js';
 
 const SERVER_LOG_EVENTS = {
   listening: 'api.server.listening',
@@ -37,7 +38,7 @@ async function main(): Promise<void> {
       const reconcilerRuntime = await reconcilerRuntimePromise;
       await reconcilerRuntime?.stop();
     } catch (err) {
-      app.log.error({ err }, 'intent reconciler shutdown failed');
+      app.log.error({ event: RECONCILER_RUNTIME_EVENTS.shutdownFailed, err });
     }
   });
 
