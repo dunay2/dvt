@@ -3,9 +3,28 @@ import { describe, expect, it, vi } from 'vitest';
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
 import { ObservabilityBackpressureCapacityTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 
-type GaugeCall = { name: string; value: number; labels?: Record<string, string> };
+type GaugeCall = { name: string; value: number; labels?: Record<string, string> | undefined };
 
-function makeObservabilitySpy() {
+type ObservabilitySpy = {
+  observability: {
+    metrics: {
+      counter: () => { add: ReturnType<typeof vi.fn> };
+      histogram: () => { record: ReturnType<typeof vi.fn> };
+      gauge: (name: string) => { set: (value: number, labels?: Record<string, string>) => void };
+    };
+    logs: {
+      info: ReturnType<typeof vi.fn>;
+      warn: ReturnType<typeof vi.fn>;
+      debug: ReturnType<typeof vi.fn>;
+      error: ReturnType<typeof vi.fn>;
+    };
+    traces: { startSpan: ReturnType<typeof vi.fn>; withSpan: ReturnType<typeof vi.fn> };
+    withContext: <T>(_ctx: unknown, fn: () => T) => T;
+  };
+  gaugeCalls: GaugeCall[];
+};
+
+function makeObservabilitySpy(): ObservabilitySpy {
   const gaugeCalls: GaugeCall[] = [];
 
   const observability = {
@@ -20,18 +39,27 @@ function makeObservabilitySpy() {
     },
     logs: { info: vi.fn(), warn: vi.fn(), debug: vi.fn(), error: vi.fn() },
     traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-    withContext: (_ctx: unknown, fn: () => unknown) => fn(),
+    withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
   };
 
   return { observability, gaugeCalls };
 }
 
 describe('ObservabilityBackpressureCapacityTelemetry', () => {
-  it('sets pending_events gauge with value from snapshot', () => {
+  function setupAndRecordSnapshot(snapshot: {
+    tenantId: string;
+    pendingEventsCount: number;
+    outboxOldestAgeMs: number;
+    source: 'live' | 'cache' | 'fallback';
+  }): { gaugeCalls: GaugeCall[] } {
     const { observability, gaugeCalls } = makeObservabilitySpy();
     const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
+    telemetry.recordSnapshot(snapshot);
+    return { gaugeCalls };
+  }
 
-    telemetry.recordSnapshot({
+  it('sets pending_events gauge with value from snapshot', () => {
+    const { gaugeCalls } = setupAndRecordSnapshot({
       tenantId: 'tenant-1',
       pendingEventsCount: 42,
       outboxOldestAgeMs: 5_000,
@@ -46,10 +74,7 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
   });
 
   it('sets outbox_oldest_age gauge with value from snapshot', () => {
-    const { observability, gaugeCalls } = makeObservabilitySpy();
-    const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
-
-    telemetry.recordSnapshot({
+    const { gaugeCalls } = setupAndRecordSnapshot({
       tenantId: 'tenant-1',
       pendingEventsCount: 10,
       outboxOldestAgeMs: 90_000,
@@ -64,10 +89,7 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
   });
 
   it('uses source=cache label when snapshot source is cache', () => {
-    const { observability, gaugeCalls } = makeObservabilitySpy();
-    const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
-
-    telemetry.recordSnapshot({
+    const { gaugeCalls } = setupAndRecordSnapshot({
       tenantId: 'tenant-1',
       pendingEventsCount: 5,
       outboxOldestAgeMs: 1_000,
@@ -78,10 +100,7 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
   });
 
   it('uses source=fallback label for fallback snapshot', () => {
-    const { observability, gaugeCalls } = makeObservabilitySpy();
-    const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
-
-    telemetry.recordSnapshot({
+    const { gaugeCalls } = setupAndRecordSnapshot({
       tenantId: 'tenant-1',
       pendingEventsCount: 0,
       outboxOldestAgeMs: 0,
@@ -92,10 +111,7 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
   });
 
   it('does not include tenantId in gauge labels', () => {
-    const { observability, gaugeCalls } = makeObservabilitySpy();
-    const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
-
-    telemetry.recordSnapshot({
+    const { gaugeCalls } = setupAndRecordSnapshot({
       tenantId: 'tenant-1',
       pendingEventsCount: 3,
       outboxOldestAgeMs: 2_000,

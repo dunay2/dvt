@@ -7,10 +7,30 @@ import { ObservabilityAdmissionTelemetry } from '../../../src/infrastructure/adm
 // Spy factory — minimal in-memory IObservability double
 // ---------------------------------------------------------------------------
 
-type CounterCall = { name: string; value: number; labels?: Record<string, string> };
+type CounterCall = { name: string; value: number; labels?: Record<string, string> | undefined };
 type LogCall = { level: string; msg: string; attributes?: Record<string, unknown> };
 
-function makeObservabilitySpy() {
+type ObservabilitySpy = {
+  observability: {
+    metrics: {
+      counter: (name: string) => { add: (value: number, labels?: Record<string, string>) => void };
+      histogram: () => { record: ReturnType<typeof vi.fn> };
+      gauge: () => { set: ReturnType<typeof vi.fn> };
+    };
+    logs: {
+      info: (entry: { msg: string; attributes?: Record<string, unknown> }) => void;
+      warn: (entry: { msg: string; attributes?: Record<string, unknown> }) => void;
+      debug: (entry: { msg: string }) => void;
+      error: (entry: { msg: string }) => void;
+    };
+    traces: { startSpan: ReturnType<typeof vi.fn>; withSpan: ReturnType<typeof vi.fn> };
+    withContext: <T>(_ctx: unknown, fn: () => T) => T;
+  };
+  counterCalls: CounterCall[];
+  logCalls: LogCall[];
+};
+
+function makeObservabilitySpy(): ObservabilitySpy {
   const counterCalls: CounterCall[] = [];
   const logCalls: LogCall[] = [];
 
@@ -33,7 +53,7 @@ function makeObservabilitySpy() {
       error: (entry: { msg: string }) => logCalls.push({ level: 'error', msg: entry.msg }),
     },
     traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-    withContext: (_ctx: unknown, fn: () => unknown) => fn(),
+    withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
   };
 
   return { observability, counterCalls, logCalls };
@@ -313,7 +333,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
           error: vi.fn(),
         },
         traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: (_ctx: unknown, fn: () => unknown) => fn(),
+        withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
       };
       const telemetry = new ObservabilityAdmissionTelemetry({ observability });
 

@@ -4,6 +4,7 @@ import type {
   BackpressureCapacitySnapshot,
   IBackpressureCapacityTelemetry,
 } from '../../application/ports/IBackpressureCapacityTelemetry.js';
+
 import { ADMISSION_TELEMETRY_METRICS } from './admissionTelemetryMetrics.js';
 
 export class ObservabilityBackpressureCapacityTelemetry implements IBackpressureCapacityTelemetry {
