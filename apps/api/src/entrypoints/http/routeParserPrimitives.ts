@@ -70,7 +70,9 @@ export function parseOptionalEnvironmentId(raw: string | undefined): OptionalEnv
   return { kind: 'ok', value: parsed.value };
 }
 
-export function parseBooleanQuery(raw: string | undefined): { readonly ok: true; readonly value: boolean } | { readonly ok: false } {
+export function parseBooleanQuery(
+  raw: string | undefined
+): { readonly ok: true; readonly value: boolean } | { readonly ok: false } {
   if (raw === undefined) return { ok: true, value: false };
   const normalized = raw.trim().toLowerCase();
   if (normalized === 'true') return { ok: true, value: true };

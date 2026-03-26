@@ -105,7 +105,12 @@ describe('getRunEventsRoute', () => {
     const reply = createReply();
 
     await getRunEventsRoute(
-      { id: 'req-3b', headers: {}, params: { runId: 'run-1' }, query: { tenantId: '   ' } } as never,
+      {
+        id: 'req-3b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: '   ' },
+      } as never,
       reply as never,
       deps as never
     );

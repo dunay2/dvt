@@ -141,7 +141,12 @@ describe('getRunRoute', () => {
     const reply = createReply();
 
     await getRunRoute(
-      { id: 'req-4b', headers: {}, params: { runId: 'run-1' }, query: { tenantId: '   ' } } as never,
+      {
+        id: 'req-4b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: '   ' },
+      } as never,
       reply as never,
       deps as never
     );
