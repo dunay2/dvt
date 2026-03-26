@@ -97,6 +97,7 @@ Concept anchors for this page:
 - [20260323 SOLID DDD Hexagonal CI and Adapters Review](reviews/20260323-solid-ddd-hexagonal-ci-and-adapters-review.md)
 - [20260323 StartRun Route Parser QA Review](reviews/20260323-start-run-route-parser-qa-review.md)
 - [20260324 Dvt Architectural Review](reviews/20260324-dvt-architectural-review.md)
+- [20260326 S03 Hard QA Review](reviews/20260326-s03-hard-qa-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/20260226-dvt-architectural-gap-remediation-tasks-review.md)
 - [DVT+ — Consolidated Architectural Review](reviews/20260305-dvt-architectural-review-consolidated.md)

@@ -88,18 +88,20 @@ it('emits warning and metric when markResolved fails after dispatch', async () =
   expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
 });
 
-it('emits warning and metric when markResolved fails on legacy bootstrap-success path', async () => {
+it('emits warning and metric when markResolved fails on no-estimate bootstrap-success path', async () => {
   const { obs, counters, warns } = makeTrackingObservability();
   const adapters = makeAdapters();
   const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('legacy resolve boom'));
+  vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(
+    new Error('no-estimate resolve boom')
+  );
 
   await expect(
-    engine.startRun(makePlanRef(), makeContext('obs-legacy-resolve-warn-1'))
+    engine.startRun(makePlanRef(), makeContext('obs-no-estimate-resolve-warn-1'))
   ).resolves.toEqual(
     expect.objectContaining({
       provider: 'temporal',
-      runId: 'obs-legacy-resolve-warn-1',
+      runId: 'obs-no-estimate-resolve-warn-1',
     })
   );
 
@@ -436,7 +438,9 @@ it('falls back to stderr when both observability sinks fail', async () => {
     );
 
     expect(stderrSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[dvt][WorkflowEngine] markResolved observability reporting failed;')
+      expect.stringContaining(
+        '[dvt][StartRunCoordinator] markResolved observability reporting failed;'
+      )
     );
   } finally {
     stderrSpy.mockRestore();
