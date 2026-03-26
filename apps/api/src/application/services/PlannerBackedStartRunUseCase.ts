@@ -5,12 +5,12 @@ import type {
   PlannerInputEnvelopeV2,
 } from '@dvt/contracts';
 
-import type {
-  AuthorizedCommandExecutionContext,
-  IStartRunUseCase,
-  StartRunCommand,
-  StartRunResult,
-} from '../ports/auth.js';
+import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
+import type { StartRunCommand } from '../ports/startRunCommandContract.js';
+import { START_RUN_RESULT_KIND } from '../ports/startRunResultContract.js';
+import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+
+type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   public constructor(
@@ -25,7 +25,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   public async execute(
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
-  ): Promise<StartRunResult> {
+  ): Promise<StartRunUseCaseResult> {
     if (command.planRef != null) {
       return this.deps.delegate.execute(command, context);
     }
@@ -34,14 +34,17 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     const planRef = await this.deps.planStore.storePlan(buildResult);
     const validation = await this.deps.validator.validatePlan(planRef, command.targetAdapter);
 
-    if (validation.status === 'ERROR') {
+    if (isValidationError(validation)) {
       await this.deps.planStore.markInvalid(planRef, validation);
       return {
-        kind: 'plan_rejected',
-        accepted: false,
-        code: validation.code,
-        reason: validation.reason,
-        ...(validation.cause === undefined ? {} : { cause: validation.cause }),
+        ok: true,
+        value: {
+          kind: START_RUN_RESULT_KIND.planRejected,
+          accepted: false,
+          code: validation.code,
+          reason: validation.reason,
+          ...(validation.cause === undefined ? {} : { cause: validation.cause }),
+        },
       };
     }
 
@@ -67,4 +70,10 @@ function toPlannerInput(
     requestId: context.requestId,
     requestedAtIso: context.authorizedAt.toISOString(),
   };
+}
+
+function isValidationError(
+  validation: PlanValidationResult
+): validation is Extract<PlanValidationResult, { readonly status: 'ERROR' }> {
+  return validation.status === 'ERROR';
 }

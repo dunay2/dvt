@@ -1,6 +1,10 @@
-import { AdapterNotRegisteredError, RunAlreadyExistsError } from '@dvt/engine';
 import { describe, it, expect } from 'vitest';
 
+import {
+  START_RUN_ENGINE_ERROR_CODE,
+  START_RUN_ENGINE_ERROR_REASON,
+  START_RUN_PLAN_REJECTION_CODE,
+} from '../../../src/application/ports/startRunContract.js';
 import { StartRunAuthorizedFacade } from '../../../src/application/services/startRunAuthorizedFacade.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
@@ -66,7 +70,10 @@ describe('StartRunAuthorizedFacade', () => {
       } as never,
       {
         async execute() {
-          return { kind: 'accepted' as const, runId: 'run-1', accepted: true };
+          return {
+            ok: true as const,
+            value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+          };
         },
       } as never
     );
@@ -94,10 +101,13 @@ describe('StartRunAuthorizedFacade', () => {
       {
         async execute() {
           return {
-            kind: 'duplicate' as const,
-            runId: 'run-1',
-            accepted: true,
-            duplicateOf: 'intent' as const,
+            ok: true as const,
+            value: {
+              kind: 'duplicate' as const,
+              runId: 'run-1',
+              accepted: true,
+              duplicateOf: 'intent' as const,
+            },
           };
         },
       } as never
@@ -112,7 +122,7 @@ describe('StartRunAuthorizedFacade', () => {
     });
   });
 
-  it('maps AdapterNotRegisteredError to adapter_not_configured', async () => {
+  it('maps adapter_not_registered engine error to adapter_not_configured', async () => {
     const facade = new StartRunAuthorizedFacade(
       {
         async authenticateBearerToken() {
@@ -126,7 +136,10 @@ describe('StartRunAuthorizedFacade', () => {
       } as never,
       {
         async execute() {
-          throw new AdapterNotRegisteredError('temporal');
+          return {
+            ok: false as const,
+            error: { kind: 'adapter_not_registered' as const, adapter: 'temporal' },
+          };
         },
       } as never
     );
@@ -138,7 +151,7 @@ describe('StartRunAuthorizedFacade', () => {
     });
   });
 
-  it('maps engine duplicate errors to duplicate facade result', async () => {
+  it('maps unsupported_plan_version engine error to plan_rejected', async () => {
     const facade = new StartRunAuthorizedFacade(
       {
         async authenticateBearerToken() {
@@ -152,17 +165,61 @@ describe('StartRunAuthorizedFacade', () => {
       } as never,
       {
         async execute() {
-          throw new RunAlreadyExistsError('run-1');
+          return {
+            ok: false as const,
+            error: {
+              kind: 'unsupported_plan_version' as const,
+              planVersion: '2.7',
+              supportedVersions: ['2.3'] as const,
+            },
+          };
         },
       } as never
     );
 
     const result = await facade.execute(INPUT);
     expect(result).toEqual({
-      kind: 'duplicate',
-      runId: 'run-1',
-      accepted: true,
-      duplicateOf: 'run',
+      kind: 'plan_rejected',
+      accepted: false,
+      code: 'UNSUPPORTED_PLAN_VERSION',
+      reason: 'Unsupported plan version: 2.7',
+      supportedVersions: ['2.3'],
+    });
+  });
+
+  it('maps command_invalid engine error to plan_rejected', async () => {
+    const facade = new StartRunAuthorizedFacade(
+      {
+        async authenticateBearerToken() {
+          return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
+        },
+      } as never,
+      {
+        async authorize() {
+          return { ok: true as const, context: AUTHORIZED_CONTEXT };
+        },
+      } as never,
+      {
+        async execute() {
+          return {
+            ok: false as const,
+            error: {
+              kind: 'command_invalid' as const,
+              code: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+              reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+            },
+          };
+        },
+      } as never
+    );
+
+    const result = await facade.execute(INPUT);
+    expect(result).toEqual({
+      kind: 'plan_rejected',
+      accepted: false,
+      code: START_RUN_PLAN_REJECTION_CODE.rejected,
+      reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+      cause: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
     });
   });
 

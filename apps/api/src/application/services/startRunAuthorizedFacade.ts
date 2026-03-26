@@ -1,12 +1,19 @@
-import { AdapterNotRegisteredError, UnsupportedPlanVersionError } from '@dvt/engine';
-
 import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
-import type {
-  IAuthenticator,
-  IStartRunUseCase,
-  StartRunCommand,
-  StartRunFacadeResult,
-} from '../ports/auth.js';
+import type { IAuthenticator } from '../ports/auth.js';
+import type { StartRunCommand } from '../ports/startRunCommandContract.js';
+import {
+  START_RUN_ENGINE_ERROR_KIND,
+  type StartRunEngineError,
+} from '../ports/startRunEngineErrorContract.js';
+import {
+  START_RUN_FACADE_RESULT_KIND,
+  type StartRunFacadeResult,
+} from '../ports/startRunFacadeContract.js';
+import {
+  formatUnsupportedPlanVersionReason,
+  START_RUN_PLAN_REJECTION_CODE,
+} from '../ports/startRunResultContract.js';
+import type { IStartRunUseCase } from '../ports/startRunUseCaseContract.js';
 
 import { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
 
@@ -27,7 +34,7 @@ export class StartRunAuthorizedFacade {
   }): Promise<StartRunFacadeResult> {
     const authentication = await this.authenticator.authenticateBearerToken(input.token);
     if (!authentication.ok) {
-      return { kind: 'unauthenticated', code: authentication.code };
+      return { kind: START_RUN_FACADE_RESULT_KIND.unauthenticated, code: authentication.code };
     }
 
     const authorization = await this.authorizer.authorize(
@@ -36,74 +43,37 @@ export class StartRunAuthorizedFacade {
       input.requestId
     );
     if (!authorization.ok) {
-      return { kind: 'unauthorized', reason: authorization.reason };
+      return { kind: START_RUN_FACADE_RESULT_KIND.unauthorized, reason: authorization.reason };
     }
 
-    try {
-      return await this.useCase.execute(input.command, authorization.context);
-    } catch (error) {
-      if (error instanceof AdapterNotRegisteredError) {
-        return { kind: 'adapter_not_configured', adapter: input.command.targetAdapter };
-      }
-
-      if (error instanceof UnsupportedPlanVersionError) {
-        return {
-          kind: 'plan_rejected',
-          accepted: false,
-          code: 'UNSUPPORTED_PLAN_VERSION',
-          reason: `Unsupported plan version: ${error.planVersion}`,
-          supportedVersions: error.supportedVersions,
-        };
-      }
-
-      const duplicate = toDuplicateResult(error, input.command.runId);
-      if (duplicate !== null) {
-        return duplicate;
-      }
-
-      const rateLimited = toRateLimitedResult(error);
-      if (rateLimited !== null) {
-        return rateLimited;
-      }
-
-      throw error;
+    const startRun = await this.useCase.execute(input.command, authorization.context);
+    if (startRun.ok) {
+      return startRun.value;
     }
+
+    return mapEngineErrorToFacade(startRun.error);
   }
 }
 
-function toDuplicateResult(
-  error: unknown,
-  runId: string
-): Extract<StartRunFacadeResult, { readonly kind: 'duplicate' }> | null {
-  if (!(error instanceof Error)) {
-    return null;
+function mapEngineErrorToFacade(error: StartRunEngineError): StartRunFacadeResult {
+  switch (error.kind) {
+    case START_RUN_ENGINE_ERROR_KIND.adapterNotRegistered:
+      return { kind: START_RUN_FACADE_RESULT_KIND.adapterNotConfigured, adapter: error.adapter };
+    case START_RUN_ENGINE_ERROR_KIND.commandInvalid:
+      return {
+        kind: START_RUN_FACADE_RESULT_KIND.planRejected,
+        accepted: false,
+        code: START_RUN_PLAN_REJECTION_CODE.rejected,
+        reason: error.reason,
+        cause: error.code,
+      };
+    case START_RUN_ENGINE_ERROR_KIND.unsupportedPlanVersion:
+      return {
+        kind: START_RUN_FACADE_RESULT_KIND.planRejected,
+        accepted: false,
+        code: START_RUN_PLAN_REJECTION_CODE.unsupportedPlanVersion,
+        reason: formatUnsupportedPlanVersionReason(error.planVersion),
+        supportedVersions: error.supportedVersions,
+      };
   }
-
-  const code = (error as Error & { code?: unknown }).code;
-  if (code === 'RUN_ALREADY_EXISTS') {
-    return { kind: 'duplicate', runId, accepted: true, duplicateOf: 'run' };
-  }
-  if (code === 'INTENT_ACTIVE_CONFLICT') {
-    return { kind: 'duplicate', runId, accepted: true, duplicateOf: 'intent' };
-  }
-  return null;
-}
-
-function toRateLimitedResult(
-  error: unknown
-): Extract<StartRunFacadeResult, { readonly kind: 'rate_limited' }> | null {
-  if (!(error instanceof Error)) {
-    return null;
-  }
-
-  const code = (error as Error & { code?: unknown }).code;
-  if (code !== 'OUTBOX_RATE_LIMIT_EXCEEDED') {
-    return null;
-  }
-
-  return {
-    kind: 'rate_limited',
-    accepted: false,
-    code: 'OUTBOX_RATE_LIMIT_EXCEEDED',
-  };
 }
