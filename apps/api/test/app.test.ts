@@ -3,6 +3,7 @@ import process from 'node:process';
 import { describe, it, expect, vi } from 'vitest';
 
 import { buildApp } from '../src/app.js';
+import * as pgPool from '../src/db/pool.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
@@ -121,7 +122,13 @@ describe('buildApp', () => {
     process.env.OBS_ENABLED = 'false';
     process.env.NODE_ENV = 'test';
     process.env.DVT_READYZ_ENABLED = 'true';
-    process.env.DATABASE_URL = 'postgres://user:pass@127.0.0.1:1/dvt';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+    const queryMock = vi.fn(async () => {
+      throw new Error('database probe failed');
+    });
+    const getPgPoolSpy = vi.spyOn(pgPool, 'getPgPool').mockReturnValue({
+      query: queryMock,
+    } as never);
 
     try {
       const { app } = await buildApp();
@@ -142,11 +149,68 @@ describe('buildApp', () => {
           event: 'api.health.readiness.database_probe_failed',
         })
       );
+      expect(queryMock).toHaveBeenCalledOnce();
 
       await app.close();
     } finally {
+      getPgPoolSpy.mockRestore();
       delete process.env.DVT_READYZ_ENABLED;
       delete process.env.DATABASE_URL;
+    }
+  });
+
+  it('returns 200 on /readyz when all probes pass', async () => {
+    const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+    const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
+    const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
+    const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
+    const queryMock = vi.fn(async () => ({ rows: [{ ok: 1 }] }));
+    const getPgPoolSpy = vi.spyOn(pgPool, 'getPgPool').mockReturnValue({
+      query: queryMock,
+      end: vi.fn(async () => undefined),
+    } as never);
+
+    PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {};
+    PostgresPlanStore.prototype.migrate = async function migrate() {};
+    PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
+    PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
+
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_READYZ_ENABLED = 'true';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+    process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
+    process.env.OIDC_ISSUER = 'https://issuer.example/';
+    process.env.OIDC_AUDIENCE = 'dvt-api';
+    delete process.env.DVT_INTENT_RECONCILER_ENABLED;
+
+    try {
+      const { app } = await buildApp();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/readyz',
+      });
+
+      expect(res.statusCode).toBe(HTTP_STATUS.ok);
+      expect(res.json()).toEqual({
+        ok: true,
+        status: 'ready',
+      });
+      expect(queryMock).toHaveBeenCalledOnce();
+
+      await app.close();
+    } finally {
+      getPgPoolSpy.mockRestore();
+      PostgresPrincipalAccessRepository.prototype.migrate = originalAccessRepoMigrate;
+      PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
+      PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
+      PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
+      delete process.env.DVT_READYZ_ENABLED;
+      delete process.env.DATABASE_URL;
+      delete process.env.OIDC_JWKS_URI;
+      delete process.env.OIDC_ISSUER;
+      delete process.env.OIDC_AUDIENCE;
+      delete process.env.DVT_INTENT_RECONCILER_ENABLED;
     }
   });
 

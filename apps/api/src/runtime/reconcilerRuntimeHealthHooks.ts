@@ -51,6 +51,8 @@ export function withWatchdogSweepSignalHooks(
         healthHooks.onSweepSuccess?.();
       },
       onSweepFailure: () => {
+        // Failures should not refresh watchdog liveness. Only successful sweeps
+        // move the stale clock forward; repeated failures must still age out.
         healthHooks.onSweepFailure?.();
       },
     });
