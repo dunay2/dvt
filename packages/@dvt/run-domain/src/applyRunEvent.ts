@@ -115,14 +115,23 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
 function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
   if (TERMINAL_RUN_STATUSES.has(snap.status)) {
-    throw new InvalidStateTransitionError(snap.runId, snap.status, eventType);
+    throw new InvalidStateTransitionError({
+      runId: snap.runId,
+      fromStatus: snap.status,
+      eventType,
+    });
   }
 }
 
 function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType: string): void {
   const step = snap.steps[stepId];
   if (step !== undefined && TERMINAL_STEP_STATUSES.has(step.status)) {
-    throw new InvalidStateTransitionError(snap.runId, step.status, eventType, stepId);
+    throw new InvalidStateTransitionError({
+      runId: snap.runId,
+      fromStatus: step.status,
+      eventType,
+      stepId,
+    });
   }
 }
 

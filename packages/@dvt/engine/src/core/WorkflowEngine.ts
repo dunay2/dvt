@@ -447,7 +447,10 @@ export class WorkflowEngine implements IWorkflowEngine {
     const supported = new Set(adapterCaps);
     const unsupported = required.filter((c) => !supported.has(c));
     if (unsupported.length > 0) {
-      throw new CapabilitiesNotSupportedError(unsupported, adapter.provider);
+      throw new CapabilitiesNotSupportedError({
+        capabilities: unsupported,
+        provider: adapter.provider,
+      });
     }
   }
 

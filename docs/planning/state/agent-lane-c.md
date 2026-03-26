@@ -2,7 +2,7 @@
 title: Agent Lane C - Runtime Safety And Admission
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-25
+last_reviewed: 2026-03-26
 planning_type: status
 ---
 

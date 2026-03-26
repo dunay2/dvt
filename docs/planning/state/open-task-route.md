@@ -2,7 +2,7 @@
 title: Open Task Route
 status: Review
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-24
+last_reviewed: 2026-03-26
 planning_type: status
 ---
 
@@ -17,9 +17,9 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 6
-- `queued`: 32
-- `blocked`: 2
+- `review`: 0
+- `queued`: 28
+- `blocked`: 1
 - `done`: tracked in closeouts and evidence (not listed here)
 
 ## Actionable Now (Strictly Unblocked)
@@ -27,38 +27,30 @@ Authoritative task source remains:
 Pick from this list when you want immediate execution with no hard dependency
 block in the workboard.
 
-| Priority | Task ID  | Why now                                                                                  | Next action                                                            |
-| -------- | -------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                                   | Close review/merge decision and lock baseline.                         |
-| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.                   | Merge and lock runtime policy baseline.                                |
-| `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.                | Merge review and lock deterministic intent-id baseline.                |
-| `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
-| `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
-| `P1`     | `RC-A6`  | Already in `Review`; explicit prerequisite for the full state-store split sweep (`S02`). | Align dead-letter contract signatures with tenant-scoped concrete API. |
-| `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
-| `P1`     | `S13`    | Already in Review; closes duplicate provider-adapter contract drift.                     | Remove duplicate `estimateRunRef` declaration and lock the cleanup.    |
-| `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                                   | Add payload version handling in envelope flow.                         |
-| `P1`     | `S07`    | No blockers; unlocks `S11`.                                                              | Normalize lineage job naming + sink shape.                             |
-| `P1`     | `S08`    | `S09` is now closed (PR #595); plan storage ownership is unblocked.                      | Start `PostgresPlanStore` ownership slice.                             |
-| `P1`     | `S16`    | `RC-A4` is merged; runtime planVersion validation is now unblocked.                      | Wire policy into `validateStartRunPreconditions`.                      |
-| `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.                          | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
-| `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.                       | Expose reconciler status as `degraded` in API health.                  |
-| `P2`     | `RC-D1A` | RC-D1 follow-up still needs compatibility closure and runtime timer proof.               | Add `/healthz` compat policy and watchdog integration tests.           |
-| `P2`     | `DHM`    | Modularization backlog reduces helper sprawl and clarifies current seams.                | Start with `WS5`, then follow the dependency order in the proposal.    |
-| `P2`     | `F4`     | DDD finding still open and currently only documented.                                    | Freeze `WorkflowSnapshot` role and versioning rule.                    |
-| `P2`     | `F5`     | DDD boundary finding still open.                                                         | Move/remove engine-side provider selection env handling.               |
-| `P2`     | `S17`    | Multi-worker safety depends on claim path semantics today.                               | Harden outbox contract/runtime to require claim/lease semantics.       |
-| `P2`     | `A1`     | Review-validated gap with no current owner slice.                                        | Define realtime run-status delivery contract.                          |
-| `P2`     | `A2`     | Per-process limiter does not hold in horizontal deployments.                             | Design distributed tenant rate-limiter rollout.                        |
-| `P2`     | `R7`     | Unblocks `R6` dependency gate currently marked external.                                 | Close DSL/interpreter governance decision.                             |
+| Priority | Task ID  | Why now                                                                       | Next action                                                         |
+| -------- | -------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `P0`     | `G4-PR4` | Unblocked after `G4-PR3` closure; keeps Gap 4 momentum and unlocks PR5.       | Start operability rollout, metrics, and runbook closure.            |
+| `P1`     | `S03`    | `S02` is closed; start-run extraction is now unblocked again.                 | Execute `StartRunCoordinator` extraction.                           |
+| `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                        | Add payload version handling in envelope flow.                      |
+| `P1`     | `S07`    | No blockers; unlocks `S11`.                                                   | Normalize lineage job naming + sink shape.                          |
+| `P1`     | `S08`    | `S09` is now closed (PR #595); plan storage ownership is unblocked.           | Start `PostgresPlanStore` ownership slice.                          |
+| `P1`     | `S16`    | `RC-A4` is merged; runtime planVersion validation is now unblocked.           | Wire policy into `validateStartRunPreconditions`.                   |
+| `P1`     | `RC-F2`  | CI relevance policy drift is still open and has no blockers.                  | Externalize patterns and add path-matcher tests.                    |
+| `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.               | Add scheduled retry (`next_attempt_at`) with exponential backoff.   |
+| `P2`     | `RC-D1A` | `RC-D1` is closed; compatibility and watchdog integration still need closure. | Add `/healthz` compatibility policy and watchdog integration tests. |
+| `P2`     | `DHM`    | Modularization backlog reduces helper sprawl and clarifies current seams.     | Start with `WS5`, then follow the dependency order in the proposal. |
+| `P2`     | `F4`     | DDD finding still open and currently only documented.                         | Freeze `WorkflowSnapshot` role and versioning rule.                 |
+| `P2`     | `F5`     | DDD boundary finding still open.                                              | Move/remove engine-side provider selection env handling.            |
+| `P2`     | `S17`    | Multi-worker safety depends on claim path semantics today.                    | Harden outbox contract/runtime to require claim/lease semantics.    |
+| `P2`     | `A1`     | Review-validated gap with no current owner slice.                             | Define realtime run-status delivery contract.                       |
+| `P2`     | `A2`     | Per-process limiter does not hold in horizontal deployments.                  | Design distributed tenant rate-limiter rollout.                     |
+| `P2`     | `R7`     | Unblocks `R6` dependency gate currently marked external.                      | Close DSL/interpreter governance decision.                          |
 
 ## Blocked Or Gated Next
 
 | Task ID  | State   | Dependency gate                               |
 | -------- | ------- | --------------------------------------------- |
-| `G4-PR4` | Queued  | waits for `G4-PR3`                            |
 | `G4-PR5` | Queued  | waits for `G4-PR4`                            |
-| `S03`    | Queued  | depends on `S02` (C1 path)                    |
 | `F1`     | Queued  | C2 final wiring depends on `S03`              |
 | `S11`    | Blocked | waits for `S07`                               |
 | `R4`     | Queued  | waits for `R3`                                |
@@ -71,28 +63,22 @@ block in the workboard.
 
 ```mermaid
 flowchart LR
-  G43[G4-PR3] --> G44[G4-PR4] --> G45[G4-PR5]
+  G44[G4-PR4] --> G45[G4-PR5]
 
-  RC_A6[RC-A6] --> S02[S02] --> S03[S03] --> F1[F1]
-  RC_A5[RC-A5]
+  S03[S03] --> F1[F1]
   RC_B5[RC-B5]
-  RC_D1[RC-D1]
   RC_D1A[RC-D1A]
-  RC_D2[RC-D2]
-  RC_D3[RC-D3]
+  RC_F2[RC-F2]
   S16[S16]
   DHM[DHM]
 
-  S14[S14]
-  S15[S15]
   S17[S17]
   F4[F4]
   F5[F5]
-  S13[S13]
   S05[S05]
 
   S07[S07] --> S11[S11]
-  S09[S09] --> S08[S08]
+  S08[S08]
 
   R3[R3] --> R4[R4] --> R5[R5]
   R4 --> R6[R6]
@@ -108,14 +94,16 @@ flowchart LR
 
 If you want maximum parallelism now without violating gates, start these lanes:
 
-1. `API lane`: close `G4-PR3`.
-2. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
+1. `API lane`: start `G4-PR4` now that `G4-PR3` is done.
+2. `State-store lane`: `S03` then `F1`.
 3. `Version lane`: `S16`.
 4. `Traceability lane`: `S07` + `RC-B5`.
 5. `Planner lane`: `S08` (unblocked after `S09` closure).
-6. `Ops lane`: `RC-D1` + `RC-D1A` + `RC-D2` + `RC-D3`.
-7. `Governance lane`: `S13` + `F4` + `F5` + `A1` + `A2` + `R7`.
+6. `Ops lane`: `RC-D1A`.
+7. `Governance lane`: `F4` + `F5` + `A1` + `A2` + `R7`.
 8. `Architecture lane`: `DHM` (start with `WS5`).
+9. `Event Lifecycle lane`: prepare `G5-PR2` prerequisites, then execute restore/deferred delete flow.
+10. `CI / Infrastructure lane`: execute `RC-F2` (single policy source for adapter-postgres relevance + matcher tests).
 
 ## Usage Rule
 

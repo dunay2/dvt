@@ -169,7 +169,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { engine } = createEngine();
 
     await expect(engine.startRun(makePlanRef(), makeContext())).rejects.toThrow(
-      /No adapter registered for provider/
+      /engine\.error\.adapter_not_registered/
     );
   });
 
@@ -184,7 +184,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
         workflowId: 'w',
         runId: 'missing',
       } as any)
-    ).rejects.toThrow(/Run metadata not found/);
+    ).rejects.toThrow(/engine\.error\.run_metadata_not_found/);
   });
 
   it('startRun rejects invalid runtime boundary payloads', async () => {
@@ -284,7 +284,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       createEngine({
         requiredProviders: ['temporal'],
       })
-    ).toThrow(/No adapter registered for provider: temporal/);
+    ).toThrow(/engine\.error\.adapter_not_registered/);
   });
 
   it.each([
@@ -292,7 +292,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       name: 'invalid runId format',
       run: async (engine: WorkflowEngine): Promise<void> => {
         await expect(engine.startRun(makePlanRef(), makeContext('bad run id'))).rejects.toThrow(
-          /Invalid runId format/
+          /engine\.error\.invalid_run_id/
         );
       },
     },
@@ -301,7 +301,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       run: async (engine: WorkflowEngine): Promise<void> => {
         await engine.startRun(makePlanRef(), makeContext('dup-1'));
         await expect(engine.startRun(makePlanRef(), makeContext('dup-1'))).rejects.toThrow(
-          /already exists/
+          /engine\.error\.run_already_exists/
         );
       },
     },

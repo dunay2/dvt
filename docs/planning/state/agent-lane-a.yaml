@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-25
+last_reviewed: 2026-03-26
 goal: Close the state-store boundary and the smallest contract cleanup slice around it.
 expected_outcome:
   - state-store ownership is explicit
@@ -65,12 +65,12 @@ tasks:
     target: Remove duplicate provider-adapter contract drift.
   - task_id: RC-A5
     priority: P1
-    status: queued
+    status: done
     objective:
       replace silent markResolved catch with warning/metric telemetry so intent-resolution failures
       are observable.
     dependency: none
-    target: Merge and lock intent-resolution observability.
+    target: Merged in main (#554); intent-resolution observability locked.
   - task_id: RC-E3
     priority: P1
     status: queued
