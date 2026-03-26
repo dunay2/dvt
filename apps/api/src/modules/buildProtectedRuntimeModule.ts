@@ -68,7 +68,7 @@ export async function buildProtectedRuntimeModule(
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
   const stateStore = new PostgresStateStoreAdapter({
-    connectionString: databaseUrl,
+    pool,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -76,7 +76,7 @@ export async function buildProtectedRuntimeModule(
   const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
-    connectionString: databaseUrl,
+    pool,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
