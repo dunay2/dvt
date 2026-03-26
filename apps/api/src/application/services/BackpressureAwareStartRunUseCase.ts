@@ -40,7 +40,6 @@ type DelegateTelemetryResult = Extract<
   }
 >;
 
-
 export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
@@ -244,7 +243,6 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     });
   }
 }
-
 
 function isDelegateTelemetryResult(
   result: StartRunUseCaseResult
