@@ -87,9 +87,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
 
   private async handleDuplicate(
     duplicate: {
-      kind:
-        | typeof DUPLICATE_RUN_PROBE_KIND.foundRun
-        | typeof DUPLICATE_RUN_PROBE_KIND.foundIntent;
+      kind: typeof DUPLICATE_RUN_PROBE_KIND.foundRun | typeof DUPLICATE_RUN_PROBE_KIND.foundIntent;
       runId: string;
     },
     context: AuthorizedCommandExecutionContext,

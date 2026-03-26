@@ -9,8 +9,7 @@ export const AUTH_AUDIT_EVENT_TYPE = {
   denied: 'AUTH_DENIED',
 } as const;
 
-export type AuthAuditEventType =
-  (typeof AUTH_AUDIT_EVENT_TYPE)[keyof typeof AUTH_AUDIT_EVENT_TYPE];
+export type AuthAuditEventType = (typeof AUTH_AUDIT_EVENT_TYPE)[keyof typeof AUTH_AUDIT_EVENT_TYPE];
 
 export type AuthenticationFailureCode =
   | 'MISSING_TOKEN'

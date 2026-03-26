@@ -9,10 +9,7 @@ import {
 } from '@dvt/engine';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type {
-  StartRunCommand,
-  StartRunPlanRef,
-} from '../ports/startRunCommandContract.js';
+import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
 import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_KIND,

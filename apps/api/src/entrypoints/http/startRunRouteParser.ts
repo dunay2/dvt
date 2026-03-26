@@ -120,7 +120,9 @@ function parsePlanRef(
 
 function parseTargetAdapter(
   raw: unknown
-): { readonly ok: true; readonly value: StartRunCommand['targetAdapter'] } | { readonly ok: false } {
+):
+  | { readonly ok: true; readonly value: StartRunCommand['targetAdapter'] }
+  | { readonly ok: false } {
   const normalized = asNonEmptyTrimmedStringOrUndefined(raw);
   if (
     normalized === START_RUN_TARGET_ADAPTER.temporal ||

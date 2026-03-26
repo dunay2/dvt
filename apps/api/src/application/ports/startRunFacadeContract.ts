@@ -23,7 +23,10 @@ export type StartRunFacadeResult =
       readonly kind: typeof START_RUN_FACADE_RESULT_KIND.unauthenticated;
       readonly code: AuthenticationFailureCode;
     }
-  | { readonly kind: typeof START_RUN_FACADE_RESULT_KIND.unauthorized; readonly reason: DeniedReason }
+  | {
+      readonly kind: typeof START_RUN_FACADE_RESULT_KIND.unauthorized;
+      readonly reason: DeniedReason;
+    }
   | {
       readonly kind: typeof START_RUN_FACADE_RESULT_KIND.adapterNotConfigured;
       readonly adapter: string;
