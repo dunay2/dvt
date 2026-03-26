@@ -63,13 +63,19 @@ describe('BackpressureAwareStartRunUseCase', () => {
       delegate: {
         async execute() {
           calls.push('delegate');
-          return { kind: 'accepted' as const, runId: 'run-1', accepted: true };
+          return {
+            ok: true as const,
+            value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+          };
         },
       },
     });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({ kind: 'accepted', runId: 'run-1', accepted: true });
+    expect(result).toEqual({
+      ok: true,
+      value: { kind: 'accepted', runId: 'run-1', accepted: true },
+    });
     expect(calls).toEqual(['duplicate', 'admission', 'delegate', 'telemetry']);
   });
 
@@ -92,10 +98,13 @@ describe('BackpressureAwareStartRunUseCase', () => {
 
     const result = await useCase.execute(COMMAND, CONTEXT);
     expect(result).toEqual({
-      kind: 'duplicate',
-      runId: 'run-1',
-      accepted: true,
-      duplicateOf: 'intent',
+      ok: true,
+      value: {
+        kind: 'duplicate',
+        runId: 'run-1',
+        accepted: true,
+        duplicateOf: 'intent',
+      },
     });
     expect(admissionGuard.assertAdmissible).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
@@ -132,10 +141,13 @@ describe('BackpressureAwareStartRunUseCase', () => {
 
     const result = await useCase.execute(COMMAND, CONTEXT);
     expect(result).toEqual({
-      kind: 'tenant_backpressure',
-      accepted: false,
-      code: 'TENANT_BACKPRESSURE',
-      retryAfterSeconds: 30,
+      ok: true,
+      value: {
+        kind: 'tenant_backpressure',
+        accepted: false,
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      },
     });
     expect(delegate.execute).not.toHaveBeenCalled();
   });
@@ -167,10 +179,13 @@ describe('BackpressureAwareStartRunUseCase', () => {
 
     const result = await useCase.execute(COMMAND, CONTEXT);
     expect(result).toEqual({
-      kind: 'system_backpressure',
-      accepted: false,
-      code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
-      retryAfterSeconds: 45,
+      ok: true,
+      value: {
+        kind: 'system_backpressure',
+        accepted: false,
+        code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
+        retryAfterSeconds: 45,
+      },
     });
     expect(delegate.execute).not.toHaveBeenCalled();
   });
@@ -178,9 +193,12 @@ describe('BackpressureAwareStartRunUseCase', () => {
   it('observe mode records hypothetical reject and still delegates', async () => {
     const delegate = {
       execute: vi.fn().mockResolvedValue({
-        kind: 'accepted' as const,
-        runId: 'run-1',
-        accepted: true,
+        ok: true as const,
+        value: {
+          kind: 'accepted' as const,
+          runId: 'run-1',
+          accepted: true,
+        },
       }),
     };
     const telemetry = { recordDecision: vi.fn().mockResolvedValue(undefined) };
@@ -202,7 +220,10 @@ describe('BackpressureAwareStartRunUseCase', () => {
     });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({ kind: 'accepted', runId: 'run-1', accepted: true });
+    expect(result).toEqual({
+      ok: true,
+      value: { kind: 'accepted', runId: 'run-1', accepted: true },
+    });
     expect(delegate.execute).toHaveBeenCalledOnce();
     expect(telemetry.recordDecision).toHaveBeenCalledWith(
       expect.objectContaining({

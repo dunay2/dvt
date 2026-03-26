@@ -1,9 +1,17 @@
+import {
+  AdapterNotRegisteredError,
+  OutboxRateLimitExceededError,
+  RunAlreadyExistsError,
+  UnsupportedPlanVersionError,
+} from '@dvt/engine';
 import { describe, it, expect } from 'vitest';
 
-import type {
-  AuthorizedCommandExecutionContext,
-  StartRunCommand,
-} from '../../../src/application/ports/auth.js';
+import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';
+import {
+  START_RUN_ENGINE_ERROR_CODE,
+  START_RUN_ENGINE_ERROR_REASON,
+  type StartRunCommand,
+} from '../../../src/application/ports/startRunContract.js';
 import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 
@@ -49,6 +57,25 @@ function mkCommand(): StartRunCommand {
 }
 
 describe('EngineStartRunUseCase', () => {
+  it('returns command_invalid result when planRef is missing', async () => {
+    const useCase = new EngineStartRunUseCase({} as never);
+    const commandWithoutPlanRef: StartRunCommand = {
+      runId: 'run-test-1',
+      targetAdapter: 'mock',
+      selection: ['step_a'],
+    };
+
+    const result = await useCase.execute(commandWithoutPlanRef, mkContext());
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'command_invalid',
+        code: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+        reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+      },
+    });
+  });
+
   it('calls engine.startRun with plan ref and run context', async () => {
     let capturedPlanRef: unknown;
     let capturedRunContext: unknown;
@@ -69,7 +96,10 @@ describe('EngineStartRunUseCase', () => {
     const useCase = new EngineStartRunUseCase(fakeEngine as never);
     const result = await useCase.execute(mkCommand(), mkContext());
 
-    expect(result).toEqual({ kind: 'accepted', runId: 'run-test-1', accepted: true });
+    expect(result).toEqual({
+      ok: true,
+      value: { kind: 'accepted', runId: 'run-test-1', accepted: true },
+    });
     expect(capturedPlanRef).toEqual(PLAN_REF);
     expect(capturedRunContext).toEqual({
       tenantId: 'tenant-1',
@@ -80,7 +110,103 @@ describe('EngineStartRunUseCase', () => {
     });
   });
 
-  it('propagates engine errors', async () => {
+  it('maps AdapterNotRegisteredError to typed engine error result', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw new AdapterNotRegisteredError('mock');
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'adapter_not_registered',
+        adapter: 'mock',
+      },
+    });
+  });
+
+  it('maps UnsupportedPlanVersionError to typed engine error result', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw new UnsupportedPlanVersionError('9.0', ['2.3', '2.4']);
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'unsupported_plan_version',
+        planVersion: '9.0',
+        supportedVersions: ['2.3', '2.4'],
+      },
+    });
+  });
+
+  it('maps RunAlreadyExistsError to duplicate result', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw new RunAlreadyExistsError('run-test-1');
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: 'duplicate',
+        runId: 'run-test-1',
+        accepted: true,
+        duplicateOf: 'run',
+      },
+    });
+  });
+
+  it('maps INTENT_ACTIVE_CONFLICT to duplicate intent result', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw Object.assign(new Error('intent conflict'), { code: 'INTENT_ACTIVE_CONFLICT' });
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: 'duplicate',
+        runId: 'run-test-1',
+        accepted: true,
+        duplicateOf: 'intent',
+      },
+    });
+  });
+
+  it('maps OutboxRateLimitExceededError to rate-limited result', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw new OutboxRateLimitExceededError('tenant-1');
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: 'rate_limited',
+        accepted: false,
+        code: 'OUTBOX_RATE_LIMIT_EXCEEDED',
+      },
+    });
+  });
+
+  it('rethrows unexpected engine errors', async () => {
     const fakeEngine = {
       async startRun() {
         throw new Error('engine unavailable');

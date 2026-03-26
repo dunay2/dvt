@@ -1,12 +1,18 @@
-import type { AdmissionTelemetry } from '../ports/AdmissionTelemetry.js';
-import type {
-  AuthorizedCommandExecutionContext,
-  IStartRunUseCase,
-  StartRunCommand,
-  StartRunResult,
-} from '../ports/auth.js';
-import type { DuplicateRunProbe } from '../ports/DuplicateRunProbe.js';
-import type { AdmissionMode } from '../ports/IAdmissionMode.js';
+import {
+  ADMISSION_TELEMETRY_DECISION,
+  type AdmissionTelemetry,
+} from '../ports/AdmissionTelemetry.js';
+import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
+import { DUPLICATE_RUN_PROBE_KIND, type DuplicateRunProbe } from '../ports/DuplicateRunProbe.js';
+import { ADMISSION_MODE, type AdmissionMode } from '../ports/IAdmissionMode.js';
+import type { StartRunCommand } from '../ports/startRunCommandContract.js';
+import {
+  START_RUN_BACKPRESSURE_CODE,
+  START_RUN_DUPLICATE_OF,
+  START_RUN_RESULT_KIND,
+  type StartRunResult,
+} from '../ports/startRunResultContract.js';
+import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
 
 type AdmissionGuard = {
   assertAdmissible(tenantId: string): Promise<void>;
@@ -14,13 +20,29 @@ type AdmissionGuard = {
 
 type AdmissionRejectResult = Extract<
   StartRunResult,
-  { readonly kind: 'tenant_backpressure' | 'system_backpressure' }
+  {
+    readonly kind:
+      | typeof START_RUN_RESULT_KIND.tenantBackpressure
+      | typeof START_RUN_RESULT_KIND.systemBackpressure;
+  }
+>;
+type DelegateTelemetryResult = Extract<
+  StartRunResult,
+  {
+    readonly kind: typeof START_RUN_RESULT_KIND.accepted | typeof START_RUN_RESULT_KIND.duplicate;
+  }
 >;
 
 type AdmissionErrorCode =
-  | 'TENANT_BACKPRESSURE'
-  | 'SYSTEM_BACKPRESSURE'
-  | 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE';
+  | typeof START_RUN_BACKPRESSURE_CODE.tenant
+  | typeof START_RUN_BACKPRESSURE_CODE.system
+  | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable;
+
+type AdmissionDecision =
+  | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectTenant
+  | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectSystem
+  | typeof ADMISSION_TELEMETRY_DECISION.rejectTenant
+  | typeof ADMISSION_TELEMETRY_DECISION.rejectSystem;
 
 export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   public constructor(
@@ -37,52 +59,61 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   public async execute(
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
-  ): Promise<StartRunResult> {
+  ): Promise<StartRunUseCaseResult> {
     const tenantId = context.scope.tenantId.value;
     const duplicate = await this.deps.duplicateProbe.findExisting(tenantId, command.runId);
-    if (duplicate.kind !== 'not_found') {
-      return this.handleDuplicate(duplicate, context, tenantId);
+    if (duplicate.kind !== DUPLICATE_RUN_PROBE_KIND.notFound) {
+      return {
+        ok: true,
+        value: await this.handleDuplicate(duplicate, context, tenantId),
+      };
     }
 
     const admissionResult = await this.evaluateAdmission(command, context, tenantId);
     if (admissionResult !== null) {
-      return admissionResult;
+      return { ok: true, value: admissionResult };
     }
 
     // Future rate limiter ordering, if enabled: duplicate -> backpressure -> rate limiter -> engine.
     const result = await this.deps.delegate.execute(command, context);
-    if (result.kind === 'accepted' || result.kind === 'duplicate') {
-      await this.recordTelemetry({
-        requestId: context.requestId,
-        tenantId,
-        runId: command.runId,
-        mode: this.deps.mode,
-        decision: result.kind === 'duplicate' ? 'duplicate' : 'accept',
-        ...(result.kind === 'duplicate' ? { duplicateOf: result.duplicateOf } : {}),
-      });
-    }
+    await this.recordDelegateDecisionIfNeeded(result, {
+      requestId: context.requestId,
+      tenantId,
+      runId: command.runId,
+    });
 
     return result;
   }
 
   private async handleDuplicate(
-    duplicate: { kind: 'found_run' | 'found_intent'; runId: string },
+    duplicate: {
+      kind:
+        | typeof DUPLICATE_RUN_PROBE_KIND.foundRun
+        | typeof DUPLICATE_RUN_PROBE_KIND.foundIntent;
+      runId: string;
+    },
     context: AuthorizedCommandExecutionContext,
     tenantId: string
-  ): Promise<Extract<StartRunResult, { readonly kind: 'duplicate' }>> {
-    const result: Extract<StartRunResult, { readonly kind: 'duplicate' }> = {
-      kind: 'duplicate',
+  ): Promise<Extract<StartRunResult, { readonly kind: typeof START_RUN_RESULT_KIND.duplicate }>> {
+    const result: Extract<
+      StartRunResult,
+      { readonly kind: typeof START_RUN_RESULT_KIND.duplicate }
+    > = {
+      kind: START_RUN_RESULT_KIND.duplicate,
       runId: duplicate.runId,
       accepted: true,
-      duplicateOf: duplicate.kind === 'found_run' ? 'run' : 'intent',
+      duplicateOf:
+        duplicate.kind === DUPLICATE_RUN_PROBE_KIND.foundRun
+          ? START_RUN_DUPLICATE_OF.run
+          : START_RUN_DUPLICATE_OF.intent,
     };
 
     await this.recordTelemetry({
       requestId: context.requestId,
       tenantId,
-      runId: result.runId,
+      runId: duplicate.runId,
       mode: this.deps.mode,
-      decision: 'duplicate',
+      decision: ADMISSION_TELEMETRY_DECISION.duplicate,
       duplicateOf: result.duplicateOf,
     });
 
@@ -94,7 +125,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     context: AuthorizedCommandExecutionContext,
     tenantId: string
   ): Promise<AdmissionRejectResult | null> {
-    if (this.deps.mode === 'off') {
+    if (this.deps.mode === ADMISSION_MODE.off) {
       return null;
     }
 
@@ -117,34 +148,39 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
         code: reject.code,
       });
 
-      return this.deps.mode === 'observe' ? null : reject;
+      return this.deps.mode === ADMISSION_MODE.observe ? null : reject;
     }
   }
 
-  private buildAdmissionDecision(
-    reject: AdmissionRejectResult
-  ): 'would_reject_tenant' | 'would_reject_system' | 'reject_tenant' | 'reject_system' {
-    if (this.deps.mode === 'observe') {
-      return reject.kind === 'tenant_backpressure' ? 'would_reject_tenant' : 'would_reject_system';
+  private buildAdmissionDecision(reject: AdmissionRejectResult): AdmissionDecision {
+    if (this.deps.mode === ADMISSION_MODE.observe) {
+      return reject.kind === START_RUN_RESULT_KIND.tenantBackpressure
+        ? ADMISSION_TELEMETRY_DECISION.wouldRejectTenant
+        : ADMISSION_TELEMETRY_DECISION.wouldRejectSystem;
     }
 
-    return reject.kind === 'tenant_backpressure' ? 'reject_tenant' : 'reject_system';
+    return reject.kind === START_RUN_RESULT_KIND.tenantBackpressure
+      ? ADMISSION_TELEMETRY_DECISION.rejectTenant
+      : ADMISSION_TELEMETRY_DECISION.rejectSystem;
   }
 
   private toAdmissionRejectResult(error: unknown): AdmissionRejectResult | null {
     const code = getAdmissionErrorCode(error);
-    if (code === 'TENANT_BACKPRESSURE') {
+    if (code === START_RUN_BACKPRESSURE_CODE.tenant) {
       return {
-        kind: 'tenant_backpressure',
+        kind: START_RUN_RESULT_KIND.tenantBackpressure,
         accepted: false,
         code,
         retryAfterSeconds: this.deps.retryAfterSeconds,
       };
     }
 
-    if (code === 'SYSTEM_BACKPRESSURE' || code === 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE') {
+    if (
+      code === START_RUN_BACKPRESSURE_CODE.system ||
+      code === START_RUN_BACKPRESSURE_CODE.snapshotUnavailable
+    ) {
       return {
-        kind: 'system_backpressure',
+        kind: START_RUN_RESULT_KIND.systemBackpressure,
         accepted: false,
         code,
         retryAfterSeconds: this.deps.retryAfterSeconds,
@@ -163,6 +199,39 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
       // Telemetry must not break command admission.
     }
   }
+
+  private async recordDelegateDecisionIfNeeded(
+    result: StartRunUseCaseResult,
+    context: {
+      readonly requestId: string;
+      readonly tenantId: string;
+      readonly runId: string;
+    }
+  ): Promise<void> {
+    if (!isDelegateTelemetryResult(result)) {
+      return;
+    }
+
+    if (result.value.kind === START_RUN_RESULT_KIND.duplicate) {
+      await this.recordTelemetry({
+        requestId: context.requestId,
+        tenantId: context.tenantId,
+        runId: context.runId,
+        mode: this.deps.mode,
+        decision: ADMISSION_TELEMETRY_DECISION.duplicate,
+        duplicateOf: result.value.duplicateOf,
+      });
+      return;
+    }
+
+    await this.recordTelemetry({
+      requestId: context.requestId,
+      tenantId: context.tenantId,
+      runId: context.runId,
+      mode: this.deps.mode,
+      decision: ADMISSION_TELEMETRY_DECISION.accept,
+    });
+  }
 }
 
 function getAdmissionErrorCode(error: unknown): AdmissionErrorCode | null {
@@ -172,12 +241,22 @@ function getAdmissionErrorCode(error: unknown): AdmissionErrorCode | null {
 
   const code = (error as Error & { code?: unknown }).code;
   if (
-    code === 'TENANT_BACKPRESSURE' ||
-    code === 'SYSTEM_BACKPRESSURE' ||
-    code === 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE'
+    code === START_RUN_BACKPRESSURE_CODE.tenant ||
+    code === START_RUN_BACKPRESSURE_CODE.system ||
+    code === START_RUN_BACKPRESSURE_CODE.snapshotUnavailable
   ) {
     return code;
   }
 
   return null;
+}
+
+function isDelegateTelemetryResult(
+  result: StartRunUseCaseResult
+): result is { readonly ok: true; readonly value: DelegateTelemetryResult } {
+  return (
+    result.ok &&
+    (result.value.kind === START_RUN_RESULT_KIND.accepted ||
+      result.value.kind === START_RUN_RESULT_KIND.duplicate)
+  );
 }

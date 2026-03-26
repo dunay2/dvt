@@ -7,10 +7,12 @@ import {
   SignalNotImplementedError,
 } from '@dvt/engine';
 
-import type {
-  AuthenticationFailureCode,
-  StartRunFacadeResult,
-} from '../../application/ports/auth.js';
+import type { AuthenticationFailureCode } from '../../application/ports/auth.js';
+import { START_RUN_ENGINE_ERROR_CODE } from '../../application/ports/startRunEngineErrorContract.js';
+import {
+  START_RUN_FACADE_RESULT_KIND,
+  type StartRunFacadeResult,
+} from '../../application/ports/startRunFacadeContract.js';
 import type { DeniedReason } from '../../domain/auth/types.js';
 
 export interface HttpResponseModel {
@@ -21,21 +23,21 @@ export interface HttpResponseModel {
 
 export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpResponseModel {
   switch (result.kind) {
-    case 'unauthenticated':
+    case START_RUN_FACADE_RESULT_KIND.unauthenticated:
       return { status: 401, body: { error: 'UNAUTHORIZED', code: result.code } };
-    case 'unauthorized':
+    case START_RUN_FACADE_RESULT_KIND.unauthorized:
       return { status: 403, body: { error: 'FORBIDDEN', code: result.reason } };
-    case 'adapter_not_configured':
+    case START_RUN_FACADE_RESULT_KIND.adapterNotConfigured:
       return {
         status: 422,
         body: { error: 'ADAPTER_NOT_CONFIGURED', adapter: result.adapter },
       };
-    case 'accepted':
+    case START_RUN_FACADE_RESULT_KIND.accepted:
       return {
         status: 202,
         body: { runId: result.runId, accepted: result.accepted },
       };
-    case 'duplicate':
+    case START_RUN_FACADE_RESULT_KIND.duplicate:
       return {
         status: 202,
         body: {
@@ -45,19 +47,19 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           duplicateOf: result.duplicateOf,
         },
       };
-    case 'tenant_backpressure':
+    case START_RUN_FACADE_RESULT_KIND.tenantBackpressure:
       return {
         status: 429,
         headers: { 'retry-after': String(result.retryAfterSeconds) },
         body: { error: 'TOO_MANY_REQUESTS', code: result.code },
       };
-    case 'system_backpressure':
+    case START_RUN_FACADE_RESULT_KIND.systemBackpressure:
       return {
         status: 503,
         headers: { 'retry-after': String(result.retryAfterSeconds) },
         body: { error: 'SERVICE_UNAVAILABLE', code: result.code },
       };
-    case 'rate_limited':
+    case START_RUN_FACADE_RESULT_KIND.rateLimited:
       return {
         status: 429,
         ...(result.retryAfterSeconds === undefined
@@ -65,7 +67,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           : { headers: { 'retry-after': String(result.retryAfterSeconds) } }),
         body: { error: 'TOO_MANY_REQUESTS', code: result.code },
       };
-    case 'plan_rejected':
+    case START_RUN_FACADE_RESULT_KIND.planRejected:
       return {
         status: 422,
         body: {
@@ -106,7 +108,10 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     return { status: 403, body: { error: 'FORBIDDEN', code: 'TENANT_ACCESS_DENIED' } };
   }
 
-  if (error instanceof RunAlreadyExistsError || getErrorCode(error) === 'INTENT_ACTIVE_CONFLICT') {
+  if (
+    error instanceof RunAlreadyExistsError ||
+    getErrorCode(error) === START_RUN_ENGINE_ERROR_CODE.intentActiveConflict
+  ) {
     return { status: 409, body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' } };
   }
 
