@@ -16,7 +16,6 @@ export class MetricsEmittingBackpressureStore implements BackpressureStore {
     const envelope = await this.deps.delegate.getTenantSnapshotEnvelope(tenantId);
     try {
       this.deps.capacityTelemetry.recordSnapshot({
-        tenantId,
         pendingEventsCount: envelope.snapshot.pendingEventsPerTenant,
         outboxOldestAgeMs: envelope.snapshot.outboxOldestAgeMs,
         source: envelope.source,

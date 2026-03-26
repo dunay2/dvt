@@ -64,7 +64,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
       expect(() =>
         telemetry.recordSnapshot({
-          tenantId: 't',
           pendingEventsCount: 1,
           outboxOldestAgeMs: 0,
           source: 'live',
@@ -101,7 +100,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
       expect(() =>
         telemetry.recordSnapshot({
-          tenantId: 't',
           pendingEventsCount: 1,
           outboxOldestAgeMs: 0,
           source: 'live',
