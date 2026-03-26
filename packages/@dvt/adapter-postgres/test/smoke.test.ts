@@ -64,6 +64,7 @@ function makeEvent(
     logicalAttemptId: 1,
     emittedAt: NOW,
     idempotencyKey: overrides.idempotencyKey,
+    payloadVersion: overrides.payloadVersion ?? 1,
     payload: overrides.payload,
   };
 }
