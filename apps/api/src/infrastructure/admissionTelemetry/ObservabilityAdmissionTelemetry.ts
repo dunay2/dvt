@@ -16,6 +16,12 @@ const REJECTION_DECISIONS = new Set<AdmissionTelemetryDecision>([
   ADMISSION_TELEMETRY_DECISION.wouldRejectSystem,
 ]);
 
+type RejectionRecord = Extract<AdmissionDecisionRecord, { readonly code: string }>;
+
+function isRejectionRecord(event: AdmissionDecisionRecord): event is RejectionRecord {
+  return REJECTION_DECISIONS.has(event.decision);
+}
+
 export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
   private readonly decisionCounter;
   private readonly rejectionCounter;
@@ -37,15 +43,11 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
     try {
       this.decisionCounter.add(1, { mode: event.mode, decision: event.decision });
 
-      if (REJECTION_DECISIONS.has(event.decision)) {
-        const rejection = event as Extract<
-          AdmissionDecisionRecord,
-          { readonly code: string; readonly retryAfterSeconds: number }
-        >;
+      if (isRejectionRecord(event)) {
         this.rejectionCounter.add(1, {
           mode: event.mode,
           decision: event.decision,
-          code: rejection.code,
+          code: event.code,
         });
         this.deps.observability.logs.warn({
           msg: 'admission.decision',
