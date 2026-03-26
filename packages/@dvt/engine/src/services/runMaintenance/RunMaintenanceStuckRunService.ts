@@ -20,12 +20,15 @@ import {
   RUN_MAINTENANCE_RUN_STATUS,
 } from './RunMaintenanceDomainConstants.js';
 import { RunMaintenanceEventFactory } from './RunMaintenanceEventFactory.js';
+import { RunMaintenanceObservabilityFacade } from './RunMaintenanceObservabilityFacade.js';
 
 export class RunMaintenanceStuckRunService {
   private readonly eventFactory: RunMaintenanceEventFactory;
+  private readonly observability: RunMaintenanceObservabilityFacade;
 
   constructor(private readonly deps: RunMaintenanceServiceDeps) {
     this.eventFactory = new RunMaintenanceEventFactory(this.deps);
+    this.observability = new RunMaintenanceObservabilityFacade(this.deps.observability);
   }
 
   async detectStuckRuns(options: DetectStuckRunsOptions): Promise<DetectStuckRunsResult> {
@@ -45,7 +48,7 @@ export class RunMaintenanceStuckRunService {
 
     for (const meta of candidates) {
       if (!meta.createdAt) {
-        this.safeLogWarn({
+        this.observability.warn({
           msg: RUN_MAINTENANCE_MESSAGE.skipStuckRunWithoutCreatedAt,
           context: traceContext,
           attributes: { runId: meta.runId },
@@ -63,12 +66,12 @@ export class RunMaintenanceStuckRunService {
         ),
       ]);
 
-      this.safeIncrementCounter(RUN_MAINTENANCE_METRIC.queuedTimeoutTotal, {
+      this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.queuedTimeoutTotal, {
         provider: meta.provider,
         tenantId: meta.tenantId,
         operation: RUN_MAINTENANCE_OPERATION.detectStuckRuns,
       });
-      this.safeLogInfo({
+      this.observability.info({
         msg: RUN_MAINTENANCE_MESSAGE.transitionedStuckRunToFailed,
         context: traceContext,
         attributes: {
@@ -128,12 +131,12 @@ export class RunMaintenanceStuckRunService {
         ),
       ]);
 
-      this.safeIncrementCounter(RUN_MAINTENANCE_METRIC.cancellationTimeoutTotal, {
+      this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.cancellationTimeoutTotal, {
         provider: meta.provider,
         tenantId: meta.tenantId,
         operation: RUN_MAINTENANCE_OPERATION.detectStuckCancellingRuns,
       });
-      this.safeLogInfo({
+      this.observability.info({
         msg: RUN_MAINTENANCE_MESSAGE.transitionedCancellingRunToFailed,
         context: traceContext,
         attributes: {
@@ -162,36 +165,6 @@ export class RunMaintenanceStuckRunService {
       return await this.deps.observability.withContext(context, listRuns);
     } catch {
       return listRuns();
-    }
-  }
-
-  private safeIncrementCounter(name: string, labels: Readonly<Record<string, string>>): void {
-    try {
-      this.deps.observability.metrics
-        .counter(name, labels)
-        .add(RUN_MAINTENANCE_NUMERIC.metricIncrement);
-    } catch {
-      // no-op
-    }
-  }
-
-  private safeLogInfo(
-    entry: Parameters<RunMaintenanceServiceDeps['observability']['logs']['info']>[0]
-  ): void {
-    try {
-      this.deps.observability.logs.info(entry);
-    } catch {
-      // no-op
-    }
-  }
-
-  private safeLogWarn(
-    entry: Parameters<RunMaintenanceServiceDeps['observability']['logs']['warn']>[0]
-  ): void {
-    try {
-      this.deps.observability.logs.warn(entry);
-    } catch {
-      // no-op
     }
   }
 }
