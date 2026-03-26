@@ -26,25 +26,22 @@ import type {
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
-import type { IObservability, ISpan } from '@dvt/observability';
+import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import {
   AdapterNotRegisteredError,
-  CapabilitiesNotSupportedError,
-  InvalidRunIdError,
-  InvalidSchemaVersionError,
-  RunAlreadyExistsError,
   RunMetadataNotFoundError,
   SignalNotImplementedError,
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
-import { assertSupportedPlanVersion } from '../contracts/PlanVersionPolicy.js';
 import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { StartRunCoordinator } from '../services/StartRunCoordinator.js';
 import type { IClock } from '../utils/clock.js';
+import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
@@ -90,54 +87,34 @@ interface HealthCheckable {
   ping?: () => Promise<void>;
 }
 
-interface StartRunErrorContext {
-  intentId?: string;
-}
-
-class MutableStartRunErrorContext implements StartRunErrorContext {
-  intentId?: string;
-}
-
-class PostStartIntentPersistenceError extends Error {
-  constructor(
-    readonly intentId: string,
-    readonly runRef: EngineRunRef,
-    readonly originalError: unknown
-  ) {
-    const cause = originalError instanceof Error ? originalError : new Error(String(originalError));
-    super(`Intent persistence failed after adapter.startRun succeeded: ${cause.message}`, {
-      cause,
-    });
-    this.name = 'PostStartIntentPersistenceError';
-  }
-}
-
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
-  private readonly stderrFallbackThrottleMs: number;
-  private lastStderrFallbackAtMs = 0;
+  private readonly startRunCoordinator: StartRunCoordinator;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
     this.observability = deps.observability;
-    this.stderrFallbackThrottleMs =
-      typeof deps.observabilityFallbackThrottleMs === 'number' &&
-      Number.isFinite(deps.observabilityFallbackThrottleMs) &&
-      deps.observabilityFallbackThrottleMs > 0
-        ? deps.observabilityFallbackThrottleMs
-        : 30_000;
+    this.startRunCoordinator = new StartRunCoordinator({
+      stateStoreRead: deps.stateStoreRead,
+      stateStoreWrite: deps.stateStoreWrite,
+      idempotency: deps.idempotency,
+      clock: deps.clock,
+      policy: deps.policy,
+      intentStore: deps.intentStore,
+      adapters: deps.adapters,
+      observability: deps.observability,
+      ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
+      ...(deps.observabilityFallbackThrottleMs === undefined
+        ? {}
+        : { observabilityFallbackThrottleMs: deps.observabilityFallbackThrottleMs }),
+    });
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
     const validatedPlanRef = normalizePlanRef(parsePlanRef(planRef));
     const validatedContext = normalizeRunContext(parseRunContext(context));
     const resolvedContext = resolveInitialRunContext(validatedContext);
-    const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(resolvedContext.targetAdapter, resolvedContext.tenantId, {
-      operation: 'startRun',
-    });
     const traceContext = buildTraceContext(resolvedContext, validatedPlanRef.planId);
-    const errorContext = new MutableStartRunErrorContext();
 
     return this.observability.withContext(traceContext, () =>
       this.observability.traces.withSpan(
@@ -150,380 +127,22 @@ export class WorkflowEngine implements IWorkflowEngine {
           },
         },
         async (span) => {
-          this.observability.logs.info({
-            msg: 'Starting run',
-            context: traceContext,
-            attributes: {
-              provider: resolvedContext.targetAdapter,
-              planUri: validatedPlanRef.uri,
-            },
-          });
           try {
-            return await this._startRunCore({
+            const runRef = await this.startRunCoordinator.startRun(
               validatedPlanRef,
               resolvedContext,
-              startMs,
-              metricTags,
-              traceContext,
-              span,
-              errorContext,
-            });
+              traceContext
+            );
+            span.setStatus('ok');
+            return runRef;
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
-            return this.handleStartRunError(
-              error,
-              resolvedContext,
-              metricTags,
-              traceContext,
-              errorContext
-            );
+            throw error;
           }
         }
       )
     );
-  }
-
-  private async _startRunCore({
-    validatedPlanRef,
-    resolvedContext,
-    startMs,
-    metricTags,
-    traceContext,
-    span,
-    errorContext,
-  }: {
-    validatedPlanRef: PlanRef;
-    resolvedContext: ResolvedRunContext;
-    startMs: number;
-    metricTags: Record<string, string>;
-    traceContext: ReturnType<typeof buildTraceContext>;
-    span: ISpan;
-    errorContext: StartRunErrorContext;
-  }): Promise<EngineRunRef> {
-    await this.validateStartRunPreconditions(validatedPlanRef, resolvedContext);
-    this.checkOutboxRateLimit(resolvedContext);
-
-    const provider = resolvedContext.targetAdapter;
-    const adapter = this.getAdapterOrThrow(provider);
-    this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
-
-    const intentId = await this._createStartRunIntent(resolvedContext, provider);
-    errorContext.intentId = intentId;
-
-    let runRef: EngineRunRef;
-    if (adapter.estimateRunRef) {
-      // Pre-bootstrap path: eliminates dual-producer ordering race.
-      // Commits run_metadata + RunQueued BEFORE adapter.startRun() so the workflow
-      // worker sees run_metadata already committed when its first activity runs.
-      // No activity can write to an uncommitted stream.
-      const estimatedRef = adapter.estimateRunRef(resolvedContext);
-      const bootMeta: RunMetadata = buildRunMetadata(
-        resolvedContext,
-        validatedPlanRef,
-        estimatedRef,
-        this.deps.clock.nowIsoUtc()
-      );
-      await this.deps.stateStoreWrite.bootstrapRunTx({
-        metadata: bootMeta,
-        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-      });
-      // bootstrapRunTx failure propagates; startRun never called; intent stays PENDING for reconciler.
-      runRef = await this.withTimeout(
-        adapter.startRun(validatedPlanRef, resolvedContext),
-        this.deps.timeouts?.adapterCallMs ?? 30_000,
-        'adapter.startRun'
-      );
-      if (
-        this.deps.stateStoreWrite.saveProviderRef &&
-        (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
-      ) {
-        await this.deps.stateStoreWrite
-          .saveProviderRef(
-            resolvedContext.tenantId,
-            resolvedContext.runId,
-            buildProviderRefUpdate(runRef)
-          )
-          .catch((refErr: unknown) => {
-            this.observability.logs.warn({
-              msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
-              context: traceContext,
-              attributes: {
-                error: toErrorMessage(refErr),
-                provider: runRef.provider,
-                runId: resolvedContext.runId,
-              },
-            });
-          });
-      }
-      // startRun failure propagates to handleStartRunError. With a pending intent,
-      // the error path skips RunFailed emission and leaves reconciliation to the
-      // maintenance worker, which probes lookupRunRef and marks the intent resolved
-      // if no workflow exists.
-      try {
-        await this.deps.intentStore.markDispatched(intentId, runRef);
-      } catch (markDispatchedError) {
-        throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
-      }
-      await this.markIntentResolvedBestEffort({
-        intentId,
-        tenantId: resolvedContext.tenantId,
-        runId: resolvedContext.runId,
-        provider,
-        traceContext,
-      });
-    } else {
-      // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
-      runRef = await this.withTimeout(
-        adapter.startRun(validatedPlanRef, resolvedContext),
-        this.deps.timeouts?.adapterCallMs ?? 30_000,
-        'adapter.startRun'
-      );
-      await this.deps.intentStore.markDispatched(intentId, runRef);
-
-      const bootMeta: RunMetadata = buildRunMetadata(
-        resolvedContext,
-        validatedPlanRef,
-        runRef,
-        this.deps.clock.nowIsoUtc()
-      );
-      await this._bootstrapRunTxWithCompensation({
-        bootMeta,
-        adapter,
-        runRef,
-        intentId,
-        traceContext,
-      });
-    }
-
-    this.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
-    this.observability.metrics
-      .histogram('dvt.run.start.duration_ms', metricTags)
-      .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
-    span.setStatus('ok');
-    return runRef;
-  }
-
-  private async _createStartRunIntent(
-    resolvedContext: ResolvedRunContext,
-    provider: EngineRunRef['provider']
-  ): Promise<string> {
-    const intentId = this.deps.idempotency.startRunIntentId(
-      resolvedContext.tenantId,
-      resolvedContext.runId,
-      resolvedContext.logicalAttemptId,
-      provider
-    );
-    await this.deps.intentStore.createIntent({
-      intentId,
-      tenantId: resolvedContext.tenantId,
-      runId: resolvedContext.runId,
-      provider,
-      createdAt: this.deps.clock.nowIsoUtc(),
-    });
-    return intentId;
-  }
-
-  private async _bootstrapRunTxWithCompensation({
-    bootMeta,
-    adapter,
-    runRef,
-    intentId,
-    traceContext,
-  }: {
-    bootMeta: RunMetadata;
-    adapter: IProviderAdapter;
-    runRef: EngineRunRef;
-    intentId: string;
-    traceContext: ReturnType<typeof buildTraceContext>;
-  }): Promise<void> {
-    try {
-      await this.deps.stateStoreWrite.bootstrapRunTx({
-        metadata: bootMeta,
-        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-      });
-      await this.markIntentResolvedBestEffort({
-        intentId,
-        tenantId: bootMeta.tenantId,
-        runId: bootMeta.runId,
-        provider: bootMeta.provider,
-        traceContext,
-      });
-    } catch (bootstrapError) {
-      await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
-        this.observability.logs.error({
-          msg: 'Compensation cancelRun failed after bootstrap error',
-          context: traceContext,
-          err: cancelErr,
-          attributes: {
-            error: toErrorMessage(cancelErr),
-          },
-        });
-      });
-      await this.markIntentResolvedBestEffort({
-        intentId,
-        tenantId: bootMeta.tenantId,
-        runId: bootMeta.runId,
-        provider: bootMeta.provider,
-        traceContext,
-      });
-      throw bootstrapError;
-    }
-  }
-
-  private async markIntentResolvedBestEffort(input: {
-    intentId: string;
-    tenantId: string;
-    runId: string;
-    provider: EngineRunRef['provider'];
-    traceContext: ReturnType<typeof buildTraceContext>;
-  }): Promise<void> {
-    try {
-      await this.deps.intentStore.markResolved(input.intentId);
-      return;
-    } catch (error) {
-      try {
-        this.observability.metrics
-          .counter('dvt.intent.mark_resolved_failed_total', {
-            tenantId: input.tenantId,
-            provider: input.provider,
-            operation: 'markResolved',
-          })
-          .add(1);
-      } catch {
-        // Best-effort: metrics reporting must not turn cleanup failure into a hard failure.
-      }
-
-      try {
-        this.observability.logs.warn({
-          msg: 'markResolved failed; leaving intent cleanup to reconciliation worker',
-          context: input.traceContext,
-          attributes: {
-            intentId: input.intentId,
-            tenantId: input.tenantId,
-            runId: input.runId,
-            provider: input.provider,
-            error: toErrorMessage(error),
-          },
-        });
-      } catch {
-        try {
-          const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
-          if (
-            this.lastStderrFallbackAtMs === 0 ||
-            nowMs - this.lastStderrFallbackAtMs >= this.stderrFallbackThrottleMs
-          ) {
-            this.lastStderrFallbackAtMs = nowMs;
-            process.stderr.write(
-              `[dvt][WorkflowEngine] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
-            );
-          }
-        } catch {
-          // Keep this path non-fatal even if stderr is unavailable.
-        }
-      }
-    }
-  }
-
-  private async validateStartRunPreconditions(
-    planRef: PlanRef,
-    context: RunContext
-  ): Promise<void> {
-    this.deps.policy.validatePlanRef(planRef);
-    validateSchemaVersionOrThrow(planRef.schemaVersion);
-    assertSupportedPlanVersion(planRef.planVersion);
-    await this.deps.policy.assertTenantAccess(context.tenantId);
-    validateRunIdOrThrow(context.runId);
-    await this.ensureRunDoesNotExist(context.tenantId, context.runId);
-  }
-
-  private validateCapabilitiesOrThrow(planRef: PlanRef, adapter: IProviderAdapter): void {
-    const required = planRef.requiresCapabilities ?? [];
-    if (required.length === 0) return;
-
-    const adapterCaps = adapter.capabilities?.();
-    if (adapterCaps === undefined) return; // adapter omits capabilities() — skip validation
-
-    const supported = new Set(adapterCaps);
-    const unsupported = required.filter((c) => !supported.has(c));
-    if (unsupported.length > 0) {
-      throw new CapabilitiesNotSupportedError({
-        capabilities: unsupported,
-        provider: adapter.provider,
-      });
-    }
-  }
-
-  private checkOutboxRateLimit(context: RunContext): void {
-    this.deps.policy.checkRateLimit(context.tenantId);
-  }
-
-  private async handleStartRunError(
-    error: unknown,
-    resolvedContext: ResolvedRunContext,
-    metricTags: Record<string, string>,
-    traceContext: ReturnType<typeof buildTraceContext>,
-    errorContext: StartRunErrorContext
-  ): Promise<never> {
-    this.observability.metrics.counter('dvt.run.start_failed_total', metricTags).add(1);
-    this.observability.logs.error({
-      msg: 'startRun failed',
-      context: traceContext,
-      err: error instanceof Error ? error.message : String(error),
-      attributes: {
-        provider: resolvedContext.targetAdapter,
-        error: toErrorMessage(error),
-      },
-    });
-
-    if (error instanceof PostStartIntentPersistenceError) {
-      this.observability.logs.warn({
-        msg: 'Provider workflow started but intent persistence failed; leaving reconciliation to maintenance worker',
-        context: traceContext,
-        attributes: {
-          intentId: error.intentId,
-          runId: error.runRef.runId,
-          provider: error.runRef.provider,
-          error: toErrorMessage(error.originalError),
-        },
-      });
-      throw error;
-    }
-
-    const failMeta = await this.deps.stateStoreRead
-      .getRunMetadataByRunId(resolvedContext.tenantId, resolvedContext.runId)
-      .catch(() => null);
-    if (failMeta) {
-      const pendingIntent = errorContext.intentId
-        ? await this.deps.intentStore.getIntent(errorContext.intentId).catch(() => null)
-        : null;
-      if (pendingIntent?.status === 'PENDING') {
-        this.observability.logs.warn({
-          msg: 'Skipping RunFailed emission after startRun error because intent remains pending',
-          context: traceContext,
-          attributes: {
-            intentId: pendingIntent.intentId,
-            runId: pendingIntent.runId,
-            provider: pendingIntent.provider,
-          },
-        });
-        throw error;
-      }
-
-      await this.emitRunEvent(failMeta, 'RunFailed', { reason: 'START_RUN_FAILURE' }).catch(
-        (emitErr: unknown) => {
-          this.observability.logs.error({
-            msg: 'RunFailed emission failed after startRun error',
-            context: traceContext,
-            err: emitErr instanceof Error ? emitErr.message : String(emitErr),
-            attributes: {
-              error: toErrorMessage(emitErr),
-            },
-          });
-        }
-      );
-    }
-    throw error;
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
@@ -859,16 +478,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     };
   }
 
-  private async ensureRunDoesNotExist(tenantId: string, runId: string): Promise<void> {
-    const existing = await this.deps.stateStoreRead.getRunMetadataByRunId(tenantId, runId);
-    if (existing) throw new RunAlreadyExistsError(runId);
-  }
-
   private async withTimeout<T>(
     promise: Promise<T>,
     timeoutMs: number,
     operation: string
   ): Promise<T> {
+    // Intentionally local: core engine operations (cancel/status/signal) use this generic
+    // timeout guard independently from startRun-specific execution semantics.
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
@@ -947,79 +563,6 @@ function buildTraceContext(
     ...(planId ? { planId } : {}),
     ...(adapter ? { adapter } : {}),
   };
-}
-
-function validateSchemaVersionOrThrow(schemaVersion: string): void {
-  // Contract: engine rejects unknown schema versions; supports <=3 minor versions back.
-  // MVP: accept v1.x only.
-  if (!schemaVersion.startsWith('v1.')) throw new InvalidSchemaVersionError(schemaVersion);
-}
-
-function validateRunIdOrThrow(runId: string): void {
-  // Defensive format guard: letters/digits + [._:-], no spaces.
-  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(runId)) throw new InvalidRunIdError(runId);
-}
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-// ADR-0013: runRef is passed in so provider refs are included in the atomic bootstrapRunTx.
-function buildRunMetadata(
-  ctx: ResolvedRunContext,
-  planRef: PlanRef,
-  runRef: EngineRunRef,
-  createdAt: string
-): RunMetadata {
-  return {
-    tenantId: ctx.tenantId,
-    projectId: ctx.projectId,
-    environmentId: ctx.environmentId,
-    runId: ctx.runId,
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
-    logicalAttemptId: ctx.logicalAttemptId,
-    ...(ctx.parentRunId !== undefined ? { parentRunId: ctx.parentRunId } : {}),
-    ...(ctx.originRunId !== undefined ? { originRunId: ctx.originRunId } : {}),
-    provider: ctx.targetAdapter,
-    providerWorkflowId: runRef.workflowId,
-    providerRunId: runRef.runId,
-    ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-    ...(runRef.provider === 'temporal' && runRef.taskQueue
-      ? { providerTaskQueue: runRef.taskQueue }
-      : {}),
-    ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
-    createdAt,
-  };
-}
-
-function buildProviderRefUpdate(runRef: EngineRunRef): {
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
-} {
-  const update: {
-    providerWorkflowId: string;
-    providerRunId: string;
-    providerNamespace?: string;
-    providerTaskQueue?: string;
-    providerConductorUrl?: string;
-  } = {
-    providerWorkflowId: runRef.workflowId,
-    providerRunId: runRef.runId,
-  };
-  if (runRef.provider === 'temporal') {
-    update.providerNamespace = runRef.namespace;
-    if (runRef.taskQueue) {
-      update.providerTaskQueue = runRef.taskQueue;
-    }
-  }
-  if (runRef.provider === 'conductor') {
-    update.providerConductorUrl = runRef.conductorUrl;
-  }
-  return update;
 }
 
 function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {

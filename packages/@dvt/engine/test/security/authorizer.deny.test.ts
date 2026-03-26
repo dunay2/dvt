@@ -265,4 +265,28 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     await expect(engine.startRun(planRef, ctx)).rejects.toBeInstanceOf(AuthorizationError);
     expect(adapter.startCalls).toBe(0);
   });
+
+  it('denies unauthorized startRun before planRef validation to avoid plan-uri leakage', async () => {
+    const adapter = new CountingAdapter();
+    const { engine } = makeEngine(new DenyAuthorizer(), adapter);
+
+    const planRef: import('@dvt/contracts').PlanRef = {
+      uri: 'file:///etc/passwd',
+      sha256: 'deadbeef',
+      schemaVersion: 'v1.2',
+      planId: 'p',
+      planVersion: '2.3',
+    };
+
+    const ctx: RunContext = {
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId: 'run-deny-first-1',
+      targetAdapter: 'mock',
+    };
+
+    await expect(engine.startRun(planRef, ctx)).rejects.toBeInstanceOf(AuthorizationError);
+    expect(adapter.startCalls).toBe(0);
+  });
 });

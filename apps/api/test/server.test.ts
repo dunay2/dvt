@@ -8,14 +8,19 @@ import type {
   ReconcilerRuntimeHealthHooks,
 } from '../src/runtime/intentReconcilerRuntime.js';
 import type { ReconcilerHealthState } from '../src/runtime/reconcilerHealth.js';
+import { emitReconcilerHealthTransitionMonitoring } from '../src/runtime/reconcilerHealthMonitoring.js';
+import { computeReconcilerHealthStaleMs } from '../src/runtime/reconcilerHealthPolicy.js';
+import {
+  evaluateReconcilerHealthStaleTransition,
+  shouldMarkReconcilerRuntimeUnavailable,
+} from '../src/runtime/reconcilerHealthStateMachine.js';
+import { startReconcilerHealthWatchdog } from '../src/runtime/reconcilerHealthWatchdog.js';
 import {
   bootstrapIntentReconciler,
   buildReconcilerHealthHooks,
-  computeReconcilerHealthStaleMs,
-  evaluateAndMarkReconcilerHealthStale,
-  startReconcilerHealthWatchdog,
-  shouldMarkReconcilerRuntimeUnavailable,
-} from '../src/server.js';
+  withWatchdogSweepSignalHooks,
+} from '../src/runtime/reconcilerRuntimeBootstrap.js';
+import { RECONCILER_RUNTIME_METRICS } from '../src/runtime/reconcilerRuntimeTelemetry.js';
 
 function createHarness(): {
   ctx: {
@@ -73,7 +78,10 @@ describe('reconciler bootstrap health wiring', () => {
         } as unknown as IObservability,
       };
       const hooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
-      const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000);
+      const watchdog = startReconcilerHealthWatchdog(ctx, logger, {
+        staleMs: 5_000,
+        pollMs: 1_000,
+      });
 
       nowMs = 7_500;
       vi.advanceTimersByTime(6_000);
@@ -134,11 +142,16 @@ describe('reconciler bootstrap health wiring', () => {
       } as unknown as IObservability,
     };
 
-    const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000, {
-      now: () => 1_000,
-      setInterval: setIntervalSpy,
-      clearInterval: clearIntervalSpy,
-    });
+    const watchdog = startReconcilerHealthWatchdog(
+      ctx,
+      logger,
+      { staleMs: 5_000, pollMs: 1_000 },
+      {
+        now: () => 1_000,
+        setInterval: setIntervalSpy,
+        clearInterval: clearIntervalSpy,
+      }
+    );
 
     watchdog.stop();
 
@@ -172,7 +185,10 @@ describe('reconciler bootstrap health wiring', () => {
         } as unknown as IObservability,
       };
 
-      const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000);
+      const watchdog = startReconcilerHealthWatchdog(ctx, logger, {
+        staleMs: 5_000,
+        pollMs: 1_000,
+      });
       watchdog.stop();
 
       nowMs = 9_000;
@@ -186,6 +202,40 @@ describe('reconciler bootstrap health wiring', () => {
       nowSpy.mockRestore();
       vi.useRealTimers();
     }
+  });
+
+  it('fails fast when watchdog staleMs is invalid', () => {
+    const logger = { error: vi.fn() } as unknown as FastifyBaseLogger;
+    const ctx = {
+      getIntentReconcilerHealth: () => ({ status: 'starting' as const }),
+      setIntentReconcilerHealth: vi.fn(),
+      observability: {
+        metrics: {
+          counter: vi.fn(() => ({ add: vi.fn() })),
+        },
+      } as unknown as IObservability,
+    };
+
+    expect(() => startReconcilerHealthWatchdog(ctx, logger, { staleMs: 0, pollMs: 1_000 })).toThrow(
+      /staleMs must be a positive finite number/
+    );
+  });
+
+  it('fails fast when watchdog pollMs is invalid', () => {
+    const logger = { error: vi.fn() } as unknown as FastifyBaseLogger;
+    const ctx = {
+      getIntentReconcilerHealth: () => ({ status: 'starting' as const }),
+      setIntentReconcilerHealth: vi.fn(),
+      observability: {
+        metrics: {
+          counter: vi.fn(() => ({ add: vi.fn() })),
+        },
+      } as unknown as IObservability,
+    };
+
+    expect(() =>
+      startReconcilerHealthWatchdog(ctx, logger, { staleMs: 5_000, pollMs: Number.NaN })
+    ).toThrow(/pollMs must be a positive finite number/);
   });
 
   it('sets disabled health when runtime is not created', async () => {
@@ -277,91 +327,111 @@ describe('reconciler bootstrap health wiring', () => {
   });
 
   it('marks runtime unavailable only when non-degraded health exceeds stale threshold', () => {
-    expect(shouldMarkReconcilerRuntimeUnavailable({ status: 'healthy' }, 1_000, 5_000, 5_000)).toBe(
-      false
-    );
+    expect(
+      shouldMarkReconcilerRuntimeUnavailable(
+        { status: 'healthy' },
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 5_000,
+        }
+      )
+    ).toBe(false);
 
     expect(
-      shouldMarkReconcilerRuntimeUnavailable({ status: 'starting' }, 1_000, 7_000, 5_000)
+      shouldMarkReconcilerRuntimeUnavailable(
+        { status: 'starting' },
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 7_000,
+        }
+      )
     ).toBe(true);
 
     expect(
       shouldMarkReconcilerRuntimeUnavailable(
         { status: 'degraded', reasonCode: 'runtime_unavailable' },
-        1_000,
-        10_000,
-        5_000
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 10_000,
+        }
       )
     ).toBe(false);
   });
 
-  it('emits stale metric and log when stale threshold is exceeded', () => {
-    let health: ReconcilerHealthState = { status: 'healthy' };
+  it('does not mark runtime unavailable when elapsed time equals stale threshold', () => {
+    expect(
+      shouldMarkReconcilerRuntimeUnavailable(
+        { status: 'starting' },
+        {
+          staleMs: 5_000,
+          lastSweepSignalAtMs: 1_000,
+          nowMs: 6_000,
+        }
+      )
+    ).toBe(false);
+  });
+
+  it('returns stale transition when threshold is exceeded', () => {
+    const current: ReconcilerHealthState = { status: 'healthy' };
+
+    const transition = evaluateReconcilerHealthStaleTransition(current, {
+      staleMs: 5_000,
+      lastSweepSignalAtMs: 1_000,
+      nowMs: 7_000,
+    });
+
+    expect(transition).toEqual({
+      nextHealth: {
+        status: 'degraded',
+        reasonCode: 'runtime_unavailable',
+      },
+      reason: 'runtime_unavailable_stale',
+    });
+  });
+
+  it('emits stale metric and log when transition monitoring is emitted', () => {
     const add = vi.fn();
     const counter = vi.fn(() => ({ add }));
     const logger = {
       error: vi.fn(),
     } as unknown as FastifyBaseLogger;
 
-    const marked = evaluateAndMarkReconcilerHealthStale(
+    emitReconcilerHealthTransitionMonitoring(
       {
-        getIntentReconcilerHealth: () => health,
-        setIntentReconcilerHealth: (next) => {
-          health = next;
-        },
-        observability: {
-          metrics: {
-            counter,
-          },
-        } as unknown as IObservability,
+        nextHealth: { status: 'degraded', reasonCode: 'runtime_unavailable' },
+        reason: 'runtime_unavailable_stale',
       },
+      {
+        metrics: {
+          counter,
+        },
+      } as unknown as IObservability,
       logger,
-      5_000,
-      1_000,
-      7_000
+      {
+        staleMs: 5_000,
+        lastSweepSignalAtMs: 1_000,
+        nowMs: 7_000,
+      }
     );
 
-    expect(marked).toBe(true);
-    expect(health).toEqual({
-      status: 'degraded',
-      reasonCode: 'runtime_unavailable',
-    });
-    expect(counter).toHaveBeenCalledWith('dvt.intent.reconcile.health_stale_total');
+    expect(counter).toHaveBeenCalledWith(RECONCILER_RUNTIME_METRICS.healthStaleTotal);
     expect(add).toHaveBeenCalledWith(1);
     expect(logger.error).toHaveBeenCalledOnce();
   });
 
-  it('does not emit stale metric when threshold is not exceeded', () => {
-    let health: ReconcilerHealthState = { status: 'starting' };
-    const add = vi.fn();
-    const counter = vi.fn(() => ({ add }));
-    const logger = {
-      error: vi.fn(),
-    } as unknown as FastifyBaseLogger;
+  it('returns no transition when threshold is not exceeded', () => {
+    const current: ReconcilerHealthState = { status: 'starting' };
 
-    const marked = evaluateAndMarkReconcilerHealthStale(
-      {
-        getIntentReconcilerHealth: () => health,
-        setIntentReconcilerHealth: (next) => {
-          health = next;
-        },
-        observability: {
-          metrics: {
-            counter,
-          },
-        } as unknown as IObservability,
-      },
-      logger,
-      10_000,
-      1_000,
-      5_000
-    );
+    const transition = evaluateReconcilerHealthStaleTransition(current, {
+      staleMs: 10_000,
+      lastSweepSignalAtMs: 1_000,
+      nowMs: 5_000,
+    });
 
-    expect(marked).toBe(false);
-    expect(health).toEqual({ status: 'starting' });
-    expect(counter).not.toHaveBeenCalled();
-    expect(add).not.toHaveBeenCalled();
-    expect(logger.error).not.toHaveBeenCalled();
+    expect(transition).toBeNull();
   });
 
   it('recovers health after a stale watchdog degradation once a later sweep succeeds', () => {
@@ -385,7 +455,20 @@ describe('reconciler bootstrap health wiring', () => {
     };
     const hooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
 
-    expect(evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 1_000, 7_500)).toBe(true);
+    const staleTransition = evaluateReconcilerHealthStaleTransition(health, {
+      staleMs: 5_000,
+      lastSweepSignalAtMs: 1_000,
+      nowMs: 7_500,
+    });
+    expect(staleTransition).not.toBeNull();
+    if (staleTransition !== null) {
+      health = staleTransition.nextHealth;
+      emitReconcilerHealthTransitionMonitoring(staleTransition, ctx.observability, logger, {
+        staleMs: 5_000,
+        lastSweepSignalAtMs: 1_000,
+        nowMs: 7_500,
+      });
+    }
     expect(health).toEqual({
       status: 'degraded',
       reasonCode: 'runtime_unavailable',
@@ -396,9 +479,94 @@ describe('reconciler bootstrap health wiring', () => {
     hooks.onSweepSuccess?.();
     expect(health).toEqual({ status: 'healthy' });
 
-    expect(evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 7_400, 7_900)).toBe(false);
+    const freshTransition = evaluateReconcilerHealthStaleTransition(health, {
+      staleMs: 5_000,
+      lastSweepSignalAtMs: 7_400,
+      nowMs: 7_900,
+    });
+    expect(freshTransition).toBeNull();
     expect(health).toEqual({ status: 'healthy' });
     expect(counter).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledTimes(1);
+  });
+
+  it('wires runtime sweep hooks through watchdog signaling used by main bootstrap flow', async () => {
+    vi.useFakeTimers();
+    let nowMs = 1_000;
+    vi.setSystemTime(new Date(nowMs));
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => nowMs);
+
+    try {
+      let health: ReconcilerHealthState = { status: 'starting' };
+      const add = vi.fn();
+      const counter = vi.fn(() => ({ add }));
+      const logger = {
+        error: vi.fn(),
+      } as unknown as FastifyBaseLogger;
+
+      const healthCtx = {
+        getIntentReconcilerHealth: () => health,
+        setIntentReconcilerHealth: (next: ReconcilerHealthState) => {
+          health = next;
+        },
+        observability: {
+          metrics: {
+            counter,
+          },
+        } as unknown as IObservability,
+      };
+
+      const watchdog = startReconcilerHealthWatchdog(healthCtx, logger, {
+        staleMs: 5_000,
+        pollMs: 1_000,
+      });
+      const runtime: IntentReconcilerRuntimeHandle = {
+        start: vi.fn(),
+        stop: vi.fn(async () => {}),
+      };
+
+      let capturedHooks: ReconcilerRuntimeHealthHooks | undefined;
+      const baseCreateRuntime = vi.fn(async (_env, _logger, _observability, hooks) => {
+        capturedHooks = hooks;
+        return runtime;
+      });
+      const createRuntime = withWatchdogSweepSignalHooks(baseCreateRuntime, () => watchdog);
+
+      const bootstrapCtx = {
+        env: {} as Env,
+        observability: healthCtx.observability,
+        setIntentReconcilerHealth: healthCtx.setIntentReconcilerHealth,
+      };
+
+      const reconcilerRuntime = await bootstrapIntentReconciler(
+        bootstrapCtx,
+        logger,
+        createRuntime
+      );
+
+      expect(reconcilerRuntime).toBe(runtime);
+      expect(health).toEqual({ status: 'starting' });
+
+      nowMs = 7_500;
+      vi.advanceTimersByTime(6_000);
+      expect(health).toEqual({
+        status: 'degraded',
+        reasonCode: 'runtime_unavailable',
+      });
+      expect(add).toHaveBeenCalledTimes(1);
+
+      capturedHooks?.onSweepSuccess?.();
+      expect(health).toEqual({ status: 'healthy' });
+
+      nowMs = 11_000;
+      vi.advanceTimersByTime(3_000);
+      expect(health).toEqual({ status: 'healthy' });
+      expect(add).toHaveBeenCalledTimes(1);
+
+      watchdog.stop();
+    } finally {
+      nowSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });

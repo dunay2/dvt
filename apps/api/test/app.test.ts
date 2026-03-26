@@ -1,9 +1,10 @@
 import process from 'node:process';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { buildApp } from '../src/app.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
+import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
 const adapterPostgres = await import('@dvt/adapter-postgres');
 const { PostgresPlanStore, PostgresStartRunIntentStore, PostgresStateStoreAdapter } =
@@ -21,7 +22,7 @@ describe('buildApp', () => {
       method: 'GET',
       url: '/healthz',
     });
-    expect(res.statusCode).toBe(200);
+    expect(res.statusCode).toBe(HTTP_STATUS.ok);
     expect(res.json()).toEqual({
       ok: true,
       status: 'healthy',
@@ -33,6 +34,120 @@ describe('buildApp', () => {
     });
 
     await app.close();
+  });
+
+  it('returns 503 on /readyz when database dependency is not configured', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_READYZ_ENABLED = 'true';
+
+    try {
+      const { app } = await buildApp();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/readyz',
+      });
+      expect(res.statusCode).toBe(HTTP_STATUS.serviceUnavailable);
+      expect(res.json()).toEqual({
+        ok: false,
+        status: 'not_ready',
+        reasonCode: 'database_not_configured',
+      });
+      await app.close();
+    } finally {
+      delete process.env.DVT_READYZ_ENABLED;
+    }
+  });
+
+  it('returns 503 on /readyz while reconciler is starting', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_READYZ_ENABLED = 'true';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+    process.env.DVT_INTENT_RECONCILER_ENABLED = 'true';
+
+    try {
+      const { app } = await buildApp();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/readyz',
+      });
+      expect(res.statusCode).toBe(HTTP_STATUS.serviceUnavailable);
+      expect(res.json()).toEqual({
+        ok: false,
+        status: 'not_ready',
+        reasonCode: 'reconciler_starting',
+      });
+      await app.close();
+    } finally {
+      delete process.env.DVT_READYZ_ENABLED;
+      delete process.env.DATABASE_URL;
+      delete process.env.DVT_INTENT_RECONCILER_ENABLED;
+    }
+  });
+
+  it('returns 503 on /readyz when reconciler is degraded', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_READYZ_ENABLED = 'true';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+    process.env.DVT_INTENT_RECONCILER_ENABLED = 'true';
+
+    try {
+      const { app, ctx } = await buildApp();
+      ctx.setIntentReconcilerHealth({
+        status: 'degraded',
+        reasonCode: 'runtime_unavailable',
+      });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/readyz',
+      });
+      expect(res.statusCode).toBe(HTTP_STATUS.serviceUnavailable);
+      expect(res.json()).toEqual({
+        ok: false,
+        status: 'not_ready',
+        reasonCode: 'reconciler_degraded',
+      });
+      await app.close();
+    } finally {
+      delete process.env.DVT_READYZ_ENABLED;
+      delete process.env.DATABASE_URL;
+      delete process.env.DVT_INTENT_RECONCILER_ENABLED;
+    }
+  });
+
+  it('emits structured readiness event when database probe fails', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_READYZ_ENABLED = 'true';
+    process.env.DATABASE_URL = 'postgres://user:pass@127.0.0.1:1/dvt';
+
+    try {
+      const { app } = await buildApp();
+      const warnSpy = vi.spyOn(app.log, 'warn');
+      const res = await app.inject({
+        method: 'GET',
+        url: '/readyz',
+      });
+
+      expect(res.statusCode).toBe(HTTP_STATUS.serviceUnavailable);
+      expect(res.json()).toEqual({
+        ok: false,
+        status: 'not_ready',
+        reasonCode: 'database_unavailable',
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'api.health.readiness.database_probe_failed',
+        })
+      );
+
+      await app.close();
+    } finally {
+      delete process.env.DVT_READYZ_ENABLED;
+      delete process.env.DATABASE_URL;
+    }
   });
 
   it('surfaces degraded intent reconciler state in health response', async () => {
@@ -53,7 +168,7 @@ describe('buildApp', () => {
         url: '/healthz',
       });
       const payload = res.json();
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(HTTP_STATUS.ok);
       expect(payload).toEqual({
         ok: true,
         status: 'degraded',
@@ -91,7 +206,7 @@ describe('buildApp', () => {
         url: '/healthz',
       });
       const payload = res.json();
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(HTTP_STATUS.ok);
       expect(payload).toEqual({
         ok: true,
         status: 'degraded',
@@ -125,7 +240,7 @@ describe('buildApp', () => {
       });
       const payload = res.json();
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(HTTP_STATUS.ok);
       expect(payload).toEqual({
         ok: true,
         status: 'healthy',
@@ -163,7 +278,7 @@ describe('buildApp', () => {
       });
       const payload = res.json();
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(HTTP_STATUS.ok);
       expect(payload).toEqual({
         ok: true,
         status: 'degraded',

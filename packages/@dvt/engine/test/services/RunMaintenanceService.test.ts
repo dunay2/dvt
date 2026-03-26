@@ -1,18 +1,26 @@
-import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
-import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
+import {
+  RUN_MAINTENANCE_MESSAGE,
+  RUN_MAINTENANCE_METRIC,
+} from '../../src/services/runMaintenance/RunMaintenanceDomainConstants.js';
 import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
+
+type EngineRunRef = import('@dvt/contracts').EngineRunRef;
+type IObservability = import('@dvt/observability').IObservability;
+type PlanRef = import('@dvt/contracts').PlanRef;
+type RunContext = import('@dvt/contracts').RunContext;
+type IProviderAdapter = import('../../src/adapters/IProviderAdapter.js').IProviderAdapter;
 
 // helpers moved to module scope
 
@@ -56,7 +64,7 @@ function makeTemporalAdapter(): IProviderAdapter {
   };
 }
 
-function createFixture(): {
+function createFixture(observability: IObservability = createNoopObservability()): {
   engine: WorkflowEngine;
   service: RunMaintenanceService;
   store: InMemoryTxStore;
@@ -86,7 +94,7 @@ function createFixture(): {
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
     }),
     intentStore,
-    observability: createNoopObservability(),
+    observability,
     adapters,
   });
 
@@ -98,10 +106,157 @@ function createFixture(): {
     authorizer,
     clock,
     idempotency,
-    observability: createNoopObservability(),
+    observability,
   });
 
   return { engine, service, store, intentStore, clock, idempotency };
+}
+
+class UnknownStatusIntentStore extends InMemoryStartRunIntentStore {
+  override async listOrphaned(): Promise<
+    Awaited<ReturnType<InMemoryStartRunIntentStore['listOrphaned']>>
+  > {
+    return [
+      {
+        intentId: 'i-unknown',
+        tenantId: 't',
+        runId: 'run-unknown',
+        provider: 'temporal',
+        status: 'UNKNOWN_STATUS',
+      },
+    ] as Awaited<ReturnType<InMemoryStartRunIntentStore['listOrphaned']>>;
+  }
+}
+
+function createFixtureWithIntentStore(
+  intentStore: InMemoryStartRunIntentStore,
+  observability: IObservability = createNoopObservability()
+): {
+  service: RunMaintenanceService;
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+  clock: SequenceClock;
+  idempotency: IdempotencyKeyBuilder;
+} {
+  const store = new InMemoryTxStore();
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+  const authorizer = new AllowAllAuthorizer();
+  const idempotency = new IdempotencyKeyBuilder();
+
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+    ['temporal', makeTemporalAdapter()],
+  ]);
+
+  const service = new RunMaintenanceService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    intentStore,
+    adapters,
+    authorizer,
+    clock,
+    idempotency,
+    observability,
+  });
+
+  return { service, store, intentStore, clock, idempotency };
+}
+
+function createThrowingObservability(): IObservability {
+  return {
+    metrics: {
+      counter() {
+        return {
+          add() {
+            throw new Error('metrics sink down');
+          },
+        };
+      },
+      histogram() {
+        return { record() {} };
+      },
+      gauge() {
+        return { set() {} };
+      },
+    },
+    logs: {
+      debug() {
+        throw new Error('logs sink down');
+      },
+      info() {
+        throw new Error('logs sink down');
+      },
+      warn() {
+        throw new Error('logs sink down');
+      },
+      error() {
+        throw new Error('logs sink down');
+      },
+    },
+    traces: {
+      startSpan() {
+        return {
+          setAttribute() {},
+          setAttributes() {},
+          recordException() {},
+          setStatus() {},
+          end() {},
+        };
+      },
+      withSpan(_name, _options, fn) {
+        const span = {
+          setAttribute() {},
+          setAttributes() {},
+          recordException() {},
+          setStatus() {},
+          end() {},
+        };
+        return fn(span);
+      },
+    },
+    withContext(_ctx, fn) {
+      return fn();
+    },
+  };
+}
+
+function createContextFailingObservability(): IObservability {
+  const base = createNoopObservability();
+  return {
+    ...base,
+    withContext(ctx, fn) {
+      if (ctx.runId !== 'maintenance') return fn();
+      throw new Error('context sink down');
+    },
+  };
+}
+
+function createStatusSignalObservability(spy: {
+  warnMessages: string[];
+  counterNames: string[];
+}): IObservability {
+  const base = createNoopObservability();
+  return {
+    ...base,
+    metrics: {
+      ...base.metrics,
+      counter(name, labels) {
+        const counter = base.metrics.counter(name, labels);
+        return {
+          add(value: number) {
+            spy.counterNames.push(name);
+            counter.add(value);
+          },
+        };
+      },
+    },
+    logs: {
+      ...base.logs,
+      warn(entry) {
+        spy.warnMessages.push(entry.msg);
+        base.logs.warn(entry);
+      },
+    },
+  };
 }
 
 /** Adapter with lookupRunRef that reports a known set of running workflows. */
@@ -338,6 +493,27 @@ describe('RunMaintenanceService', () => {
       expect(failedEvent?.payload).toMatchObject({ reason: 'QUEUED_TIMEOUT' });
     });
 
+    it('keeps transitioning stuck runs when observability sinks throw', async () => {
+      const { engine, service, store } = createFixture(createThrowingObservability());
+      await engine.startRun(makePlanRef(), makeContext('stuck-obs-fail-1'));
+
+      const result = await service.detectStuckRuns({ thresholdMs: 0, tenantId: 't' });
+
+      expect(result.transitioned).toEqual(['stuck-obs-fail-1']);
+      const events = await store.listEvents('t', 'stuck-obs-fail-1');
+      const failedEvent = events.find((e) => e.eventType === 'RunFailed');
+      expect(failedEvent?.payload).toMatchObject({ reason: 'QUEUED_TIMEOUT' });
+    });
+
+    it('falls back to plain state-store query when withContext fails', async () => {
+      const { engine, service } = createFixture(createContextFailingObservability());
+      await engine.startRun(makePlanRef(), makeContext('stuck-context-fail-1'));
+
+      const result = await service.detectStuckRuns({ thresholdMs: 0, tenantId: 't' });
+
+      expect(result.transitioned).toEqual(['stuck-context-fail-1']);
+    });
+
     it('transitions snapshot to FAILED after detection', async () => {
       const { engine, service, store } = createFixture();
       const runRef = await engine.startRun(makePlanRef(), makeContext('stuck-snap-1'));
@@ -473,7 +649,33 @@ describe('RunMaintenanceService', () => {
     it('returns empty result when no orphaned intents exist', async () => {
       const { service } = createFixture();
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
-      expect(result).toEqual({ inspected: 0, expired: [], cancelled: [], cancelFailed: [] });
+      expect(result).toEqual({
+        inspected: 0,
+        expired: [],
+        cancelled: [],
+        cancelFailed: [],
+        deferred: [],
+      });
+    });
+
+    it('signals unexpected intent status with warn and metric without failing the sweep', async () => {
+      const spy = { warnMessages: [] as string[], counterNames: [] as string[] };
+      const { service } = createFixtureWithIntentStore(
+        new UnknownStatusIntentStore(),
+        createStatusSignalObservability(spy)
+      );
+
+      const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
+
+      expect(result).toEqual({
+        inspected: 1,
+        expired: [],
+        cancelled: [],
+        cancelFailed: [],
+        deferred: [],
+      });
+      expect(spy.warnMessages).toContain(RUN_MAINTENANCE_MESSAGE.unexpectedIntentStatus);
+      expect(spy.counterNames).toContain(RUN_MAINTENANCE_METRIC.intentUnexpectedStatusTotal);
     });
 
     it('keeps PENDING intent unresolved when adapter does not implement lookupRunRef', async () => {
@@ -485,6 +687,7 @@ describe('RunMaintenanceService', () => {
       expect(result.expired).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual(['i-p1']);
       expect((await intentStore.getIntent('i-p1'))?.status).toBe('PENDING');
     });
 
@@ -496,6 +699,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.expired).toEqual(['i-p2']);
       expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual([]);
       expect((await intentStore.getIntent('i-p2'))?.status).toBe('EXPIRED');
     });
 
@@ -510,6 +714,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.expired).toEqual(['i-p3']);
       expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('run-with-wf-1');
       expect((await intentStore.getIntent('i-p3'))?.status).toBe('EXPIRED');
     });
@@ -524,8 +729,40 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toEqual(['i-p4']);
       expect(result.expired).toEqual([]);
+      expect(result.deferred).toEqual([]);
       // Intent stays PENDING for retry on next sweep (INV-INTENT-011)
       expect((await intentStore.getIntent('i-p4'))?.status).toBe('PENDING');
+    });
+
+    it('keeps PENDING intent deferred when run is bootstrapped but provider workflow is missing', async () => {
+      const { service, store, intentStore } = createFixtureWith(makeAdapterWithLookup(new Set()));
+
+      await store.bootstrapRunTx({
+        metadata: {
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          runId: 'pending-bootstrap-no-workflow',
+          planId: 'plan',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          provider: 'temporal',
+          providerWorkflowId: 'wf-pending-bootstrap-no-workflow',
+          providerRunId: 'pending-bootstrap-no-workflow',
+          createdAt: '1970-01-01T00:00:00.000Z',
+        },
+        firstEvents: [],
+      });
+
+      await makePendingIntent(intentStore, 'pending-bootstrap-no-workflow', 'i-p5');
+
+      const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
+
+      expect(result.expired).toEqual([]);
+      expect(result.cancelled).toEqual([]);
+      expect(result.cancelFailed).toEqual([]);
+      expect(result.deferred).toEqual(['i-p5']);
+      expect((await intentStore.getIntent('i-p5'))?.status).toBe('PENDING');
     });
 
     it('resolves DISPATCHED intent without cancelling when run was already bootstrapped', async () => {
@@ -564,6 +801,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelled).toContain('i-d1');
+      expect(result.deferred).toEqual([]);
       expect(cancelLog).toHaveLength(0); // no actual workflow cancel
       expect((await intentStore.getIntent('i-d1'))?.status).toBe('RESOLVED');
     });
@@ -586,6 +824,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelled).toContain('i-d2');
+      expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('dispatched-orphan-1');
       expect((await intentStore.getIntent('i-d2'))?.status).toBe('RESOLVED');
     });
@@ -606,6 +845,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toContain('i-d3');
       expect(result.cancelled).toHaveLength(0);
+      expect(result.deferred).toEqual([]);
     });
 
     it('skips intents newer than threshold', async () => {
@@ -630,6 +870,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.inspected).toBe(1);
       expect(result.expired).toHaveLength(0);
+      expect(result.deferred).toEqual(['i-dry1']);
       expect((await intentStore.getIntent('i-dry1'))?.status).toBe('PENDING');
     });
 
@@ -665,6 +906,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.expired).toHaveLength(2);
       expect(result.cancelFailed).toHaveLength(0);
+      expect(result.deferred).toHaveLength(0);
       expect(cancelLogTemporal).toContain('run-temporal-mp');
       expect(cancelLogMock).toContain('run-mock-mp');
     });
@@ -691,6 +933,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toContain('i-no-adapter');
       expect(result.cancelled).toHaveLength(0);
+      expect(result.deferred).toHaveLength(0);
     });
   });
 
