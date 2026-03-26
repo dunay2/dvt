@@ -10,7 +10,6 @@ import type { Logger } from 'pino';
 import { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
-import { NoopAdmissionTelemetry } from '../application/services/NoopAdmissionTelemetry.js';
 import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
 import { bridgePlannerBuildToExecutablePlan } from '../application/services/plannerExecutionPlanBridge.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
@@ -19,6 +18,8 @@ import { StoredPlanExecutabilityValidator } from '../application/services/Stored
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
 import { getPgPool } from '../db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from '../domain/auth/policy.js';
+import { ObservabilityAdmissionTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
+import { ObservabilityBackpressureCapacityTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 import { StructuredAuditLogger } from '../infrastructure/audit/structuredAuditLogger.js';
 import { JwksJwtVerifier } from '../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../infrastructure/auth/oidcAuthenticator.js';
@@ -26,6 +27,7 @@ import { PostgresPrincipalAccessRepository } from '../infrastructure/auth/postgr
 import { CachedBackpressureStore } from '../infrastructure/backpressure/CachedBackpressureStore.js';
 import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure/CircuitBreakingBackpressureStore.js';
 import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
+import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import type { Env } from '../plugins/env.js';
@@ -123,8 +125,15 @@ export async function buildProtectedRuntimeModule(
     delegate: resilientBackpressureStore,
     ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
   });
+  const capacityTelemetry = new ObservabilityBackpressureCapacityTelemetry({
+    observability,
+  });
+  const instrumentedBackpressureStore = new MetricsEmittingBackpressureStore({
+    delegate: backpressureStore,
+    capacityTelemetry,
+  });
   const admissionGuard = new StartRunAdmissionGuard({
-    backpressureStore,
+    backpressureStore: instrumentedBackpressureStore,
     policy: {
       maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
@@ -185,7 +194,7 @@ export async function buildProtectedRuntimeModule(
     new BackpressureAwareStartRunUseCase({
       duplicateProbe,
       admissionGuard,
-      telemetry: new NoopAdmissionTelemetry(),
+      telemetry: new ObservabilityAdmissionTelemetry({ observability }),
       mode: env.DVT_START_RUN_BACKPRESSURE_MODE,
       retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
       delegate: new PlannerBackedStartRunUseCase({
