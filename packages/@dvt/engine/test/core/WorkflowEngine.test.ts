@@ -45,7 +45,7 @@ function makeRunEventInput(args: {
   engineAttemptId: number;
   emittedAt: string;
   idempotencyKey: string;
-  payloadVersion: number;
+  payloadVersion: 1;
 } {
   return {
     eventId: args.eventId,

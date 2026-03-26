@@ -17,7 +17,11 @@ import {
   maxRunSeqSql,
   selectExistingEventSql,
 } from './PostgresRunEventStoreSql.js';
-import { InvalidRunEventEnvelopeError, InvalidRunEventTenantError } from './runEventStoreErrors.js';
+import {
+  InvalidListEventsLimitError,
+  InvalidRunEventEnvelopeError,
+  InvalidRunEventTenantError,
+} from './runEventStoreErrors.js';
 import type {
   RunEventAppendResult,
   RunEventReadRepository,
@@ -77,13 +81,14 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
     const params: unknown[] = [tenantId, runId];
     let afterSeqClause = '';
     let limitClause = '';
+    const limit = this.resolveListLimit(runId, options?.limit);
 
     if (options?.afterSeq !== undefined) {
       params.push(options.afterSeq);
       afterSeqClause = `AND run_seq > $${params.length}`;
     }
-    if (options?.limit !== undefined) {
-      params.push(Math.max(1, options.limit));
+    if (limit !== undefined) {
+      params.push(limit);
       limitClause = `LIMIT $${params.length}`;
     }
 
@@ -189,6 +194,16 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
     if (envelope.tenantId !== tenantId) {
       throw new InvalidRunEventTenantError(runId, index, tenantId, envelope.tenantId);
     }
+  }
+
+  private resolveListLimit(runId: string, limit: number | undefined): number | undefined {
+    if (limit === undefined) {
+      return undefined;
+    }
+    if (!Number.isInteger(limit) || limit < 0) {
+      throw new InvalidListEventsLimitError(runId, limit);
+    }
+    return limit;
   }
 
   private enrichEnvelopeWithSeq(envelope: RunEventWriteSchemaT, runSeq: number): EventEnvelope {
