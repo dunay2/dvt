@@ -18,11 +18,13 @@ import {
   selectExistingEventSql,
 } from './PostgresRunEventStoreSql.js';
 import { InvalidRunEventEnvelopeError, InvalidRunEventTenantError } from './runEventStoreErrors.js';
-import type { RunEventReadRepository, SqlCommandExecutor } from './RunEventWriteRepository.js';
-import type { RunEventAppendResult, RunEventWriteRepository } from './RunEventWriteRepository.js';
+import type {
+  RunEventAppendResult,
+  RunEventReadRepository,
+  RunEventWriteRepository,
+  SqlCommandExecutor,
+} from './RunEventWriteRepository.js';
 import type { EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
-
-// ---------------------------------------------------------------------------
 // Row shapes (internal)
 // ---------------------------------------------------------------------------
 
