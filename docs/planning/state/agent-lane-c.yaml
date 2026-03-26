@@ -35,7 +35,7 @@ tasks:
     target: Validate and merge health degradation signaling.
   - task_id: RC-D1A
     priority: P1
-    status: queued
+    status: done
     objective: add health compatibility and watchdog integration tests.
     dependency: RC-D1
     target: Compat policy + timer wiring integration coverage.

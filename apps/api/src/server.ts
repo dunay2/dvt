@@ -1,158 +1,31 @@
 import { pathToFileURL } from 'node:url';
 
-import type { FastifyBaseLogger } from 'fastify';
-
 import { buildApp } from './app.js';
-import type { AppContext } from './app.js';
+import { createIntentReconcilerRuntime } from './runtime/intentReconcilerRuntime.js';
 import {
-  createIntentReconcilerRuntime,
-  type IntentReconcilerRuntimeHandle,
-  type ReconcilerRuntimeHealthHooks,
-} from './runtime/intentReconcilerRuntime.js';
-import type { ReconcilerHealthState } from './runtime/reconcilerHealth.js';
+  DEFAULT_RECONCILER_HEALTH_POLICY,
+  bootstrapIntentReconciler,
+  computeReconcilerHealthStaleMs,
+  startReconcilerHealthWatchdog,
+  withWatchdogSweepSignalHooks,
+  type ReconcilerHealthWatchdog,
+} from './runtime/reconcilerBootstrap.js';
 
-type ReconcilerBootstrapContext = Pick<
-  AppContext,
-  'env' | 'observability' | 'setIntentReconcilerHealth'
->;
-type ReconcilerHealthReadContext = Pick<
-  AppContext,
-  'getIntentReconcilerHealth' | 'setIntentReconcilerHealth' | 'observability'
->;
-type IntervalHandle = ReturnType<typeof setInterval>;
-
-type CreateIntentReconcilerRuntime = (
-  env: AppContext['env'],
-  logger: FastifyBaseLogger,
-  observability: AppContext['observability'],
-  healthHooks?: ReconcilerRuntimeHealthHooks
-) => Promise<IntentReconcilerRuntimeHandle | null>;
-
-const RECONCILER_HEALTH_STALE_MULTIPLIER = 3;
-
-export function computeReconcilerHealthStaleMs(env: AppContext['env']): number {
-  return Math.max(
-    env.DVT_INTENT_RECONCILER_INTERVAL_MS * RECONCILER_HEALTH_STALE_MULTIPLIER,
-    env.DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS + env.DVT_INTENT_RECONCILER_BACKOFF_MAX_MS
-  );
-}
-
-export function shouldMarkReconcilerRuntimeUnavailable(
-  current: ReconcilerHealthState,
-  lastSweepSignalAtMs: number,
-  nowMs: number,
-  staleMs: number
-): boolean {
-  if (current.status === 'disabled' || current.status === 'degraded') {
-    return false;
-  }
-  return nowMs - lastSweepSignalAtMs > staleMs;
-}
-
-export function evaluateAndMarkReconcilerHealthStale(
-  ctx: ReconcilerHealthReadContext,
-  logger: FastifyBaseLogger,
-  staleMs: number,
-  lastSweepSignalAtMs: number,
-  nowMs: number
-): boolean {
-  const currentHealth = ctx.getIntentReconcilerHealth();
-  if (!shouldMarkReconcilerRuntimeUnavailable(currentHealth, lastSweepSignalAtMs, nowMs, staleMs)) {
-    return false;
-  }
-  ctx.setIntentReconcilerHealth({ status: 'degraded', reasonCode: 'runtime_unavailable' });
-  ctx.observability.metrics.counter('dvt.intent.reconcile.health_stale_total').add(1);
-  logger.error(
-    {
-      staleMs,
-      lastSweepSignalAtMs,
-      nowMs,
-    },
-    'intent reconciler health stale: no sweep signal within threshold'
-  );
-  return true;
-}
-
-export type ReconcilerHealthWatchdog = {
-  markSweepSignal: () => void;
-  stop: () => void;
-};
-
-type ReconcilerHealthWatchdogDeps = {
-  now: () => number;
-  setInterval: (handler: () => void, timeout?: number) => IntervalHandle;
-  clearInterval: (handle: IntervalHandle) => void;
-};
-
-const DEFAULT_WATCHDOG_DEPS: ReconcilerHealthWatchdogDeps = {
-  now: () => Date.now(),
-  setInterval: (handler: () => void, timeout?: number): IntervalHandle =>
-    setInterval(handler, timeout),
-  clearInterval: (handle: IntervalHandle): void => clearInterval(handle),
-};
-
-export function startReconcilerHealthWatchdog(
-  ctx: ReconcilerHealthReadContext,
-  logger: FastifyBaseLogger,
-  staleMs: number,
-  pollMs: number,
-  deps: ReconcilerHealthWatchdogDeps = DEFAULT_WATCHDOG_DEPS
-): ReconcilerHealthWatchdog {
-  let lastSweepSignalAtMs = deps.now();
-  const interval = deps.setInterval(() => {
-    evaluateAndMarkReconcilerHealthStale(ctx, logger, staleMs, lastSweepSignalAtMs, deps.now());
-  }, pollMs);
-  interval.unref?.();
-
-  return {
-    markSweepSignal: () => {
-      lastSweepSignalAtMs = deps.now();
-    },
-    stop: () => {
-      deps.clearInterval(interval);
-    },
-  };
-}
-
-export function buildReconcilerHealthHooks(
-  setIntentReconcilerHealth: (health: ReconcilerHealthState) => void
-): ReconcilerRuntimeHealthHooks {
-  return {
-    onSweepFailure: () => {
-      setIntentReconcilerHealth({ status: 'degraded', reasonCode: 'runtime_unavailable' });
-    },
-    onSweepSuccess: () => {
-      setIntentReconcilerHealth({ status: 'healthy' });
-    },
-  };
-}
-
-export async function bootstrapIntentReconciler(
-  ctx: ReconcilerBootstrapContext,
-  logger: FastifyBaseLogger,
-  createRuntime: CreateIntentReconcilerRuntime = createIntentReconcilerRuntime
-): Promise<IntentReconcilerRuntimeHandle | null> {
-  const healthHooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
-  try {
-    const reconcilerRuntime = await createRuntime(ctx.env, logger, ctx.observability, healthHooks);
-    if (reconcilerRuntime === null) {
-      ctx.setIntentReconcilerHealth({ status: 'disabled' });
-      return null;
-    }
-    reconcilerRuntime.start();
-    // Keep "starting" until the first successful sweep confirms runtime availability.
-    ctx.setIntentReconcilerHealth({ status: 'starting' });
-    return reconcilerRuntime;
-  } catch (err) {
-    ctx.setIntentReconcilerHealth({ status: 'degraded', reasonCode: 'bootstrap_failed' });
-    logger.error({ err }, 'intent reconciler bootstrap failed');
-    return null;
-  }
-}
+export {
+  DEFAULT_RECONCILER_HEALTH_POLICY,
+  bootstrapIntentReconciler,
+  buildReconcilerHealthHooks,
+  computeReconcilerHealthStaleMs,
+  evaluateAndMarkReconcilerHealthStale,
+  shouldMarkReconcilerRuntimeUnavailable,
+  startReconcilerHealthWatchdog,
+  withWatchdogSweepSignalHooks,
+} from './runtime/reconcilerBootstrap.js';
 
 async function main(): Promise<void> {
   const { app, ctx } = await buildApp();
-  let reconcilerRuntimePromise: Promise<IntentReconcilerRuntimeHandle | null> | null = null;
+  let reconcilerRuntimePromise: Promise<Awaited<ReturnType<typeof bootstrapIntentReconciler>>> | null =
+    null;
   let watchdog: ReconcilerHealthWatchdog | null = null;
 
   app.addHook('onClose', async () => {
@@ -173,32 +46,22 @@ async function main(): Promise<void> {
     port: ctx.env.PORT,
     host: ctx.env.HOST,
   });
-
   app.log.info({ address }, 'server listening');
 
-  const createRuntimeWithHealthSignal: CreateIntentReconcilerRuntime = (
-    env,
-    logger,
-    observability,
-    healthHooks = {}
-  ) =>
-    createIntentReconcilerRuntime(env, logger, observability, {
-      onSweepSuccess: () => {
-        watchdog?.markSweepSignal();
-        healthHooks.onSweepSuccess?.();
-      },
-      onSweepFailure: () => {
-        watchdog?.markSweepSignal();
-        healthHooks.onSweepFailure?.();
-      },
-    });
-
+  const createRuntimeWithHealthSignal = withWatchdogSweepSignalHooks(
+    createIntentReconcilerRuntime,
+    () => watchdog
+  );
   reconcilerRuntimePromise = bootstrapIntentReconciler(ctx, app.log, createRuntimeWithHealthSignal);
+
   const reconcilerRuntime = await reconcilerRuntimePromise;
   if (reconcilerRuntime === null) return;
 
-  const staleMs = computeReconcilerHealthStaleMs(ctx.env);
-  const pollMs = Math.max(1_000, Math.floor(staleMs / 2));
+  const staleMs = computeReconcilerHealthStaleMs(ctx.env, DEFAULT_RECONCILER_HEALTH_POLICY);
+  const pollMs = Math.max(
+    DEFAULT_RECONCILER_HEALTH_POLICY.minWatchdogPollMs,
+    Math.floor(staleMs / DEFAULT_RECONCILER_HEALTH_POLICY.watchdogPollDivisor)
+  );
   watchdog = startReconcilerHealthWatchdog(
     {
       getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
@@ -206,8 +69,7 @@ async function main(): Promise<void> {
       observability: ctx.observability,
     },
     app.log,
-    staleMs,
-    pollMs
+    { staleMs, pollMs }
   );
 }
 
