@@ -21,8 +21,17 @@ import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
+import {
+  createHealthReadinessPorts,
+  HEALTH_READINESS_EVENTS,
+  READINESS_PROBE_STATUS,
+  type ReadinessProbeStatus,
+} from './routes/healthReadinessPorts.js';
 import { versionRoutes } from './routes/version.js';
-import type { ReconcilerHealthState } from './runtime/reconcilerHealth.js';
+import {
+  RECONCILER_HEALTH_STATUS,
+  type ReconcilerHealthState,
+} from './runtime/reconcilerHealth.js';
 
 export type AppContext = {
   env: Env;
@@ -42,8 +51,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
   const observability = buildObservability(env);
   let intentReconcilerHealth: ReconcilerHealthState =
     !env.DVT_INTENT_RECONCILER_ENABLED || !env.DATABASE_URL
-      ? { status: 'disabled' }
-      : { status: 'starting' };
+      ? { status: RECONCILER_HEALTH_STATUS.disabled }
+      : { status: RECONCILER_HEALTH_STATUS.starting };
 
   const app = Fastify({
     logger: buildLoggerOptions(env),
@@ -63,6 +72,16 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     },
     getIntentReconcilerHealth: () => intentReconcilerHealth,
   };
+
+  let runtimeAdaptersReadyProbe: () => ReadinessProbeStatus = () =>
+    READINESS_PROBE_STATUS.notConfigured;
+  const readinessPorts = createHealthReadinessPorts({
+    databaseUrl: env.DATABASE_URL,
+    checkRuntimeAdaptersReady: () => runtimeAdaptersReadyProbe(),
+    onDatabaseProbeFailure: (error) => {
+      app.log.warn({ event: HEALTH_READINESS_EVENTS.databaseProbeFailed, err: error });
+    },
+  });
 
   app.addHook('onRequest', async (request) => {
     const span = observability.traces.startSpan('api.request', {
@@ -127,6 +146,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     prefix: '/',
     env,
     getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
+    readinessPorts,
   });
   app.register(versionRoutes, { prefix: '/', env });
   app.register(dbReadyRoutes, { prefix: '/', env });
@@ -135,6 +155,16 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
     const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
+    runtimeAdaptersReadyProbe = () => {
+      if (env.TEMPORAL_ADDRESS) {
+        return protectedModule.adapters.has('temporal')
+          ? READINESS_PROBE_STATUS.ready
+          : READINESS_PROBE_STATUS.unavailable;
+      }
+      return protectedModule.adapters.size > 0
+        ? READINESS_PROBE_STATUS.ready
+        : READINESS_PROBE_STATUS.unavailable;
+    };
     registerOperationalHooks(app, protectedModule);
 
     const runtimeAuth = {
