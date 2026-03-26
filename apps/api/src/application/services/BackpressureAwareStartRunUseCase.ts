@@ -1,4 +1,10 @@
 import {
+  BackpressureSnapshotUnavailableError,
+  SystemBackpressureError,
+  TenantBackpressureError,
+} from '@dvt/delivery';
+
+import {
   ADMISSION_TELEMETRY_DECISION,
   type AdmissionDecisionRecord,
   type AdmissionTelemetry,
@@ -34,10 +40,6 @@ type DelegateTelemetryResult = Extract<
   }
 >;
 
-type AdmissionErrorCode =
-  | typeof START_RUN_BACKPRESSURE_CODE.tenant
-  | typeof START_RUN_BACKPRESSURE_CODE.system
-  | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable;
 
 export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   public constructor(
@@ -171,24 +173,29 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   }
 
   private toAdmissionRejectResult(error: unknown): AdmissionRejectResult | null {
-    const code = getAdmissionErrorCode(error);
-    if (code === START_RUN_BACKPRESSURE_CODE.tenant) {
+    if (error instanceof TenantBackpressureError) {
       return {
         kind: START_RUN_RESULT_KIND.tenantBackpressure,
         accepted: false,
-        code,
+        code: START_RUN_BACKPRESSURE_CODE.tenant,
         retryAfterSeconds: this.deps.retryAfterSeconds,
       };
     }
 
-    if (
-      code === START_RUN_BACKPRESSURE_CODE.system ||
-      code === START_RUN_BACKPRESSURE_CODE.snapshotUnavailable
-    ) {
+    if (error instanceof SystemBackpressureError) {
       return {
         kind: START_RUN_RESULT_KIND.systemBackpressure,
         accepted: false,
-        code,
+        code: START_RUN_BACKPRESSURE_CODE.system,
+        retryAfterSeconds: this.deps.retryAfterSeconds,
+      };
+    }
+
+    if (error instanceof BackpressureSnapshotUnavailableError) {
+      return {
+        kind: START_RUN_RESULT_KIND.systemBackpressure,
+        accepted: false,
+        code: START_RUN_BACKPRESSURE_CODE.snapshotUnavailable,
         retryAfterSeconds: this.deps.retryAfterSeconds,
       };
     }
@@ -238,22 +245,6 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   }
 }
 
-function getAdmissionErrorCode(error: unknown): AdmissionErrorCode | null {
-  if (!(error instanceof Error)) {
-    return null;
-  }
-
-  const code = (error as Error & { code?: unknown }).code;
-  if (
-    code === START_RUN_BACKPRESSURE_CODE.tenant ||
-    code === START_RUN_BACKPRESSURE_CODE.system ||
-    code === START_RUN_BACKPRESSURE_CODE.snapshotUnavailable
-  ) {
-    return code;
-  }
-
-  return null;
-}
 
 function isDelegateTelemetryResult(
   result: StartRunUseCaseResult
