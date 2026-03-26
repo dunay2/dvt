@@ -57,10 +57,15 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
       }
     } catch (err) {
       // Telemetry must not break command admission.
-      this.deps.observability.logs.warn({
-        msg: 'admission.telemetry_drop',
-        attributes: { error: String(err) },
-      });
+      // Secondary try/catch: if the logger itself throws, swallow silently.
+      try {
+        this.deps.observability.logs.warn({
+          msg: 'admission.telemetry_drop',
+          attributes: { error: String(err) },
+        });
+      } catch {
+        // Logger unavailable — ignore silently.
+      }
     }
   }
 

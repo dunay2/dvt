@@ -343,5 +343,32 @@ describe('ObservabilityAdmissionTelemetry', () => {
         expect.objectContaining({ msg: 'admission.telemetry_drop' })
       );
     });
+
+    it('resolves even when both counter.add and logs.warn throw', async () => {
+      const observability = {
+        metrics: {
+          counter: () => ({
+            add: () => {
+              throw new Error('metrics unavailable');
+            },
+          }),
+          histogram: () => ({ record: vi.fn() }),
+          gauge: () => ({ set: vi.fn() }),
+        },
+        logs: {
+          info: vi.fn(),
+          warn: () => {
+            throw new Error('logger unavailable');
+          },
+          debug: vi.fn(),
+          error: vi.fn(),
+        },
+        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
+        withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
+      };
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await expect(telemetry.record({ ...COMMON, decision: 'accept' })).resolves.toBeUndefined();
+    });
   });
 });
