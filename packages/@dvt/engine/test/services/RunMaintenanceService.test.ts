@@ -1,4 +1,5 @@
 import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
+import type { IObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
@@ -56,7 +57,7 @@ function makeTemporalAdapter(): IProviderAdapter {
   };
 }
 
-function createFixture(): {
+function createFixture(observability: IObservability = createNoopObservability()): {
   engine: WorkflowEngine;
   service: RunMaintenanceService;
   store: InMemoryTxStore;
@@ -86,7 +87,7 @@ function createFixture(): {
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
     }),
     intentStore,
-    observability: createNoopObservability(),
+    observability,
     adapters,
   });
 
@@ -98,10 +99,79 @@ function createFixture(): {
     authorizer,
     clock,
     idempotency,
-    observability: createNoopObservability(),
+    observability,
   });
 
   return { engine, service, store, intentStore, clock, idempotency };
+}
+
+function createThrowingObservability(): IObservability {
+  return {
+    metrics: {
+      counter() {
+        return {
+          add() {
+            throw new Error('metrics sink down');
+          },
+        };
+      },
+      histogram() {
+        return { record() {} };
+      },
+      gauge() {
+        return { set() {} };
+      },
+    },
+    logs: {
+      debug() {
+        throw new Error('logs sink down');
+      },
+      info() {
+        throw new Error('logs sink down');
+      },
+      warn() {
+        throw new Error('logs sink down');
+      },
+      error() {
+        throw new Error('logs sink down');
+      },
+    },
+    traces: {
+      startSpan() {
+        return {
+          setAttribute() {},
+          setAttributes() {},
+          recordException() {},
+          setStatus() {},
+          end() {},
+        };
+      },
+      withSpan(_name, _options, fn) {
+        const span = {
+          setAttribute() {},
+          setAttributes() {},
+          recordException() {},
+          setStatus() {},
+          end() {},
+        };
+        return fn(span);
+      },
+    },
+    withContext(_ctx, fn) {
+      return fn();
+    },
+  };
+}
+
+function createContextFailingObservability(): IObservability {
+  const base = createNoopObservability();
+  return {
+    ...base,
+    withContext(ctx, fn) {
+      if (ctx.runId !== 'maintenance') return fn();
+      throw new Error('context sink down');
+    },
+  };
 }
 
 /** Adapter with lookupRunRef that reports a known set of running workflows. */
@@ -335,6 +405,27 @@ describe('RunMaintenanceService', () => {
       const failedEvent = events.find((e) => e.eventType === 'RunFailed');
       expect(failedEvent).toBeDefined();
       expect(failedEvent?.payload).toMatchObject({ reason: 'QUEUED_TIMEOUT' });
+    });
+
+    it('keeps transitioning stuck runs when observability sinks throw', async () => {
+      const { engine, service, store } = createFixture(createThrowingObservability());
+      await engine.startRun(makePlanRef(), makeContext('stuck-obs-fail-1'));
+
+      const result = await service.detectStuckRuns({ thresholdMs: 0, tenantId: 't' });
+
+      expect(result.transitioned).toEqual(['stuck-obs-fail-1']);
+      const events = await store.listEvents('t', 'stuck-obs-fail-1');
+      const failedEvent = events.find((e) => e.eventType === 'RunFailed');
+      expect(failedEvent?.payload).toMatchObject({ reason: 'QUEUED_TIMEOUT' });
+    });
+
+    it('falls back to plain state-store query when withContext fails', async () => {
+      const { engine, service } = createFixture(createContextFailingObservability());
+      await engine.startRun(makePlanRef(), makeContext('stuck-context-fail-1'));
+
+      const result = await service.detectStuckRuns({ thresholdMs: 0, tenantId: 't' });
+
+      expect(result.transitioned).toEqual(['stuck-context-fail-1']);
     });
 
     it('transitions snapshot to FAILED after detection', async () => {
