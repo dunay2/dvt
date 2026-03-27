@@ -27,7 +27,7 @@ lerna-debug.log*
 *.d.ts.map
 
 # IDE
-.vscode/
+.vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea/
