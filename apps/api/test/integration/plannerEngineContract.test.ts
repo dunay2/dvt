@@ -128,6 +128,7 @@ function makeRunEvent(
     planVersion: meta.planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
+    payloadVersion: 1,
     idempotencyKey: idempotency.runEventKey({
       eventType,
       runId: meta.runId,
@@ -157,6 +158,7 @@ function makeStepEvent(
     planVersion: meta.planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
+    payloadVersion: 1,
     stepId,
     idempotencyKey: idempotency.runEventKey({
       eventType,

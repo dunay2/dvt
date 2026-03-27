@@ -1,29 +1,30 @@
 import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
-import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
-import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { START_RUN_MESSAGE } from '../services/startRun/StartRunDomainConstants.js';
+import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
+import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
+import { StartRunFailurePolicy } from '../services/startRun/StartRunFailurePolicy.js';
+import type {
+  StartRunErrorContext,
+  StartRunTraceContext,
+} from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 
-import { START_RUN_MESSAGE } from './startRun/StartRunDomainConstants.js';
-import { StartRunEventFactory } from './startRun/StartRunEventFactory.js';
-import { StartRunExecutionService } from './startRun/StartRunExecutionService.js';
-import { StartRunFailurePolicy } from './startRun/StartRunFailurePolicy.js';
-import type { StartRunErrorContext, StartRunTraceContext } from './startRun/StartRunTypes.js';
-import { StartRunValidationPolicy } from './startRun/StartRunValidationPolicy.js';
+import { StartRunAdmissionGuard } from './StartRunAdmissionGuard.js';
 
 export interface StartRunCoordinatorDeps {
+  policy: IRunAccessPolicy;
+  guard: StartRunAdmissionGuard;
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
-  policy: IRunAccessPolicy;
   intentStore: IStartRunIntentStore;
-  adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   observability: IObservability;
   timeouts?: {
     adapterCallMs?: number;
@@ -33,11 +34,10 @@ export interface StartRunCoordinatorDeps {
 }
 
 /**
- * S03 extraction seam: start-run orchestration moved out of WorkflowEngine
- * without altering runtime behavior.
+ * Application-layer start-run use case coordinator.
+ * Keeps start-run admission and execution orchestration out of WorkflowEngine core.
  */
 export class StartRunCoordinator {
-  private readonly validationPolicy: StartRunValidationPolicy;
   private readonly failurePolicy: StartRunFailurePolicy;
   private readonly executionService: StartRunExecutionService;
 
@@ -45,10 +45,6 @@ export class StartRunCoordinator {
     const eventFactory = new StartRunEventFactory({
       idempotency: deps.idempotency,
       clock: deps.clock,
-    });
-    this.validationPolicy = new StartRunValidationPolicy({
-      policy: deps.policy,
-      stateStoreRead: deps.stateStoreRead,
     });
     this.failurePolicy = new StartRunFailurePolicy({
       stateStoreRead: deps.stateStoreRead,
@@ -72,7 +68,7 @@ export class StartRunCoordinator {
     });
   }
 
-  async startRun(
+  async execute(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext
@@ -97,7 +93,7 @@ export class StartRunCoordinator {
     }
 
     try {
-      const runRef = await this.startRunCore(planRef, resolvedContext, traceContext, errorContext);
+      const runRef = await this.executeCore(planRef, resolvedContext, traceContext, errorContext);
       try {
         this.deps.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
         this.deps.observability.metrics
@@ -118,20 +114,19 @@ export class StartRunCoordinator {
     }
   }
 
-  private async startRunCore(
+  private async executeCore(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext,
     errorContext: StartRunErrorContext
   ): Promise<EngineRunRef> {
-    await this.validationPolicy.validateStartRunPreconditions(planRef, resolvedContext);
-    this.deps.policy.checkRateLimit(resolvedContext.tenantId);
+    await this.deps.guard.assertStartRunAllowed(planRef, resolvedContext);
+    const adapter = this.deps.guard.resolveAdapter(planRef, resolvedContext);
 
-    const provider = resolvedContext.targetAdapter;
-    const adapter = this.getAdapterOrThrow(provider);
-    this.validationPolicy.validateCapabilitiesOrThrow(planRef, adapter);
-
-    const intentId = await this.createStartRunIntent(resolvedContext, provider);
+    const intentId = await this.createStartRunIntent(
+      resolvedContext,
+      resolvedContext.targetAdapter
+    );
     errorContext.intentId = intentId;
 
     return this.executionService.executeStartRun({
@@ -161,12 +156,6 @@ export class StartRunCoordinator {
       createdAt: this.deps.clock.nowIsoUtc(),
     });
     return intentId;
-  }
-
-  private getAdapterOrThrow(provider: EngineRunRef['provider']): IProviderAdapter {
-    const adapter = this.deps.adapters.get(provider);
-    if (adapter === undefined) throw new AdapterNotRegisteredError(provider);
-    return adapter;
   }
 }
 

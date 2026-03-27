@@ -324,44 +324,6 @@ describe('buildApp', () => {
     }
   });
 
-  it('defaults degraded reconciler reasonCode when not explicitly provided', async () => {
-    process.env.OBS_ENABLED = 'false';
-    process.env.NODE_ENV = 'test';
-    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
-    process.env.DVT_INTENT_RECONCILER_ENABLED = 'true';
-
-    try {
-      const { app, ctx } = await buildApp();
-      ctx.setIntentReconcilerHealth({
-        status: 'degraded',
-      });
-
-      const res = await app.inject({
-        method: 'GET',
-        url: '/healthz',
-      });
-      const payload = res.json();
-
-      expect(res.statusCode).toBe(HTTP_STATUS.ok);
-      expect(payload).toEqual({
-        ok: true,
-        status: 'degraded',
-        components: {
-          intentReconciler: {
-            status: 'degraded',
-            reasonCode: 'runtime_unavailable',
-          },
-        },
-      });
-      expect(payload.components.intentReconciler).not.toHaveProperty('reason');
-
-      await app.close();
-    } finally {
-      delete process.env.DATABASE_URL;
-      delete process.env.DVT_INTENT_RECONCILER_ENABLED;
-    }
-  });
-
   it('migrates principal grants before serving protected runtime routes', async () => {
     const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
     const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;

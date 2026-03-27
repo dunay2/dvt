@@ -39,6 +39,8 @@ Canonical catalog of ADRs in this repository.
 | ADR-0038   | Delivery Buffer Retention and Purge Policy                                                      | Accepted                 | 2026-03-19                       | [ADR-0038-delivery-buffer-retention-and-purge-policy.md](ADR-0038-delivery-buffer-retention-and-purge-policy.md)                                   |
 | ADR-0039   | Hexagonal Port Hardening and SOLID Remediation                                                  | Accepted                 | 2026-03-22                       | [ADR-0039-hexagonal-port-hardening-and-solid-remediation.md](ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)                           |
 | ADR-0040   | Retry Ownership and Attempt Authority                                                           | Accepted                 | 2026-03-24                       | [ADR-0040-retry-ownership-and-attempt-authority.md](ADR-0040-retry-ownership-and-attempt-authority.md)                                             |
+| ADR-0041   | Global Domain State Model and Boundary Contracts                                                | Accepted                 | 2026-03-26                       | [ADR-0041-global-domain-state-model-and-boundary-contracts.md](ADR-0041-global-domain-state-model-and-boundary-contracts.md)                       |
+| ADR-0041A  | Reconciler Health State and Readiness Port Semantics                                            | Accepted                 | 2026-03-26                       | [ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md](ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md)             |
 
 ## Usage rules
 
