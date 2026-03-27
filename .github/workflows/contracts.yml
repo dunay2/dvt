@@ -37,21 +37,20 @@ jobs:
       golden_relevant: ${{ steps.changes.outputs.golden_relevant }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
       - name: Detect changed areas (PR only)
         id: changes
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
           filters: |
             contracts_relevant:
               - 'packages/@dvt/contracts/**'
               - 'packages/@dvt/engine/test/contracts/**'
               - 'docs/architecture/engine/contracts/**'
-              - 'docs/decisions/**'
               - '.golden/**'
               - 'scripts/compare-hashes.cjs'
               - 'scripts/db-migrate.cjs'
@@ -94,7 +93,7 @@ jobs:
       'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -129,7 +128,7 @@ jobs:
           )
           if [ ${#draft2020_schemas[@]} -gt 0 ]; then
             for schema in "${draft2020_schemas[@]}"; do
-              npx --yes ajv-cli@5 compile --spec=draft2020 --strict=false -s "$schema"
+              pnpm exec ajv compile --spec=draft2020 --strict=false -s "$schema"
             done
           else
             echo "No draft 2020-12 schemas found"
@@ -143,7 +142,7 @@ jobs:
           done)
           if [ ${#draft7_schemas[@]} -gt 0 ]; then
             for schema in "${draft7_schemas[@]}"; do
-              npx --yes ajv-cli@5 compile --spec=draft7 --strict=false -s "$schema"
+              pnpm exec ajv compile --spec=draft7 --strict=false -s "$schema"
             done
           else
             echo "No draft-07/legacy schemas found"
@@ -161,7 +160,7 @@ jobs:
       github.event.inputs.run_determinism_scan == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -169,35 +168,8 @@ jobs:
       - name: Run determinism linting
         run: pnpm lint:determinism
 
-      - name: Check for Date.now()
-        run: |
-          echo "🔍 Scanning for Date.now() in engine workflows..."
-          if grep -r "Date\.now()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
-            echo "❌ Found Date.now() calls (use workflow.now() in Temporal workflows)"
-            exit 1
-          else
-            echo "✅ No Date.now() calls found"
-          fi
-
-      - name: Check for Math.random()
-        run: |
-          echo "🔍 Scanning for Math.random() in engine workflows..."
-          if grep -r "Math\.random()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
-            echo "❌ Found Math.random() calls (use workflow-seeded RNG)"
-            exit 1
-          else
-            echo "✅ No Math.random() calls found"
-          fi
-
-      - name: Check for crypto.randomBytes()
-        run: |
-          echo "🔍 Scanning for crypto.randomBytes() in engine workflows..."
-          if grep -r "crypto\.randomBytes" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
-            echo "❌ Found crypto.randomBytes() calls (use deterministic UUID generation)"
-            exit 1
-          else
-            echo "✅ No crypto.randomBytes() calls found"
-          fi
+      - name: Check for non-deterministic API usage
+        run: node tools/ci/check-determinism.mjs
 
   contract-compile:
     name: Compile TypeScript Contracts
@@ -208,7 +180,7 @@ jobs:
       'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -233,7 +205,7 @@ jobs:
 
       - name: Upload compiled contracts artifact
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: compiled-contracts
           path: |
@@ -249,13 +221,13 @@ jobs:
       github.event.inputs.run_golden_validation == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Download compiled contracts artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: compiled-contracts
           path: .
@@ -285,7 +257,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
@@ -293,7 +265,7 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Download compiled contracts artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: compiled-contracts
           path: .
@@ -335,7 +307,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: contract-test-results
           path: |

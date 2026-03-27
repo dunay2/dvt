@@ -42,8 +42,7 @@ Concept anchors for this page:
 
 ## Proposals
 
-- [CI Scope-Aware Validation And Docs-Only Fast Path](proposals/ci-scope-aware-validation-and-docs-only-fast-path-20260324.md)
-- [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
+- [CI Improvement Plan — Reliability, Scope-Awareness, And Deduplication](proposals/ci-improvement-plan-20260327.md)
 - [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](proposals/todo.md)
 - [Docs Governance Tooling Future Tasks](proposals/docs-governance-tooling-future-tasks-20260324.md)
@@ -53,6 +52,7 @@ Concept anchors for this page:
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
 - [DVT+ - Top 5 Architectural Gaps (Corrected)](dvt-top-5-gaps-corrected-20260319.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](engine-gap-to-target-migration-plan.md)
+- [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
 - [G4-PR4 Operability & Metrics - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4 Operability & Metrics — Implementation Plan](proposals/gap4-backpressure-admission-pr4-plan-20260326.md)
 - [G5 Outbox Worker Development Proposal](proposals/g5-outbox-worker-development-proposal-20260308.md)
