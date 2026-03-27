@@ -54,6 +54,8 @@ export async function buildProtectedRuntimeModule(
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
   const pool = getPgPool(databaseUrl);
+  const nowIsoUtc = (): string => new Date().toISOString();
+  const nowDate = (): Date => new Date();
 
   const [adapterMod, engineMod] = await Promise.all([
     import('@dvt/adapter-postgres'),
@@ -107,7 +109,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: () => new Date().toISOString(),
+    now: nowIsoUtc,
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -166,7 +168,7 @@ export async function buildProtectedRuntimeModule(
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc: () => new Date().toISOString() },
+      clock: { nowIsoUtc },
       observability,
     },
   });
@@ -178,7 +180,7 @@ export async function buildProtectedRuntimeModule(
     accessRepo,
     policy,
     auditLogger,
-    () => new Date()
+    nowDate
   );
   const authenticator = new OidcAuthenticator(
     new JwksJwtVerifier({
@@ -223,15 +225,24 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      try {
-        await Promise.allSettled([
-          closeAdapters(),
-          planStore.close(),
-          stateStore.close(),
-          intentStore.close(),
-        ]);
-      } finally {
-        await pool.end();
+      const results = await Promise.allSettled([
+        closeAdapters(),
+        planStore.close(),
+        stateStore.close(),
+        intentStore.close(),
+      ]);
+      const failures = results.filter(
+        (r): r is PromiseRejectedResult => r.status === 'rejected'
+      );
+      for (const { reason } of failures) {
+        app.log.error({ err: reason }, 'Teardown failure');
+      }
+      await pool.end();
+      if (failures.length > 0) {
+        throw new AggregateError(
+          failures.map((f) => f.reason),
+          `${failures.length} teardown failure(s)`
+        );
       }
     },
   };
