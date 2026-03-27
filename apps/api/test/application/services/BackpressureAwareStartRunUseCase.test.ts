@@ -246,14 +246,25 @@ describe('BackpressureAwareStartRunUseCase', () => {
     it('skips admission guard entirely', async () => {
       const admissionGuard = { assertAdmissible: vi.fn() };
       const useCase = new BackpressureAwareStartRunUseCase({
-        duplicateProbe: { async findExisting() { return { kind: 'not_found' as const }; } },
+        duplicateProbe: {
+          async findExisting() {
+            return { kind: 'not_found' as const };
+          },
+        },
         admissionGuard,
-        telemetry: { async record() { return undefined; } },
+        telemetry: {
+          async record() {
+            return undefined;
+          },
+        },
         mode: 'off',
         retryAfterSeconds: 30,
         delegate: {
           async execute() {
-            return { ok: true as const, value: { kind: 'accepted' as const, runId: 'run-1', accepted: true } };
+            return {
+              ok: true as const,
+              value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+            };
           },
         },
       });
@@ -272,8 +283,16 @@ describe('BackpressureAwareStartRunUseCase', () => {
         }),
       };
       const useCase = new BackpressureAwareStartRunUseCase({
-        duplicateProbe: { async findExisting() { return { kind: 'not_found' as const }; } },
-        admissionGuard: { async assertAdmissible() { return; } },
+        duplicateProbe: {
+          async findExisting() {
+            return { kind: 'not_found' as const };
+          },
+        },
+        admissionGuard: {
+          async assertAdmissible() {
+            return;
+          },
+        },
         telemetry,
         mode: 'off',
         retryAfterSeconds: 30,
@@ -282,7 +301,10 @@ describe('BackpressureAwareStartRunUseCase', () => {
 
       const result = await useCase.execute(COMMAND, CONTEXT);
 
-      expect(result).toEqual({ ok: true, value: { kind: 'accepted', runId: 'run-1', accepted: true } });
+      expect(result).toEqual({
+        ok: true,
+        value: { kind: 'accepted', runId: 'run-1', accepted: true },
+      });
       expect(delegate.execute).toHaveBeenCalledOnce();
       expect(telemetry.record).toHaveBeenCalledWith(
         expect.objectContaining({ decision: 'accept', mode: 'off' })
