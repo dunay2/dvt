@@ -41,6 +41,25 @@ jobs:
         with:
           fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
+      - name: Detect docs-only scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            any_code:
+              - 'apps/**'
+              - 'packages/**'
+              - 'specs/**'
+              - 'tools/**'
+              - '.github/workflows/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig*.json'
+              - 'vitest.config.ts'
+              - 'eslint.config.cjs'
+
       - name: Validate adapter-postgres policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
 
@@ -95,9 +114,9 @@ jobs:
         run: pnpm docs:capability:check
 
       - name: Workspace type-check (fast-fail)
-        if:
-          github.event_name != 'workflow_dispatch' || (github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.run_typecheck_gate == 'true')
+        if: >-
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
+          'true') && (github.event_name != 'pull_request' || steps.scope.outputs.any_code == 'true')
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
