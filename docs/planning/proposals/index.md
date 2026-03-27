@@ -21,6 +21,7 @@ Draft proposals and candidate changes. Non-normative.
 - [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
 - [DVT+ - Top 5 Architectural Gaps (Corrected)](../dvt-top-5-gaps-corrected-20260319.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](../engine-gap-to-target-migration-plan.md)
+- [Frontend Roadmap — Prototype To Operational UI](frontend-roadmap-20260219.md)
 - [G4-PR4 Operability & Metrics - Plan B](gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4 Operability & Metrics — Implementation Plan](gap4-backpressure-admission-pr4-plan-20260326.md)
 - [G5 Outbox Worker Development Proposal](g5-outbox-worker-development-proposal-20260308.md)
