@@ -8,6 +8,7 @@ import type {
 import { ADMISSION_TELEMETRY_DECISION } from '../../application/ports/AdmissionTelemetry.js';
 
 import { ADMISSION_TELEMETRY_METRICS } from './admissionTelemetryMetrics.js';
+import { safeWarn } from './safeWarn.js';
 
 const REJECTION_DECISIONS = new Set<AdmissionTelemetryDecision>([
   ADMISSION_TELEMETRY_DECISION.rejectTenant,
@@ -17,6 +18,17 @@ const REJECTION_DECISIONS = new Set<AdmissionTelemetryDecision>([
 ]);
 
 type RejectionRecord = Extract<AdmissionDecisionRecord, { readonly code: string }>;
+
+type DecisionLogAttributes = {
+  readonly requestId: string;
+  readonly tenantId: string;
+  readonly runId: string;
+  readonly mode: string;
+  readonly decision: string;
+  readonly code?: string;
+  readonly retryAfterSeconds?: number;
+  readonly duplicateOf?: string;
+};
 
 function isRejectionRecord(event: AdmissionDecisionRecord): event is RejectionRecord {
   return REJECTION_DECISIONS.has(event.decision);
@@ -61,37 +73,21 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
       }
     } catch (err) {
       // Telemetry must not break command admission.
-      // Secondary try/catch: if the logger itself throws, swallow silently.
-      try {
-        this.deps.observability.logs.warn({
-          msg: 'admission.telemetry_drop',
-          attributes: { error: String(err) },
-        });
-      } catch {
-        // Logger unavailable — ignore silently.
-      }
+      safeWarn(this.deps.observability.logs, 'admission.telemetry_drop', err);
     }
   }
 
   private toLogAttributes(event: AdmissionDecisionRecord): Attributes {
-    const attrs: Record<string, string | number> = {
+    const attrs: DecisionLogAttributes = {
       requestId: event.requestId,
       tenantId: event.tenantId,
       runId: event.runId,
       mode: event.mode,
       decision: event.decision,
+      ...('code' in event ? { code: event.code } : {}),
+      ...('retryAfterSeconds' in event ? { retryAfterSeconds: event.retryAfterSeconds } : {}),
+      ...('duplicateOf' in event ? { duplicateOf: event.duplicateOf } : {}),
     };
-
-    if ('code' in event) {
-      attrs['code'] = event.code;
-    }
-    if ('retryAfterSeconds' in event) {
-      attrs['retryAfterSeconds'] = event.retryAfterSeconds;
-    }
-    if ('duplicateOf' in event) {
-      attrs['duplicateOf'] = event.duplicateOf;
-    }
-
-    return attrs;
+    return attrs as Attributes;
   }
 }

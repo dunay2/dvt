@@ -6,6 +6,7 @@ import type {
 } from '../../application/ports/IBackpressureCapacityTelemetry.js';
 
 import { ADMISSION_TELEMETRY_METRICS } from './admissionTelemetryMetrics.js';
+import { safeWarn } from './safeWarn.js';
 
 export class ObservabilityBackpressureCapacityTelemetry implements IBackpressureCapacityTelemetry {
   private readonly pendingEventsGauge;
@@ -30,14 +31,7 @@ export class ObservabilityBackpressureCapacityTelemetry implements IBackpressure
       this.pendingEventsGauge.set(snapshot.pendingEventsCount, labels);
       this.outboxOldestAgeGauge.set(snapshot.outboxOldestAgeMs, labels);
     } catch (err) {
-      try {
-        this.deps.observability.logs.warn({
-          msg: 'backpressure.capacity_telemetry_drop',
-          attributes: { error: String(err) },
-        });
-      } catch {
-        // Logger unavailable — ignore silently.
-      }
+      safeWarn(this.deps.observability.logs, 'backpressure.capacity_telemetry_drop', err);
     }
   }
 }
