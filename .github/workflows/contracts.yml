@@ -168,35 +168,8 @@ jobs:
       - name: Run determinism linting
         run: pnpm lint:determinism
 
-      - name: Check for Date.now()
-        run: |
-          echo "🔍 Scanning for Date.now() in engine workflows..."
-          if grep -r "Date\.now()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
-            echo "❌ Found Date.now() calls (use workflow.now() in Temporal workflows)"
-            exit 1
-          else
-            echo "✅ No Date.now() calls found"
-          fi
-
-      - name: Check for Math.random()
-        run: |
-          echo "🔍 Scanning for Math.random() in engine workflows..."
-          if grep -r "Math\.random()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
-            echo "❌ Found Math.random() calls (use workflow-seeded RNG)"
-            exit 1
-          else
-            echo "✅ No Math.random() calls found"
-          fi
-
-      - name: Check for crypto.randomBytes()
-        run: |
-          echo "🔍 Scanning for crypto.randomBytes() in engine workflows..."
-          if grep -r "crypto\.randomBytes" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
-            echo "❌ Found crypto.randomBytes() calls (use deterministic UUID generation)"
-            exit 1
-          else
-            echo "✅ No crypto.randomBytes() calls found"
-          fi
+      - name: Check for non-deterministic API usage
+        run: node tools/ci/check-determinism.mjs
 
   contract-compile:
     name: Compile TypeScript Contracts

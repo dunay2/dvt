@@ -208,6 +208,50 @@ jobs:
           'true'
         run: pnpm test:replay
 
+  coverage:
+    name: Engine Coverage Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Detect coverage-relevant changes (PR only)
+        id: cov_changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
+        with:
+          filters: |
+            coverage_relevant:
+              - 'packages/@dvt/engine/src/**'
+              - 'packages/@dvt/engine/test/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'vitest.config.ts'
+              - '.github/workflows/test.yml'
+
+      - name: Setup pnpm, cache and dependencies
+        if:
+          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
+          'true'
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Run engine coverage (with threshold enforcement)
+        if:
+          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
+          'true'
+        run: pnpm test:coverage:engine
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: engine-coverage-report
+          path: packages/@dvt/engine/coverage/
+
   adapter-postgres-smoke:
     name: Adapter Postgres Smoke
     runs-on: ubuntu-latest

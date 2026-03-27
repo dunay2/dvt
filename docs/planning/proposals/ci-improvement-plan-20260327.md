@@ -169,18 +169,18 @@ Three clearly separated execution classes:
 | ID  | Issue                                                               | Severity | Effort  | Valor | Status  |
 | --- | ------------------------------------------------------------------- | -------- | ------- | ----- | ------- |
 | D1  | Scope detection duplicated across 4 workflows                       | Medium   | High    | Medio | Open    |
-| D2  | Long inline policy blocks in YAML                                   | Medium   | Medium  | Medio | Open    |
-| D3  | Local commands not aligned to CI scope classes                      | Low      | Medium  | Poco  | Open    |
+| D2  | Long inline policy blocks in YAML                                   | Medium   | Medium  | Medio | ✅ Done |
+| D3  | Local commands not aligned to CI scope classes                      | Low      | Medium  | Poco  | ✅ Done |
 | S1  | `pr-quality-gate.yml` runs full type-check on all PRs               | Medium   | Low     | Alto  | ✅ Done |
-| S2  | No local scripts for CI scope reproduction                          | Low      | Medium  | Poco  | Open    |
+| S2  | No local scripts for CI scope reproduction                          | Low      | Medium  | Poco  | ✅ Done |
 | R1  | pnpm store cache path wrong                                         | High     | Low     | Alto  | ✅ Done |
 | R2  | `apps/api` tests not run (web has no test script)                   | High     | Low     | Alto  | ✅ Done |
-| R3  | `smoke-guard` polling fragility                                     | Medium   | Medium  | Medio | Open    |
+| R3  | `smoke-guard` polling fragility                                     | Medium   | Medium  | Medio | ✅ Done |
 | R4  | No post-merge validation in `pr-quality-gate.yml`                   | Medium   | Low     | Medio | ✅ Done |
 | R5  | `docs/decisions/**` dead filter entry                               | Low      | Trivial | Poco  | ✅ Done |
 | R6  | Actions pinned by mutable tag                                       | Low      | Low     | Medio | ✅ Done |
 | R7  | `npx ajv-cli` runtime download                                      | Low      | Low     | Poco  | ✅ Done |
-| R8  | No coverage gate                                                    | Low      | Medium  | Alto  | Open    |
+| R8  | No coverage gate                                                    | Low      | Medium  | Alto  | ✅ Done |
 | R9  | `golden-paths.yml` orphaned — removed, real gate is `contracts.yml` | Medium   | Low     | Poco  | ✅ Done |
 
 ---

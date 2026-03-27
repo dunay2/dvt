@@ -147,37 +147,12 @@ jobs:
 
       - name: Check PR size
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
-        with:
-          script: |
-            const title = context.payload.pull_request.title || '';
-            const labels = (context.payload.pull_request.labels || []).map(l => l.name.toLowerCase());
-
-            // Override mechanisms (use one):
-            // - add `[skip-size-check]` to the PR title, or
-            // - add a PR label named `skip-size-check` or `pr-size-exempt`
-            if (
-              /\[skip-size-check\]/i.test(title) ||
-              labels.includes('skip-size-check') ||
-              labels.includes('pr-size-exempt')
-            ) {
-              core.info('ℹ️ PR size check skipped by override (title or label).');
-            } else {
-              const additions = context.payload.pull_request.additions;
-              const deletions = context.payload.pull_request.deletions;
-              const changes = additions + deletions;
-
-              const maxChanges = 50000;
-              const warningThreshold = 500;
-
-              if (changes > maxChanges) {
-                core.setFailed(`❌ PR too large: ${changes} lines changed (max: ${maxChanges}). Consider splitting into smaller PRs.`);
-              } else if (changes > warningThreshold) {
-                core.warning(`⚠️ Large PR: ${changes} lines changed. Consider splitting if possible.`);
-              } else {
-                core.info(`✅ PR size acceptable: ${changes} lines changed.`);
-              }
-            }
+        run: node tools/ci/check-pr-size.mjs
+        env:
+          PR_ADDITIONS: ${{ github.event.pull_request.additions }}
+          PR_DELETIONS: ${{ github.event.pull_request.deletions }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
 
       - name: Label PR based on files changed
         if: github.event_name == 'pull_request'
@@ -188,13 +163,9 @@ jobs:
 
       - name: Check if description is present
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
-        with:
-          script: |
-            const body = context.payload.pull_request.body;
-            if (!body || body.trim().length < 50) {
-              core.setFailed('❌ PR description is too short. Please provide a detailed description (min 50 characters).');
-            }
+        run: node tools/ci/check-pr-description.mjs
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
 
       - name: Detect PR changes relevant to Temporal and adapter-postgres
         id: detect_changes
@@ -237,34 +208,47 @@ jobs:
       - name: Run Temporal adapter integration (time-skipping)
         run: pnpm --filter @dvt/adapter-temporal test:integration
 
-  adapter-postgres-smoke-guard:
-    name: Adapter Postgres Smoke Guard
+  adapter-postgres-smoke:
+    name: Adapter Postgres Smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [pr-checks]
     if:
       needs.pr-checks.outputs.adapter_postgres_changed == 'true' && github.event_name ==
       'pull_request' && github.event.pull_request.draft == false
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: dvt_test
+          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_DB: dvt_test
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Require dedicated adapter-postgres smoke check
-        run: node tools/ci/check-run-guard.mjs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_SHA: ${{ github.event.pull_request.head.sha }}
-          CHECK_NAME: Adapter Postgres Smoke
-          CHECK_RETRIES: '60'
-          CHECK_DELAY_MS: '10000'
-          CHECK_ACCEPTED_CONCLUSIONS: success
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Build adapter-postgres dependency graph
+        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+
+      - name: Run adapter-postgres full test suite
+        run: pnpm test:adapter-postgres
 
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pr-checks, temporal-integration, adapter-postgres-smoke-guard]
+    needs: [pr-checks, temporal-integration, adapter-postgres-smoke]
     if: always()
     steps:
       - name: Check all jobs
