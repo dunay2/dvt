@@ -56,6 +56,10 @@ tmpclaude-*-cwd
 docs-dist/
 /site/
 
+# Generated planning views (produced by pnpm docs:workboard:generate)
+docs/planning/state/execution-workboard.md
+docs/planning/state/open-task-route.md
+
 # Root-local tooling artifacts
 /bfg.jar
 /eslint-issues.txt
