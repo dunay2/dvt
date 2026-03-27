@@ -1,0 +1,15 @@
+# <type>(<scope>): <Subject starting with uppercase>
+#
+# Types:  feat | fix | docs | style | refactor | perf | test | build | ci | chore | revert
+# Scopes: engine | adapters | temporal | conductor | state-store | contracts | planner | docs | ci | deps | release | api | web
+#
+# Examples:
+#   feat(engine): Add cancellation support to WorkflowEngine
+#   fix(api): Prevent plan-URI leakage to unauthorized callers
+#   chore(ci): Upgrade Node to 22.x in all workflow files
+#
+# Optional body (leave blank line before):
+
+# Optional footer — breaking changes, issue refs (leave blank line before):
+# BREAKING CHANGE: <description>
+# Closes #123
