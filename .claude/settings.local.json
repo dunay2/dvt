@@ -94,7 +94,16 @@
       "Bash(find /f/segundodvt/dvt/packages/@dvt/traceability-service/src -name *.ts)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(pnpm install:*)",
-      "Bash(grep -rl \"tsconfig.node-runtime.base.json\" f:/tercerdvt/dvt/apps/*/tsconfig.json)"
+      "Bash(grep -rl \"tsconfig.node-runtime.base.json\" f:/tercerdvt/dvt/apps/*/tsconfig.json)",
+      "Bash(pnpm --filter @dvt/api tsc --noEmit)",
+      "Bash(pnpm --filter api tsc --noEmit)",
+      "Bash(pnpm --filter dvt-api test --run)",
+      "Bash(pnpm --filter dvt-api test --run -- test/infrastructure/admissionTelemetry)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(gh pr:*)",
+      "Bash(grep -rn export.*TenantBackpressureError f:/tercerdvt/dvt/packages/@dvt/delivery/src/)",
+      "Bash(node -e \":*)"
     ]
   }
 }

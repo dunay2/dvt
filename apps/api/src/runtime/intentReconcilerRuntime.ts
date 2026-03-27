@@ -91,7 +91,11 @@ function parseProviderList(value: string): readonly EngineRunRef['provider'][] {
 }
 
 function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
-  const pool = getPgPool(config.databaseUrl);
+  const pool = getPgPool({
+    connectionString: config.databaseUrl,
+    statementTimeoutMs: config.statementTimeoutMs,
+    queryTimeoutMs: config.queryTimeoutMs,
+  });
   const stateStore = new PostgresStateStoreAdapter({
     pool,
     schema: config.schema,

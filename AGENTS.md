@@ -12,7 +12,7 @@ Before analysis, coding, Git actions, or planning, the agent MUST:
    the task.
 3. Start the first user-visible update with this exact sentence:
 
-`ME ESTOY GUIANDO POR EL AGENT.`
+`*** Plan-driven. Outcome-agnostic.***`
 
 1. Immediately after that sentence, name the governing sources being used for
    the task.
@@ -43,6 +43,29 @@ The agent MUST NOT:
 - present partial wiring, placeholders, or fake implementations as complete
   work
 
+## Git Commit Format Rule
+
+**Always use the commit helper. Never call `git commit -m` directly.**
+
+```bash
+pnpm commit <type> <scope> "<Subject>"
+```
+
+Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
+
+Valid scopes: `engine` `adapters` `temporal` `conductor` `state-store` `contracts` `planner` `docs` `ci` `deps` `release` `api` `web`
+
+The helper enforces sentence-case, no trailing dot, and max 100-char header automatically.
+
+Examples:
+
+```bash
+pnpm commit fix api "Prevent plan-URI leakage to unauthorized callers"
+pnpm commit feat engine "Add cancellation support to WorkflowEngine"
+pnpm commit chore ci "Upgrade Node to 22.x in workflow files"
+pnpm commit docs docs "Add how-to-add-tasks guide"
+```
+
 ## Git Commit Execution Rule
 
 For this repository's agent execution environment, `git commit` is a known
@@ -61,19 +84,16 @@ change normal Git usage for human contributors outside the agent environment.
 
 ## Sandboxed Validation Execution Rule
 
-For this repository's agent execution environment, commands that load
-`vitest`, `vite`, or `esbuild` may fail under sandboxed execution with
-`spawn EPERM` even when the code is correct.
+Commands that load `vitest`, `vite`, or `esbuild` always require escalated
+execution in this repository's agent environment.
 
 Therefore the agent MUST:
 
-- treat `spawn EPERM` from `vitest`/`vite`/`esbuild` as an environment signal
-  first, not as a code failure
-- rerun the affected validation command with escalated execution directly when
-  that failure occurs
-- report the escalated rerun result as the real validation outcome
-- not present sandbox-only `spawn EPERM` output as a product defect unless the
-  escalated rerun confirms it
+- run `vitest`, `vite`, and `esbuild`-backed commands with escalated execution
+  directly — never attempt them in sandboxed mode first
+- report the escalated run result as the real validation outcome
+- not present `spawn EPERM` output as a product defect — it is an environment
+  signal, not a code failure
 
 ## Required End-Of-Task Validation
 
@@ -142,6 +162,101 @@ A task is only complete when all of the following are true:
 - the affected validations were actually run
 - no hidden debt or stub was introduced
 - the final report includes concrete evidence, not reassurance
+
+## ARC Policy Rule
+
+Any PR that touches the paths below triggers ARC-2 and requires **both** an evidence doc and a risk register entry before CI will pass.
+
+| Trigger        | Glob                                                 |
+| -------------- | ---------------------------------------------------- |
+| `engine-core`  | `packages/@dvt/engine/**`                            |
+| `contracts`    | `packages/@dvt/contracts/**` or `specs/contracts/**` |
+| `adapters`     | `packages/@dvt/adapter-*/**`                         |
+| `planner-core` | `packages/@dvt/planner/**`                           |
+
+**Evidence doc** — create a file under `docs/evidence/` with this frontmatter:
+
+```yaml
+---
+title: <short description>
+status: Accepted
+date: YYYY-MM-DD
+owners:
+  - <package name>
+arc_level: ARC-2
+breaking: false
+code_refs:
+  - <file or function changed>
+evidence:
+  - <test or validation that proves correctness>
+---
+```
+
+**Risk register entry** — create a file under `docs/risk-register/quality/` (or the relevant subdirectory) with:
+
+```yaml
+---
+id: R-YYYYMMDD-<SHORT-ID>
+title: <one-line description>
+status: Open
+date: YYYY-MM-DD
+owners:
+  - <package>
+severity: Low | Medium | High
+probability: Low | Medium | High
+---
+```
+
+If either file is missing, the `ARC docs / evidence validate` step in `PR Quality Checks` will fail.
+
+## PR Rules
+
+PR title must follow Conventional Commits — same format as commits:
+
+```
+<type>(<scope>): <Subject starting with uppercase>
+```
+
+PR body must be at least 50 characters or CI will reject it.
+
+Use `gh pr create` with an explicit `--body`. Never open a PR with an empty or one-line description.
+
+## Generated Docs Rule
+
+Whenever source files are added or removed from any workspace, `docs/planning/status/generated-code-state.md` goes stale and CI fails. Always run:
+
+```bash
+pnpm docs:status:generate
+```
+
+and commit the result before pushing. Required after any structural change to `apps/` or `packages/`.
+
+Whenever any file under `docs/` is added, removed, or renamed, the documentation index files go stale and CI fails. Always run:
+
+```bash
+pnpm docs:sync
+```
+
+and commit the result before pushing. This updates all `docs/*/index.md` files and `mkdocs.yml`. This is **not** automatic — it does not run on pre-commit. The agent is responsible for running it manually whenever docs structure changes.
+
+## Planning State Rule
+
+Agent task assignments live in `docs/planning/state/agent-lane-*.yaml`.
+
+- `execution-workboard.md` and `open-task-route.md` are **generated views** — never edit them directly.
+- To add or update a task, edit the relevant `agent-lane-X.yaml`.
+- After editing, run `pnpm docs:workboard:generate` to regenerate the views.
+
+Lane ownership:
+
+| Lane | File                | Scope                                                 |
+| ---- | ------------------- | ----------------------------------------------------- |
+| A    | `agent-lane-a.yaml` | Contracts, state-store boundaries, DDD modularization |
+| B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
+| C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
+| D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
+
+See `docs/planning/state/how-to-add-tasks.md` for the full task format.
 
 ## Canonical Governance Entry Point
 

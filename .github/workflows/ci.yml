@@ -46,13 +46,8 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'tsconfig*.json'
+              - 'vitest.config.ts'
               - 'eslint.config.cjs'
-              - 'commitlint.config.cjs'
-              - '.prettierrc.json'
-              - 'scripts/**'
-              - 'packages/@dvt/traceability-service/**'
-              - 'traceability.config.json'
-              - 'docs/adr/**'
             api:
               - 'apps/api/**'
             web:
@@ -67,6 +62,19 @@ jobs:
               - 'packages/@dvt/adapter-temporal/**'
             cli:
               - 'packages/@dvt/cli/**'
+            docs_only:
+              - 'docs/**'
+              - 'AGENTS.md'
+              - 'CLAUDE.md'
+              - '.vscode/**'
+              - '.gitmessage'
+              - '.gitignore'
+              - 'scripts/generate-*.cjs'
+              - 'scripts/commit.cjs'
+              - 'scripts/docs-*.cjs'
+              - 'scripts/setup-git-hooks.cjs'
+              - 'commitlint.config.cjs'
+              - '.prettierrc.json'
 
       - name: Build matrix from affected workspaces
         id: matrix
@@ -91,6 +99,15 @@ jobs:
             add_item "cli" "@dvt/cli"
           else
             global='${{ steps.filter.outputs.global }}'
+            docs_only='${{ steps.filter.outputs.docs_only }}'
+            any_workspace='${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.web == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.engine == 'true' || steps.filter.outputs.adapter_postgres == 'true' || steps.filter.outputs.adapter_temporal == 'true' || steps.filter.outputs.cli == 'true' }}'
+
+            # Skip all workspace builds when only docs/agent/utility files changed
+            if [[ "$global" != "true" && "$any_workspace" != "true" && "$docs_only" == "true" ]]; then
+              echo "any_changed=false" >> "$GITHUB_OUTPUT"
+              echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
 
             if [[ "$global" == "true" ]]; then
               add_item "api" "dvt-api"

@@ -53,7 +53,11 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
-  const pool = getPgPool(databaseUrl);
+  const pool = getPgPool({
+    connectionString: databaseUrl,
+    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
   const nowIsoUtc = (): string => new Date().toISOString();
   const nowDate = (): Date => new Date();
 
