@@ -12,7 +12,7 @@ Before analysis, coding, Git actions, or planning, the agent MUST:
    the task.
 3. Start the first user-visible update with this exact sentence:
 
-`ME ESTOY GUIANDO POR EL AGENT.`
+`*** Plan-driven. Outcome-agnostic.***`
 
 1. Immediately after that sentence, name the governing sources being used for
    the task.
@@ -165,6 +165,74 @@ A task is only complete when all of the following are true:
 - the affected validations were actually run
 - no hidden debt or stub was introduced
 - the final report includes concrete evidence, not reassurance
+
+## ARC Policy Rule
+
+Any PR that touches the paths below triggers ARC-2 and requires **both** an evidence doc and a risk register entry before CI will pass.
+
+| Trigger        | Glob                                                 |
+| -------------- | ---------------------------------------------------- |
+| `engine-core`  | `packages/@dvt/engine/**`                            |
+| `contracts`    | `packages/@dvt/contracts/**` or `specs/contracts/**` |
+| `adapters`     | `packages/@dvt/adapter-*/**`                         |
+| `planner-core` | `packages/@dvt/planner/**`                           |
+
+**Evidence doc** — create a file under `docs/evidence/` with this frontmatter:
+
+```yaml
+---
+title: <short description>
+status: Accepted
+date: YYYY-MM-DD
+owners:
+  - <package name>
+arc_level: ARC-2
+breaking: false
+code_refs:
+  - <file or function changed>
+evidence:
+  - <test or validation that proves correctness>
+---
+```
+
+**Risk register entry** — create a file under `docs/risk-register/quality/` (or the relevant subdirectory) with:
+
+```yaml
+---
+id: R-YYYYMMDD-<SHORT-ID>
+title: <one-line description>
+status: Open
+date: YYYY-MM-DD
+owners:
+  - <package>
+severity: Low | Medium | High
+probability: Low | Medium | High
+---
+```
+
+If either file is missing, the `ARC docs / evidence validate` step in `PR Quality Checks` will fail.
+
+## PR Rules
+
+PR title must follow Conventional Commits — same format as commits:
+
+```
+<type>(<scope>): <Subject starting with uppercase>
+```
+
+PR body must be at least 50 characters or CI will reject it.
+
+Use `gh pr create` with an explicit `--body`. Never open a PR with an empty or one-line description.
+
+## Generated Docs Rule
+
+Whenever source files are added or removed from any workspace, `docs/planning/status/generated-code-state.md` goes stale and CI fails. Always run:
+
+```bash
+pnpm docs:status:generate
+```
+
+and commit the result before pushing. Required after any structural change to `apps/` or `packages/`.
 
 ## Planning State Rule
 
