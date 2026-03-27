@@ -27,7 +27,9 @@ lerna-debug.log*
 *.d.ts.map
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -55,6 +57,10 @@ tmpclaude-*-cwd
 # Generated documentation
 docs-dist/
 /site/
+
+# Generated planning views (produced by pnpm docs:workboard:generate)
+docs/planning/state/execution-workboard.md
+docs/planning/state/open-task-route.md
 
 # Root-local tooling artifacts
 /bfg.jar

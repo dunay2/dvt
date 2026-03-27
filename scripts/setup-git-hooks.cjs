@@ -9,17 +9,16 @@ if (!existsSync(gitEntry)) {
   process.exit(0);
 }
 
-const result = spawnSync('git', ['config', 'core.hooksPath', '.husky'], {
-  cwd: repoRoot,
-  stdio: 'inherit',
-});
-
-if (result.error) {
-  if (result.error.code === 'ENOENT') {
-    process.exit(0);
+function run(args) {
+  const result = spawnSync('git', args, { cwd: repoRoot, stdio: 'inherit' });
+  if (result.error) {
+    if (result.error.code === 'ENOENT') process.exit(0);
+    throw result.error;
   }
-
-  throw result.error;
+  return result.status ?? 0;
 }
 
-process.exit(result.status ?? 0);
+run(['config', 'core.hooksPath', '.husky']);
+run(['config', 'commit.template', '.gitmessage']);
+
+process.exit(0);
