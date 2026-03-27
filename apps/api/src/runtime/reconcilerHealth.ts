@@ -16,7 +16,16 @@ export type ReconcilerHealthStatus =
 export type ReconcilerHealthReasonCode =
   (typeof RECONCILER_HEALTH_REASON_CODE)[keyof typeof RECONCILER_HEALTH_REASON_CODE];
 
-export type ReconcilerHealthState = {
-  status: ReconcilerHealthStatus;
-  reasonCode?: ReconcilerHealthReasonCode;
+type ReconcilerHealthyState = {
+  status:
+    | (typeof RECONCILER_HEALTH_STATUS)['starting']
+    | (typeof RECONCILER_HEALTH_STATUS)['healthy']
+    | (typeof RECONCILER_HEALTH_STATUS)['disabled'];
 };
+
+type ReconcilerDegradedState = {
+  status: (typeof RECONCILER_HEALTH_STATUS)['degraded'];
+  reasonCode: ReconcilerHealthReasonCode;
+};
+
+export type ReconcilerHealthState = ReconcilerHealthyState | ReconcilerDegradedState;

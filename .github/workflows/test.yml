@@ -55,7 +55,7 @@ jobs:
           'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Run tests (push/workflow_dispatch full suite)
         if: github.event_name != 'pull_request'
@@ -149,7 +149,7 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Build adapter-postgres dependency graph (integration)
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build
@@ -186,7 +186,7 @@ jobs:
           'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Run determinism tests
         if:
@@ -215,7 +215,7 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Build adapter-postgres dependency graph
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build

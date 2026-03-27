@@ -15,6 +15,7 @@ export * from './contracts/engine/index.js';
 export * from './contracts/PlanVersionPolicy.js';
 
 export * from './core/WorkflowEngine.js';
+export * from './core/WorkflowEngineCoreService.js';
 export * from './core/SnapshotProjector.js';
 export * from './core/idempotency.js';
 
@@ -27,6 +28,7 @@ export * from './adapters/IProviderAdapter.js';
 export * from './services/RunMaintenanceService.js';
 export * from './workers/IntentReconcilerWorker.js';
 export * from './domain/startRunIntentPolicy.js';
+export * from './domain/IWorkflowEngineCore.js';
 
 export * from './outbox/IOutboxRateLimiter.js';
 export * from './outbox/TokenBucketRateLimiter.js';
@@ -40,3 +42,5 @@ export * from './security/planIntegrity.js';
 export * from './security/RunAccessPolicy.js';
 
 export * from './application/providerSelection.js';
+export * from './application/StartRunAdmissionGuard.js';
+export * from './application/StartRunCoordinator.js';

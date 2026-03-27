@@ -50,7 +50,7 @@ jobs:
           github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: ARC policy evaluate
         if: github.event_name == 'pull_request'
@@ -208,7 +208,7 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Build contracts for integration
         run: pnpm --filter @dvt/contracts build
