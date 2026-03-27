@@ -172,6 +172,38 @@ Eliminar la funcion muerta y mantener el modulo sin exports huerfanos.
 
 Resuelto: `buildReadyzPayload` fue eliminado y no hay referencias activas.
 
+## Prioridad 7 (Alta) - Abierto
+
+### Hallazgo
+
+Deuda de ownership contractual: la taxonomia `engine/planner/shared` no refleja
+todavia una asignacion clara en la frontera fisica de contratos y puede derivar
+en concentracion accidental en shared.
+
+### Evidencia
+
+- `docs/contracts/engine/index.md`
+- `docs/contracts/planner/index.md`
+- `docs/contracts/shared/index.md`
+- `packages/@dvt/contracts/src/contracts/planner/*`
+- `packages/@dvt/contracts/src/engine/*`
+- seguimiento operativo en `RC-G1` (workboard global)
+
+### Riesgo
+
+- Ambiguedad de ownership semantico vs fisico.
+- Deriva de reglas/literales entre runtime y contrato.
+- Evolucion menos auditable por bounded context.
+
+### Recomendacion
+
+Ejecutar `RC-G1`: matriz de ownership por familia (`engine`/`planner`/`shared`)
+y plan de migracion por slices bajo ADR-0041 Contract-First.
+
+### Estado actual
+
+Pendiente (abierto en workboard global como `RC-G1`).
+
 ## Resumen Ejecutivo
 
 El runtime cierra los hallazgos priorizados de health/readiness y bootstrap con
