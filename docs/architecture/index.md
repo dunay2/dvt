@@ -43,6 +43,7 @@ operations surface.
 - [Current Status](system-delivery-status.md)
 - [API / Entry Domain](domain-api.md)
 - [Delivery Domain](domain-delivery.md)
+- [DVT — System Architecture](system-overview.md)
 - [DVT Component Map](component-map.md)
 - [DVT Domain Map](domain-map.md)
 - [Execution Domain](domain-execution.md)
