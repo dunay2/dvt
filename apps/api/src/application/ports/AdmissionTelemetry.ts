@@ -2,7 +2,6 @@ import type { AdmissionMode } from './IAdmissionMode.js';
 import type {
   START_RUN_BACKPRESSURE_CODE,
   START_RUN_DUPLICATE_OF,
-  START_RUN_RATE_LIMIT_CODE,
 } from './startRunResultContract.js';
 
 export const ADMISSION_TELEMETRY_DECISION = {
@@ -14,22 +13,40 @@ export const ADMISSION_TELEMETRY_DECISION = {
   wouldRejectSystem: 'would_reject_system',
 } as const;
 
-export type AdmissionTelemetryDecision =
-  (typeof ADMISSION_TELEMETRY_DECISION)[keyof typeof ADMISSION_TELEMETRY_DECISION];
+type CommonFields = {
+  readonly requestId: string;
+  readonly tenantId: string;
+  readonly runId: string;
+  readonly mode: AdmissionMode;
+};
 
-type AdmissionTelemetryCode =
-  | (typeof START_RUN_BACKPRESSURE_CODE)[keyof typeof START_RUN_BACKPRESSURE_CODE]
-  | (typeof START_RUN_RATE_LIMIT_CODE)[keyof typeof START_RUN_RATE_LIMIT_CODE];
+export type AdmissionDecisionRecord =
+  | (CommonFields & {
+      readonly decision: typeof ADMISSION_TELEMETRY_DECISION.accept;
+    })
+  | (CommonFields & {
+      readonly decision: typeof ADMISSION_TELEMETRY_DECISION.duplicate;
+      readonly duplicateOf: (typeof START_RUN_DUPLICATE_OF)[keyof typeof START_RUN_DUPLICATE_OF];
+    })
+  | (CommonFields & {
+      readonly decision:
+        | typeof ADMISSION_TELEMETRY_DECISION.rejectTenant
+        | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectTenant;
+      readonly code: typeof START_RUN_BACKPRESSURE_CODE.tenant;
+      readonly retryAfterSeconds: number;
+    })
+  | (CommonFields & {
+      readonly decision:
+        | typeof ADMISSION_TELEMETRY_DECISION.rejectSystem
+        | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectSystem;
+      readonly code:
+        | typeof START_RUN_BACKPRESSURE_CODE.system
+        | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable;
+      readonly retryAfterSeconds: number;
+    });
+
+export type AdmissionTelemetryDecision = AdmissionDecisionRecord['decision'];
 
 export interface AdmissionTelemetry {
-  recordDecision(input: {
-    requestId: string;
-    tenantId: string;
-    runId: string;
-    mode: AdmissionMode;
-    decision: AdmissionTelemetryDecision;
-    retryAfterSeconds?: number;
-    duplicateOf?: (typeof START_RUN_DUPLICATE_OF)[keyof typeof START_RUN_DUPLICATE_OF];
-    code?: AdmissionTelemetryCode;
-  }): Promise<void>;
+  record(event: AdmissionDecisionRecord): Promise<void>;
 }

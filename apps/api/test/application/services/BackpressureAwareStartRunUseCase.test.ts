@@ -1,3 +1,8 @@
+import {
+  BackpressureSnapshotUnavailableError,
+  SystemBackpressureError,
+  TenantBackpressureError,
+} from '@dvt/delivery';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BackpressureAwareStartRunUseCase } from '../../../src/application/services/BackpressureAwareStartRunUseCase.js';
@@ -54,7 +59,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       },
       telemetry: {
-        async recordDecision() {
+        async record() {
           calls.push('telemetry');
         },
       },
@@ -82,7 +87,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
   it('returns duplicate before admission and delegate', async () => {
     const admissionGuard = { assertAdmissible: vi.fn() };
     const delegate = { execute: vi.fn() };
-    const telemetry = { recordDecision: vi.fn().mockResolvedValue(undefined) };
+    const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
     const useCase = new BackpressureAwareStartRunUseCase({
       duplicateProbe: {
         async findExisting() {
@@ -108,7 +113,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
     });
     expect(admissionGuard.assertAdmissible).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
-    expect(telemetry.recordDecision).toHaveBeenCalledWith(
+    expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({
         decision: 'duplicate',
         duplicateOf: 'intent',
@@ -126,11 +131,14 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw Object.assign(new Error('tenant pressure'), { code: 'TENANT_BACKPRESSURE' });
+          throw new TenantBackpressureError('tenant-1', {
+            pendingEventsPerTenant: 10,
+            outboxOldestAgeMs: 0,
+          });
         },
       },
       telemetry: {
-        async recordDecision() {
+        async record() {
           return undefined;
         },
       },
@@ -162,13 +170,11 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw Object.assign(new Error('snapshot unavailable'), {
-            code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
-          });
+          throw new BackpressureSnapshotUnavailableError('tenant-1', new Error('db timeout'));
         },
       },
       telemetry: {
-        async recordDecision() {
+        async record() {
           return undefined;
         },
       },
@@ -201,7 +207,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       }),
     };
-    const telemetry = { recordDecision: vi.fn().mockResolvedValue(undefined) };
+    const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
     const useCase = new BackpressureAwareStartRunUseCase({
       duplicateProbe: {
         async findExisting() {
@@ -210,7 +216,10 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       admissionGuard: {
         async assertAdmissible() {
-          throw Object.assign(new Error('system pressure'), { code: 'SYSTEM_BACKPRESSURE' });
+          throw new SystemBackpressureError({
+            pendingEventsPerTenant: 0,
+            outboxOldestAgeMs: 99_000,
+          });
         },
       },
       telemetry,
@@ -225,11 +234,81 @@ describe('BackpressureAwareStartRunUseCase', () => {
       value: { kind: 'accepted', runId: 'run-1', accepted: true },
     });
     expect(delegate.execute).toHaveBeenCalledOnce();
-    expect(telemetry.recordDecision).toHaveBeenCalledWith(
+    expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({
         decision: 'would_reject_system',
         code: 'SYSTEM_BACKPRESSURE',
       })
     );
+  });
+
+  describe('mode=off', () => {
+    it('skips admission guard entirely', async () => {
+      const admissionGuard = { assertAdmissible: vi.fn() };
+      const useCase = new BackpressureAwareStartRunUseCase({
+        duplicateProbe: {
+          async findExisting() {
+            return { kind: 'not_found' as const };
+          },
+        },
+        admissionGuard,
+        telemetry: {
+          async record() {
+            return undefined;
+          },
+        },
+        mode: 'off',
+        retryAfterSeconds: 30,
+        delegate: {
+          async execute() {
+            return {
+              ok: true as const,
+              value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+            };
+          },
+        },
+      });
+
+      await useCase.execute(COMMAND, CONTEXT);
+
+      expect(admissionGuard.assertAdmissible).not.toHaveBeenCalled();
+    });
+
+    it('delegates to engine and records accept telemetry', async () => {
+      const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
+      const delegate = {
+        execute: vi.fn().mockResolvedValue({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        }),
+      };
+      const useCase = new BackpressureAwareStartRunUseCase({
+        duplicateProbe: {
+          async findExisting() {
+            return { kind: 'not_found' as const };
+          },
+        },
+        admissionGuard: {
+          async assertAdmissible() {
+            return;
+          },
+        },
+        telemetry,
+        mode: 'off',
+        retryAfterSeconds: 30,
+        delegate,
+      });
+
+      const result = await useCase.execute(COMMAND, CONTEXT);
+
+      expect(result).toEqual({
+        ok: true,
+        value: { kind: 'accepted', runId: 'run-1', accepted: true },
+      });
+      expect(delegate.execute).toHaveBeenCalledOnce();
+      expect(telemetry.record).toHaveBeenCalledWith(
+        expect.objectContaining({ decision: 'accept', mode: 'off' })
+      );
+    });
   });
 });

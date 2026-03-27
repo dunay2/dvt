@@ -1,7 +1,12 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 
-import type { PlanRef, ResolvedRunContext, RunContext } from '@dvt/contracts';
+import {
+  RUN_EVENT_PAYLOAD_VERSION,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunContext,
+} from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
   IdempotencyKeyBuilder,
@@ -128,7 +133,6 @@ function makeRunEvent(
     planVersion: meta.planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
-    payloadVersion: 1,
     idempotencyKey: idempotency.runEventKey({
       eventType,
       runId: meta.runId,
@@ -136,6 +140,7 @@ function makeRunEvent(
       planId: meta.planId,
       planVersion: meta.planVersion,
     }),
+    payloadVersion: RUN_EVENT_PAYLOAD_VERSION,
   };
 }
 
@@ -158,7 +163,6 @@ function makeStepEvent(
     planVersion: meta.planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
-    payloadVersion: 1,
     stepId,
     idempotencyKey: idempotency.runEventKey({
       eventType,
@@ -168,6 +172,7 @@ function makeStepEvent(
       planVersion: meta.planVersion,
       stepId,
     }),
+    payloadVersion: RUN_EVENT_PAYLOAD_VERSION,
   };
 }
 

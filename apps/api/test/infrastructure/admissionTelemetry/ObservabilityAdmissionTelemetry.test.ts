@@ -1,165 +1,374 @@
-import type { ICounter, IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
 import { ObservabilityAdmissionTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function createCounterSpy() {
-  const add = vi.fn<ICounter['add']>();
-  const counter = vi.fn().mockReturnValue({ add });
-  return { add, counter };
+// ---------------------------------------------------------------------------
+// Spy factory — minimal in-memory IObservability double
+// ---------------------------------------------------------------------------
+
+type CounterCall = { name: string; value: number; labels?: Record<string, string> | undefined };
+type LogCall = { level: string; msg: string; attributes?: Record<string, unknown> };
+
+type ObservabilitySpy = {
+  observability: {
+    metrics: {
+      counter: (name: string) => { add: (value: number, labels?: Record<string, string>) => void };
+      histogram: () => { record: ReturnType<typeof vi.fn> };
+      gauge: () => { set: ReturnType<typeof vi.fn> };
+    };
+    logs: {
+      info: (entry: { msg: string; attributes?: Record<string, unknown> }) => void;
+      warn: (entry: { msg: string; attributes?: Record<string, unknown> }) => void;
+      debug: (entry: { msg: string }) => void;
+      error: (entry: { msg: string }) => void;
+    };
+    traces: { startSpan: ReturnType<typeof vi.fn>; withSpan: ReturnType<typeof vi.fn> };
+    withContext: <T>(_ctx: unknown, fn: () => T) => T;
+  };
+  counterCalls: CounterCall[];
+  logCalls: LogCall[];
+};
+
+function makeObservabilitySpy(): ObservabilitySpy {
+  const counterCalls: CounterCall[] = [];
+  const logCalls: LogCall[] = [];
+
+  const observability = {
+    metrics: {
+      counter: (name: string) => ({
+        add: (value: number, labels?: Record<string, string>) => {
+          counterCalls.push({ name, value, labels });
+        },
+      }),
+      histogram: () => ({ record: vi.fn() }),
+      gauge: () => ({ set: vi.fn() }),
+    },
+    logs: {
+      info: (entry: { msg: string; attributes?: Record<string, unknown> }) =>
+        logCalls.push({ level: 'info', ...entry }),
+      warn: (entry: { msg: string; attributes?: Record<string, unknown> }) =>
+        logCalls.push({ level: 'warn', ...entry }),
+      debug: (entry: { msg: string }) => logCalls.push({ level: 'debug', msg: entry.msg }),
+      error: (entry: { msg: string }) => logCalls.push({ level: 'error', msg: entry.msg }),
+    },
+    traces: { startSpan: vi.fn(), withSpan: vi.fn() },
+    withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
+  };
+
+  return { observability, counterCalls, logCalls };
 }
 
+const COMMON = {
+  requestId: 'req-1',
+  tenantId: 'tenant-1',
+  runId: 'run-1',
+  mode: 'enforce' as const,
+};
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 describe('ObservabilityAdmissionTelemetry', () => {
-  it('records decision_total and info log for accept', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const info = vi.fn();
-    const warn = vi.fn();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info, warn, error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
+  describe('accept decision', () => {
+    it('increments decision_total counter', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({ ...COMMON, decision: 'accept' });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.decisionTotal,
+        value: 1,
+        labels: { mode: 'enforce', decision: 'accept' },
+      });
     });
 
-    await telemetry.recordDecision({
-      requestId: 'req-1',
-      tenantId: 'tenant-1',
-      runId: 'run-1',
-      mode: 'enforce',
-      decision: 'accept',
+    it('does not increment rejection_total counter', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({ ...COMMON, decision: 'accept' });
+
+      expect(counterCalls.some((c) => c.name === ADMISSION_TELEMETRY_METRICS.rejectionTotal)).toBe(
+        false
+      );
     });
 
-    expect(decisionCounter.add).toHaveBeenCalledWith(1, { mode: 'enforce', decision: 'accept' });
-    expect(rejectionCounter.add).not.toHaveBeenCalled();
-    expect(info).toHaveBeenCalledOnce();
-    expect(warn).not.toHaveBeenCalled();
+    it('logs at info level', async () => {
+      const { observability, logCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({ ...COMMON, decision: 'accept' });
+
+      expect(logCalls).toContainEqual(expect.objectContaining({ level: 'info' }));
+    });
+
+    it('does not include tenantId or runId in counter labels', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({ ...COMMON, decision: 'accept' });
+
+      const call = counterCalls.find((c) => c.name === ADMISSION_TELEMETRY_METRICS.decisionTotal);
+      expect(Object.keys(call?.labels ?? {})).not.toContain('tenantId');
+      expect(Object.keys(call?.labels ?? {})).not.toContain('runId');
+    });
   });
 
-  it('records rejection_total and warn log for reject decisions', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const info = vi.fn();
-    const warn = vi.fn();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info, warn, error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
+  describe('duplicate decision', () => {
+    it('increments decision_total counter', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({ ...COMMON, decision: 'duplicate', duplicateOf: 'intent' });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.decisionTotal,
+        value: 1,
+        labels: { mode: 'enforce', decision: 'duplicate' },
+      });
     });
 
-    await telemetry.recordDecision({
-      requestId: 'req-1',
-      tenantId: 'tenant-1',
-      runId: 'run-1',
-      mode: 'observe',
-      decision: 'would_reject_system',
-      code: 'SYSTEM_BACKPRESSURE',
-      retryAfterSeconds: 30,
-    });
+    it('logs at info level', async () => {
+      const { observability, logCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
 
-    expect(decisionCounter.add).toHaveBeenCalledWith(1, {
-      mode: 'observe',
-      decision: 'would_reject_system',
+      await telemetry.record({ ...COMMON, decision: 'duplicate', duplicateOf: 'run' });
+
+      expect(logCalls).toContainEqual(expect.objectContaining({ level: 'info' }));
     });
-    expect(rejectionCounter.add).toHaveBeenCalledWith(1, {
-      mode: 'observe',
-      decision: 'would_reject_system',
-      code: 'SYSTEM_BACKPRESSURE',
-    });
-    expect(warn).toHaveBeenCalledOnce();
-    expect(info).not.toHaveBeenCalled();
   });
 
-  it('does not include tenantId or runId in metric labels', async () => {
-    const decisionCounter = createCounterSpy();
-    const rejectionCounter = createCounterSpy();
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn((name: string) =>
-            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
-              ? decisionCounter.counter()
-              : rejectionCounter.counter()
-          ),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
+  describe('reject_tenant decision (enforce mode)', () => {
+    it('increments decision_total counter', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        ...COMMON,
+        decision: 'reject_tenant',
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.decisionTotal,
+        value: 1,
+        labels: { mode: 'enforce', decision: 'reject_tenant' },
+      });
     });
 
-    await telemetry.recordDecision({
-      requestId: 'req-1',
-      tenantId: 'tenant-1',
-      runId: 'run-1',
-      mode: 'observe',
-      decision: 'would_reject_tenant',
-      code: 'TENANT_BACKPRESSURE',
-      retryAfterSeconds: 15,
+    it('increments rejection_total counter with code label', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        ...COMMON,
+        decision: 'reject_tenant',
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.rejectionTotal,
+        value: 1,
+        labels: { mode: 'enforce', decision: 'reject_tenant', code: 'TENANT_BACKPRESSURE' },
+      });
     });
 
-    const decisionLabels = decisionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
-    const rejectionLabels = rejectionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(Object.keys(decisionLabels).sort((a, b) => a.localeCompare(b))).toEqual([
-      'decision',
-      'mode',
-    ]);
-    expect(Object.keys(rejectionLabels).sort((a, b) => a.localeCompare(b))).toEqual([
-      'code',
-      'decision',
-      'mode',
-    ]);
+    it('logs at warn level', async () => {
+      const { observability, logCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        ...COMMON,
+        decision: 'reject_tenant',
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(logCalls).toContainEqual(expect.objectContaining({ level: 'warn' }));
+    });
   });
 
-  it('swallows observability errors and does not throw', async () => {
-    const telemetry = new ObservabilityAdmissionTelemetry({
-      observability: {
-        metrics: {
-          counter: vi.fn(() => {
-            throw new Error('metric sink down');
-          }),
-          histogram: vi.fn(),
-          gauge: vi.fn(),
-        },
-        logs: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
-        withContext: vi.fn((_, fn) => fn()),
-      } as unknown as IObservability,
+  describe('reject_system decision (enforce mode)', () => {
+    it('increments rejection_total with SYSTEM_BACKPRESSURE code', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        ...COMMON,
+        decision: 'reject_system',
+        code: 'SYSTEM_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.rejectionTotal,
+        value: 1,
+        labels: { mode: 'enforce', decision: 'reject_system', code: 'SYSTEM_BACKPRESSURE' },
+      });
     });
 
-    await expect(
-      telemetry.recordDecision({
+    it('increments rejection_total with BACKPRESSURE_SNAPSHOT_UNAVAILABLE code', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        ...COMMON,
+        decision: 'reject_system',
+        code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls).toContainEqual(
+        expect.objectContaining({
+          name: ADMISSION_TELEMETRY_METRICS.rejectionTotal,
+          labels: expect.objectContaining({ code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE' }),
+        })
+      );
+    });
+  });
+
+  describe('would_reject_tenant decision (observe mode)', () => {
+    it('increments decision_total with observe mode label', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
         requestId: 'req-1',
         tenantId: 'tenant-1',
         runId: 'run-1',
-        mode: 'enforce',
-        decision: 'accept',
-      })
-    ).resolves.toBeUndefined();
+        mode: 'observe',
+        decision: 'would_reject_tenant',
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.decisionTotal,
+        value: 1,
+        labels: { mode: 'observe', decision: 'would_reject_tenant' },
+      });
+    });
+
+    it('increments rejection_total counter', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        requestId: 'req-1',
+        tenantId: 'tenant-1',
+        runId: 'run-1',
+        mode: 'observe',
+        decision: 'would_reject_tenant',
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls.some((c) => c.name === ADMISSION_TELEMETRY_METRICS.rejectionTotal)).toBe(
+        true
+      );
+    });
+
+    it('logs at warn level', async () => {
+      const { observability, logCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        requestId: 'req-1',
+        tenantId: 'tenant-1',
+        runId: 'run-1',
+        mode: 'observe',
+        decision: 'would_reject_tenant',
+        code: 'TENANT_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(logCalls).toContainEqual(expect.objectContaining({ level: 'warn' }));
+    });
+  });
+
+  describe('would_reject_system decision (observe mode)', () => {
+    it('increments rejection_total with would_reject_system decision', async () => {
+      const { observability, counterCalls } = makeObservabilitySpy();
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await telemetry.record({
+        requestId: 'req-1',
+        tenantId: 'tenant-1',
+        runId: 'run-1',
+        mode: 'observe',
+        decision: 'would_reject_system',
+        code: 'SYSTEM_BACKPRESSURE',
+        retryAfterSeconds: 30,
+      });
+
+      expect(counterCalls).toContainEqual({
+        name: ADMISSION_TELEMETRY_METRICS.rejectionTotal,
+        value: 1,
+        labels: { mode: 'observe', decision: 'would_reject_system', code: 'SYSTEM_BACKPRESSURE' },
+      });
+    });
+  });
+
+  describe('error resilience', () => {
+    it('resolves even when counter.add throws at record time', async () => {
+      const warn = vi.fn();
+      const observability = {
+        metrics: {
+          counter: () => ({
+            add: () => {
+              throw new Error('metrics unavailable');
+            },
+          }),
+          histogram: () => ({ record: vi.fn() }),
+          gauge: () => ({ set: vi.fn() }),
+        },
+        logs: {
+          info: vi.fn(),
+          warn,
+          debug: vi.fn(),
+          error: vi.fn(),
+        },
+        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
+        withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
+      };
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await expect(telemetry.record({ ...COMMON, decision: 'accept' })).resolves.toBeUndefined();
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({ msg: 'admission.telemetry_drop' })
+      );
+    });
+
+    it('resolves even when both counter.add and logs.warn throw', async () => {
+      const observability = {
+        metrics: {
+          counter: () => ({
+            add: () => {
+              throw new Error('metrics unavailable');
+            },
+          }),
+          histogram: () => ({ record: vi.fn() }),
+          gauge: () => ({ set: vi.fn() }),
+        },
+        logs: {
+          info: vi.fn(),
+          warn: () => {
+            throw new Error('logger unavailable');
+          },
+          debug: vi.fn(),
+          error: vi.fn(),
+        },
+        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
+        withContext: <T>(_ctx: unknown, fn: () => T): T => fn(),
+      };
+      const telemetry = new ObservabilityAdmissionTelemetry({ observability });
+
+      await expect(telemetry.record({ ...COMMON, decision: 'accept' })).resolves.toBeUndefined();
+    });
   });
 });

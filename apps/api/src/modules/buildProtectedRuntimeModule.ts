@@ -53,7 +53,13 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
-  const pool = getPgPool(databaseUrl);
+  const pool = getPgPool({
+    connectionString: databaseUrl,
+    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
+  const nowIsoUtc = (): string => new Date().toISOString();
+  const nowDate = (): Date => new Date();
 
   const [adapterMod, engineMod] = await Promise.all([
     import('@dvt/adapter-postgres'),
@@ -68,7 +74,7 @@ export async function buildProtectedRuntimeModule(
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
   const stateStore = new PostgresStateStoreAdapter({
-    connectionString: databaseUrl,
+    pool,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -76,7 +82,7 @@ export async function buildProtectedRuntimeModule(
   const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
-    connectionString: databaseUrl,
+    pool,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -107,7 +113,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: () => new Date().toISOString(),
+    now: nowIsoUtc,
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -121,19 +127,15 @@ export async function buildProtectedRuntimeModule(
     snapshotMaxAgeMs:
       env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
   });
-  const backpressureStore = new CachedBackpressureStore({
+  const cachedBackpressureStore = new CachedBackpressureStore({
     delegate: resilientBackpressureStore,
     ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
   });
-  const capacityTelemetry = new ObservabilityBackpressureCapacityTelemetry({
-    observability,
-  });
-  const instrumentedBackpressureStore = new MetricsEmittingBackpressureStore({
-    delegate: backpressureStore,
-    capacityTelemetry,
-  });
   const admissionGuard = new StartRunAdmissionGuard({
-    backpressureStore: instrumentedBackpressureStore,
+    backpressureStore: new MetricsEmittingBackpressureStore({
+      delegate: cachedBackpressureStore,
+      capacityTelemetry: new ObservabilityBackpressureCapacityTelemetry({ observability }),
+    }),
     policy: {
       maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
@@ -166,7 +168,7 @@ export async function buildProtectedRuntimeModule(
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc: () => new Date().toISOString() },
+      clock: { nowIsoUtc },
       observability,
     },
   });
@@ -178,7 +180,7 @@ export async function buildProtectedRuntimeModule(
     accessRepo,
     policy,
     auditLogger,
-    () => new Date()
+    nowDate
   );
   const authenticator = new OidcAuthenticator(
     new JwksJwtVerifier({
@@ -223,11 +225,23 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      await closeAdapters();
-      await planStore.close();
-      await stateStore.close();
-      await intentStore.close();
+      const results = await Promise.allSettled([
+        closeAdapters(),
+        planStore.close(),
+        stateStore.close(),
+        intentStore.close(),
+      ]);
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+      for (const { reason } of failures) {
+        app.log.error({ err: reason }, 'Teardown failure');
+      }
       await pool.end();
+      if (failures.length > 0) {
+        throw new AggregateError(
+          failures.map((f) => f.reason),
+          `${failures.length} teardown failure(s)`
+        );
+      }
     },
   };
 }

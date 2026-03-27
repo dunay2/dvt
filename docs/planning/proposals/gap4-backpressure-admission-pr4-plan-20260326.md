@@ -444,15 +444,15 @@ C12 docs(admission): add emergency stuck-event cleanup SQL
 
 ## Progress Tracker
 
-- [ ] C1 — refactor port: AdmissionDecisionRecord discriminated union
-- [ ] C2 — new port: IBackpressureCapacityTelemetry
-- [ ] C3 — metric constants
-- [ ] C4 — failing tests: ObservabilityAdmissionTelemetry
-- [ ] C5 — impl: ObservabilityAdmissionTelemetry (tests green)
-- [ ] C6 — failing tests: ObservabilityBackpressureCapacityTelemetry
-- [ ] C7 — impl: ObservabilityBackpressureCapacityTelemetry
-- [ ] C8 — failing tests: MetricsEmittingBackpressureStore
-- [ ] C9 — impl: MetricsEmittingBackpressureStore
-- [ ] C10 — wire composition root
-- [ ] C11 — runbook
-- [ ] C12 — emergency cleanup SQL
+- [x] C1 — refactor port: AdmissionDecisionRecord discriminated union
+- [x] C2 — new port: IBackpressureCapacityTelemetry
+- [x] C3 — metric constants
+- [x] C4 — failing tests: ObservabilityAdmissionTelemetry
+- [x] C5 — impl: ObservabilityAdmissionTelemetry (tests green)
+- [x] C6 — failing tests: ObservabilityBackpressureCapacityTelemetry
+- [x] C7 — impl: ObservabilityBackpressureCapacityTelemetry
+- [x] C8 — failing tests: MetricsEmittingBackpressureStore
+- [x] C9 — impl: MetricsEmittingBackpressureStore
+- [x] C10 — wire composition root
+- [x] C11 — runbook
+- [x] C12 — emergency cleanup SQL
