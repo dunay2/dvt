@@ -15,6 +15,17 @@ type DecisionInput = Parameters<AdmissionTelemetry['recordDecision']>[0];
 
 type RejectionRecord = Extract<AdmissionDecisionRecord, { readonly code: string }>;
 
+type DecisionLogAttributes = {
+  readonly requestId: string;
+  readonly tenantId: string;
+  readonly runId: string;
+  readonly mode: string;
+  readonly decision: string;
+  readonly code?: string;
+  readonly retryAfterSeconds?: number;
+  readonly duplicateOf?: string;
+};
+
 function isRejectionRecord(event: AdmissionDecisionRecord): event is RejectionRecord {
   return REJECTION_DECISIONS.has(event.decision);
 }
