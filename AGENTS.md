@@ -84,19 +84,16 @@ change normal Git usage for human contributors outside the agent environment.
 
 ## Sandboxed Validation Execution Rule
 
-For this repository's agent execution environment, commands that load
-`vitest`, `vite`, or `esbuild` may fail under sandboxed execution with
-`spawn EPERM` even when the code is correct.
+Commands that load `vitest`, `vite`, or `esbuild` always require escalated
+execution in this repository's agent environment.
 
 Therefore the agent MUST:
 
-- treat `spawn EPERM` from `vitest`/`vite`/`esbuild` as an environment signal
-  first, not as a code failure
-- rerun the affected validation command with escalated execution directly when
-  that failure occurs
-- report the escalated rerun result as the real validation outcome
-- not present sandbox-only `spawn EPERM` output as a product defect unless the
-  escalated rerun confirms it
+- run `vitest`, `vite`, and `esbuild`-backed commands with escalated execution
+  directly — never attempt them in sandboxed mode first
+- report the escalated run result as the real validation outcome
+- not present `spawn EPERM` output as a product defect — it is an environment
+  signal, not a code failure
 
 ## Required End-Of-Task Validation
 
