@@ -43,6 +43,29 @@ The agent MUST NOT:
 - present partial wiring, placeholders, or fake implementations as complete
   work
 
+## Git Commit Format Rule
+
+**Always use the commit helper. Never call `git commit -m` directly.**
+
+```bash
+pnpm commit <type> <scope> "<Subject>"
+```
+
+Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
+
+Valid scopes: `engine` `adapters` `temporal` `conductor` `state-store` `contracts` `planner` `docs` `ci` `deps` `release` `api` `web`
+
+The helper enforces sentence-case, no trailing dot, and max 100-char header automatically.
+
+Examples:
+
+```bash
+pnpm commit fix api "Prevent plan-URI leakage to unauthorized callers"
+pnpm commit feat engine "Add cancellation support to WorkflowEngine"
+pnpm commit chore ci "Upgrade Node to 22.x in workflow files"
+pnpm commit docs docs "Add how-to-add-tasks guide"
+```
+
 ## Git Commit Execution Rule
 
 For this repository's agent execution environment, `git commit` is a known
@@ -142,6 +165,25 @@ A task is only complete when all of the following are true:
 - the affected validations were actually run
 - no hidden debt or stub was introduced
 - the final report includes concrete evidence, not reassurance
+
+## Planning State Rule
+
+Agent task assignments live in `docs/planning/state/agent-lane-*.yaml`.
+
+- `execution-workboard.md` and `open-task-route.md` are **generated views** — never edit them directly.
+- To add or update a task, edit the relevant `agent-lane-X.yaml`.
+- After editing, run `pnpm docs:workboard:generate` to regenerate the views.
+
+Lane ownership:
+
+| Lane | File                | Scope                                                 |
+| ---- | ------------------- | ----------------------------------------------------- |
+| A    | `agent-lane-a.yaml` | Contracts, state-store boundaries, DDD modularization |
+| B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
+| C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
+| D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
+
+See `docs/planning/state/how-to-add-tasks.md` for the full task format.
 
 ## Canonical Governance Entry Point
 
