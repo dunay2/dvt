@@ -76,6 +76,7 @@ async function bootstrapRun(store: InMemoryTxStore, runId: string): Promise<Engi
         planVersion: '1.0',
         logicalAttemptId: 1,
         engineAttemptId: 1,
+        payloadVersion: 1,
         emittedAt: '2026-03-26T00:00:00.000Z',
         idempotencyKey: `${runId}:queued`,
       },
