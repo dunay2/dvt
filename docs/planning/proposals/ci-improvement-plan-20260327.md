@@ -177,46 +177,46 @@ Three execution classes are in place:
 
 ### Wave 2 — Post-merge coverage and supply chain ✅ Complete
 
-6. **Post-merge gate** (R4): `pr-quality-gate.yml` now triggers on `push:
+1. **Post-merge gate** (R4): `pr-quality-gate.yml` now triggers on `push:
 branches: [main]`.
-7. **Remove `golden-paths.yml`** (R9): Workflow file deleted; golden validation
+1. **Remove `golden-paths.yml`** (R9): Workflow file deleted; golden validation
    lives in `contracts.yml` `contract-hashes` job.
-8. **Pin all GitHub Actions to commit SHA** (R6): All four workflows and
+1. **Pin all GitHub Actions to commit SHA** (R6): All four workflows and
    `setup-node-pnpm/action.yml` pinned.
 
 ### Wave 3 — Inline extraction, coverage gate, and local parity ✅ Complete
 
-9. **Extract determinism checks** (D2): Three inline grep steps in
+1. **Extract determinism checks** (D2): Three inline grep steps in
    `contracts.yml` replaced by `tools/ci/check-determinism.mjs`.
-10. **Extract PR size and description checks** (D2): Inline `actions/github-script`
-    blocks in `pr-quality-gate.yml` replaced by `tools/ci/check-pr-size.mjs`
-    and `tools/ci/check-pr-description.mjs`.
-11. **Replace `adapter-postgres-smoke-guard` polling** (R3): Polling job removed;
-    replaced with a self-contained `adapter-postgres-smoke` job that spins up a
-    postgres service and runs the suite directly.
-12. **Coverage thresholds and gate** (R8): `vitest.config.ts` thresholds added
-    (statements/functions/lines: 65%, branches: 55%); `coverage` job added to
-    `test.yml` with artifact upload.
-13. **Local parity scripts** (D3, S2): `pnpm ci:docs`, `pnpm ci:code`, and
-    `pnpm ci:full` added to root `package.json`.
+1. **Extract PR size and description checks** (D2): Inline `actions/github-script`
+   blocks in `pr-quality-gate.yml` replaced by `tools/ci/check-pr-size.mjs`
+   and `tools/ci/check-pr-description.mjs`.
+1. **Replace `adapter-postgres-smoke-guard` polling** (R3): Polling job removed;
+   replaced with a self-contained `adapter-postgres-smoke` job that spins up a
+   postgres service and runs the suite directly.
+1. **Coverage thresholds and gate** (R8): `vitest.config.ts` thresholds added
+   (statements/functions/lines: 65%, branches: 55%); `coverage` job added to
+   `test.yml` with artifact upload.
+1. **Local parity scripts** (D3, S2): `pnpm ci:docs`, `pnpm ci:code`, and
+   `pnpm ci:full` added to root `package.json`.
 
 ### Wave 4 — Scope architecture 🔵 Active (D1 only)
 
 Prerequisite: Waves 1–3 complete ✅.
 
-14. **Shared scope module** (D1): `tools/ci/scope-config.mjs` already exists.
-    Add or verify `tools/ci/emit-workspace-matrix.mjs` and `tools/ci/emit-scope.mjs`
-    as the canonical interface for workflows.
-15. **Rewire `ci.yml`** (D1): Replace inline `dorny/paths-filter` blocks with
-    calls to the shared scope scripts. Preserve existing `docs_only` fast-path
-    semantics.
-16. **Rewire `test.yml`** (D1): Consume the shared scope policy.
-17. **Rewire `contracts.yml`** (D1): Consume the shared scope policy for
-    `contracts_relevant`, `determinism_relevant`, and `golden_relevant`.
-18. **Rewire `pr-quality-gate.yml`** (D1): Consume the shared scope classifier.
-    Remove remaining inline scope blocks.
-19. **Add scope classifier tests** (D1): Representative fixture-based tests
-    under `tools/ci` covering docs-only, code-only, mixed, and ambiguous inputs.
+1. **Shared scope module** (D1): `tools/ci/scope-config.mjs` already exists.
+   Add or verify `tools/ci/emit-workspace-matrix.mjs` and `tools/ci/emit-scope.mjs`
+   as the canonical interface for workflows.
+1. **Rewire `ci.yml`** (D1): Replace inline `dorny/paths-filter` blocks with
+   calls to the shared scope scripts. Preserve existing `docs_only` fast-path
+   semantics.
+1. **Rewire `test.yml`** (D1): Consume the shared scope policy.
+1. **Rewire `contracts.yml`** (D1): Consume the shared scope policy for
+   `contracts_relevant`, `determinism_relevant`, and `golden_relevant`.
+1. **Rewire `pr-quality-gate.yml`** (D1): Consume the shared scope classifier.
+   Remove remaining inline scope blocks.
+1. **Add scope classifier tests** (D1): Representative fixture-based tests
+   under `tools/ci` covering docs-only, code-only, mixed, and ambiguous inputs.
 
 ---
 
