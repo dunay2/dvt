@@ -12,7 +12,7 @@ Before any analysis, code, git action, or planning:
 3. Identify the governing sources for the task.
 4. Start the first user-visible update with:
 
-`ME ESTOY GUIANDO POR EL AGENT.`
+`Plan-driven. Outcome-agnostic.`
 
 Then immediately list the governing sources being used.
 
