@@ -231,6 +231,14 @@ pnpm docs:status:generate
 
 and commit the result before pushing. Required after any structural change to `apps/` or `packages/`.
 
+Whenever any file under `docs/` is added, removed, or renamed, the documentation index files go stale and CI fails. Always run:
+
+```bash
+pnpm docs:sync
+```
+
+and commit the result before pushing. This updates all `docs/*/index.md` files and `mkdocs.yml`. This is **not** automatic — it does not run on pre-commit. The agent is responsible for running it manually whenever docs structure changes.
+
 ## Planning State Rule
 
 Agent task assignments live in `docs/planning/state/agent-lane-*.yaml`.

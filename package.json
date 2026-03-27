@@ -96,10 +96,6 @@
       "pnpm contracts:index:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
-    "docs/**/*.{md,txt,yml,yaml}": [
-      "pnpm docs:sync",
-      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/concepts/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/planning/state/agent-lane-a.md docs/planning/state/agent-lane-b.md docs/planning/state/agent-lane-c.md docs/planning/state/agent-lane-d.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/risk-register/quality/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml',{stdio:'inherit'})\""
-    ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"
     ]
