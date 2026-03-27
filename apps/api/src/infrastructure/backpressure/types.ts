@@ -1,6 +1,6 @@
 import type { BackpressureSnapshot, BackpressureStore } from '@dvt/delivery';
 
-export type BackpressureSnapshotSource = 'live' | 'cache' | 'fallback';
+export type { BackpressureSnapshotSource } from '../../application/ports/IBackpressureCapacityTelemetry.js';
 
 export interface BackpressureSnapshotEnvelope {
   readonly snapshot: BackpressureSnapshot;
