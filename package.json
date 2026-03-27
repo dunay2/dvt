@@ -7,6 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "commit": "node scripts/commit.cjs",
     "lint": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --ignore-pattern vitest.config.ts --max-warnings 0",
     "lint:fix": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --fix",
     "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc",
