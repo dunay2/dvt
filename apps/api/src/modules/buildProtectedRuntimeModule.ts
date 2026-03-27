@@ -54,8 +54,6 @@ export async function buildProtectedRuntimeModule(
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
   const pool = getPgPool(databaseUrl);
-  const nowIsoUtc = (): string => new Date().toISOString();
-  const nowDate = (): Date => new Date();
 
   const [adapterMod, engineMod] = await Promise.all([
     import('@dvt/adapter-postgres'),
@@ -70,7 +68,7 @@ export async function buildProtectedRuntimeModule(
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
   const stateStore = new PostgresStateStoreAdapter({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -78,7 +76,7 @@ export async function buildProtectedRuntimeModule(
   const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -109,7 +107,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: nowIsoUtc,
+    now: () => new Date().toISOString(),
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -123,7 +121,7 @@ export async function buildProtectedRuntimeModule(
     snapshotMaxAgeMs:
       env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
   });
-  const cachedBackpressureStore = new CachedBackpressureStore({
+  const backpressureStore = new CachedBackpressureStore({
     delegate: resilientBackpressureStore,
     ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
   });
@@ -168,7 +166,7 @@ export async function buildProtectedRuntimeModule(
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc },
+      clock: { nowIsoUtc: () => new Date().toISOString() },
       observability,
     },
   });
@@ -180,7 +178,7 @@ export async function buildProtectedRuntimeModule(
     accessRepo,
     policy,
     auditLogger,
-    nowDate
+    () => new Date()
   );
   const authenticator = new OidcAuthenticator(
     new JwksJwtVerifier({
@@ -225,23 +223,11 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      const results = await Promise.allSettled([
-        closeAdapters(),
-        planStore.close(),
-        stateStore.close(),
-        intentStore.close(),
-      ]);
-      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
-      for (const { reason } of failures) {
-        app.log.error({ err: reason }, 'Teardown failure');
-      }
+      await closeAdapters();
+      await planStore.close();
+      await stateStore.close();
+      await intentStore.close();
       await pool.end();
-      if (failures.length > 0) {
-        throw new AggregateError(
-          failures.map((f) => f.reason),
-          `${failures.length} teardown failure(s)`
-        );
-      }
     },
   };
 }
