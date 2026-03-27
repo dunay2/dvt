@@ -227,9 +227,7 @@ export async function buildProtectedRuntimeModule(
         stateStore.close(),
         intentStore.close(),
       ]);
-      const failures = results.filter(
-        (r): r is PromiseRejectedResult => r.status === 'rejected'
-      );
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
       for (const { reason } of failures) {
         app.log.error({ err: reason }, 'Teardown failure');
       }
