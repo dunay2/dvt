@@ -241,4 +241,52 @@ describe('BackpressureAwareStartRunUseCase', () => {
       })
     );
   });
+
+  describe('mode=off', () => {
+    it('skips admission guard entirely', async () => {
+      const admissionGuard = { assertAdmissible: vi.fn() };
+      const useCase = new BackpressureAwareStartRunUseCase({
+        duplicateProbe: { async findExisting() { return { kind: 'not_found' as const }; } },
+        admissionGuard,
+        telemetry: { async record() { return undefined; } },
+        mode: 'off',
+        retryAfterSeconds: 30,
+        delegate: {
+          async execute() {
+            return { ok: true as const, value: { kind: 'accepted' as const, runId: 'run-1', accepted: true } };
+          },
+        },
+      });
+
+      await useCase.execute(COMMAND, CONTEXT);
+
+      expect(admissionGuard.assertAdmissible).not.toHaveBeenCalled();
+    });
+
+    it('delegates to engine and records accept telemetry', async () => {
+      const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
+      const delegate = {
+        execute: vi.fn().mockResolvedValue({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        }),
+      };
+      const useCase = new BackpressureAwareStartRunUseCase({
+        duplicateProbe: { async findExisting() { return { kind: 'not_found' as const }; } },
+        admissionGuard: { async assertAdmissible() { return; } },
+        telemetry,
+        mode: 'off',
+        retryAfterSeconds: 30,
+        delegate,
+      });
+
+      const result = await useCase.execute(COMMAND, CONTEXT);
+
+      expect(result).toEqual({ ok: true, value: { kind: 'accepted', runId: 'run-1', accepted: true } });
+      expect(delegate.execute).toHaveBeenCalledOnce();
+      expect(telemetry.record).toHaveBeenCalledWith(
+        expect.objectContaining({ decision: 'accept', mode: 'off' })
+      );
+    });
+  });
 });

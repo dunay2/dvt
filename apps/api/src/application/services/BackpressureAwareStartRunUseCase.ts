@@ -11,6 +11,7 @@ import {
 } from '../ports/AdmissionTelemetry.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import { DUPLICATE_RUN_PROBE_KIND, type DuplicateRunProbe } from '../ports/DuplicateRunProbe.js';
+import type { IAdmissionGuard } from '../ports/IAdmissionGuard.js';
 import { ADMISSION_MODE, type AdmissionMode } from '../ports/IAdmissionMode.js';
 import type { StartRunCommand } from '../ports/startRunCommandContract.js';
 import {
@@ -20,10 +21,6 @@ import {
   type StartRunResult,
 } from '../ports/startRunResultContract.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
-
-type AdmissionGuard = {
-  assertAdmissible(tenantId: string): Promise<void>;
-};
 
 type AdmissionRejectResult = Extract<
   StartRunResult,
@@ -44,7 +41,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
       readonly duplicateProbe: DuplicateRunProbe;
-      readonly admissionGuard: AdmissionGuard;
+      readonly admissionGuard: IAdmissionGuard;
       readonly telemetry: AdmissionTelemetry;
       readonly mode: AdmissionMode;
       readonly retryAfterSeconds: number;
@@ -72,7 +69,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
 
     // Future rate limiter ordering, if enabled: duplicate -> backpressure -> rate limiter -> engine.
     const result = await this.deps.delegate.execute(command, context);
-    void this.recordDelegateDecisionIfNeeded(result, {
+    await this.recordDelegateDecisionIfNeeded(result, {
       requestId: context.requestId,
       tenantId,
       runId: command.runId,
@@ -103,10 +100,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     };
 
     await this.record({
-      requestId: context.requestId,
-      tenantId,
-      runId: duplicate.runId,
-      mode: this.deps.mode,
+      ...this.telemetryBase(context.requestId, tenantId, duplicate.runId),
       decision: ADMISSION_TELEMETRY_DECISION.duplicate,
       duplicateOf: result.duplicateOf,
     });
@@ -148,9 +142,11 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     reject: AdmissionRejectResult,
     context: { requestId: string; tenantId: string; runId: string }
   ): AdmissionDecisionRecord {
-    const mode = this.deps.mode;
-    const isObserve = mode === ADMISSION_MODE.observe;
-    const base = { ...context, mode, retryAfterSeconds: reject.retryAfterSeconds };
+    const isObserve = this.deps.mode === ADMISSION_MODE.observe;
+    const base = {
+      ...this.telemetryBase(context.requestId, context.tenantId, context.runId),
+      retryAfterSeconds: reject.retryAfterSeconds,
+    };
 
     if (reject.kind === START_RUN_RESULT_KIND.tenantBackpressure) {
       return {
@@ -202,6 +198,14 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     return null;
   }
 
+  private telemetryBase(
+    requestId: string,
+    tenantId: string,
+    runId: string
+  ): { requestId: string; tenantId: string; runId: string; mode: AdmissionMode } {
+    return { requestId, tenantId, runId, mode: this.deps.mode };
+  }
+
   private async record(event: AdmissionDecisionRecord): Promise<void> {
     try {
       await this.deps.telemetry.record(event);
@@ -222,25 +226,18 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
       return;
     }
 
+    const base = this.telemetryBase(context.requestId, context.tenantId, context.runId);
+
     if (result.value.kind === START_RUN_RESULT_KIND.duplicate) {
       await this.record({
-        requestId: context.requestId,
-        tenantId: context.tenantId,
-        runId: context.runId,
-        mode: this.deps.mode,
+        ...base,
         decision: ADMISSION_TELEMETRY_DECISION.duplicate,
         duplicateOf: result.value.duplicateOf,
       });
       return;
     }
 
-    await this.record({
-      requestId: context.requestId,
-      tenantId: context.tenantId,
-      runId: context.runId,
-      mode: this.deps.mode,
-      decision: ADMISSION_TELEMETRY_DECISION.accept,
-    });
+    await this.record({ ...base, decision: ADMISSION_TELEMETRY_DECISION.accept });
   }
 }
 
