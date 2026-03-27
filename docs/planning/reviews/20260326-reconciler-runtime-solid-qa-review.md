@@ -176,58 +176,33 @@ Resuelto: `buildReadyzPayload` fue eliminado y no hay referencias activas.
 
 ### Hallazgo
 
-Existe deuda de ownership contractual: la taxonomia `engine/planner/shared` no
-esta poblada de forma coherente con el objetivo de `ADR-0041` (global) y
-`ADR-0041A` (slice health), y hay riesgo de deriva hacia "todo en shared".
+Deuda de ownership contractual: la taxonomia `engine/planner/shared` no refleja
+todavia una asignacion clara en la frontera fisica de contratos y puede derivar
+en concentracion accidental en shared.
 
 ### Evidencia
 
-- `docs/contracts/engine/index.md` (catalogo sin contratos concretos listados)
-- `docs/contracts/planner/index.md` (catalogo, pero frontera fisica no
-  materializada en `docs/contracts/planner`)
+- `docs/contracts/engine/index.md`
+- `docs/contracts/planner/index.md`
 - `docs/contracts/shared/index.md`
 - `packages/@dvt/contracts/src/contracts/planner/*`
 - `packages/@dvt/contracts/src/engine/*`
+- seguimiento operativo en `RC-G1` (workboard global)
 
 ### Riesgo
 
-- Ambiguedad de ownership semantico vs fisico de contratos.
-- Mayor probabilidad de duplicacion de literales/reglas entre runtime y
-  contrato.
-- Fronteras de compatibilidad menos claras para cambios de `engine` y
-  `planner`.
+- Ambiguedad de ownership semantico vs fisico.
+- Deriva de reglas/literales entre runtime y contrato.
+- Evolucion menos auditable por bounded context.
 
 ### Recomendacion
 
-Ejecutar una normalizacion contract-first (JSON Schema) por fases:
-
-1. Declarar inventario de contratos por familia (`engine`, `planner`, `shared`)
-   con owner semantico y estado de migracion.
-2. Mover o etiquetar contratos para evitar que `shared` absorba contratos
-   de dominio que no son cross-context.
-3. Mantener mapeo explicito runtime -> contract en borde (sin acoplar runtime a
-   schema HTTP).
-
-### Donde tocar (pasada inicial)
-
-- `docs/contracts/engine/index.md`
-  - añadir matriz de contratos engine y clasificacion (domain-owned vs shared).
-- `docs/contracts/planner/index.md`
-  - añadir matriz de contratos planner y clasificacion.
-- `docs/contracts/shared/index.md`
-  - marcar solo contratos realmente cross-context.
-- `docs/adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md`
-  - anclar checklist de cumplimiento por familia.
-- `docs/adr/ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md`
-  - referenciar explicitamente contrato boundary health en JSON Schema.
-- `packages/@dvt/contracts/src/contracts/planner/*`
-  - etiquetar owner/alcance en comments o indices de contrato.
-- `packages/@dvt/contracts/src/engine/*`
-  - revisar mezcla de contrato de dominio vs shared serializable.
+Ejecutar `RC-G1`: matriz de ownership por familia (`engine`/`planner`/`shared`)
+y plan de migracion por slices bajo ADR-0041 Contract-First.
 
 ### Estado actual
 
-Pendiente. No resuelto aun.
+Pendiente (abierto en workboard global como `RC-G1`).
 
 ## Resumen Ejecutivo
 
