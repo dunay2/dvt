@@ -23,12 +23,12 @@ jobs:
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Detect package changes (PR only)
         id: changes
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
           filters: |
             engine:
@@ -39,6 +39,8 @@ jobs:
               - 'packages/@dvt/adapter-temporal/**'
             cli:
               - 'packages/@dvt/cli/**'
+            api:
+              - 'apps/api/**'
             root_config:
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -51,8 +53,8 @@ jobs:
         if:
           github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
           steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_temporal ==
-          'true' || steps.changes.outputs.cli == 'true' || steps.changes.outputs.root_config ==
-          'true'
+          'true' || steps.changes.outputs.cli == 'true' || steps.changes.outputs.api == 'true' ||
+          steps.changes.outputs.root_config == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
@@ -85,6 +87,12 @@ jobs:
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:cli
 
+      - name: Run api tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.api == 'true' ||
+          steps.changes.outputs.root_config == 'true')
+        run: pnpm test:api
+
   detect-pg-scope:
     name: Detect adapter-postgres scope
     runs-on: ubuntu-latest
@@ -97,7 +105,7 @@ jobs:
         ${{ steps.changes.outputs.adapter_postgres_relevant || steps.push_all.outputs.changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Mark all changed (push/dispatch — no diff available)
         id: push_all
@@ -116,7 +124,7 @@ jobs:
       - name: Detect adapter-postgres changes
         id: changes
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
           filters: ${{ steps.filters.outputs.filters }}
 
@@ -144,7 +152,7 @@ jobs:
       DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -164,12 +172,12 @@ jobs:
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Detect determinism-relevant changes (PR only)
         id: det_changes
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
           filters: |
             determinism_relevant:
@@ -210,7 +218,7 @@ jobs:
       'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm

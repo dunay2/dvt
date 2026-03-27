@@ -166,22 +166,22 @@ Three clearly separated execution classes:
 
 ## Issue Catalogue
 
-| ID  | Issue                                                 | Severity | Effort  |
-| --- | ----------------------------------------------------- | -------- | ------- |
-| D1  | Scope detection duplicated across 4 workflows         | Medium   | High    |
-| D2  | Long inline policy blocks in YAML                     | Medium   | Medium  |
-| D3  | Local commands not aligned to CI scope classes        | Low      | Medium  |
-| S1  | `pr-quality-gate.yml` runs full type-check on all PRs | Medium   | Low     |
-| S2  | No local scripts for CI scope reproduction            | Low      | Medium  |
-| R1  | pnpm store cache path wrong                           | High     | Low     |
-| R2  | `apps/api` / `apps/web` tests not run                 | High     | Low     |
-| R3  | `smoke-guard` polling fragility                       | Medium   | Medium  |
-| R4  | No post-merge validation in `pr-quality-gate.yml`     | Medium   | Low     |
-| R5  | `docs/decisions/**` dead filter entry                 | Low      | Trivial |
-| R6  | Actions pinned by mutable tag                         | Low      | Low     |
-| R7  | `npx ajv-cli` runtime download                        | Low      | Low     |
-| R8  | No coverage gate                                      | Low      | Medium  |
-| R9  | `golden-paths.yml` provides no automatic validation   | Medium   | Low     |
+| ID  | Issue                                                 | Severity | Effort  | Status  |
+| --- | ----------------------------------------------------- | -------- | ------- | ------- |
+| D1  | Scope detection duplicated across 4 workflows         | Medium   | High    | Open    |
+| D2  | Long inline policy blocks in YAML                     | Medium   | Medium  | Open    |
+| D3  | Local commands not aligned to CI scope classes        | Low      | Medium  | Open    |
+| S1  | `pr-quality-gate.yml` runs full type-check on all PRs | Medium   | Low     | ✅ Done |
+| S2  | No local scripts for CI scope reproduction            | Low      | Medium  | Open    |
+| R1  | pnpm store cache path wrong                           | High     | Low     | ✅ Done |
+| R2  | `apps/api` tests not run (web has no test script)     | High     | Low     | ✅ Done |
+| R3  | `smoke-guard` polling fragility                       | Medium   | Medium  | Open    |
+| R4  | No post-merge validation in `pr-quality-gate.yml`     | Medium   | Low     | ✅ Done |
+| R5  | `docs/decisions/**` dead filter entry                 | Low      | Trivial | ✅ Done |
+| R6  | Actions pinned by mutable tag                         | Low      | Low     | ✅ Done |
+| R7  | `npx ajv-cli` runtime download                        | Low      | Low     | ✅ Done |
+| R8  | No coverage gate                                      | Low      | Medium  | Open    |
+| R9  | `golden-paths.yml` provides no automatic validation   | Medium   | Low     | Open    |
 
 ---
 
