@@ -54,6 +54,7 @@ Concept anchors for this page:
 - [DVT+ - Top 5 Architectural Gaps (Corrected)](dvt-top-5-gaps-corrected-20260319.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](engine-gap-to-target-migration-plan.md)
 - [G4-PR4 Operability & Metrics - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
+- [G4-PR4 Operability & Metrics — Implementation Plan](proposals/gap4-backpressure-admission-pr4-plan-20260326.md)
 - [G5 Outbox Worker Development Proposal](proposals/g5-outbox-worker-development-proposal-20260308.md)
 - [Gap 4 Backpressure Admission Design](proposals/gap4-backpressure-admission-design-20260319.md)
 - [Gap 4 PR1 Admission Foundation](proposals/gap4-backpressure-admission-pr1-foundation-20260319.md)

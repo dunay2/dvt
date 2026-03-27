@@ -204,9 +204,9 @@ describe('PgShardOwnershipGate', () => {
     const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
 
     expect(lease).not.toBe(null);
-    await expect(() => lease?.waitForLoss?.() ?? Promise.resolve()).rejects.toThrow(
-      /OUTBOX_OWNERSHIP_LOST/
-    );
+    await expect(() =>
+      lease?.waitForLoss == null ? Promise.resolve() : lease.waitForLoss()
+    ).rejects.toThrow(/OUTBOX_OWNERSHIP_LOST/);
     expect(harness.client.releaseCalls).toEqual([true]);
     expect(harness.releaseLeaseCalls).toBe(1);
   });
