@@ -72,6 +72,8 @@ All gaps G1–G10 closed — see closeouts directory for evidence.
 - [G5 US-G5.5 Sharding And Fencing Plan](gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [G5 Outbox Worker Guide](gaps/g5-outbox-worker-guide.md)
 - [G5 gap5 README](gaps/README.md)
+- [G6 OpenLineage CI And Schema Pin Plan](gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+- [G6 Architecture And QA Review](gaps/g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
 - [G7 AI Execution Tracker](gaps/G7-AI-EXECUTION-TRACKER.md)
 - [G8 Real Auth Final Spec](gaps/G8-REAL-AUTH-FINAL-SPEC.md)
 - [GAP Execution Plans](gaps/GAP_EXECUTION_PLANS.md)

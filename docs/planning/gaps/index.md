@@ -15,7 +15,4 @@ Active execution work is tracked in the
 [agent lane YAMLs](../state/agent-lane-a.yaml) and the
 [execution workboard](../state/execution-workboard.md).
 
-## G6 Reference (closed — kept for CI/schema reference)
-
-- [G6 OpenLineage CI And Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-- [G6 Architecture And QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+All G6 documents are in [archive/gaps/g6/](../archive/gaps/g6/).
