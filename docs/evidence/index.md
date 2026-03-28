@@ -11,6 +11,7 @@ Evidence documents that justify or validate relevant changes.
 
 ## Index
 
+- [20260328 Adapter Runtime And Sonar Closeout](ED-20260328-adapter-runtime-sonar-closeout.md)
 - [20260328 Lineage Outbox Retry Scheduling](ED-20260328-lineage-outbox-retry-scheduling.md)
 - [ED 20260304 Compiledcoderef Ownership](ED-20260304-compiledcoderef-ownership.md)
 - [ED 20260304 Temporal Lookup Run Ref](ED-20260304-temporal-lookup-run-ref.md)

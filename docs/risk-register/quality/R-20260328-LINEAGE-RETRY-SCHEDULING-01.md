@@ -25,3 +25,11 @@ This prevents hot retry loops but may increase end-to-end lineage publication la
 
 1. Keep `lineage_outbox` lag visible through the lineage worker health endpoint.
 2. Follow-on slice (`DLQ alerting + automated replay`) must add explicit lag and DLQ alert thresholds.
+
+## 2026-03-28 status update
+
+1. Sonar warnings in adapter/delivery runtime were remediated in `6b98f90`.
+2. Residual risk is now focused on production race-depth confidence, not static-quality debt.
+3. The remaining mitigation path is:
+   - `RC-B5-F2` for real-Postgres concurrency coverage
+   - `DLQ alerting + automated replay` for operational lag controls
