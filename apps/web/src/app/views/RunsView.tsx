@@ -27,7 +27,8 @@ export default function RunsView() {
   });
 
   const runs = runsQuery.data ?? [];
-  const run = runId ? (runDetailQuery.data ?? null) : (runs[0] ?? null);
+  // /runs always shows the list; /runs/:runId shows the detail
+  const run = runId ? (runDetailQuery.data ?? null) : null;
 
   useEffect(() => {
     setCurrentRun(run);
@@ -37,8 +38,8 @@ export default function RunsView() {
     };
   }, [run, setCurrentRun]);
 
-  if (!runId && !run) {
-    return <RunListState runs={runs} />;
+  if (!runId) {
+    return <RunListState runs={runs} isLoading={runsQuery.isLoading} />;
   }
 
   if (!run) {

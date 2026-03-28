@@ -1,4 +1,5 @@
 import { Clock, GitCommit } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 
 import type { Run } from '../../types/dbt';
 
@@ -9,9 +10,12 @@ import { cn } from '../../components/ui/utils';
 
 type RunListStateProps = {
   runs: Run[];
+  isLoading?: boolean;
 };
 
-export function RunListState({ runs }: RunListStateProps) {
+export function RunListState({ runs, isLoading }: RunListStateProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="h-full bg-slate-950 flex flex-col">
       <div className="h-12 bg-slate-900 border-b border-slate-700 flex items-center px-4">
@@ -19,10 +23,24 @@ export function RunListState({ runs }: RunListStateProps) {
       </div>
       <div className="flex-1 p-6">
         <div className="max-w-4xl mx-auto space-y-4">
+          {isLoading && (
+            <p className="text-sm text-slate-400">Loading runs…</p>
+          )}
+
+          {!isLoading && runs.length === 0 && (
+            <Card className="bg-slate-900 border-slate-700 p-8 text-center">
+              <p className="text-sm text-slate-400 mb-3">No runs yet.</p>
+              <Link to="/canvas" className="text-sm text-blue-400 underline underline-offset-2">
+                Go to canvas to plan and start a run
+              </Link>
+            </Card>
+          )}
+
           {runs.map((runRecord) => (
             <Card
               key={runRecord.runId}
               className="bg-slate-900 border-slate-700 p-4 hover:border-slate-600 cursor-pointer transition-colors"
+              onClick={() => navigate(`/runs/${runRecord.runId}`)}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -50,7 +68,7 @@ export function RunListState({ runs }: RunListStateProps) {
                     <div>Environment: {runRecord.environment}</div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/runs/${runRecord.runId}`); }}>
                   View Details
                 </Button>
               </div>
