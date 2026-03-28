@@ -47,7 +47,7 @@ function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
 }
 
 describe('buildObservability', () => {
-  it('returns no-op implementation when OBS_ENABLED=false', () => {
+  it('returns a no-op implementation when OBS_ENABLED=false', () => {
     const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
     expect(typeof obs.withContext).toBe('function');
     expect(() => obs.metrics.counter('test.counter').add(1)).not.toThrow();
