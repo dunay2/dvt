@@ -599,14 +599,19 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         ).toBeUndefined();
 
         nowRef.value = '2026-02-22T00:01:31.000Z';
+        if (lineageStore.countPending) {
+          const lagBeforeReclaim = await lineageStore.countPending();
+          expect(lagBeforeReclaim).toBeGreaterThanOrEqual(1);
+        }
+
         const afterExpiry = await lineageStore.listPending(10);
         const reclaimed = afterExpiry.find((record) => record.runId === 'run-lineage-stale-claim');
         expect(reclaimed).toBeDefined();
         expect(reclaimed?.id).toBe(claimed?.id);
 
         if (lineageStore.countPending) {
-          const lag = await lineageStore.countPending();
-          expect(lag).toBeGreaterThanOrEqual(1);
+          const lagAfterReclaim = await lineageStore.countPending();
+          expect(lagAfterReclaim).toBe(0);
         }
       },
       { lineageOutboxClaimTimeoutMs: 90_000 }
