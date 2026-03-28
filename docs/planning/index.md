@@ -44,6 +44,7 @@ Concept anchors for this page:
 
 - [CI Improvement Plan — Reliability, Scope-Awareness, And Deduplication](proposals/ci-improvement-plan-20260327.md)
 - [Contracts Domain Ownership Migration Plan](proposals/contracts-domain-ownership-migration-plan-20260327.md)
+- [DataMode Concept Proposal](proposals/datamode_proposal.md)
 - [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](proposals/todo.md)
 - [Docs Governance Tooling Future Tasks](proposals/docs-governance-tooling-future-tasks-20260324.md)

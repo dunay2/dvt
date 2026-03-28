@@ -11,6 +11,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 
 ## Index
 
+- [R 20260328 RCB5F2 LINEAGE CLAIM RACE](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
 - [R-20260307-GOLDEN-PATH-01 - Golden-path coverage debt can hide engine and adapter regressions](R-20260307-golden-path-coverage-debt.md)
 - [R-20260308-API-AUTH-01 - API auth runtime can regress without a full OIDC plus Postgres integration lane](R-20260308-api-auth-runtime-integration-coverage.md)
 - [R-20260311-G5-3-CORRECTNESS-01 - G5.3 correctness hardening is mergeable, but formal closeout still depends on real PostgreSQL evidence and policy alignment](R-20260311-g5-3-correctness-closeout-residuals.md)

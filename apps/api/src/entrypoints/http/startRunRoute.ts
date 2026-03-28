@@ -2,7 +2,7 @@
 
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 
-import { mapStartRunFacadeResult } from './authErrorMapper.js';
+import { mapStartRunEngineError, mapStartRunFacadeResult } from './authErrorMapper.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
 
@@ -24,7 +24,9 @@ export async function startRunRoute(
     requestedScope: parsed.value.requestedScope,
   });
 
-  const mapped = mapStartRunFacadeResult(facadeResult);
+  const mapped = facadeResult.ok
+    ? mapStartRunFacadeResult(facadeResult.value)
+    : mapStartRunEngineError(facadeResult.error);
   if (mapped.headers) {
     for (const [name, value] of Object.entries(mapped.headers)) {
       reply.header(name, value);

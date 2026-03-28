@@ -93,7 +93,7 @@ Stabilize event payload versioning and lineage wiring.
 - [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
 - [x] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
 - [x] `P1` `RC-B5`: add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and harden DLQ.
-- [ ] `P1` `RC-B5-F2`: add real-Postgres integration tests for lineage claim-timeout and stale-claimer race semantics.
+- [x] `P1` `RC-B5-F2`: add real-Postgres integration tests for lineage claim-timeout and stale-claimer race semantics.
 - [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.
 - [ ] `P2` `manifest S3 fetch cache`: reduce planner egress and build latency.
 - [ ] `P2` `ADP-LINT-ORDER-01`: upgrade eslint import-order toolchain and remove workaround-only inline type alias patterns in adapter-postgres.

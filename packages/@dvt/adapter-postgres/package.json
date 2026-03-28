@@ -27,7 +27,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests --config vitest.config.ts",
-    "test:integration": "vitest run --passWithNoTests --config vitest.config.ts test/smoke.test.ts"
+    "test:integration": "vitest run --passWithNoTests --config vitest.config.ts"
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",

@@ -228,6 +228,7 @@ async function bootstrapRun(
     firstEvents: [
       {
         eventId: `${runId}:queued`,
+        payloadVersion: 1,
         eventType: 'RunQueued',
         runId,
         tenantId,

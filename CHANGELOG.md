@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.0.2](https://github.com/dunay2/dvt/compare/v5.0.1...v5.0.2) (2026-03-28)
+
+
+### Bug Fixes
+
+* **api:** Align startRun facade result contract and HTTP mapping ([#650](https://github.com/dunay2/dvt/issues/650)) ([5ce6f28](https://github.com/dunay2/dvt/commit/5ce6f2814d3e9ccfc0a71535879008daa0027567))
+
+## [5.0.1](https://github.com/dunay2/dvt/compare/v5.0.0...v5.0.1) (2026-03-28)
+
+
+### Bug Fixes
+
+* **adapters:** Harden lineage stale-claim recovery and redaction coverage ([#647](https://github.com/dunay2/dvt/issues/647)) ([0323b54](https://github.com/dunay2/dvt/commit/0323b54af9ddc97900c236b71dffb3db486095a6))
+
 ## [5.0.0](https://github.com/dunay2/dvt/compare/v4.14.0...v5.0.0) (2026-03-28)
 
 

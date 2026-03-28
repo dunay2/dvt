@@ -228,6 +228,7 @@ jobs:
         ports:
           - 5432:5432
     env:
+      DVT_PG_INTEGRATION: '1'
       DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
     steps:
       - name: Checkout
@@ -241,8 +242,8 @@ jobs:
       - name: Build adapter-postgres dependency graph
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build
 
-      - name: Run adapter-postgres full test suite
-        run: pnpm test:adapter-postgres
+      - name: Run adapter-postgres integration-enabled suite
+        run: pnpm test:adapter-postgres:integration
 
   all-checks-passed:
     name: All Checks Required for Merge
