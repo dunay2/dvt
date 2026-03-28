@@ -9,7 +9,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-import type { CoreNodeRole } from '../types/canonical';
+import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { DbtNodeType } from '../types/dbt';
 
 import type { EdgeTypeStrategy, NodeKindRegistration } from './nodeTypeContracts';
 
@@ -119,6 +120,21 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
     supportsColumns: false,
   },
 ];
+
+export const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
+  SOURCE: 'dbt:source',
+  MODEL: 'dbt:model',
+  SEED: 'dbt:seed',
+  SNAPSHOT: 'dbt:snapshot',
+  TEST: 'dbt:test',
+  EXPOSURE: 'dbt:exposure',
+  METRIC: 'dbt:metric',
+  MACRO: 'dbt:macro',
+};
+
+export function mapDbtTypeToKind(type: DbtNodeType): PluginNodeKind {
+  return DBT_TYPE_TO_KIND[type];
+}
 
 export const FALLBACK_NODE_KIND: NodeKindRegistration = {
   kind: 'dvt:unknown',

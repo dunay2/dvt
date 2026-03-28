@@ -39,6 +39,7 @@ import {
   resolveCanvasEdgeType,
   resolveNodeKindRegistration,
 } from '../plugins/nodeTypeRegistry';
+import { mapDbtTypeToKind } from '../plugins/nodeTypeCatalog.dbt';
 import { buildSessionRunContext, createPlansService } from '../services/plans/plansService';
 import { resolveDataSource } from '../services/config/dataSource';
 import { createWorkspaceService } from '../services/workspace/workspaceService';
@@ -63,17 +64,6 @@ const nodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
 
-const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
-  SOURCE: 'dbt:source',
-  MODEL: 'dbt:model',
-  SEED: 'dbt:seed',
-  SNAPSHOT: 'dbt:snapshot',
-  TEST: 'dbt:test',
-  EXPOSURE: 'dbt:exposure',
-  METRIC: 'dbt:metric',
-  MACRO: 'dbt:macro',
-};
-
 const CANONICAL_NODE_ROLES: ReadonlySet<CoreNodeRole> = new Set([
   'input',
   'transform',
@@ -92,7 +82,7 @@ const CANONICAL_NODE_STATUSES: ReadonlySet<CanonicalNodeStatus> = new Set([
 ]);
 
 function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
-  const kind = DBT_TYPE_TO_KIND[node.type];
+  const kind = mapDbtTypeToKind(node.type);
   const kindRegistration = resolveNodeKindRegistration(kind);
 
   return {

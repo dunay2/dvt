@@ -3,7 +3,7 @@ import { Handle, Node, NodeProps, Position } from '@xyflow/react';
 import { Info, MousePointer, Trash2 } from 'lucide-react';
 import { memo, type CSSProperties } from 'react';
 
-import { mapDbtTypeToPluginKind } from '../../plugins/dbt/dbtNodeAdapter';
+import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import { getNodeBadges, getNodeRenderer } from '../../plugins/registry';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
@@ -162,9 +162,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const { id, selected } = props;
   const pluginKind =
     data.pluginKind ??
-    (isDbtNodeType(data.type)
-      ? mapDbtTypeToPluginKind(data.type)
-      : ('dvt:unknown' as PluginNodeKind));
+    (isDbtNodeType(data.type) ? mapDbtTypeToKind(data.type) : ('dvt:unknown' as PluginNodeKind));
   const kindRegistration = resolveNodeKindRegistration(pluginKind);
   const role = data.role ?? kindRegistration.role;
   const canonicalNode = buildCanonicalNode(id, data, pluginKind, role);
