@@ -8,7 +8,7 @@ import {
   normalizeRunId,
   parseOptionalReason,
   parseTenantId,
-} from './runCommandRouteParser.shared.js';
+} from './runCommandFieldParsers.js';
 import {
   SIGNAL_ACTION_BY_TYPE,
   SIGNAL_RUN_PARSE_ERROR_CODE,
