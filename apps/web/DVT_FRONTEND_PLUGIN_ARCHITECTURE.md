@@ -166,6 +166,27 @@ El hecho de que v1 use `PluginContributions` como contrato público no obliga a 
 | `PluginContext`         | contrato interno útil para componentes y servicios |
 | `PluginEventBus`        | infraestructura interna activa                     |
 
+### Mapeo de implementación actual
+
+La transición correcta no es “borrar lo que existe y volver a helpers planos”, sino fijar qué parte del sistema es pública y qué parte sigue siendo interna.
+
+| Necesidad v1                                | Superficie pública                               | Implementación interna que puede seguir existiendo                       |
+| ------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
+| definir slots, renderers, overlays y reglas | `PluginContributions`                            | `PluginManifest` o adaptadores internos equivalentes                     |
+| componer plugins en bootstrap               | `PLUGIN_REGISTRY` como modelo conceptual         | `PluginRegistry` / `PluginRegistryContext` mientras el shell lo necesite |
+| pub/sub namespaced entre plugins            | topics `shell:*` y `<pluginId>:*`                | `PluginEventBus` actual                                                  |
+| snapshot y contexto reactivo para UI        | `usePluginContext()` y contratos de contribución | `PluginContext` interno del shell                                        |
+| servicios auxiliares por capacidad          | shape de contribución y slots                    | `PluginServices` como bag interna del shell                              |
+
+Regla de transición:
+
+> Mientras el contrato visible hacia los plugins siga siendo `PluginContributions`, el shell puede seguir adaptando internamente esas contribuciones a `PluginManifest`, `PluginServices` o cualquier estructura equivalente.
+
+Eso evita dos errores:
+
+1. exigir un rollback innecesario del código ya escrito
+2. filtrar capacidades de v2 como si fueran obligación pública de v1
+
 ### Regla de interpretación
 
 En v1:
@@ -537,6 +558,7 @@ No hace falta obligar al autor del plugin v1 a depender de `register()` o `build
 1. fijar `PluginContributions` como contrato público v1
 2. mover codegen/dialect a un boundary separado
 3. dejar explícito qué scaffolding interno se preserva
+4. permitir que la implementación actual siga usando adaptadores internos sin reabrir el diseño base
 
 ### Fase 1 — dbt + monitoring
 

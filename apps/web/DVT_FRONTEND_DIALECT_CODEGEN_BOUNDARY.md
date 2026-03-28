@@ -285,6 +285,23 @@ Un plugin frontend no puede reclamar como responsabilidad propia:
 
 Eso deja claro que un “plugin dbt frontend” no es un “adapter dialect-specific”.
 
+### Mapeo de ownership por plugin
+
+| Superficie                                         | Puede vivir en plugin frontend | Debe vivir en engine / adapter |
+| -------------------------------------------------- | ------------------------------ | ------------------------------ |
+| importar manifest y construir plan canónico        | `dbt`                          | no                             |
+| iniciar run con `mode` y `targetAdapter`           | `dbt` o shell                  | no                             |
+| observar timeline y estado operacional             | `monitoring`                   | no                             |
+| mostrar costo o artifacts                          | `cost` / `monitoring` / `dbt`  | no                             |
+| transpilar `dbt:model` a procedure/task/function   | no                             | sí                             |
+| escribir archivos al repo destino                  | no                             | sí                             |
+| abrir PR o push directo                            | no                             | sí                             |
+| aplicar objetos en Snowflake / BigQuery / Postgres | no                             | sí                             |
+
+Regla:
+
+> Un plugin frontend puede pedir trabajo dialect-specific y visualizar su resultado, pero no es dueño de la semántica dialect-specific.
+
 ---
 
 ## 11. Implicaciones Para Observabilidad
