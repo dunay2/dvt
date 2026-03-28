@@ -152,6 +152,7 @@ const mockBuildNodeDecorations = vi.hoisted(() => vi.fn());
 const mockMapCanonicalNodeToCanvasNode = vi.hoisted(() => vi.fn());
 const mockMapCanonicalEdgeToCanvasEdge = vi.hoisted(() => vi.fn());
 const mockGetAllOverlays = vi.hoisted(() => vi.fn());
+const mockGetRegisteredPluginIds = vi.hoisted(() => vi.fn());
 const mockBuildNodesWithImpact = vi.hoisted(() => vi.fn());
 const mockUseCanvasExecutionActions = vi.hoisted(() => vi.fn());
 const mockUseCanvasGraphHandlers = vi.hoisted(() => vi.fn());
@@ -215,6 +216,7 @@ vi.mock('./canvasNodeMapper', () => ({
 
 vi.mock('../../plugins/registry', () => ({
   getAllOverlays: mockGetAllOverlays,
+  getRegisteredPluginIds: mockGetRegisteredPluginIds,
 }));
 
 vi.mock('./useCanvasExecutionActions', () => ({
@@ -334,6 +336,7 @@ describe('useCanvasController', () => {
       target: edge.targetId,
     }));
     mockGetAllOverlays.mockReturnValue([{ id: 'impact' }]);
+    mockGetRegisteredPluginIds.mockReturnValue(new Set(['dbt', 'monitoring', 'cost']));
     mockBuildNodesWithImpact.mockImplementation(({ nodes }: { nodes: unknown[] }) => nodes);
     mockUseCanvasGraphHandlers.mockImplementation(() => state.graphHandlersResult);
     mockUseCanvasExecutionActions.mockImplementation(() => state.executionActionsResult);
@@ -372,7 +375,7 @@ describe('useCanvasController', () => {
     expect(mockBuildNodeDecorations).toHaveBeenCalledWith(
       state.canonicalNodes,
       [{ id: 'impact' }],
-      'impact',
+      null,
       { overlay: 'ctx' }
     );
   });
@@ -382,6 +385,7 @@ describe('useCanvasController', () => {
 
     expect(latestResult?.inspectorNode).toEqual(state.canonicalNodes[0]);
     expect(latestResult?.currentPlan).toEqual(state.currentPlan);
+    expect(latestResult?.registeredPlugins).toEqual(new Set(['dbt', 'monitoring', 'cost']));
     expect(latestResult?.handlePlan).toBe(state.executionActionsResult.handlePlan);
     expect(latestResult?.handleStartRun).toBe(state.executionActionsResult.handleStartRun);
     expect(latestResult?.handleDrop).toBe(state.graphHandlersResult.handleDrop);
