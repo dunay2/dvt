@@ -1,6 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import { MAX_LINEAGE_ATTEMPTS as MAX_ATTEMPTS } from '@dvt/contracts';
 import type { ILineageOutboxStore, ILineageSink, LineageOutboxRecord } from '@dvt/contracts';
 
 export interface LineageWorkerRuntimeLogger {
@@ -112,7 +111,9 @@ export class LineageWorkerRuntime {
 
   async runOnce(): Promise<LineageTickResult> {
     const pending = await this.store.listPending(this.batchSize);
-    this._lagCount = pending.length;
+    const pendingCount =
+      this.store.countPending === undefined ? pending.length : await this.store.countPending();
+    this._lagCount = pendingCount;
     let processed = 0;
     let deadLettered = 0;
 
@@ -149,33 +150,47 @@ export class LineageWorkerRuntime {
       await this.store.markDelivered([record.id]);
       return 'delivered';
     } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
-      const newAttempts = record.attempts + 1;
-
-      if (newAttempts >= MAX_ATTEMPTS) {
-        this.logger.warn?.(
-          { err: toErrorLike(err), runId: record.runId, id: record.id, attempts: newAttempts },
-          'lineage worker: max attempts reached, moving to dead letter'
-        );
-        await this.store.deadLetter(record.id, error).catch((dlErr: unknown) => {
+      const error = sanitizeErrorForPersistence(err);
+      const disposition = await this.store
+        .markFailed(record.id, error)
+        .catch((markErr: unknown) => {
           this.logger.error(
-            { err: toErrorLike(dlErr), runId: record.runId, id: record.id },
-            'lineage worker: dead letter write failed'
+            { err: toErrorLike(markErr), runId: record.runId, id: record.id },
+            'lineage worker: markFailed write failed'
           );
+          return 'not_found' as const;
         });
+
+      if (disposition === 'dead_lettered') {
+        this.logger.warn?.(
+          {
+            err: toErrorLike(err),
+            runId: record.runId,
+            id: record.id,
+            attempts: record.attempts + 1,
+          },
+          'lineage worker: max attempts reached, moved to dead letter'
+        );
         return 'dead_lettered';
       }
 
-      this.logger.warn?.(
-        { err: toErrorLike(err), runId: record.runId, id: record.id, attempts: newAttempts },
-        'lineage worker: publish failed, will retry'
-      );
-      await this.store.markFailed(record.id, error, newAttempts).catch((markErr: unknown) => {
-        this.logger.error(
-          { err: toErrorLike(markErr), runId: record.runId, id: record.id },
-          'lineage worker: markFailed write failed'
+      if (disposition === 'retry_scheduled') {
+        this.logger.warn?.(
+          {
+            err: toErrorLike(err),
+            runId: record.runId,
+            id: record.id,
+            attempts: record.attempts + 1,
+          },
+          'lineage worker: publish failed, will retry'
         );
-      });
+      } else {
+        this.logger.warn?.(
+          { err: toErrorLike(err), runId: record.runId, id: record.id },
+          'lineage worker: publish failed but record was not found during retry mark'
+        );
+      }
+
       return 'failed';
     }
   }
@@ -243,5 +258,27 @@ function toErrorLike(error: unknown): { message: string; name: string } {
   if (error instanceof Error) {
     return { message: error.message, name: error.name };
   }
+  if (typeof error === 'object' && error !== null) {
+    try {
+      return { message: JSON.stringify(error), name: 'UnknownError' };
+    } catch {
+      return { message: '[object with circular reference]', name: 'UnknownError' };
+    }
+  }
   return { message: String(error), name: 'UnknownError' };
+}
+
+function sanitizeErrorForPersistence(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const singleLine = raw.replace(/\s+/g, ' ').trim();
+  const redacted = singleLine
+    .replace(
+      /(password|passwd|pwd|secret|token|apikey|api_key)\s*[=:]\s*[^,\s;]+/gi,
+      '$1=[REDACTED]'
+    )
+    .replace(/bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'bearer [REDACTED]');
+  if (redacted.length <= 512) {
+    return redacted;
+  }
+  return `${redacted.slice(0, 509)}...`;
 }

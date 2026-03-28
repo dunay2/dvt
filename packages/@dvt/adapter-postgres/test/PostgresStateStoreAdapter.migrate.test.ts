@@ -41,6 +41,33 @@ class RecordingMigrationClient {
   }
 }
 
+class PartiallyAppliedMigrationClient {
+  public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
+  public releaseCalls = 0;
+
+  constructor(private readonly appliedVersions: Set<string>) {}
+
+  async query(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ rows: { exists: boolean }[]; rowCount: number }> {
+    this.queries.push({ sql, params });
+    if (
+      sql.includes('SELECT EXISTS') &&
+      Array.isArray(params) &&
+      params.length >= 2 &&
+      typeof params[1] === 'string'
+    ) {
+      return { rows: [{ exists: this.appliedVersions.has(params[1]) }], rowCount: 1 };
+    }
+    return { rows: [{ exists: false }], rowCount: 0 };
+  }
+
+  release(): void {
+    this.releaseCalls += 1;
+  }
+}
+
 describe('PostgresStateStoreAdapter migration state', () => {
   it('rejects use before migrate() is called', async () => {
     const adapter = new PostgresStateStoreAdapter({
@@ -104,9 +131,11 @@ describe('PostgresStateStoreAdapter migration state', () => {
 
     (
       adapter as unknown as {
-        activeClients: Set<unknown>;
+        clientSession: {
+          activeClients: Set<unknown>;
+        };
       }
-    ).activeClients.add({ release() {} });
+    ).clientSession.activeClients.add({ release() {} });
 
     await expect(adapter.rollbackSchemaTo('core_009_core_indexes')).rejects.toThrow(
       /SCHEMA_ROLLBACK_ACTIVE_CLIENTS/
@@ -186,14 +215,17 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (11 steps)
-    expect(insertQueries.length).toBe(11);
+    // One INSERT per named migration step (14 steps)
+    expect(insertQueries.length).toBe(14);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
     expect(versions).toContain('core_006_archive_lease_restore_tables');
     expect(versions).toContain('core_010_purge_indexes');
     expect(versions).toContain('core_011_retry_lineage_columns');
+    expect(versions).toContain('core_012_lineage_outbox_retry_schedule');
+    expect(versions).toContain('core_013_lineage_outbox_claim_timeout');
+    expect(versions).toContain('core_014_lineage_tenant_scope_hardening');
   });
 
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {
@@ -231,6 +263,63 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain('run_event_archive_leases');
     expect(executedSql).toContain('run_event_archive_restore_log');
     expect(executedSql).toContain('archive_restore_log_unit_key_idx');
+  });
+
+  it('adds lineage retry/claim columns before creating the lineage pending index shape', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const sqls = client.queries.map((q) => q.sql);
+    const addNextAttemptAtIdx = sqls.findIndex((sql) =>
+      sql.includes('ALTER TABLE "DvtOps".lineage_outbox ADD COLUMN IF NOT EXISTS next_attempt_at')
+    );
+    const addClaimedAtIdx = sqls.findIndex((sql) =>
+      sql.includes('ALTER TABLE "DvtOps".lineage_outbox ADD COLUMN IF NOT EXISTS claimed_at')
+    );
+    const lineagePendingIdx = sqls.findIndex(
+      (sql) =>
+        sql.includes('CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx') &&
+        sql.includes('(next_attempt_at ASC NULLS FIRST, created_at ASC, claimed_at ASC)')
+    );
+
+    expect(addNextAttemptAtIdx).toBeGreaterThan(-1);
+    expect(addClaimedAtIdx).toBeGreaterThan(-1);
+    expect(lineagePendingIdx).toBeGreaterThan(addNextAttemptAtIdx);
+    expect(lineagePendingIdx).toBeGreaterThan(addClaimedAtIdx);
+  });
+
+  it('handles partial-applied chains by adding lineage retry/claim columns before index recreation', async () => {
+    const appliedVersions = new Set<string>([
+      'core_001_initial_tables',
+      'core_002_run_snapshots_table',
+      'core_003_outbox_dead_letter_table',
+      'core_004_lineage_tables',
+      'core_005_archive_catalog_tables',
+      'core_006_archive_lease_restore_tables',
+      'core_007_compat_columns',
+      'core_008_compat_cleanup',
+    ]);
+    const client = new PartiallyAppliedMigrationClient(appliedVersions);
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".lineage_outbox ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ'
+    );
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".lineage_outbox ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ'
+    );
+    expect(executedSql).toContain('CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx');
   });
 
   it('creates the delivery buffer purge indexes required for G5-PR3', async () => {

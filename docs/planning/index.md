@@ -44,6 +44,7 @@ Concept anchors for this page:
 
 - [CI Scope-Aware Validation And Docs-Only Fast Path](proposals/ci-scope-aware-validation-and-docs-only-fast-path-20260324.md)
 - [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
+- [Contracts Domain Ownership Migration Plan](proposals/contracts-domain-ownership-migration-plan-20260327.md)
 - [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](proposals/todo.md)
 - [Docs Governance Tooling Future Tasks](proposals/docs-governance-tooling-future-tasks-20260324.md)
@@ -101,6 +102,7 @@ Concept anchors for this page:
 - [20260324 Dvt Architectural Review](reviews/20260324-dvt-architectural-review.md)
 - [20260326 RunMaintenanceService SRP Review](reviews/20260326-run-maintenance-service-srp-review.md)
 - [20260326 S03 Hard QA Review](reviews/20260326-s03-hard-qa-review.md)
+- [20260328 Lineage Outbox Fowler QA Hard Review](reviews/20260328-lineage-outbox-fowler-qa-hard-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/20260226-dvt-architectural-gap-remediation-tasks-review.md)
 - [DVT+ — Consolidated Architectural Review](reviews/20260305-dvt-architectural-review-consolidated.md)

@@ -192,12 +192,15 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       await client.query(`
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.lineage_outbox (
           id TEXT PRIMARY KEY,
+          tenant_id TEXT NOT NULL,
           run_id TEXT NOT NULL,
           event_type TEXT NOT NULL,
           payload JSONB NOT NULL,
           attempts INTEGER NOT NULL DEFAULT 0,
           last_error TEXT,
           status TEXT NOT NULL DEFAULT 'pending',
+          next_attempt_at TIMESTAMPTZ,
+          claimed_at TIMESTAMPTZ,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `);
@@ -205,6 +208,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.lineage_dead_letter (
           id TEXT PRIMARY KEY,
           original_id TEXT NOT NULL,
+          tenant_id TEXT NOT NULL,
           run_id TEXT NOT NULL,
           event_type TEXT NOT NULL,
           payload JSONB NOT NULL,
@@ -403,6 +407,12 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
     version: 'core_009_core_indexes',
     description: 'Create all standard operational indexes',
     run: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`
+      );
       await client.query(`
         CREATE INDEX IF NOT EXISTS outbox_pending_idx
         ON ${sq(schema)}.outbox (shard_id, next_attempt_at, created_at, claimed_at)
@@ -432,7 +442,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       `);
       await client.query(`
         CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx
-        ON ${sq(schema)}.lineage_outbox (created_at)
+        ON ${sq(schema)}.lineage_outbox (next_attempt_at ASC NULLS FIRST, created_at ASC, claimed_at ASC)
         WHERE status = 'pending'
       `);
       await client.query(`
@@ -574,6 +584,141 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       );
       await client.query(
         `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS logical_attempt_id`
+      );
+    },
+  },
+  {
+    version: 'core_012_lineage_outbox_retry_schedule',
+    description:
+      'Add lineage_outbox retry scheduling + claim-timeout columns and retry-ready pending index',
+    run: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_pending_idx')}`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx
+        ON ${sq(schema)}.lineage_outbox (next_attempt_at ASC NULLS FIRST, created_at ASC, claimed_at ASC)
+        WHERE status = 'pending'
+      `);
+    },
+    rollbackDescription:
+      'Restore the legacy lineage_outbox pending index shape while keeping additive retry columns',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_pending_idx')}`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx
+        ON ${sq(schema)}.lineage_outbox (created_at)
+        WHERE status = 'pending'
+      `);
+    },
+  },
+  {
+    version: 'core_013_lineage_outbox_claim_timeout',
+    description:
+      'Guarantee lineage_outbox retry scheduling and claim-timeout columns/index for mixed-version upgrades',
+    run: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_pending_idx')}`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx
+        ON ${sq(schema)}.lineage_outbox (next_attempt_at ASC NULLS FIRST, created_at ASC, claimed_at ASC)
+        WHERE status = 'pending'
+      `);
+    },
+    rollbackDescription:
+      'Restore legacy lineage_outbox pending index shape while retaining additive lineage retry columns',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_pending_idx')}`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx
+        ON ${sq(schema)}.lineage_outbox (created_at)
+        WHERE status = 'pending'
+      `);
+    },
+  },
+  {
+    version: 'core_014_lineage_tenant_scope_hardening',
+    description:
+      'Add tenant columns and tenant-oriented indexes for lineage_outbox and lineage_dead_letter',
+    run: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ADD COLUMN IF NOT EXISTS tenant_id TEXT`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_dead_letter ADD COLUMN IF NOT EXISTS tenant_id TEXT`
+      );
+      await client.query(`
+        UPDATE ${sq(schema)}.lineage_outbox o
+        SET tenant_id = COALESCE(
+          o.payload->>'tenantId',
+          m.tenant_id,
+          '__unknown_tenant__'
+        )
+        FROM ${sq(schema)}.run_metadata m
+        WHERE m.run_id = o.run_id
+          AND o.tenant_id IS NULL
+      `);
+      await client.query(`
+        UPDATE ${sq(schema)}.lineage_dead_letter dl
+        SET tenant_id = COALESCE(
+          dl.payload->>'tenantId',
+          m.tenant_id,
+          '__unknown_tenant__'
+        )
+        FROM ${sq(schema)}.run_metadata m
+        WHERE m.run_id = dl.run_id
+          AND dl.tenant_id IS NULL
+      `);
+      await client.query(`
+        UPDATE ${sq(schema)}.lineage_outbox
+        SET tenant_id = '__unknown_tenant__'
+        WHERE tenant_id IS NULL
+      `);
+      await client.query(`
+        UPDATE ${sq(schema)}.lineage_dead_letter
+        SET tenant_id = '__unknown_tenant__'
+        WHERE tenant_id IS NULL
+      `);
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_outbox ALTER COLUMN tenant_id SET NOT NULL`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.lineage_dead_letter ALTER COLUMN tenant_id SET NOT NULL`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS lineage_outbox_tenant_pending_idx
+        ON ${sq(schema)}.lineage_outbox (tenant_id, next_attempt_at ASC NULLS FIRST, created_at ASC)
+        WHERE status = 'pending'
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS lineage_dead_letter_tenant_dead_lettered_idx
+        ON ${sq(schema)}.lineage_dead_letter (tenant_id, dead_lettered_at DESC)
+      `);
+    },
+    rollbackDescription: 'Drop tenant-oriented lineage indexes while preserving additive columns',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_tenant_pending_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_dead_letter_tenant_dead_lettered_idx')}`
       );
     },
   },
