@@ -16,7 +16,7 @@ Generated automatically from repository code on 2026-03-28.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 529   |
+| Total source files           | 530   |
 | Total test files             | 181   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
@@ -29,7 +29,7 @@ Generated automatically from repository code on 2026-03-28.
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 4          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 14        | 17         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 140       | 0          | yes   | no   | yes       | -                       |
+| @dvt/web                  | `apps/web`                           | 141       | 0          | yes   | no   | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 25        | 14         | yes   | yes  | yes       | 22                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 9         | 1          | yes   | yes  | no        | 8                       |
