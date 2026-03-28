@@ -6,7 +6,7 @@ import type { PluginContributions } from '../registry';
 import type { LucideIcon } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
-// monitoring plugin — static contributions v1
+// monitoring plugin - static contributions v1
 // ---------------------------------------------------------------------------
 
 const MONITORING_PLUGIN_ID = 'monitoring';
@@ -52,7 +52,7 @@ export const monitoringContributions: PluginContributions = {
       pluginId: MONITORING_PLUGIN_ID,
       id: 'monitoring.run-detail',
       path: '/runs/:runId',
-      // Same component — RunsView reads :runId from params internally
+      // Same component - RunsView reads :runId from params internally
       component: React.lazy(() => import('../../views/RunsView')),
     },
   ],
@@ -60,7 +60,7 @@ export const monitoringContributions: PluginContributions = {
   // ---- Overlays ------------------------------------------------------------
 
   overlays: [
-    // runtime overlay — colors nodes by their run execution status
+    // runtime overlay - colors nodes by their run execution status
     {
       id: 'runtime',
       label: 'Runtime Status',
@@ -76,7 +76,7 @@ export const monitoringContributions: PluginContributions = {
       },
     },
 
-    // impact overlay — dims nodes not related to the selection
+    // impact overlay - dims nodes not related to the selection
     {
       id: 'impact',
       label: 'Impact Highlight',
