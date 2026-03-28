@@ -1,8 +1,9 @@
 import React from 'react';
 
-import { Activity, GitMerge } from 'lucide-react';
+import { Activity, Check, GitMerge, Minus, Play, X } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
+import type { LucideIcon } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // monitoring plugin — static contributions v1
@@ -18,19 +19,13 @@ const STATUS_BORDER_COLOR: Record<string, string> = {
   skipped: '#eab308', // yellow-500
 };
 
-// Run status → badge color
-const STATUS_BADGE_COLOR: Record<string, 'green' | 'red' | 'yellow' | 'blue' | 'gray'> = {
-  running: 'blue',
-  success: 'green',
-  failed: 'red',
-  skipped: 'yellow',
-};
+type BadgeColor = 'green' | 'red' | 'yellow' | 'blue' | 'gray';
 
-const STATUS_BADGE_TEXT: Record<string, string> = {
-  running: '▶',
-  success: '✓',
-  failed: '✗',
-  skipped: '–',
+const STATUS_BADGE: Record<string, { icon: LucideIcon; color: BadgeColor }> = {
+  running: { icon: Play, color: 'blue' },
+  success: { icon: Check, color: 'green' },
+  failed: { icon: X, color: 'red' },
+  skipped: { icon: Minus, color: 'yellow' },
 };
 
 export const monitoringContributions: PluginContributions = {
@@ -111,9 +106,10 @@ export const monitoringContributions: PluginContributions = {
         if (!ctx.activeRunId) return null;
         const status = ctx.runStatusByNodeId.get(node.id);
         if (!status || status === 'idle') return null;
+        const badge = STATUS_BADGE[status];
         return {
-          text: STATUS_BADGE_TEXT[status] ?? status,
-          color: STATUS_BADGE_COLOR[status] ?? 'gray',
+          icon: badge?.icon,
+          color: badge?.color ?? 'gray',
           position: 'top-right',
           tooltip: `Run status: ${status}`,
         };
