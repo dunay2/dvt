@@ -1,13 +1,22 @@
-import { Columns, DollarSign, FileCheck, GitBranch, Play, Target } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronDown,
+  Columns,
+  FileCheck,
+  GitBranch,
+  Play,
+  Target,
+} from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 import { Button } from '../../components/ui/button';
-import { Separator } from '../../components/ui/separator';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '../../components/ui/tooltip';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 
 type CanvasToolbarProps = {
   readonly onAutoLayout: () => void;
@@ -24,93 +33,76 @@ type CanvasToolbarProps = {
 
 export default function CanvasToolbar({
   onAutoLayout,
-  onToggleCostOverlay,
   onToggleImpact,
   onToggleColumns,
   onPlan,
   onRun,
-  exclusiveOverlayMode,
-  canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
 }: CanvasToolbarProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4">
       <div className="flex items-center gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={onAutoLayout}>
-                <GitBranch className="size-4 mr-2" />
-                Auto Layout
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Apply dagre layout algorithm</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              Edit
+              <ChevronDown className="ml-1 size-3 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
 
-        <Separator orientation="vertical" className="h-6" />
+          <DropdownMenuContent
+            align="start"
+            className="w-52 bg-slate-900 border-slate-700 text-slate-50"
+          >
+            <DropdownMenuItem
+              className="gap-2 focus:bg-slate-800 focus:text-white"
+              onSelect={onAutoLayout}
+            >
+              <GitBranch className="size-4 shrink-0" />
+              Auto Layout
+            </DropdownMenuItem>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={exclusiveOverlayMode === 'cost' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={onToggleCostOverlay}
-                disabled={!canUseCostOverlay}
-              >
-                <DollarSign className="size-4 mr-2" />
-                Cost
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {!canUseCostOverlay
-                ? 'No node cost data available'
-                : exclusiveOverlayMode === 'cost'
-                  ? 'Switch back to runtime overlay'
-                  : 'Switch to cost heatmap overlay'}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+            <DropdownMenuSeparator className="bg-slate-700" />
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={impactOverlayEnabled ? 'default' : 'ghost'}
-                size="sm"
-                onClick={onToggleImpact}
-              >
-                <Target className="size-4 mr-2" />
-                Impact
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle impact overlay</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+            <DropdownMenuItem
+              className="gap-2 focus:bg-slate-800 focus:text-white"
+              onSelect={onToggleImpact}
+            >
+              <Target className="size-4 shrink-0" />
+              <span className="flex-1">Impact Overlay</span>
+              {impactOverlayEnabled && (
+                <span className="text-[10px] font-mono text-blue-400">on</span>
+              )}
+            </DropdownMenuItem>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={columnLevelLineageEnabled ? 'default' : 'ghost'}
-                size="sm"
-                onClick={onToggleColumns}
-              >
-                <Columns className="size-4 mr-2" />
-                Columns
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle column-level lineage</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+            <DropdownMenuItem
+              className="gap-2 focus:bg-slate-800 focus:text-white"
+              onSelect={onToggleColumns}
+            >
+              <Columns className="size-4 shrink-0" />
+              <span className="flex-1">Column Lineage</span>
+              {columnLevelLineageEnabled && (
+                <span className="text-[10px] font-mono text-blue-400">on</span>
+              )}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-slate-700" />
+
+            <DropdownMenuItem
+              className="gap-2 focus:bg-slate-800 focus:text-white"
+              onSelect={() => navigate(-1)}
+            >
+              <ArrowLeft className="size-4 shrink-0" />
+              Back
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-400">
-          overlay: {exclusiveOverlayMode}
-        </div>
         <Button variant="outline" size="sm" onClick={onPlan}>
           <FileCheck className="size-4 mr-2" />
           Plan
