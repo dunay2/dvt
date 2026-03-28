@@ -101,6 +101,21 @@ export function getAllOverlays(): CanvasOverlayContribution[] {
   return PLUGIN_REGISTRY.flatMap((p) => p.overlays ?? []);
 }
 
+export function mapRunToCanonical(run: unknown): CanonicalRun | null {
+  for (const plugin of PLUGIN_REGISTRY) {
+    const canonicalRun = plugin.runAdapter?.mapToCanonical(run) ?? null;
+    if (canonicalRun) {
+      return canonicalRun;
+    }
+  }
+
+  return null;
+}
+
+export function getRegisteredPluginIds(): ReadonlySet<string> {
+  return new Set(PLUGIN_REGISTRY.map((plugin) => plugin.id));
+}
+
 /**
  * Returns the highest-priority renderer for the given kind.
  * Falls back to the provided fallback component if none registered.

@@ -40,6 +40,16 @@ import {
   resolveNodeKindRegistration,
 } from '../plugins/nodeTypeRegistry';
 import { mapDbtTypeToKind } from '../plugins/nodeTypeCatalog.dbt';
+import type {
+  MergedNodeDecoration,
+  NodeDecoration,
+  OverlayContext,
+} from '../plugins/contracts/NodeRendering';
+import {
+  getAllOverlays,
+  getRegisteredPluginIds,
+  mapRunToCanonical as mapPluginRunToCanonical,
+} from '../plugins/registry';
 import { buildSessionRunContext, createPlansService } from '../services/plans/plansService';
 import { resolveDataSource } from '../services/config/dataSource';
 import { createWorkspaceService } from '../services/workspace/workspaceService';
@@ -52,6 +62,7 @@ import {
   type CoreNodeRole,
   type PluginNodeKind,
 } from '../types/canonical';
+import type { RunStatusSnapshot } from '../types/engine';
 import type { DbtEdge, DbtNode, DbtNodeType, ExecutionPlan } from '../types/dbt';
 import {
   createCanvasEdgeFromConnection,
@@ -80,6 +91,118 @@ const CANONICAL_NODE_STATUSES: ReadonlySet<CanonicalNodeStatus> = new Set([
   'skipped',
   'warn',
 ]);
+
+function mergeNodeDecorations(
+  exclusiveDecoration: NodeDecoration | null,
+  additiveDecorations: NodeDecoration[]
+): MergedNodeDecoration | null {
+  if (!exclusiveDecoration && additiveDecorations.length === 0) {
+    return null;
+  }
+
+  const borderColor =
+    exclusiveDecoration?.borderColor ??
+    additiveDecorations.find((decoration) => decoration.borderColor)?.borderColor;
+
+  const backgroundColor =
+    exclusiveDecoration?.backgroundColor ??
+    additiveDecorations.find((decoration) => decoration.backgroundColor)?.backgroundColor;
+
+  const dimmed =
+    (exclusiveDecoration?.dimmed ?? false) ||
+    additiveDecorations.some((decoration) => decoration.dimmed === true);
+
+  if (!borderColor && !backgroundColor && !dimmed) {
+    return null;
+  }
+
+  return {
+    borderColor,
+    backgroundColor,
+    dimmed: dimmed || undefined,
+  };
+}
+
+function buildImpactSets(
+  edges: Edge[],
+  selectedNodeIds: string[]
+): { upstreamOfSelected: Set<string>; downstreamOfSelected: Set<string> } {
+  const upstreamOfSelected = new Set<string>();
+  const downstreamOfSelected = new Set<string>();
+
+  for (const selectedId of selectedNodeIds) {
+    const upstreamQueue = [selectedId];
+    const visitedUpstream = new Set<string>();
+    while (upstreamQueue.length > 0) {
+      const current = upstreamQueue.shift()!;
+      if (visitedUpstream.has(current)) continue;
+      visitedUpstream.add(current);
+
+      for (const edge of edges) {
+        if (edge.target === current && edge.source !== selectedId) {
+          upstreamOfSelected.add(edge.source);
+          upstreamQueue.push(edge.source);
+        }
+      }
+    }
+
+    const downstreamQueue = [selectedId];
+    const visitedDownstream = new Set<string>();
+    while (downstreamQueue.length > 0) {
+      const current = downstreamQueue.shift()!;
+      if (visitedDownstream.has(current)) continue;
+      visitedDownstream.add(current);
+
+      for (const edge of edges) {
+        if (edge.source === current && edge.target !== selectedId) {
+          downstreamOfSelected.add(edge.target);
+          downstreamQueue.push(edge.target);
+        }
+      }
+    }
+  }
+
+  return { upstreamOfSelected, downstreamOfSelected };
+}
+
+function buildRunStatusByNodeId(
+  canonicalRun: ReturnType<typeof mapPluginRunToCanonical>
+): ReadonlyMap<string, string> {
+  const runStatusByNodeId = new Map<string, string>();
+
+  if (!canonicalRun) {
+    return runStatusByNodeId;
+  }
+
+  for (const task of canonicalRun.tasks) {
+    runStatusByNodeId.set(task.nodeId, task.status);
+  }
+
+  return runStatusByNodeId;
+}
+
+function toRunStatusSnapshot(
+  canonicalRun: ReturnType<typeof mapPluginRunToCanonical>
+): RunStatusSnapshot | null {
+  if (!canonicalRun) {
+    return null;
+  }
+
+  const statusMap: Record<typeof canonicalRun.status, RunStatusSnapshot['status']> = {
+    pending: 'PENDING',
+    running: 'RUNNING',
+    completed: 'COMPLETED',
+    failed: 'FAILED',
+    cancelled: 'CANCELLED',
+  };
+
+  return {
+    runId: canonicalRun.runId,
+    status: statusMap[canonicalRun.status],
+    startedAt: canonicalRun.startedAt,
+    completedAt: canonicalRun.finishedAt,
+  };
+}
 
 function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
   const kind = mapDbtTypeToKind(node.type);
@@ -214,6 +337,7 @@ function CanvasContent() {
     toggleColumnLevelLineage,
     setCurrentPlan,
     currentPlan,
+    currentRun,
     userPermissions,
     setConsolePanelHeight,
     consolePanelVisible,
@@ -237,6 +361,19 @@ function CanvasContent() {
     () => new Map(canonicalNodes.map((node) => [node.id, node])),
     [canonicalNodes]
   );
+  const activeCanonicalRun = useMemo(
+    () => (currentRun ? mapPluginRunToCanonical(currentRun) : null),
+    [currentRun]
+  );
+  const activeRunSnapshot = useMemo(
+    () => toRunStatusSnapshot(activeCanonicalRun),
+    [activeCanonicalRun]
+  );
+  const activeRunId = activeCanonicalRun?.runId ?? null;
+  const runStatusByNodeId = useMemo(
+    () => buildRunStatusByNodeId(activeCanonicalRun),
+    [activeCanonicalRun]
+  );
 
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [confirmEdgeModal, setConfirmEdgeModal] = useState<{
@@ -259,6 +396,49 @@ function CanvasContent() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const overlayDecorations = useMemo(() => {
+    const overlays = getAllOverlays();
+    const activeExclusiveOverlay =
+      activeRunSnapshot == null
+        ? null
+        : (overlays.find((overlay) => overlay.mode === 'exclusive' && overlay.id === 'runtime') ??
+          null);
+    const additiveOverlays = impactOverlayEnabled
+      ? overlays
+          .filter((overlay) => overlay.mode === 'additive' && overlay.id === 'impact')
+          .sort((left, right) => right.priority - left.priority)
+      : [];
+    const { upstreamOfSelected, downstreamOfSelected } = buildImpactSets(edges, selectedNodeIds);
+    const overlayContext: OverlayContext = {
+      activeRun: activeRunSnapshot,
+      runStatusByNodeId,
+      costByNodeId: new Map(),
+      selectedNodeIds: new Set(selectedNodeIds),
+      upstreamOfSelected,
+      downstreamOfSelected,
+    };
+    const decorations = new Map<string, MergedNodeDecoration | null>();
+
+    for (const node of canonicalNodes) {
+      const exclusiveDecoration =
+        activeExclusiveOverlay?.nodeDecorator(node, overlayContext) ?? null;
+      const additiveDecorations = additiveOverlays
+        .map((overlay) => overlay.nodeDecorator(node, overlayContext))
+        .filter((decoration): decoration is NodeDecoration => decoration !== null);
+
+      decorations.set(node.id, mergeNodeDecorations(exclusiveDecoration, additiveDecorations));
+    }
+
+    return decorations;
+  }, [
+    activeRunSnapshot,
+    canonicalNodes,
+    edges,
+    impactOverlayEnabled,
+    runStatusByNodeId,
+    selectedNodeIds,
+  ]);
 
   useEffect(() => {
     setNodes(initialNodes);
@@ -480,6 +660,9 @@ function CanvasContent() {
         ...node,
         data: {
           ...node.data,
+          activeRunId,
+          runStatusByNodeId,
+          overlayDecoration: overlayDecorations.get(node.id) ?? null,
           showColumns: columnLevelLineageEnabled,
           onInspectNode: handleInspectNode,
           onRemoveNode: handleRemoveNode,
@@ -532,6 +715,9 @@ function CanvasContent() {
           : downstream.has(node.id)
             ? 'downstream'
             : 'none',
+        activeRunId,
+        runStatusByNodeId,
+        overlayDecoration: overlayDecorations.get(node.id) ?? null,
         showColumns: columnLevelLineageEnabled,
         onInspectNode: handleInspectNode,
         onRemoveNode: handleRemoveNode,
@@ -542,11 +728,14 @@ function CanvasContent() {
     nodes,
     edges,
     impactOverlayEnabled,
+    activeRunId,
     selectedNodeIds,
     columnLevelLineageEnabled,
     handleInspectNode,
     handleRemoveNode,
     handleToggleNodeSelection,
+    overlayDecorations,
+    runStatusByNodeId,
   ]);
 
   const inspectorNode = inspectorNodeId ? (canonicalNodesById.get(inspectorNodeId) ?? null) : null;
@@ -697,7 +886,8 @@ function CanvasContent() {
             <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
               <InspectorPanel
                 node={inspectorNode}
-                activeRunId={null}
+                activeRunId={activeRunId}
+                registeredPlugins={getRegisteredPluginIds()}
                 onHide={toggleInspectorPanel}
               />
             </ResizablePanel>
