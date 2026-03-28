@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { DbtNode, Run, ExecutionPlan } from '../types/dbt';
+import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from './sessionStore';
 
 interface ConnectionStatus {
@@ -29,7 +30,6 @@ interface AppState {
 
   // Canvas State
   selectedNodes: string[];
-  highlightedNodes: string[];
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
 
@@ -75,7 +75,6 @@ interface AppState {
   toggleConsolePanel: () => void;
   setGridSize: (size: number) => void;
   setSelectedNodes: (nodes: string[]) => void;
-  setHighlightedNodes: (nodes: string[]) => void;
   toggleImpactOverlay: () => void;
   toggleColumnLevelLineage: () => void;
   addTab: (tab: { id: string; type: TabType; label: string; data?: any }) => void;
@@ -89,13 +88,16 @@ interface AppState {
 
 type TabType = 'canvas' | 'run' | 'diff' | 'lineage';
 
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
+const sessionContext = useSessionStore.getState();
+
 export const useAppStore = create<AppState>((set) => ({
   // Initial state
-  selectedTenant: 'acme-corp',
-  selectedProject: 'dbt-analytics',
-  selectedEnvironment: 'dev',
-  gitBranch: 'main',
-  gitSha: 'a3f2b91',
+  selectedTenant: sessionContext.tenantId,
+  selectedProject: sessionContext.projectId,
+  selectedEnvironment: sessionContext.environmentId,
+  gitBranch: workspaceBootstrap.gitBranch,
+  gitSha: workspaceBootstrap.gitSha,
 
   leftNavCollapsed: false,
   explorerPanelWidth: 280,
@@ -108,7 +110,6 @@ export const useAppStore = create<AppState>((set) => ({
   gridSize: 20,
 
   selectedNodes: [],
-  highlightedNodes: [],
   impactOverlayEnabled: false,
   columnLevelLineageEnabled: false,
 
@@ -161,7 +162,6 @@ export const useAppStore = create<AppState>((set) => ({
     })),
   setGridSize: (size: number) => set({ gridSize: size }),
   setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
-  setHighlightedNodes: (nodes) => set({ highlightedNodes: nodes }),
   toggleImpactOverlay: () =>
     set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled })),
   toggleColumnLevelLineage: () =>

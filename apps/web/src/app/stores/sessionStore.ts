@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import { resolveDataSource } from '../services/config/dataSource';
+import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import type { RunContext } from '../types/engine';
 
 export interface SessionState {
@@ -11,19 +13,20 @@ export interface SessionState {
   setProjectId: (projectId: string) => void;
   setEnvironmentId: (environmentId: string) => void;
   setTargetAdapter: (targetAdapter: RunContext['targetAdapter']) => void;
-  setSessionContext: (context: Partial<Pick<RunContext, 'tenantId' | 'projectId' | 'environmentId' | 'targetAdapter'>>) => void;
+  setSessionContext: (
+    context: Partial<Pick<RunContext, 'tenantId' | 'projectId' | 'environmentId' | 'targetAdapter'>>
+  ) => void;
   buildRunContext: (runId: string) => RunContext;
 }
 
-const DEFAULT_TENANT_ID = 'acme-corp';
-const DEFAULT_PROJECT_ID = 'dbt-analytics';
-const DEFAULT_ENVIRONMENT_ID = 'dev';
-const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] = 'mock';
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
+const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] =
+  resolveDataSource() === 'api' ? 'temporal' : 'mock';
 
 export const useSessionStore = create<SessionState>((set, get) => ({
-  tenantId: DEFAULT_TENANT_ID,
-  projectId: DEFAULT_PROJECT_ID,
-  environmentId: DEFAULT_ENVIRONMENT_ID,
+  tenantId: workspaceBootstrap.tenantId,
+  projectId: workspaceBootstrap.projectId,
+  environmentId: workspaceBootstrap.environmentId,
   targetAdapter: DEFAULT_TARGET_ADAPTER,
   setTenantId: (tenantId) => set({ tenantId }),
   setProjectId: (projectId) => set({ projectId }),

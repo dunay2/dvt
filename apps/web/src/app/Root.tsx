@@ -21,8 +21,13 @@ const queryClient = new QueryClient({
 });
 
 function RootShell() {
-  const { focusMode, consolePanelHeight, consolePanelVisible, connectionStatus, setConnectionStatus } =
-    useAppStore();
+  const {
+    focusMode,
+    consolePanelHeight,
+    consolePanelVisible,
+    connectionStatus,
+    setConnectionStatus,
+  } = useAppStore();
   const platformHealth = usePlatformHealthQuery();
 
   useEffect(() => {
@@ -31,12 +36,7 @@ function RootShell() {
     }
 
     setConnectionStatus(deriveConnectionStatus(platformHealth.data, platformHealth.isError));
-  }, [
-    platformHealth.data,
-    platformHealth.isError,
-    platformHealth.isPending,
-    setConnectionStatus,
-  ]);
+  }, [platformHealth.data, platformHealth.isError, platformHealth.isPending, setConnectionStatus]);
 
   const errorMessage = platformHealth.isError
     ? platformHealth.error instanceof Error
@@ -93,4 +93,3 @@ export default function Root() {
     </QueryClientProvider>
   );
 }
-

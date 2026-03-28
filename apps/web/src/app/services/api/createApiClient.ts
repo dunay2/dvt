@@ -38,7 +38,10 @@ export type ApiRequestInit = Omit<RequestInit, 'body' | 'headers'> & {
 export type ApiClient = {
   baseUrl: string;
   requestRaw: (endpoint: string, init?: ApiRequestInit) => Promise<Response>;
-  getJson: <TResponse>(endpoint: string, init?: Omit<ApiRequestInit, 'method'>) => Promise<TResponse>;
+  getJson: <TResponse>(
+    endpoint: string,
+    init?: Omit<ApiRequestInit, 'method'>
+  ) => Promise<TResponse>;
   postJson: <TRequest, TResponse>(
     endpoint: string,
     payload: TRequest,
@@ -52,7 +55,7 @@ function normalizeBaseUrl(value: string): string {
 
 function inferLocalApiBaseUrl(): string {
   if (typeof window === 'undefined') {
-    return `http://localhost:${DEFAULT_API_PORT}`;
+    return '';
   }
 
   const { protocol, hostname, port } = window.location;
@@ -61,6 +64,20 @@ function inferLocalApiBaseUrl(): string {
   }
 
   return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+}
+
+function buildRequestUrl(endpoint: string, normalizedBaseUrl: string): string {
+  if (normalizedBaseUrl.length > 0) {
+    return `${normalizedBaseUrl}${endpoint}`;
+  }
+
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${endpoint}`;
+  }
+
+  throw new Error(
+    'API base URL is required outside browser runtime. Set VITE_API_BASE_URL explicitly.'
+  );
 }
 
 export function resolveApiBaseUrl(): string {
@@ -171,12 +188,7 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()): ApiClient {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
 
   async function requestRaw(endpoint: string, init: ApiRequestInit = {}): Promise<Response> {
-    const {
-      includeSessionHeaders = true,
-      jsonBody,
-      headers: customHeaders,
-      ...requestInit
-    } = init;
+    const { includeSessionHeaders = true, jsonBody, headers: customHeaders, ...requestInit } = init;
     const headers = buildHeaders(customHeaders, includeSessionHeaders);
 
     let body: BodyInit | null | undefined = requestInit.body;
@@ -186,7 +198,7 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()): ApiClient {
     }
 
     try {
-      return await fetch(`${normalizedBaseUrl}${endpoint}`, {
+      return await fetch(buildRequestUrl(endpoint, normalizedBaseUrl), {
         ...requestInit,
         headers,
         body,
@@ -200,7 +212,10 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()): ApiClient {
     }
   }
 
-  async function requestJson<TResponse>(endpoint: string, init: ApiRequestInit): Promise<TResponse> {
+  async function requestJson<TResponse>(
+    endpoint: string,
+    init: ApiRequestInit
+  ): Promise<TResponse> {
     const response = await requestRaw(endpoint, init);
 
     if (!response.ok) {

@@ -12,6 +12,7 @@ import {
   User,
 } from 'lucide-react';
 
+import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useAppStore } from '../stores/appStore';
 
 import { Badge } from './ui/badge';
@@ -38,6 +39,8 @@ const GRID_OPTIONS = [
   { value: 30, label: '30px' },
   { value: 40, label: '40px (Sparse)' },
 ];
+
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
 export default function TopAppBar() {
   const {
@@ -106,9 +109,11 @@ export default function TopAppBar() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="acme-corp">ACME Corp</SelectItem>
-            <SelectItem value="globex">Globex Inc</SelectItem>
-            <SelectItem value="initech">Initech</SelectItem>
+            {workspaceBootstrap.tenantOptions.map((tenantOption) => (
+              <SelectItem key={tenantOption.value} value={tenantOption.value}>
+                {tenantOption.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -117,9 +122,11 @@ export default function TopAppBar() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="dbt-analytics">dbt-analytics</SelectItem>
-            <SelectItem value="dbt-marketing">dbt-marketing</SelectItem>
-            <SelectItem value="dbt-finance">dbt-finance</SelectItem>
+            {workspaceBootstrap.projectOptions.map((projectOption) => (
+              <SelectItem key={projectOption.value} value={projectOption.value}>
+                {projectOption.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -128,9 +135,11 @@ export default function TopAppBar() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="dev">dev</SelectItem>
-            <SelectItem value="stage">stage</SelectItem>
-            <SelectItem value="prod">prod</SelectItem>
+            {workspaceBootstrap.environmentOptions.map((environmentOption) => (
+              <SelectItem key={environmentOption.value} value={environmentOption.value}>
+                {environmentOption.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -241,4 +250,3 @@ export default function TopAppBar() {
     </TooltipProvider>
   );
 }
-

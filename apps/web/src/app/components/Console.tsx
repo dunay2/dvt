@@ -1,5 +1,6 @@
 import { Terminal, FileText, X } from 'lucide-react';
 
+import { resolveDataSource } from '../services/config/dataSource';
 import { useAppStore } from '../stores/appStore';
 
 import { Badge } from './ui/badge';
@@ -8,6 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 
 export default function Console() {
   const { setConsolePanelHeight, currentRun } = useAppStore();
+  const dataSourceMode = resolveDataSource();
 
   const mockLogs = [
     { time: '10:35:14', level: 'INFO', message: 'Starting run step...' },
@@ -45,6 +47,11 @@ export default function Console() {
         <div className="inline-flex items-center gap-2 rounded-md bg-slate-950 px-2 py-1 text-xs text-slate-100">
           <FileText className="size-3" />
           Logs
+          {dataSourceMode === 'mock' && (
+            <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+              Mock data
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -74,4 +81,3 @@ export default function Console() {
     </div>
   );
 }
-

@@ -27,7 +27,12 @@ export function deriveConnectionStatus(
     snapshot.version.error !== null ||
     snapshot.dbReady.error !== null;
 
-  if (snapshot.healthz.status === 'degraded' || isReadyDegraded || isDbDegraded || hasOptionalEndpointError) {
+  if (
+    snapshot.healthz.status === 'degraded' ||
+    isReadyDegraded ||
+    isDbDegraded ||
+    hasOptionalEndpointError
+  ) {
     return { rest: 'degraded', liveEvents: 'polling' };
   }
 
