@@ -33,3 +33,6 @@ This prevents hot retry loops but may increase end-to-end lineage publication la
 3. The remaining mitigation path is:
    - `RC-B5-F2` for real-Postgres concurrency coverage
    - `DLQ alerting + automated replay` for operational lag controls
+4. Additional residual observations tracked in QA review:
+   - `lagCount` is eventual (separate `listPending`/`countPending` reads), so it is not an atomic backlog snapshot.
+   - secret redaction is pattern-based and can miss non-standard/encoded secret forms.

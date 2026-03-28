@@ -132,6 +132,10 @@ describe('PostgresLineageOutboxStore', () => {
     expect(client.queries).toHaveLength(1);
     const query = client.queries[0];
     expect(query?.sql).toContain("status = 'pending'");
+    expect(query?.sql).toContain("o.status = 'claimed'");
+    expect(query?.sql).toContain(
+      "o.claimed_at < ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))"
+    );
     expect(query?.sql).toContain(
       '(o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)'
     );
@@ -141,6 +145,29 @@ describe('PostgresLineageOutboxStore', () => {
     expect(query?.params).toEqual([25, NOW, 60_000]);
   });
 
+  it('countPending considers expired claimed records as pending work', async () => {
+    const client = new RecordingClient();
+    client.enqueueRows([{ pending_count: 3 }]);
+    const store = new PostgresLineageOutboxStore(
+      'dvt',
+      () => NOW,
+      60_000,
+      withRecordingClient(client) as never,
+      withRecordingClient(client) as never
+    );
+
+    const pendingCount = await store.countPending();
+
+    expect(pendingCount).toBe(3);
+    expect(client.queries).toHaveLength(1);
+    const query = client.queries[0];
+    expect(query?.sql).toContain("o.status = 'pending'");
+    expect(query?.sql).toContain("o.status = 'claimed'");
+    expect(query?.sql).toContain(
+      "o.claimed_at < ($1::timestamptz - ($2::bigint * INTERVAL '1 millisecond'))"
+    );
+    expect(query?.params).toEqual([NOW, 60_000]);
+  });
   it('listPending omits lastError when lineage row has no last_error value', async () => {
     const client = new RecordingClient();
     client.enqueueRows([

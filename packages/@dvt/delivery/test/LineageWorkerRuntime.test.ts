@@ -222,6 +222,25 @@ describe('LineageWorkerRuntime', () => {
         'publish failed token=[REDACTED] bearer [REDACTED] password=[REDACTED]'
       );
     });
+
+    it('redacts sensitive fragments in structured warning logs', async () => {
+      const record = makeRecord({ id: 'r-log-secret' });
+      const store = makeStore([record]);
+      const sink: ILineageSink = {
+        publish: vi.fn().mockRejectedValue({ token: 'abc123', password: 'hunter2' }),
+      };
+      const logger = makeSilentLogger();
+      const runtime = new LineageWorkerRuntime(store, sink, makeMapper(), logger);
+
+      await runtime.runOnce();
+
+      expect(logger.warn).toHaveBeenCalled();
+      const firstWarnCall = (logger.warn as ReturnType<typeof vi.fn>).mock.calls[0];
+      const firstWarnPayload = firstWarnCall?.[0] as { err?: { message?: string } };
+      expect(firstWarnPayload?.err?.message).toContain('[REDACTED]');
+      expect(firstWarnPayload?.err?.message).not.toContain('abc123');
+      expect(firstWarnPayload?.err?.message).not.toContain('hunter2');
+    });
   });
 
   describe('start / stop', () => {

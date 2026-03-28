@@ -55,6 +55,20 @@ Code baseline used for this state snapshot:
      - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
      - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts`
 
+1. **[Low] `lagCount` is eventual, not atomic**
+   - `runOnce()` reads `listPending()` and `countPending()` in separate calls.
+   - Under concurrent claims/deliveries, the reported lag can differ from the exact same-snapshot backlog.
+   - This is acceptable for observability but should be treated as eventual-consistency behavior, not exact accounting.
+   - References:
+     - `packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts` (`runOnce`)
+
+1. **[Low] Redaction strategy remains pattern-based**
+   - Runtime now redacts token/password/bearer patterns, including common JSON key forms.
+   - Coverage is still regex-driven; uncommon/encoded secret formats can evade redaction.
+   - Keep this as residual privacy risk until a structured allowlist/blocklist sanitizer is introduced.
+   - References:
+     - `packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts` (`sanitizeErrorForPersistence`, `toErrorLike`)
+
 ## Evidence links
 
 - [ED-20260328-lineage-outbox-retry-scheduling](../../evidence/ED-20260328-lineage-outbox-retry-scheduling.md)
