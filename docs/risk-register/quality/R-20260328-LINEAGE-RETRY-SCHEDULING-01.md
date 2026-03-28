@@ -36,3 +36,4 @@ This prevents hot retry loops but may increase end-to-end lineage publication la
 4. Additional residual observations tracked in QA review:
    - `lagCount` is eventual (separate `listPending`/`countPending` reads), so it is not an atomic backlog snapshot.
    - secret redaction is pattern-based and can miss non-standard/encoded secret forms.
+5. `S05-F1` write-boundary schema gating is integrated in runtime (`parseRunEventWrite` via adapter envelope policy) and now has explicit negative integration coverage for invalid `RunFailed` and `StepCompleted` payload shapes.

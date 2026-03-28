@@ -19,7 +19,7 @@ tasks:
     target: Merge PR #623 and lock envelope boundary behavior.
   - task_id: S05-F1
     priority: P0
-    status: review
+    status: done
     objective: add per-eventType payload-content schema validation at write boundary.
     dependency: S05
     target: Add payload schema map and AJV/runtime validation per eventType.
@@ -84,7 +84,7 @@ tasks:
     target: Single source of truth for adapter scope detection plus path-matcher tests.
 dependency_notes: |
   - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
-  - `S05-F1` moved to `review` after runtime boundary validation in contracts, adapter-postgres, and engine focused suites.
+  - `S05-F1` is closed after runtime boundary validation in contracts, adapter-postgres, and engine focused suites, plus negative write-boundary coverage.
   - `RC-B1` and `RC-B2` are closed in mainline.
   - `RC-B5` is complete; `RC-B5-F2` tracks the remaining integration-depth gap.
   - `RC-B5` remains a prerequisite to DLQ alerting plus automated replay.

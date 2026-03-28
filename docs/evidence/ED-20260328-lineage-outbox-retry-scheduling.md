@@ -8,9 +8,11 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts
+  - packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts
   - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
   - packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql
   - packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.test.ts
+  - packages/@dvt/adapter-postgres/test/smoke.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
 evidence:
   tests:
@@ -32,6 +34,7 @@ Pending selection only pulls retry-eligible records, reducing hot-loop retries a
 1. `PostgresLineageOutboxStore.listPending` now filters by `next_attempt_at <= NOW()` and keeps FIFO tie-break by `created_at`.
 2. `PostgresLineageOutboxStore.markFailed` now computes exponential delay and stores it in `next_attempt_at`.
 3. Schema baseline and migration path were updated so both fresh installs and already-migrated databases get the column/index shape.
+4. `runEventEnvelopePolicy` enforces per-eventType payload schema validation at write boundary (`parseRunEventWrite`), and invalid payload shapes are rejected before persistence/enqueue.
 
 ## Validation Outcome
 

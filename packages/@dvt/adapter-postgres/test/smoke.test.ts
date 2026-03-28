@@ -326,6 +326,50 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       ).resolves.toHaveLength(1);
     }));
 
+  test('appendAndEnqueueTx: rejects RunFailed payloads that violate per-eventType schema', () =>
+    withAdapter(async (adapter) => {
+      const runId = 'run-invalid-runfailed-payload';
+      await adapter.bootstrapRunTx(makeBootstrap(runId));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid(runId), [
+          makeEvent({
+            runId,
+            eventType: 'RunFailed',
+            idempotencyKey: `${runId}:failed`,
+            payload: { reason: 'NOT_A_VALID_REASON' } as EventInput['payload'],
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventSchemaError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      });
+
+      await expect(adapter.listEvents('t1', runId)).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: rejects StepCompleted payloads that violate per-eventType schema', () =>
+    withAdapter(async (adapter) => {
+      const runId = 'run-invalid-step-completed-payload';
+      await adapter.bootstrapRunTx(makeBootstrap(runId));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid(runId), [
+          makeEvent({
+            runId,
+            eventType: 'StepCompleted',
+            idempotencyKey: `${runId}:step-completed`,
+            payload: { unexpected: true } as EventInput['payload'],
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventSchemaError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      });
+
+      await expect(adapter.listEvents('t1', runId)).resolves.toHaveLength(1);
+    }));
+
   test('appendAndEnqueueTx: does not consume runSeq slots for deduped entries within the same batch', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-idemp-batch'));
