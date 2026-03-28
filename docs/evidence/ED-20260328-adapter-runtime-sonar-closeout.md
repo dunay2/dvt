@@ -3,8 +3,8 @@ title: Adapter runtime and Sonar closeout
 status: Accepted
 date: 2026-03-28
 owners:
-  - @dvt/adapter-postgres
-  - @dvt/delivery
+  - '@dvt/adapter-postgres'
+  - '@dvt/delivery'
 arc_level: ARC-2
 breaking: false
 code_refs:
