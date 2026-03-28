@@ -5,7 +5,7 @@ import type {
   IAuthenticator,
 } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import type { AuthorizationAction, TenantId } from '../../domain/auth/types.js';
+import type { TenantId } from '../../domain/auth/types.js';
 import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { mapRuntimeDomainError } from './authErrorMapper.js';
