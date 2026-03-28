@@ -78,6 +78,8 @@ export default function CanvasShell({
             canUseCostOverlay={canUseCostOverlay}
             impactOverlayEnabled={impactOverlayEnabled}
             columnLevelLineageEnabled={columnLevelLineageEnabled}
+            nodeCount={nodesWithImpact.length}
+            edgeCount={edges.length}
           />
           <CanvasViewport
             focusMode={focusMode}
