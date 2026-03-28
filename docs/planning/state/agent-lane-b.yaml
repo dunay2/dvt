@@ -45,14 +45,14 @@ tasks:
     target: Retry pacing and DLQ hardening merged in mainline (0ac73b7).
   - task_id: RC-B5-F2
     priority: P1
-    status: queued
+    status: done
     objective:
       add real-Postgres integration tests for lineage claim-timeout and stale-claimer race
       semantics.
     dependency: RC-B5
     target:
-      Integration coverage validates claim fencing behavior under delayed delivery and concurrent
-      workers.
+      Real-Postgres integration coverage validates claim-timeout boundaries and stale-claimer
+      interactions in lineage outbox claim fencing.
   - task_id: DLQ alerting + automated replay
     priority: P1
     status: queued
