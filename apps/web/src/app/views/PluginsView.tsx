@@ -1,5 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { Puzzle, CheckCircle2, XCircle, Settings, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '../components/ui/badge';
@@ -8,10 +9,23 @@ import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Switch } from '../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { mockPlugins } from '../data/mockDbtData';
+import { resolveDataSource } from '../services/config/dataSource';
+import { createWorkspaceService } from '../services/workspace/workspaceService';
+
+const workspaceService = createWorkspaceService(resolveDataSource());
 
 export default function PluginsView() {
-  const [plugins, setPlugins] = useState(mockPlugins);
+  const pluginsQuery = useQuery({
+    queryKey: ['workspace', 'plugins'],
+    queryFn: () => workspaceService.getPlugins(),
+  });
+  const [plugins, setPlugins] = useState(() => pluginsQuery.data ?? []);
+
+  useEffect(() => {
+    if (pluginsQuery.data) {
+      setPlugins(pluginsQuery.data);
+    }
+  }, [pluginsQuery.data]);
 
   const handleTogglePlugin = (pluginId: string) => {
     setPlugins((prev) => prev.map((p) => (p.id === pluginId ? { ...p, enabled: !p.enabled } : p)));
@@ -20,9 +34,9 @@ export default function PluginsView() {
   };
 
   return (
-    <div className="h-full bg-[#1a1d23] flex flex-col">
+    <div className="h-full bg-slate-950 flex flex-col">
       {/* Header */}
-      <div className="bg-[#0f1116] border-b border-gray-800 px-6 py-4">
+      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Puzzle className="size-6 text-orange-400" />
@@ -36,14 +50,14 @@ export default function PluginsView() {
       <ScrollArea className="flex-1">
         <div className="p-6">
           <Tabs defaultValue="installed" className="max-w-5xl mx-auto">
-            <TabsList className="bg-[#0f1116] border border-gray-800">
+            <TabsList className="bg-slate-900 border border-slate-700">
               <TabsTrigger value="installed">Installed ({plugins.length})</TabsTrigger>
               <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             </TabsList>
 
             <TabsContent value="installed" className="space-y-4 mt-6">
               {plugins.map((plugin) => (
-                <Card key={plugin.id} className="bg-[#0f1116] border-gray-800 p-5">
+                <Card key={plugin.id} className="bg-slate-900 border-slate-700 p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4">
                       <div className="size-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -67,7 +81,7 @@ export default function PluginsView() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-400">{plugin.description}</p>
+                        <p className="text-sm text-slate-300">{plugin.description}</p>
                       </div>
                     </div>
                     <Switch
@@ -76,10 +90,10 @@ export default function PluginsView() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-800">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
                     <div className="flex gap-4">
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Capabilities</div>
+                        <div className="text-xs text-slate-400 mb-1">Capabilities</div>
                         <div className="flex gap-1">
                           {plugin.capabilities.map((cap) => (
                             <Badge key={cap} variant="secondary" className="text-xs">
@@ -89,7 +103,7 @@ export default function PluginsView() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Permissions</div>
+                        <div className="text-xs text-slate-400 mb-1">Permissions</div>
                         <div className="flex gap-1">
                           {plugin.permissions.map((perm) => (
                             <Badge key={perm} variant="outline" className="text-xs">
@@ -140,7 +154,7 @@ export default function PluginsView() {
                 ].map((plugin, idx) => (
                   <Card
                     key={idx}
-                    className="bg-[#0f1116] border-gray-800 p-4 hover:border-gray-700 cursor-pointer transition-colors"
+                    className="bg-slate-900 border-slate-700 p-4 hover:border-slate-600 cursor-pointer transition-colors"
                   >
                     <div className="flex items-start gap-3 mb-3">
                       <div className="size-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
@@ -153,7 +167,7 @@ export default function PluginsView() {
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">{plugin.description}</p>
+                    <p className="text-sm text-slate-300 mb-4">{plugin.description}</p>
                     <Button variant="outline" size="sm" className="w-full">
                       Install
                     </Button>
@@ -167,3 +181,4 @@ export default function PluginsView() {
     </div>
   );
 }
+

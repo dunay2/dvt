@@ -7,7 +7,7 @@ import {
   TrendingUp,
   Code,
   Package,
-  Plus,
+  PanelLeftClose,
   Upload,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -24,6 +24,7 @@ import { cn } from './ui/utils';
 interface DbtExplorerProps {
   nodes: DbtNode[];
   onNodeDragStart?: (node: DbtNode) => void;
+  onHide?: () => void;
 }
 
 const nodeTypeConfig: Record<DbtNodeType, { icon: any; label: string; color: string }> = {
@@ -34,7 +35,7 @@ const nodeTypeConfig: Record<DbtNodeType, { icon: any; label: string; color: str
   TEST: { icon: TestTube, label: 'Tests', color: 'text-red-400' },
   EXPOSURE: { icon: Presentation, label: 'Exposures', color: 'text-pink-400' },
   METRIC: { icon: TrendingUp, label: 'Metrics', color: 'text-orange-400' },
-  MACRO: { icon: Code, label: 'Macros', color: 'text-gray-400' },
+  MACRO: { icon: Code, label: 'Macros', color: 'text-slate-300' },
 };
 
 const statusColors = {
@@ -46,7 +47,7 @@ const statusColors = {
   warn: 'bg-orange-500',
 };
 
-export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps) {
+export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplorerProps) {
   const [importWizardOpen, setImportWizardOpen] = useState(false);
 
   const groupedNodes = useMemo(() => {
@@ -73,11 +74,27 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
 
   return (
     <>
-      <div className="h-full bg-[#0f1116] border-r border-gray-800 flex flex-col">
+      <div className="h-full bg-slate-900 border-r border-slate-700 flex flex-col">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-800">
-          <h2 className="font-semibold text-sm">dbt Explorer</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Drag to canvas</p>
+        <div className="px-4 py-3 border-b border-slate-700">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h2 className="font-semibold text-sm">dbt Explorer</h2>
+              <p className="text-xs text-slate-300 mt-0.5">Drag to canvas</p>
+            </div>
+            {onHide && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 text-slate-300 hover:text-white"
+                onClick={onHide}
+                aria-label="Hide explorer panel"
+              >
+                <PanelLeftClose className="size-4" />
+              </Button>
+            )}
+          </div>
 
           {/* Import Button */}
           <Button
@@ -99,8 +116,8 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
               if (!config) return null;
 
               return (
-                <AccordionItem key={type} value={type} className="border-b border-gray-800">
-                  <AccordionTrigger className="py-2 px-2 hover:bg-[#1a1d23] text-sm">
+                <AccordionItem key={type} value={type} className="border-b border-slate-700">
+                  <AccordionTrigger className="py-2 px-2 hover:bg-slate-950 text-sm">
                     <div className="flex items-center gap-2">
                       <config.icon className={cn('size-4', config.color)} />
                       <span>{config.label}</span>
@@ -116,15 +133,15 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
                           key={node.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, node)}
-                          className="flex items-center gap-2 px-3 py-2 rounded hover:bg-[#1a1d23] cursor-move group text-sm"
+                          className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-950 cursor-move group text-sm"
                         >
                           <div className={cn('size-2 rounded-full', statusColors[node.status])} />
                           <div className="flex-1 min-w-0">
                             <div className="font-mono text-xs truncate">{node.name}</div>
                             {node.lastDuration && (
-                              <div className="text-[10px] text-gray-500">
+                              <div className="text-[10px] text-slate-400">
                                 {node.lastDuration}s
-                                {node.lastCost && ` · $${node.lastCost.toFixed(2)}`}
+                                {node.lastCost && ` - $${node.lastCost.toFixed(2)}`}
                               </div>
                             )}
                           </div>
@@ -156,3 +173,4 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
     </>
   );
 }
+

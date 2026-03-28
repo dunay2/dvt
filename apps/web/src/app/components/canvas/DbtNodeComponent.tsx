@@ -10,12 +10,22 @@ import {
   Package,
   ChevronDown,
   ChevronUp,
+  Info,
+  MousePointer,
+  Trash2,
 } from 'lucide-react';
 import { memo, useState } from 'react';
 
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../ui/context-menu';
 import { cn } from '../ui/utils';
 
 export interface DbtNodeData extends Record<string, unknown> {
@@ -28,6 +38,9 @@ export interface DbtNodeData extends Record<string, unknown> {
   impactLevel?: 'upstream' | 'downstream' | 'none';
   showColumns?: boolean;
   columns?: Array<{ name: string; type: string }>;
+  onInspectNode?: (nodeId: string) => void;
+  onRemoveNode?: (nodeId: string) => void;
+  onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
@@ -79,109 +92,139 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const showColumnsSection = data.showColumns && (data.type === 'MODEL' || data.type === 'SOURCE');
 
   return (
-    <div
-      className={cn(
-        styles.root,
-        'relative rounded-lg border-2 transition-all bg-[#0f1116]',
-        selected ? 'border-white shadow-lg' : config.borderColor,
-        data.isHighlighted && 'ring-2 ring-white ring-offset-2 ring-offset-[#1a1d23]',
-        impactBorderColor && impactBorderColor
-      )}
-    >
-      {/* Target Handle (input) */}
-      {shouldShowTargetHandle && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-        />
-      )}
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className={cn(
+            styles.root,
+            'relative rounded-lg border-2 transition-all bg-slate-900',
+            selected ? 'border-white shadow-lg' : config.borderColor,
+            data.isHighlighted && 'ring-2 ring-white ring-offset-2 ring-offset-slate-950',
+            impactBorderColor && impactBorderColor
+          )}
+        >
+          {/* Target Handle (input) */}
+          {shouldShowTargetHandle && (
+            <Handle
+              type="target"
+              position={Position.Left}
+              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
+            />
+          )}
 
-      {/* Node Content */}
-      <div className="p-3">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Icon className="size-4 flex-shrink-0" />
-            <span className="font-mono text-sm font-medium truncate">{data.name}</span>
-          </div>
-          <div className={cn('size-2 rounded-full flex-shrink-0', statusColors[data.status])} />
-        </div>
+          {/* Node Content */}
+          <div className="p-3">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Icon className="size-4 flex-shrink-0" />
+                <span className="font-mono text-sm font-medium truncate">{data.name}</span>
+              </div>
+              <div className={cn('size-2 rounded-full flex-shrink-0', statusColors[data.status])} />
+            </div>
 
-        {/* Type Badge */}
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
-          {data.type}
-        </Badge>
-
-        {/* Metrics */}
-        {(data.lastDuration || data.lastCost) && (
-          <div className="mt-2 flex gap-2 text-[10px] text-gray-400">
-            {data.lastDuration && <span>{data.lastDuration}s</span>}
-            {data.lastCost && <span>${data.lastCost.toFixed(2)}</span>}
-          </div>
-        )}
-
-        {/* Impact Level Indicator */}
-        {data.impactLevel && data.impactLevel !== 'none' && (
-          <div className="mt-2">
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-[10px] px-1.5 py-0.5',
-                data.impactLevel === 'upstream' && 'border-yellow-500 text-yellow-500',
-                data.impactLevel === 'downstream' && 'border-orange-500 text-orange-500'
-              )}
-            >
-              {data.impactLevel}
+            {/* Type Badge */}
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+              {data.type}
             </Badge>
-          </div>
-        )}
 
-        {/* Columns Section */}
-        {showColumnsSection && (
-          <div className="mt-2 border-t border-gray-700 pt-2">
-            <button
-              onClick={() => setColumnsExpanded(!columnsExpanded)}
-              className="flex items-center justify-between w-full text-xs text-gray-400 hover:text-white transition-colors"
-            >
-              <span className="flex items-center gap-1">
-                <Table className="size-3" />
-                Columns ({columns.length})
-              </span>
-              {columnsExpanded ? (
-                <ChevronUp className="size-3" />
-              ) : (
-                <ChevronDown className="size-3" />
-              )}
-            </button>
+            {/* Metrics */}
+            {(data.lastDuration || data.lastCost) && (
+              <div className="mt-2 flex gap-2 text-[10px] text-slate-300">
+                {data.lastDuration && <span>{data.lastDuration}s</span>}
+                {data.lastCost && <span>${data.lastCost.toFixed(2)}</span>}
+              </div>
+            )}
 
-            {columnsExpanded && (
-              <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-                {columns.map((col: { name: string; type: string }, idx: number) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between text-[10px] px-2 py-1 bg-[#1a1d23] rounded"
-                  >
-                    <span className="font-mono text-white truncate">{col.name}</span>
-                    <span className="text-gray-500 ml-2 flex-shrink-0">{col.type}</span>
+            {/* Impact Level Indicator */}
+            {data.impactLevel && data.impactLevel !== 'none' && (
+              <div className="mt-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'text-[10px] px-1.5 py-0.5',
+                    data.impactLevel === 'upstream' && 'border-yellow-500 text-yellow-500',
+                    data.impactLevel === 'downstream' && 'border-orange-500 text-orange-500'
+                  )}
+                >
+                  {data.impactLevel}
+                </Badge>
+              </div>
+            )}
+
+            {/* Columns Section */}
+            {showColumnsSection && (
+              <div className="mt-2 border-t border-slate-600 pt-2">
+                <button
+                  onClick={() => setColumnsExpanded(!columnsExpanded)}
+                  className="flex items-center justify-between w-full text-xs text-slate-300 hover:text-white transition-colors"
+                >
+                  <span className="flex items-center gap-1">
+                    <Table className="size-3" />
+                    Columns ({columns.length})
+                  </span>
+                  {columnsExpanded ? (
+                    <ChevronUp className="size-3" />
+                  ) : (
+                    <ChevronDown className="size-3" />
+                  )}
+                </button>
+
+                {columnsExpanded && (
+                  <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                    {columns.map((col: { name: string; type: string }, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-[10px] px-2 py-1 bg-slate-950 rounded"
+                      >
+                        <span className="font-mono text-white truncate">{col.name}</span>
+                        <span className="text-slate-400 ml-2 flex-shrink-0">{col.type}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
 
-      {/* Source Handle (output) */}
-      {shouldShowSourceHandle && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-        />
-      )}
-    </div>
+          {/* Source Handle (output) */}
+          {shouldShowSourceHandle && (
+            <Handle
+              type="source"
+              position={Position.Right}
+              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
+            />
+          )}
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48 bg-slate-900 border-slate-600 text-slate-50">
+        <ContextMenuLabel className="font-mono text-xs">{data.name}</ContextMenuLabel>
+        <ContextMenuSeparator className="bg-slate-600" />
+        <ContextMenuItem onSelect={() => data.onInspectNode?.(props.id)}>
+          <Info className="size-4" />
+          Open inspector panel
+        </ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() => data.onToggleNodeSelection?.(props.id, !selected)}
+          disabled={!data.onToggleNodeSelection}
+        >
+          <MousePointer className="size-4" />
+          {selected ? 'Deselect node' : 'Select node'}
+        </ContextMenuItem>
+        <ContextMenuSeparator className="bg-slate-600" />
+        <ContextMenuItem
+          variant="destructive"
+          onSelect={() => data.onRemoveNode?.(props.id)}
+          disabled={!data.onRemoveNode}
+        >
+          <Trash2 className="size-4" />
+          Remove node
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
 export default memo(DbtNodeComponent);
+

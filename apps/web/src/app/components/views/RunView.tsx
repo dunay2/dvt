@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   Activity,
   Clock,
@@ -9,8 +10,10 @@ import {
   AlertCircle,
   Download,
 } from 'lucide-react';
+import { useMemo } from 'react';
 
-import { mockRun } from '../../data/mockData';
+import { resolveDataSource } from '../../services/config/dataSource';
+import { createRunsService } from '../../services/runs/runsService';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
@@ -20,24 +23,36 @@ import { Separator } from '../ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
 export function RunView() {
-  const run = mockRun;
+  const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
+  const runQuery = useQuery({
+    queryKey: ['run-view', 'first-run'],
+    queryFn: async () => {
+      const runs = await runsService.listRuns();
+      return runs[0] ?? null;
+    },
+  });
+  const run = runQuery.data;
+
+  if (!run) {
+    return <div className="h-full flex items-center justify-center text-muted-foreground">No run data yet</div>;
+  }
 
   const getStatusIcon = () => {
     switch (run.status) {
-      case 'success':
+      case 'completed':
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
       case 'failed':
         return <XCircle className="h-5 w-5 text-red-500" />;
       case 'running':
         return <Activity className="h-5 w-5 text-blue-500 animate-pulse" />;
       default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
+        return <Clock className="h-5 w-5 text-slate-400" />;
     }
   };
 
   const getStatusColor = () => {
     switch (run.status) {
-      case 'success':
+      case 'completed':
         return 'bg-green-500';
       case 'failed':
         return 'bg-red-500';
@@ -69,12 +84,12 @@ export function RunView() {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <GitBranch className="h-3 w-3" />
-                  <span>{run.gitBranch}</span>
+                  <span>{run.planId}</span>
                   <span className="text-xs">@{run.gitSha}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  <span>{new Date(run.startedAt).toLocaleString()}</span>
+                  <span>{new Date(run.startTime).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -177,16 +192,11 @@ export function RunView() {
                         <div className="space-y-1 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <span>{step.nodes.length} nodes</span>
-                            <span>•</span>
+                            <span>-</span>
                             <span>Concurrency: {step.policies.concurrency}</span>
                           </div>
                           {step.duration && (
                             <div>Duration: {(step.duration / 1000).toFixed(2)}s</div>
-                          )}
-                          {step.startedAt && (
-                            <div className="text-xs">
-                              Started: {new Date(step.startedAt).toLocaleTimeString()}
-                            </div>
                           )}
                         </div>
 
@@ -269,7 +279,7 @@ export function RunView() {
                   <div>[10:35:12] Starting run...</div>
                   <div>[10:35:14] Running stg_orders...</div>
                   <div>[10:35:16] stg_orders completed (2.3s)</div>
-                  <div className="animate-pulse">▌</div>
+                  <div className="animate-pulse">|</div>
                 </div>
               </TabsContent>
 
@@ -347,3 +357,4 @@ export function RunView() {
     </div>
   );
 }
+

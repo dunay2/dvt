@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@dvt/contracts": "workspace:*",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "@emotion/react": "11.14.0",

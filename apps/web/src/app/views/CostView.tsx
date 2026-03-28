@@ -51,9 +51,9 @@ const warehouseUsage = [
 
 export default function CostView() {
   return (
-    <div className="h-full bg-[#1a1d23] flex flex-col">
+    <div className="h-full bg-slate-950 flex flex-col">
       {/* Header */}
-      <div className="bg-[#0f1116] border-b border-gray-800 px-6 py-4">
+      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <DollarSign className="size-6 text-green-400" />
@@ -61,7 +61,7 @@ export default function CostView() {
           </div>
           <div className="flex gap-2">
             <Select defaultValue="7d">
-              <SelectTrigger className="w-[150px] bg-[#1a1d23] border-gray-700">
+              <SelectTrigger className="w-[150px] bg-slate-950 border-slate-600">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -71,7 +71,7 @@ export default function CostView() {
               </SelectContent>
             </Select>
             <Select defaultValue="dev">
-              <SelectTrigger className="w-[150px] bg-[#1a1d23] border-gray-700">
+              <SelectTrigger className="w-[150px] bg-slate-950 border-slate-600">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -89,7 +89,7 @@ export default function CostView() {
         <div className="p-6 space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-4 gap-4">
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className="bg-slate-900 border-slate-700 p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 text-green-400">
                   <DollarSign className="size-5" />
@@ -100,10 +100,10 @@ export default function CostView() {
                   <span>12%</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-400">Total Cost (7d)</p>
+              <p className="text-sm text-slate-300">Total Cost (7d)</p>
             </Card>
 
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className="bg-slate-900 border-slate-700 p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 text-blue-400">
                   <Activity className="size-5" />
@@ -114,33 +114,33 @@ export default function CostView() {
                   <span>8%</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-400">Runs (7d)</p>
+              <p className="text-sm text-slate-300">Runs (7d)</p>
             </Card>
 
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className="bg-slate-900 border-slate-700 p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 text-purple-400">
                   <DollarSign className="size-5" />
                   <span className="text-2xl font-semibold">$0.49</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-400">Avg Cost per Run</p>
+              <p className="text-sm text-slate-300">Avg Cost per Run</p>
             </Card>
 
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className="bg-slate-900 border-slate-700 p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 text-yellow-400">
                   <AlertTriangle className="size-5" />
                   <span className="text-2xl font-semibold">2</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-400">Cost Alerts</p>
+              <p className="text-sm text-slate-300">Cost Alerts</p>
             </Card>
           </div>
 
           {/* Charts */}
           <div className="grid grid-cols-2 gap-6">
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className="bg-slate-900 border-slate-700 p-4">
               <h3 className="font-semibold mb-4">Cost by Run</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={costByRun}>
@@ -149,8 +149,8 @@ export default function CostView() {
                   <YAxis stroke="#9ca3af" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0f1116',
-                      border: '1px solid #374151',
+                      backgroundColor: '#0f172a',
+                      border: '1px solid #334155',
                       borderRadius: '8px',
                     }}
                   />
@@ -159,7 +159,7 @@ export default function CostView() {
               </ResponsiveContainer>
             </Card>
 
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className="bg-slate-900 border-slate-700 p-4">
               <h3 className="font-semibold mb-4">Warehouse Usage</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={warehouseUsage}>
@@ -168,8 +168,8 @@ export default function CostView() {
                   <YAxis stroke="#9ca3af" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0f1116',
-                      border: '1px solid #374151',
+                      backgroundColor: '#0f172a',
+                      border: '1px solid #334155',
                       borderRadius: '8px',
                     }}
                   />
@@ -180,7 +180,7 @@ export default function CostView() {
           </div>
 
           {/* Cost by Model */}
-          <Card className="bg-[#0f1116] border-gray-800 p-4">
+          <Card className="bg-slate-900 border-slate-700 p-4">
             <h3 className="font-semibold mb-4">Cost by Model</h3>
             <div className="space-y-2">
               {costByModel
@@ -188,7 +188,7 @@ export default function CostView() {
                 .map((model) => (
                   <div
                     key={model.name}
-                    className="flex items-center justify-between p-3 bg-[#1a1d23] border border-gray-800 rounded"
+                    className="flex items-center justify-between p-3 bg-slate-950 border border-slate-700 rounded"
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <code className="font-mono text-sm font-medium">{model.name}</code>
@@ -200,7 +200,7 @@ export default function CostView() {
                       </div>
                     </div>
                     <div className="flex items-center gap-6 text-sm">
-                      <div className="text-gray-400">{model.duration}s</div>
+                      <div className="text-slate-300">{model.duration}s</div>
                       <div className="text-green-400 font-semibold">${model.cost.toFixed(2)}</div>
                     </div>
                   </div>
@@ -209,17 +209,17 @@ export default function CostView() {
           </Card>
 
           {/* Alerts */}
-          <Card className="bg-[#0f1116] border-gray-800 p-4">
+          <Card className="bg-slate-900 border-slate-700 p-4">
             <h3 className="font-semibold mb-4">Cost Alerts</h3>
             <div className="space-y-2">
               <div className="flex items-start gap-3 p-3 bg-yellow-900/20 border border-yellow-800 rounded">
                 <AlertTriangle className="size-5 text-yellow-400 mt-0.5" />
                 <div className="flex-1">
                   <div className="font-medium mb-1">fct_sales exceeded cost threshold</div>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-slate-300">
                     Model cost $0.45 exceeded the threshold of $0.40 on last run
                   </p>
-                  <div className="text-xs text-gray-500 mt-2">2 hours ago</div>
+                  <div className="text-xs text-slate-400 mt-2">2 hours ago</div>
                 </div>
                 <Badge className="bg-yellow-600">Warning</Badge>
               </div>
@@ -227,10 +227,10 @@ export default function CostView() {
                 <AlertTriangle className="size-5 text-yellow-400 mt-0.5" />
                 <div className="flex-1">
                   <div className="font-medium mb-1">Warehouse usage spike detected</div>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-slate-300">
                     Usage increased by 45% at 12:00 PM compared to baseline
                   </p>
-                  <div className="text-xs text-gray-500 mt-2">4 hours ago</div>
+                  <div className="text-xs text-slate-400 mt-2">4 hours ago</div>
                 </div>
                 <Badge className="bg-yellow-600">Warning</Badge>
               </div>
@@ -238,9 +238,9 @@ export default function CostView() {
           </Card>
 
           {/* OpenTelemetry Traces (Placeholder) */}
-          <Card className="bg-[#0f1116] border-gray-800 p-4">
+          <Card className="bg-slate-900 border-slate-700 p-4">
             <h3 className="font-semibold mb-4">OpenTelemetry Traces</h3>
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-400">
               <Activity className="size-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm">
                 Trace data will appear here when OpenTelemetry is configured
@@ -252,3 +252,4 @@ export default function CostView() {
     </div>
   );
 }
+

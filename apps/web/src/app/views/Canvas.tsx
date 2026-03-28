@@ -14,31 +14,30 @@ import {
   type NodeTypes,
 } from '@xyflow/react';
 import dagre from 'dagre';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Maximize,
-  ZoomIn,
-  ZoomOut,
   GitBranch,
   Play,
   FileCheck,
   Target,
   Columns,
-  X,
+  PanelLeftOpen,
+  PanelRightOpen,
 } from 'lucide-react';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
-import type { DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import DbtExplorer from '../components/DbtExplorer';
 import InspectorPanel from '../components/InspectorPanel';
 import { PlanPreviewModal, ConfirmEdgeModal } from '../components/Modals';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
 import { Separator } from '../components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
-import { mockNodes, mockEdges, mockExecutionPlan } from '../data/mockDbtData';
+import { resolveDataSource } from '../services/config/dataSource';
+import { buildSessionRunContext, createPlansService } from '../services/plans/plansService';
+import { createWorkspaceService } from '../services/workspace/workspaceService';
 import { useAppStore } from '../stores/appStore';
 import { DbtNode, DbtNodeType } from '../types/dbt';
 
@@ -88,6 +87,9 @@ function getLayoutedElements(nodes: Node[], edges: Edge[]) {
 }
 
 function CanvasContent() {
+  const dataSourceMode = resolveDataSource();
+  const workspaceService = useMemo(() => createWorkspaceService(dataSourceMode), [dataSourceMode]);
+  const plansService = useMemo(() => createPlansService(dataSourceMode), [dataSourceMode]);
   const {
     focusMode,
     selectedNodes: selectedNodeIds,
@@ -99,13 +101,23 @@ function CanvasContent() {
     columnLevelLineageEnabled,
     toggleColumnLevelLineage,
     setCurrentPlan,
-    setCurrentRun,
+    currentPlan,
     userPermissions,
     setConsolePanelHeight,
+    consolePanelVisible,
+    toggleExplorerPanel,
+    toggleInspectorPanel,
+    toggleConsolePanel,
     explorerPanelVisible,
     inspectorPanelVisible,
     gridSize,
   } = useAppStore();
+  const graphSnapshotQuery = useQuery({
+    queryKey: ['workspace', 'graph'],
+    queryFn: () => workspaceService.getGraphSnapshot(),
+  });
+  const workspaceNodes = graphSnapshotQuery.data?.nodes ?? [];
+  const workspaceEdges = graphSnapshotQuery.data?.edges ?? [];
 
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [confirmEdgeModal, setConfirmEdgeModal] = useState<{
@@ -115,7 +127,7 @@ function CanvasContent() {
 
   // Convert mock nodes to React Flow nodes
   const initialNodes: Node[] = useMemo(() => {
-    return mockNodes.map((node, idx) => ({
+    return workspaceNodes.map((node, idx) => ({
       id: node.id,
       type: 'dbtNode',
       position: { x: (idx % 3) * 250, y: Math.floor(idx / 3) * 150 },
@@ -128,10 +140,10 @@ function CanvasContent() {
         showColumns: columnLevelLineageEnabled,
       },
     }));
-  }, [columnLevelLineageEnabled]);
+  }, [workspaceNodes, columnLevelLineageEnabled]);
 
   const initialEdges: Edge[] = useMemo(() => {
-    return mockEdges.map((edge) => ({
+    return workspaceEdges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
@@ -145,18 +157,23 @@ function CanvasContent() {
         height: 20,
       },
     }));
-  }, []);
+  }, [workspaceEdges]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
 
       // Find source and target nodes
-      const sourceNode = mockNodes.find((n) => n.id === connection.source);
-      const targetNode = mockNodes.find((n) => n.id === connection.target);
+      const sourceNode = workspaceNodes.find((n) => n.id === connection.source);
+      const targetNode = workspaceNodes.find((n) => n.id === connection.target);
 
       if (!sourceNode || !targetNode) return;
 
@@ -196,7 +213,7 @@ function CanvasContent() {
       // Store the connection for later
       (window as any).__pendingConnection = connection;
     },
-    [edges]
+    [edges, workspaceNodes]
   );
 
   const confirmEdgeCreation = useCallback(() => {
@@ -223,11 +240,24 @@ function CanvasContent() {
     setConfirmEdgeModal({ open: false, edge: null });
   }, [setEdges]);
 
-  const onNodeClick = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      setInspectorNode(node.id);
+  const handleInspectNode = useCallback(
+    (nodeId: string) => {
+      setInspectorNode(nodeId);
+      if (!focusMode && !inspectorPanelVisible) {
+        toggleInspectorPanel();
+      }
     },
-    [setInspectorNode]
+    [focusMode, inspectorPanelVisible, setInspectorNode, toggleInspectorPanel]
+  );
+
+  const handleNodeClick = useCallback(
+    (_event: unknown, node: Node) => {
+      // Keep the right panel in sync with normal node selection only when it is already open.
+      if (inspectorPanelVisible && !focusMode) {
+        setInspectorNode(node.id);
+      }
+    },
+    [focusMode, inspectorPanelVisible, setInspectorNode]
   );
 
   const onSelectionChange = useCallback(
@@ -289,29 +319,56 @@ function CanvasContent() {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedNodeIds.length === 0) {
-      toast.error('No nodes selected');
-      return;
-    }
+  const handleToggleNodeSelection = useCallback(
+    (nodeId: string, shouldSelect: boolean) => {
+      if (shouldSelect) {
+        if (selectedNodeIds.includes(nodeId)) {
+          return;
+        }
+        setSelectedNodes([...selectedNodeIds, nodeId]);
+        return;
+      }
 
-    setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
-    setEdges((eds) =>
-      eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target))
-    );
-    setSelectedNodes([]);
-    toast.success(`Removed ${selectedNodeIds.length} node(s)`);
-  }, [selectedNodeIds, setNodes, setEdges, setSelectedNodes]);
+      setSelectedNodes(selectedNodeIds.filter((id) => id !== nodeId));
+    },
+    [selectedNodeIds, setSelectedNodes]
+  );
 
-  const handlePlan = useCallback(() => {
+  const handleRemoveNode = useCallback(
+    (nodeId: string) => {
+      const nodeName = nodes.find((node) => node.id === nodeId)?.data?.name ?? nodeId;
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setSelectedNodes(selectedNodeIds.filter((id) => id !== nodeId));
+
+      if (inspectorNodeId === nodeId) {
+        setInspectorNode(null);
+      }
+
+      toast.success(`Removed ${nodeName}`);
+    },
+    [nodes, setNodes, setEdges, setSelectedNodes, selectedNodeIds, inspectorNodeId, setInspectorNode]
+  );
+
+  const handlePlan = useCallback(async () => {
     if (!userPermissions.canPlan) {
       toast.error('You do not have permission to create plans');
       return;
     }
-    setCurrentPlan(mockExecutionPlan);
-    setPlanModalOpen(true);
-    toast.success('Execution plan created');
-  }, [userPermissions, setCurrentPlan]);
+    try {
+      const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodes.map((node) => node.id);
+      const plan = await plansService.previewPlan({
+        selectedNodeIds: selectedForPlan,
+        context: buildSessionRunContext(`run_ui_${Date.now()}`),
+      });
+      setCurrentPlan(plan);
+      setPlanModalOpen(true);
+      toast.success('Execution plan created');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create execution plan';
+      toast.error(message);
+    }
+  }, [plansService, selectedNodeIds, setCurrentPlan, userPermissions.canPlan, workspaceNodes]);
 
   const handleStartRun = useCallback(() => {
     if (!userPermissions.canRun) {
@@ -321,8 +378,12 @@ function CanvasContent() {
     // This would normally start a run via API
     toast.success('Run started');
     setPlanModalOpen(false);
-    setConsolePanelHeight(200);
-  }, [userPermissions, setConsolePanelHeight]);
+    if (!consolePanelVisible) {
+      toggleConsolePanel();
+    } else {
+      setConsolePanelHeight(160);
+    }
+  }, [userPermissions, consolePanelVisible, toggleConsolePanel, setConsolePanelHeight]);
 
   // Update nodes with impact overlay
   const nodesWithImpact = useMemo(() => {
@@ -332,6 +393,9 @@ function CanvasContent() {
         data: {
           ...node.data,
           showColumns: columnLevelLineageEnabled,
+          onInspectNode: handleInspectNode,
+          onRemoveNode: handleRemoveNode,
+          onToggleNodeSelection: handleToggleNodeSelection,
         },
       }));
     }
@@ -386,11 +450,23 @@ function CanvasContent() {
             ? 'downstream'
             : 'none',
         showColumns: columnLevelLineageEnabled,
+        onInspectNode: handleInspectNode,
+        onRemoveNode: handleRemoveNode,
+        onToggleNodeSelection: handleToggleNodeSelection,
       },
     }));
-  }, [nodes, edges, impactOverlayEnabled, selectedNodeIds, columnLevelLineageEnabled]);
+  }, [
+    nodes,
+    edges,
+    impactOverlayEnabled,
+    selectedNodeIds,
+    columnLevelLineageEnabled,
+    handleInspectNode,
+    handleRemoveNode,
+    handleToggleNodeSelection,
+  ]);
 
-  const inspectorNode = mockNodes.find((n) => n.id === inspectorNodeId);
+  const inspectorNode = workspaceNodes.find((n) => n.id === inspectorNodeId);
 
   return (
     <>
@@ -398,8 +474,8 @@ function CanvasContent() {
         {/* Left: Explorer */}
         {!focusMode && explorerPanelVisible && (
           <>
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-              <DbtExplorer nodes={mockNodes} />
+            <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
+              <DbtExplorer nodes={workspaceNodes} onHide={toggleExplorerPanel} />
             </ResizablePanel>
             <ResizableHandle />
           </>
@@ -407,11 +483,19 @@ function CanvasContent() {
 
         {/* Center: Canvas */}
         <ResizablePanel
-          defaultSize={focusMode || !explorerPanelVisible || !inspectorPanelVisible ? 100 : 55}
+          defaultSize={
+            focusMode
+              ? 100
+              : explorerPanelVisible && inspectorPanelVisible
+                ? 63
+                : explorerPanelVisible || inspectorPanelVisible
+                  ? 80
+                  : 100
+          }
         >
-          <div className="h-full flex flex-col bg-[#1a1d23]">
+          <div className="h-full flex flex-col bg-slate-950">
             {/* Toolbar */}
-            <div className="h-12 bg-[#0f1116] border-b border-gray-800 flex items-center justify-between px-4">
+            <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4">
               <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
@@ -461,7 +545,7 @@ function CanvasContent() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handlePlan}>
+                <Button variant="outline" size="sm" onClick={() => void handlePlan()}>
                   <FileCheck className="size-4 mr-2" />
                   Plan
                 </Button>
@@ -472,47 +556,50 @@ function CanvasContent() {
               </div>
             </div>
 
-            {/* Selection Bar */}
-            {selectedNodeIds.length > 0 && (
-              <div className="h-10 bg-blue-900/30 border-b border-blue-700 flex items-center justify-between px-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Badge>{selectedNodeIds.length} selected</Badge>
-                  <span className="text-gray-300">
-                    {selectedNodeIds
-                      .map((id) => mockNodes.find((n) => n.id === id)?.name)
-                      .join(', ')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
-                    <X className="size-4 mr-1" />
-                    Remove
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedNodes([])}>
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            )}
-
             {/* React Flow Canvas */}
-            <div className="flex-1" onDrop={handleDrop} onDragOver={handleDragOver}>
+            <div className="flex-1 relative" onDrop={handleDrop} onDragOver={handleDragOver}>
+              {!focusMode && !explorerPanelVisible && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-slate-900/90 border-slate-600 text-slate-50 hover:bg-slate-950"
+                  onClick={toggleExplorerPanel}
+                  aria-label="Show explorer panel"
+                >
+                  <PanelLeftOpen className="size-4" />
+                </Button>
+              )}
+
+              {!focusMode && !inspectorPanelVisible && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-slate-900/90 border-slate-600 text-slate-50 hover:bg-slate-950"
+                  onClick={toggleInspectorPanel}
+                  aria-label="Show inspector panel"
+                >
+                  <PanelRightOpen className="size-4" />
+                </Button>
+              )}
+
               <ReactFlow
                 nodes={nodesWithImpact}
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
-                onNodeClick={onNodeClick}
+                onNodeClick={handleNodeClick}
                 onSelectionChange={onSelectionChange}
                 nodeTypes={nodeTypes}
                 fitView
-                className="bg-[#1a1d23]"
+                className="bg-slate-950"
               >
                 <Background color="#374151" gap={gridSize} />
-                <Controls className="bg-[#0f1116] border-gray-700" />
+                <Controls className="bg-slate-900 border-slate-600" />
                 <MiniMap
-                  className="bg-[#0f1116] border border-gray-700"
+                  className="bg-slate-900 border border-slate-600"
                   nodeColor={(node) => {
                     const type = (node.data as any).type;
                     if (type === 'SOURCE') return '#a855f7';
@@ -534,10 +621,10 @@ function CanvasContent() {
         {!focusMode && inspectorPanelVisible && (
           <>
             <ResizableHandle />
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+            <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
               <InspectorPanel
                 node={inspectorNode || null}
-                onClose={() => setInspectorNode(null)}
+                onHide={toggleInspectorPanel}
                 userPermissions={userPermissions}
               />
             </ResizablePanel>
@@ -549,7 +636,7 @@ function CanvasContent() {
       <PlanPreviewModal
         open={planModalOpen}
         onClose={() => setPlanModalOpen(false)}
-        plan={mockExecutionPlan}
+        plan={currentPlan}
         onStartRun={handleStartRun}
       />
 
@@ -570,3 +657,4 @@ export default function Canvas() {
     </ReactFlowProvider>
   );
 }
+

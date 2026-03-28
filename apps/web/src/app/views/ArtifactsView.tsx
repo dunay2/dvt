@@ -7,6 +7,10 @@ import { ScrollArea } from '../components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 export default function ArtifactsView() {
+  const panelClassName = 'bg-slate-900 border-slate-700 p-4 text-slate-50';
+  const tabTriggerClassName =
+    'text-slate-200 data-[state=active]:bg-[#101724] data-[state=active]:text-white';
+
   const artifacts = [
     {
       type: 'manifest.json',
@@ -52,9 +56,9 @@ export default function ArtifactsView() {
   };
 
   return (
-    <div className="h-full bg-[#1a1d23] flex flex-col">
+    <div className="h-full bg-slate-950 flex flex-col text-slate-50">
       {/* Header */}
-      <div className="bg-[#0f1116] border-b border-gray-800 px-6 py-4">
+      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FileText className="size-6 text-blue-400" />
@@ -76,16 +80,16 @@ export default function ArtifactsView() {
             {/* Artifacts List */}
             <div className="space-y-3">
               {artifacts.map((artifact) => (
-                <Card key={artifact.type} className="bg-[#0f1116] border-gray-800 p-4">
+                <Card key={artifact.type} className={panelClassName}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <div className="size-10 bg-blue-900/30 rounded flex items-center justify-center">
                         <FileText className="size-5 text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold mb-1">{artifact.type}</h3>
-                        <p className="text-sm text-gray-400 mb-2">{artifact.description}</p>
-                        <div className="flex gap-3 text-xs text-gray-500">
+                        <h3 className="font-semibold mb-1 text-slate-50">{artifact.type}</h3>
+                        <p className="text-sm text-slate-200 mb-2">{artifact.description}</p>
+                        <div className="flex gap-3 text-xs text-slate-300">
                           <span>Size: {artifact.size}</span>
                           <span>Updated: {new Date(artifact.lastUpdated).toLocaleString()}</span>
                           <span>SHA: {artifact.gitSha}</span>
@@ -108,23 +112,29 @@ export default function ArtifactsView() {
             </div>
 
             {/* Artifact Preview */}
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
+            <Card className={panelClassName}>
               <Tabs defaultValue="manifest">
-                <TabsList className="bg-[#1a1d23] border border-gray-800">
-                  <TabsTrigger value="manifest">manifest.json</TabsTrigger>
-                  <TabsTrigger value="run_results">run_results.json</TabsTrigger>
-                  <TabsTrigger value="catalog">catalog.json</TabsTrigger>
+                <TabsList className="bg-slate-950 border border-slate-700">
+                  <TabsTrigger value="manifest" className={tabTriggerClassName}>
+                    manifest.json
+                  </TabsTrigger>
+                  <TabsTrigger value="run_results" className={tabTriggerClassName}>
+                    run_results.json
+                  </TabsTrigger>
+                  <TabsTrigger value="catalog" className={tabTriggerClassName}>
+                    catalog.json
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="manifest" className="mt-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Preview: manifest.json</h3>
+                      <h3 className="font-semibold text-slate-50">Preview: manifest.json</h3>
                       <Button variant="outline" size="sm">
                         View Full File
                       </Button>
                     </div>
-                    <pre className="bg-[#0f1116] border border-gray-800 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
+                    <pre className="bg-slate-950 border border-slate-700 p-4 rounded font-mono text-xs text-slate-50 overflow-auto max-h-[500px]">
                       {JSON.stringify(manifestPreview, null, 2)}
                     </pre>
                   </div>
@@ -132,8 +142,8 @@ export default function ArtifactsView() {
 
                 <TabsContent value="run_results" className="mt-4">
                   <div className="space-y-3">
-                    <h3 className="font-semibold mb-4">Preview: run_results.json</h3>
-                    <pre className="bg-[#0f1116] border border-gray-800 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
+                    <h3 className="font-semibold mb-4 text-slate-50">Preview: run_results.json</h3>
+                    <pre className="bg-slate-950 border border-slate-700 p-4 rounded font-mono text-xs text-slate-50 overflow-auto max-h-[500px]">
                       {JSON.stringify(
                         {
                           metadata: {
@@ -161,8 +171,8 @@ export default function ArtifactsView() {
 
                 <TabsContent value="catalog" className="mt-4">
                   <div className="space-y-3">
-                    <h3 className="font-semibold mb-4">Preview: catalog.json</h3>
-                    <pre className="bg-[#0f1116] border border-gray-800 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
+                    <h3 className="font-semibold mb-4 text-slate-50">Preview: catalog.json</h3>
+                    <pre className="bg-slate-950 border border-slate-700 p-4 rounded font-mono text-xs text-slate-50 overflow-auto max-h-[500px]">
                       {JSON.stringify(
                         {
                           metadata: {
@@ -199,8 +209,8 @@ export default function ArtifactsView() {
               <div className="flex items-start gap-3">
                 <FileText className="size-5 text-blue-400 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold mb-1">About dbt Artifacts</h3>
-                  <p className="text-sm text-gray-400">
+                  <h3 className="font-semibold mb-1 text-blue-100">About dbt Artifacts</h3>
+                  <p className="text-sm text-blue-100/90">
                     dbt generates these JSON artifacts after each run. They contain metadata about
                     your project structure, execution results, and database catalog. DVT+ reads
                     these immutable artifacts to provide state-driven UI without executing SQL
@@ -215,3 +225,4 @@ export default function ArtifactsView() {
     </div>
   );
 }
+

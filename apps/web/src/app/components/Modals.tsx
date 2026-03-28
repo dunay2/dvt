@@ -45,15 +45,15 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl bg-[#1a1d23] border-gray-700 text-white">
+      <DialogContent className="max-w-3xl bg-slate-950 border-slate-600 text-slate-50">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-slate-50">
             Execution Plan Preview
             <Badge variant="outline" className="ml-2">
               Read-only
             </Badge>
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-slate-200">
             Plan is immutable. Review before starting run.
           </DialogDescription>
         </DialogHeader>
@@ -61,43 +61,43 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
         <ScrollArea className="max-h-[500px]">
           <div className="space-y-4">
             {/* Plan Metadata */}
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
-              <h3 className="text-sm font-medium mb-3">Plan Metadata</h3>
+            <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
+              <h3 className="text-sm font-medium mb-3 text-slate-50">Plan Metadata</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <span className="text-gray-400">Plan ID:</span>
+                  <span className="text-slate-300">Plan ID:</span>
                   <code className="ml-2 text-blue-400">{plan.planId}</code>
                 </div>
                 <div>
-                  <span className="text-gray-400">Version:</span>
+                  <span className="text-slate-300">Version:</span>
                   <span className="ml-2">{plan.planVersion}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Adapter:</span>
+                  <span className="text-slate-300">Adapter:</span>
                   <span className="ml-2">{plan.adapter}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Target:</span>
+                  <span className="text-slate-300">Target:</span>
                   <Badge variant="secondary" className="ml-2">
                     {plan.target}
                   </Badge>
                 </div>
                 <div>
-                  <span className="text-gray-400">Generated:</span>
+                  <span className="text-slate-300">Generated:</span>
                   <span className="ml-2 text-xs">
                     {new Date(plan.generatedAt).toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Est. Cost:</span>
+                  <span className="text-slate-300">Est. Cost:</span>
                   <span className="ml-2 text-green-400">${plan.estimatedCost?.toFixed(2)}</span>
                 </div>
               </div>
             </Card>
 
             {/* Capabilities */}
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
-              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-slate-50">
                 <Zap className="size-4 text-yellow-400" />
                 Capabilities
               </h3>
@@ -111,22 +111,22 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
             </Card>
 
             {/* Steps */}
-            <Card className="bg-[#0f1116] border-gray-800 p-4">
-              <h3 className="text-sm font-medium mb-3">Execution Steps</h3>
+            <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
+              <h3 className="text-sm font-medium mb-3 text-slate-50">Execution Steps</h3>
               <div className="space-y-3">
                 {plan.steps.map((step, idx) => (
                   <div key={step.id} className="border-l-2 border-blue-500 pl-3 py-2">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Step {idx + 1}</span>
-                        <span className="font-medium">{step.name}</span>
+                        <span className="text-xs text-slate-400">Step {idx + 1}</span>
+                        <span className="font-medium text-slate-50">{step.name}</span>
                         <Badge variant="secondary" className="text-xs">
                           {step.type}
                         </Badge>
                       </div>
-                      <span className="text-xs text-gray-400">{step.nodes.length} nodes</span>
+                      <span className="text-xs text-slate-300">{step.nodes.length} nodes</span>
                     </div>
-                    <div className="flex gap-4 text-xs text-gray-400">
+                    <div className="flex gap-4 text-xs text-slate-300">
                       {step.policies.timeout && (
                         <div className="flex items-center gap-1">
                           <Clock className="size-3" />
@@ -192,20 +192,20 @@ export function ConfirmEdgeModal({ open, onClose, edge, onConfirm }: ConfirmEdge
 
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-[#1a1d23] border-gray-700 text-white">
+      <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Dependency</AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-400">
+          <AlertDialogDescription className="text-slate-300">
             {getEdgeDescription()}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="my-4 p-3 bg-[#0f1116] border border-gray-800 rounded">
+        <div className="my-4 p-3 bg-slate-900 border border-slate-700 rounded">
           <div className="text-sm font-mono">
             <span className="text-blue-400">{edge.source}</span>
-            <span className="text-gray-500 mx-2">→</span>
+            <span className="text-slate-400 mx-2">{'->'}</span>
             <span className="text-green-400">{edge.target}</span>
           </div>
-          <div className="text-xs text-gray-500 mt-2">
+          <div className="text-xs text-slate-400 mt-2">
             Type:{' '}
             <Badge variant="outline" className="ml-1">
               {edge.type}
@@ -230,13 +230,13 @@ interface PermissionDeniedModalProps {
 export function PermissionDeniedModal({ open, onClose, action }: PermissionDeniedModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-[#1a1d23] border-gray-700 text-white">
+      <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-red-400">
             <XCircle className="size-5" />
             Permission Denied
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-400">
+          <AlertDialogDescription className="text-slate-300">
             You do not have permission to {action}. Please contact your administrator.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -256,13 +256,13 @@ interface NetworkDegradedModalProps {
 export function NetworkDegradedModal({ open, onClose }: NetworkDegradedModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-[#1a1d23] border-gray-700 text-white">
+      <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-yellow-400">
             <AlertTriangle className="size-5" />
             Network Degraded
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-400">
+          <AlertDialogDescription className="text-slate-300">
             Connection to the server is degraded. You can continue in read-only mode, or retry the
             connection.
           </AlertDialogDescription>
@@ -285,13 +285,13 @@ interface RePlanRequiredModalProps {
 export function RePlanRequiredModal({ open, onClose, onRePlan }: RePlanRequiredModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-[#1a1d23] border-gray-700 text-white">
+      <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-orange-400">
             <AlertTriangle className="size-5" />
             Re-Plan Required (409 Conflict)
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-400">
+          <AlertDialogDescription className="text-slate-300">
             The current execution plan is outdated. The project state has changed. Please create a
             new plan.
           </AlertDialogDescription>
@@ -311,3 +311,4 @@ export function RePlanRequiredModal({ open, onClose, onRePlan }: RePlanRequiredM
     </AlertDialog>
   );
 }
+

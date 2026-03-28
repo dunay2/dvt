@@ -11,44 +11,61 @@ expected_outcome:
   - real backend health state is always visible
   - mock and API modes are explicitly separated
   - store responsibilities are decomposed by domain
-  - core flow (Plan → Run → Monitor) works with real data
+  - core flow (Plan -> Run -> Monitor) works with real data
   - secondary views activate progressively via feature flags
+  - dbt plan lifecycle (create, import, execute) is available through typed contracts
+  - plugin-driven execution supports dbt explorer and Snowflake runtime modes
+  - project deltas are persisted with snapshots and Git-linked audit history
 tasks:
   - task_id: F-01
     priority: P0
-    status: queued
+    status: in_progress
     objective:
-      clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify
+      clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify
       secondary controls into a contextual menu.
     dependency: none
     target:
       Shell navigation is icon-only with tooltips. No persistent sidebar text labels. TopBar
       secondary controls are collapsed into a single contextual menu. Canvas area gains visible
       vertical space.
+    notes: |
+      LeftNavigation.tsx already icon-only with tooltips (58 lines, no persistent text labels).
+      Pending: unify TopAppBar secondary controls (view toggles, grid spacing, etc.) into a single
+      contextual menu. Currently these controls are inline in TopAppBar.tsx (~244 lines).
 
   - task_id: F-02
     priority: P0
-    status: queued
+    status: done
     objective:
       implement a typed API client covering the existing health endpoints (healthz, readyz, version,
       db/ready).
     dependency: none
     target:
       app/services/platform-client.ts with typed request/response shapes and error handling. No mock
-      fallback in this client — it talks to real backend only.
+      fallback in this client - it talks to real backend only.
+    notes: |
+      Completed. services/platform/platformClient.ts + types.ts fully implemented.
+      Wraps services/api/createApiClient.ts (base HTTP client with session headers).
+      Handles /healthz (required), /readyz + /version + /db/ready (optional with graceful
+      403/404/405 handling). PlatformHealthSnapshot type covers all responses.
 
   - task_id: F-03
     priority: P0
-    status: queued
+    status: done
     objective: wire real backend health state into the top bar and a global degraded/offline banner.
     dependency: F-02
     target:
       TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
       offline states with retry and backoff. No mock connectivity state anywhere in the shell.
+    notes: |
+      Completed. components/GlobalStatusBanner.tsx renders ok/degraded/offline from real
+      PlatformHealthSnapshot. TopAppBar.tsx displays real connection status indicator.
+      queries/usePlatformHealthQuery.ts polls every 15s via TanStack Query and derives
+      ConnectionStatus (ok/degraded/offline) from the snapshot.
 
   - task_id: F-04
     priority: P1
-    status: queued
+    status: done
     objective:
       introduce a VITE_DATA_SOURCE=mock|api environment flag and separate data layers so views do
       not consume mock data directly.
@@ -56,10 +73,16 @@ tasks:
     target:
       Feature flag documented. Mock data isolated to app/data/. Views consume app/services/* and
       typed view-models. Both modes runnable without code changes.
+    notes: |
+      Completed. services/config/dataSource.ts implements resolveDataSource() reading
+      VITE_DATA_SOURCE. services/runs/runsService.ts and services/plans/plansService.ts both
+      implement mock/api factory pattern via createRunsService(mode) / createPlansService(mode).
+      Remaining gap: response types (ExecutionPlan, Run) are dbt-specific frontend types, not
+      engine contracts — a DTO mapper layer is needed before real API integration (tracked under F-07).
 
   - task_id: F-05
     priority: P1
-    status: queued
+    status: in_progress
     objective:
       decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore,
       graphStore, runStore, statusStore).
@@ -67,21 +90,30 @@ tasks:
     target:
       Each store has a single declared responsibility. Cross-store reads are explicit. No store
       reads mock data directly.
+    notes: |
+      Partially done. stores/sessionStore.ts extracted (tenantId, projectId, environmentId,
+      targetAdapter, buildRunContext). Already consumed by createApiClient.ts for session headers.
+      Remaining: shellStore, graphStore, runStore, statusStore still in monolithic appStore.ts.
+      highlightedNodes in appStore is defined but never consumed — dead state, candidate for cleanup.
 
   - task_id: F-06
     priority: P1
-    status: queued
+    status: in_progress
     objective:
       introduce TanStack Query as the data-fetching layer and define query/mutation patterns for
       health, plan, and run domains.
     dependency: F-05
     target:
       TanStack Query installed and configured. Health queries wired. Invalidation strategy
-      documented per domain. Views use useQuery/useMutation — no ad-hoc fetch calls.
+      documented per domain. Views use useQuery/useMutation - no ad-hoc fetch calls.
+    notes: |
+      Partially done. TanStack Query installed (@tanstack/react-query ^5.90.21) and configured
+      in Root.tsx (QueryClientProvider). usePlatformHealthQuery.ts is wired and working.
+      Pending: plan and run domain queries/mutations, invalidation strategy documentation.
 
   - task_id: F-07
     priority: P2
-    status: queued
+    status: in_progress
     objective:
       define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend
       is ready before backend endpoints land.
@@ -90,12 +122,19 @@ tasks:
       app/types/plan.ts and app/types/run.ts define request/response shapes for POST /plans/preview,
       POST /runs, GET /runs/:id, GET /runs, GET /runs/:id/events. Reviewed against backend contract
       owners.
+    notes: |
+      Partially done. types/engine.ts re-exports PlanRef, RunContext, RunStatus, RunStatusSnapshot,
+      RunEvent, EngineRunRef directly from @dvt/contracts — fully aligned with backend.
+      Input types (StartRunInput, PlanPreviewInput) are complete and use engine contracts.
+      Gap: response types for listRuns (returns Run[] dbt type) and previewPlan (returns
+      ExecutionPlan dbt type) are not aligned with engine response contracts. A DTO mapper layer
+      is needed: RunStatusSnapshot → Run (view-model) and PlanRef/steps → ExecutionPlan.
 
   - task_id: F-08
     priority: P2
     status: queued
     objective:
-      integrate the Plan → Run core flow from canvas selection through to run start using real API
+      integrate the Plan -> Run core flow from canvas selection through to run start using real API
       when available, with a typed adapter for mock when not.
     dependency: F-07
     target:
@@ -107,7 +146,7 @@ tasks:
     priority: P2
     status: queued
     objective:
-      wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
+      wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
     dependency: F-08
     target:
       RunsView shows real run list. RunView shows real run detail. Status updates via polling or SSE
@@ -135,6 +174,61 @@ tasks:
       ArtifactsView and DiffView work on real data. Level-C views (Lineage, Cost, Plugins, Admin)
       are hidden by default and activatable by role or flag. No mock data in any active view.
 
+  - task_id: F-12
+    priority: P1
+    status: queued
+    objective:
+      define canonical frontend contracts for plugin capabilities including workspace.import,
+      workspace.prepare, plan.preview, run.start, run.observe, artifact.sync, and node.adapt.
+    dependency: F-06
+    target:
+      Typed interfaces and capability registry are documented and implemented in app/services and
+      app/types. UI behavior is driven by capabilities, not tool-specific hardcoding.
+
+  - task_id: F-13
+    priority: P2
+    status: queued
+    objective:
+      implement dbt explorer plugin baseline with source/model/test/exposure navigation plus project
+      import/export and contextual node actions.
+    dependency: F-12
+    target:
+      Explorer panel is provided by dbt plugin contract, supports import/export flow, and exposes
+      audit-friendly node operations without global noisy controls.
+
+  - task_id: F-14
+    priority: P2
+    status: queued
+    objective:
+      deliver dbt plan lifecycle end-to-end with create plan, import existing plan/project state,
+      preview immutable plan, and execute through run.start.
+    dependency: F-13
+    target:
+      Users can create/import/execute dbt plans from UI with typed validation, permission gating,
+      and canonical run events visible in Runs/Console views.
+
+  - task_id: F-15
+    priority: P2
+    status: queued
+    objective:
+      implement Snowflake runtime plugin with two modes with direct task/procedure execution and
+      repository DDL generation for external apply workflows.
+    dependency: F-12
+    target:
+      Snowflake plugin can prepare runtime artifacts and execute directly or emit deterministic DDL
+      into repo, both producing the same canonical audit/run contracts.
+
+  - task_id: F-16
+    priority: P2
+    status: queued
+    objective:
+      persist and expose project deltas with immutable snapshots, timeline messages, and Git linkage
+      to support before/after auditability.
+    dependency: F-14
+    target:
+      Diff and Artifacts surfaces can query historical snapshots and deltas, linked to commit refs
+      when available, with reproducible project state transitions.
+
 dependency_notes: |
   - F-01, F-02, F-04 are independent and can start in parallel.
   - F-03 depends on F-02.
@@ -145,4 +239,9 @@ dependency_notes: |
   - F-09 depends on F-08 and is blocked until backend delivers GET /runs and GET /runs/:id.
   - F-10 depends on F-09 and is blocked until backend delivers GET /runs/:id/events.
   - F-11 depends on F-10 and requires artifact and lineage endpoints from backend.
+  - F-12 depends on F-06 and defines plugin capability contracts for all tool adapters.
+  - F-13 depends on F-12 and introduces the dbt explorer plugin baseline.
+  - F-14 depends on F-13 and delivers create/import/execute dbt plan lifecycle.
+  - F-15 depends on F-12 and introduces Snowflake runtime modes (direct or DDL-to-repo).
+  - F-16 depends on F-14 and captures deltas/snapshots with Git-linked auditability.
   - F-08 through F-11 coordinate with Lane C (admission) and Lane D (scale/GTM) for API surface readiness.

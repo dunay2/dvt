@@ -32,9 +32,9 @@ export default function LineageView() {
   ];
 
   return (
-    <div className="h-full bg-[#1a1d23] flex flex-col">
+    <div className="h-full bg-slate-950 flex flex-col">
       {/* Header */}
-      <div className="bg-[#0f1116] border-b border-gray-800 px-6 py-4">
+      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <GitGraph className="size-6 text-purple-400" />
@@ -44,12 +44,12 @@ export default function LineageView() {
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-300" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search models, columns..."
-              className="pl-10 bg-[#1a1d23] border-gray-700"
+              className="pl-10 bg-slate-950 border-slate-600"
             />
           </div>
 
@@ -68,15 +68,15 @@ export default function LineageView() {
       </div>
 
       {/* Breadcrumb */}
-      <div className="bg-[#0f1116] border-b border-gray-800 px-6 py-2">
+      <div className="bg-slate-900 border-b border-slate-700 px-6 py-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-400">Path:</span>
+          <span className="text-slate-300">Path:</span>
           <code className="text-blue-400">src_erp_orders</code>
-          <ArrowRight className="size-3 text-gray-500" />
+          <ArrowRight className="size-3 text-slate-400" />
           <code className="text-blue-400">stg_orders</code>
-          <ArrowRight className="size-3 text-gray-500" />
+          <ArrowRight className="size-3 text-slate-400" />
           <code className="text-green-400 font-semibold">fct_sales</code>
-          <ArrowRight className="size-3 text-gray-500" />
+          <ArrowRight className="size-3 text-slate-400" />
           <code className="text-pink-400">exposure_powerbi_sales</code>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function LineageView() {
           {!columnLevel ? (
             // Model-level lineage
             <div className="max-w-4xl mx-auto">
-              <Card className="bg-[#0f1116] border-gray-800 p-6">
+              <Card className="bg-slate-900 border-slate-700 p-6">
                 <h2 className="font-semibold mb-4 flex items-center gap-2">
                   <Table className="size-5" />
                   Model-Level Lineage: fct_sales
@@ -96,7 +96,7 @@ export default function LineageView() {
                 <div className="space-y-8">
                   {/* Level 0: Sources */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-3">LEVEL 0 - SOURCES</div>
+                    <div className="text-xs text-slate-400 mb-3">LEVEL 0 - SOURCES</div>
                     <div className="flex gap-3">
                       {modelLineage
                         .filter((n) => n.level === 0)
@@ -115,12 +115,12 @@ export default function LineageView() {
                   </div>
 
                   <div className="flex justify-center">
-                    <ArrowRight className="size-6 text-gray-500 rotate-90" />
+                    <ArrowRight className="size-6 text-slate-400 rotate-90" />
                   </div>
 
                   {/* Level 1: Staging */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-3">LEVEL 1 - STAGING & DIMENSIONS</div>
+                    <div className="text-xs text-slate-400 mb-3">LEVEL 1 - STAGING & DIMENSIONS</div>
                     <div className="flex gap-3">
                       {modelLineage
                         .filter((n) => n.level === 1)
@@ -136,51 +136,51 @@ export default function LineageView() {
                   </div>
 
                   <div className="flex justify-center">
-                    <ArrowRight className="size-6 text-gray-500 rotate-90" />
+                    <ArrowRight className="size-6 text-slate-400 rotate-90" />
                   </div>
 
                   {/* Level 2: Facts */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-3">LEVEL 2 - FACTS</div>
+                    <div className="text-xs text-slate-400 mb-3">LEVEL 2 - FACTS</div>
                     <Card className="bg-green-900/30 border-green-500 border-2 p-4">
                       <Badge className="mb-2 bg-green-600">CURRENT</Badge>
                       <div className="font-mono text-lg font-semibold">fct_sales</div>
-                      <div className="text-sm text-gray-400 mt-2">Sales fact table</div>
+                      <div className="text-sm text-slate-300 mt-2">Sales fact table</div>
                     </Card>
                   </div>
 
                   <div className="flex justify-center">
-                    <ArrowRight className="size-6 text-gray-500 rotate-90" />
+                    <ArrowRight className="size-6 text-slate-400 rotate-90" />
                   </div>
 
                   {/* Level 3: Exposures */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-3">LEVEL 3 - EXPOSURES</div>
+                    <div className="text-xs text-slate-400 mb-3">LEVEL 3 - EXPOSURES</div>
                     <Card className="bg-pink-900/30 border-pink-500 p-3">
                       <Badge variant="secondary" className="mb-2 text-xs">
                         EXPOSURE
                       </Badge>
                       <div className="font-mono text-sm">exposure_powerbi_sales</div>
-                      <div className="text-xs text-gray-400 mt-1">PowerBI Sales Dashboard</div>
+                      <div className="text-xs text-slate-300 mt-1">PowerBI Sales Dashboard</div>
                     </Card>
                   </div>
                 </div>
               </Card>
 
               {/* Impact Summary */}
-              <Card className="bg-[#0f1116] border-gray-800 p-4 mt-4">
+              <Card className="bg-slate-900 border-slate-700 p-4 mt-4">
                 <h3 className="font-semibold mb-3">Impact Summary</h3>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-gray-400">Upstream Dependencies</div>
+                    <div className="text-slate-300">Upstream Dependencies</div>
                     <div className="text-xl font-semibold mt-1">5</div>
                   </div>
                   <div>
-                    <div className="text-gray-400">Downstream Consumers</div>
+                    <div className="text-slate-300">Downstream Consumers</div>
                     <div className="text-xl font-semibold mt-1">1</div>
                   </div>
                   <div>
-                    <div className="text-gray-400">Exposures Affected</div>
+                    <div className="text-slate-300">Exposures Affected</div>
                     <div className="text-xl font-semibold mt-1">1</div>
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function LineageView() {
           ) : (
             // Column-level lineage
             <div className="max-w-4xl mx-auto">
-              <Card className="bg-[#0f1116] border-gray-800 p-6">
+              <Card className="bg-slate-900 border-slate-700 p-6">
                 <h2 className="font-semibold mb-4 flex items-center gap-2">
                   <Columns className="size-5" />
                   Column-Level Lineage: fct_sales
@@ -199,10 +199,10 @@ export default function LineageView() {
                   {columnLineage.map((lineage, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-3 bg-[#1a1d23] border border-gray-800 rounded"
+                      className="flex items-center gap-3 p-3 bg-slate-950 border border-slate-700 rounded"
                     >
                       <code className="text-sm text-blue-400">{lineage.from}</code>
-                      <ArrowRight className="size-4 text-gray-500" />
+                      <ArrowRight className="size-4 text-slate-400" />
                       <code className="text-sm text-green-400">{lineage.to}</code>
                     </div>
                   ))}
@@ -210,7 +210,7 @@ export default function LineageView() {
 
                 <div className="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded">
                   <h4 className="text-sm font-medium mb-2">Column: total_amount</h4>
-                  <div className="text-xs text-gray-400 space-y-1">
+                  <div className="text-xs text-slate-300 space-y-1">
                     <div>
                       <strong>Origin:</strong> src_erp_orders.total_amount (DECIMAL)
                     </div>
@@ -230,3 +230,4 @@ export default function LineageView() {
     </div>
   );
 }
+

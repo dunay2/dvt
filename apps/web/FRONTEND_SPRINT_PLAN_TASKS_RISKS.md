@@ -1,216 +1,175 @@
-# DVT+ Frontend — Task, Sprint, and Phase Execution Plan
+# DVT+ Frontend — Plan de Ejecución por Sprint
 
-## 1) Objective
-
-Deliver a cleaner, more organized DVT+ interface focused on real backend operation, maintaining the current architecture (Planner/Engine/State/UI) and a state-driven approach.
-
-## 2) Execution Approach
-
-- Horizon: 4 sprints.
-- Suggested duration: 2 weeks per sprint.
-- Strategy: start with visual base and connectivity, then core flow, then observability and scaling.
-
-## 3) Clear Phases
-
-### Phase A — UX Foundation + Minimal Integration
-
-Sprints: 1
-Goal: Clean up shell and connect to real platform states.
-
-### Phase B — Core Operational Flow
-
-Sprints: 2
-Goal: Consolidate Canvas → Plan → Run with real contracts or transitional adapter.
-
-### Phase C — Monitoring and Robustness
-
-Sprints: 3
-Goal: Timeline, useful console, network and error resilience.
-
-### Phase D — Scalability and Controlled Expansion
-
-Sprints: 4
-Goal: Stable experience with large graphs and gradual activation of advanced views.
+> v2 — actualizado 2026-03-27
 
 ---
 
-## 4) Detailed Plan per Sprint (Concrete Tasks)
+## 1. Objetivo
 
-### Sprint 1 — Clean and Connected Base
-
-**Sprint Objective:**
-Reduce visual noise and replace mock connectivity state with real backend state.
-
-**Tasks:**
-
-1. **Consolidate shell navigation and visual hierarchy**
-   - Remove redundant headers in sidebars.
-   - Keep left navigation icon-only + tooltip.
-   - Unify secondary controls in a contextual menu.
-2. **Implement platform client (health/version/db)**
-   - Endpoints: `/healthz`, `/readyz`, `/version`, `/db/ready`.
-   - Typed responses and error handling.
-3. **Real network/platform global state**
-   - Top bar with real state (ok/degraded/offline).
-   - Persistent banner in degraded/offline.
-   - Simple retry and backoff policy.
-4. **Separation of data sources `mock|api`**
-   - Feature flag `VITE_DATA_SOURCE`.
-   - Document operation mode.
-5. **Define canvas UX baseline (clean Design Mode)**
-   - No persistent metrics in design mode.
-   - Details only on hover/inspector.
-
-**Risks:**
-
-- Coupling UI to current health endpoint format may require rework later.
-- Confusing intermediate states if state matrix (offline/degraded/reconnecting) is not defined.
-
-**Opportunities:**
-
-- Immediate gain in perception of a "real" product.
-- Reusable base for any view depending on backend availability.
+Entregar una interfaz DVT+ operacional, conectada al backend real, manteniendo
+la arquitectura Planner/Engine/State/UI y el enfoque state-driven.
 
 ---
 
-### Sprint 2 — Core Flow: Plan + Run
+## 2. Estado de Sprint 1 (parcialmente completado antes del plan formal)
 
-**Sprint Objective:**
-Move the main flow from visual interaction to backend operation (or stable transitional contract).
+Estos ítems ya están implementados y se pueden dar por cerrados:
 
-**Tasks:**
+| Tarea                                      | Archivo                               | Estado  |
+| ------------------------------------------ | ------------------------------------- | ------- |
+| Platform client (health/readyz/version/db) | `services/platform/platformClient.ts` | ✅ Done |
+| TanStack Query con polling 15s             | `queries/usePlatformHealthQuery.ts`   | ✅ Done |
+| Banner global ok/degraded/offline          | `components/GlobalStatusBanner.tsx`   | ✅ Done |
+| Indicador de conexión en TopBar            | `components/TopAppBar.tsx`            | ✅ Done |
 
-1. **Define frontend contracts for Plan Preview and Run Start**
-   - TS interfaces for request/response.
-   - Data adapters to view-models.
-2. **Integrate Plan action from canvas selection**
-   - Plan mutation with states: idle/loading/success/error.
-   - Plan Preview modal on real/adapted data.
-3. **Integrate Run action from confirmed plan**
-   - Start run mutation.
-   - Contextual navigation to Runs.
-4. **Error and permission UX states**
-   - Handle 401/403/409/5xx in plan/run flow.
-   - Actionable messages and retry.
-5. **Register minimal core flow telemetry**
-   - Events: plan_opened, plan_confirmed, run_started, run_failed_ui.
+**Pendiente de Sprint 1 (completar antes de avanzar):**
 
-**Risks:**
+| #   | Tarea                               | Criterio de aceptación                                                                                                         |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1.1 | Definir tipos alineados con backend | `PlanRef`, `RunContext`, `RunStatus`, `RunStatusSnapshot`, `RunEvent` en `types/engine.ts`. Sin duplicar con `@dvt/contracts`. |
+| 1.2 | `createApiClient` con sesión        | Headers `X-Tenant-Id` / `X-Project-Id` inyectados desde `sessionStore`. Manejo de `401/403/5xx` con `ApiError` tipado.         |
+| 1.3 | Separación `mock \| api`            | `VITE_DATA_SOURCE=mock\|api`. Service layer base en `services/runs/`, `services/plans/`. Vistas no importan mock directo.      |
+| 1.4 | Visual cleanup shell                | Remover headers redundantes en sidebars. Controles secundarios del TopBar a menú contextual.                                   |
+| 1.5 | Documentar modo operación           | README actualizado con instrucciones para correr en modo mock vs api real.                                                     |
 
-- Backend contracts for plan/run not yet stable.
-- API decisions may block sprint closure.
+**Riesgos Sprint 1:**
 
-**Opportunities:**
-
-- First direct business value: execution from UI.
-- Reduced gap between visual demo and real operation.
+- Acoplamiento de tipos frontend a endpoint shape actual puede requerir rework → mitigar con interfaz de adapter entre service y view-model.
+- Ambigüedad de estados intermedios offline/degraded/reconnecting → definir matrix de estados antes de implementar visual cleanup.
 
 ---
 
-### Sprint 3 — Monitor, Console, and Resilience
+## 3. Sprint 2 — "Flujo Core Real (v1)"
 
-**Sprint Objective:**
-Make execution tracking operable with controlled degradation.
+**Objetivo:** Mover el flujo principal de interacción visual a operación con backend
+(o contrato transitional estable).
 
-**Tasks:**
+**Prerrequisito:** Sprint 1 completo (especialmente 1.1 y 1.2).
 
-1. **Implement state-driven Run Monitor**
-   - Run state by polling/SSE as available.
-   - Ordered, consistent event timeline.
-2. **Unified console (events/logs/metrics)**
-   - Filters by step/severity/timestamp.
-   - Persistence of basic user preferences.
-3. **Fallback and reconnection policies**
-   - SSE → automatic polling.
-   - Visual circuit-breaker for unstable service.
-4. **Runtime and Cost overlays by mode (no mixing)**
-   - Runtime Mode: state + duration.
-   - Cost Mode: heatmap.
-   - Clean Design Mode by default.
-5. **Error message hardening**
-   - Recoverable errors (toast + retry).
-   - Unrecoverable errors (blocking panel with diagnosis).
+| #   | Tarea                                       | Criterio de aceptación                                                                                                                               |
+| --- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1 | Mutation `POST /plans/preview`              | Estados: idle/loading/success/error. Retry automático en 5xx. Plan Preview modal renderiza con datos reales o mock adapter según `VITE_DATA_SOURCE`. |
+| 2.2 | Propagación de `RunContext`                 | `sessionStore` provee tenantId/projectId/environmentId. Todas las mutations incluyen `context: RunContext` en body.                                  |
+| 2.3 | Mutation `POST /runs` desde plan confirmado | Start run → 202 → navegación a `/runs/:runId`. Persiste `EngineRunRef` en `runStore`.                                                                |
+| 2.4 | Manejo de errores plan/run                  | 401 → Permission Denied modal (ya existe). 409 → Re-Plan Required modal (ya existe). 5xx → toast con retry.                                          |
+| 2.5 | `runStore` con estado de ejecución activa   | `currentPlan`, `currentRun`, `engineRunRef`. No en `appStore` global.                                                                                |
+| 2.6 | Telemetría mínima de flujo core             | Eventos: `plan_opened`, `plan_confirmed`, `run_started`, `run_failed_ui`. Console log en mock; hook de analytics en api.                             |
 
-**Risks:**
+**Riesgos:**
 
-- High event frequency may degrade render performance.
-- Temporary inconsistencies between run snapshot and event stream.
+- Backend no tiene `POST /runs` aún → usar mock adapter (`createRunsService('mock', ...)`) con respuesta fija.
+- `RunContext.targetAdapter` debe coincidir con lo que el backend espera → definir enum en 1.1.
 
-**Opportunities:**
+**Oportunidades:**
 
-- Strong product differentiation in daily operation.
-- Better traceability for support and functional debugging.
+- Primera acción con valor de negocio real desde UI.
+- Reduce el gap entre demo visual y operación real.
 
 ---
 
-### Sprint 4 — Scalability + Controlled Advanced Views
+## 4. Sprint 3 — "Monitor, Consola y Resiliencia"
 
-**Sprint Objective:**
-Ensure readability and performance in large graphs and activate advanced capabilities without noise.
+**Objetivo:** Hacer el tracking de ejecuciones operable con degradación controlada.
 
-**Tasks:**
+**Prerrequisito:** Sprint 2 completo (especialmente 2.3 y 2.5).
 
-1. **Implement full canvas layering**
-   - Core/Validation/Exposure/Runtime/Cost/Impact with toggles.
-   - Rule: only one intensive layer at a time.
-2. **Non-intrusive representation of tests and exposures**
-   - Aggregated tests by badge + inspector.
-   - Exposures hidden by default and secondary style.
-3. **Scaling strategy for 300+ nodes**
-   - Progressive reveal by zoom.
-   - Auto-grouping and collapsible clusters.
-   - Render optimization in viewport.
-4. **Recommended deterministic layout (ELK layered)**
-   - Stable order by type/name/dependency.
-   - Incremental insertion without "visual chaos".
-5. **Gradual activation of advanced views**
-   - Diff/Artifacts first.
-   - Lineage/Cost/Plugins/Admin by flags and/or role.
+| #   | Tarea                                              | Criterio de aceptación                                                                                                                                          |
+| --- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3.1 | `useRunStatus(runId, { enriched })`                | Polling con comparación de `hash` para evitar re-renders innecesarios. `enriched=true` solo en vista de run activo (ADR-0015). Parar cuando status es terminal. |
+| 3.2 | `useRunEvents(runId)` — SSE + fallback             | `EventSource` con `onerror` → polling `GET /runs/:runId/events?after={seq}` cada 3s. Stop automático en estado terminal + drain final.                          |
+| 3.3 | Timeline de eventos ordenada                       | Orden por `seq`. Deduplicación por `seq`. Scroll to bottom automático cuando está al fondo. Scroll freeze cuando el usuario sube.                               |
+| 3.4 | Console unificada (Events/Logs/Metrics)            | Tabs separados. Filtros: step, severidad, timestamp. Preferencia de tab persistida en `shellStore`.                                                             |
+| 3.5 | Overlays Runtime y Cost sin contaminar Design Mode | Runtime Mode: estado + duración por nodo. Cost Mode: heatmap. Design Mode: limpio (sin métricas persistentes). Solo un modo intensivo a la vez.                 |
+| 3.6 | Error states hardening                             | Errores recuperables: toast + retry. Errores irrecuperables: panel bloqueante con diagnóstico. No usar alertas nativas del browser.                             |
 
-**Risks:**
+**Riesgos:**
 
-- UX complexity if too many toggles are exposed without guidance.
-- Technical cost of migrating layout while maintaining current experience.
+- Alta frecuencia de eventos puede degradar render → virtualizar timeline si >500 eventos.
+- Inconsistencias temporales entre snapshot y event stream → documentar y mostrar "estado puede estar retrasado" si lag > 5s.
 
-**Opportunities:**
+**Oportunidades:**
 
-- Real scalability for enterprise cases.
-- Robust base for advanced observability roadmap.
+- Diferenciación fuerte de producto en operación diaria.
+- Mejor trazabilidad para soporte y debugging funcional.
 
 ---
 
-## 5) Key Dependencies Between Sprints
+## 5. Sprint 4 — "Escalabilidad + Vistas Avanzadas Controladas"
 
-- Sprint 2 depends on Sprint 1's minimum contract (platform state + data source).
-- Sprint 3 depends on having functional Run Start or stable contractual simulation.
-- Sprint 4 depends on baseline modes (Design/Runtime/Cost/Impact) defined in Sprint 3.
+**Objetivo:** Legibilidad y performance en grafos grandes. Activación controlada de
+capacidades avanzadas.
 
-## 6) Cross-cutting Risks
+**Prerrequisito:** Modos base (Design/Runtime/Cost) definidos en Sprint 3.
 
-1. **Front/Back misalignment in domain contracts**
-   - Mitigation: contract versioning and explicit temporary adapters.
-2. **Usability regression due to excess controls**
-   - Mitigation: strict defaults, progressive disclosure, and "clean view" criteria.
-3. **Performance in large graphs**
-   - Mitigation: render strategy by zoom level + clusters.
-4. **Network state ambiguity**
-   - Mitigation: single state matrix and consistent UX copy.
+| #   | Tarea                                | Criterio de aceptación                                                                                                                                                |
+| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4.1 | Layer system completo                | Toggles: Core/Validation/Exposure/Runtime/Cost/Impact. Regla: solo un intensivo activo. Cambio de capa no modifica layout base.                                       |
+| 4.2 | Tests como badges agregados          | Badge `tests: N pass / M fail` por nodo. Rojo solo si hay fallo. Detalle completo en inspector. Test nodes visibles solo en Validation Layer ON + zoom alto.          |
+| 4.3 | Exposures como capa secundaria       | Default: ocultas. Cuando activas: borde punteado, baja saturación, aristas semi-transparentes. Nunca compiten en tamaño/color con nodos core.                         |
+| 4.4 | Progressive reveal por zoom          | Bajo zoom: solo forma + label crítico. Zoom medio: nombre + estado resumido. Zoom alto: metadata adicional on demand.                                                 |
+| 4.5 | Grouping/clustering                  | Auto-agrupación por domain/tag/capa de transformación. Clusters colapsables con counters (nodos, fallos, costo agregado).                                             |
+| 4.6 | Migración a ELK layered              | Eje principal izquierda→derecha por dependencias. Swimlanes opcionales por tipo. Fallback dagre si ELK no disponible. Inserción incremental sin reorganización total. |
+| 4.7 | Activación gradual de vistas Nivel C | `VITE_SHOW_ADVANCED_VIEWS=true` o rol `admin`/`power_user`. Lineage, Cost, Plugins, Admin ocultos por defecto.                                                        |
+| 4.8 | Plugin registry por `schemaVersion`  | `NodeTypeRegistry` selecciona renderer por `plan.schemaVersion` o `plan.domain`. dbt plan → dbt renderer. Espejo del modelo de adapter del backend.                   |
+| 4.9 | Auth bridge (preparación OIDC)       | `X-Api-Key` header como bridge en entornos staging. Documentar ruta hacia Authorization Code + PKCE.                                                                  |
 
-## 7) Cross-cutting Opportunities
+**Riesgos:**
 
-1. **Accelerate internal adoption** with a clearer UI for daily operation.
-2. **Reduce support cost** through better visual diagnosis and explicit states.
-3. **Improve Front/Back collaboration** with concrete integration contracts per sprint.
-4. **Prepare enterprise ground** via scalability and visual control by layers.
+- Complejidad UX si se exponen demasiados toggles sin guía → aplicar progressive disclosure estricta.
+- Costo técnico de migrar layout mientras se mantiene experiencia actual → feature flag para ELK, dagre como fallback.
 
-## 8) Suggested Success Metrics
+**Oportunidades:**
 
-- Time to first useful action in Canvas (TTFA).
-- % of sessions completing Plan → Run without blocking UX error.
-- Rate of errors recovered via successful retry.
-- Performance in 300-node graph (fps/interaction and layout latency).
-- Usage of modes (Design/Runtime/Cost/Impact) and dwell time.
+- Escalabilidad real para casos enterprise (>300 nodos).
+- Base robusta para roadmap de observabilidad avanzada.
+- El plugin registry abre el producto a dominios no-dbt.
 
-## 9) Closing
+---
 
-This plan divides evolution into concrete, cumulative deliverables, focusing on cognitive clarity, real backend integration, and scalability, without architectural drift.
+## 6. Dependencias entre Sprints
+
+```
+Sprint 1 (tipos + API client + mock|api layer)
+    │
+    └─► Sprint 2 (mutations plan/run + RunContext propagation)
+            │
+            └─► Sprint 3 (useRunStatus + useRunEvents + timeline)
+                    │
+                    └─► Sprint 4 (canvas layers + grouping + ELK + plugin registry)
+```
+
+Ningún sprint puede iniciar sin que el anterior esté completo en sus
+tareas prerrequisito.
+
+---
+
+## 7. Riesgos Cross-cutting
+
+| Riesgo                              | Impacto                           | Mitigación                                                       |
+| ----------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| Divergencia tipos frontend/backend  | Alto — bloquea integración        | Definir y alinear en Sprint 1.1 antes de cualquier mutation      |
+| Contratos plan/run no estables      | Medio — puede retrasar Sprint 2   | Mock adapters; contratos transitionals versionados               |
+| Lag del proyector visible en listas | Bajo — UX confusa                 | Indicador "actualizado hace X"; `?enriched` solo donde necesario |
+| SSE no disponible en backend        | Bajo — Sprint 3 funcional igual   | `useRunEvents` diseñado con polling desde el inicio              |
+| Regression visual al limpiar shell  | Medio — UX regresión              | Tests visuales de referencia antes de cleanup                    |
+| Performance en grafos grandes       | Alto — bloqueante para enterprise | Virtualization + progressive reveal desde Sprint 4               |
+
+---
+
+## 8. Métricas de Éxito Sugeridas
+
+- **TTFA** (Time to First Useful Action en Canvas): objetivo < 10s desde carga.
+- **% sesiones completando Plan → Run sin error UX bloqueante**: objetivo > 95%.
+- **Tasa de errores recuperados via retry exitoso**: objetivo > 80%.
+- **FPS en gráfico de 300 nodos** (interacción y layout): objetivo ≥ 30fps.
+- **% reducción en queries con `?enriched=true`** vs total run queries: objetivo < 20% (solo vistas activas).
+- **Dwell time por modo** (Design/Runtime/Cost/Impact): indicador de adopción por feature.
+
+---
+
+## 9. Cierre
+
+Este plan divide la evolución en entregas concretas y acumulativas. La
+secuencia garantiza que cada sprint construye sobre contratos estables del
+anterior, evitando retrabajos y manteniendo la coherencia entre frontend y
+backend a medida que los endpoints del engine se hacen disponibles.

@@ -163,9 +163,33 @@ All data is sourced from dbt artifacts (manifest.json, run_results.json, catalog
 
 Default mode: prototype with mock data.
 
+### Data source mode (`VITE_DATA_SOURCE`)
+
+The frontend supports two runtime modes:
+
+1. `mock` (default): uses frontend mock adapters through `services/*`.
+2. `api`: calls backend endpoints through typed API services and `createApiClient`.
+
+Optional environment variables:
+
+- `VITE_DATA_SOURCE=mock|api`
+- `VITE_API_BASE_URL=http://localhost:3000` (or your backend URL)
+
+Examples:
+
 ```bash
-npm install
-npm run dev
+# Mock mode (default)
+VITE_DATA_SOURCE=mock pnpm --filter @dvt/web dev
+
+# API mode (real backend)
+VITE_DATA_SOURCE=api VITE_API_BASE_URL=http://localhost:3000 pnpm --filter @dvt/web dev
+```
+
+If `VITE_DATA_SOURCE` is not provided, the app falls back to `mock`.
+
+```bash
+pnpm install
+pnpm --filter @dvt/web dev
 ```
 
 ## Evolution Direction

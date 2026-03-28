@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { DbtNode, Run, ExecutionPlan } from '../types/dbt';
+import { useSessionStore } from './sessionStore';
 
 interface ConnectionStatus {
   rest: 'ok' | 'degraded' | 'offline';
@@ -98,10 +99,10 @@ export const useAppStore = create<AppState>((set) => ({
 
   leftNavCollapsed: false,
   explorerPanelWidth: 280,
-  explorerPanelVisible: true,
+  explorerPanelVisible: false,
   inspectorPanelWidth: 380,
-  inspectorPanelVisible: true,
-  consolePanelHeight: 200,
+  inspectorPanelVisible: false,
+  consolePanelHeight: 0,
   consolePanelVisible: false,
   focusMode: false,
   gridSize: 20,
@@ -132,9 +133,18 @@ export const useAppStore = create<AppState>((set) => ({
   },
 
   // Actions
-  setSelectedTenant: (tenant) => set({ selectedTenant: tenant }),
-  setSelectedProject: (project) => set({ selectedProject: project }),
-  setSelectedEnvironment: (env) => set({ selectedEnvironment: env }),
+  setSelectedTenant: (tenant) => {
+    useSessionStore.getState().setTenantId(tenant);
+    set({ selectedTenant: tenant });
+  },
+  setSelectedProject: (project) => {
+    useSessionStore.getState().setProjectId(project);
+    set({ selectedProject: project });
+  },
+  setSelectedEnvironment: (env) => {
+    useSessionStore.getState().setEnvironmentId(env);
+    set({ selectedEnvironment: env });
+  },
   toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
   setExplorerPanelWidth: (width) => set({ explorerPanelWidth: width }),
   setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
@@ -147,7 +157,7 @@ export const useAppStore = create<AppState>((set) => ({
   toggleConsolePanel: () =>
     set((state) => ({
       consolePanelVisible: !state.consolePanelVisible,
-      consolePanelHeight: !state.consolePanelVisible ? 200 : 0,
+      consolePanelHeight: !state.consolePanelVisible ? 160 : 0,
     })),
   setGridSize: (size: number) => set({ gridSize: size }),
   setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),

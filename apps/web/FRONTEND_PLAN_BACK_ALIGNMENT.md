@@ -1,197 +1,486 @@
-# DVT+ Frontend — Clean Interface Plan Focused on Backend
+# DVT+ Frontend — Plan de Alineación con Backend
 
-## 1. Objective
+> **Estado del documento:** v2 — actualizado 2026-03-27
+> Sustituye la versión inicial de 2026-02-19.
+> Se mantiene la propuesta de producto pero se incorpora estado actual real,
+> contratos del engine, estrategia SSE y path de autenticación.
 
-Define a practical plan to evolve the `apps/web` UI from a broad prototype to an interface that is:
+---
 
-- cleaner (less visual noise),
-- more organized (clear work hierarchy),
-- more focused (main flow Plan → Run → Monitor),
-- and aligned with the real evolution of the backend.
+## 1. Objetivo
+
+Evolucionar `apps/web` de prototipo con mock data a interfaz operacional real,
+alineada con los contratos del `@dvt/engine` y su capa HTTP (`apps/api`).
+
+Principio rector: **"UI con muchas vistas" → "UI operacional ejecutada contra
+backend real"**
+
+---
+
+## 2. Diagnóstico Actualizado
 
-## 2. Current Diagnosis
+### 2.1 Lo que ya está construido (Sprint 1 — parcialmente completado)
+
+| Componente                                    | Estado             | Archivo                               |
+| --------------------------------------------- | ------------------ | ------------------------------------- |
+| `platformClient` — health/readyz/version/db   | ✅ Implementado    | `services/platform/platformClient.ts` |
+| `usePlatformHealthQuery` — polling 15s        | ✅ Implementado    | `queries/usePlatformHealthQuery.ts`   |
+| `GlobalStatusBanner` — ok/degraded/offline    | ✅ Implementado    | `components/GlobalStatusBanner.tsx`   |
+| `TopAppBar` — indicador de conexión real      | ✅ Implementado    | `components/TopAppBar.tsx`            |
+| Separación `mock \| api` (`VITE_DATA_SOURCE`) | ❌ No implementado | pendiente                             |
+| Visual cleanup de navegación y headers        | ❌ No implementado | pendiente                             |
 
-### 2.1 Frontend Today
+### 2.2 Backend disponible hoy
 
-The current frontend is a high-fidelity prototype with broad coverage of views and components:
+```
+GET  /healthz          → { ok, status, components }  — siempre 200
+GET  /readyz           → { ok, status, reasonCode }  — 503 si no listo
+GET  /version          → { version, commit }
+GET  /db/ready         → { ok }
+```
 
-- Multiple routes (`/canvas`, `/runs`, `/artifacts`, `/diff`, `/lineage`, `/cost`, `/plugins`, `/admin`).
-- Unified local state with Zustand.
-- Simulation based on mock data (`mockDbtData.ts`) and local plan/run actions.
-- Complex shell with top bar, icon sidebar, explorer panel, inspector panel, and console.
+**No existen aún:** `/plans/preview`, `/runs`, `/runs/:id`, `/runs/:id/events`,
+`/artifacts/*`
 
-Conclusion: visually powerful, but still a “demo-first product” (mock UI-centric) rather than “workflow-first” (backend integration-centric).
+### 2.3 Estado de alineación de tipos
 
-### 2.2 Backend Today (Available Evolution)
+`types/engine.ts` ya **re-exporta directamente de `@dvt/contracts`**:
+`PlanRef`, `RunContext`, `RunStatus`, `RunStatusSnapshot`, `RunEvent`, `EngineRunRef`
+están alineados con el engine. Los tipos de input (`StartRunInput`, `PlanPreviewInput`)
+usan estos contratos correctamente.
 
-The backend in `apps/api` is a solid but minimal operational base, focused on infrastructure and service health:
+**Gap restante — tipos de respuesta (DTO mismatch latente):**
 
-- `GET /healthz` and `GET /readyz`.
-- `GET /version`.
-- `GET /db/ready` with real PostgreSQL check if `DATABASE_URL` exists.
-- Configurable CORS, environment validation with Zod, and strict Fastify startup.
+| Servicio                     | Respuesta actual                    | Debería ser                                 |
+| ---------------------------- | ----------------------------------- | ------------------------------------------- |
+| `runsService.listRuns()`     | `Run[]` (tipo dbt frontend)         | `RunStatusSnapshot[]` + mapper a view-model |
+| `plansService.previewPlan()` | `ExecutionPlan` (tipo dbt frontend) | Tipo de respuesta del engine + mapper       |
+| `runsService.getRun()`       | `Run \| null` (tipo dbt)            | `RunStatusSnapshot` + mapper                |
 
-Conclusion: there are still no domain endpoints for `plan`, `run`, `lineage`, `artifacts`, `cost`, or `plugins`; therefore, the frontend should prioritize gradual integration and avoid over-promising UX on mock data.
-
-## 3. Product Guiding Principle (New Focus)
-
-Move from **“UI with many views”** to **“Operational UI to execute with real backend”**.
-
-Rule:
-
-1. First, shell reliability + connectivity + network states.
-2. Then, core flow (Plan / Run / Monitor) with real data.
-3. Then, secondary views (diff, lineage, cost, plugins, admin).
-
-## 4. Visual Cleanup and Order Plan
-
-### 4.1 Navigation Simplification (UI-1 Phase)
-
-**Changes:**
-
-- Keep left sidebar with icons only + tooltip (no permanent texts).
-- Remove redundant headers in sidebars (`Projects`, `dbt explorer`) to gain vertical focus.
-- Keep fixed IDE-like width (no ambiguous double collapse system).
-- Reduce top bar density: move secondary “View” controls to a single contextual menu.
-
-**Expected UX Result:**
-
-- Less visual noise.
-- More useful canvas area.
-- Fewer decisions per screen.
-
-### 4.2 View Hierarchy by Priority (UI-2 Phase)
-
-Define views by levels:
-
-- **Level A (Core):** Canvas, Runs.
-- **Level B (Operation):** Artifacts, Diff.
-- **Level C (Advanced/Admin):** Lineage, Cost, Plugins, Admin.
-
-Apply “progressive disclosure”:
-
-- Level C hidden by default in basic mode.
-- Activatable by feature flags or role.
-
-**Expected UX Result:**
-
-- Interface more focused on daily work.
-- Lower cognitive load for new users.
-
-### 4.3 Task-oriented Layout (UI-3 Phase)
-
-Standardize layout by context:
-
-- **Build Mode (default):** Explorer + Canvas + Inspector.
-- **Run Mode:** Runs + prioritized Console.
-- **Focus Mode:** Almost full Canvas.
-
-Avoid making the user manage too many panels manually; layout should respond to route context.
-
-## 5. Backend Alignment Plan
-
-### 5.1 Minimum Connectivity Contract (Immediate)
-
-Create a typed API client for existing endpoints:
-
-- `GET /healthz`
-- `GET /readyz`
-- `GET /version`
-- `GET /db/ready`
-
-Frontend usage:
-
-- Global platform state indicator in top bar.
-- Real degraded/offline banner (not mock).
-- “Service diagnostics” in status panel.
-
-### 5.2 Anti-mock Strategy (Short Term)
-
-Explicitly separate data sources:
-
-- `mock` (development/demo)
-- `api` (real)
-
-Switch via environment variable (`VITE_DATA_SOURCE=mock|api`).
-
-Goal: keep demo useful without blocking real integration.
-
-### 5.3 Backend Contracts Needed by Frontend (Next Evolution)
-
-Prioritized proposal for backend:
-
-1. `POST /plans/preview` (subgraph/selection → immutable plan).
-2. `POST /runs` (start run from plan).
-3. `GET /runs/:id` + `GET /runs` (state and list).
-4. `GET /runs/:id/events` (SSE or equivalent polling).
-5. `GET /artifacts/:runId/*` (minimal manifest/run_results/catalog).
-
-Frontend should prepare with TypeScript interfaces for these contracts now, even if backend delivers them incrementally.
-
-## 6. Recommended Frontend Architecture
-
-### 6.1 Stores by Responsibility
-
-Progressive refactor of current global store towards:
-
-- `shellStore`: layout, panels, focus, navigation.
-- `sessionStore`: tenant/project/env/git/ref.
-- `graphStore`: nodes/edges/selection.
-- `runStore`: current plan, current run, timeline.
-- `statusStore`: backend health and connectivity.
-
-### 6.2 Data Layer
-
-Standardize with TanStack Query:
-
-- State queries (`health`, `version`, `dbReady`),
-- Action mutations (`plan`, `run`),
-- Predictable invalidation by domain.
-
-### 6.3 UI Principle
-
-View components do not consume mock directly; they use services (`app/services/*`) and typed view-models.
-
-## 7. Proposed Roadmap (4 Sprints)
-
-### Sprint 1 — “Clean and Connected Base”
-
-- Visual shell cleanup (navigation and redundant headers).
-- Minimal API client (`health`, `ready`, `version`, `db/ready`).
-- Real network state in top bar + global banner.
-- Document `mock` vs `api` mode.
-
-### Sprint 2 — “Real Core Flow (v1)”
-
-- Integrate real plan preview (if backend available; if not, temporary adapter).
-- Integrate run start.
-- Reinforce Runs view as operational focus.
-
-### Sprint 3 — “Monitor and Traceability”
-
-- Run timeline with real/polling events.
-- Unified events and logs console.
-- Empty states, errors, retry, and degradation.
-
-### Sprint 4 — “Controlled Expansion”
-
-- Artifacts and Diff on real data.
-- Gradual activation of Lineage/Cost/Plugins/Admin by feature flag.
-- UX hardening (accessibility + performance).
-
-## 8. Success Criteria
-
-1. A user can complete the main flow without relying on mock data.
-2. The UI always shows real backend state.
-3. Navigation prioritizes core tasks and reduces noise.
-4. The technical base allows scaling to future contracts without redoing the shell.
-
-## 9. Frontend Documentation Deliverables
-
-This document is complemented by:
-
-- Update of `apps/web/README.md` to reflect real state.
-- Phase-based integration roadmap for frontend/backend team.
-
-Status: Initial operational proposal.
-Date: 2026-02-19.
+Estos tipos son compatibles en `mock` mode porque los mocks están construidos con los tipos
+dbt. Cuando el backend real responda, la shape será diferente y no habrá error de compilación
+(los mocks enmascaran el problema). **Se requiere una capa de mapeo DTO** antes de integrar
+los endpoints reales.
+
+---
+
+## 3. Contratos de API que el frontend debe preparar
+
+### 3.1 Endpoints prioritarios (orden de implementación backend)
+
+#### P1 — Iniciar una ejecución
+
+```
+POST /runs
+Content-Type: application/json
+X-Tenant-Id: {tenantId}
+
+{
+  "planRef": {
+    "uri": "string",
+    "sha256": "string",
+    "schemaVersion": "string",
+    "planId": "string",
+    "planVersion": "string"
+  },
+  "context": {
+    "tenantId": "string",
+    "projectId": "string",
+    "environmentId": "string",
+    "runId": "string",         // generado por cliente o por servidor
+    "targetAdapter": "temporal" | "conductor"
+  }
+}
+
+→ 202 { runId, workflowId, provider }    // EngineRunRef
+→ 409 { error: "PLAN_CONFLICT", ... }    // re-plan required
+→ 403 { error: "FORBIDDEN" }
+```
+
+#### P2 — Estado de una ejecución
+
+```
+GET /runs/:runId
+GET /runs/:runId?enriched=true           // ADR-0015: path enriquecido (llama al adapter)
+
+→ 200 {
+    runId, status, substatus,
+    startedAt, completedAt,
+    hash                                 // para detectar cambios en polling
+  }
+```
+
+> **ADR-0015**: `GET /runs/:runId` sin parámetro lee del snapshot local (rápido,
+> sin llamar al adapter). El path `?enriched=true` llama al adapter para
+> sub-estado en tiempo real. El frontend debe usar `?enriched=true` solo en
+> la vista de run activo; para listas usar el path por defecto.
+
+#### P3 — Eventos de una ejecución (streaming)
+
+```
+GET /runs/:runId/events                  // SSE: text/event-stream
+GET /runs/:runId/events?after=42         // polling paginado: afterSeq
+
+→ stream de RunEvent  { seq, type, runId, occurredAt, payload }
+```
+
+Ver §5 para la estrategia SSE → polling fallback.
+
+#### P4 — Lista de ejecuciones
+
+```
+GET /runs?tenantId=X&projectId=Y&status=running&limit=50
+→ 200 { items: RunStatusSnapshot[], nextCursor }
+```
+
+#### P5 — Plan preview (servidor o planner externo)
+
+```
+POST /plans/preview
+{ selection: string[], context: RunContext }
+→ 200 { planRef, steps, estimatedCost, estimatedDuration }
+→ 422 { error: "INVALID_SELECTION" }
+```
+
+### 3.2 Tipos TypeScript que el frontend debe definir (alineados con backend)
+
+```typescript
+// Reemplazar ExecutionPlan y DbtRun en types/dbt.ts por:
+
+export interface PlanRef {
+  uri: string;
+  sha256: string;
+  schemaVersion: string;
+  planId: string;
+  planVersion: string;
+  requiresCapabilities?: string[];
+}
+
+export interface RunContext {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  targetAdapter: 'temporal' | 'conductor';
+}
+
+export type RunStatus = 'queued' | 'running' | 'success' | 'failed' | 'cancelled';
+
+export interface RunStatusSnapshot {
+  runId: string;
+  status: RunStatus;
+  substatus?: string;
+  startedAt: string; // ISO UTC
+  completedAt?: string;
+  hash: string; // para polling optimista
+}
+
+export interface RunEvent {
+  seq: number;
+  type: string; // 'RunStarted' | 'StepStarted' | 'RunCompleted' | ...
+  runId: string;
+  occurredAt: string;
+  payload: Record<string, unknown>;
+}
+```
+
+---
+
+## 4. Propagación de Contexto Multi-Tenant
+
+Cada llamada al backend debe incluir el contexto de sesión. El `TopAppBar`
+ya gestiona `tenantId`, `projectId`, `environmentId` en el store. Falta
+propagarlos a las llamadas HTTP.
+
+**Estrategia:**
+
+1. `sessionStore` (o `appStore.selectedTenant/Project/Env`) provee el contexto.
+2. El API client base incluye `X-Tenant-Id` y `X-Project-Id` como headers por
+   defecto (inyectados desde el store en tiempo de llamada, no en construcción
+   del cliente).
+3. Todas las mutations (POST /runs, POST /plans/preview) incluyen el contexto
+   explícitamente en el body (`context: RunContext`).
+
+```typescript
+// services/apiClient.ts (nuevo)
+export function createApiClient(getSession: () => SessionContext) {
+  const baseUrl = resolveApiBaseUrl();
+  return {
+    async post<T>(path: string, body: unknown): Promise<T> {
+      const { tenantId, projectId } = getSession();
+      const res = await fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId,
+          'X-Project-Id': projectId,
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new ApiError(res.status, await res.json());
+      return res.json();
+    },
+  };
+}
+```
+
+---
+
+## 5. Estrategia SSE → Polling (Run Monitor)
+
+El backend eventualmente expone `GET /runs/:runId/events` como SSE. El frontend
+debe soportar ambos modos con fallback automático.
+
+```
+┌─────────────────────────────────────────────┐
+│  useRunEvents(runId)                         │
+│                                              │
+│  1. Intentar SSE (EventSource)               │
+│     ├── onmessage → dispatch event           │
+│     └── onerror   → degradar a polling       │
+│                                              │
+│  2. Polling fallback                         │
+│     GET /runs/:runId/events?after={lastSeq}  │
+│     cada 3s mientras status = running        │
+│     cada 15s cuando status terminal         │
+│                                              │
+│  3. Stop                                     │
+│     status ∈ {success, failed, cancelled}   │
+│     + drain final poll para cerrar gaps      │
+└─────────────────────────────────────────────┘
+```
+
+**Implementación:**
+
+```typescript
+// queries/useRunEvents.ts
+export function useRunEvents(runId: string, options?: { enriched?: boolean }) {
+  const [events, dispatch] = useReducer(eventReducer, []);
+  const lastSeq = useRef(0);
+
+  useEffect(() => {
+    if (!runId) return;
+    const es = new EventSource(`/runs/${runId}/events`);
+    es.onmessage = (e) => {
+      const event: RunEvent = JSON.parse(e.data);
+      lastSeq.current = event.seq;
+      dispatch({ type: 'APPEND', event });
+    };
+    es.onerror = () => {
+      es.close();
+      startPolling(); // fallback
+    };
+    return () => es.close();
+  }, [runId]);
+
+  return events;
+}
+```
+
+---
+
+## 6. Estrategia de Autenticación (Placeholder → OIDC)
+
+La arquitectura del sistema define OIDC para operaciones de escritura. El
+frontend necesita preparar el camino aunque la autenticación no esté activa.
+
+**Fases:**
+
+| Fase       | Estrategia                                   |
+| ---------- | -------------------------------------------- |
+| Sprint 1–2 | Sin auth (desarrollo local, CORS permisivo)  |
+| Sprint 3   | API key por header (`X-Api-Key`) como bridge |
+| Sprint 4+  | OIDC completo (Authorization Code + PKCE)    |
+
+**Lo que NO debe hacerse:**
+
+- No hardcodear tokens en el código.
+- No asumir que todos los endpoints son públicos; diseñar con `401/403` en mind.
+- Los modals de "Permission Denied" ya existen — conectarlos a las responses reales.
+
+---
+
+## 7. Separación Mock | API (`VITE_DATA_SOURCE`)
+
+### 7.1 Implementación
+
+Cada service que hoy usa mock data directamente debe pasar por una capa de
+abstracción:
+
+```typescript
+// services/runs/runsService.ts
+import { mockRuns } from '@/data/mockData';
+
+export function createRunsService(mode: 'mock' | 'api', apiClient: ApiClient) {
+  if (mode === 'mock') {
+    return {
+      listRuns: async () => mockRuns,
+      getRun: async (id: string) => mockRuns.find((r) => r.runId === id),
+    };
+  }
+  return {
+    listRuns: async () => apiClient.get('/runs'),
+    getRun: async (id: string) => apiClient.get(`/runs/${id}`),
+  };
+}
+```
+
+### 7.2 Configuración
+
+```bash
+# .env.development (mock — por defecto)
+VITE_DATA_SOURCE=mock
+
+# .env.local (contra API real)
+VITE_DATA_SOURCE=api
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+### 7.3 Regla
+
+Los componentes de vista (`views/`) nunca importan `mockData` directamente.
+Solo usan hooks (`useRuns`, `useRunStatus`) que internamente delegan al service
+configurado.
+
+---
+
+## 8. Arquitectura de Stores Objetivo
+
+Refactor gradual del store global hacia responsabilidades separadas:
+
+```typescript
+shellStore; // layout, panels, focus, navigation
+sessionStore; // tenantId, projectId, environmentId, gitBranch, gitSha
+graphStore; // nodes, edges, selection, overlays
+runStore; // currentPlan, currentRun, runEvents, timeline
+statusStore; // platform health snapshot, connectionStatus
+```
+
+**Criterio de migración:** no big-bang. Mover estado a su store natural cuando
+se toca ese dominio por primera vez en cada sprint.
+
+---
+
+## 9. Topología de Lectura del Backend (referencia para polling)
+
+El frontend necesita entender de dónde vienen los datos para saber cuándo
+son frescos:
+
+```
+Temporal Worker
+    │ escribe run_events → PostgreSQL
+    │
+projector-worker
+    │ lee run_events → escribe run_snapshots
+    │
+GET /runs/:runId           ← lee run_snapshots (snapshot stale posible)
+GET /runs/:runId?enriched  ← snapshot + adapter.getRunStatus() (real-time)
+GET /runs/:runId/events    ← lee run_events directamente (sin lag de proyector)
+```
+
+**Implicación para UI:**
+
+- El estado en `RunsView` lista (sin enriched) puede tener lag de proyector.
+- El run activo en detalle debe usar `?enriched=true` para sub-estado en tiempo
+  real.
+- `useRunEvents` proporciona el timeline granular event-by-event.
+
+---
+
+## 10. Jerarquía de Vistas y Progresión
+
+### Nivel A — Core (siempre visible)
+
+- `/canvas` — DAG + Plan + Run
+- `/runs` — Monitor de ejecuciones
+
+### Nivel B — Operacional (accesible por defecto)
+
+- `/artifacts` — manifest/run_results/catalog
+- `/diff` — comparación git/run
+
+### Nivel C — Avanzado (feature flag o rol)
+
+- `/lineage`, `/cost`, `/plugins`, `/admin`
+
+Los items de Nivel C aparecen en la navegación solo cuando:
+
+- `VITE_SHOW_ADVANCED_VIEWS=true`, o
+- El usuario tiene rol `admin` o `power_user` (futuro RBAC)
+
+---
+
+## 11. Roadmap de Sprints (actualizado)
+
+### Sprint 1 — "Base Limpia y Conectada" (parcialmente completado)
+
+**Completado:**
+
+- ✅ Platform client (health/readyz/version/db)
+- ✅ Polling en `usePlatformHealthQuery`
+- ✅ `GlobalStatusBanner` con estado real
+
+**Pendiente:**
+
+- [ ] Separación `VITE_DATA_SOURCE=mock|api` + service layer base
+- [ ] Visual cleanup: remover headers redundantes en sidebars
+- [ ] Consolidar controles secundarios del TopBar en menú contextual
+- [x] Tipos alineados con backend — `types/engine.ts` re-exporta de `@dvt/contracts` directamente.
+- [ ] Capa de mapeo DTO: `RunStatusSnapshot → Run` (view-model) y respuesta plan → `ExecutionPlan`.
+- [ ] `createApiClient` con inyección de contexto de sesión
+- [ ] Documentar modo operación (mock vs api)
+
+### Sprint 2 — "Flujo Core Real (v1)"
+
+- [ ] `POST /plans/preview` — mutation con estados idle/loading/success/error
+- [ ] Plan Preview modal consumiendo respuesta real (con adapter mock si backend no listo)
+- [ ] `POST /runs` — start run mutation
+- [ ] Navegación contextual a Runs tras iniciar ejecución
+- [ ] Manejo de 401/403/409/5xx en flujo plan/run
+- [ ] Propagación de `RunContext` desde sessionStore a llamadas API
+
+### Sprint 3 — "Monitor y Trazabilidad"
+
+- [ ] `useRunStatus(runId, { enriched: true })` — polling con hash comparison
+- [ ] `useRunEvents(runId)` — SSE con fallback a polling (ver §5)
+- [ ] Timeline de eventos ordenada y consistente
+- [ ] Console unificada: events/logs/metrics con filtros por step/severity
+- [ ] Fallback visual SSE → polling con indicador en UI
+- [ ] Runtime Mode y Cost Mode como overlays en canvas (sin contaminar Design Mode)
+
+### Sprint 4 — "Escalabilidad + Vistas Avanzadas"
+
+- [ ] Canvas layering completo (Core/Validation/Exposure/Runtime/Cost/Impact)
+- [ ] Grouping/clustering + progressive reveal para 300+ nodos
+- [ ] Migración layout engine a ELK layered (con fallback dagre)
+- [ ] Activación gradual de vistas Nivel C por feature flag
+- [ ] Auth bridge (API key → OIDC preparación)
+- [ ] Plugin registry dinámico (NodeTypeRegistry por schemaVersion del plan)
+
+---
+
+## 12. Criterios de Éxito
+
+1. Un usuario puede completar Plan → Run → Monitor sin mock data.
+2. La UI refleja siempre el estado real del backend.
+3. El polling usa `hash` para evitar re-renders innecesarios.
+4. `?enriched=true` solo se llama desde la vista de run activo (no en listas).
+5. El switch `mock|api` no requiere cambios en componentes de vista.
+6. Los tipos del frontend son isomorfos a los contratos del engine.
+7. Un graph de 50 nodos es legible "first glance" en Design Mode.
+
+---
+
+## 13. Riesgos y Mitigaciones
+
+| Riesgo                                            | Mitigación                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Contratos plan/run no estables en backend         | Transitional adapters + mock mode hasta que estén listos                                     |
+| Lag del proyector visible en listas de runs       | Documentar; usar `?enriched` solo donde sea necesario; añadir indicador "actualizado hace X" |
+| SSE no disponible inicialmente en backend         | Diseñar `useRunEvents` con polling desde el inicio; SSE como mejora                          |
+| Divergencia tipos frontend/backend en integración | Definir y alinear tipos en Sprint 1 antes de cualquier mutation                              |
+| Autenticación bloquea desarrollo cruzado          | Entornos de desarrollo con CORS permisivo + env flag para bypass auth en local               |
+
+---
+
+_Documento vivo. Actualizar al inicio de cada sprint con estado real de completado._
