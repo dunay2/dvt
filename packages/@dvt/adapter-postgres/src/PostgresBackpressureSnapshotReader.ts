@@ -1,5 +1,10 @@
 import { Pool } from 'pg';
 
+import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
+import {
+  POSTGRES_ADAPTER_ERROR_CONSTANTS as E,
+  POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C,
+} from './PostgresAdapterConstants.js';
 import { getBackpressureSnapshotSql } from './PostgresBackpressureSnapshotReaderSql.js';
 import { normalizeSchema } from './sqlUtils.js';
 
@@ -39,10 +44,10 @@ export class PostgresBackpressureSnapshotReader {
   private readonly localOverloadPendingThreshold: number;
 
   public constructor(config: PostgresBackpressureSnapshotReaderConfig) {
-    this.schema = normalizeSchema(config.schema ?? 'dvt');
+    this.schema = normalizeSchema(config.schema ?? C.defaultSchema);
     this.now = config.now ?? (() => new Date().toISOString());
     this.queryTimeoutMs =
-      config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0);
+      config.queryTimeoutMs ?? Number(process.env[C.queryTimeoutEnvVar] ?? C.defaultTimeoutMs);
     this.stuckEventAgeThresholdMs = config.stuckEventAgeThresholdMs;
     this.localOverloadPendingThreshold = config.localOverloadPendingThreshold;
 
@@ -50,12 +55,9 @@ export class PostgresBackpressureSnapshotReader {
       this.pool = config.pool;
       this.ownsPool = false;
     } else {
+      const connectionString = resolvePostgresConnectionString(config.connectionString);
       this.pool = new Pool({
-        connectionString:
-          config.connectionString ??
-          process.env['DVT_PG_URL'] ??
-          process.env['DATABASE_URL'] ??
-          'postgresql://dvt:dvt@localhost:5432/dvt',
+        connectionString,
         query_timeout: this.queryTimeoutMs,
       });
       this.ownsPool = true;
@@ -71,14 +73,12 @@ export class PostgresBackpressureSnapshotReader {
   public async getTenantSnapshot(tenantId: string): Promise<PostgresBackpressureSnapshot> {
     assertTenantId(tenantId);
     const nowIso = this.now();
-    const stuckCutoffIso = new Date(
-      new Date(nowIso).getTime() - this.stuckEventAgeThresholdMs
-    ).toISOString();
+    const stuckCutoffIso = calculateStuckCutoffIso(nowIso, this.stuckEventAgeThresholdMs);
 
     const result = await this.pool.query<BackpressureSnapshotRow>({
       text: getBackpressureSnapshotSql(this.schema),
       values: [tenantId, nowIso, stuckCutoffIso, this.localOverloadPendingThreshold],
-      ...(this.queryTimeoutMs > 0
+      ...(this.queryTimeoutMs > C.defaultTimeoutMs
         ? { signal: globalThis.AbortSignal.timeout(this.queryTimeoutMs) }
         : {}),
     });
@@ -106,8 +106,13 @@ export class PostgresBackpressureSnapshotReader {
 
 function assertTenantId(tenantId: string): void {
   if (tenantId.trim().length === 0) {
-    throw new Error('TENANT_SCOPE_REQUIRED');
+    throw new Error(E.tenantScopeRequiredErrorMessage);
   }
+}
+
+function calculateStuckCutoffIso(nowIso: string, thresholdMs: number): string {
+  const nowMs = new Date(nowIso).getTime();
+  return new Date(nowMs - thresholdMs).toISOString();
 }
 
 function toNumber(value: number | string | null): number {

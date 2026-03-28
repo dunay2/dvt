@@ -8,6 +8,7 @@
  */
 import type { PoolClient } from 'pg';
 
+import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
 import { listStaleSnapshotRunsSql } from './PostgresSnapshotStalenessQuerySql.js';
 import type { IRunSnapshotStalenessQuery } from './types.js';
 
@@ -45,7 +46,7 @@ function normalizeStaleSnapshotBatchSize(batchSize: number): number {
     !Number.isFinite(batchSize) ||
     batchSize < MIN_STALE_SNAPSHOT_BATCH_SIZE
   ) {
-    throw new Error(`INVALID_STALE_SNAPSHOT_BATCH_SIZE: ${batchSize}`);
+    throw new Error(`${E.invalidStaleSnapshotBatchSizeErrorCode}: ${batchSize}`);
   }
   return Math.min(batchSize, MAX_STALE_SNAPSHOT_BATCH_SIZE);
 }

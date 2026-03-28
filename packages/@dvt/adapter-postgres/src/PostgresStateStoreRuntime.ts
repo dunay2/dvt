@@ -11,191 +11,208 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { Pool } from 'pg';
-
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
-import {
-  PostgresLineageOutboxStore,
-  normalizeLineageOutboxClaimTimeoutMs,
-} from './PostgresLineageOutboxStore.js';
-import {
-  PostgresOutboxStore,
-  normalizeOutboxClaimTimeoutMs,
-  normalizeOutboxShardCount,
-} from './PostgresOutboxStore.js';
-import { PostgresRunEventStore } from './PostgresRunEventStore.js';
+import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
+import { PostgresOutboxStore } from './PostgresOutboxStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 import { PostgresRunStateCoordinator } from './PostgresRunStateCoordinator.js';
-import { PostgresSchemaManager, type PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { PostgresSnapshotStalenessQuery } from './PostgresSnapshotStalenessQuery.js';
-import type {
-  RunEventReadRepository,
-  RunEventRepositoryDeps,
-  RunEventWriteRepository,
-} from './RunEventWriteRepository.js';
-import { normalizeSchema } from './sqlUtils.js';
-
-export interface PostgresStateStoreRuntimeConfig {
-  connectionString?: string;
-  schema?: string;
-  pool?: Pool;
-  now?: () => string;
-  statementTimeoutMs?: number;
-  queryTimeoutMs?: number;
-  assumeSchemaReady?: boolean;
-  outboxShardCount?: number;
-  outboxClaimTimeoutMs?: number;
-  lineageOutboxClaimTimeoutMs?: number;
-  runEventRepositoryFactory?: (
-    deps: RunEventRepositoryDeps
-  ) => RunEventWriteRepository & RunEventReadRepository;
-}
+import { composePostgresStateStoreRuntime } from './PostgresStateStoreRuntimeComposer.js';
+type PostgresStateStoreRuntimeConfig =
+  import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig;
+type RunEventReadRepository = import('./RunEventWriteRepository.js').RunEventReadRepository;
+type RunEventWriteRepository = import('./RunEventWriteRepository.js').RunEventWriteRepository;
+type AppendResult = import('./types.js').AppendResult;
+type DeadLetterRecord = import('./types.js').DeadLetterRecord;
+type EventEnvelope = import('./types.js').EventEnvelope;
+type EventInput = import('./types.js').EventInput;
+type ListEventsOptions = import('./types.js').ListEventsOptions;
+type ListRunsOptions = import('./types.js').ListRunsOptions;
+type OutboxRecord = import('./types.js').OutboxRecord;
+type RetryAttemptReservation = import('./types.js').RetryAttemptReservation;
+type RunBootstrapInput = import('./types.js').RunBootstrapInput;
+type RunId = import('./types.js').RunId;
+type RunMetadata = import('./types.js').RunMetadata;
+type WorkflowSnapshot = import('./types.js').WorkflowSnapshot;
+type ILineageOutboxStore = import('@dvt/contracts').ILineageOutboxStore;
+type ArchivedTerminalSnapshot = import('@dvt/state-store').ArchivedTerminalSnapshot;
+type TerminalSnapshotPinResult = import('@dvt/state-store').TerminalSnapshotPinResult;
 
 /**
- * Foundation adapter for issue #6 (Postgres state store implementation).
+ * Runtime composition base for the Postgres state-store adapter.
  *
- * SQL-backed implementation for run metadata, run events and outbox.
- *
- * - run metadata and event append are persisted in PostgreSQL
- * - idempotency is enforced by UNIQUE(run_id, idempotency_key)
- * - outbox entries are persisted with retry metadata
+ * This class owns resource lifecycle and internal adapter component wiring.
+ * Concrete facade adapters delegate to protected methods and avoid direct
+ * dependency on the concrete repositories/stores.
  */
 export class PostgresStateStoreRuntime {
-  private readonly pool: Pool;
-  protected readonly ownsPool: boolean;
-  private readonly schema: string;
-  private readonly now: () => string;
-  private readonly statementTimeoutMs: number;
-  private readonly outboxShardCount: number;
+  private readonly ownsPool: boolean;
   protected readonly clientSession: PostgresAdapterClientSession;
   protected readonly schemaManager: PostgresSchemaManager;
-  protected readonly outboxStore: PostgresOutboxStore;
-  protected readonly metadataRepo: PostgresRunMetadataRepository;
-  protected readonly runEventRepository: RunEventWriteRepository & RunEventReadRepository;
-  protected readonly snapshotStore: PostgresRunSnapshotStore;
-  protected readonly runStateCoordinator: PostgresRunStateCoordinator;
-  protected readonly snapshotStalenessQuery: PostgresSnapshotStalenessQuery;
-  protected readonly lineageOutboxStore: PostgresLineageOutboxStore;
+  private readonly outboxStore: PostgresOutboxStore;
+  private readonly metadataRepo: PostgresRunMetadataRepository;
+  private readonly runEventRepository: RunEventWriteRepository & RunEventReadRepository;
+  private readonly snapshotStore: PostgresRunSnapshotStore;
+  private readonly runStateCoordinator: PostgresRunStateCoordinator;
+  private readonly snapshotStalenessQuery: PostgresSnapshotStalenessQuery;
+  private readonly lineageOutboxStore: PostgresLineageOutboxStore;
 
   constructor(readonly config: PostgresStateStoreRuntimeConfig = {}) {
-    this.schema = normalizeSchema(config.schema ?? 'dvt');
-    this.now = config.now ?? (() => new Date().toISOString());
-    this.statementTimeoutMs =
-      config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0);
-    this.outboxShardCount = normalizeOutboxShardCount(config.outboxShardCount);
-
-    if (config.pool) {
-      this.pool = config.pool;
-      this.ownsPool = false;
-    } else {
-      this.pool = new Pool({
-        connectionString:
-          config.connectionString ??
-          process.env['DVT_PG_URL'] ??
-          process.env['DATABASE_URL'] ??
-          'postgresql://dvt:dvt@localhost:5432/dvt',
-        statement_timeout: this.statementTimeoutMs,
-        query_timeout: config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0),
-      });
-      this.ownsPool = true;
-    }
-
-    this.clientSession = new PostgresAdapterClientSession(this.pool, this.statementTimeoutMs);
-    this.schemaManager = new PostgresSchemaManager(this.pool, this.schema, this.statementTimeoutMs);
-
-    const outboxClaimTimeoutMs = normalizeOutboxClaimTimeoutMs(config.outboxClaimTimeoutMs);
-    this.outboxStore = new PostgresOutboxStore(
-      this.schema,
-      this.now,
-      this.outboxShardCount,
-      outboxClaimTimeoutMs,
-      (fn) => this.clientSession.withTransaction(fn),
-      (fn) => this.clientSession.withClient(fn)
-    );
-
-    this.metadataRepo = new PostgresRunMetadataRepository(this.schema, (fn) =>
-      this.clientSession.withClient(fn)
-    );
-
-    const runEventRepositoryFactory =
-      config.runEventRepositoryFactory ??
-      ((deps: RunEventRepositoryDeps): RunEventWriteRepository & RunEventReadRepository =>
-        new PostgresRunEventStore(deps.schema, deps.now, deps.withClient));
-
-    this.runEventRepository = runEventRepositoryFactory({
-      schema: this.schema,
-      now: this.now,
-      withClient: (fn) => this.clientSession.withClient(fn),
-    });
-
-    this.snapshotStore = new PostgresRunSnapshotStore(
-      this.schema,
-      this.now,
-      (fn) => this.clientSession.withTransaction(fn),
-      (fn) => this.clientSession.withClient(fn)
-    );
-
-    this.runStateCoordinator = new PostgresRunStateCoordinator({
-      metadataRepo: this.metadataRepo,
-      runEventRepository: this.runEventRepository,
-      snapshotStore: this.snapshotStore,
-      outboxStore: this.outboxStore,
-      setTenantContext: (client, tenantId) =>
-        PostgresSchemaManager.setTenantContext(client, tenantId),
-      withTransaction: (fn) => this.clientSession.withTransaction(fn),
-    });
-
-    this.snapshotStalenessQuery = new PostgresSnapshotStalenessQuery(this.schema, (fn) =>
-      this.clientSession.withClient(fn)
-    );
-
-    this.lineageOutboxStore = new PostgresLineageOutboxStore(
-      this.schema,
-      this.now,
-      normalizeLineageOutboxClaimTimeoutMs(config.lineageOutboxClaimTimeoutMs),
-      (fn) => this.clientSession.withTransaction(fn),
-      (fn) => this.clientSession.withClient(fn)
-    );
-
-    if (config.assumeSchemaReady) {
-      this.schemaManager.markReady();
-    }
-    // DDL is no longer run at construction time.
-    // Callers MUST await adapter.migrate() before using any storage methods.
+    const services = composePostgresStateStoreRuntime(config);
+    this.ownsPool = services.ownsPool;
+    this.clientSession = services.clientSession;
+    this.schemaManager = services.schemaManager;
+    this.outboxStore = services.outboxStore;
+    this.metadataRepo = services.metadataRepo;
+    this.runEventRepository = services.runEventRepository;
+    this.snapshotStore = services.snapshotStore;
+    this.runStateCoordinator = services.runStateCoordinator;
+    this.snapshotStalenessQuery = services.snapshotStalenessQuery;
+    this.lineageOutboxStore = services.lineageOutboxStore;
   }
 
-  /**
-   * Runs all DDL migrations required for this adapter (CREATE TABLE IF NOT EXISTS, etc.).
-   *
-   * Must be called and awaited once before the adapter is used.
-   * Safe to call multiple times: subsequent calls are no-ops (idempotent).
-   *
-   * Separating DDL from the constructor allows the adapter to be instantiated in
-   * IAM-restricted environments where the runtime role has no DDL privileges, and
-   * migrations are run as a separate privileged step.
-   */
-  async migrate(): Promise<void> {
-    return this.schemaManager.migrate();
-  }
-
-  async planSchemaRollback(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
-    return this.schemaManager.planRollback(targetVersion);
-  }
-
-  async rollbackSchemaTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
-    if (this.clientSession.hasActiveClients()) {
-      throw new Error('SCHEMA_ROLLBACK_ACTIVE_CLIENTS');
-    }
-    return this.schemaManager.rollbackTo(targetVersion);
-  }
-
+  /** Closes active clients and the owned pool when this runtime created it. */
   async close(): Promise<void> {
     await this.clientSession.close(this.ownsPool);
   }
 
   abortPendingOperations(): void {
     this.clientSession.abortPendingOperations();
+  }
+
+  protected async appendAndEnqueueTxInternal(
+    runId: RunId,
+    envelopes: EventInput[]
+  ): Promise<AppendResult> {
+    return this.runStateCoordinator.appendAndEnqueueTx(runId, envelopes);
+  }
+
+  protected async bootstrapRunTxInternal(input: RunBootstrapInput): Promise<AppendResult> {
+    return this.runStateCoordinator.bootstrapRunTx(input);
+  }
+
+  protected async saveProviderRefInternal(
+    tenantId: string,
+    runId: RunId,
+    runRef: {
+      providerWorkflowId: string;
+      providerRunId: string;
+      providerNamespace?: string;
+      providerTaskQueue?: string;
+      providerConductorUrl?: string;
+    }
+  ): Promise<void> {
+    return this.metadataRepo.saveProviderRef(tenantId, runId, runRef);
+  }
+
+  protected async getRunMetadataByRunIdInternal(
+    tenantId: string,
+    runId: string
+  ): Promise<RunMetadata | null> {
+    return this.metadataRepo.getByRunId(tenantId, runId);
+  }
+
+  protected async listRunsInternal(options: ListRunsOptions): Promise<RunMetadata[]> {
+    return this.metadataRepo.listRuns(options);
+  }
+
+  protected async reserveRetryAttemptInternal(
+    tenantId: string,
+    sourceRunId: RunId
+  ): Promise<RetryAttemptReservation> {
+    return this.metadataRepo.reserveRetryAttempt(tenantId, sourceRunId);
+  }
+
+  protected async listEventsInternal(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<EventEnvelope[]> {
+    return this.runEventRepository.listEvents(tenantId, runId, options);
+  }
+
+  protected async getSnapshotInternal(
+    tenantId: string,
+    runId: RunId
+  ): Promise<WorkflowSnapshot | null> {
+    return this.snapshotStore.getSnapshot(tenantId, runId);
+  }
+
+  protected async pinTerminalSnapshotInternal(
+    snapshot: ArchivedTerminalSnapshot
+  ): Promise<TerminalSnapshotPinResult> {
+    return this.snapshotStore.pinTerminalSnapshot(snapshot);
+  }
+
+  protected async getPinnedTerminalSnapshotInternal(
+    tenantId: string,
+    runId: RunId
+  ): Promise<ArchivedTerminalSnapshot | null> {
+    return this.snapshotStore.getPinnedTerminalSnapshot(tenantId, runId);
+  }
+
+  protected async rebuildSnapshotInternal(
+    tenantId: string,
+    runId: RunId
+  ): Promise<WorkflowSnapshot> {
+    return this.snapshotStore.rebuildSnapshot(tenantId, runId);
+  }
+
+  protected async listStaleSnapshotRunsInternal(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string }>> {
+    return this.snapshotStalenessQuery.listStaleSnapshotRuns(batchSize);
+  }
+
+  protected async enqueueTxInternal(runId: RunId, events: EventEnvelope[]): Promise<void> {
+    await this.runStateCoordinator.enqueueTx(runId, events);
+  }
+
+  protected async listPendingInternal(limit: number): Promise<OutboxRecord[]> {
+    return this.outboxStore.listPending(limit);
+  }
+
+  protected async listPendingForClaimInternal(
+    limit: number,
+    selection?: { shardIds?: readonly number[] }
+  ): Promise<OutboxRecord[]> {
+    return this.outboxStore.listPendingForClaim(limit, selection);
+  }
+
+  protected async markDeliveredInternal(ids: string[]): Promise<void> {
+    return this.outboxStore.markDelivered(ids);
+  }
+
+  protected async markFailedInternal(id: string, error: string): Promise<void> {
+    return this.outboxStore.markFailed(id, error);
+  }
+
+  protected async hasPendingRetriesInternal(selection?: {
+    shardIds?: readonly number[];
+  }): Promise<boolean> {
+    return this.outboxStore.hasPendingRetries(selection);
+  }
+
+  protected async listDeadLetterInternal(
+    limit: number,
+    tenantId: string
+  ): Promise<DeadLetterRecord[]> {
+    return this.outboxStore.listDeadLetter(limit, tenantId);
+  }
+
+  protected getLineageOutboxStoreInternal(): ILineageOutboxStore {
+    return this.lineageOutboxStore;
+  }
+
+  protected async replayDeadLettersInternal(options: {
+    tenantId: string;
+    limit?: number;
+    runId?: string;
+    ids?: string[];
+  }): Promise<number> {
+    return this.outboxStore.replayDeadLetters(options);
   }
 
   protected ready(): void {

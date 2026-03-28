@@ -8,30 +8,29 @@
  * @version 1.0.0
  * @date 2026-03-28
  */
-import type { ILineageOutboxStore } from '@dvt/contracts';
-import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
-
-import {
-  PostgresStateStoreRuntime,
-  type PostgresStateStoreRuntimeConfig,
-} from './PostgresStateStoreRuntime.js';
-import type {
-  AppendResult,
-  DeadLetterRecord,
-  EventEnvelope,
-  EventInput,
-  IOutboxStorage,
-  IRunSnapshotStalenessQuery,
-  IRunStateStore,
-  ListEventsOptions,
-  ListRunsOptions,
-  OutboxRecord,
-  RetryAttemptReservation,
-  RunBootstrapInput,
-  RunId,
-  RunMetadata,
-  WorkflowSnapshot,
-} from './types.js';
+import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
+import { PostgresStateStoreRuntime } from './PostgresStateStoreRuntime.js';
+type PostgresSchemaRollbackPlan = import('./PostgresSchemaManager.js').PostgresSchemaRollbackPlan;
+type PostgresStateStoreRuntimeConfig =
+  import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig;
+type AppendResult = import('./types.js').AppendResult;
+type DeadLetterRecord = import('./types.js').DeadLetterRecord;
+type EventEnvelope = import('./types.js').EventEnvelope;
+type EventInput = import('./types.js').EventInput;
+type IOutboxStorage = import('./types.js').IOutboxStorage;
+type IRunSnapshotStalenessQuery = import('./types.js').IRunSnapshotStalenessQuery;
+type IRunStateStore = import('./types.js').IRunStateStore;
+type ListEventsOptions = import('./types.js').ListEventsOptions;
+type ListRunsOptions = import('./types.js').ListRunsOptions;
+type OutboxRecord = import('./types.js').OutboxRecord;
+type RetryAttemptReservation = import('./types.js').RetryAttemptReservation;
+type RunBootstrapInput = import('./types.js').RunBootstrapInput;
+type RunId = import('./types.js').RunId;
+type RunMetadata = import('./types.js').RunMetadata;
+type WorkflowSnapshot = import('./types.js').WorkflowSnapshot;
+type ILineageOutboxStore = import('@dvt/contracts').ILineageOutboxStore;
+type ArchivedTerminalSnapshot = import('@dvt/state-store').ArchivedTerminalSnapshot;
+type TerminalSnapshotPinResult = import('@dvt/state-store').TerminalSnapshotPinResult;
 
 export type PostgresAdapterConfig = PostgresStateStoreRuntimeConfig;
 
@@ -43,14 +42,31 @@ export class PostgresStateStoreAdapter
     super(config);
   }
 
+  async migrate(): Promise<void> {
+    return this.schemaManager.migrate();
+  }
+
+  async planSchemaRollback(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
+    return this.schemaManager.planRollback(targetVersion);
+  }
+
+  async rollbackSchemaTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
+    return this.clientSession.withMaintenanceMode(async () => {
+      if (this.clientSession.hasActiveClients()) {
+        throw new Error(E.schemaRollbackActiveClientsErrorMessage);
+      }
+      return this.schemaManager.rollbackTo(targetVersion);
+    });
+  }
+
   async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
     this.ready();
-    return this.runStateCoordinator.appendAndEnqueueTx(runId, envelopes);
+    return this.appendAndEnqueueTxInternal(runId, envelopes);
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     this.ready();
-    return this.runStateCoordinator.bootstrapRunTx(input);
+    return this.bootstrapRunTxInternal(input);
   }
 
   async saveProviderRef(
@@ -65,17 +81,17 @@ export class PostgresStateStoreAdapter
     }
   ): Promise<void> {
     this.ready();
-    return this.metadataRepo.saveProviderRef(tenantId, runId, runRef);
+    return this.saveProviderRefInternal(tenantId, runId, runRef);
   }
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
-    return this.metadataRepo.getByRunId(tenantId, runId);
+    return this.getRunMetadataByRunIdInternal(tenantId, runId);
   }
 
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     this.ready();
-    return this.metadataRepo.listRuns(options);
+    return this.listRunsInternal(options);
   }
 
   async reserveRetryAttempt(
@@ -83,7 +99,7 @@ export class PostgresStateStoreAdapter
     sourceRunId: RunId
   ): Promise<RetryAttemptReservation> {
     this.ready();
-    return this.metadataRepo.reserveRetryAttempt(tenantId, sourceRunId);
+    return this.reserveRetryAttemptInternal(tenantId, sourceRunId);
   }
 
   async listEvents(
@@ -92,19 +108,19 @@ export class PostgresStateStoreAdapter
     options?: ListEventsOptions
   ): Promise<EventEnvelope[]> {
     this.ready();
-    return this.runEventRepository.listEvents(tenantId, runId, options);
+    return this.listEventsInternal(tenantId, runId, options);
   }
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
-    return this.snapshotStore.getSnapshot(tenantId, runId);
+    return this.getSnapshotInternal(tenantId, runId);
   }
 
   async pinTerminalSnapshot(
     snapshot: ArchivedTerminalSnapshot
   ): Promise<TerminalSnapshotPinResult> {
     this.ready();
-    return this.snapshotStore.pinTerminalSnapshot(snapshot);
+    return this.pinTerminalSnapshotInternal(snapshot);
   }
 
   async getPinnedTerminalSnapshot(
@@ -112,29 +128,29 @@ export class PostgresStateStoreAdapter
     runId: RunId
   ): Promise<ArchivedTerminalSnapshot | null> {
     this.ready();
-    return this.snapshotStore.getPinnedTerminalSnapshot(tenantId, runId);
+    return this.getPinnedTerminalSnapshotInternal(tenantId, runId);
   }
 
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
     this.ready();
-    return this.snapshotStore.rebuildSnapshot(tenantId, runId);
+    return this.rebuildSnapshotInternal(tenantId, runId);
   }
 
   async listStaleSnapshotRuns(
     batchSize: number
   ): Promise<Array<{ runId: string; tenantId: string }>> {
     this.ready();
-    return this.snapshotStalenessQuery.listStaleSnapshotRuns(batchSize);
+    return this.listStaleSnapshotRunsInternal(batchSize);
   }
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     this.ready();
-    await this.runStateCoordinator.enqueueTx(runId, events);
+    await this.enqueueTxInternal(runId, events);
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
     this.ready();
-    return this.outboxStore.listPending(limit);
+    return this.listPendingInternal(limit);
   }
 
   async listPendingForClaim(
@@ -142,32 +158,32 @@ export class PostgresStateStoreAdapter
     selection?: { shardIds?: readonly number[] }
   ): Promise<OutboxRecord[]> {
     this.ready();
-    return this.outboxStore.listPendingForClaim(limit, selection);
+    return this.listPendingForClaimInternal(limit, selection);
   }
 
   async markDelivered(ids: string[]): Promise<void> {
     this.ready();
-    return this.outboxStore.markDelivered(ids);
+    return this.markDeliveredInternal(ids);
   }
 
   async markFailed(id: string, error: string): Promise<void> {
     this.ready();
-    return this.outboxStore.markFailed(id, error);
+    return this.markFailedInternal(id, error);
   }
 
   async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     this.ready();
-    return this.outboxStore.hasPendingRetries(selection);
+    return this.hasPendingRetriesInternal(selection);
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
     this.ready();
-    return this.outboxStore.listDeadLetter(limit, tenantId);
+    return this.listDeadLetterInternal(limit, tenantId);
   }
 
   getLineageOutboxStore(): ILineageOutboxStore {
     this.ready();
-    return this.lineageOutboxStore;
+    return this.getLineageOutboxStoreInternal();
   }
 
   async replayDeadLetters(options: {
@@ -177,6 +193,6 @@ export class PostgresStateStoreAdapter
     ids?: string[];
   }): Promise<number> {
     this.ready();
-    return this.outboxStore.replayDeadLetters(options);
+    return this.replayDeadLettersInternal(options);
   }
 }

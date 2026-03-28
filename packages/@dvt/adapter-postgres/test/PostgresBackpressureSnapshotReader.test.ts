@@ -33,6 +33,36 @@ class RecordingPool {
 }
 
 describe('PostgresBackpressureSnapshotReader', () => {
+  it('fails fast when connection string sources are missing and no pool is provided', () => {
+    const previousPgUrl = process.env.DVT_PG_URL;
+    const previousDatabaseUrl = process.env.DATABASE_URL;
+    delete process.env.DVT_PG_URL;
+    delete process.env.DATABASE_URL;
+
+    try {
+      expect(
+        () =>
+          new PostgresBackpressureSnapshotReader({
+            schema: 'dvt',
+            now: () => NOW,
+            stuckEventAgeThresholdMs: 60_000,
+            localOverloadPendingThreshold: 2,
+          })
+      ).toThrow(/POSTGRES_CONNECTION_STRING_REQUIRED/);
+    } finally {
+      if (typeof previousPgUrl === 'undefined') {
+        delete process.env.DVT_PG_URL;
+      } else {
+        process.env.DVT_PG_URL = previousPgUrl;
+      }
+      if (typeof previousDatabaseUrl === 'undefined') {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = previousDatabaseUrl;
+      }
+    }
+  });
+
   it('rejects empty tenant scope before querying storage', async () => {
     const pool = new RecordingPool([]);
     const reader = new PostgresBackpressureSnapshotReader({

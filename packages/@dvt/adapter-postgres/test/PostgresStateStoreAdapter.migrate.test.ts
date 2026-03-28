@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
 
@@ -69,6 +69,30 @@ class PartiallyAppliedMigrationClient {
 }
 
 describe('PostgresStateStoreAdapter migration state', () => {
+  it('fails fast when connection string sources are missing and no pool is provided', () => {
+    const previousPgUrl = process.env.DVT_PG_URL;
+    const previousDatabaseUrl = process.env.DATABASE_URL;
+    delete process.env.DVT_PG_URL;
+    delete process.env.DATABASE_URL;
+
+    try {
+      expect(() => new PostgresStateStoreAdapter({ schema: 'dvt' })).toThrow(
+        /POSTGRES_CONNECTION_STRING_REQUIRED/
+      );
+    } finally {
+      if (typeof previousPgUrl === 'undefined') {
+        delete process.env.DVT_PG_URL;
+      } else {
+        process.env.DVT_PG_URL = previousPgUrl;
+      }
+      if (typeof previousDatabaseUrl === 'undefined') {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = previousDatabaseUrl;
+      }
+    }
+  });
+
   it('rejects use before migrate() is called', async () => {
     const adapter = new PostgresStateStoreAdapter({
       pool: {
@@ -140,6 +164,48 @@ describe('PostgresStateStoreAdapter migration state', () => {
     await expect(adapter.rollbackSchemaTo('core_009_core_indexes')).rejects.toThrow(
       /SCHEMA_ROLLBACK_ACTIVE_CLIENTS/
     );
+  });
+
+  it('holds maintenance gate during rollback to prevent new client acquisition race', async () => {
+    const pool = {
+      connect: vi.fn(async () => {
+        throw new Error('connect should not run while maintenance gate is active');
+      }),
+    };
+    const adapter = new PostgresStateStoreAdapter({
+      pool: pool as never,
+      assumeSchemaReady: true,
+    });
+    const rollbackPlan = {
+      component: 'core',
+      schema: 'dvt',
+      currentVersion: 'core_009_core_indexes',
+      targetVersion: 'core_008_compat_cleanup',
+      steps: [
+        {
+          version: 'core_009_core_indexes',
+          description: 'Create all standard operational indexes',
+          rollbackDescription:
+            'Drop the standard operational indexes introduced by the core index step',
+        },
+      ],
+    };
+
+    (
+      adapter as unknown as {
+        schemaManager: {
+          rollbackTo: (targetVersion: string | null) => Promise<unknown>;
+        };
+      }
+    ).schemaManager.rollbackTo = vi.fn(async (_targetVersion: string | null) => {
+      await expect(adapter.listPending(1)).rejects.toThrow(/SESSION_MAINTENANCE_MODE_ACTIVE/);
+      return rollbackPlan;
+    });
+
+    await expect(adapter.rollbackSchemaTo('core_008_compat_cleanup')).resolves.toEqual(
+      rollbackPlan
+    );
+    expect(pool.connect).not.toHaveBeenCalled();
   });
 
   it('applies SET LOCAL statement_timeout inside each step transaction when configured', async () => {

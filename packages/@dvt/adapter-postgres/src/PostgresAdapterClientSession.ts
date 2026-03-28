@@ -8,6 +8,7 @@
  */
 import type { Pool, PoolClient } from 'pg';
 
+import { POSTGRES_ADAPTER_CLIENT_SESSION_CONSTANTS as C } from './PostgresAdapterClientSessionConstants.js';
 import {
   beginTransactionSql,
   commitTransactionSql,
@@ -18,6 +19,8 @@ import {
 export class PostgresAdapterClientSession {
   private readonly activeClients = new Set<PoolClient>();
   private abortPendingOperationsRequested = false;
+  private maintenanceModeRequested = false;
+  private inFlightClientAcquisitions = 0;
 
   constructor(
     private readonly pool: Pool,
@@ -25,7 +28,7 @@ export class PostgresAdapterClientSession {
   ) {}
 
   hasActiveClients(): boolean {
-    return this.activeClients.size > 0;
+    return this.activeClients.size > 0 || this.inFlightClientAcquisitions > 0;
   }
 
   async close(ownsPool: boolean): Promise<void> {
@@ -39,7 +42,16 @@ export class PostgresAdapterClientSession {
     this.abortPendingOperationsRequested = true;
     const clients = [...this.activeClients];
     for (const client of clients) {
-      this.releaseClient(client, true);
+      this.releaseClient(client, C.destroyClientOnAbort);
+    }
+  }
+
+  async withMaintenanceMode<T>(fn: () => Promise<T>): Promise<T> {
+    this.beginMaintenanceMode();
+    try {
+      return await fn();
+    } finally {
+      this.endMaintenanceMode();
     }
   }
 
@@ -47,7 +59,7 @@ export class PostgresAdapterClientSession {
     const client = await this.connect();
     try {
       await client.query(beginTransactionSql());
-      if (this.statementTimeoutMs > 0) {
+      if (this.statementTimeoutMs > C.statementTimeoutDisabledMs) {
         await client.query(setLocalStatementTimeoutSql(), [this.statementTimeoutMs]);
       }
       const result = await fn(client);
@@ -75,24 +87,48 @@ export class PostgresAdapterClientSession {
     }
   }
 
+  private beginMaintenanceMode(): void {
+    if (this.maintenanceModeRequested) {
+      throw createMaintenanceModeActiveError();
+    }
+    this.maintenanceModeRequested = true;
+  }
+
+  private endMaintenanceMode(): void {
+    this.maintenanceModeRequested = false;
+  }
+
   private async connect(): Promise<PoolClient> {
-    this.throwIfPendingOperationsAborted();
-    const client = await this.pool.connect();
+    this.throwIfClientAcquisitionBlocked();
+    this.inFlightClientAcquisitions += 1;
+    let client: PoolClient;
+    try {
+      client = await this.pool.connect();
+    } finally {
+      this.inFlightClientAcquisitions -= 1;
+    }
     if (this.abortPendingOperationsRequested) {
-      client.release(true);
+      client.release(C.destroyClientOnAbort);
       throw createPendingOperationsAbortedError();
+    }
+    if (this.maintenanceModeRequested) {
+      client.release(C.releaseClientNormally);
+      throw createMaintenanceModeActiveError();
     }
     this.activeClients.add(client);
     return client;
   }
 
-  private throwIfPendingOperationsAborted(): void {
+  private throwIfClientAcquisitionBlocked(): void {
     if (this.abortPendingOperationsRequested) {
       throw createPendingOperationsAbortedError();
     }
+    if (this.maintenanceModeRequested) {
+      throw createMaintenanceModeActiveError();
+    }
   }
 
-  private releaseClient(client: PoolClient, destroy = false): void {
+  private releaseClient(client: PoolClient, destroy: boolean = C.releaseClientNormally): void {
     if (!this.activeClients.delete(client)) {
       return;
     }
@@ -101,32 +137,45 @@ export class PostgresAdapterClientSession {
 }
 
 function createPendingOperationsAbortedError(): Error {
-  const error = new Error('PENDING_OPERATIONS_ABORTED');
-  error.name = 'AbortError';
+  const error = new Error(C.pendingOperationsAbortedErrorMessage);
+  error.name = C.pendingOperationsAbortedErrorName;
+  return error;
+}
+
+function createMaintenanceModeActiveError(): Error {
+  const error = new Error(C.maintenanceModeActiveErrorMessage);
+  error.name = C.maintenanceModeActiveErrorName;
   return error;
 }
 
 function asError(error: unknown): Error {
   if (error instanceof Error) return error;
-  let message: string;
-  try {
-    if (typeof error === 'object' && error !== null) {
-      message = JSON.stringify(error);
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = JSON.stringify(error);
-    }
-  } catch {
-    message = String(error);
-  }
+  const message = typeof error === 'string' ? error : safeSerializeUnknown(error);
   return new Error(message);
 }
 
+function safeSerializeUnknown(error: unknown): string {
+  try {
+    const seen = new WeakSet<object>();
+    return JSON.stringify(error, (_key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular]';
+        }
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch {
+    return String(error);
+  }
+}
+
 function createTransactionRollbackError(operationError: Error, rollbackError: unknown): Error {
-  const wrapped = new Error('TRANSACTION_ROLLBACK_FAILED');
-  wrapped.name = 'PostgresTransactionError';
-  (wrapped as Error & { cause?: unknown }).cause = asError(rollbackError);
+  const wrapped = new Error(C.transactionRollbackFailedErrorMessage);
+  wrapped.name = C.transactionRollbackFailedErrorName;
+  (wrapped as Error & { cause?: unknown }).cause = operationError;
   (wrapped as Error & { operationCause?: unknown }).operationCause = operationError;
+  (wrapped as Error & { rollbackCause?: unknown }).rollbackCause = asError(rollbackError);
   return wrapped;
 }

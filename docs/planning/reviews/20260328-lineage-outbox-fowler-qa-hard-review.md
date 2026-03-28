@@ -480,6 +480,134 @@ already contains:
    `RUN_ALREADY_EXISTS`), the identity check fails even though behavior is correct.
    `.toMatchObject({ code: '23505', table: 'run_events' })` would be more resilient.
 
+---
+
+## Fourth Fowler QA review — in-progress refactor (2026-03-28)
+
+### Scope
+
+Working-tree changes not yet committed. Files reviewed:
+
+- `PostgresStateStoreAdapter.ts` (M)
+- `PostgresStateStoreRuntime.ts` (M)
+- `PostgresAdapterClientSession.ts` (M)
+- `PostgresSnapshotStalenessQuerySql.ts` (M)
+- `PostgresSnapshotStalenessQuery.ts` (M)
+- `PostgresBackpressureSnapshotReader.ts` (M)
+- `PostgresAdapterConstants.ts` (??)
+- `PostgresAdapterClientSessionConstants.ts` (??)
+- `PostgresAdapterConnectionString.ts` (??)
+- `PostgresStateStoreRuntimeConfig.ts` (??)
+- `PostgresStateStoreRuntimeComposer.ts` (??)
+
+### What this change does
+
+Construction of `PostgresStateStoreRuntime` is extracted into a pure function
+`composePostgresStateStoreRuntime`. Schema management methods (`migrate`,
+`planSchemaRollback`, `rollbackSchemaTo`) are moved from the base class to the
+`PostgresStateStoreAdapter` subclass. A `maintenanceMode` gate is added to
+`PostgresAdapterClientSession` to prevent new connections during `rollbackSchemaTo`.
+The correlated subquery in `listStaleSnapshotRunsSql` is replaced with a CTE.
+The localhost connection-string fallback is replaced with a fail-fast error.
+Error message strings are centralised in constants files.
+
+### Findings (ordered by criticality)
+
+1. **[High] CTE full-table scan is not unambiguously better than the correlated subquery it replaces**
+   - `listStaleSnapshotRunsSql` now materialises `MAX(run_seq) GROUP BY tenant_id, run_id` over
+     the entire `run_events` table before joining to `run_metadata`. For a table with N events and
+     a batch of M stale runs (M ≪ N), the correlated subquery used M index seeks; the CTE forces
+     an O(N) aggregate scan followed by a hash join. PostgreSQL will not elide the aggregate even
+     with a partial index unless the planner can push the LIMIT into the CTE, which it cannot do
+     here. The fix for finding 4 from the second review trades one pathology for another on large
+     deployments. A scoped CTE (`WHERE e.run_id IN (SELECT m.run_id FROM run_metadata m ORDER BY
+m.created_at ASC LIMIT $1)`) would preserve the index-seek path while still eliminating the
+     correlated evaluation.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts:11`
+
+2. **[High] `cause`/`operationCause` rename in `createTransactionRollbackError` is a silent breaking change**
+   - Before: `.cause` held the original operation error; `.rollbackCause` held the rollback
+     failure. After: `.cause` holds the rollback failure (wrapped); `.operationCause` holds the
+     original operation error. Any existing caller that reads `.cause` to recover the underlying
+     business error now silently gets the rollback failure instead. No migration path, no
+     deprecation comment.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:130`
+
+3. **[Medium] `rollbackSchemaTo` maintenance gate has a TOCTOU window for in-flight connections**
+   - `withMaintenanceMode` sets the flag synchronously, then the callback checks
+     `hasActiveClients()`. A caller that passed `throwIfClientAcquisitionBlocked()` and then
+     awaited `pool.connect()` before the flag was set will be rejected inside `connect()` after
+     the pool resolves — it is never added to `activeClients`. This means `hasActiveClients()` can
+     return 0 while a connection is still in progress. The rollback proceeds and the in-flight
+     caller gets a `SESSION_MAINTENANCE_MODE_ACTIVE` error once `pool.connect()` resolves. The DDL
+     and the in-flight caller's session are effectively concurrent for the duration of
+     `pool.connect()`. This window is milliseconds, but DDL in Postgres takes table locks.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:98`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:52`
+
+4. **[Medium] `beginMaintenanceMode` and `endMaintenanceMode` are public, enabling permanent session lockout**
+   - The safe API is `withMaintenanceMode(fn)`. Exposing `beginMaintenanceMode()` and
+     `endMaintenanceMode()` as public methods allows a caller to enter maintenance mode and never
+     exit — permanently blocking all new connections on the session. The test exercises
+     `beginMaintenanceMode`/`endMaintenanceMode` directly, which means downstream tests depend on
+     the unsafe API. Both methods should be `private` or removed; `withMaintenanceMode` is
+     sufficient.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:43`
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:47`
+
+5. **[Medium] `PostgresStateStoreRuntime` exposes 10 implementation details as `protected` fields**
+   - `PostgresStateStoreAdapter` directly accesses only `schemaManager` and `clientSession`.
+     The other eight fields (`outboxStore`, `metadataRepo`, `runEventRepository`,
+     `snapshotStore`, `runStateCoordinator`, `snapshotStalenessQuery`, `lineageOutboxStore`,
+     `ownsPool`) are `protected` without a current subclass consumer. `protected` is a
+     permanant public API commitment to all future subclasses; it cannot be tightened without a
+     breaking change. Fields not needed by the subclass should remain `private` on the base class,
+     with the base class methods accessing them directly.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts:39`
+
+6. **[Medium] Fail-fast on missing connection string is a silent breaking change with no migration path**
+   - `resolvePostgresConnectionString` now throws `POSTGRES_CONNECTION_STRING_REQUIRED` at
+     construction time if neither `config.connectionString`, `DVT_PG_URL`, nor `DATABASE_URL` is
+     present. Any existing test, integration environment, or CI setup that relied on the implicit
+     `postgresql://dvt:dvt@localhost:5432/dvt` fallback will throw immediately. This is the
+     correct final behavior (finding 7 from the second review), but it is undocumented as a
+     breaking change and no deprecation window is offered.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts:6`
+
+7. **[Low] 16 inline `type =` alias declarations instead of grouped `import type` in the adapter**
+   - `PostgresStateStoreAdapter.ts` replaces a single grouped `import type { … }` block with 16
+     individual `type X = import('…').X` declarations. This pattern is valid TypeScript but
+     unusual in this codebase, not idiomatic, and adds no functional benefit visible in the diff.
+     If it exists to avoid a circular-import cycle, that cycle is an architectural signal worth
+     documenting; if not, the pattern should be reverted to match the rest of the codebase.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:13`
+
+8. **[Low] `PostgresStateStoreRuntime` docstring still claims it is a "Foundation adapter" rather than a base class**
+   - After the refactor, `PostgresStateStoreRuntime` is no longer a standalone adapter — it is an
+     abstract base class. Its docstring (`Foundation adapter for issue #6`) and the live comment
+     (`DDL is no longer run at construction time`) from the previous design remain unchanged.
+     Documentation that describes a removed design is actively misleading.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts:29`
+
+### What this change closes from the second review
+
+| Finding                                                 | Status                                                                                              |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 4 — Correlated subquery N+1                             | Partial — correlated query is gone, but CTE introduces a full-table scan risk (see finding 1 above) |
+| 5 — `listStaleSnapshotRuns` no input validation         | Closed — `normalizeStaleSnapshotBatchSize` added                                                    |
+| 6 — `abortPendingOperations` `async` signature mismatch | Open — method is still declared `async` with no awaitable work                                      |
+| 7 — Hardcoded localhost fallback                        | Closed — `resolvePostgresConnectionString` throws on missing config                                 |
+| 8 — `BackpressureSnapshotReader` inline SQL             | Closed — extracted to `PostgresBackpressureSnapshotReaderSql.ts`                                    |
+| 3 — `lineageOutboxStore` public field                   | Not addressed — field remains `protected` on the runtime base class                                 |
+
 ## Assumption
 
 - This review assumes ADR-0031 tenant-isolation expectations apply to lineage persistence surfaces unless explicitly exempted.
@@ -552,3 +680,100 @@ already contains:
 
 - Command: `pnpm vitest packages/@dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts`
 - Result: passed (`7` tests, `1` file)
+
+---
+
+## Fifth Fowler QA review — deep mechanics (2026-03-28)
+
+### Scope
+
+Full working-tree read of all in-progress files, focused on areas not covered by reviews 1–4.
+Files examined in depth: `PostgresAdapterClientSession.ts`, `PostgresStateStoreRuntimeComposer.ts`,
+`PostgresStateStoreRuntime.ts`, `PostgresStateStoreAdapter.ts`, `PostgresSnapshotStalenessQuery.ts`,
+`PostgresAdapterConnectionString.ts`, `PostgresAdapterClientSessionConstants.ts`.
+
+### Corrections to review 4
+
+**Finding 2 withdrawn.** The current code sets `.cause = operationError` (original op error)
+— not a swap. Incorrect in review 4.
+
+**Finding 3 closed.** `inFlightClientAcquisitions` is incremented synchronously before
+`await pool.connect()` with no intervening `await`. In JS's single-threaded model the gap
+between `throwIfClientAcquisitionBlocked()` and `+= 1` cannot be observed by another
+coroutine. `hasActiveClients()` correctly includes in-flight counts. TOCTOU is closed.
+
+### New findings
+
+1. **[High] `.cause` and `.operationCause` are identical; ES2022 cause chain is semantically inverted**
+   - `createTransactionRollbackError` sets both `.cause = operationError` and
+     `.operationCause = operationError` to the same object, making one redundant.
+     Under the ES2022 `Error.cause` convention, the `cause` of `TRANSACTION_ROLLBACK_FAILED`
+     should be the error that caused the rollback to fail (the rollback error), not the original
+     operation error. A consumer walking the `.cause` chain to find the root error will
+     traverse into the original operation error immediately, skipping the rollback error
+     entirely. Correct layout: `.cause = asError(rollbackError)`,
+     `.operationCause = operationError`.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:174`
+
+2. **[High] `statementTimeoutMs` silently becomes `NaN` on non-numeric env var**
+   - Composer line 45: `Number(process.env[C.statementTimeoutEnvVar] ?? C.defaultTimeoutMs)`.
+     If `DVT_PG_STATEMENT_TIMEOUT_MS='abc'`, `Number('abc') = NaN`. The session guard
+     `this.statementTimeoutMs > C.statementTimeoutDisabledMs` evaluates `NaN > 0 = false`,
+     silently disabling the timeout. A misconfigured env var disables a production safety
+     feature with no error, log, or observable signal.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts:44`
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:73`
+
+3. **[Medium] `constructor(config = {})` default is now a lying API**
+   - `new PostgresStateStoreAdapter()` now throws `POSTGRES_CONNECTION_STRING_REQUIRED` at
+     construction. The `= {}` default implies zero-argument construction is valid; it is not.
+     The default argument should be removed or the type narrowed so that `pool` or
+     `connectionString` is required at the type level. All existing tests and documentation
+     that relied on the implicit localhost fallback now break silently at runtime, not at
+     the type boundary.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts:62`
+
+4. **[Medium] `close()` does not wait for in-flight acquisitions before `pool.end()`**
+   - `abortPendingOperations()` is synchronous. It releases all `activeClients` but does not
+     await connections still counted in `inFlightClientAcquisitions` (those inside
+     `await pool.connect()`). `pool.end()` is called immediately after. In node-postgres,
+     `pool.end()` terminates idle connections and waits for checked-out connections, but its
+     behavior with a pending `pool.connect()` queued for a slot is unspecified. An in-flight
+     acquisition could resolve after `pool.end()` returns, leaving an orphaned connection
+     that gets the abort flag, releases itself with destroy=true, but against an already-ended
+     pool.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:34`
+
+5. **[Medium] `composePostgresStateStoreRuntime` has no tests**
+   - The composer is the single point responsible for the entire service wiring graph. No
+     isolation test verifies that closures capture the correct `clientSession` instance, that
+     `assumeSchemaReady` calls `schemaManager.markReady()`, or that `runStateCoordinator` is
+     wired to the correct `outboxStore` and `metadataRepo`. A misclosure would only surface in
+     integration tests if the relevant scenario is exercised. The function is pure and
+     straightforwardly testable with a mock pool.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts:39`
+
+6. **[Low] `PostgresStateStoreRuntimeServices` returns concrete types — permanent coupling**
+   - The return type of the composer names every concrete implementation.
+     The runtime base class stores these as `protected readonly` fields of concrete types.
+     Any future need to inject test doubles at the runtime level requires either modifying
+     the entire inheritance chain or reconstructing the services object. Port interfaces
+     already defined elsewhere in the codebase would decouple the base class from
+     concrete implementations without changing the wiring function.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts:26`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts:40`
+
+7. **[Low] `resolvePostgresConnectionString` returns untrimmed string after trim-based guard**
+   - The guard is `resolved.trim().length === 0` but the function returns `resolved` (not
+     `resolved.trim()`). A connection string with leading/trailing whitespace passes the
+     guard and is forwarded verbatim to `new Pool({ connectionString })`. Node-postgres passes
+     it to libpq, which fails with a cryptic parse error instead of the clear
+     `POSTGRES_CONNECTION_STRING_REQUIRED` message.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts:10`
