@@ -97,6 +97,8 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [ ] `P1` `snapshot staleness in API`: expose freshness to callers.
 - [ ] `P2` `read-your-writes contract`: set a measurable staleness SLO.
 - [ ] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
+- [ ] `P3` `RC-C1`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
+- [ ] `P2` `RC-C2`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
 - [ ] `P1` `RC-E1`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
 - [ ] `P1` `RC-E2`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
 
@@ -105,6 +107,8 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - `RC-D1A` depends on `RC-D1`.
 - `RBAC at operation level` is unblocked after `S09`.
 - `Read-your-writes contract` depends on `snapshot staleness in API`.
+- `RC-C1` depends on `RBAC at operation level`.
+- `RC-C2` is independent and may run in parallel with runtime hardening items.
 - `RC-E1` and `RC-E2` depend on S16 merge.
 
 ## Expected Outcome
