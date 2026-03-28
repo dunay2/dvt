@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dvt:planner:PlanCore:v2.3.1",
+  "$id": "dvt:planner:PlanCore:v1.0.0",
   "type": "object",
   "required": ["metadata", "steps"],
   "additionalProperties": false,
@@ -10,7 +10,7 @@
       "required": ["planVersion", "inputHashSha256"],
       "additionalProperties": false,
       "properties": {
-        "planVersion": { "const": "2.3" },
+        "planVersion": { "const": "1.0" },
         "inputHashSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }
     },

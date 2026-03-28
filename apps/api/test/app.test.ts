@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { buildApp } from '../src/app.js';
 import * as pgPool from '../src/db/pool.js';
+import { SIGNAL_RUN_PARSE_ERROR_CODE } from '../src/entrypoints/http/signalRunRouteParser.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
@@ -392,6 +393,61 @@ describe('buildApp', () => {
       delete process.env.OIDC_JWKS_URI;
       delete process.env.OIDC_ISSUER;
       delete process.env.OIDC_AUDIENCE;
+    }
+  });
+
+  it('wires DVT_SIGNAL_ROUTE_ALLOW_CANCEL into /runs/:runId/signal parsing', async () => {
+    const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+    const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
+    const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
+    const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
+    const queryMock = vi.fn(async () => ({ rows: [{ ok: 1 }] }));
+    const getPgPoolSpy = vi.spyOn(pgPool, 'getPgPool').mockReturnValue({
+      query: queryMock,
+      end: vi.fn(async () => undefined),
+    } as never);
+
+    PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {};
+    PostgresPlanStore.prototype.migrate = async function migrate() {};
+    PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
+    PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
+
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+    process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
+    process.env.OIDC_ISSUER = 'https://issuer.example/';
+    process.env.OIDC_AUDIENCE = 'dvt-api';
+    process.env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL = 'false';
+
+    try {
+      const { app } = await buildApp();
+      const response = await app.inject({
+        method: 'POST',
+        url: '/runs/run-1/signal',
+        payload: {
+          tenantId: 'tenant-a',
+          signalType: 'CANCEL',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: 'BAD_REQUEST',
+        code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE,
+      });
+      await app.close();
+    } finally {
+      getPgPoolSpy.mockRestore();
+      PostgresPrincipalAccessRepository.prototype.migrate = originalAccessRepoMigrate;
+      PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
+      PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
+      PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
+      delete process.env.DATABASE_URL;
+      delete process.env.OIDC_JWKS_URI;
+      delete process.env.OIDC_ISSUER;
+      delete process.env.OIDC_AUDIENCE;
+      delete process.env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL;
     }
   });
 });

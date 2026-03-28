@@ -192,7 +192,7 @@ describe('planner -> engine contract', () => {
     });
 
     expect(plannerPlan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
-    expect(plannerPlan.metadata.planVersion).toBe('2.3');
+    expect(plannerPlan.metadata.planVersion).toBe('1.0');
     expect(plannerPlan.steps.length).toBe(3);
 
     const stepIds = plannerPlan.steps.map((step) => step.stepId);

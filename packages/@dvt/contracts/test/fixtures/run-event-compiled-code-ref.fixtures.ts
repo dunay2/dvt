@@ -9,7 +9,7 @@ const BASE_STEP_STARTED_WRITE_EVENT = {
   projectId: 'project-analytics',
   environmentId: 'prod',
   planId: 'plan-compiled-code-ref-1',
-  planVersion: '2.3',
+  planVersion: '1.0',
   engineAttemptId: 1,
   logicalAttemptId: 1,
   stepId: 'model.analytics.orders',

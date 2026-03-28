@@ -5,40 +5,44 @@ import type {
   IAuthenticator,
 } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import type { TenantId } from '../../domain/auth/types.js';
+import type { AuthorizationAction, TenantId } from '../../domain/auth/types.js';
 import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import type { SignalCommandActionName } from './signalRunRouteAuthorization.constants.js';
-import {
-  SIGNAL_RUN_PARSE_ERROR_RESPONSE,
-  type SignalRunParseErrorCode,
-} from './signalRunRouteParser.constants.js';
+
+type CommandActionName = Extract<AuthorizationAction, { readonly kind: 'command' }>['name'];
 
 type ParsedCommandRequest<TCommand> = {
   readonly command: TCommand;
   readonly authorization: {
     readonly tenantId: TenantId;
-    readonly actionName: SignalCommandActionName;
+    readonly actionName: CommandActionName;
   };
 };
 
-type ParsedCommandResult<TCommand> =
+type ParsedCommandResult<
+  TCommand,
+  TError extends string,
+  TCode extends string,
+> =
   | { readonly ok: true; readonly value: ParsedCommandRequest<TCommand> }
   | {
       readonly ok: false;
       readonly status: 400 | 403;
       readonly body: {
-        readonly error:
-          | typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST
-          | typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN;
-        readonly code: SignalRunParseErrorCode;
+        readonly error: TError;
+        readonly code: TCode;
       };
     };
 
-export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
+export async function executeAuthorizedRunCommandRoute<
+  TCommand,
+  TResult,
+  TError extends string,
+  TCode extends string,
+>(
   request: FastifyRequest,
   reply: FastifyReply,
   deps: {
@@ -46,7 +50,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     authorizer: AuthorizeCommandScopeService;
     execute: (command: TCommand, context: AuthorizedCommandExecutionContext) => Promise<TResult>;
   },
-  parsed: ParsedCommandResult<TCommand>
+  parsed: ParsedCommandResult<TCommand, TError, TCode>
 ): Promise<void> {
   if (!parsed.ok) {
     reply.code(parsed.status).send(parsed.body);

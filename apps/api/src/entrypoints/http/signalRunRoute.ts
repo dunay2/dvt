@@ -5,7 +5,10 @@ import type { ISignalRunUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
 import { executeAuthorizedRunCommandRoute } from './runCommandRouteExecutor.js';
-import { parseSignalRunRequest } from './signalRunRouteParser.js';
+import {
+  parseSignalRunRequest,
+  type SignalRouteCompatibilityPolicy,
+} from './signalRunRouteParser.js';
 
 export async function signalRunRoute(
   request: FastifyRequest<{ Params: { runId?: string }; Body: unknown }>,
@@ -14,6 +17,7 @@ export async function signalRunRoute(
     authenticator: IAuthenticator;
     authorizer: AuthorizeCommandScopeService;
     useCase: ISignalRunUseCase;
+    compatibilityPolicy: SignalRouteCompatibilityPolicy;
   }
 ): Promise<void> {
   await executeAuthorizedRunCommandRoute(
@@ -27,6 +31,7 @@ export async function signalRunRoute(
     parseSignalRunRequest({
       runId: request.params.runId,
       body: request.body,
+      compatibilityPolicy: deps.compatibilityPolicy,
     })
   );
 }

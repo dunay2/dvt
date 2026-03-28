@@ -8,7 +8,7 @@ import {
 
 describe('PlanVersionPolicy', () => {
   it('accepts a supported plan version', () => {
-    expect(() => assertSupportedPlanVersion('2.3')).not.toThrow();
+    expect(() => assertSupportedPlanVersion('1.0')).not.toThrow();
   });
 
   it('rejects an unsupported plan version with a typed error', () => {

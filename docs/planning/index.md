@@ -50,6 +50,7 @@ Concept anchors for this page:
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
+- [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
 
 ## Reviews
 

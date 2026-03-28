@@ -170,7 +170,7 @@ describe('StartRunAuthorizedFacade', () => {
             error: {
               kind: 'unsupported_plan_version' as const,
               planVersion: '2.7',
-              supportedVersions: ['2.3'] as const,
+              supportedVersions: ['1.0'] as const,
             },
           };
         },
@@ -183,7 +183,7 @@ describe('StartRunAuthorizedFacade', () => {
       accepted: false,
       code: 'UNSUPPORTED_PLAN_VERSION',
       reason: 'Unsupported plan version: 2.7',
-      supportedVersions: ['2.3'],
+      supportedVersions: ['1.0'],
     });
   });
 
