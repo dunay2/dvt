@@ -1,59 +1,75 @@
-﻿---
-title: Delivery Component Overview
+---
+title: '@dvt/delivery'
 status: Draft
 owner: Delivery Domain
-last_reviewed: 2026-03-15
-topics:
-  - Overview
-  - Main Responsibilities
-  - Documentation Pages
-  - Component File List
-  - Related Links
+last_reviewed: 2026-03-28
 ---
 
-# Delivery Component Overview
+# @dvt/delivery
 
-This page provides a general overview of the Delivery component, its purpose,
-main responsibilities, and navigation to detailed documentation pages.
+## Component Map
 
-## Purpose
+```mermaid
+flowchart LR
+  delivery[dvt/delivery]
+  outbox[dvt-outbox-worker]
+  engine[dvt/engine]
+  delivery --> outbox
+  engine --> delivery
+```
 
-The Delivery component orchestrates event publication, ownership tracking, and
-retry management for workflow events.
+## Location
+
+- `packages/@dvt/delivery`
+
+## Domain
+
+- [Delivery Domain](../../domain-delivery.md)
 
 ## Main Responsibilities
 
-- Event delivery and publication
-- Ownership tracking and confirmation
-- Retry management for failed events
-- Contract compliance
+- Delivery orchestration, event publishing, ownership management
+- Root: `DeliveryAggregate` (central delivery model)
+- Aggregates: `OutboxAggregate`
+- Ensures event publication, ownership tracking, retry logic
 
-## Documentation Pages
+## Explanation
+
+`@dvt/delivery` is responsible for the lifecycle of delivery events:
+
+- **Root:** `DeliveryAggregate` — represents the central delivery model, owning
+  event publication and ownership.
+- **Aggregates:** `OutboxAggregate` — event publishing and retry.
+- **Responsibilities:**
+  - Orchestrate event delivery and publication.
+  - Track delivery ownership and status.
+  - Manage retry logic for failed events.
+
+**Interactions:**
+
+- **[OutboxWorker](../outbox-worker.md):** Publishes events and manages retries.
+- **[Engine](../engine/index.md):** Receives delivery events for workflow execution.
+
+## Detailed Documentation
 
 - [DDD Structure](delivery-ddd.md)
 - [Sequence Diagram & Flow](delivery-sequence.md)
 - [Constraints & Invariants](delivery-constraints.md)
 - [Functionalities](delivery-functional.md)
 
-## Component File List
+## Key Files
 
-| File Name                 | Description                                | Type   | Last Modified |
-| ------------------------- | ------------------------------------------ | ------ | ------------- |
-| `DeliveryAggregate.ts`    | Central delivery model that manages events | Source | `YYYY-MM-DD`  |
-| `OutboxAggregate.ts`      | Handles event publishing and retry logic   | Source | `YYYY-MM-DD`  |
-| `delivery-ddd.md`         | DDD structure documentation                | Doc    | `YYYY-MM-DD`  |
-| `delivery-sequence.md`    | Sequence diagram and flow documentation    | Doc    | `YYYY-MM-DD`  |
-| `delivery-constraints.md` | Constraints and invariants documentation   | Doc    | `YYYY-MM-DD`  |
-| `delivery-functional.md`  | Functionalities documentation              | Doc    | `YYYY-MM-DD`  |
-| `index.md`                | Component overview and navigation          | Doc    | `YYYY-MM-DD`  |
+- `packages/@dvt/delivery/src/domain/DeliveryAggregate.ts`
+- `packages/@dvt/delivery/src/domain/OutboxAggregate.ts`
+- `packages/@dvt/delivery/src/domain/types.ts`
 
-## Related Links
+## Restrictions
 
+- Must comply with contract definitions in [Delivery Contracts](../../../contracts/index.md)
+- Only interacts with Delivery domain components and engine
+
+## Related
+
+- [Component Map](../../component-map.md)
+- [Delivery Domain](../../domain-delivery.md)
 - [Engine Component](../engine/index.md)
-- [Architecture Overview](../../index.md)
-
-## Navigation
-
-- [Back to Component Index](index.md)
-- [Related: Engine Component](../engine/index.md)
-- [Related: Architecture Overview](../../index.md)
