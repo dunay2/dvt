@@ -41,12 +41,13 @@ function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
     OTEL_RESOURCE_ATTRIBUTES: undefined,
     OIDC_ALGORITHMS: 'RS256',
     DVT_ADMIN_ROUTES_ENABLED: false,
+    DVT_SIGNAL_ROUTE_ALLOW_CANCEL: true,
     ...overrides,
   };
 }
 
 describe('buildObservability', () => {
-  it('returns no-op implementation when OBS_ENABLED=false', () => {
+  it('returns a no-op implementation when OBS_ENABLED=false', () => {
     const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
     expect(typeof obs.withContext).toBe('function');
     expect(() => obs.metrics.counter('test.counter').add(1)).not.toThrow();
