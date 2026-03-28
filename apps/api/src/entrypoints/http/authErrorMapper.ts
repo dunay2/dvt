@@ -33,7 +33,10 @@ export interface HttpResponseModel {
 export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpResponseModel {
   switch (result.kind) {
     case START_RUN_FACADE_RESULT_KIND.unauthenticated:
-      return { status: HTTP_STATUS.unauthorized, body: { error: 'UNAUTHORIZED', code: result.code } };
+      return {
+        status: HTTP_STATUS.unauthorized,
+        body: { error: 'UNAUTHORIZED', code: result.code },
+      };
     case START_RUN_FACADE_RESULT_KIND.unauthorized:
       return { status: HTTP_STATUS.forbidden, body: { error: 'FORBIDDEN', code: result.reason } };
     case START_RUN_FACADE_RESULT_KIND.accepted:
@@ -155,7 +158,10 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     error instanceof RunAlreadyExistsError ||
     getErrorCode(error) === START_RUN_ENGINE_ERROR_CODE.intentActiveConflict
   ) {
-    return { status: HTTP_STATUS.conflict, body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' } };
+    return {
+      status: HTTP_STATUS.conflict,
+      body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' },
+    };
   }
 
   if (error instanceof OutboxRateLimitExceededError) {
