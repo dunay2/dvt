@@ -47,9 +47,14 @@ export default function InspectorPanel({
       <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
         <PanelHeader title="Inspector" status={null} kind="" onHide={onHide} />
         <div className="flex flex-1 items-center justify-center px-6">
-          <p className="text-center text-sm text-slate-400">
-            {node ? 'No panels registered for this node type.' : 'Select a node to inspect.'}
-          </p>
+          <div className="max-w-xs text-center text-sm text-slate-400">
+            <p>{node ? 'No panels registered for this node type.' : 'Select a node to inspect.'}</p>
+            {node && (
+              <p className="mt-2 font-mono text-xs text-slate-500">
+                {node.kind} is renderable but has no inspector contribution yet.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );

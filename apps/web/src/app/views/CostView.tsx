@@ -95,6 +95,9 @@ export default function CostView() {
     description: `Last observed cost ${formatCurrency(node.lastCost ?? 0)} exceeded the warning threshold of $0.40.`,
   }));
 
+  const isLoading = graphSnapshotQuery.isLoading || runsQuery.isLoading;
+  const loadError = graphSnapshotQuery.error ?? runsQuery.error;
+
   return (
     <div className="flex h-full flex-col bg-slate-950">
       <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
@@ -123,6 +126,18 @@ export default function CostView() {
 
       <ScrollArea className="flex-1">
         <div className="space-y-6 p-6">
+          {isLoading && (
+            <Card className="border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">
+              Loading cost coverage from workspace and runs...
+            </Card>
+          )}
+
+          {loadError && (
+            <Card className="border-red-900 bg-red-950/30 p-4 text-sm text-red-200">
+              Cost data could not be loaded from the current data source.
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <Card className="border-slate-700 bg-slate-900 p-4">
               <div className="mb-2 flex items-start justify-between">
@@ -285,7 +300,8 @@ export default function CostView() {
             <h3 className="mb-2 font-semibold">Coverage</h3>
             <p className="text-sm text-slate-400">
               Cost coverage currently uses node-level `lastCost` and `lastDuration` data from the
-              workspace graph. The canvas heatmap reads the same source when `/cost` is active.
+              workspace graph. The canvas cost heatmap reads the same source when the `Cost` overlay
+              is enabled from the canvas toolbar.
             </p>
             <div className="mt-3 text-sm text-slate-300">
               <div>Nodes with cost data: {nodesWithCost.length}</div>

@@ -1,15 +1,11 @@
-import { CheckCircle2, Info, Puzzle, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { CheckCircle2, Info, Puzzle, XCircle } from 'lucide-react';
 
-import { PLUGIN_REGISTRY } from '../plugins/registry';
-import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Badge } from '../components/ui/badge';
 import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
-
-// ---------------------------------------------------------------------------
-// /api/capabilities — optional backend availability check
-// ---------------------------------------------------------------------------
+import { resolveString } from '../plugins/contracts/PluginManifest';
+import { PLUGIN_REGISTRY } from '../plugins/registry';
 
 type CapabilitiesResponse = {
   apiVersion: string;
@@ -23,12 +19,12 @@ async function fetchCapabilities(): Promise<CapabilitiesResponse> {
   return res.json() as Promise<CapabilitiesResponse>;
 }
 
-// ---------------------------------------------------------------------------
-// PluginsView — read-only, informative (v1 spec §7)
-// ---------------------------------------------------------------------------
-
 export default function PluginsView() {
-  const { data: capabilities } = useQuery({
+  const {
+    data: capabilities,
+    error: capabilitiesError,
+    isLoading: capabilitiesLoading,
+  } = useQuery({
     queryKey: ['shell', 'capabilities'],
     queryFn: fetchCapabilities,
     retry: false,
@@ -37,7 +33,6 @@ export default function PluginsView() {
 
   return (
     <div className="flex h-full flex-col bg-slate-950">
-      {/* Header */}
       <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
         <div className="flex items-center gap-3">
           <Puzzle className="size-6 text-orange-400" />
@@ -46,7 +41,7 @@ export default function PluginsView() {
             <p className="text-xs text-slate-400">
               {PLUGIN_REGISTRY.length} plugin{PLUGIN_REGISTRY.length !== 1 ? 's' : ''} registered
               {capabilities && (
-                <span className="ml-2 text-slate-500">· API {capabilities.apiVersion}</span>
+                <span className="ml-2 text-slate-500">� API {capabilities.apiVersion}</span>
               )}
             </p>
           </div>
@@ -55,22 +50,44 @@ export default function PluginsView() {
 
       <ScrollArea className="flex-1">
         <div className="mx-auto max-w-3xl space-y-4 p-6">
+          {capabilitiesLoading && (
+            <Card className="border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">
+              Checking backend capability availability...
+            </Card>
+          )}
+
+          {capabilitiesError && (
+            <Card className="border-amber-800 bg-amber-950/30 p-4 text-sm text-amber-200">
+              <div className="flex items-start gap-2">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <div>
+                  <div className="font-medium">Backend capability probe unavailable</div>
+                  <p className="mt-1 text-amber-100/80">
+                    `/api/capabilities` did not respond. Availability is being shown from frontend
+                    registry state only.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {PLUGIN_REGISTRY.map((plugin) => {
             const backendInfo = capabilities?.plugins[plugin.id];
-            const isAvailable = backendInfo?.available ?? true; // assume available if no backend info
+            const isAvailable = backendInfo?.available ?? true;
+            const envFlagValue = plugin.envFlag
+              ? (import.meta.env as Record<string, string | boolean | undefined>)[plugin.envFlag]
+              : undefined;
 
             return (
               <Card key={plugin.id} className="border-slate-700 bg-slate-900 p-5">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
-                    {/* Icon placeholder */}
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-700">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-cyan-700">
                       <Puzzle className="size-5" />
                     </div>
 
                     <div>
-                      {/* Name + version + status */}
-                      <div className="mb-1 flex items-center gap-2">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
                         <span className="font-semibold">{resolveString(plugin.displayName)}</span>
                         <Badge variant="outline" className="text-xs">
                           v{plugin.version}
@@ -91,7 +108,6 @@ export default function PluginsView() {
                         )}
                       </div>
 
-                      {/* Unavailability reason */}
                       {backendInfo?.reason && (
                         <p className="mb-2 flex items-center gap-1 text-xs text-slate-400">
                           <Info className="size-3 shrink-0" />
@@ -100,19 +116,14 @@ export default function PluginsView() {
                       )}
 
                       {plugin.envFlag && (
-                        <p className="text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-slate-500">
                           env flag: <span className="font-mono">{plugin.envFlag}</span> ={' '}
-                          <span className="font-mono">
-                            {(import.meta.env as Record<string, string | boolean | undefined>)[
-                              plugin.envFlag
-                            ] ?? 'unset'}
-                          </span>
+                          <span className="font-mono">{envFlagValue ?? 'unset'}</span>
                         </p>
                       )}
 
-                      {/* Capabilities */}
                       {(plugin.capabilities?.length ?? 0) > 0 && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           <div className="mb-1 text-xs text-slate-500">Capabilities</div>
                           <div className="flex flex-wrap gap-1">
                             {plugin.capabilities!.map((cap) => (
@@ -124,9 +135,8 @@ export default function PluginsView() {
                         </div>
                       )}
 
-                      {/* Node kinds */}
                       {(plugin.nodeKinds?.length ?? 0) > 0 && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           <div className="mb-1 text-xs text-slate-500">Node kinds</div>
                           <div className="flex flex-wrap gap-1">
                             {plugin.nodeKinds!.map((kind) => (
@@ -144,7 +154,6 @@ export default function PluginsView() {
                     </div>
                   </div>
 
-                  {/* Plugin id — always visible for debugging */}
                   <span className="shrink-0 font-mono text-[10px] text-slate-600">{plugin.id}</span>
                 </div>
               </Card>

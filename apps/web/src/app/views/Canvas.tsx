@@ -421,6 +421,12 @@ function CanvasContent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  useEffect(() => {
+    if (costByNodeId.size === 0 && exclusiveOverlayMode === 'cost') {
+      setExclusiveOverlayMode('runtime');
+    }
+  }, [costByNodeId.size, exclusiveOverlayMode]);
+
   const overlayDecorations = useMemo(() => {
     const overlays = getAllOverlays();
     const activeExclusiveOverlayId = exclusiveOverlayMode;
@@ -828,10 +834,16 @@ function CanvasContent() {
                     <TooltipContent>
                       {costByNodeId.size === 0
                         ? 'No node cost data available'
-                        : 'Toggle cost heatmap overlay'}
+                        : exclusiveOverlayMode === 'cost'
+                          ? 'Switch back to runtime overlay'
+                          : 'Switch to cost heatmap overlay'}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+
+                <div className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-400">
+                  overlay: {exclusiveOverlayMode}
+                </div>
 
                 <TooltipProvider>
                   <Tooltip>
