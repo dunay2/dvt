@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEdgesState, useNodesState, type Edge, type Node, type NodeTypes } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
 import { resolveDataSource } from '../../services/config/dataSource';
 import { createPlansService } from '../../services/plans/plansService';
+import { createRunsService } from '../../services/runs/runsService';
 import { createWorkspaceService } from '../../services/workspace/workspaceService';
 import { useAppStore } from '../../stores/appStore';
 import type { CanonicalEdge, CanonicalNode, CanonicalRun } from '../../types/canonical';
@@ -67,10 +69,12 @@ function toRunStatusSnapshot(canonicalRun: CanonicalRun | null): RunStatusSnapsh
 }
 
 export function useCanvasController() {
+  const navigate = useNavigate();
   const dataSourceMode = resolveDataSource();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
   const workspaceService = useMemo(() => createWorkspaceService(dataSourceMode), [dataSourceMode]);
   const plansService = useMemo(() => createPlansService(dataSourceMode), [dataSourceMode]);
+  const runsService = useMemo(() => createRunsService(dataSourceMode), [dataSourceMode]);
 
   const {
     focusMode,
@@ -230,16 +234,26 @@ export function useCanvasController() {
     toggleInspectorPanel,
   });
 
+  const handleRunStarted = useCallback(
+    (runId: string) => {
+      navigate(`/runs/${runId}`);
+    },
+    [navigate]
+  );
+
   const executionActions = useCanvasExecutionActions({
     plansService,
+    runsService,
     selectedNodeIds,
     workspaceNodeIds: workspaceNodes.map((node) => node.id),
     canPlan: userPermissions.canPlan,
     canRun: userPermissions.canRun,
     consolePanelVisible,
+    currentPlan: currentPlan as ExecutionPlan | null,
     setCurrentPlan,
     setConsolePanelHeight,
     toggleConsolePanel,
+    onRunStarted: handleRunStarted,
   });
 
   const nodesWithImpact = useMemo(

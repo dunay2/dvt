@@ -1,39 +1,49 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import { toast } from 'sonner';
 
-import { buildSessionRunContext } from '../../services/plans/plansService';
-import type { PlansService } from '../../services/plans/plansService';
+import {
+  buildSessionRunContext,
+  buildPlanRefFromPlan,
+  type PlansService,
+} from '../../services/plans/plansService';
+import type { RunsService } from '../../services/runs/runsService';
 import type { ExecutionPlan } from '../../types/dbt';
 
 type UseCanvasExecutionActionsParams = {
   plansService: PlansService;
+  runsService: RunsService;
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
+  currentPlan: ExecutionPlan | null;
   setCurrentPlan: (plan: ExecutionPlan | null) => void;
   setConsolePanelHeight: (height: number) => void;
   toggleConsolePanel: () => void;
+  onRunStarted: (runId: string) => void;
 };
 
 type UseCanvasExecutionActionsResult = {
   planModalOpen: boolean;
   setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
   handlePlan: () => Promise<void>;
-  handleStartRun: () => void;
+  handleStartRun: () => Promise<void>;
 };
 
 export function useCanvasExecutionActions({
   plansService,
+  runsService,
   selectedNodeIds,
   workspaceNodeIds,
   canPlan,
   canRun,
   consolePanelVisible,
+  currentPlan,
   setCurrentPlan,
   setConsolePanelHeight,
   toggleConsolePanel,
+  onRunStarted,
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
 
@@ -60,20 +70,47 @@ export function useCanvasExecutionActions({
     }
   }, [canPlan, plansService, selectedNodeIds, setCurrentPlan, workspaceNodeIds]);
 
-  const handleStartRun = useCallback(() => {
+  const handleStartRun = useCallback(async () => {
     if (!canRun) {
       toast.error('You do not have permission to start runs');
       return;
     }
 
-    toast.success('Run started');
-    setPlanModalOpen(false);
-    if (!consolePanelVisible) {
-      toggleConsolePanel();
-    } else {
-      setConsolePanelHeight(160);
+    if (!currentPlan) {
+      toast.error('No execution plan available — run Plan first');
+      return;
     }
-  }, [canRun, consolePanelVisible, setConsolePanelHeight, toggleConsolePanel]);
+
+    setPlanModalOpen(false);
+
+    try {
+      const runId = `run_ui_${Date.now()}`;
+      const context = buildSessionRunContext(runId);
+      const planRef = buildPlanRefFromPlan(currentPlan);
+      const runRef = await runsService.startRun({ planRef, context });
+
+      if (!consolePanelVisible) {
+        toggleConsolePanel();
+      } else {
+        setConsolePanelHeight(160);
+      }
+
+      toast.success('Run started');
+      onRunStarted(runRef.runId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start run';
+      toast.error(message);
+      setPlanModalOpen(true);
+    }
+  }, [
+    canRun,
+    consolePanelVisible,
+    currentPlan,
+    onRunStarted,
+    runsService,
+    setConsolePanelHeight,
+    toggleConsolePanel,
+  ]);
 
   return {
     planModalOpen,
