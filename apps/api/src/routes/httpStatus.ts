@@ -11,6 +11,4 @@ export const HTTP_STATUS_CODE = Object.freeze({
   serviceUnavailable: 503,
 } as const);
 
-export const HTTP_STATUS = HTTP_STATUS_CODE;
-
 export type HttpStatusCode = (typeof HTTP_STATUS_CODE)[keyof typeof HTTP_STATUS_CODE];

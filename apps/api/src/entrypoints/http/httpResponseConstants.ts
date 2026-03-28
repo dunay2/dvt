@@ -14,7 +14,7 @@ export const HTTP_ERROR = Object.freeze({
   conflict: 'CONFLICT',
 } as const);
 
-export const HTTP_ERROR_CODE = Object.freeze({
+export const HTTP_BODY_CODE = Object.freeze({
   runNotFound: 'RUN_NOT_FOUND',
   tenantAccessDenied: 'TENANT_ACCESS_DENIED',
   runAlreadyExists: 'RUN_ALREADY_EXISTS',
