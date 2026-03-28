@@ -1,5 +1,48 @@
 export type CoreNodeRole = 'input' | 'transform' | 'check' | 'output' | 'control';
 
+// ---------------------------------------------------------------------------
+// Canonical task and run shapes
+// ---------------------------------------------------------------------------
+
+export type CanonicalTaskStatus =
+  | 'pending'
+  | 'running'
+  | 'success'
+  | 'failed'
+  | 'skipped'
+  | 'warn'
+  | 'cancelled';
+
+export interface CanonicalTask {
+  taskId: string;
+  runId: string;
+  nodeId: string;
+  pluginId: string;
+  status: CanonicalTaskStatus;
+  startedAt?: string;
+  finishedAt?: string;
+  durationMs?: number;
+  logs?: string[];
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export type CanonicalRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface CanonicalRun {
+  runId: string;
+  planId: string;
+  pluginId: string;
+  status: CanonicalRunStatus;
+  startedAt: string;
+  finishedAt?: string;
+  durationMs?: number;
+  environment: string;
+  gitSha?: string;
+  tasks: CanonicalTask[];
+  metadata?: Record<string, unknown>;
+}
+
 export type CanonicalNodeStatus = 'idle' | 'running' | 'success' | 'failed' | 'skipped' | 'warn';
 
 export type PluginNodeKind = `${string}:${string}`;

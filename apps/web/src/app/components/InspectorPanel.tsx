@@ -1,309 +1,133 @@
-import { Info, Settings, Code, TestTube, Table, Clock, Shield, PanelRightClose } from 'lucide-react';
+import { useState } from 'react';
+import { PanelRightClose } from 'lucide-react';
 
-import { DbtNode } from '../types/dbt';
-
-import { Badge } from './ui/badge';
+import type { CanonicalNode } from '../types/canonical';
+import type { InspectorContext } from '../plugins/contracts/PluginManifest';
+import { getInspectorPanels } from '../plugins/registry';
+import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { cn } from './ui/utils';
 
+// ---------------------------------------------------------------------------
+// InspectorPanel
+// ---------------------------------------------------------------------------
+
 interface InspectorPanelProps {
-  node: DbtNode | null;
+  node: CanonicalNode | null;
+  activeRunId: string | null;
+  registeredPlugins?: ReadonlySet<string>;
   onHide: () => void;
-  userPermissions: {
-    canRun: boolean;
-    canPlan: boolean;
-    canEditEdges: boolean;
-  };
 }
 
-const statusColors = {
+const STATUS_DOT: Record<string, string> = {
   idle: 'bg-gray-600',
-  running: 'bg-blue-500',
+  running: 'bg-blue-500 animate-pulse',
   success: 'bg-green-500',
   failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
+  skipped: 'bg-yellow-400',
 };
 
-const triggerClassName =
-  'text-slate-200 data-[state=active]:bg-slate-950 data-[state=active]:text-white';
-const cardClassName = 'bg-slate-950 border-slate-700 p-3 text-slate-50';
-const cardTitleClassName = 'text-sm font-medium mb-2 text-slate-100';
-const statusBadgeClassName: Record<DbtNode['status'], string> = {
-  idle: 'border-gray-500/80 bg-gray-900/60 text-slate-100',
-  running: 'border-blue-500/80 bg-blue-950/60 text-blue-200',
-  success: 'border-green-500/80 bg-green-950/60 text-green-200',
-  failed: 'border-red-500/80 bg-red-950/60 text-red-200',
-  skipped: 'border-yellow-500/80 bg-yellow-950/60 text-yellow-200',
-  warn: 'border-orange-500/80 bg-orange-950/60 text-orange-200',
-};
+export default function InspectorPanel({
+  node,
+  activeRunId,
+  registeredPlugins = new Set(),
+  onHide,
+}: Readonly<InspectorPanelProps>) {
+  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
 
-export default function InspectorPanel({ node, onHide, userPermissions }: InspectorPanelProps) {
-  if (!node) {
+  const ctx: InspectorContext = { activeRunId, registeredPlugins };
+  const panels = node ? getInspectorPanels(node, ctx) : [];
+  const defaultTab = panels[0]?.id;
+
+  // Empty state
+  if (!node || panels.length === 0) {
     return (
-      <div className="h-full bg-slate-900 border-l border-slate-700 flex flex-col text-slate-50">
-        <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-          <h2 className="font-semibold text-sm">Inspector</h2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7 text-slate-300 hover:text-white"
-            onClick={onHide}
-            aria-label="Hide inspector panel"
-          >
-            <PanelRightClose className="size-4" />
-          </Button>
-        </div>
-        <div className="flex-1 flex items-center justify-center px-4">
-          <p className="text-sm text-slate-200 text-center">Select a node to inspect</p>
+      <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
+        <PanelHeader title="Inspector" status={null} kind="" onHide={onHide} />
+        <div className="flex flex-1 items-center justify-center px-6">
+          <p className="text-center text-sm text-slate-400">
+            {node ? 'No panels registered for this node type.' : 'Select a node to inspect.'}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-slate-900 border-l border-slate-700 flex flex-col text-slate-50">
-      <div className="px-4 py-3 border-b border-slate-700 flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <div className={cn('size-2 rounded-full', statusColors[node.status])} />
-            <h2 className="font-semibold text-sm truncate">{node.name}</h2>
-          </div>
-          <p className="text-xs text-slate-200 mt-1">{node.type}</p>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 text-slate-300 hover:text-white"
-          onClick={onHide}
-          aria-label="Hide inspector panel"
-        >
-          <PanelRightClose className="size-4" />
-        </Button>
-      </div>
+    <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
+      <PanelHeader title={node.name} status={node.status} kind={node.kind} onHide={onHide} />
 
-      <Tabs defaultValue="overview" className="flex-1 flex flex-col">
-        <TabsList className="bg-transparent border-b border-slate-700 rounded-none px-4 justify-start">
-          <TabsTrigger value="overview" className={triggerClassName}>
-            <Info className="size-3 mr-1" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="config" className={triggerClassName}>
-            <Settings className="size-3 mr-1" />
-            Config
-          </TabsTrigger>
-          <TabsTrigger value="sql" className={triggerClassName}>
-            <Code className="size-3 mr-1" />
-            SQL
-          </TabsTrigger>
-          {node.type === 'MODEL' && (
-            <>
-              <TabsTrigger value="tests" className={triggerClassName}>
-                <TestTube className="size-3 mr-1" />
-                Tests
+      <Tabs
+        value={activeTab ?? defaultTab}
+        onValueChange={setActiveTab}
+        className="flex flex-1 flex-col overflow-hidden"
+      >
+        <TabsList className="justify-start rounded-none border-b border-slate-700 bg-transparent px-4">
+          {panels.map((panel) => {
+            const Icon = panel.icon;
+            return (
+              <TabsTrigger
+                key={panel.id}
+                value={panel.id}
+                className="text-slate-200 data-[state=active]:bg-slate-950 data-[state=active]:text-white"
+              >
+                <Icon className="mr-1 size-3" />
+                {resolveString(panel.label)}
               </TabsTrigger>
-              <TabsTrigger value="columns" className={triggerClassName}>
-                <Table className="size-3 mr-1" />
-                Columns
-              </TabsTrigger>
-            </>
-          )}
-          <TabsTrigger value="history" className={triggerClassName}>
-            <Clock className="size-3 mr-1" />
-            History
-          </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <ScrollArea className="flex-1">
-          <TabsContent value="overview" className="p-4 space-y-4 m-0">
-            <Card className={cardClassName}>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-200">Package:</span>
-                  <span className="text-slate-50">{node.package}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-200">Path:</span>
-                  <span className="text-xs font-mono truncate ml-2 text-slate-50">{node.path}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-200">Status:</span>
-                  <Badge
-                    variant="outline"
-                    className={cn('capitalize font-medium', statusBadgeClassName[node.status])}
-                  >
-                    {node.status}
-                  </Badge>
-                </div>
-                {node.lastDuration && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-200">Last Duration:</span>
-                    <span className="text-slate-50">{node.lastDuration}s</span>
-                  </div>
-                )}
-                {node.lastCost && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-200">Last Cost:</span>
-                    <span className="text-slate-50">${node.lastCost.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {node.description && (
-              <Card className={cardClassName}>
-                <h3 className={cardTitleClassName}>Description</h3>
-                <p className="text-xs text-slate-100">{node.description}</p>
-              </Card>
-            )}
-
-            {node.tags.length > 0 && (
-              <Card className={cardClassName}>
-                <h3 className={cardTitleClassName}>Tags</h3>
-                <div className="flex flex-wrap gap-1">
-                  {node.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            <Card className={cardClassName}>
-              <h3 className={cardTitleClassName}>Dependencies</h3>
-              {node.dependencies.length === 0 ? (
-                <p className="text-xs text-slate-100">No dependencies</p>
-              ) : (
-                <div className="space-y-1">
-                  {node.dependencies.map((dep) => (
-                    <div key={dep} className="text-xs font-mono text-slate-100">
-                      -&gt; {dep}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            <Card className={cardClassName}>
-              <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-slate-100">
-                <Shield className="size-4" />
-                Permissions
-              </h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-200">Can Plan:</span>
-                  <Badge variant={userPermissions.canPlan ? 'default' : 'secondary'}>
-                    {userPermissions.canPlan ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-200">Can Run:</span>
-                  <Badge variant={userPermissions.canRun ? 'default' : 'secondary'}>
-                    {userPermissions.canRun ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-200">Can Edit Edges:</span>
-                  <Badge variant={userPermissions.canEditEdges ? 'default' : 'secondary'}>
-                    {userPermissions.canEditEdges ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="config" className="p-4 m-0">
-            <Card className={cardClassName}>
-              <pre className="text-xs font-mono text-slate-50 whitespace-pre-wrap">
-                {JSON.stringify(node.config || { materialized: 'table' }, null, 2)}
-              </pre>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="sql" className="p-4 m-0">
-            <Card className={cardClassName}>
-              <h3 className={cardTitleClassName}>Compiled SQL</h3>
-              <pre className="text-xs font-mono text-slate-50 whitespace-pre-wrap bg-slate-900 p-3 rounded border border-slate-700">
-                {node.compiledSql || 'No compiled SQL available'}
-              </pre>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="tests" className="p-4 m-0">
-            <div className="space-y-2">
-              <Card className={cardClassName}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-mono">test_not_null_store_id</span>
-                  <Badge className="bg-green-600">Passed</Badge>
-                </div>
-                <p className="text-xs text-slate-100">Generic test: not_null on store_id</p>
-              </Card>
-              <Card className={cardClassName}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-mono">test_unique_store_id</span>
-                  <Badge className="bg-green-600">Passed</Badge>
-                </div>
-                <p className="text-xs text-slate-100">Generic test: unique on store_id</p>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="columns" className="p-4 m-0">
-            <div className="space-y-2">
-              {node.columns?.map((col) => (
-                <Card key={col.name} className={cardClassName}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="font-mono text-sm">{col.name}</div>
-                      <div className="text-xs text-slate-100 mt-1">{col.type}</div>
-                      {col.description && (
-                        <p className="text-xs text-slate-200 mt-2">{col.description}</p>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {col.nullable ? 'nullable' : 'not null'}
-                    </Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="history" className="p-4 m-0">
-            <div className="space-y-3">
-              <Card className={cardClassName}>
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <div className="font-medium">Run #xyz789</div>
-                    <div className="text-xs text-slate-200 mt-1">2026-02-13 10:35:00</div>
-                  </div>
-                  <Badge className="bg-green-600">Success</Badge>
-                </div>
-                <div className="mt-2 text-xs text-slate-100">
-                  Duration: {node.lastDuration}s | Cost: ${node.lastCost?.toFixed(2)}
-                </div>
-              </Card>
-              <Card className={cardClassName}>
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <div className="font-medium">Run #abc456</div>
-                    <div className="text-xs text-slate-200 mt-1">2026-02-12 14:22:00</div>
-                  </div>
-                  <Badge className="bg-green-600">Success</Badge>
-                </div>
-                <div className="mt-2 text-xs text-slate-100">Duration: 2.1s | Cost: $0.04</div>
-              </Card>
-            </div>
-          </TabsContent>
+          {panels.map((panel) => {
+            const PanelComponent = panel.component;
+            return (
+              <TabsContent key={panel.id} value={panel.id} className="m-0 p-4">
+                <PanelComponent node={node} activeRunId={activeRunId} onClose={onHide} />
+              </TabsContent>
+            );
+          })}
         </ScrollArea>
       </Tabs>
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// PanelHeader
+// ---------------------------------------------------------------------------
+
+type PanelHeaderProps = {
+  title: string;
+  status: string | null;
+  kind: string;
+  onHide: () => void;
+};
+
+function PanelHeader({ title, status, kind, onHide }: PanelHeaderProps) {
+  const dotClass = status ? (STATUS_DOT[status] ?? 'bg-gray-600') : null;
+
+  return (
+    <div className="flex items-start justify-between border-b border-slate-700 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          {dotClass && <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />}
+          <h2 className="truncate text-sm font-semibold">{title}</h2>
+        </div>
+        {kind && <p className="mt-0.5 font-mono text-xs text-slate-400">{kind}</p>}
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-7 shrink-0 text-slate-300 hover:text-white"
+        onClick={onHide}
+        aria-label="Hide inspector panel"
+      >
+        <PanelRightClose className="size-4" />
+      </Button>
+    </div>
+  );
+}

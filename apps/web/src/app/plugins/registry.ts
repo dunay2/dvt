@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { CanonicalNode, PluginNodeKind } from '../types/canonical';
+import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
 import type {
   BadgeContext,
   CanvasOverlayContribution,
@@ -42,6 +42,15 @@ export type PluginContributions = {
   connectionRules?: PluginConnectionRule[];
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
+
+  /**
+   * Optional run adapter — normalises plugin-specific run data to CanonicalRun.
+   * The shell calls mapToCanonical() when it needs a unified view of a run
+   * (e.g. for the inspector History panel, overlay context with run status).
+   */
+  runAdapter?: {
+    mapToCanonical: (run: unknown) => CanonicalRun | null;
+  };
 };
 
 // ---------------------------------------------------------------------------
