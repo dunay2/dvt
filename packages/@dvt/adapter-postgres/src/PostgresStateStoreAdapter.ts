@@ -11,8 +11,6 @@
 import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
 import { PostgresStateStoreRuntime } from './PostgresStateStoreRuntime.js';
 type PostgresSchemaRollbackPlan = import('./PostgresSchemaManager.js').PostgresSchemaRollbackPlan;
-type PostgresStateStoreRuntimeConfig =
-  import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig;
 type AppendResult = import('./types.js').AppendResult;
 type DeadLetterRecord = import('./types.js').DeadLetterRecord;
 type EventEnvelope = import('./types.js').EventEnvelope;
@@ -32,13 +30,13 @@ type ILineageOutboxStore = import('@dvt/contracts').ILineageOutboxStore;
 type ArchivedTerminalSnapshot = import('@dvt/state-store').ArchivedTerminalSnapshot;
 type TerminalSnapshotPinResult = import('@dvt/state-store').TerminalSnapshotPinResult;
 
-export type PostgresAdapterConfig = PostgresStateStoreRuntimeConfig;
-
 export class PostgresStateStoreAdapter
   extends PostgresStateStoreRuntime
   implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage
 {
-  constructor(config: PostgresAdapterConfig = {}) {
+  constructor(
+    config: import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig = {}
+  ) {
     super(config);
   }
 

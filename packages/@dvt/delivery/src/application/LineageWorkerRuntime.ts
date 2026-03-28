@@ -276,7 +276,7 @@ function sanitizeErrorForPersistence(error: unknown): string {
       /(password|passwd|pwd|secret|token|apikey|api_key)\s*[=:]\s*[^,\s;]+/gi,
       '$1=[REDACTED]'
     )
-    .replace(/bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'bearer [REDACTED]');
+    .replace(/bearer\s+\S+/gi, 'bearer [REDACTED]');
   if (redacted.length <= 512) {
     return redacted;
   }

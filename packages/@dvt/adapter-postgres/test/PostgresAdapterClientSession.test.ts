@@ -73,6 +73,24 @@ describe('PostgresAdapterClientSession', () => {
     expect(client.release).toHaveBeenCalledWith(false);
   });
 
+  it('uses deterministic fallback message for non-serializable thrown objects', async () => {
+    const client = createClient();
+    const pool = createPool(client);
+    const session = new PostgresAdapterClientSession(pool as never, DISABLED_STATEMENT_TIMEOUT_MS);
+    const nonSerializableError = { value: 1n };
+
+    await expect(
+      session.withTransaction(async () => {
+        throw nonSerializableError;
+      })
+    ).rejects.toMatchObject({
+      message: 'NON_SERIALIZABLE_UNKNOWN_ERROR',
+    });
+    expect(client.query).toHaveBeenNthCalledWith(1, 'BEGIN');
+    expect(client.query).toHaveBeenNthCalledWith(2, 'ROLLBACK');
+    expect(client.release).toHaveBeenCalledWith(false);
+  });
+
   it('raises PostgresTransactionError when rollback fails and preserves operation cause compatibility', async () => {
     const client = createClient();
     const pool = createPool(client);

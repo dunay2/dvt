@@ -32,7 +32,7 @@ export type {
   TerminalSnapshotPinStore,
   WorkflowSnapshot,
 } from './types.js';
-export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
+export type { PostgresStateStoreRuntimeConfig as PostgresAdapterConfig } from './PostgresStateStoreRuntimeConfig.js';
 export type { ExecutablePlanArtifact, PostgresPlanStoreConfig } from './PostgresPlanStore.js';
 export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
 export type {

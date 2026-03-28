@@ -155,9 +155,25 @@ function asError(error: unknown): Error {
 }
 
 function safeSerializeUnknown(error: unknown): string {
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (typeof error === 'number' || typeof error === 'boolean' || typeof error === 'bigint') {
+    return `${error}`;
+  }
+  if (typeof error === 'symbol') {
+    const description = error.description ?? C.nonSerializableErrorFallbackMessage;
+    return `${C.symbolErrorPrefix}:${description}`;
+  }
+  if (typeof error === 'function') {
+    return C.functionErrorFallbackMessage;
+  }
+  if (error === null || typeof error !== 'object') {
+    return C.nonSerializableErrorFallbackMessage;
+  }
   try {
     const seen = new WeakSet<object>();
-    return JSON.stringify(error, (_key, value) => {
+    const serialized = JSON.stringify(error, (_key, value) => {
       if (typeof value === 'object' && value !== null) {
         if (seen.has(value)) {
           return '[Circular]';
@@ -166,8 +182,9 @@ function safeSerializeUnknown(error: unknown): string {
       }
       return value;
     });
+    return serialized ?? C.nonSerializableErrorFallbackMessage;
   } catch {
-    return String(error);
+    return C.nonSerializableErrorFallbackMessage;
   }
 }
 
