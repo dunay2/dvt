@@ -10,14 +10,20 @@ function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeo
   };
 }
 
-function createRequest() {
+function createRequest(): { id: string; headers: Record<string, string> } {
   return {
     id: 'req-1',
     headers: {},
   };
 }
 
-function createParsedCommand() {
+function createParsedCommand(): {
+  ok: true;
+  value: {
+    command: { runId: string; signalType: 'CANCEL' };
+    authorization: { tenantId: { value: string }; actionName: string };
+  };
+} {
   return {
     ok: true,
     value: {
@@ -30,7 +36,11 @@ function createParsedCommand() {
   };
 }
 
-function createDeps() {
+function createDeps(): {
+  authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
+  authorizer: { authorize: ReturnType<typeof vi.fn> };
+  execute: ReturnType<typeof vi.fn>;
+} {
   return {
     authenticator: {
       authenticateBearerToken: vi.fn().mockResolvedValue({
