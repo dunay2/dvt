@@ -1,6 +1,8 @@
 import React from 'react';
 import { DollarSign } from 'lucide-react';
 
+import type { PluginPortMap } from './contracts/ConnectionRules';
+
 import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
 import type { NodeCostData } from './contracts/PluginServices';
 import type {
@@ -238,6 +240,34 @@ export function getInspectorPanels(
 /**
  * Returns all badges applicable to the given node, sorted by priority desc.
  */
+/**
+ * Returns a map from pluginId → { connectionRules, produces, consumes }
+ * for use by the canvas connection evaluator.
+ */
+export function getPluginPortMap(): PluginPortMap {
+  const map = new Map<string, {
+    connectionRules: import('./contracts/PluginManifest').PluginConnectionRule[];
+    produces: { portType: string; forRoles: string[] }[];
+    consumes: { portType: string; forRoles: string[] }[];
+  }>();
+
+  for (const plugin of PLUGIN_REGISTRY) {
+    map.set(plugin.id, {
+      connectionRules: plugin.connectionRules ?? [],
+      produces: (plugin.produces ?? []).map((p) => ({
+        portType: p.portType,
+        forRoles: p.forRoles as string[],
+      })),
+      consumes: (plugin.consumes ?? []).map((c) => ({
+        portType: c.portType,
+        forRoles: c.forRoles as string[],
+      })),
+    });
+  }
+
+  return map;
+}
+
 export function getNodeBadges(node: CanonicalNode, ctx: BadgeContext): NodeBadge[] {
   const badges: Array<{ priority: number; badge: NodeBadge }> = [];
   for (const plugin of PLUGIN_REGISTRY) {

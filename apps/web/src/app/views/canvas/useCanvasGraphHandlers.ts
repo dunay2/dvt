@@ -1,7 +1,9 @@
 import { addEdge, type Connection, type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { canConnectNodeRoles, resolveCanvasEdgeType } from '../../plugins/nodeTypeRegistry';
+import { evaluateConnection } from '../../plugins/contracts/ConnectionRules';
+import { getPluginPortMap } from '../../plugins/registry';
+import { resolveCanvasEdgeType } from '../../plugins/nodeTypeRegistry';
 import {
   CANONICAL_NODE_DRAG_MIME_TYPE,
   type CanonicalNode,
@@ -9,7 +11,7 @@ import {
   type CoreNodeRole,
   type PluginNodeKind,
 } from '../../types/canonical';
-import { createsCycle, getLayoutedElements } from './canvasGraphUtils';
+import { getLayoutedElements } from './canvasGraphUtils';
 import {
   createCanvasEdgeFromConnection,
   mapDroppedCanonicalNodeToCanvasNode,
@@ -109,6 +111,8 @@ export function useCanvasGraphHandlers({
     edge: null,
   });
 
+  const pluginPortMap = useMemo(() => getPluginPortMap(), []);
+
   const onConnect = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
     (connection) => {
       if (!connection.source || !connection.target) {
@@ -121,13 +125,17 @@ export function useCanvasGraphHandlers({
         return;
       }
 
-      if (!canConnectNodeRoles(sourceNode.role, targetNode.role)) {
-        toast.error(`Cannot connect ${sourceNode.kind} to ${targetNode.kind}`);
-        return;
-      }
+      // Convert ReactFlow edges to CanonicalEdge shape for evaluateConnection
+      const canonicalEdges = edges.map((e) => ({
+        id: e.id,
+        sourceId: e.source,
+        targetId: e.target,
+        relation: 'lineage' as const,
+      }));
 
-      if (createsCycle(edges, connection.source, connection.target)) {
-        toast.error('Cannot create cycle in DAG');
+      const result = evaluateConnection(sourceNode, targetNode, canonicalEdges, pluginPortMap);
+      if (!result.allowed) {
+        toast.error(result.reason);
         return;
       }
 
@@ -148,7 +156,7 @@ export function useCanvasGraphHandlers({
       });
       pendingConnectionRef.current = connection;
     },
-    [canonicalNodesById, edges]
+    [canonicalNodesById, edges, pluginPortMap]
   );
 
   const confirmEdgeCreation = useCallback(() => {
