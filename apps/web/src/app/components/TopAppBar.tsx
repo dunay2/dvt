@@ -1,5 +1,6 @@
 import {
   Activity,
+  AlertTriangle,
   Bell,
   Database,
   GitBranch,
@@ -10,6 +11,7 @@ import {
   PanelRightClose,
   TerminalSquare,
   User,
+  WifiOff,
 } from 'lucide-react';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
@@ -42,7 +44,11 @@ const GRID_OPTIONS = [
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
-export default function TopAppBar() {
+type TopAppBarProps = {
+  readonly connectionDetail?: string | null;
+};
+
+export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
   const {
     selectedTenant,
     selectedProject,
@@ -64,37 +70,6 @@ export default function TopAppBar() {
     gridSize,
     setGridSize,
   } = useAppStore();
-
-  const getStatusColor = () => {
-    switch (connectionStatus.rest) {
-      case 'ok':
-        return 'bg-green-500';
-      case 'degraded':
-        return 'bg-yellow-500';
-      case 'offline':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusLabel = () => {
-    if (connectionStatus.rest === 'ok' && connectionStatus.liveEvents === 'connected') {
-      return 'Online';
-    }
-
-    if (connectionStatus.rest === 'ok' && connectionStatus.liveEvents === 'polling') {
-      return 'Online (Polling)';
-    }
-
-    if (connectionStatus.rest === 'degraded') {
-      return 'Degraded';
-    }
-
-    return 'Offline';
-  };
-
-  const showInlineStatus = connectionStatus.rest === 'ok';
 
   return (
     <TooltipProvider>
@@ -159,18 +134,42 @@ export default function TopAppBar() {
 
         <div className="flex-1" />
 
-        {showInlineStatus && (
+        {/* Connection status — compact inline indicator, always visible when not ok */}
+        {connectionStatus.rest === 'ok' ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950 border border-slate-600 rounded-md text-sm cursor-default">
-                <div className={`size-2 rounded-full ${getStatusColor()}`} />
-                <Activity className="size-4 text-slate-300" />
-                <span className="text-xs">{getStatusLabel()}</span>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 cursor-default px-1">
+                <div className="size-1.5 rounded-full bg-green-500" />
+                <Activity className="size-3.5" />
               </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>REST API: {connectionStatus.rest}</p>
               <p>Live Events: {connectionStatus.liveEvents}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : connectionStatus.rest === 'offline' ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 cursor-default px-1 select-none">
+                <WifiOff className="size-3.5" />
+                <span>Offline</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{connectionDetail ?? 'Unable to reach /healthz'}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 text-xs text-amber-500 cursor-default px-1 select-none">
+                <AlertTriangle className="size-3.5" />
+                <span>Degraded</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{connectionDetail ?? 'Platform in degraded state'}</p>
             </TooltipContent>
           </Tooltip>
         )}

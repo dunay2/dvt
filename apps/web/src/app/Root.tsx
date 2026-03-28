@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { Outlet } from 'react-router';
 
 import Console from './components/Console';
-import GlobalStatusBanner from './components/GlobalStatusBanner';
 import LeftNavigation from './components/LeftNavigation';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
@@ -25,7 +24,6 @@ function RootShell() {
     focusMode,
     consolePanelHeight,
     consolePanelVisible,
-    connectionStatus,
     setConnectionStatus,
   } = useAppStore();
   const platformHealth = usePlatformHealthQuery();
@@ -46,14 +44,7 @@ function RootShell() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">
-      {/* Global status banner pinned at the top when not healthy */}
-      <GlobalStatusBanner
-        restStatus={connectionStatus.rest}
-        snapshot={platformHealth.data}
-        errorMessage={errorMessage}
-      />
-      {/* Top App Bar */}
-      <TopAppBar />
+      <TopAppBar connectionDetail={errorMessage} />
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
