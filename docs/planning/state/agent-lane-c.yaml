@@ -63,6 +63,22 @@ tasks:
     objective: split CANCEL and PAUSE privileges.
     dependency: none
     target: Refine operation-level authorization split.
+  - task_id: RC-C1
+    priority: P3
+    status: queued
+    objective:
+      make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing
+      does not depend on a closed parse-code set.
+    dependency: RBAC at operation level
+    target: Generic ParsedRunCommandError helper signatures validated by dedicated unit tests.
+  - task_id: RC-C2
+    priority: P2
+    status: queued
+    objective:
+      institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure
+      log-first triage) and track measurable round reduction.
+    dependency: none
+    target: Apply the Lane C efficiency playbook in three consecutive PR cycles.
   - task_id: RC-E1
     priority: P1
     status: queued
@@ -83,4 +99,6 @@ dependency_notes: |
   - `RC-D1A` depends on `RC-D1`.
   - `RBAC at operation level` is unblocked after `S09`.
   - `Read-your-writes contract` depends on `snapshot staleness in API`.
+  - `RC-C1` depends on `RBAC at operation level`.
+  - `RC-C2` is independent and may run in parallel with runtime hardening items.
   - `RC-E1` and `RC-E2` depend on S16 merge.
