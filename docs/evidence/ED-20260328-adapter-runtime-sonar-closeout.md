@@ -13,11 +13,12 @@ code_refs:
   - packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts
   - docs/planning/reviews/20260328-lineage-outbox-fowler-qa-hard-review.md
 evidence:
-  - pnpm vitest packages/@dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts packages/@dvt/delivery/test/LineageWorkerRuntime.test.ts
-  - pnpm --filter @dvt/delivery test
-  - pnpm --filter @dvt/adapter-postgres test
-  - pnpm --filter @dvt/adapter-postgres typecheck
-  - pnpm verify:prepush
+  tests:
+    - pnpm vitest packages/@dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts packages/@dvt/delivery/test/LineageWorkerRuntime.test.ts
+    - pnpm --filter @dvt/delivery test
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/adapter-postgres typecheck
+    - pnpm verify:prepush
 ---
 
 # 20260328 Adapter Runtime And Sonar Closeout
