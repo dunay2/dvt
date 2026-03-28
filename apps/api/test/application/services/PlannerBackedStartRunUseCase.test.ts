@@ -41,7 +41,7 @@ const STORED_PLAN_REF = {
   sha256: 'abc123',
   schemaVersion: 'v1.2',
   planId: 'plan-1',
-  planVersion: '2.3',
+  planVersion: '1.0',
 };
 
 describe('PlannerBackedStartRunUseCase', () => {
@@ -208,7 +208,7 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
     plan: {
       metadata: {
         planId,
-        planVersion: '2.3',
+        planVersion: '1.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: '2026-03-21T00:00:00.000Z',
       },
@@ -223,7 +223,7 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
     canonicalPlanJson: JSON.stringify({
       metadata: {
         planId,
-        planVersion: '2.3',
+        planVersion: '1.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: '2026-03-21T00:00:00.000Z',
       },

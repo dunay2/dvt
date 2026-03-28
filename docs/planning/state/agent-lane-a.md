@@ -111,6 +111,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - `Schema migration rollback` depends on `S02`.
 - `S13` is independent and can run in parallel.
 - `RC-E3` is a prerequisite to S03 or similar; breaking interface change — coordinate with Lane C.
+- `RC-E3` closeout deferred until PR #639 is merged to main.
 - `DHM` starts with WS5; follow WS1, WS3, WS4, WS2, WS6 dependency order.
 - `plan-version-reset` is independent and can run in parallel.
 

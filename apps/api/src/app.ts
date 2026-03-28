@@ -204,7 +204,11 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       getRunEventsRoute(request as never, reply, { ...runtimeAuth, useCase: getRunEventsUseCase })
     );
     app.post(RUNTIME_ROUTE_PATH.signal, async (request, reply) =>
-      signalRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
+      signalRunRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: signalRunUseCase,
+        compatibilityPolicy: { allowCancelSignalType: env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL },
+      })
     );
     app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
       cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })

@@ -22,14 +22,14 @@ type ParsedCommandRequest<TCommand> = {
   };
 };
 
-type ParsedCommandResult<TCommand, TParseCode extends string = string> =
+type ParsedCommandResult<TCommand, TParseCode extends string> =
   | { readonly ok: true; readonly value: ParsedCommandRequest<TCommand> }
   | ParsedRunCommandError<TParseCode>;
 
 export async function executeAuthorizedRunCommandRoute<
   TCommand,
   TResult,
-  TParseCode extends string = string,
+  TParseCode extends string,
 >(
   request: FastifyRequest,
   reply: FastifyReply,

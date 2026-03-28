@@ -37,7 +37,7 @@ function mkStepStartedEvent(payload?: Record<string, unknown>): EventEnvelope {
     projectId: 'project-1',
     environmentId: 'env-1',
     planId: 'plan-1',
-    planVersion: '2.3',
+    planVersion: '1.0',
     engineAttemptId: 1,
     logicalAttemptId: 1,
     idempotencyKey: 'idem-1',

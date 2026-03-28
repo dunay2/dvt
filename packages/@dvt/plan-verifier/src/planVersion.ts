@@ -9,13 +9,13 @@ export type ParsedPlanVersion = {
 
 export const PLAN_RUNTIME_COMPATIBILITY_MATRIX = {
   planner: {
-    acceptedPlanVersions: ['2.3'],
+    acceptedPlanVersions: ['1.0'],
   },
   engine: {
-    acceptedPlanVersions: ['2.3'],
+    acceptedPlanVersions: ['1.0'],
   },
   'adapter-temporal': {
-    acceptedPlanVersions: ['2.3'],
+    acceptedPlanVersions: ['1.0'],
   },
 } as const;
 

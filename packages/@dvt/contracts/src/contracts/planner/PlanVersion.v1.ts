@@ -5,7 +5,7 @@
  * literals across the contract surface.
  */
 
-export const CURRENT_EXECUTION_PLAN_VERSION = '2.3' as const;
+export const CURRENT_EXECUTION_PLAN_VERSION = '1.0' as const;
 
 export const SUPPORTED_EXECUTION_PLAN_VERSIONS = [CURRENT_EXECUTION_PLAN_VERSION] as const;
 
@@ -18,7 +18,7 @@ export interface ExecutionPlanVersionDescriptor {
 }
 
 export const EXECUTION_PLAN_VERSION_REGISTRY = {
-  '2.3': {
+  '1.0': {
     status: 'current',
     family: 'ExecutionPlanV2',
     notes: 'Current planner-emitted version for the canonical ExecutionPlanV2 surface.',

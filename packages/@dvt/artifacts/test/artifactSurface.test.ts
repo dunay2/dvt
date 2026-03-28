@@ -13,7 +13,7 @@ const TENANT_ID = 'artifact-test-tenant';
 function buildPlan(): ExecutionPlanV2 {
   return {
     metadata: {
-      planVersion: '2.3',
+      planVersion: '1.0',
       inputHashSha256: 'input-hash',
       planId: 'plan-id',
       createdAtIso: '2026-03-19T00:00:00.000Z',

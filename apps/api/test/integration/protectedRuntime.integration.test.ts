@@ -35,7 +35,7 @@ const VALID_PLAN_REF = {
   sha256: 'integration-sha-256',
   schemaVersion: 'v1.2',
   planId: 'integration-plan',
-  planVersion: '2.3',
+  planVersion: '1.0',
 };
 
 type JwksServerHandle = {
