@@ -85,3 +85,10 @@ Represents parser logic for DSL. Responsible for:
 - [Component Map](../component-map.md)
 - [Planning Domain](../domain-planning.md)
 - [Planner Contracts](../../packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md)
+
+## Detailed Documentation
+
+- [DDD Structure](dsl-ddd.md)
+- [Functionalities](dsl-functional.md)
+- [Constraints & Invariants](dsl-constraints.md)
+- [Sequence Diagrams](dsl-sequence.md)

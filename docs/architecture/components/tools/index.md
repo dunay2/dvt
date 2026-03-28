@@ -76,3 +76,10 @@ Represents operation management for tools. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Infra Domain](../domain-infra.md)
+
+## Detailed Documentation
+
+- [DDD Structure](tools-ddd.md)
+- [Functionalities](tools-functional.md)
+- [Constraints & Invariants](tools-constraints.md)
+- [Sequence Diagrams](tools-sequence.md)

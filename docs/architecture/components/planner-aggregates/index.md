@@ -217,3 +217,10 @@ sequenceDiagram
  ValidationAggregate-->>Verifier: Validation results (errors/warnings)
  Verifier-->>Planner: Return validation outcome
 ```
+
+## Detailed Documentation
+
+- [DDD Structure](planner-aggregates-ddd.md)
+- [Functionalities](planner-aggregates-functional.md)
+- [Constraints & Invariants](planner-aggregates-constraints.md)
+- [Sequence Diagrams](planner-aggregates-sequence.md)

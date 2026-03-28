@@ -43,3 +43,10 @@ apps/api exposes HTTP endpoints, manages routing and authentication, and handles
 
 - [Component Map](../component-map.md)
 - [API / Entry Domain](../domain-api.md)
+
+## Detailed Documentation
+
+- [DDD Structure](api-ddd.md)
+- [Functionalities](api-functional.md)
+- [Constraints & Invariants](api-constraints.md)
+- [Sequence Diagrams](api-sequence.md)

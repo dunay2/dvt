@@ -73,3 +73,10 @@ Represents workflow management for temporal adapter. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Execution Domain](../domain-execution.md)
+
+## Detailed Documentation
+
+- [DDD Structure](adapter-temporal-ddd.md)
+- [Functionalities](adapter-temporal-functional.md)
+- [Constraints & Invariants](adapter-temporal-constraints.md)
+- [Sequence Diagrams](adapter-temporal-sequence.md)

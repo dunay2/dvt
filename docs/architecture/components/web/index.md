@@ -43,3 +43,10 @@ flowchart LR
 
 - [Component Map](../component-map.md)
 - [UI / Visualization Domain](../domain-ui.md)
+
+## Detailed Documentation
+
+- [DDD Structure](web-ddd.md)
+- [Functionalities](web-functional.md)
+- [Constraints & Invariants](web-constraints.md)
+- [Sequence Diagrams](web-sequence.md)

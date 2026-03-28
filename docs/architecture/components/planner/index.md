@@ -77,3 +77,10 @@ Planner orchestrates these interactions to ensure every plan is valid, executabl
 - [Plan Verifier](verifier.md)
 - [Plan Interpreter](interpreter.md)
 - [DSL](dsl.md)
+
+## Detailed Documentation
+
+- [DDD Structure](planner-ddd.md)
+- [Functionalities](planner-functional.md)
+- [Constraints & Invariants](planner-constraints.md)
+- [Sequence Diagrams](planner-sequence.md)

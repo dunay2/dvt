@@ -1,17 +1,17 @@
-﻿# Engine C4 Architecture
+# Engine C4 Architecture
 
-**Date**: 2026-03-06
-**Scope**: Logical architecture of `@dvt/engine` and direct collaborators.
-**Note**: C4 containers are logical and runtime boundaries. `@dvt/engine` is a TypeScript library embedded by processes such as `apps/api`, reconciler workers, and outbox workers.
+**Date**: 2026-03-06  
+**Scope**: Logical architecture of `@dvt/engine` and direct collaborators.  
+**Note**: C4 containers are logical/runtime boundaries. `@dvt/engine` is a TypeScript library embedded by processes such as `apps/api`, reconciler workers, and outbox workers.
 
 **Primary sources**:
 
-- `packages/@dvt/engine/src/core/WorkflowEngine.ts`
-- `packages/@dvt/engine/src/core/SnapshotProjector.ts`
-- `packages/@dvt/engine/src/services/RunMaintenanceService.ts`
-- `packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts`
-- `packages/@dvt/engine/src/ports/IRunStateStore.ts`
-- `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
+- [WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+- [SnapshotProjector.ts](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
+- [RunMaintenanceService.ts](../../../packages/@dvt/engine/src/services/RunMaintenanceService.ts)
+- [IntentReconcilerWorker.ts](../../../packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts)
+- [IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
+- [IProviderAdapter.ts](../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts)
 - [ADR-0029](../../adr/ADR-0029-run-maintenance-service.md)
 - [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md)
 
@@ -145,15 +145,15 @@ UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ## 4. Reading Notes
 
 - `WorkflowEngine` is the lifecycle boundary and should not own plan bytes or runtime internals.
-- `SnapshotProjector` is still in-process; no standalone projector service exists yet.
+- `SnapshotProjector` is still in-process; no standalone projector service yet.
 - `RunMaintenanceService` centralizes maintenance behavior from ADR-0029 and ADR-0030.
-- `@dvt/adapter-postgres` covers state store, outbox, and persistent intent store.
-- `OutboxWorker` and `IntentReconcilerWorker` are operational components embedding engine behavior.
+- `@dvt/adapter-postgres` now covers state store, outbox, and persistent intent store (`PostgresStartRunIntentStore`).
+- `OutboxWorker` and `IntentReconcilerWorker` are operational components that embed `@dvt/engine`.
 
 ## 5. Implementation Maturity Map
 
-**Last reviewed**: 2026-03-15
-**References**: [navigation-guide.md](../../navigation-guide.md), [VERSIONING.md](../../VERSIONING.md)
+**Cutoff date**: 2026-03-06  
+**Basis**: current code in `packages/@dvt/engine`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, and local test coverage.
 
 ```mermaid
 flowchart LR
@@ -165,27 +165,31 @@ flowchart LR
   E --> C["Conductor adapter (15%)"]
 ```
 
-| Area                              | Implemented | Primary gap                                              |
-| --------------------------------- | ----------- | -------------------------------------------------------- |
-| Engine lifecycle core             | 95%         | Operational hardening and integration fit-and-finish     |
-| Postgres state + outbox storage   | 95%         | Contract hardening and downstream operational maturity   |
-| Intent durability                 | 85%         | End-to-end wiring and production telemetry               |
-| Temporal runtime adapter          | 80%         | Missing capabilities and CI lane stability               |
-| Standalone projection/read models | 40%         | Dedicated projector service and denormalized read models |
-| Conductor adapter                 | 15%         | Real implementation and parity validation                |
+| Area                              | Implemented | Code evidence                                                               | Main gap                                                     |
+| --------------------------------- | ----------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Engine lifecycle core             | 95%         | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests | Operational hardening and integration debt                   |
+| Postgres state + outbox storage   | 95%         | `PostgresStateStoreAdapter` with snapshots/event log/outbox + DLQ           | Downstream contract hardening and operational hardening      |
+| Intent durability                 | 85%         | `PostgresStartRunIntentStore` + `IntentReconcilerWorker`                    | End-to-end wiring and production telemetry tuning            |
+| Temporal runtime adapter          | 80%         | `TemporalAdapter`, `TemporalWorkerHost`, workflow/activities                | Remaining phase capabilities + CI integration lane stability |
+| Standalone projection/read models | 40%         | In-process `SnapshotProjector` only                                         | Dedicated projector service and denormalized read models     |
+| Conductor adapter                 | 15%         | `ConductorAdapterStub`                                                      | Real adapter implementation and parity validation            |
 
-## 6. Gaps and Proposed Sequencing
+## 6. Missing Capabilities and Proposed Effort
 
-| Gap                                    | Why it matters                                                                                      | Proposed implementation                                                                                      |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Independent outbox delivery process    | Improves asynchronous publication reliability and isolates API runtime from delivery back-pressure. | Formalize the minimal operational contract, complete canary cutover, and harden scaling plus ordering.       |
-| Standalone projection and read service | Enables scalable reads and dashboard-friendly denormalized models.                                  | Extract a projector worker, add rebuild and replay tooling, and introduce targeted read models plus indexes. |
-| Temporal integration hardening         | Reduces runtime risk and CI blind spots.                                                            | Stabilize the Temporal lane, expand failure-path coverage, and harden shutdown behavior.                     |
-| Real Conductor adapter                 | Preserves provider portability.                                                                     | Replace the stub, map lifecycle signals and events, and add capability parity tests.                         |
+<!-- markdownlint-disable MD060 -->
 
-### Proposed order
+| Gap                                      | Why it matters                                                                | Proposed implementation                                                                                                  | Estimated effort    |
+| ---------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| Independent outbox delivery process      | Production reliability for async publication and isolation from API lifecycle | Formalize the minimal HTTP publisher contract, execute canary cutover, and harden scale-out/ordering                     | 4-6 engineer-days   |
+| Standalone projection/read model service | Scalable status queries and dashboard-friendly reads                          | Extract projector worker, add rebuild/replay tooling, introduce denormalized read models and indexes                     | 8-12 engineer-days  |
+| Temporal integration hardening           | Reduce runtime risk and CI blind spots                                        | Stabilize Temporal integration lane (time-skipping/dev server), strengthen failure injection tests and shutdown behavior | 3-5 engineer-days   |
+| Conductor real adapter                   | Multi-provider portability roadmap                                            | Replace `ConductorAdapterStub`, map signals/status/events, add capability parity tests                                   | 10-15 engineer-days |
 
-1. Independent outbox delivery process.
-2. Temporal hardening.
-3. Standalone projection and read service.
-4. Conductor adapter.
+<!-- markdownlint-enable MD060 -->
+
+### Sequencing proposal
+
+1. Outbox delivery process
+2. Temporal hardening
+3. Standalone projection/read model service
+4. Conductor adapter

@@ -73,3 +73,10 @@ Represents state management for postgres adapter. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Execution Domain](../domain-execution.md)
+
+## Detailed Documentation
+
+- [DDD Structure](adapter-postgres-ddd.md)
+- [Functionalities](adapter-postgres-functional.md)
+- [Constraints & Invariants](adapter-postgres-constraints.md)
+- [Sequence Diagrams](adapter-postgres-sequence.md)

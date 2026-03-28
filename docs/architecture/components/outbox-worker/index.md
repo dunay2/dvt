@@ -76,3 +76,10 @@ Represents retry management for outbox worker. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Delivery Domain](../domain-delivery.md)
+
+## Detailed Documentation
+
+- [DDD Structure](outbox-worker-ddd.md)
+- [Functionalities](outbox-worker-functional.md)
+- [Constraints & Invariants](outbox-worker-constraints.md)
+- [Sequence Diagrams](outbox-worker-sequence.md)

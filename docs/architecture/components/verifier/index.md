@@ -92,3 +92,10 @@ Represents warning tracking for plan validation. Responsible for:
 - [Component Map](../component-map.md)
 - [Planning Domain](../domain-planning.md)
 - [Planner Contracts](../../packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md)
+
+## Detailed Documentation
+
+- [DDD Structure](verifier-ddd.md)
+- [Functionalities](verifier-functional.md)
+- [Constraints & Invariants](verifier-constraints.md)
+- [Sequence Diagrams](verifier-sequence.md)

@@ -76,3 +76,10 @@ Represents UI component management for web. Responsible for:
 
 - [Component Map](../component-map.md)
 - [UI / Visualization Domain](../domain-ui.md)
+
+## Detailed Documentation
+
+- [DDD Structure](web-app-ddd.md)
+- [Functionalities](web-app-functional.md)
+- [Constraints & Invariants](web-app-constraints.md)
+- [Sequence Diagrams](web-app-sequence.md)

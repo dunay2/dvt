@@ -76,3 +76,10 @@ Represents validation management for scripts. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Infra Domain](../domain-infra.md)
+
+## Detailed Documentation
+
+- [DDD Structure](scripts-ddd.md)
+- [Functionalities](scripts-functional.md)
+- [Constraints & Invariants](scripts-constraints.md)
+- [Sequence Diagrams](scripts-sequence.md)

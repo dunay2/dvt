@@ -84,3 +84,10 @@ Represents log management for observability. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Shared Boundary Domain](../domain-shared.md)
+
+## Detailed Documentation
+
+- [DDD Structure](observability-ddd.md)
+- [Functionalities](observability-functional.md)
+- [Constraints & Invariants](observability-constraints.md)
+- [Sequence Diagrams](observability-sequence.md)

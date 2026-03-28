@@ -76,3 +76,10 @@ Represents event management for traceability. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Shared Boundary Domain](../domain-shared.md)
+
+## Detailed Documentation
+
+- [DDD Structure](traceability-service-ddd.md)
+- [Functionalities](traceability-service-functional.md)
+- [Constraints & Invariants](traceability-service-constraints.md)
+- [Sequence Diagrams](traceability-service-sequence.md)

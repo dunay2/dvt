@@ -84,3 +84,10 @@ Represents tool management for infra. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Infra Domain](../domain-infra.md)
+
+## Detailed Documentation
+
+- [DDD Structure](infra-ddd.md)
+- [Functionalities](infra-functional.md)
+- [Constraints & Invariants](infra-constraints.md)
+- [Sequence Diagrams](infra-sequence.md)

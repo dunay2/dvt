@@ -84,3 +84,10 @@ Represents hash management for crypto. Responsible for:
 
 - [Component Map](../component-map.md)
 - [Shared Boundary Domain](../domain-shared.md)
+
+## Detailed Documentation
+
+- [DDD Structure](crypto-ddd.md)
+- [Functionalities](crypto-functional.md)
+- [Constraints & Invariants](crypto-constraints.md)
+- [Sequence Diagrams](crypto-sequence.md)
