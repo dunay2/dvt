@@ -75,6 +75,24 @@ function createDeps(): {
 }
 
 describe('executeAuthorizedRunCommandRoute', () => {
+  it('returns parser error directly without auth or execution', async () => {
+    const request = createRequest();
+    const reply = createReply();
+    const deps = createDeps();
+
+    await executeAuthorizedRunCommandRoute(request as never, reply as never, deps as never, {
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' },
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_BODY' });
+    expect(deps.authenticator.authenticateBearerToken).not.toHaveBeenCalled();
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.execute).not.toHaveBeenCalled();
+  });
+
   it('returns 401 when authentication fails', async () => {
     const request = createRequest();
     const reply = createReply();
@@ -93,6 +111,27 @@ describe('executeAuthorizedRunCommandRoute', () => {
 
     expect(reply.code).toHaveBeenCalledWith(401);
     expect(reply.send).toHaveBeenCalledWith({ error: 'UNAUTHORIZED', code: 'AUTH_REQUIRED' });
+    expect(deps.execute).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when authorization denies scope', async () => {
+    const request = createRequest();
+    const reply = createReply();
+    const deps = createDeps();
+    deps.authorizer.authorize.mockResolvedValueOnce({
+      ok: false,
+      reason: 'ACTION_NOT_GRANTED',
+    });
+
+    await executeAuthorizedRunCommandRoute(
+      request as never,
+      reply as never,
+      deps as never,
+      createParsedCommand() as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(403);
+    expect(reply.send).toHaveBeenCalledWith({ error: 'FORBIDDEN', code: 'ACTION_NOT_GRANTED' });
     expect(deps.execute).not.toHaveBeenCalled();
   });
 

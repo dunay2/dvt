@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseCancelRunRequest } from '../../../src/entrypoints/http/cancelRunRouteParser.js';
 import {
-  parseCancelRunRequest,
   SIGNAL_COMMAND_ACTION,
   SIGNAL_RUN_PARSE_ERROR_CODE,
-} from '../../../src/entrypoints/http/cancelRunRouteParser.js';
+} from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 
 describe('parseCancelRunRequest', () => {
   it('maps cancel request to run:cancel action and CANCEL signal', () => {
