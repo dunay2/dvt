@@ -93,7 +93,10 @@ export default function CanvasViewport({
         <Background color="#374151" gap={gridSize} />
         <Controls className="bg-slate-900 border-slate-600" />
         <MiniMap
-          className="bg-slate-900 border border-slate-600"
+          style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 6 }}
+          maskColor="rgba(2, 6, 23, 0.65)"
+          maskStrokeColor="#475569"
+          maskStrokeWidth={3}
           nodeColor={(node) => {
             const pluginKind = (node.data as { pluginKind?: string }).pluginKind ?? 'dvt:unknown';
             return resolveNodeKindRegistration(pluginKind).minimapColor;
