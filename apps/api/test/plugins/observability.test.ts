@@ -41,6 +41,7 @@ function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
     OTEL_RESOURCE_ATTRIBUTES: undefined,
     OIDC_ALGORITHMS: 'RS256',
     DVT_ADMIN_ROUTES_ENABLED: false,
+    DVT_SIGNAL_ROUTE_ALLOW_CANCEL: true,
     ...overrides,
   };
 }
