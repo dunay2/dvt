@@ -843,6 +843,64 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     );
   });
 
+  test('lineage outbox: stale worker markFailed cannot increment attempts after claim ownership changes', async () => {
+    const nowRef = { value: NOW };
+    const runId = 'run-lineage-stale-failed-owner-change';
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+    const afterFirstBackoff = '2026-02-22T00:01:33.000Z';
+    const expectedAttemptsAfterSingleFailure = 1;
+
+    await withClockAdaptersOnSharedSchema(
+      nowRef,
+      async (adapterA, adapterB) => {
+        await adapterA.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapterA.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStoreA = adapterA.getLineageOutboxStore();
+        const lineageStoreB = adapterB.getLineageOutboxStore();
+        await lineageStoreA.enqueue(runId, event);
+
+        const firstClaims = await lineageStoreA.listPending(claimLimit);
+        const firstClaimedRecord = requireDefined(
+          firstClaims.find((record) => record.runId === runId),
+          'expected initial lineage claim'
+        );
+
+        nowRef.value = afterClaimExpiry;
+        const reclaimedByWorkerB = await lineageStoreB.listPending(claimLimit);
+        const reclaimedRecord = requireDefined(
+          reclaimedByWorkerB.find((record) => record.runId === runId),
+          'expected worker B reclaim after timeout'
+        );
+        expect(reclaimedRecord.id).toBe(firstClaimedRecord.id);
+
+        const ownerDisposition = await lineageStoreB.markFailed(
+          reclaimedRecord.id,
+          'owner-worker-failure'
+        );
+        expect(ownerDisposition).toBe('retry_scheduled');
+
+        const staleDisposition = await lineageStoreA.markFailed(
+          firstClaimedRecord.id,
+          'stale-worker-failure'
+        );
+        expect(staleDisposition).toBe('not_found');
+
+        nowRef.value = afterFirstBackoff;
+        const nextClaims = await lineageStoreA.listPending(claimLimit);
+        const retriedRecord = requireDefined(
+          nextClaims.find((record) => record.runId === runId),
+          'expected retried record after first backoff'
+        );
+        expect(retriedRecord.attempts).toBe(expectedAttemptsAfterSingleFailure);
+        expect(retriedRecord.lastError).toBe('owner-worker-failure');
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
   test('outbox: replayDeadLetters moves records back to pending', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-replay'));
