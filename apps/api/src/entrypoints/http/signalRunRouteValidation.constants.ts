@@ -17,3 +17,12 @@ export const SUPPORTED_SIGNAL_TYPES: ReadonlySet<SupportedSignalType> = new Set(
   'RESUME',
   'CANCEL',
 ]);
+
+export const SIGNAL_ROUTE_COMPATIBILITY_POLICY = {
+  // Keep /signal supporting CANCEL while dedicated /cancel route coexists.
+  allowCancelSignalType: true,
+} as const;
+
+export type SignalRouteCompatibilityPolicy = {
+  readonly allowCancelSignalType: boolean;
+};

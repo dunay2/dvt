@@ -17,7 +17,7 @@ describe('@dvt/plan-verifier runtime compatibility matrix', () => {
   it('acepta una version declarada para el runtime', () => {
     expect(() =>
       verifyPlanVersionOrThrow({
-        planVersion: '2.3',
+        planVersion: '1.0',
         runtime: 'planner',
       })
     ).not.toThrow();

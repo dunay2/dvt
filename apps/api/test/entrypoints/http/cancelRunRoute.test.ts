@@ -5,6 +5,7 @@ import {
   SIGNAL_COMMAND_ACTION,
   SIGNAL_RUN_PARSE_ERROR_CODE,
 } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
+import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
 function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
   return {
@@ -80,7 +81,7 @@ describe('cancelRunRoute', () => {
       }),
       'req-1'
     );
-    expect(reply.code).toHaveBeenCalledWith(202);
+    expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
   });
 
   it('returns 403 when tenantId is missing', async () => {
@@ -147,6 +148,33 @@ describe('cancelRunRoute', () => {
       code: 'MISSING_TOKEN',
     });
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when authorization is denied', async () => {
+    const deps = createDeps();
+    deps.authorizer.authorize.mockResolvedValueOnce({
+      ok: false,
+      reason: 'TENANT_ACCESS_DENIED',
+    });
+    const reply = createReply();
+
+    await cancelRunRoute(
+      {
+        id: 'req-5',
+        headers: { authorization: 'Bearer token' },
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(403);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'FORBIDDEN',
+      code: 'TENANT_ACCESS_DENIED',
+    });
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 });

@@ -133,7 +133,7 @@ describe('EngineStartRunUseCase', () => {
       async startRun() {
         throw new UnsupportedPlanVersionError({
           planVersion: '9.0',
-          supportedVersions: ['2.3', '2.4'],
+          supportedVersions: ['1.0'],
         });
       },
     };
@@ -145,7 +145,7 @@ describe('EngineStartRunUseCase', () => {
       error: {
         kind: 'unsupported_plan_version',
         planVersion: '9.0',
-        supportedVersions: ['2.3', '2.4'],
+        supportedVersions: ['1.0'],
       },
     });
   });

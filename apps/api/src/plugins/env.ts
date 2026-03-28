@@ -61,6 +61,8 @@ const EnvSchema = z.object({
   DVT_DB_READY_ENABLED: strictTrueBoolean.default(false),
   // Admin routes (snapshot repair, etc.) -- disabled by default; never expose publicly
   DVT_ADMIN_ROUTES_ENABLED: strictTrueBoolean.default(false),
+  // Compatibility switch: allow CANCEL through /signal while /cancel coexists.
+  DVT_SIGNAL_ROUTE_ALLOW_CANCEL: strictTrueBoolean.default(true),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

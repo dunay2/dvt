@@ -8,7 +8,7 @@ const PLAN_REF = {
   sha256: 'abc123',
   schemaVersion: 'v1.2',
   planId: 'plan-1',
-  planVersion: '2.3',
+  planVersion: '1.0',
 };
 
 describe('StoredPlanExecutabilityValidator', () => {
@@ -151,7 +151,7 @@ function executablePlanBytes(
     JSON.stringify({
       metadata: {
         planId: overrides?.planId ?? 'plan-1',
-        planVersion: overrides?.planVersion ?? '2.3',
+        planVersion: overrides?.planVersion ?? '1.0',
         schemaVersion: overrides?.schemaVersion ?? 'v1.2',
         contractVersion: '1.0.0',
         ...(overrides?.requiresCapabilities === undefined

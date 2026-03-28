@@ -60,7 +60,7 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
         uri: 'dvt-plan://postgres/plan-r4-1',
         schemaVersion: 'v1.2',
         planId: 'plan-r4-1',
-        planVersion: '2.3',
+        planVersion: '1.0',
       });
       expect(record).toMatchObject({
         planId: 'plan-r4-1',
@@ -79,7 +79,7 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       expect(JSON.parse(Buffer.from(pendingBytes).toString('utf8'))).toMatchObject({
         metadata: {
           planId: 'plan-r4-2',
-          planVersion: '2.3',
+          planVersion: '1.0',
           schemaVersion: 'v1.2',
           contractVersion: '1.0.0',
         },
@@ -94,7 +94,7 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       expect(JSON.parse(Buffer.from(bytes).toString('utf8'))).toMatchObject({
         metadata: {
           planId: 'plan-r4-2',
-          planVersion: '2.3',
+          planVersion: '1.0',
           schemaVersion: 'v1.2',
           contractVersion: '1.0.0',
         },
@@ -227,7 +227,7 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
     plan: {
       metadata: {
         planId,
-        planVersion: '2.3',
+        planVersion: '1.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: NOW,
       },
@@ -242,7 +242,7 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
     canonicalPlanJson: JSON.stringify({
       metadata: {
         planId,
-        planVersion: '2.3',
+        planVersion: '1.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: NOW,
       },

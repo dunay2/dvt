@@ -168,7 +168,6 @@ describe('PostgresLineageOutboxStore', () => {
     );
     expect(query?.params).toEqual([NOW, 60_000]);
   });
-
   it('listPending omits lastError when lineage row has no last_error value', async () => {
     const client = new RecordingClient();
     client.enqueueRows([

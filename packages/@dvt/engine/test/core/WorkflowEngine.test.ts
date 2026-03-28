@@ -69,7 +69,7 @@ function makePlanRef(): PlanRef {
     sha256: 'deadbeef',
     schemaVersion: 'v1.1',
     planId: 'p',
-    planVersion: '2.3',
+    planVersion: '1.0',
   };
 }
 
@@ -183,7 +183,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       sha256: 'deadbeef',
       schemaVersion: 'v1.1',
       planId: 'p',
-      planVersion: '2.3',
+      planVersion: '1.0',
     } as any;
 
     const validContext = {
