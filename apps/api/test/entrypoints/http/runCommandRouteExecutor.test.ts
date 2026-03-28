@@ -80,16 +80,11 @@ describe('executeAuthorizedRunCommandRoute', () => {
     const reply = createReply();
     const deps = createDeps();
 
-    await executeAuthorizedRunCommandRoute(
-      request as never,
-      reply as never,
-      deps as never,
-      {
-        ok: false,
-        status: 400,
-        body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' },
-      }
-    );
+    await executeAuthorizedRunCommandRoute(request as never, reply as never, deps as never, {
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' },
+    });
 
     expect(reply.code).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_BODY' });

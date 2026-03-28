@@ -10,8 +10,8 @@ import type { TenantId } from '../../domain/auth/types.js';
 import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import type { RunCommandActionName } from './runCommandRoute.constants.js';
 import type { ParsedRunCommandError } from './runCommandFieldParsers.js';
+import type { RunCommandActionName } from './runCommandRoute.constants.js';
 
 type ParsedCommandRequest<TCommand> = {
   readonly command: TCommand;
