@@ -1,6 +1,12 @@
 import { Pool } from 'pg';
 
-import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
+import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
+import {
+  POSTGRES_ADAPTER_ERROR_CONSTANTS as E,
+  POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C,
+} from './PostgresAdapterConstants.js';
+import { getBackpressureSnapshotSql } from './PostgresBackpressureSnapshotReaderSql.js';
+import { normalizeSchema } from './sqlUtils.js';
 
 export interface PostgresBackpressureSnapshot {
   readonly tenantActivePendingEventCount: number;
@@ -9,11 +15,13 @@ export interface PostgresBackpressureSnapshot {
   readonly globalHealthyTenantOldestActiveAgeMs: number;
 }
 
+type PgSnapshotField = number | string | null;
+
 interface BackpressureSnapshotRow {
-  tenant_active_pending_event_count: number | string | null;
-  tenant_stuck_pending_event_count: number | string | null;
-  global_active_pending_event_count: number | string | null;
-  global_healthy_tenant_oldest_active_age_ms: number | string | null;
+  tenant_active_pending_event_count: PgSnapshotField;
+  tenant_stuck_pending_event_count: PgSnapshotField;
+  global_active_pending_event_count: PgSnapshotField;
+  global_healthy_tenant_oldest_active_age_ms: PgSnapshotField;
 }
 
 export interface PostgresBackpressureSnapshotReaderConfig {
@@ -36,10 +44,10 @@ export class PostgresBackpressureSnapshotReader {
   private readonly localOverloadPendingThreshold: number;
 
   public constructor(config: PostgresBackpressureSnapshotReaderConfig) {
-    this.schema = normalizeSchema(config.schema ?? 'dvt');
+    this.schema = normalizeSchema(config.schema ?? C.defaultSchema);
     this.now = config.now ?? (() => new Date().toISOString());
     this.queryTimeoutMs =
-      config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0);
+      config.queryTimeoutMs ?? Number(process.env[C.queryTimeoutEnvVar] ?? C.defaultTimeoutMs);
     this.stuckEventAgeThresholdMs = config.stuckEventAgeThresholdMs;
     this.localOverloadPendingThreshold = config.localOverloadPendingThreshold;
 
@@ -47,12 +55,9 @@ export class PostgresBackpressureSnapshotReader {
       this.pool = config.pool;
       this.ownsPool = false;
     } else {
+      const connectionString = resolvePostgresConnectionString(config.connectionString);
       this.pool = new Pool({
-        connectionString:
-          config.connectionString ??
-          process.env['DVT_PG_URL'] ??
-          process.env['DATABASE_URL'] ??
-          'postgresql://dvt:dvt@localhost:5432/dvt',
+        connectionString,
         query_timeout: this.queryTimeoutMs,
       });
       this.ownsPool = true;
@@ -66,56 +71,14 @@ export class PostgresBackpressureSnapshotReader {
   }
 
   public async getTenantSnapshot(tenantId: string): Promise<PostgresBackpressureSnapshot> {
+    assertTenantId(tenantId);
     const nowIso = this.now();
-    const stuckCutoffIso = new Date(
-      new Date(nowIso).getTime() - this.stuckEventAgeThresholdMs
-    ).toISOString();
+    const stuckCutoffIso = calculateStuckCutoffIso(nowIso, this.stuckEventAgeThresholdMs);
 
     const result = await this.pool.query<BackpressureSnapshotRow>({
-      text: `
-        WITH active_outbox AS (
-          SELECT m.tenant_id, o.created_at
-          FROM ${quoteIdentifier(this.schema)}.outbox o
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = o.run_id
-          WHERE o.delivered_at IS NULL
-            AND o.created_at >= $3::timestamptz
-        ),
-        stuck_outbox AS (
-          SELECT m.tenant_id
-          FROM ${quoteIdentifier(this.schema)}.outbox o
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = o.run_id
-          WHERE o.delivered_at IS NULL
-            AND o.created_at < $3::timestamptz
-        ),
-        tenant_counts AS (
-          SELECT
-            tenant_id,
-            COUNT(*)::integer AS active_pending_count,
-            MIN(created_at) AS oldest_created_at
-          FROM active_outbox
-          GROUP BY tenant_id
-        )
-        SELECT
-          COALESCE(
-            (SELECT active_pending_count FROM tenant_counts WHERE tenant_id = $1),
-            0
-          )::integer AS tenant_active_pending_event_count,
-          COALESCE(
-            (SELECT COUNT(*) FROM stuck_outbox WHERE tenant_id = $1),
-            0
-          )::integer AS tenant_stuck_pending_event_count,
-          COALESCE((SELECT COUNT(*) FROM active_outbox), 0)::integer AS global_active_pending_event_count,
-          COALESCE(
-            (
-              SELECT FLOOR(EXTRACT(EPOCH FROM (($2::timestamptz) - MIN(oldest_created_at))) * 1000)
-              FROM tenant_counts
-              WHERE active_pending_count <= $4
-            ),
-            0
-          )::bigint AS global_healthy_tenant_oldest_active_age_ms
-      `,
+      text: getBackpressureSnapshotSql(this.schema),
       values: [tenantId, nowIso, stuckCutoffIso, this.localOverloadPendingThreshold],
-      ...(this.queryTimeoutMs > 0
+      ...(this.queryTimeoutMs > C.defaultTimeoutMs
         ? { signal: globalThis.AbortSignal.timeout(this.queryTimeoutMs) }
         : {}),
     });
@@ -139,6 +102,17 @@ export class PostgresBackpressureSnapshotReader {
       ),
     };
   }
+}
+
+function assertTenantId(tenantId: string): void {
+  if (tenantId.trim().length === 0) {
+    throw new Error(E.tenantScopeRequiredErrorMessage);
+  }
+}
+
+function calculateStuckCutoffIso(nowIso: string, thresholdMs: number): string {
+  const nowMs = new Date(nowIso).getTime();
+  return new Date(nowMs - thresholdMs).toISOString();
 }
 
 function toNumber(value: number | string | null): number {

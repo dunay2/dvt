@@ -3,168 +3,43 @@
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
- * @decision Section 2.1 Ã¢â‚¬â€ Append-only event persistence with monotonic sequence semantics
- * @decision Section 2.2 Ã¢â‚¬â€ Read model snapshot projection derived from persisted event stream
- * @decision All adapter methods enforce tenant scope per ADR-0031
- * @consequence PostgreSQL adapter preserves deterministic replay and transactional state consistency
- * @consequence Cross-tenant reads/writes are blocked at the adapter boundary
+ * @decision Runtime owns wiring/lifecycle and the facade owns contract delegation
+ * @consequence Runtime composition is separated from state-store contract behavior
  * @version 1.0.0
- * @date 2026-02-21
+ * @date 2026-03-28
  */
-import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
-import { Pool, type PoolClient } from 'pg';
+import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
+import { PostgresStateStoreRuntime } from './PostgresStateStoreRuntime.js';
+type PostgresSchemaRollbackPlan = import('./PostgresSchemaManager.js').PostgresSchemaRollbackPlan;
+type AppendResult = import('./types.js').AppendResult;
+type DeadLetterRecord = import('./types.js').DeadLetterRecord;
+type EventEnvelope = import('./types.js').EventEnvelope;
+type EventInput = import('./types.js').EventInput;
+type IOutboxStorage = import('./types.js').IOutboxStorage;
+type IRunSnapshotStalenessQuery = import('./types.js').IRunSnapshotStalenessQuery;
+type IRunStateStore = import('./types.js').IRunStateStore;
+type ListEventsOptions = import('./types.js').ListEventsOptions;
+type ListRunsOptions = import('./types.js').ListRunsOptions;
+type OutboxRecord = import('./types.js').OutboxRecord;
+type RetryAttemptReservation = import('./types.js').RetryAttemptReservation;
+type RunBootstrapInput = import('./types.js').RunBootstrapInput;
+type RunId = import('./types.js').RunId;
+type RunMetadata = import('./types.js').RunMetadata;
+type WorkflowSnapshot = import('./types.js').WorkflowSnapshot;
+type ILineageOutboxStore = import('@dvt/contracts').ILineageOutboxStore;
+type ArchivedTerminalSnapshot = import('@dvt/state-store').ArchivedTerminalSnapshot;
+type TerminalSnapshotPinResult = import('@dvt/state-store').TerminalSnapshotPinResult;
 
-import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
-import {
-  PostgresOutboxStore,
-  normalizeOutboxClaimTimeoutMs,
-  normalizeOutboxShardCount,
-} from './PostgresOutboxStore.js';
-import { PostgresRunEventStore } from './PostgresRunEventStore.js';
-import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
-import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
-import { PostgresSchemaManager, type PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
-import {
-  beginTransactionSql,
-  commitTransactionSql,
-  listStaleSnapshotRunsSql,
-  rollbackTransactionSql,
-  setLocalStatementTimeoutSql,
-} from './PostgresStateStoreAdapterSql.js';
-import type {
-  RunEventReadRepository,
-  RunEventRepositoryDeps,
-  RunEventWriteRepository,
-} from './RunEventWriteRepository.js';
-import { normalizeSchema } from './sqlUtils.js';
-import type {
-  AppendResult,
-  DeadLetterRecord,
-  EventEnvelope,
-  EventInput,
-  IOutboxStorage,
-  IRunStateStore,
-  ListEventsOptions,
-  ListRunsOptions,
-  IRunSnapshotStalenessQuery,
-  OutboxRecord,
-  RetryAttemptReservation,
-  RunBootstrapInput,
-  RunId,
-  RunMetadata,
-  WorkflowSnapshot,
-} from './types.js';
-
-export interface PostgresAdapterConfig {
-  connectionString?: string;
-  schema?: string;
-  pool?: Pool;
-  now?: () => string;
-  statementTimeoutMs?: number;
-  queryTimeoutMs?: number;
-  assumeSchemaReady?: boolean;
-  outboxShardCount?: number;
-  outboxClaimTimeoutMs?: number;
-  runEventRepositoryFactory?: (
-    deps: RunEventRepositoryDeps
-  ) => RunEventWriteRepository & RunEventReadRepository;
-}
-
-/**
- * Foundation adapter for issue #6 (Postgres state store implementation).
-
- * SQL-backed implementation for run metadata, run events and outbox.
- *
- * - run metadata and event append are persisted in PostgreSQL
- * - idempotency is enforced by UNIQUE(run_id, idempotency_key)
- * - outbox entries are persisted with retry metadata
- */
 export class PostgresStateStoreAdapter
+  extends PostgresStateStoreRuntime
   implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage
 {
-  private readonly pool: Pool;
-  private readonly ownsPool: boolean;
-  private readonly schema: string;
-  private readonly now: () => string;
-  private readonly statementTimeoutMs: number;
-  private readonly outboxShardCount: number;
-  private readonly activeClients = new Set<PoolClient>();
-  private abortPendingOperationsRequested = false;
-  private readonly schemaManager: PostgresSchemaManager;
-  private readonly outboxStore: PostgresOutboxStore;
-  private readonly metadataRepo: PostgresRunMetadataRepository;
-  private readonly runEventRepository: RunEventWriteRepository & RunEventReadRepository;
-  private readonly snapshotStore: PostgresRunSnapshotStore;
-  readonly lineageOutboxStore: PostgresLineageOutboxStore;
-
-  constructor(readonly config: PostgresAdapterConfig = {}) {
-    this.schema = normalizeSchema(config.schema ?? 'dvt');
-    this.now = config.now ?? (() => new Date().toISOString());
-    this.statementTimeoutMs =
-      config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0);
-    this.outboxShardCount = normalizeOutboxShardCount(config.outboxShardCount);
-
-    if (config.pool) {
-      this.pool = config.pool;
-      this.ownsPool = false;
-    } else {
-      this.pool = new Pool({
-        connectionString:
-          config.connectionString ??
-          process.env['DVT_PG_URL'] ??
-          process.env['DATABASE_URL'] ??
-          'postgresql://dvt:dvt@localhost:5432/dvt',
-        statement_timeout: this.statementTimeoutMs,
-        query_timeout: config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0),
-      });
-      this.ownsPool = true;
-    }
-
-    this.schemaManager = new PostgresSchemaManager(this.pool, this.schema, this.statementTimeoutMs);
-    this.outboxStore = new PostgresOutboxStore(
-      this.schema,
-      this.now,
-      this.outboxShardCount,
-      normalizeOutboxClaimTimeoutMs(config.outboxClaimTimeoutMs),
-      (fn) => this.withTransaction(fn),
-      (fn) => this.withClient(fn)
-    );
-    this.metadataRepo = new PostgresRunMetadataRepository(this.schema, (fn) => this.withClient(fn));
-    const runEventRepositoryFactory =
-      config.runEventRepositoryFactory ??
-      ((deps: RunEventRepositoryDeps): RunEventWriteRepository & RunEventReadRepository =>
-        new PostgresRunEventStore(deps.schema, deps.now, deps.withClient));
-    this.runEventRepository = runEventRepositoryFactory({
-      schema: this.schema,
-      now: this.now,
-      withClient: (fn) => this.withClient(fn),
-    });
-    this.snapshotStore = new PostgresRunSnapshotStore(
-      this.schema,
-      this.now,
-      (fn) => this.withTransaction(fn),
-      (fn) => this.withClient(fn)
-    );
-    this.lineageOutboxStore = new PostgresLineageOutboxStore(this.schema, (fn) =>
-      this.withClient(fn)
-    );
-    if (config.assumeSchemaReady) {
-      this.schemaManager.markReady();
-    }
-    // DDL is no longer run at construction time.
-    // Callers MUST await adapter.migrate() before using any storage methods.
+  constructor(
+    config: import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig = {}
+  ) {
+    super(config);
   }
 
-  /**
-   * Runs all DDL migrations required for this adapter (CREATE TABLE IF NOT EXISTS, etc.).
-   *
-   * Must be called Ã¢â‚¬â€ and awaited Ã¢â‚¬â€ once before the adapter is used.
-   * Safe to call multiple times: subsequent calls are no-ops (idempotent).
-   *
-   * Separating DDL from the constructor allows the adapter to be instantiated in
-   * IAM-restricted environments where the runtime role has no DDL privileges, and
-   * migrations are run as a separate privileged step.
-   */
   async migrate(): Promise<void> {
     return this.schemaManager.migrate();
   }
@@ -174,119 +49,22 @@ export class PostgresStateStoreAdapter
   }
 
   async rollbackSchemaTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
-    if (this.activeClients.size > 0) {
-      throw new Error('SCHEMA_ROLLBACK_ACTIVE_CLIENTS');
-    }
-    return this.schemaManager.rollbackTo(targetVersion);
-  }
-
-  async close(): Promise<void> {
-    await this.abortPendingOperations();
-    if (this.ownsPool) {
-      await this.pool.end();
-    }
-  }
-
-  async abortPendingOperations(): Promise<void> {
-    this.abortPendingOperationsRequested = true;
-    const clients = [...this.activeClients];
-    for (const client of clients) {
-      this.releaseClient(client, true);
-    }
-  }
-
-  private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.connect();
-    try {
-      await client.query(beginTransactionSql());
-      if (this.statementTimeoutMs > 0) {
-        await client.query(setLocalStatementTimeoutSql(), [this.statementTimeoutMs]);
+    return this.clientSession.withMaintenanceMode(async () => {
+      if (this.clientSession.hasActiveClients()) {
+        throw new Error(E.schemaRollbackActiveClientsErrorMessage);
       }
-      const result = await fn(client);
-      await client.query(commitTransactionSql());
-      return result;
-    } catch (error) {
-      try {
-        await client.query(rollbackTransactionSql());
-      } catch {
-        // Connection may already be torn down during shutdown interruption.
-      }
-      throw error;
-    } finally {
-      this.releaseClient(client);
-    }
-  }
-
-  private async withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.connect();
-    try {
-      return await fn(client);
-    } finally {
-      this.releaseClient(client);
-    }
-  }
-
-  private async resolveAndSetTenantContext(client: PoolClient, runId: RunId): Promise<string> {
-    const tenantId = await this.metadataRepo.resolveTenantWithClient(client, runId);
-    await PostgresSchemaManager.setTenantContext(client, tenantId);
-    return tenantId;
-  }
-
-  private async appendEventsTxWithClient(
-    client: PoolClient,
-    tenantId: string,
-    runId: RunId,
-    envelopes: EventInput[]
-  ): Promise<AppendResult> {
-    const { appended, deduped, lastAppendedRunSeq, baseRunSeq } =
-      await this.runEventRepository.append(client, tenantId, runId, envelopes);
-    await this.snapshotStore.updateWithClient(
-      client,
-      runId,
-      appended,
-      baseRunSeq,
-      lastAppendedRunSeq
-    );
-    return { appended, deduped, lastSeq: lastAppendedRunSeq ?? baseRunSeq };
+      return this.schemaManager.rollbackTo(targetVersion);
+    });
   }
 
   async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
     this.ready();
-    return this.withTransaction(async (client) => {
-      const tenantId = await this.resolveAndSetTenantContext(client, runId);
-      const append = await this.appendEventsTxWithClient(client, tenantId, runId, envelopes);
-      await this.outboxStore.enqueueWithClient(client, runId, append.appended);
-      return append;
-    });
+    return this.appendAndEnqueueTxInternal(runId, envelopes);
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     this.ready();
-    try {
-      return await this.withTransaction(async (client) => {
-        await PostgresSchemaManager.setTenantContext(client, input.metadata.tenantId);
-        await this.metadataRepo.insertWithClient(client, input.metadata);
-        const append = await this.appendEventsTxWithClient(
-          client,
-          input.metadata.tenantId,
-          input.metadata.runId as RunId,
-          input.firstEvents
-        );
-        await this.outboxStore.enqueueWithClient(
-          client,
-          input.metadata.runId as RunId,
-          append.appended
-        );
-        return append;
-      });
-    } catch (error: unknown) {
-      if (isUniqueViolation(error)) {
-        const err = new Error('RUN_ALREADY_EXISTS');
-        (err as Error & { cause?: unknown }).cause = error;
-        throw err;
-      }
-      throw error;
-    }
+    return this.bootstrapRunTxInternal(input);
   }
 
   async saveProviderRef(
@@ -301,17 +79,17 @@ export class PostgresStateStoreAdapter
     }
   ): Promise<void> {
     this.ready();
-    return this.metadataRepo.saveProviderRef(tenantId, runId, runRef);
+    return this.saveProviderRefInternal(tenantId, runId, runRef);
   }
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
-    return this.metadataRepo.getByRunId(tenantId, runId);
+    return this.getRunMetadataByRunIdInternal(tenantId, runId);
   }
 
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     this.ready();
-    return this.metadataRepo.listRuns(options);
+    return this.listRunsInternal(options);
   }
 
   async reserveRetryAttempt(
@@ -319,7 +97,7 @@ export class PostgresStateStoreAdapter
     sourceRunId: RunId
   ): Promise<RetryAttemptReservation> {
     this.ready();
-    return this.metadataRepo.reserveRetryAttempt(tenantId, sourceRunId);
+    return this.reserveRetryAttemptInternal(tenantId, sourceRunId);
   }
 
   async listEvents(
@@ -328,19 +106,19 @@ export class PostgresStateStoreAdapter
     options?: ListEventsOptions
   ): Promise<EventEnvelope[]> {
     this.ready();
-    return this.runEventRepository.listEvents(tenantId, runId, options);
+    return this.listEventsInternal(tenantId, runId, options);
   }
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
-    return this.snapshotStore.getSnapshot(tenantId, runId);
+    return this.getSnapshotInternal(tenantId, runId);
   }
 
   async pinTerminalSnapshot(
     snapshot: ArchivedTerminalSnapshot
   ): Promise<TerminalSnapshotPinResult> {
     this.ready();
-    return this.snapshotStore.pinTerminalSnapshot(snapshot);
+    return this.pinTerminalSnapshotInternal(snapshot);
   }
 
   async getPinnedTerminalSnapshot(
@@ -348,51 +126,29 @@ export class PostgresStateStoreAdapter
     runId: RunId
   ): Promise<ArchivedTerminalSnapshot | null> {
     this.ready();
-    return this.snapshotStore.getPinnedTerminalSnapshot(tenantId, runId);
+    return this.getPinnedTerminalSnapshotInternal(tenantId, runId);
   }
 
-  /**
-   * ADR-0004 Ã‚Â§2.2 Ã¢â‚¬â€ Full event replay from runSeq=1, overwrites the materialized snapshot.
-   * ADR-0031 Ã¢â‚¬â€ Tenant isolation verified before replay; throws RUN_NOT_FOUND on mismatch.
-   */
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
     this.ready();
-    return this.snapshotStore.rebuildSnapshot(tenantId, runId);
+    return this.rebuildSnapshotInternal(tenantId, runId);
   }
 
-  /**
-   * Returns up to `batchSize` runs with a missing or stale snapshot.
-   *
-   * A snapshot is stale when `run_snapshots.last_run_seq < MAX(run_events.run_seq)` for
-   * that run, or when no snapshot row exists at all.
-   *
-   * The result is ordered by `run_metadata.created_at ASC` so the oldest runs
-   * are repaired first (FIFO catch-up order).
-   */
   async listStaleSnapshotRuns(
     batchSize: number
   ): Promise<Array<{ runId: string; tenantId: string }>> {
     this.ready();
-    return this.withClient(async (client) => {
-      const result = await client.query<{ run_id: string; tenant_id: string }>(
-        listStaleSnapshotRunsSql(this.schema),
-        [batchSize]
-      );
-      return result.rows.map((row) => ({ runId: row.run_id, tenantId: row.tenant_id }));
-    });
+    return this.listStaleSnapshotRunsInternal(batchSize);
   }
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     this.ready();
-    await this.withTransaction(async (client) => {
-      await this.resolveAndSetTenantContext(client, runId);
-      await this.outboxStore.enqueueWithClient(client, runId, events);
-    });
+    await this.enqueueTxInternal(runId, events);
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
     this.ready();
-    return this.outboxStore.listPending(limit);
+    return this.listPendingInternal(limit);
   }
 
   async listPendingForClaim(
@@ -400,27 +156,32 @@ export class PostgresStateStoreAdapter
     selection?: { shardIds?: readonly number[] }
   ): Promise<OutboxRecord[]> {
     this.ready();
-    return this.outboxStore.listPendingForClaim(limit, selection);
+    return this.listPendingForClaimInternal(limit, selection);
   }
 
   async markDelivered(ids: string[]): Promise<void> {
     this.ready();
-    return this.outboxStore.markDelivered(ids);
+    return this.markDeliveredInternal(ids);
   }
 
   async markFailed(id: string, error: string): Promise<void> {
     this.ready();
-    return this.outboxStore.markFailed(id, error);
+    return this.markFailedInternal(id, error);
   }
 
   async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     this.ready();
-    return this.outboxStore.hasPendingRetries(selection);
+    return this.hasPendingRetriesInternal(selection);
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
     this.ready();
-    return this.outboxStore.listDeadLetter(limit, tenantId);
+    return this.listDeadLetterInternal(limit, tenantId);
+  }
+
+  getLineageOutboxStore(): ILineageOutboxStore {
+    this.ready();
+    return this.getLineageOutboxStoreInternal();
   }
 
   async replayDeadLetters(options: {
@@ -430,49 +191,6 @@ export class PostgresStateStoreAdapter
     ids?: string[];
   }): Promise<number> {
     this.ready();
-    return this.outboxStore.replayDeadLetters(options);
+    return this.replayDeadLettersInternal(options);
   }
-
-  private ready(): void {
-    this.schemaManager.ready();
-  }
-
-  private async connect(): Promise<PoolClient> {
-    this.throwIfPendingOperationsAborted();
-    const client = await this.pool.connect();
-    if (this.abortPendingOperationsRequested) {
-      client.release(true);
-      throw createPendingOperationsAbortedError();
-    }
-    this.activeClients.add(client);
-    return client;
-  }
-
-  private throwIfPendingOperationsAborted(): void {
-    if (this.abortPendingOperationsRequested) {
-      throw createPendingOperationsAbortedError();
-    }
-  }
-
-  private releaseClient(client: PoolClient, destroy = false): void {
-    if (!this.activeClients.delete(client)) {
-      return;
-    }
-    client.release(destroy);
-  }
-}
-
-function isUniqueViolation(error: unknown): error is { code: string } {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: unknown }).code === '23505'
-  );
-}
-
-function createPendingOperationsAbortedError(): Error {
-  const error = new Error('PENDING_OPERATIONS_ABORTED');
-  error.name = 'AbortError';
-  return error;
 }

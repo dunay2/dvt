@@ -7,12 +7,12 @@ import {
   normalizeRunId,
   parseOptionalReason,
   parseTenantId,
-} from './runCommandRouteParser.shared.js';
+} from './runCommandFieldParsers.js';
 import {
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-  type SignalRunParseErrorCode,
-} from './signalRunRouteParser.constants.js';
+  RUN_COMMAND_ACTION,
+  RUN_COMMAND_PARSE_ERROR_CODE,
+  type RunCommandParseErrorCode,
+} from './runCommandRoute.constants.js';
 
 const CANCEL_SIGNAL_TYPE = 'CANCEL' as const;
 
@@ -24,7 +24,7 @@ export interface ParsedCancelRunRequest {
   };
   readonly authorization: {
     readonly tenantId: TenantId;
-    readonly actionName: typeof SIGNAL_COMMAND_ACTION.CANCEL;
+    readonly actionName: typeof RUN_COMMAND_ACTION.CANCEL;
   };
 }
 
@@ -35,15 +35,9 @@ type ParsedCancelRunResult =
       readonly status: 400 | 403;
       readonly body: {
         readonly error: 'BAD_REQUEST' | 'FORBIDDEN';
-        readonly code: SignalRunParseErrorCode;
+        readonly code: RunCommandParseErrorCode;
       };
     };
-
-export {
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-  type SignalRunParseErrorCode,
-} from './signalRunRouteParser.constants.js';
 
 export function parseCancelRunRequest(input: {
   readonly runId: string | undefined;
@@ -51,16 +45,16 @@ export function parseCancelRunRequest(input: {
 }): ParsedCancelRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
-    return badRequest(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID);
+    return badRequest(RUN_COMMAND_PARSE_ERROR_CODE.INVALID_RUN_ID);
   }
 
   if (!isBodyObject(input.body)) {
-    return badRequest(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY);
+    return badRequest(RUN_COMMAND_PARSE_ERROR_CODE.INVALID_BODY);
   }
 
   const tenantIdResult = parseTenantId(input.body);
   if (!tenantIdResult.ok) {
-    return tenantIdResult.error === SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE
+    return tenantIdResult.error === RUN_COMMAND_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE
       ? forbidden(tenantIdResult.error)
       : badRequest(tenantIdResult.error);
   }
@@ -77,7 +71,7 @@ export function parseCancelRunRequest(input: {
       },
       authorization: {
         tenantId: tenantIdResult.value,
-        actionName: SIGNAL_COMMAND_ACTION.CANCEL,
+        actionName: RUN_COMMAND_ACTION.CANCEL,
       },
     },
   };

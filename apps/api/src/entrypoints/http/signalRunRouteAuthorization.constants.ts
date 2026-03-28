@@ -1,11 +1,10 @@
 import type { SupportedSignalType } from '../../application/ports/runtime.js';
 
-export type SignalCommandActionName = 'run:cancel' | 'run:signal';
+import { RUN_COMMAND_ACTION, type RunCommandActionName } from './runCommandRoute.constants.js';
 
-export const SIGNAL_COMMAND_ACTION = {
-  CANCEL: 'run:cancel',
-  SIGNAL: 'run:signal',
-} as const;
+export type SignalCommandActionName = RunCommandActionName;
+
+export const SIGNAL_COMMAND_ACTION = RUN_COMMAND_ACTION;
 
 export const SIGNAL_ACTION_BY_TYPE: Readonly<Record<SupportedSignalType, SignalCommandActionName>> =
   {

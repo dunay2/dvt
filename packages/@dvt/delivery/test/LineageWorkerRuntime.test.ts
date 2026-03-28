@@ -14,6 +14,7 @@ import {
 function makeRecord(overrides: Partial<LineageOutboxRecord> = {}): LineageOutboxRecord {
   return {
     id: overrides.id ?? 'lox-run-1-1-0',
+    tenantId: overrides.tenantId ?? 'tenant-a',
     runId: overrides.runId ?? 'run-1',
     eventType: overrides.eventType ?? 'StepStarted',
     payload:
@@ -37,16 +38,18 @@ function makeSilentLogger(): LineageWorkerRuntimeLogger {
 }
 
 function makeStore(pending: LineageOutboxRecord[] = []): ILineageOutboxStore & {
+  countPending: ReturnType<typeof vi.fn>;
   markDelivered: ReturnType<typeof vi.fn>;
   markFailed: ReturnType<typeof vi.fn>;
-  deadLetter: ReturnType<typeof vi.fn>;
+  listDeadLetter: ReturnType<typeof vi.fn>;
 } {
   return {
     enqueue: vi.fn().mockResolvedValue(undefined),
     listPending: vi.fn().mockResolvedValue(pending),
+    countPending: vi.fn().mockResolvedValue(pending.length),
     markDelivered: vi.fn().mockResolvedValue(undefined),
-    markFailed: vi.fn().mockResolvedValue(undefined),
-    deadLetter: vi.fn().mockResolvedValue(undefined),
+    markFailed: vi.fn().mockResolvedValue('retry_scheduled'),
+    listDeadLetter: vi.fn().mockResolvedValue([]),
   };
 }
 
@@ -120,21 +123,20 @@ describe('LineageWorkerRuntime', () => {
       const result = await runtime.runOnce();
 
       expect(result.processed).toBe(0);
-      expect(store.markFailed).toHaveBeenCalledWith('r1', 'publish error', 2);
-      expect(store.deadLetter).not.toHaveBeenCalled();
+      expect(store.markFailed).toHaveBeenCalledWith('r1', 'publish error');
     });
 
-    it('moves to dead letter when attempts reaches MAX_LINEAGE_ATTEMPTS', async () => {
+    it('moves to dead letter when the store reports max-attempt exhaustion', async () => {
       const record = makeRecord({ id: 'r1', attempts: 4 }); // next = 5 = MAX
       const store = makeStore([record]);
+      store.markFailed.mockResolvedValueOnce('dead_lettered');
       const sink = makeSink(new Error('still failing'));
       const runtime = new LineageWorkerRuntime(store, sink, makeMapper(), makeSilentLogger());
 
       const result = await runtime.runOnce();
 
       expect(result.deadLettered).toBe(1);
-      expect(store.deadLetter).toHaveBeenCalledWith('r1', 'still failing');
-      expect(store.markFailed).not.toHaveBeenCalled();
+      expect(store.markFailed).toHaveBeenCalledWith('r1', 'still failing');
     });
 
     it('continues processing remaining records when one fails', async () => {
@@ -157,7 +159,7 @@ describe('LineageWorkerRuntime', () => {
       expect(result.processed).toBe(2);
       expect(store.markDelivered).toHaveBeenCalledWith(['r1']);
       expect(store.markDelivered).toHaveBeenCalledWith(['r3']);
-      expect(store.markFailed).toHaveBeenCalledWith('r2', 'fail', 1);
+      expect(store.markFailed).toHaveBeenCalledWith('r2', 'fail');
     });
 
     it('exposes lagCount via getter after runOnce', async () => {
@@ -167,6 +169,25 @@ describe('LineageWorkerRuntime', () => {
       await runtime.runOnce();
 
       expect(runtime.lagCount).toBe(2);
+    });
+
+    it('uses countPending when available to report uncapped lag', async () => {
+      const store = makeStore([makeRecord({ id: 'r1' })]);
+      store.countPending.mockResolvedValueOnce(99);
+      const runtime = new LineageWorkerRuntime(
+        store,
+        makeSink(),
+        makeMapper(),
+        makeSilentLogger(),
+        {
+          batchSize: 1,
+        }
+      );
+
+      const result = await runtime.runOnce();
+
+      expect(result.lag).toBe(99);
+      expect(runtime.lagCount).toBe(99);
     });
 
     it('passes batchSize from options to listPending', async () => {
@@ -184,6 +205,22 @@ describe('LineageWorkerRuntime', () => {
       await runtime.runOnce();
 
       expect(store.listPending).toHaveBeenCalledWith(23);
+    });
+
+    it('sanitizes sensitive error fragments before persisting last_error', async () => {
+      const record = makeRecord({ id: 'r-secret' });
+      const store = makeStore([record]);
+      const sink = makeSink(
+        new Error('publish failed token=abc123 bearer qwerty password=hunter2')
+      );
+      const runtime = new LineageWorkerRuntime(store, sink, makeMapper(), makeSilentLogger());
+
+      await runtime.runOnce();
+
+      expect(store.markFailed).toHaveBeenCalledWith(
+        'r-secret',
+        'publish failed token=[REDACTED] bearer [REDACTED] password=[REDACTED]'
+      );
     });
   });
 

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS __SCHEMA__.lineage_outbox (
   id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
   run_id TEXT NOT NULL,
   event_type TEXT NOT NULL,
   payload JSONB NOT NULL,
@@ -19,6 +20,7 @@ ON __SCHEMA__.lineage_outbox (run_id);
 CREATE TABLE IF NOT EXISTS __SCHEMA__.lineage_dead_letter (
   id TEXT PRIMARY KEY,
   original_id TEXT NOT NULL,
+  tenant_id TEXT NOT NULL,
   run_id TEXT NOT NULL,
   event_type TEXT NOT NULL,
   payload JSONB NOT NULL,
@@ -28,3 +30,6 @@ CREATE TABLE IF NOT EXISTS __SCHEMA__.lineage_dead_letter (
 
 CREATE INDEX IF NOT EXISTS lineage_dead_letter_run_id_idx
 ON __SCHEMA__.lineage_dead_letter (run_id);
+
+CREATE INDEX IF NOT EXISTS lineage_dead_letter_dead_lettered_at_idx
+ON __SCHEMA__.lineage_dead_letter (dead_lettered_at DESC);
