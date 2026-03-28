@@ -1,22 +1,23 @@
 import { TenantId } from '../../domain/auth/types.js';
 
 import {
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-  SIGNAL_RUN_PARSE_ERROR_RESPONSE,
-} from './signalRunRouteParser.constants.js';
+  RUN_COMMAND_PARSE_ERROR_CODE,
+  RUN_COMMAND_PARSE_ERROR_RESPONSE,
+  type RunCommandParseErrorCode,
+} from './runCommandRoute.constants.js';
 
 type MissingOrInvalidTenantCode =
-  | typeof SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE
-  | typeof SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID;
+  | typeof RUN_COMMAND_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE
+  | typeof RUN_COMMAND_PARSE_ERROR_CODE.INVALID_TENANT_ID;
 
-export type ParsedRunCommandError = {
+export type ParsedRunCommandError<TCode extends string = RunCommandParseErrorCode> = {
   readonly ok: false;
   readonly status: 400 | 403;
   readonly body: {
     readonly error:
-      | typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST
-      | typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN;
-    readonly code: string;
+      | typeof RUN_COMMAND_PARSE_ERROR_RESPONSE.BAD_REQUEST
+      | typeof RUN_COMMAND_PARSE_ERROR_RESPONSE.FORBIDDEN;
+    readonly code: TCode;
   };
 };
 
@@ -35,17 +36,17 @@ export function parseTenantId(
   | { readonly ok: true; readonly value: TenantId }
   | { readonly ok: false; readonly error: MissingOrInvalidTenantCode } {
   if (!Object.hasOwn(body, 'tenantId') || body.tenantId === undefined) {
-    return { ok: false, error: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE };
+    return { ok: false, error: RUN_COMMAND_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE };
   }
 
   const rawTenantId = readString(body.tenantId);
   if (rawTenantId === undefined) {
-    return { ok: false, error: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID };
+    return { ok: false, error: RUN_COMMAND_PARSE_ERROR_CODE.INVALID_TENANT_ID };
   }
 
   const tenant = TenantId.parse(rawTenantId);
   if (!tenant.ok) {
-    return { ok: false, error: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID };
+    return { ok: false, error: RUN_COMMAND_PARSE_ERROR_CODE.INVALID_TENANT_ID };
   }
 
   return { ok: true, value: tenant.value };
@@ -60,11 +61,11 @@ export function parseOptionalReason(raw: unknown): string | undefined {
   return normalized.length > 0 ? normalized : undefined;
 }
 
-export function badRequest<TCode extends string>(
+export function badRequest<TCode extends RunCommandParseErrorCode>(
   code: TCode
 ): ParsedRunCommandError & {
   readonly body: {
-    readonly error: typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST;
+    readonly error: typeof RUN_COMMAND_PARSE_ERROR_RESPONSE.BAD_REQUEST;
     readonly code: TCode;
   };
 } {
@@ -72,17 +73,17 @@ export function badRequest<TCode extends string>(
     ok: false,
     status: 400,
     body: {
-      error: SIGNAL_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST,
+      error: RUN_COMMAND_PARSE_ERROR_RESPONSE.BAD_REQUEST,
       code,
     },
   };
 }
 
-export function forbidden<TCode extends string>(
+export function forbidden<TCode extends RunCommandParseErrorCode>(
   code: TCode
 ): ParsedRunCommandError & {
   readonly body: {
-    readonly error: typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN;
+    readonly error: typeof RUN_COMMAND_PARSE_ERROR_RESPONSE.FORBIDDEN;
     readonly code: TCode;
   };
 } {
@@ -90,7 +91,7 @@ export function forbidden<TCode extends string>(
     ok: false,
     status: 403,
     body: {
-      error: SIGNAL_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN,
+      error: RUN_COMMAND_PARSE_ERROR_RESPONSE.FORBIDDEN,
       code,
     },
   };
