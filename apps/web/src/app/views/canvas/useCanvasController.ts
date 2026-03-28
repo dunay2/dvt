@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveDataSource } from '../../services/config/dataSource';
 import { createPlansService } from '../../services/plans/plansService';
 import { createRunsService } from '../../services/runs/runsService';
@@ -70,6 +71,7 @@ function toRunStatusSnapshot(canonicalRun: CanonicalRun | null): RunStatusSnapsh
 
 export function useCanvasController() {
   const navigate = useNavigate();
+  const { data: capabilities } = useCapabilitiesQuery();
   const dataSourceMode = resolveDataSource();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
   const workspaceService = useMemo(() => createWorkspaceService(dataSourceMode), [dataSourceMode]);
@@ -129,8 +131,8 @@ export function useCanvasController() {
     [canonicalNodes]
   );
   const activeCanonicalRun = useMemo(
-    () => (currentRun ? mapRunToCanonical(currentRun) : null),
-    [currentRun]
+    () => (currentRun ? mapRunToCanonical(currentRun, capabilities) : null),
+    [capabilities, currentRun]
   );
   const activeRunSnapshot = useMemo(
     () => toRunStatusSnapshot(activeCanonicalRun),
@@ -198,12 +200,13 @@ export function useCanvasController() {
     );
     return buildNodeDecorations(
       canonicalNodes,
-      getAllOverlays(),
+      getAllOverlays(capabilities),
       activeExclusiveOverlayId,
       overlayCtx
     );
   }, [
     activeRunSnapshot,
+    capabilities,
     canonicalNodes,
     costByNodeId,
     edges,
@@ -309,7 +312,7 @@ export function useCanvasController() {
     explorerNodes: canonicalNodes,
     inspectorNode,
     activeRunId,
-    registeredPlugins: getRegisteredPluginIds(),
+    registeredPlugins: getRegisteredPluginIds(capabilities),
     userPermissions,
     nodesWithImpact,
     edges,

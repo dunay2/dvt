@@ -2,6 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -147,6 +148,7 @@ const mockResolveCanvasGraphStrategy = vi.hoisted(() => vi.fn());
 const mockCreateWorkspaceService = vi.hoisted(() => vi.fn());
 const mockCreatePlansService = vi.hoisted(() => vi.fn());
 const mockUseAppStore = vi.hoisted(() => vi.fn());
+const mockUseCapabilitiesQuery = vi.hoisted(() => vi.fn());
 const mockBuildOverlayContext = vi.hoisted(() => vi.fn());
 const mockBuildNodeDecorations = vi.hoisted(() => vi.fn());
 const mockMapCanonicalNodeToCanvasNode = vi.hoisted(() => vi.fn());
@@ -198,6 +200,10 @@ vi.mock('../../services/workspace/workspaceService', () => ({
 
 vi.mock('../../stores/appStore', () => ({
   useAppStore: mockUseAppStore,
+}));
+
+vi.mock('../../queries/useCapabilitiesQuery', () => ({
+  useCapabilitiesQuery: mockUseCapabilitiesQuery,
 }));
 
 vi.mock('./canvasImpactOverlay', () => ({
@@ -260,7 +266,11 @@ describe('useCanvasController', () => {
 
   async function renderProbe(): Promise<void> {
     await act(async () => {
-      root.render(<Probe />);
+      root.render(
+        <MemoryRouter>
+          <Probe />
+        </MemoryRouter>
+      );
     });
   }
 
@@ -304,6 +314,7 @@ describe('useCanvasController', () => {
     mockCreateWorkspaceService.mockReturnValue({ getGraphSnapshot: vi.fn() });
     mockCreatePlansService.mockReturnValue({ previewPlan: vi.fn() });
     mockUseAppStore.mockImplementation(() => state.store);
+    mockUseCapabilitiesQuery.mockReturnValue({ data: undefined });
     mockResolveCanvasGraphStrategy.mockReturnValue({
       mapNodeToCanonical: vi.fn(
         (node: { id: string }) =>

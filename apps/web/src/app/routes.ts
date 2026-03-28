@@ -1,13 +1,14 @@
-import { Suspense, createElement, type ComponentType } from 'react';
+import { Fragment, Suspense, createElement, type ComponentType, type ReactNode } from 'react';
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 
 import Root from './Root';
+import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import AdminView from './views/AdminView';
 import ArtifactsView from './views/ArtifactsView';
 import DiffView from './views/DiffView';
 import LineageView from './views/LineageView';
 import PluginsView from './views/PluginsView';
-import { getAllViews, getDefaultCoreViewPath } from './plugins/registry';
+import { getAllViews, getDefaultCoreViewPath, getRuntimePlugins } from './plugins/registry';
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;
@@ -21,17 +22,34 @@ function PluginRouteFallback() {
   );
 }
 
-function createPluginRoute(component: ComponentType): RouteObject['element'] {
+function PluginAvailabilityGuard({
+  pluginId,
+  children,
+}: Readonly<{ pluginId: string; children: ReactNode }>) {
+  const { data: capabilities } = useCapabilitiesQuery();
+  const enabledPluginIds = new Set(getRuntimePlugins(capabilities).map((plugin) => plugin.id));
+
+  if (!enabledPluginIds.has(pluginId)) {
+    return createElement(Navigate, {
+      to: getDefaultCoreViewPath(capabilities),
+      replace: true,
+    });
+  }
+
+  return createElement(Fragment, null, children);
+}
+
+function createPluginRoute(pluginId: string, component: ComponentType): RouteObject['element'] {
   return createElement(
     Suspense,
     { fallback: createElement(PluginRouteFallback) },
-    createElement(component)
+    createElement(PluginAvailabilityGuard, { pluginId }, createElement(component))
   );
 }
 
 const pluginRoutes = getAllViews().map<RouteObject>((view) => ({
   path: normalizeChildPath(view.path),
-  element: createPluginRoute(view.component),
+  element: createPluginRoute(view.pluginId, view.component),
 }));
 
 const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));

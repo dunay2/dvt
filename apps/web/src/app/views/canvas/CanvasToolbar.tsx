@@ -62,7 +62,12 @@ export default function CanvasToolbar({
               Auto Layout
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2" onSelect={() => navigate(-1)}>
+            <DropdownMenuItem
+              className="gap-2"
+              onSelect={() => {
+                void navigate(-1);
+              }}
+            >
               <ArrowLeft className="size-4 shrink-0" />
               Back
             </DropdownMenuItem>

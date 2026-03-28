@@ -72,6 +72,10 @@ export type PluginContributions = {
 import { dbtContributions } from './dbt/dbtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
 
+export type RuntimeCapabilities = {
+  plugins: Record<string, { available: boolean; reason?: string }>;
+};
+
 function getEnvFlagValue(envFlag: string | undefined): string | boolean | undefined {
   if (!envFlag) {
     return undefined;
@@ -87,6 +91,26 @@ function isPluginEnabled(plugin: PluginContributions): boolean {
   }
 
   return envFlagValue !== 'false' && envFlagValue !== false;
+}
+
+function isPluginAvailableAtRuntime(
+  plugin: PluginContributions,
+  capabilities?: RuntimeCapabilities
+): boolean {
+  if (!isPluginEnabled(plugin)) {
+    return false;
+  }
+
+  if (!plugin.backendPluginId || !capabilities) {
+    return true;
+  }
+
+  const info = capabilities.plugins[plugin.backendPluginId];
+  if (!info) {
+    return true;
+  }
+
+  return info.available;
 }
 
 function resolveCostDecoration(costData: NodeCostData | undefined) {
@@ -149,18 +173,22 @@ const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
 export const PLUGIN_REGISTRY: PluginContributions[] =
   ALL_PLUGIN_CONTRIBUTIONS.filter(isPluginEnabled);
 
+export function getRuntimePlugins(capabilities?: RuntimeCapabilities): PluginContributions[] {
+  return PLUGIN_REGISTRY.filter((plugin) => isPluginAvailableAtRuntime(plugin, capabilities));
+}
+
 // ---------------------------------------------------------------------------
 // Helper functions — shell reads contributions through these
 // ---------------------------------------------------------------------------
 
-export function getAllViews(): ViewContribution[] {
-  return PLUGIN_REGISTRY.flatMap((p) => p.views ?? []);
+export function getAllViews(capabilities?: RuntimeCapabilities): ViewContribution[] {
+  return getRuntimePlugins(capabilities).flatMap((p) => p.views ?? []);
 }
 
-export function getNavigationViews(): Array<
-  ViewContribution & { nav: NonNullable<ViewContribution['nav']> }
-> {
-  return getAllViews()
+export function getNavigationViews(
+  capabilities?: RuntimeCapabilities
+): Array<ViewContribution & { nav: NonNullable<ViewContribution['nav']> }> {
+  return getAllViews(capabilities)
     .filter(
       (
         view
@@ -171,20 +199,25 @@ export function getNavigationViews(): Array<
     .sort((a, b) => a.nav.order - b.nav.order);
 }
 
-export function getDefaultCoreViewPath(): string {
-  return getNavigationViews().find((view) => view.nav.level === 'core')?.path ?? '/canvas';
+export function getDefaultCoreViewPath(capabilities?: RuntimeCapabilities): string {
+  return (
+    getNavigationViews(capabilities).find((view) => view.nav.level === 'core')?.path ?? '/canvas'
+  );
 }
 
-export function getAllNodeKinds(): NodeKindRegistration[] {
-  return PLUGIN_REGISTRY.flatMap((p) => p.nodeKinds ?? []);
+export function getAllNodeKinds(capabilities?: RuntimeCapabilities): NodeKindRegistration[] {
+  return getRuntimePlugins(capabilities).flatMap((p) => p.nodeKinds ?? []);
 }
 
-export function getAllOverlays(): CanvasOverlayContribution[] {
-  return PLUGIN_REGISTRY.flatMap((p) => p.overlays ?? []);
+export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverlayContribution[] {
+  return getRuntimePlugins(capabilities).flatMap((p) => p.overlays ?? []);
 }
 
-export function mapRunToCanonical(run: unknown): CanonicalRun | null {
-  for (const plugin of PLUGIN_REGISTRY) {
+export function mapRunToCanonical(
+  run: unknown,
+  capabilities?: RuntimeCapabilities
+): CanonicalRun | null {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     const canonicalRun = plugin.runAdapter?.mapToCanonical(run) ?? null;
     if (canonicalRun) {
       return canonicalRun;
@@ -194,8 +227,8 @@ export function mapRunToCanonical(run: unknown): CanonicalRun | null {
   return null;
 }
 
-export function getRegisteredPluginIds(): ReadonlySet<string> {
-  return new Set(PLUGIN_REGISTRY.map((plugin) => plugin.id));
+export function getRegisteredPluginIds(capabilities?: RuntimeCapabilities): ReadonlySet<string> {
+  return new Set(getRuntimePlugins(capabilities).map((plugin) => plugin.id));
 }
 
 /**
@@ -204,11 +237,12 @@ export function getRegisteredPluginIds(): ReadonlySet<string> {
  */
 export function getNodeRenderer(
   kind: PluginNodeKind,
-  fallback: React.ComponentType<NodeRendererProps>
+  fallback: React.ComponentType<NodeRendererProps>,
+  capabilities?: RuntimeCapabilities
 ): React.ComponentType<NodeRendererProps> {
   let best: { priority: number; component: React.ComponentType<NodeRendererProps> } | null = null;
 
-  for (const plugin of PLUGIN_REGISTRY) {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     const reg = plugin.nodeRenderers?.get(kind);
     if (!reg) continue;
     if (!best || reg.priority > best.priority) {
@@ -225,10 +259,11 @@ export function getNodeRenderer(
  */
 export function getInspectorPanels(
   node: CanonicalNode,
-  ctx: InspectorContext
+  ctx: InspectorContext,
+  capabilities?: RuntimeCapabilities
 ): InspectorPanelContribution[] {
   const panels: InspectorPanelContribution[] = [];
-  for (const plugin of PLUGIN_REGISTRY) {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     for (const panel of plugin.inspectorPanels ?? []) {
       if (panel.shouldShow(node, ctx)) panels.push(panel);
     }
@@ -245,11 +280,14 @@ export function getInspectorPanels(
  * for use by the canvas connection evaluator.
  */
 export function getPluginPortMap(): PluginPortMap {
-  const map = new Map<string, {
-    connectionRules: import('./contracts/PluginManifest').PluginConnectionRule[];
-    produces: { portType: string; forRoles: string[] }[];
-    consumes: { portType: string; forRoles: string[] }[];
-  }>();
+  const map = new Map<
+    string,
+    {
+      connectionRules: import('./contracts/PluginManifest').PluginConnectionRule[];
+      produces: { portType: string; forRoles: string[] }[];
+      consumes: { portType: string; forRoles: string[] }[];
+    }
+  >();
 
   for (const plugin of PLUGIN_REGISTRY) {
     map.set(plugin.id, {
