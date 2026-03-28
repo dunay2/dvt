@@ -80,6 +80,10 @@ export interface SignalRunCommand {
   readonly reason?: string;
 }
 
+export type CancelRunCommand = SignalRunCommand & {
+  readonly signalType: 'CANCEL';
+};
+
 export interface SignalRunResult {
   readonly runId: string;
   readonly signalType: SupportedSignalType;
@@ -89,6 +93,13 @@ export interface SignalRunResult {
 export interface ISignalRunUseCase {
   execute(
     command: SignalRunCommand,
+    context: AuthorizedCommandExecutionContext
+  ): Promise<SignalRunResult>;
+}
+
+export interface ICancelRunUseCase {
+  execute(
+    command: CancelRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<SignalRunResult>;
 }

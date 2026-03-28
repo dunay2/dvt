@@ -4,6 +4,7 @@ import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
+import type { ICancelRunUseCase } from './application/ports/runtime.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
@@ -13,6 +14,10 @@ import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
+import {
+  PROTECTED_RUNTIME_ROUTE_SUMMARY,
+  RUNTIME_ROUTE_PATH,
+} from './entrypoints/http/runtimeRoutes.constants.js';
 import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
@@ -42,22 +47,6 @@ export type AppContext = {
 };
 
 const REQUEST_SPAN = Symbol('requestSpan');
-const RUNTIME_ROUTE_PATH = {
-  start: '/runs/start',
-  list: '/runs',
-  get: '/runs/:runId',
-  events: '/runs/:runId/events',
-  signal: '/runs/:runId/signal',
-  cancel: '/runs/:runId/cancel',
-} as const;
-const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
-  `POST ${RUNTIME_ROUTE_PATH.start}`,
-  `GET ${RUNTIME_ROUTE_PATH.list}`,
-  `GET ${RUNTIME_ROUTE_PATH.get}`,
-  `GET ${RUNTIME_ROUTE_PATH.events}`,
-  `POST ${RUNTIME_ROUTE_PATH.signal}`,
-  `POST ${RUNTIME_ROUTE_PATH.cancel}`,
-].join(', ');
 
 type RequestWithSpan = FastifyRequest & {
   [REQUEST_SPAN]?: ISpan;
@@ -198,6 +187,9 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.engine,
       protectedModule.stateStore.read
     );
+    const cancelRunUseCase: ICancelRunUseCase = {
+      execute: (command, context) => signalRunUseCase.execute(command, context),
+    };
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
@@ -217,7 +209,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       signalRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
     );
     app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
-      cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
+      cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {

@@ -11,7 +11,7 @@ import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import type { SignalCommandActionName } from './signalRunRouteAuthorization.constants.js';
-import type { SignalRunParseErrorCode } from './signalRunRouteValidation.constants.js';
+import type { SignalRunParseErrorCode } from './signalRunRouteParser.constants.js';
 
 type ParsedCommandRequest<TCommand> = {
   readonly command: TCommand;

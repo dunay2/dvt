@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
-import type { ISignalRunUseCase } from '../../application/ports/runtime.js';
+import type { ICancelRunUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
 import { parseCancelRunRequest } from './cancelRunRouteParser.js';
@@ -13,7 +13,7 @@ export async function cancelRunRoute(
   deps: {
     authenticator: IAuthenticator;
     authorizer: AuthorizeCommandScopeService;
-    useCase: ISignalRunUseCase;
+    useCase: ICancelRunUseCase;
   }
 ): Promise<void> {
   await executeAuthorizedRunCommandRoute(
