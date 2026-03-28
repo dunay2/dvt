@@ -7,7 +7,13 @@ import {
 import { describe, it, expect } from 'vitest';
 
 import {
+  START_RUN_ENGINE_ERROR_CODE,
+  START_RUN_ENGINE_ERROR_REASON,
+  START_RUN_PLAN_REJECTION_CODE,
+} from '../../../src/application/ports/startRunContract.js';
+import {
   mapRuntimeDomainError,
+  mapStartRunEngineError,
   mapStartRunFacadeResult,
 } from '../../../src/entrypoints/http/authErrorMapper.js';
 
@@ -22,18 +28,6 @@ describe('mapStartRunFacadeResult', () => {
     const result = mapStartRunFacadeResult({ kind: 'unauthorized', reason: 'TENANT_NOT_GRANTED' });
     expect(result.status).toBe(403);
     expect(result.body).toEqual({ error: 'FORBIDDEN', code: 'TENANT_NOT_GRANTED' });
-  });
-
-  it('adapter_not_configured -> 422', () => {
-    const result = mapStartRunFacadeResult({
-      kind: 'adapter_not_configured',
-      adapter: 'temporal',
-    });
-    expect(result.status).toBe(422);
-    expect(result.body).toEqual({
-      error: 'ADAPTER_NOT_CONFIGURED',
-      adapter: 'temporal',
-    });
   });
 
   it('accepted -> 202 with runId', () => {
@@ -106,6 +100,50 @@ describe('mapStartRunFacadeResult', () => {
       code: 'MISSING_CAPABILITY',
       reason: 'Missing adapter capability: workflow.pause',
       cause: 'workflow.pause',
+    });
+  });
+});
+
+describe('mapStartRunEngineError', () => {
+  it('adapter_not_registered -> 422', () => {
+    const result = mapStartRunEngineError({
+      kind: 'adapter_not_registered',
+      adapter: 'temporal',
+    });
+    expect(result.status).toBe(422);
+    expect(result.body).toEqual({
+      error: 'ADAPTER_NOT_CONFIGURED',
+      adapter: 'temporal',
+    });
+  });
+
+  it('command_invalid -> 422 plan_rejected', () => {
+    const result = mapStartRunEngineError({
+      kind: 'command_invalid',
+      code: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+      reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+    });
+    expect(result.status).toBe(422);
+    expect(result.body).toEqual({
+      error: 'PLAN_REJECTED',
+      code: START_RUN_PLAN_REJECTION_CODE.rejected,
+      reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+      cause: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+    });
+  });
+
+  it('unsupported_plan_version -> 422 plan_rejected', () => {
+    const result = mapStartRunEngineError({
+      kind: 'unsupported_plan_version',
+      planVersion: '2.7',
+      supportedVersions: ['2.3'],
+    });
+    expect(result.status).toBe(422);
+    expect(result.body).toEqual({
+      error: 'PLAN_REJECTED',
+      code: START_RUN_PLAN_REJECTION_CODE.unsupportedPlanVersion,
+      reason: 'Unsupported plan version: 2.7',
+      supportedVersions: ['2.3'],
     });
   });
 });
