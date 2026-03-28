@@ -73,14 +73,14 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
 
   return (
     <TooltipProvider>
-      <div className="h-12 bg-slate-900 border-b border-slate-700 flex items-center px-4 gap-3 flex-shrink-0">
-        <div className="flex items-center gap-2 mr-2">
-          <Database className="size-6 text-blue-400" />
-          <span className="font-semibold text-lg">DVT+</span>
+      <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center px-3 gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 mr-1 shrink-0">
+          <Database className="size-5 text-blue-400" />
+          <span className="font-semibold text-base leading-none">DVT+</span>
         </div>
 
         <Select value={selectedTenant} onValueChange={setSelectedTenant}>
-          <SelectTrigger className="w-[140px] bg-slate-950 border-slate-600">
+          <SelectTrigger className="h-8 w-[138px] bg-slate-950 border-slate-600">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -93,7 +93,7 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
         </Select>
 
         <Select value={selectedProject} onValueChange={setSelectedProject}>
-          <SelectTrigger className="w-[160px] bg-slate-950 border-slate-600">
+          <SelectTrigger className="h-8 w-[160px] bg-slate-950 border-slate-600">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -106,7 +106,7 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
         </Select>
 
         <Select value={selectedEnvironment} onValueChange={setSelectedEnvironment}>
-          <SelectTrigger className="w-[120px] bg-slate-950 border-slate-600">
+          <SelectTrigger className="h-8 w-[104px] bg-slate-950 border-slate-600">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -120,8 +120,8 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950 border border-slate-600 rounded-md text-sm">
-              <GitBranch className="size-4 text-slate-300" />
+            <div className="flex h-8 items-center gap-2 rounded-md border border-slate-600 bg-slate-950 px-2.5 text-xs">
+              <GitBranch className="size-3.5 text-slate-300" />
               <span>{gitBranch}</span>
               <span className="text-slate-400">@</span>
               <code className="text-xs text-slate-300">{gitSha}</code>
@@ -138,7 +138,7 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
         {connectionStatus.rest === 'ok' ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 cursor-default px-1">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-default px-1">
                 <div className="size-1.5 rounded-full bg-green-500" />
                 <Activity className="size-3.5" />
               </div>
@@ -151,7 +151,7 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
         ) : connectionStatus.rest === 'offline' ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 cursor-default px-1 select-none">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-default px-1 select-none">
                 <WifiOff className="size-3.5" />
                 <span>Offline</span>
               </div>
@@ -163,7 +163,7 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
         ) : (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 text-xs text-amber-500 cursor-default px-1 select-none">
+              <div className="flex items-center gap-1.5 text-[11px] text-amber-500 cursor-default px-1 select-none">
                 <AlertTriangle className="size-3.5" />
                 <span>Degraded</span>
               </div>
@@ -176,7 +176,11 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 px-2 text-slate-200 hover:text-white"
+            >
               <Menu className="size-4" />
               Shell
             </Button>

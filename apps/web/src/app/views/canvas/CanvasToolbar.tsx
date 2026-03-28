@@ -39,7 +39,7 @@ type CanvasToolbarProps = {
 };
 
 const MENU_TRIGGER_CLASS =
-  'inline-flex items-center gap-1 rounded px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-default outline-none select-none';
+  'inline-flex h-7 items-center gap-1 rounded px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-default outline-none select-none';
 
 const MENU_CONTENT_CLASS = 'w-48 bg-slate-800 border border-slate-600 shadow-xl';
 
@@ -60,10 +60,8 @@ export default function CanvasToolbar({
   const navigate = useNavigate();
 
   return (
-    <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-2 gap-2 shrink-0">
-      {/* Left — menu bar + overlay toggles */}
-      <div className="flex items-center">
-        {/* File menu */}
+    <div className="flex h-9 shrink-0 items-center justify-between gap-2 border-b border-slate-700 bg-slate-900 px-2">
+      <div className="flex min-w-0 items-center">
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger className={MENU_TRIGGER_CLASS}>
             File
@@ -82,7 +80,6 @@ export default function CanvasToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Edit menu */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger className={MENU_TRIGGER_CLASS}>
             Edit
@@ -92,12 +89,12 @@ export default function CanvasToolbar({
             <DropdownMenuItem className={MENU_ITEM_CLASS} disabled>
               <Undo2 className="size-4 shrink-0" />
               Undo
-              <DropdownMenuShortcut>⌘Z</DropdownMenuShortcut>
+              <DropdownMenuShortcut>Cmd+Z</DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuItem className={MENU_ITEM_CLASS} disabled>
               <Redo2 className="size-4 shrink-0" />
               Redo
-              <DropdownMenuShortcut>⌘⇧Z</DropdownMenuShortcut>
+              <DropdownMenuShortcut>Cmd+Shift+Z</DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-slate-600" />
             <DropdownMenuItem className={MENU_ITEM_CLASS} onSelect={onAutoLayout}>
@@ -107,16 +104,15 @@ export default function CanvasToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Separator orientation="vertical" className="h-5 mx-2 bg-slate-700" />
+        <Separator orientation="vertical" className="mx-2 h-5 bg-slate-700" />
 
-        {/* Overlay toggles — state immediately visible */}
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={onToggleImpact}
           className={cn(
-            'gap-1.5 text-slate-300 hover:text-white hover:bg-slate-800',
+            'h-7 gap-1.5 px-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
             impactOverlayEnabled && 'bg-slate-700 text-white'
           )}
         >
@@ -130,7 +126,7 @@ export default function CanvasToolbar({
           size="sm"
           onClick={onToggleColumns}
           className={cn(
-            'gap-1.5 text-slate-300 hover:text-white hover:bg-slate-800',
+            'h-7 gap-1.5 px-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
             columnLevelLineageEnabled && 'bg-slate-700 text-white'
           )}
         >
@@ -139,27 +135,34 @@ export default function CanvasToolbar({
         </Button>
       </div>
 
-      {/* Centre — canvas stats */}
-      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 select-none tabular-nums">
-        <span>{nodeCount} node{nodeCount !== 1 ? 's' : ''}</span>
-        <span className="text-slate-700">·</span>
-        <span>{edgeCount} edge{edgeCount !== 1 ? 's' : ''}</span>
-      </div>
-
-      {/* Right — execution */}
       <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 select-none tabular-nums">
+          <span>
+            {nodeCount} node{nodeCount !== 1 ? 's' : ''}
+          </span>
+          <span className="text-slate-700">�</span>
+          <span>
+            {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
+          </span>
+        </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onPlan}
-          className="border-slate-600 text-slate-200 hover:text-white hover:bg-slate-800 bg-transparent"
+          className="h-7 border-slate-600 bg-transparent px-2.5 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
         >
-          <FileCheck className="size-4 mr-1.5" />
+          <FileCheck className="mr-1.5 size-4" />
           Plan
         </Button>
-        <Button type="button" variant="default" size="sm" onClick={onRun}>
-          <Play className="size-4 mr-1.5" />
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          onClick={onRun}
+          className="h-7 px-2.5 text-xs"
+        >
+          <Play className="mr-1.5 size-4" />
           Run
         </Button>
       </div>

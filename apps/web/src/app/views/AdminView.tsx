@@ -1,5 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Users, FileText, CheckCircle2, XCircle, Search } from 'lucide-react';
+import {
+  Shield,
+  Users,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Activity,
+  Database,
+  Radio,
+  Server,
+  AlertTriangle,
+  Link2,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '../components/ui/badge';
@@ -17,13 +30,32 @@ import {
 } from '../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
+import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
+import { deriveConnectionStatus, usePlatformHealthQuery } from '../queries/usePlatformHealthQuery';
 import { resolveDataSource } from '../services/config/dataSource';
 import { createWorkspaceService } from '../services/workspace/workspaceService';
 
 const workspaceService = createWorkspaceService(resolveDataSource());
 
+function StatusBadge({
+  ok,
+  label,
+}: Readonly<{
+  ok: boolean;
+  label: string;
+}>) {
+  return (
+    <Badge className={cn(ok ? 'bg-green-700 text-white' : 'bg-amber-700 text-white')}>
+      {ok ? <CheckCircle2 className="mr-1 size-3" /> : <AlertTriangle className="mr-1 size-3" />}
+      {label}
+    </Badge>
+  );
+}
+
 export default function AdminView() {
   const [searchQuery, setSearchQuery] = useState('');
+  const platformHealth = usePlatformHealthQuery();
+  const capabilities = useCapabilitiesQuery();
   const rolesQuery = useQuery({
     queryKey: ['workspace', 'roles'],
     queryFn: () => workspaceService.getRoles(),
@@ -34,6 +66,7 @@ export default function AdminView() {
   });
   const roles = rolesQuery.data ?? [];
   const auditLog = auditQuery.data ?? [];
+  const connectionStatus = deriveConnectionStatus(platformHealth.data, platformHealth.isError);
 
   const filteredAuditLog = searchQuery
     ? auditLog.filter(
@@ -61,6 +94,10 @@ export default function AdminView() {
         <div className="p-6">
           <Tabs defaultValue="roles" className="max-w-6xl mx-auto">
             <TabsList className="bg-slate-900 border border-slate-700">
+              <TabsTrigger value="platform">
+                <Server className="size-4 mr-2" />
+                Platform
+              </TabsTrigger>
               <TabsTrigger value="roles">
                 <Users className="size-4 mr-2" />
                 Roles
@@ -74,6 +111,239 @@ export default function AdminView() {
                 Audit Log
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="platform" className="space-y-6 mt-6">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <Card className="border-slate-700 bg-slate-900 p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Backend status
+                      </div>
+                      <div className="mt-2 text-lg font-semibold">
+                        {connectionStatus.rest === 'ok'
+                          ? 'Online'
+                          : connectionStatus.rest === 'degraded'
+                            ? 'Degraded'
+                            : 'Offline'}
+                      </div>
+                    </div>
+                    <Activity
+                      className={cn(
+                        'size-5',
+                        connectionStatus.rest === 'ok' && 'text-green-400',
+                        connectionStatus.rest === 'degraded' && 'text-amber-400',
+                        connectionStatus.rest === 'offline' && 'text-red-400'
+                      )}
+                    />
+                  </div>
+                  <div className="mt-4 text-sm text-slate-400">
+                    REST: {connectionStatus.rest} · events: {connectionStatus.liveEvents}
+                  </div>
+                </Card>
+
+                <Card className="border-slate-700 bg-slate-900 p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-slate-500">Version</div>
+                      <div className="mt-2 text-lg font-semibold">
+                        {platformHealth.data?.version.data?.version ?? 'unknown'}
+                      </div>
+                    </div>
+                    <Radio className="size-5 text-cyan-400" />
+                  </div>
+                  <div className="mt-4 text-sm text-slate-400">
+                    {platformHealth.data?.version.data?.name ?? 'backend'} · API{' '}
+                    {capabilities.data?.apiVersion ?? 'n/a'}
+                  </div>
+                </Card>
+
+                <Card className="border-slate-700 bg-slate-900 p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Readiness
+                      </div>
+                      <div className="mt-2 text-lg font-semibold">
+                        {platformHealth.data?.readyz.data?.status ?? 'unavailable'}
+                      </div>
+                    </div>
+                    <Link2 className="size-5 text-violet-400" />
+                  </div>
+                  <div className="mt-4 text-sm text-slate-400">
+                    {platformHealth.data?.readyz.data &&
+                    'reasonCode' in platformHealth.data.readyz.data
+                      ? platformHealth.data.readyz.data.reasonCode
+                      : 'readyz endpoint healthy'}
+                  </div>
+                </Card>
+
+                <Card className="border-slate-700 bg-slate-900 p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-slate-500">Database</div>
+                      <div className="mt-2 text-lg font-semibold">
+                        {platformHealth.data?.dbReady.data?.ok ? 'Ready' : 'Unavailable'}
+                      </div>
+                    </div>
+                    <Database className="size-5 text-emerald-400" />
+                  </div>
+                  <div className="mt-4 text-sm text-slate-400">
+                    {platformHealth.data?.dbReady.data?.reason ?? 'db/ready endpoint available'}
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                <Card className="border-slate-700 bg-slate-900 p-5">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Server className="size-5 text-blue-400" />
+                    <div>
+                      <h3 className="font-semibold">Backend probe details</h3>
+                      <p className="text-sm text-slate-400">
+                        What is up, what responded, and which base URL the shell is using.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium">/healthz</span>
+                        <StatusBadge
+                          ok={platformHealth.data?.healthz.status === 'healthy'}
+                          label={platformHealth.data?.healthz.status ?? 'offline'}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        intent reconciler:{' '}
+                        {platformHealth.data?.healthz.components.intentReconciler.status ?? 'n/a'}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium">/readyz</span>
+                        <StatusBadge
+                          ok={platformHealth.data?.readyz.data?.ok === true}
+                          label={platformHealth.data?.readyz.data?.status ?? 'unavailable'}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {platformHealth.data?.readyz.available
+                          ? (platformHealth.data?.readyz.error ?? 'endpoint responded')
+                          : 'endpoint not enabled'}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium">/version</span>
+                        <StatusBadge
+                          ok={platformHealth.data?.version.available === true}
+                          label={platformHealth.data?.version.statusCode?.toString() ?? 'n/a'}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-400 font-mono">
+                        {platformHealth.data?.version.data
+                          ? `${platformHealth.data.version.data.name}@${platformHealth.data.version.data.version}`
+                          : (platformHealth.data?.version.error ?? 'endpoint not enabled')}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium">/db/ready</span>
+                        <StatusBadge
+                          ok={platformHealth.data?.dbReady.data?.ok === true}
+                          label={platformHealth.data?.dbReady.statusCode?.toString() ?? 'n/a'}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {platformHealth.data?.dbReady.data?.reason ??
+                          platformHealth.data?.dbReady.error ??
+                          'endpoint not enabled'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">
+                      API base URL
+                    </div>
+                    <div className="mt-2 font-mono text-sm text-slate-200 break-all">
+                      {platformHealth.data?.apiBaseUrl ?? 'not resolved'}
+                    </div>
+                    <div className="mt-2 text-xs text-slate-500">
+                      fetched at {platformHealth.data?.fetchedAt ?? 'n/a'}
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="border-slate-700 bg-slate-900 p-5">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Radio className="size-5 text-cyan-400" />
+                    <div>
+                      <h3 className="font-semibold">Capabilities in use</h3>
+                      <p className="text-sm text-slate-400">
+                        What the backend reports as available for this frontend.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Frontend compatibility
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Badge variant="outline">
+                          apiVersion: {capabilities.data?.apiVersion ?? 'n/a'}
+                        </Badge>
+                        <Badge variant="outline">
+                          minFrontendVersion: {capabilities.data?.minFrontendVersion ?? 'n/a'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                      <div className="mb-3 text-xs uppercase tracking-wide text-slate-500">
+                        Plugin availability
+                      </div>
+                      <div className="space-y-2">
+                        {capabilities.data ? (
+                          Object.entries(capabilities.data.plugins).map(([pluginId, info]) => (
+                            <div
+                              key={pluginId}
+                              className="flex items-center justify-between rounded border border-slate-800 px-3 py-2"
+                            >
+                              <span className="font-mono text-sm text-slate-200">{pluginId}</span>
+                              <div className="flex items-center gap-2">
+                                {info.reason && (
+                                  <span className="text-xs text-slate-500">{info.reason}</span>
+                                )}
+                                <StatusBadge
+                                  ok={info.available}
+                                  label={info.available ? 'available' : 'blocked'}
+                                />
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-slate-400">
+                            {capabilities.isLoading
+                              ? 'Loading capabilities...'
+                              : capabilities.error
+                                ? 'Capabilities endpoint unavailable.'
+                                : 'No capability data.'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </TabsContent>
 
             {/* Roles Tab */}
             <TabsContent value="roles" className="space-y-4 mt-6">
