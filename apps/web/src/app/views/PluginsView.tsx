@@ -1,35 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Info, Puzzle, XCircle } from 'lucide-react';
+import { CheckCircle2, Info, Puzzle, Radio, XCircle } from 'lucide-react';
 
 import { Badge } from '../components/ui/badge';
 import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
 import { resolveString } from '../plugins/contracts/PluginManifest';
 import { PLUGIN_REGISTRY } from '../plugins/registry';
-
-type CapabilitiesResponse = {
-  apiVersion: string;
-  minFrontendVersion: string;
-  plugins: Record<string, { available: boolean; reason?: string }>;
-};
-
-async function fetchCapabilities(): Promise<CapabilitiesResponse> {
-  const res = await fetch('/api/capabilities');
-  if (!res.ok) throw new Error('capabilities unavailable');
-  return res.json() as Promise<CapabilitiesResponse>;
-}
 
 export default function PluginsView() {
   const {
     data: capabilities,
     error: capabilitiesError,
     isLoading: capabilitiesLoading,
-  } = useQuery({
-    queryKey: ['shell', 'capabilities'],
-    queryFn: fetchCapabilities,
-    retry: false,
-    staleTime: 60_000,
-  });
+  } = useCapabilitiesQuery();
 
   return (
     <div className="flex h-full flex-col bg-slate-950">
@@ -41,7 +24,10 @@ export default function PluginsView() {
             <p className="text-xs text-slate-400">
               {PLUGIN_REGISTRY.length} plugin{PLUGIN_REGISTRY.length !== 1 ? 's' : ''} registered
               {capabilities && (
-                <span className="ml-2 text-slate-500">� API {capabilities.apiVersion}</span>
+                <span className="ml-2 inline-flex items-center gap-1 text-slate-500">
+                  <Radio className="size-3" />
+                  API {capabilities.apiVersion}
+                </span>
               )}
             </p>
           </div>

@@ -1,6 +1,10 @@
 import { Shield, Puzzle } from 'lucide-react';
 import { NavLink } from 'react-router';
 
+import {
+  useCapabilitiesQuery,
+  isPluginAvailableFromCapabilities,
+} from '../queries/useCapabilitiesQuery';
 import { getNavigationViews } from '../plugins/registry';
 import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -13,7 +17,13 @@ const SHELL_NAV = [
 ];
 
 export default function LeftNavigation() {
-  const pluginViews = getNavigationViews();
+  const { data: capabilities } = useCapabilitiesQuery();
+
+  // Fail-open: if capabilities are unavailable, all views are shown.
+  // Only hide a view when the backend explicitly marks its plugin as unavailable.
+  const pluginViews = getNavigationViews().filter((view) =>
+    isPluginAvailableFromCapabilities(capabilities, view.pluginId)
+  );
 
   return (
     <div className="bg-slate-900 border-r border-slate-700 w-14">
