@@ -3,7 +3,7 @@ title: Lineage outbox retry scheduling hardening
 status: Accepted
 date: 2026-03-28
 owners:
-  - @dvt/adapter-postgres
+  - '@dvt/adapter-postgres'
 arc_level: ARC-2
 breaking: false
 code_refs:
@@ -13,10 +13,11 @@ code_refs:
   - packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
 evidence:
-  - pnpm --filter @dvt/adapter-postgres test
-  - pnpm --filter @dvt/adapter-postgres typecheck
-  - pnpm lint:md
-  - pnpm verify:prepush
+  tests:
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/adapter-postgres typecheck
+    - pnpm lint:md
+    - pnpm verify:prepush
 ---
 
 # 20260328 Lineage Outbox Retry Scheduling
