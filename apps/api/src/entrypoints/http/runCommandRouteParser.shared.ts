@@ -1,6 +1,9 @@
 import { TenantId } from '../../domain/auth/types.js';
 
-import { SIGNAL_RUN_PARSE_ERROR_CODE, SIGNAL_RUN_PARSE_ERROR_RESPONSE } from './signalRunRouteParser.constants.js';
+import {
+  SIGNAL_RUN_PARSE_ERROR_CODE,
+  SIGNAL_RUN_PARSE_ERROR_RESPONSE,
+} from './signalRunRouteParser.constants.js';
 
 type MissingOrInvalidTenantCode =
   | typeof SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE
@@ -26,7 +29,9 @@ export function isBodyObject(raw: unknown): raw is Record<string, unknown> {
   return raw !== null && typeof raw === 'object' && !Array.isArray(raw);
 }
 
-export function parseTenantId(body: Record<string, unknown>):
+export function parseTenantId(
+  body: Record<string, unknown>
+):
   | { readonly ok: true; readonly value: TenantId }
   | { readonly ok: false; readonly error: MissingOrInvalidTenantCode } {
   if (!Object.hasOwn(body, 'tenantId') || body.tenantId === undefined) {
@@ -55,7 +60,9 @@ export function parseOptionalReason(raw: unknown): string | undefined {
   return normalized.length > 0 ? normalized : undefined;
 }
 
-export function badRequest<TCode extends string>(code: TCode): ParsedRunCommandError & {
+export function badRequest<TCode extends string>(
+  code: TCode
+): ParsedRunCommandError & {
   readonly body: {
     readonly error: typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST;
     readonly code: TCode;
@@ -71,7 +78,9 @@ export function badRequest<TCode extends string>(code: TCode): ParsedRunCommandE
   };
 }
 
-export function forbidden<TCode extends string>(code: TCode): ParsedRunCommandError & {
+export function forbidden<TCode extends string>(
+  code: TCode
+): ParsedRunCommandError & {
   readonly body: {
     readonly error: typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN;
     readonly code: TCode;
