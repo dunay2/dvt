@@ -4,7 +4,7 @@ import { cancelRunRoute } from '../../../src/entrypoints/http/cancelRunRoute.js'
 import {
   SIGNAL_COMMAND_ACTION,
   SIGNAL_RUN_PARSE_ERROR_CODE,
-} from '../../../src/entrypoints/http/cancelRunRouteParser.js';
+} from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 
 function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
   return {

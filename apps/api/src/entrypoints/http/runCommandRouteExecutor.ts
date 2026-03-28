@@ -10,29 +10,26 @@ import type { TenantId } from '../../domain/auth/types.js';
 import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import type { SignalCommandActionName } from './signalRunRouteAuthorization.constants.js';
-import type { SignalRunParseErrorCode } from './signalRunRouteParser.constants.js';
+import type { RunCommandActionName } from './runCommandRoute.constants.js';
+import type { ParsedRunCommandError } from './runCommandFieldParsers.js';
 
 type ParsedCommandRequest<TCommand> = {
   readonly command: TCommand;
   readonly authorization: {
     readonly tenantId: TenantId;
-    readonly actionName: SignalCommandActionName;
+    readonly actionName: RunCommandActionName;
   };
 };
 
-type ParsedCommandResult<TCommand> =
+type ParsedCommandResult<TCommand, TParseCode extends string = string> =
   | { readonly ok: true; readonly value: ParsedCommandRequest<TCommand> }
-  | {
-      readonly ok: false;
-      readonly status: 400 | 403;
-      readonly body: {
-        readonly error: 'BAD_REQUEST' | 'FORBIDDEN';
-        readonly code: SignalRunParseErrorCode;
-      };
-    };
+  | ParsedRunCommandError<TParseCode>;
 
-export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
+export async function executeAuthorizedRunCommandRoute<
+  TCommand,
+  TResult,
+  TParseCode extends string = string,
+>(
   request: FastifyRequest,
   reply: FastifyReply,
   deps: {
@@ -40,7 +37,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     authorizer: AuthorizeCommandScopeService;
     execute: (command: TCommand, context: AuthorizedCommandExecutionContext) => Promise<TResult>;
   },
-  parsed: ParsedCommandResult<TCommand>
+  parsed: ParsedCommandResult<TCommand, TParseCode>
 ): Promise<void> {
   if (!parsed.ok) {
     reply.code(parsed.status).send(parsed.body);

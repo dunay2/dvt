@@ -1,0 +1,22 @@
+export const RUN_COMMAND_ACTION = {
+  CANCEL: 'run:cancel',
+  SIGNAL: 'run:signal',
+} as const;
+
+export type RunCommandActionName = (typeof RUN_COMMAND_ACTION)[keyof typeof RUN_COMMAND_ACTION];
+
+export const RUN_COMMAND_PARSE_ERROR_CODE = {
+  INVALID_RUN_ID: 'INVALID_RUN_ID',
+  INVALID_BODY: 'INVALID_BODY',
+  INVALID_SIGNAL_TYPE: 'INVALID_SIGNAL_TYPE',
+  MISSING_TENANT_SCOPE: 'MISSING_TENANT_SCOPE',
+  INVALID_TENANT_ID: 'INVALID_TENANT_ID',
+} as const;
+
+export type RunCommandParseErrorCode =
+  (typeof RUN_COMMAND_PARSE_ERROR_CODE)[keyof typeof RUN_COMMAND_PARSE_ERROR_CODE];
+
+export const RUN_COMMAND_PARSE_ERROR_RESPONSE = {
+  BAD_REQUEST: 'BAD_REQUEST',
+  FORBIDDEN: 'FORBIDDEN',
+} as const;

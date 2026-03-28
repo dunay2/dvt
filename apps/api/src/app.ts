@@ -4,7 +4,7 @@ import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
-import type { ICancelRunUseCase } from './application/ports/runtime.js';
+import { CancelRunUseCase } from './application/services/cancelRunUseCase.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
@@ -187,9 +187,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.engine,
       protectedModule.stateStore.read
     );
-    const cancelRunUseCase: ICancelRunUseCase = {
-      execute: (command, context) => signalRunUseCase.execute(command, context),
-    };
+    const cancelRunUseCase = new CancelRunUseCase(signalRunUseCase);
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
