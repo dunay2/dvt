@@ -1,184 +1,143 @@
+import { CheckCircle2, Info, Puzzle, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Puzzle, CheckCircle2, XCircle, Settings, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
+import { PLUGIN_REGISTRY } from '../plugins/registry';
+import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { Switch } from '../components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { resolveDataSource } from '../services/config/dataSource';
-import { createWorkspaceService } from '../services/workspace/workspaceService';
 
-const workspaceService = createWorkspaceService(resolveDataSource());
+// ---------------------------------------------------------------------------
+// /api/capabilities — optional backend availability check
+// ---------------------------------------------------------------------------
+
+type CapabilitiesResponse = {
+  apiVersion: string;
+  minFrontendVersion: string;
+  plugins: Record<string, { available: boolean; reason?: string }>;
+};
+
+async function fetchCapabilities(): Promise<CapabilitiesResponse> {
+  const res = await fetch('/api/capabilities');
+  if (!res.ok) throw new Error('capabilities unavailable');
+  return res.json() as Promise<CapabilitiesResponse>;
+}
+
+// ---------------------------------------------------------------------------
+// PluginsView — read-only, informative (v1 spec §7)
+// ---------------------------------------------------------------------------
 
 export default function PluginsView() {
-  const pluginsQuery = useQuery({
-    queryKey: ['workspace', 'plugins'],
-    queryFn: () => workspaceService.getPlugins(),
+  const { data: capabilities } = useQuery({
+    queryKey: ['shell', 'capabilities'],
+    queryFn: fetchCapabilities,
+    retry: false,
+    staleTime: 60_000,
   });
-  const [plugins, setPlugins] = useState(() => pluginsQuery.data ?? []);
-
-  useEffect(() => {
-    if (pluginsQuery.data) {
-      setPlugins(pluginsQuery.data);
-    }
-  }, [pluginsQuery.data]);
-
-  const handleTogglePlugin = (pluginId: string) => {
-    setPlugins((prev) => prev.map((p) => (p.id === pluginId ? { ...p, enabled: !p.enabled } : p)));
-    const plugin = plugins.find((p) => p.id === pluginId);
-    toast.success(`${plugin?.name} ${plugin?.enabled ? 'disabled' : 'enabled'}`);
-  };
 
   return (
-    <div className="h-full bg-slate-950 flex flex-col">
+    <div className="flex h-full flex-col bg-slate-950">
       {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Puzzle className="size-6 text-orange-400" />
+      <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Puzzle className="size-6 text-orange-400" />
+          <div>
             <h1 className="text-xl font-semibold">Plugins</h1>
+            <p className="text-xs text-slate-400">
+              {PLUGIN_REGISTRY.length} plugin{PLUGIN_REGISTRY.length !== 1 ? 's' : ''} registered
+              {capabilities && (
+                <span className="ml-2 text-slate-500">· API {capabilities.apiVersion}</span>
+              )}
+            </p>
           </div>
-          <Button variant="default">Browse Marketplace</Button>
         </div>
       </div>
 
-      {/* Main Content */}
       <ScrollArea className="flex-1">
-        <div className="p-6">
-          <Tabs defaultValue="installed" className="max-w-5xl mx-auto">
-            <TabsList className="bg-slate-900 border border-slate-700">
-              <TabsTrigger value="installed">Installed ({plugins.length})</TabsTrigger>
-              <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-            </TabsList>
+        <div className="mx-auto max-w-3xl space-y-4 p-6">
+          {PLUGIN_REGISTRY.map((plugin) => {
+            const backendInfo = capabilities?.plugins[plugin.id];
+            const isAvailable = backendInfo?.available ?? true; // assume available if no backend info
 
-            <TabsContent value="installed" className="space-y-4 mt-6">
-              {plugins.map((plugin) => (
-                <Card key={plugin.id} className="bg-slate-900 border-slate-700 p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start gap-4">
-                      <div className="size-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <Puzzle className="size-6" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{plugin.name}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            v{plugin.version}
-                          </Badge>
-                          {plugin.enabled ? (
-                            <Badge className="bg-green-600 text-xs">
-                              <CheckCircle2 className="size-3 mr-1" />
-                              Enabled
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">
-                              <XCircle className="size-3 mr-1" />
-                              Disabled
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-300">{plugin.description}</p>
-                      </div>
+            return (
+              <Card key={plugin.id} className="border-slate-700 bg-slate-900 p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    {/* Icon placeholder */}
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-700">
+                      <Puzzle className="size-5" />
                     </div>
-                    <Switch
-                      checked={plugin.enabled}
-                      onCheckedChange={() => handleTogglePlugin(plugin.id)}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                    <div className="flex gap-4">
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Capabilities</div>
-                        <div className="flex gap-1">
-                          {plugin.capabilities.map((cap) => (
-                            <Badge key={cap} variant="secondary" className="text-xs">
-                              {cap}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Permissions</div>
-                        <div className="flex gap-1">
-                          {plugin.permissions.map((perm) => (
-                            <Badge key={perm} variant="outline" className="text-xs">
-                              {perm}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Settings className="size-4 mr-2" />
-                        Configure
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <ShieldCheck className="size-4 mr-2" />
-                        Permissions
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="marketplace" className="mt-6">
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  {
-                    name: 'Data Quality Pro',
-                    description: 'Advanced data quality checks and anomaly detection',
-                    category: 'Quality',
-                  },
-                  {
-                    name: 'Snowflake Optimizer',
-                    description: 'Optimize Snowflake warehouse usage and costs',
-                    category: 'Performance',
-                  },
-                  {
-                    name: 'Teams Notifier',
-                    description: 'Send run notifications to Microsoft Teams',
-                    category: 'Notifications',
-                  },
-                  {
-                    name: 'Git Auto-Commit',
-                    description: 'Automatically commit changes to Git on successful runs',
-                    category: 'Automation',
-                  },
-                ].map((plugin, idx) => (
-                  <Card
-                    key={idx}
-                    className="bg-slate-900 border-slate-700 p-4 hover:border-slate-600 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="size-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                        <Puzzle className="size-5" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold mb-1">{plugin.name}</h3>
-                        <Badge variant="secondary" className="text-xs">
-                          {plugin.category}
+                    <div>
+                      {/* Name + version + status */}
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="font-semibold">{resolveString(plugin.displayName)}</span>
+                        <Badge variant="outline" className="text-xs">
+                          v{plugin.version}
                         </Badge>
+                        {isAvailable ? (
+                          <Badge className="bg-green-700 text-xs">
+                            <CheckCircle2 className="mr-1 size-3" />
+                            available
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs text-red-400">
+                            <XCircle className="mr-1 size-3" />
+                            unavailable
+                          </Badge>
+                        )}
                       </div>
+
+                      {/* Unavailability reason */}
+                      {backendInfo?.reason && (
+                        <p className="mb-2 flex items-center gap-1 text-xs text-slate-400">
+                          <Info className="size-3 shrink-0" />
+                          {backendInfo.reason}
+                        </p>
+                      )}
+
+                      {/* Capabilities */}
+                      {(plugin.capabilities?.length ?? 0) > 0 && (
+                        <div className="mt-2">
+                          <div className="mb-1 text-xs text-slate-500">Capabilities</div>
+                          <div className="flex flex-wrap gap-1">
+                            {plugin.capabilities!.map((cap) => (
+                              <Badge key={cap} variant="secondary" className="text-xs">
+                                {cap}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Node kinds */}
+                      {(plugin.nodeKinds?.length ?? 0) > 0 && (
+                        <div className="mt-2">
+                          <div className="mb-1 text-xs text-slate-500">Node kinds</div>
+                          <div className="flex flex-wrap gap-1">
+                            {plugin.nodeKinds!.map((kind) => (
+                              <Badge
+                                key={kind.kind}
+                                variant="outline"
+                                className="font-mono text-[10px]"
+                              >
+                                {kind.kind}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-slate-300 mb-4">{plugin.description}</p>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Install
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
+                  </div>
+
+                  {/* Plugin id — always visible for debugging */}
+                  <span className="shrink-0 font-mono text-[10px] text-slate-600">{plugin.id}</span>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>
   );
 }
-
