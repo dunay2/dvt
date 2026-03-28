@@ -13,6 +13,7 @@ Draft proposals and candidate changes. Non-normative.
 
 - [CI Scope-Aware Validation And Docs-Only Fast Path](ci-scope-aware-validation-and-docs-only-fast-path-20260324.md)
 - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md)
+- [Contracts Domain Ownership Migration Plan](contracts-domain-ownership-migration-plan-20260327.md)
 - [DDD Hexagonal Modularization Plan](ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](todo.md)
 - [Docs Governance Tooling Future Tasks](docs-governance-tooling-future-tasks-20260324.md)

@@ -269,6 +269,172 @@ S-5 is the final gate and should not open until S-4 is merged.
 
 ---
 
+## Commit review — 0ac73b7
+
+**`fix(adapters): Harden lineage outbox tenant scope and claim fencing`**
+18 files, +1381/−112 lines — reviewed 2026-03-28.
+
+### Coverage of the 14 findings
+
+| #   | Finding                                          | Status                                                                                                                                                               |
+| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Tenant isolation — no `tenant_id`                | Closed — migration 011 + SchemaManager `core_014` add column, backfill from `payload->>'tenantId'` + `run_metadata`, fallback `'__unknown_tenant__'`                 |
+| 2   | Claim fencing incomplete                         | Closed — `deleteLineageOutboxByIdsSql` and `updateLineageOutboxFailureSql` add `AND status = 'claimed' AND claimed_at IS NOT NULL AND claimed_at >= (now - timeout)` |
+| 3   | `listDeadLetter` unbounded limit                 | Closed — `normalizeLineageQueryLimit` rejects NaN, float, negative; cap `MAX_LINEAGE_QUERY_LIMIT = 1000`                                                             |
+| 4   | Missing index on `dead_lettered_at`              | Closed — `lineage_dead_letter_tenant_dead_lettered_idx` on `(tenant_id, dead_lettered_at DESC)`                                                                      |
+| 5   | Raw `err.message` persisted                      | Closed — `sanitizeErrorForPersistence`: redacts tokens/passwords, collapses whitespace, truncates to 512 chars                                                       |
+| 6   | Type mismatch in `deadLetter`                    | Closed — `deadLetter()` removed from contract; `markFailed` uses precise `LineageMarkFailedRow`                                                                      |
+| 7   | Asymmetric `listPending` limit validation        | Closed — `listPending` now uses same `normalizeLineageQueryLimit`                                                                                                    |
+| 8   | `status` column inert                            | Closed — `status` now transitions: `'pending'` → `'claimed'` (on listPending) → `'dead_lettered'` (on markFailed max attempts) → DELETE                              |
+| 9   | Tests overfit SQL mocks                          | Partial — tests expanded and improved; still `RecordingClient`-only; no real Postgres integration tests                                                              |
+| 10  | Dead-letter coverage gaps                        | Closed — tests for `listDeadLetter` (tenant required, filter, invalid limits) and markFailed DLQ path                                                                |
+| 11  | NULLS ordering mismatch in index 010             | Closed — index recreated with explicit `ASC NULLS FIRST` in 011 and SchemaManager                                                                                    |
+| 12  | `lagCount` batch-capped                          | Closed — `countPending()` runs `COUNT(*)` with no LIMIT; runtime uses `countPending?.()` with fallback                                                               |
+| 13  | `listDeadLetter?` optional vs unconditional impl | Closed — `listDeadLetter` now required in contract (no `?`), signature `(limit, tenantId)`                                                                           |
+| 14  | `deadLetter()` force path with no caller         | Closed — method removed from contract and store                                                                                                                      |
+
+**Score: 13/14 closed, 1 partial (finding 9 — real Postgres integration tests)**
+
+### New risks introduced by this commit
+
+**[Medium] `markDelivered` silent no-op at claim timeout boundary**
+
+`deleteLineageOutboxByIdsSql` (line 68–73) adds:
+
+```sql
+AND claimed_at >= ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))
+```
+
+If processing a record takes longer than `claimTimeoutMs`, the DELETE is a silent no-op — the
+method returns `void` with no feedback. The next worker reclaims and retries the same record,
+risking duplicate publication to the sink.
+
+**[Medium] Orphaned row if DELETE fails after `status = 'dead_lettered'` is written**
+
+In `updateLineageOutboxFailureSql`, when `attempts + 1 >= MAX`, the UPDATE sets
+`status = 'dead_lettered'`; the TypeScript then issues a second DELETE in the same transaction.
+If that DELETE rolls back (crash, network), the row sits with `status = 'dead_lettered'` and
+`claimed_at = NULL`. `listPending` filters `status = 'pending'`, so the row is permanently
+orphaned — never reprocessed, never reaching the DLQ.
+
+**[Medium] In-flight rows break `markDelivered` at upgrade time**
+
+Rows with `claimed_at IS NOT NULL` and `status = 'pending'` (claimed under the old code, which
+did not set `status = 'claimed'`) will fail the `AND status = 'claimed'` guard in
+`deleteLineageOutboxByIdsSql`. Delivery silently fails; the row is reclaimed after timeout and
+retried. Short window but real in rolling deployments.
+
+**[Low] `run_metadata` assumed in migration 011 backfill**
+
+`011_lineage_tenant_scope_hardening.sql` line 7–17 joins on `__SCHEMA__.run_metadata`. If that
+table does not exist or lacks `tenant_id` in the target schema, the migration fails with no
+automatic rollback path.
+
+**[Low] Breaking contract changes on `ILineageSink.v1.ts` without version bump**
+
+`markFailed` signature changed (new return type), `deadLetter` removed, `listDeadLetter` made
+required with a new `tenantId` parameter. These are breaking changes on a `v1` file. Under
+ADR-0005 and ADR-0006, breaking contract changes require a version bump or explicit ADR backing;
+this commit provides neither.
+
+### Open items for Berta after this commit
+
+1. S-5 — integration tests against real Postgres (finding 9 still partial)
+2. Harden `markDelivered` timeout boundary — add return count or raise on no-op
+3. Ensure dead-letter atomicity — move `status = 'dead_lettered'` inside the same delete
+   transaction or use a single atomic SQL statement
+4. Migration upgrade path for in-flight `status = 'pending'` rows with `claimed_at` set
+5. ADR decision or version bump for `ILineageSink.v1.ts` breaking changes
+
+---
+
+---
+
+## Second Fowler QA review — adapter layer (2026-03-28)
+
+### Scope
+
+- `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionSql.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts`
+
+### Findings (ordered by criticality)
+
+1. **[High] `bootstrapRunTx` wraps all `23505` unique violations as `RUN_ALREADY_EXISTS`**
+   - `isUniqueViolation` checks for Postgres error code `23505` globally. Any unique constraint
+     violation raised inside the transaction — including a duplicate `(run_id, idempotency_key)`
+     from `run_events`, or a conflicting insert into `outbox` — is silently re-typed as
+     `RUN_ALREADY_EXISTS`. Callers get an incorrect diagnosis; the real cause is masked.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts:98`
+     - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts:138`
+
+2. **[Medium] `resolveAndSetTenantContext` forwards unvalidated tenant to RLS setter**
+   - `resolveTenantWithClient` returns the raw `tenant_id` from `run_metadata`. The result is
+     passed directly to `setTenantContext` without asserting it is a non-empty string. A metadata
+     corruption or schema inconsistency that yields an empty or null tenant would call
+     `PostgresSchemaManager.setTenantContext(client, '')`, potentially disabling row-level security
+     for the transaction.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts:113`
+     - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts:72`
+
+3. **[Medium] `lineageOutboxStore` is a public field — bypasses `ready()` guard and adapter delegation**
+   - `lineageOutboxStore` is declared `readonly` public on `PostgresStateStoreAdapter` (line 99),
+     while all other sub-components (`outboxStore`, `runStateCoordinator`, `snapshotStalenessQuery`)
+     are private. Callers accessing `adapter.lineageOutboxStore.enqueue(...)` directly skip the
+     `this.ready()` check and the adapter's boundary contract. No delegation methods for the
+     lineage store exist on the adapter itself.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:99`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:357`
+
+4. **[Medium] Correlated subquery in `listStaleSnapshotRunsSql` — N+1 scan risk**
+   - The staleness query uses a correlated subquery `SELECT MAX(e.run_seq) FROM run_events WHERE
+e.run_id = m.run_id` in the WHERE clause, evaluated once per row from `run_metadata`.
+     On large tables without a covering index on `run_events(run_id, run_seq DESC)`, this forces a
+     sequential scan of `run_events` for every metadata row. PostgreSQL may inline it as a hash
+     join under favorable statistics, but there is no guarantee. Production scale risk.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts:16`
+
+5. **[Medium] `listStaleSnapshotRuns` passes `batchSize` to LIMIT without input validation**
+   - `batchSize` is forwarded directly as `$1` to `LIMIT $1` with no guard against NaN, negative
+     values, or non-integer inputs. This is the same class of defect as findings 3 and 7 in the
+     outbox review; the pattern is inconsistent across the adapter layer.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts:22`
+     - `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts:11`
+
+6. **[Low] `abortPendingOperations` is declared `async` but executes synchronously**
+   - The method contains no `await` and performs only synchronous work (setting a flag, iterating
+     a Set, calling `releaseClient`). The `async` modifier wraps the return in a resolved Promise,
+     misleading callers into believing they are waiting for an asynchronous cleanup operation.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:38`
+
+7. **[Low] `enqueueTx` name and contract ambiguity**
+   - `PostgresRunStateCoordinator.enqueueTx` resolves tenant, sets RLS context, and enqueues
+     pre-built `EventEnvelope[]` objects — but does not append to the event log or update the
+     snapshot. It is a re-enqueue recovery path, but its name suggests parity with
+     `appendAndEnqueueTx`. No docstring or ADR reference distinguishes the two. Callers could
+     use it as a primary enqueue path and silently skip the append.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts:106`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:309`
+
+8. **[Low] `PostgresBackpressureSnapshotReader` has inline SQL, inconsistent with `*Sql.ts` convention**
+   - Every other component introduced in this PR (`PostgresAdapterClientSession`,
+     `PostgresSnapshotStalenessQuery`, `PostgresLineageOutboxStore`) centralizes SQL in a
+     companion `*Sql.ts` file. `PostgresBackpressureSnapshotReader` holds a 40-line inline query
+     inside the class method, breaking the pattern and making the SQL untestable in isolation.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts:77`
+
 ## Assumption
 
 - This review assumes ADR-0031 tenant-isolation expectations apply to lineage persistence surfaces unless explicitly exempted.
