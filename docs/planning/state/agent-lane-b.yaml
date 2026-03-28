@@ -19,7 +19,7 @@ tasks:
     target: Merge PR #623 and lock envelope boundary behavior.
   - task_id: S05-F1
     priority: P0
-    status: queued
+    status: review
     objective: add per-eventType payload-content schema validation at write boundary.
     dependency: S05
     target: Add payload schema map and AJV/runtime validation per eventType.
@@ -43,7 +43,7 @@ tasks:
     target: Alerting and replay for lineage failures.
   - task_id: RC-B5
     priority: P1
-    status: queued
+    status: review
     objective:
       add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and
       harden DLQ.
@@ -66,7 +66,7 @@ tasks:
     target: Single source of truth for adapter scope detection + path-matcher tests.
 dependency_notes: |
   - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
-  - `S05-F1` closes deferred payload-content schema enforcement.
+  - `S05-F1` moved to `review` after runtime boundary validation in contracts, adapter-postgres, and engine focused suites.
   - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
   - `RC-B5` is a prerequisite to DLQ alerting + automated replay.
   - `RC-F2` is independent — CI-only change with no runtime risk.

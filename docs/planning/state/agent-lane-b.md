@@ -100,7 +100,7 @@ Stabilize event payload versioning and lineage wiring.
 ## Dependencies
 
 - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
-- `S05-F1` closes deferred payload-content schema enforcement.
+- `S05-F1` moved to `review` after runtime boundary validation in contracts, adapter-postgres, and engine focused suites.
 - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
 - `RC-B5` is a prerequisite to DLQ alerting + automated replay.
 - `RC-F2` is independent — CI-only change with no runtime risk.

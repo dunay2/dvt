@@ -1,10 +1,10 @@
 /**
- * @file packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapterSql.ts
+ * @file packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
- * @decision Centralize SQL text used by PostgresStateStoreAdapter
- * @consequence Adapter orchestration remains free of inline SQL blocks
+ * @decision Centralize SQL text used by PostgresSnapshotStalenessQuery
+ * @consequence Snapshot staleness query stays isolated from query execution logic
  * @version 1.0.0
- * @date 2026-03-26
+ * @date 2026-03-28
  */
 import { quoteIdentifier } from './sqlUtils.js';
 
@@ -20,20 +20,4 @@ export function listStaleSnapshotRunsSql(schema: string): string {
           )
     ORDER BY m.created_at ASC
     LIMIT $1`;
-}
-
-export function beginTransactionSql(): string {
-  return 'BEGIN';
-}
-
-export function commitTransactionSql(): string {
-  return 'COMMIT';
-}
-
-export function rollbackTransactionSql(): string {
-  return 'ROLLBACK';
-}
-
-export function setLocalStatementTimeoutSql(): string {
-  return 'SET LOCAL statement_timeout = $1';
 }

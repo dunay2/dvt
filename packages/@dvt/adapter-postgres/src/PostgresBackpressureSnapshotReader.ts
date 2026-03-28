@@ -9,11 +9,13 @@ export interface PostgresBackpressureSnapshot {
   readonly globalHealthyTenantOldestActiveAgeMs: number;
 }
 
+type PgSnapshotField = number | string | null;
+
 interface BackpressureSnapshotRow {
-  tenant_active_pending_event_count: number | string | null;
-  tenant_stuck_pending_event_count: number | string | null;
-  global_active_pending_event_count: number | string | null;
-  global_healthy_tenant_oldest_active_age_ms: number | string | null;
+  tenant_active_pending_event_count: PgSnapshotField;
+  tenant_stuck_pending_event_count: PgSnapshotField;
+  global_active_pending_event_count: PgSnapshotField;
+  global_healthy_tenant_oldest_active_age_ms: PgSnapshotField;
 }
 
 export interface PostgresBackpressureSnapshotReaderConfig {
