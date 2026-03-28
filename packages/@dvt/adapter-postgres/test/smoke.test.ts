@@ -712,6 +712,137 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     );
   });
 
+  test('lineage outbox: markDelivered does not remove claims after timeout expiry', async () => {
+    const nowRef = { value: NOW };
+    const runId = 'run-lineage-mark-delivered-timeout-fence';
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+
+    await withClockAdapter(
+      nowRef,
+      async (adapter) => {
+        await adapter.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapter.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStore = adapter.getLineageOutboxStore();
+        await lineageStore.enqueue(runId, event);
+
+        const initialClaims = await lineageStore.listPending(claimLimit);
+        const claimed = requireDefined(
+          initialClaims.find((record) => record.runId === runId),
+          'expected initial lineage claim'
+        );
+
+        nowRef.value = afterClaimExpiry;
+        await lineageStore.markDelivered([claimed.id]);
+
+        if (lineageStore.countPending) {
+          const lagBeforeReclaim = await lineageStore.countPending();
+          expect(lagBeforeReclaim).toBeGreaterThanOrEqual(1);
+        }
+
+        const reclaimed = await lineageStore.listPending(claimLimit);
+        const reclaimedRecord = reclaimed.find((record) => record.runId === runId);
+        expect(reclaimedRecord).toBeDefined();
+        expect(reclaimedRecord?.id).toBe(claimed.id);
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
+  test('lineage outbox: markFailed returns not_found after timeout expiry and keeps event reclaimable', async () => {
+    const nowRef = { value: NOW };
+    const runId = 'run-lineage-mark-failed-timeout-fence';
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+
+    await withClockAdapter(
+      nowRef,
+      async (adapter) => {
+        await adapter.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapter.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStore = adapter.getLineageOutboxStore();
+        await lineageStore.enqueue(runId, event);
+
+        const initialClaims = await lineageStore.listPending(claimLimit);
+        const claimed = requireDefined(
+          initialClaims.find((record) => record.runId === runId),
+          'expected initial lineage claim'
+        );
+
+        nowRef.value = afterClaimExpiry;
+        const disposition = await lineageStore.markFailed(claimed.id, 'late-failure');
+        expect(disposition).toBe('not_found');
+
+        if (lineageStore.countPending) {
+          const lagBeforeReclaim = await lineageStore.countPending();
+          expect(lagBeforeReclaim).toBeGreaterThanOrEqual(1);
+        }
+
+        const reclaimed = await lineageStore.listPending(claimLimit);
+        const reclaimedRecord = reclaimed.find((record) => record.runId === runId);
+        expect(reclaimedRecord).toBeDefined();
+        expect(reclaimedRecord?.id).toBe(claimed.id);
+        expect(reclaimedRecord?.attempts).toBe(0);
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
+  test('lineage outbox: concurrent claimers split a pending batch without duplicate claims', async () => {
+    const nowRef = { value: NOW };
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const runIds = [
+      'run-lineage-batch-claim-a',
+      'run-lineage-batch-claim-b',
+      'run-lineage-batch-claim-c',
+    ];
+
+    await withClockAdaptersOnSharedSchema(
+      nowRef,
+      async (adapterA, adapterB) => {
+        const lineageStoreA = adapterA.getLineageOutboxStore();
+        const lineageStoreB = adapterB.getLineageOutboxStore();
+
+        for (const runId of runIds) {
+          await adapterA.bootstrapRunTx(makeBootstrap(runId));
+          const events = await adapterA.listEvents('t1', runId);
+          const event = requireDefined(events[0], `expected bootstrap event for ${runId}`);
+          await lineageStoreA.enqueue(runId, event);
+        }
+
+        const [claimsA, claimsB] = await Promise.all([
+          lineageStoreA.listPending(claimLimit),
+          lineageStoreB.listPending(claimLimit),
+        ]);
+        const claimedTargetRecords = [...claimsA, ...claimsB].filter((record) =>
+          runIds.includes(record.runId)
+        );
+        const uniqueClaimedIds = new Set(claimedTargetRecords.map((record) => record.id));
+
+        expect(claimedTargetRecords).toHaveLength(runIds.length);
+        expect(uniqueClaimedIds.size).toBe(runIds.length);
+        for (const runId of runIds) {
+          expect(claimedTargetRecords.some((record) => record.runId === runId)).toBe(true);
+        }
+
+        const [secondPassA, secondPassB] = await Promise.all([
+          lineageStoreA.listPending(claimLimit),
+          lineageStoreB.listPending(claimLimit),
+        ]);
+        const secondPassClaims = [...secondPassA, ...secondPassB].filter((record) =>
+          runIds.includes(record.runId)
+        );
+        expect(secondPassClaims).toHaveLength(0);
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
   test('outbox: replayDeadLetters moves records back to pending', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-replay'));
