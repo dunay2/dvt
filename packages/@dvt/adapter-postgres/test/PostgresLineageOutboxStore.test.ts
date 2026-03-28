@@ -1,10 +1,12 @@
 import { MAX_LINEAGE_ATTEMPTS } from '@dvt/contracts';
-import { describe, expect, it } from 'vitest';
+import { Client } from 'pg';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import {
   normalizeLineageOutboxClaimTimeoutMs,
   PostgresLineageOutboxStore,
 } from '../src/PostgresLineageOutboxStore.js';
+import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
 import type { EventEnvelope } from '../src/types.js';
 
 interface RecordedQuery {
@@ -35,6 +37,8 @@ function withRecordingClient(client: RecordingClient) {
 }
 
 const NOW = '2026-03-28T00:00:00.000Z';
+const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
+const describeIfPg = runIntegration ? describe : describe.skip;
 
 function makePayload(eventId: string): EventEnvelope {
   return {
@@ -373,6 +377,117 @@ describe('PostgresLineageOutboxStore', () => {
     );
     await expect(store.listDeadLetter(1.5, 'tenant-a')).rejects.toThrow(
       'INVALID_LINEAGE_DEAD_LETTER_LIMIT'
+    );
+  });
+});
+
+describeIfPg('PostgresLineageOutboxStore integration (real PostgreSQL)', () => {
+  const schemaPrefix = `dvt_lineage_it_${Date.now()}`;
+  const createdSchemas = new Set<string>();
+  let schemaCounter = 0;
+
+  function allocateSchema(): string {
+    schemaCounter += 1;
+    const schema = `${schemaPrefix}_${schemaCounter}`;
+    createdSchemas.add(schema);
+    return schema;
+  }
+
+  afterAll(async () => {
+    const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
+    if (!connectionString) return;
+    const client = new Client({ connectionString });
+    await client.connect();
+    try {
+      for (const schema of createdSchemas) {
+        await client.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+      }
+    } finally {
+      await client.end();
+    }
+  });
+
+  async function withLineageStores(
+    options: { nowA: { value: string }; nowB?: { value: string }; claimTimeoutMs?: number },
+    fn: (args: {
+      storeA: ReturnType<PostgresStateStoreAdapter['getLineageOutboxStore']>;
+      storeB: ReturnType<PostgresStateStoreAdapter['getLineageOutboxStore']>;
+    }) => Promise<void>
+  ): Promise<void> {
+    const schema = allocateSchema();
+    const nowB = options.nowB ?? options.nowA;
+    const adapterA = new PostgresStateStoreAdapter({
+      schema,
+      now: () => options.nowA.value,
+      lineageOutboxClaimTimeoutMs: options.claimTimeoutMs,
+    });
+    const adapterB = new PostgresStateStoreAdapter({
+      schema,
+      now: () => nowB.value,
+      assumeSchemaReady: true,
+      lineageOutboxClaimTimeoutMs: options.claimTimeoutMs,
+    });
+
+    try {
+      await adapterA.migrate();
+      await fn({
+        storeA: adapterA.getLineageOutboxStore(),
+        storeB: adapterB.getLineageOutboxStore(),
+      });
+    } finally {
+      await adapterA.close();
+      await adapterB.close();
+    }
+  }
+
+  it('enforces lineage claim-timeout boundary using real Postgres state', async () => {
+    const nowRef = { value: NOW };
+    await withLineageStores(
+      { nowA: nowRef, claimTimeoutMs: 90_000 },
+      async ({ storeA, storeB }) => {
+        await storeA.enqueue('run-claim-timeout', makePayload('evt-claim-timeout'));
+
+        const firstClaim = await storeA.listPending(10);
+        expect(firstClaim).toHaveLength(1);
+        const claimed = firstClaim[0];
+        expect(claimed?.runId).toBe('run-claim-timeout');
+
+        nowRef.value = '2026-03-28T00:01:29.000Z';
+        const beforeExpiry = await storeB.listPending(10);
+        expect(beforeExpiry.find((record) => record.id === claimed?.id)).toBeUndefined();
+
+        nowRef.value = '2026-03-28T00:01:31.000Z';
+        const afterExpiry = await storeB.listPending(10);
+        expect(afterExpiry.find((record) => record.id === claimed?.id)).toBeDefined();
+      }
+    );
+  });
+
+  it('keeps stale claimer writes fenced after timeout while a fresh worker can reclaim', async () => {
+    const nowRef = { value: NOW };
+    await withLineageStores(
+      { nowA: nowRef, claimTimeoutMs: 60_000 },
+      async ({ storeA, storeB }) => {
+        await storeA.enqueue('run-stale-race', makePayload('evt-stale-race'));
+
+        const firstClaim = await storeA.listPending(10);
+        expect(firstClaim).toHaveLength(1);
+        const claimed = firstClaim[0];
+        expect(claimed?.runId).toBe('run-stale-race');
+        if (!claimed) {
+          throw new Error('expected claimed lineage outbox record');
+        }
+
+        nowRef.value = '2026-03-28T00:01:01.000Z';
+        await expect(storeA.markFailed(claimed.id, 'stale worker attempt')).resolves.toBe(
+          'not_found'
+        );
+
+        const reclaimed = await storeB.listPending(10);
+        const reclaimedRecord = reclaimed.find((record) => record.id === claimed?.id);
+        expect(reclaimedRecord).toBeDefined();
+        expect(reclaimedRecord?.id).toBe(claimed?.id);
+      }
     );
   });
 });
