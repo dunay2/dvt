@@ -22,9 +22,9 @@ import {
   START_RUN_PLAN_REJECTION_CODE,
 } from '../../application/ports/startRunResultContract.js';
 import type { DeniedReason } from '../../domain/auth/types.js';
-import { HTTP_STATUS, type HttpStatusCode } from '../../routes/httpStatus.js';
+import { HTTP_STATUS_CODE, type HttpStatusCode } from '../../routes/httpStatus.js';
 
-import { HTTP_ERROR, HTTP_ERROR_CODE, HTTP_HEADER } from './httpResponseConstants.js';
+import { HTTP_BODY_CODE, HTTP_ERROR, HTTP_HEADER } from './httpResponseConstants.js';
 
 export interface HttpResponseModel {
   readonly status: HttpStatusCode;
@@ -36,22 +36,22 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
   switch (result.kind) {
     case START_RUN_FACADE_RESULT_KIND.unauthenticated:
       return {
-        status: HTTP_STATUS.unauthorized,
+        status: HTTP_STATUS_CODE.unauthorized,
         body: { error: HTTP_ERROR.unauthorized, code: result.code },
       };
     case START_RUN_FACADE_RESULT_KIND.unauthorized:
       return {
-        status: HTTP_STATUS.forbidden,
+        status: HTTP_STATUS_CODE.forbidden,
         body: { error: HTTP_ERROR.forbidden, code: result.reason },
       };
     case START_RUN_FACADE_RESULT_KIND.accepted:
       return {
-        status: HTTP_STATUS.accepted,
+        status: HTTP_STATUS_CODE.accepted,
         body: { runId: result.runId, accepted: result.accepted },
       };
     case START_RUN_FACADE_RESULT_KIND.duplicate:
       return {
-        status: HTTP_STATUS.accepted,
+        status: HTTP_STATUS_CODE.accepted,
         body: {
           runId: result.runId,
           accepted: result.accepted,
@@ -61,19 +61,19 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
       };
     case START_RUN_FACADE_RESULT_KIND.tenantBackpressure:
       return {
-        status: HTTP_STATUS.tooManyRequests,
+        status: HTTP_STATUS_CODE.tooManyRequests,
         headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) },
         body: { error: HTTP_ERROR.tooManyRequests, code: result.code },
       };
     case START_RUN_FACADE_RESULT_KIND.systemBackpressure:
       return {
-        status: HTTP_STATUS.serviceUnavailable,
+        status: HTTP_STATUS_CODE.serviceUnavailable,
         headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) },
         body: { error: HTTP_ERROR.serviceUnavailable, code: result.code },
       };
     case START_RUN_FACADE_RESULT_KIND.rateLimited:
       return {
-        status: HTTP_STATUS.tooManyRequests,
+        status: HTTP_STATUS_CODE.tooManyRequests,
         ...(result.retryAfterSeconds === undefined
           ? {}
           : { headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) } }),
@@ -81,7 +81,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
       };
     case START_RUN_FACADE_RESULT_KIND.planRejected:
       return {
-        status: HTTP_STATUS.unprocessableEntity,
+        status: HTTP_STATUS_CODE.unprocessableEntity,
         body: {
           error: HTTP_ERROR.planRejected,
           code: result.code,
@@ -99,12 +99,12 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
   switch (error.kind) {
     case START_RUN_ENGINE_ERROR_KIND.adapterNotRegistered:
       return {
-        status: HTTP_STATUS.unprocessableEntity,
+        status: HTTP_STATUS_CODE.unprocessableEntity,
         body: { error: HTTP_ERROR.adapterNotConfigured, adapter: error.adapter },
       };
     case START_RUN_ENGINE_ERROR_KIND.commandInvalid:
       return {
-        status: HTTP_STATUS.unprocessableEntity,
+        status: HTTP_STATUS_CODE.unprocessableEntity,
         body: {
           error: HTTP_ERROR.planRejected,
           code: START_RUN_PLAN_REJECTION_CODE.rejected,
@@ -114,7 +114,7 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
       };
     case START_RUN_ENGINE_ERROR_KIND.unsupportedPlanVersion:
       return {
-        status: HTTP_STATUS.unprocessableEntity,
+        status: HTTP_STATUS_CODE.unprocessableEntity,
         body: {
           error: HTTP_ERROR.planRejected,
           code: START_RUN_PLAN_REJECTION_CODE.unsupportedPlanVersion,
@@ -126,39 +126,42 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
 }
 
 export function mapAuthenticationFailure(code: AuthenticationFailureCode): HttpResponseModel {
-  return { status: HTTP_STATUS.unauthorized, body: { error: HTTP_ERROR.unauthorized, code } };
+  return { status: HTTP_STATUS_CODE.unauthorized, body: { error: HTTP_ERROR.unauthorized, code } };
 }
 
 export function mapAuthorizationFailure(reason: DeniedReason): HttpResponseModel {
-  return { status: HTTP_STATUS.forbidden, body: { error: HTTP_ERROR.forbidden, code: reason } };
+  return {
+    status: HTTP_STATUS_CODE.forbidden,
+    body: { error: HTTP_ERROR.forbidden, code: reason },
+  };
 }
 
 export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null {
   if (error instanceof RunMetadataNotFoundError) {
     return {
-      status: HTTP_STATUS.notFound,
-      body: { error: HTTP_ERROR.notFound, code: HTTP_ERROR_CODE.runNotFound },
+      status: HTTP_STATUS_CODE.notFound,
+      body: { error: HTTP_ERROR.notFound, code: HTTP_BODY_CODE.runNotFound },
     };
   }
 
   if (error instanceof SignalNotImplementedError) {
     return {
-      status: HTTP_STATUS.unprocessableEntity,
+      status: HTTP_STATUS_CODE.unprocessableEntity,
       body: { error: HTTP_ERROR.unprocessableEntity, code: error.code },
     };
   }
 
   if (error instanceof AdapterNotRegisteredError) {
     return {
-      status: HTTP_STATUS.unprocessableEntity,
+      status: HTTP_STATUS_CODE.unprocessableEntity,
       body: { error: HTTP_ERROR.adapterNotConfigured, code: error.code },
     };
   }
 
   if (error instanceof AuthorizationError) {
     return {
-      status: HTTP_STATUS.forbidden,
-      body: { error: HTTP_ERROR.forbidden, code: HTTP_ERROR_CODE.tenantAccessDenied },
+      status: HTTP_STATUS_CODE.forbidden,
+      body: { error: HTTP_ERROR.forbidden, code: HTTP_BODY_CODE.tenantAccessDenied },
     };
   }
 
@@ -167,14 +170,14 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     getErrorCode(error) === START_RUN_ENGINE_ERROR_CODE.intentActiveConflict
   ) {
     return {
-      status: HTTP_STATUS.conflict,
-      body: { error: HTTP_ERROR.conflict, code: HTTP_ERROR_CODE.runAlreadyExists },
+      status: HTTP_STATUS_CODE.conflict,
+      body: { error: HTTP_ERROR.conflict, code: HTTP_BODY_CODE.runAlreadyExists },
     };
   }
 
   if (error instanceof OutboxRateLimitExceededError) {
     return {
-      status: HTTP_STATUS.tooManyRequests,
+      status: HTTP_STATUS_CODE.tooManyRequests,
       body: { error: HTTP_ERROR.tooManyRequests, code: error.code },
     };
   }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
   START_RUN_ENGINE_ERROR_CODE,
@@ -56,7 +56,9 @@ const INPUT = {
 
 describe('StartRunAuthorizedFacade', () => {
   it('returns unauthenticated as ok=true value and does not call use case', async () => {
-    let useCaseCalled = false;
+    const execute = vi.fn(async () => {
+      throw new Error('should not be called');
+    });
     const facade = new StartRunAuthorizedFacade(
       {
         async authenticateBearerToken() {
@@ -69,10 +71,7 @@ describe('StartRunAuthorizedFacade', () => {
         },
       } as never,
       {
-        async execute() {
-          useCaseCalled = true;
-          throw new Error('should not be called');
-        },
+        execute,
       } as never
     );
 
@@ -84,11 +83,13 @@ describe('StartRunAuthorizedFacade', () => {
         code: 'MISSING_TOKEN',
       },
     });
-    expect(useCaseCalled).toBe(false);
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('returns unauthorized as ok=true value and does not call use case', async () => {
-    let useCaseCalled = false;
+    const execute = vi.fn(async () => {
+      throw new Error('should not be called');
+    });
     const facade = new StartRunAuthorizedFacade(
       {
         async authenticateBearerToken() {
@@ -101,10 +102,7 @@ describe('StartRunAuthorizedFacade', () => {
         },
       } as never,
       {
-        async execute() {
-          useCaseCalled = true;
-          throw new Error('should not be called');
-        },
+        execute,
       } as never
     );
 
@@ -116,7 +114,7 @@ describe('StartRunAuthorizedFacade', () => {
         reason: 'TENANT_NOT_GRANTED',
       },
     });
-    expect(useCaseCalled).toBe(false);
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('returns accepted when auth and use case succeed', async () => {
