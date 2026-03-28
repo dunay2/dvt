@@ -1,6 +1,8 @@
 import React from 'react';
+import { DollarSign } from 'lucide-react';
 
 import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
+import type { NodeCostData } from './contracts/PluginServices';
 import type {
   BadgeContext,
   CanvasOverlayContribution,
@@ -31,6 +33,9 @@ export type PluginContributions = {
   id: string;
   displayName: LocalizableString;
   version: string;
+  kind?: 'core' | 'optional';
+  envFlag?: string;
+  backendPluginId?: string;
   capabilities?: PluginCapabilityId[];
 
   views?: ViewContribution[];
@@ -65,7 +70,82 @@ export type PluginContributions = {
 import { dbtContributions } from './dbt/dbtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
 
-export const PLUGIN_REGISTRY: PluginContributions[] = [dbtContributions, monitoringContributions];
+function getEnvFlagValue(envFlag: string | undefined): string | boolean | undefined {
+  if (!envFlag) {
+    return undefined;
+  }
+
+  return (import.meta.env as Record<string, string | boolean | undefined>)[envFlag];
+}
+
+function isPluginEnabled(plugin: PluginContributions): boolean {
+  const envFlagValue = getEnvFlagValue(plugin.envFlag);
+  if (envFlagValue == null) {
+    return true;
+  }
+
+  return envFlagValue !== 'false' && envFlagValue !== false;
+}
+
+function resolveCostDecoration(costData: NodeCostData | undefined) {
+  if (!costData || costData.cost <= 0) {
+    return null;
+  }
+
+  if (costData.cost >= 0.4) {
+    return { borderColor: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.18)' };
+  }
+
+  if (costData.cost >= 0.2) {
+    return { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)' };
+  }
+
+  return { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.14)' };
+}
+
+const costContributions: PluginContributions = {
+  id: 'cost',
+  displayName: 'Cost',
+  version: '1.0.0',
+  kind: 'optional',
+  envFlag: 'VITE_PLUGIN_COST',
+  backendPluginId: 'cost',
+  capabilities: ['cost.analyze', 'canvas.overlay'],
+  views: [
+    {
+      pluginId: 'cost',
+      id: 'cost.dashboard',
+      path: '/cost',
+      component: React.lazy(() => import('../views/CostView')),
+      nav: {
+        label: 'Cost',
+        icon: DollarSign,
+        order: 25,
+        level: 'extended',
+      },
+    },
+  ],
+  overlays: [
+    {
+      id: 'cost',
+      label: 'Cost Heatmap',
+      icon: DollarSign,
+      mode: 'exclusive',
+      priority: 90,
+      nodeDecorator: (node, ctx) => resolveCostDecoration(ctx.costByNodeId.get(node.id)),
+    },
+  ],
+  consumes: [{ portType: 'data.tabular', forRoles: ['transform', 'output'] }],
+};
+
+const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
+  dbtContributions,
+  monitoringContributions,
+  costContributions,
+];
+
+export const PLUGIN_REGISTRY: PluginContributions[] =
+  ALL_PLUGIN_CONTRIBUTIONS.filter(isPluginEnabled);
 
 // ---------------------------------------------------------------------------
 // Helper functions — shell reads contributions through these

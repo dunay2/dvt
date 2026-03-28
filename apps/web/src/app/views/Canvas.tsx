@@ -15,6 +15,7 @@ import {
 import dagre from 'dagre';
 import { useQuery } from '@tanstack/react-query';
 import {
+  DollarSign,
   GitBranch,
   Play,
   FileCheck,
@@ -64,6 +65,7 @@ import {
 } from '../types/canonical';
 import type { RunStatusSnapshot } from '../types/engine';
 import type { DbtEdge, DbtNode, DbtNodeType, ExecutionPlan } from '../types/dbt';
+import type { NodeCostData } from '../plugins/contracts/PluginServices';
 import {
   createCanvasEdgeFromConnection,
   mapCanonicalEdgeToCanvasEdge,
@@ -374,8 +376,30 @@ function CanvasContent() {
     () => buildRunStatusByNodeId(activeCanonicalRun),
     [activeCanonicalRun]
   );
+  const costByNodeId = useMemo(() => {
+    const nodeCosts = new Map<string, NodeCostData>();
+
+    for (const node of canonicalNodes) {
+      if (typeof node.lastCost !== 'number') {
+        continue;
+      }
+
+      nodeCosts.set(node.id, {
+        nodeId: node.id,
+        cost: node.lastCost,
+        currency: 'USD',
+        breakdown:
+          typeof node.lastDuration === 'number'
+            ? { durationSeconds: node.lastDuration }
+            : undefined,
+      });
+    }
+
+    return nodeCosts;
+  }, [canonicalNodes]);
 
   const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [exclusiveOverlayMode, setExclusiveOverlayMode] = useState<'runtime' | 'cost'>('runtime');
   const [confirmEdgeModal, setConfirmEdgeModal] = useState<{
     open: boolean;
     edge: { source: string; target: string; type: string } | null;
@@ -399,11 +423,13 @@ function CanvasContent() {
 
   const overlayDecorations = useMemo(() => {
     const overlays = getAllOverlays();
+    const activeExclusiveOverlayId = exclusiveOverlayMode;
     const activeExclusiveOverlay =
-      activeRunSnapshot == null
+      activeExclusiveOverlayId === 'runtime' && activeRunSnapshot == null
         ? null
-        : (overlays.find((overlay) => overlay.mode === 'exclusive' && overlay.id === 'runtime') ??
-          null);
+        : (overlays.find(
+            (overlay) => overlay.mode === 'exclusive' && overlay.id === activeExclusiveOverlayId
+          ) ?? null);
     const additiveOverlays = impactOverlayEnabled
       ? overlays
           .filter((overlay) => overlay.mode === 'additive' && overlay.id === 'impact')
@@ -413,7 +439,7 @@ function CanvasContent() {
     const overlayContext: OverlayContext = {
       activeRun: activeRunSnapshot,
       runStatusByNodeId,
-      costByNodeId: new Map(),
+      costByNodeId,
       selectedNodeIds: new Set(selectedNodeIds),
       upstreamOfSelected,
       downstreamOfSelected,
@@ -434,7 +460,9 @@ function CanvasContent() {
   }, [
     activeRunSnapshot,
     canonicalNodes,
+    costByNodeId,
     edges,
+    exclusiveOverlayMode,
     impactOverlayEnabled,
     runStatusByNodeId,
     selectedNodeIds,
@@ -779,6 +807,31 @@ function CanvasContent() {
                 </TooltipProvider>
 
                 <Separator orientation="vertical" className="h-6" />
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={exclusiveOverlayMode === 'cost' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() =>
+                          setExclusiveOverlayMode((current) =>
+                            current === 'cost' ? 'runtime' : 'cost'
+                          )
+                        }
+                        disabled={costByNodeId.size === 0}
+                      >
+                        <DollarSign className="size-4 mr-2" />
+                        Cost
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {costByNodeId.size === 0
+                        ? 'No node cost data available'
+                        : 'Toggle cost heatmap overlay'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
                 <TooltipProvider>
                   <Tooltip>

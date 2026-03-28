@@ -4,7 +4,6 @@ import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 import Root from './Root';
 import AdminView from './views/AdminView';
 import ArtifactsView from './views/ArtifactsView';
-import CostView from './views/CostView';
 import DiffView from './views/DiffView';
 import LineageView from './views/LineageView';
 import PluginsView from './views/PluginsView';
@@ -41,7 +40,6 @@ const shellRoutes: RouteObject[] = [
   { path: 'artifacts', Component: ArtifactsView },
   { path: 'diff', Component: DiffView },
   { path: 'lineage', Component: LineageView },
-  { path: 'cost', Component: CostView },
   { path: 'plugins', Component: PluginsView },
   { path: 'admin', Component: AdminView },
 ].filter((route) => !pluginRoutePaths.has(route.path));

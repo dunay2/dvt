@@ -75,6 +75,9 @@ export default function PluginsView() {
                         <Badge variant="outline" className="text-xs">
                           v{plugin.version}
                         </Badge>
+                        <Badge variant="outline" className="text-xs uppercase">
+                          {plugin.kind ?? 'core'}
+                        </Badge>
                         {isAvailable ? (
                           <Badge className="bg-green-700 text-xs">
                             <CheckCircle2 className="mr-1 size-3" />
@@ -93,6 +96,17 @@ export default function PluginsView() {
                         <p className="mb-2 flex items-center gap-1 text-xs text-slate-400">
                           <Info className="size-3 shrink-0" />
                           {backendInfo.reason}
+                        </p>
+                      )}
+
+                      {plugin.envFlag && (
+                        <p className="text-xs text-slate-500">
+                          env flag: <span className="font-mono">{plugin.envFlag}</span> ={' '}
+                          <span className="font-mono">
+                            {(import.meta.env as Record<string, string | boolean | undefined>)[
+                              plugin.envFlag
+                            ] ?? 'unset'}
+                          </span>
                         </p>
                       )}
 

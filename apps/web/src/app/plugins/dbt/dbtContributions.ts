@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
+import { FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
@@ -28,7 +28,6 @@ export const dbtContributions: PluginContributions = {
     'plan.import',
     'plan.export',
     'artifact.read',
-    'cost.analyze',
     'lineage.resolve',
   ],
   nodeKinds: DBT_NODE_KINDS,
@@ -80,18 +79,6 @@ export const dbtContributions: PluginContributions = {
         label: 'Artifacts',
         icon: FileText,
         order: 18,
-        level: 'extended',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.cost',
-      path: '/cost',
-      component: React.lazy(() => import('../../views/CostView')),
-      nav: {
-        label: 'Cost',
-        icon: DollarSign,
-        order: 25,
         level: 'extended',
       },
     },
