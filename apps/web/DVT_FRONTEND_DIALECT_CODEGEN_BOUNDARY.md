@@ -1,24 +1,24 @@
-# DVT+ Frontend — Dialect Codegen Boundary
+# DVT+ Frontend - Dialect Codegen Boundary
 
-> **Estado:** Propuesta de diseño v1 — 2026-03-28
-> **Propósito:** separar el boundary entre shell/frontend y engine/adapters para codegen y ejecución dialect-specific.
+> **Estado:** Propuesta de diseno v1 - 2026-03-28
+> **Proposito:** separar el boundary entre shell/frontend y engine/adapters para codegen y ejecucion dialect-specific.
 > Este documento complementa [DVT_FRONTEND_PLUGIN_ARCHITECTURE.md](c:/dvt/apps/web/DVT_FRONTEND_PLUGIN_ARCHITECTURE.md).
 
 ---
 
-## 0. Decisión
+## 0. Decision
 
 La capacidad de generar SQL dialect-specific, escribirlo en git y aplicarlo en el target database **no** forma parte del plugin system frontend.
 
-La separación es esta:
+La separacion es esta:
 
 - **frontend / shell:** inicia runs, muestra estado, expone artifacts y diffs
 - **engine / adapters:** transpila, escribe en git, abre PRs, aplica objetos en el target
 
-La razón es de boundary, no de conveniencia:
+La razon es de boundary, no de conveniencia:
 
-1. el frontend no debe convertirse en autoridad semántica del dialecto
-2. el mismo plan puede ejecutarse en distintos modos sin mutar topología
+1. el frontend no debe convertirse en autoridad semantica del dialecto
+2. el mismo plan puede ejecutarse en distintos modos sin mutar topologia
 3. git ops y deploy pertenecen a runtime backend, no a la UI
 
 ---
@@ -27,19 +27,19 @@ La razón es de boundary, no de conveniencia:
 
 > El plan es puro.
 > El adapter conoce el dialecto.
-> El modo de operación pertenece al run, no al plan.
+> El modo de operacion pertenece al run, no al plan.
 
 Esto evita tres errores de modelado:
 
 1. meter el dialecto en el nodo
 2. duplicar tipos de run por cada modo de codegen
-3. hacer que el frontend “genere SQL” en lugar de disparar una ejecución gobernada
+3. hacer que el frontend "genere SQL" en lugar de disparar una ejecucion gobernada
 
 ---
 
-## 2. Modo De Operación — Vive En El Run
+## 2. Modo De Operacion - Vive En El Run
 
-El modo se declara al iniciar la ejecución:
+El modo se declara al iniciar la ejecucion:
 
 ```typescript
 interface DialectRunOptions {
@@ -65,22 +65,22 @@ engine.startRun(plan, {
 });
 ```
 
-### Por qué no en el nodo
+### Por que no en el nodo
 
 Si el modo viviera en el nodo:
 
-- podrías mezclar `generate-only` y `execute-only` en el mismo plan
-- el run dejaría de ser auditable como unidad
-- la semántica operacional del grafo quedaría ambigua
+- podrias mezclar `generate-only` y `execute-only` en el mismo plan
+- el run dejaria de ser auditable como unidad
+- la semantica operacional del grafo quedaria ambigua
 
-### Por qué no como tipos distintos de run en el engine
+### Por que no como tipos distintos de run en el engine
 
 El grafo no cambia entre generar y ejecutar. Cambia el modo operacional del mismo plan.
 
 Por tanto:
 
-- el plan responde a **qué**
-- el run responde a **cómo** y **dónde**
+- el plan responde a **que**
+- el run responde a **como** y **donde**
 
 ---
 
@@ -94,7 +94,7 @@ Por tanto:
 | mostrar progreso      | `generating`, `pushing`, `applying`            |
 | mostrar artifacts     | links a commit, PR, objetos aplicados          |
 | mostrar diff          | artifact type `sql-source`                     |
-| reintentar o promover | botón `Deploy to production` -> `execute-only` |
+| reintentar o promover | boton `Deploy to production` -> `execute-only` |
 
 ### Lo que NO hace el frontend
 
@@ -106,13 +106,13 @@ Por tanto:
 | abrir PRs                                | pertenece al runtime backend |
 | ejecutar `CREATE OR REPLACE` en la base  | pertenece al adapter/runtime |
 
-La UI orquesta intención del usuario. El engine y los adapters ejecutan trabajo.
+La UI orquesta intencion del usuario. El engine y los adapters ejecutan trabajo.
 
 ---
 
 ## 4. `IDialectAdapter`
 
-La extensión dialect-specific vive del lado de adapters:
+La extension dialect-specific vive del lado de adapters:
 
 ```typescript
 interface TranspiledObject {
@@ -139,9 +139,9 @@ interface IDialectAdapter extends IProviderAdapter {
 
 ### Responsabilidades
 
-| Método          | Responsabilidad                                      |
+| Metodo          | Responsabilidad                                      |
 | --------------- | ---------------------------------------------------- |
-| `transpile()`   | traducir nodo canónico a objeto SQL dialect-specific |
+| `transpile()`   | traducir nodo canonico a objeto SQL dialect-specific |
 | `writeToRepo()` | persistir archivos generados y devolver artifacts    |
 | `apply()`       | aplicar objetos en el target database                |
 
@@ -192,11 +192,11 @@ engine.startRun(plan, { mode: 'generate-only', gitTarget })
 RunCompleted
 ```
 
-Resultado típico:
+Resultado tipico:
 
 - commit o PR con SQL generado
 - artifacts de tipo `sql-source`
-- sin mutación del target database
+- sin mutacion del target database
 
 ---
 
@@ -207,16 +207,16 @@ Resultado típico:
 La regla sigue siendo la misma:
 
 - la UI dispara el run
-- el engine decide cómo resolver inputs y artifacts
+- el engine decide como resolver inputs y artifacts
 - el adapter aplica en el target
 
-La UI no “reproduce SQL” localmente.
+La UI no "reproduce SQL" localmente.
 
 ---
 
 ## 8. Shape Del Plan
 
-El plan sigue siendo canónico y dialect-agnostic.
+El plan sigue siendo canonico y dialect-agnostic.
 
 ```typescript
 type CanonicalNode = {
@@ -238,7 +238,7 @@ Ejemplo conceptual:
 }
 ```
 
-Ese nodo no debe contener templates específicos de Snowflake, BigQuery o Postgres. Eso pertenece al adapter.
+Ese nodo no debe contener templates especificos de Snowflake, BigQuery o Postgres. Eso pertenece al adapter.
 
 ---
 
@@ -258,11 +258,11 @@ packages/@dvt/adapter-postgres
 
 ### Regla de ownership
 
-| Package             | Ownership lógico                               |
+| Package             | Ownership logico                               |
 | ------------------- | ---------------------------------------------- |
-| `@dvt/codegen-core` | lógica compartida dialect-agnostic             |
-| `@dvt/adapter-*`    | semántica y templates dialect-specific         |
-| `apps/web`          | visualización, disparo de runs, artifacts y UX |
+| `@dvt/codegen-core` | logica compartida dialect-agnostic             |
+| `@dvt/adapter-*`    | semantica y templates dialect-specific         |
+| `apps/web`          | visualizacion, disparo de runs, artifacts y UX |
 
 ---
 
@@ -283,30 +283,30 @@ Un plugin frontend no puede reclamar como responsabilidad propia:
 - gobernar merge, push o PR
 - aplicar cambios directamente en la base
 
-Eso deja claro que un “plugin dbt frontend” no es un “adapter dialect-specific”.
+Eso deja claro que un "plugin dbt frontend" no es un "adapter dialect-specific".
 
 ### Mapeo de ownership por plugin
 
 | Superficie                                         | Puede vivir en plugin frontend | Debe vivir en engine / adapter |
 | -------------------------------------------------- | ------------------------------ | ------------------------------ |
-| importar manifest y construir plan canónico        | `dbt`                          | no                             |
+| importar manifest y construir plan canonico        | `dbt`                          | no                             |
 | iniciar run con `mode` y `targetAdapter`           | `dbt` o shell                  | no                             |
 | observar timeline y estado operacional             | `monitoring`                   | no                             |
 | mostrar costo o artifacts                          | `cost` / `monitoring` / `dbt`  | no                             |
-| transpilar `dbt:model` a procedure/task/function   | no                             | sí                             |
-| escribir archivos al repo destino                  | no                             | sí                             |
-| abrir PR o push directo                            | no                             | sí                             |
-| aplicar objetos en Snowflake / BigQuery / Postgres | no                             | sí                             |
+| transpilar `dbt:model` a procedure/task/function   | no                             | si                             |
+| escribir archivos al repo destino                  | no                             | si                             |
+| abrir PR o push directo                            | no                             | si                             |
+| aplicar objetos en Snowflake / BigQuery / Postgres | no                             | si                             |
 
 Regla:
 
-> Un plugin frontend puede pedir trabajo dialect-specific y visualizar su resultado, pero no es dueño de la semántica dialect-specific.
+> Un plugin frontend puede pedir trabajo dialect-specific y visualizar su resultado, pero no es dueno de la semantica dialect-specific.
 
 ---
 
 ## 11. Implicaciones Para Observabilidad
 
-Los estados de ejecución que ve la UI deben venir del runtime del run, por ejemplo:
+Los estados de ejecucion que ve la UI deben venir del runtime del run, por ejemplo:
 
 - `generating`
 - `writing_artifacts`
@@ -323,40 +323,81 @@ La UI solo proyecta ese estado.
 
 ## 12. Riesgos Que Este Boundary Evita
 
-1. **Acoplamiento UI-dialecto**
+1. **Acoplamiento UI-dialecto**  
    La UI deja de depender de templates o sintaxis SQL concretas.
 
-2. **Plan impuro**
+2. **Plan impuro**  
    El plan no queda contaminado con modos de deploy o targets git.
 
-3. **Duplicación de orquestación**
-   No se crean engines distintos para generar y ejecutar la misma topología.
+3. **Duplicacion de orquestacion**  
+   No se crean engines distintos para generar y ejecutar la misma topologia.
 
-4. **Side effects fuera del runtime**
+4. **Side effects fuera del runtime**  
    Git y base de datos quedan fuera del navegador y de la capa visual.
 
 ---
 
-## 13. Dudas De Alineación Pendientes
+## 13. Arquitectura Del Adaptador dbt (Backend)
 
-Estas dudas no bloquean el boundary, pero siguen abiertas:
+La ejecucion de dbt (`dbt run`, `dbt test`, `dbt compile`) vive en el backend como una implementacion de `IProviderAdapter`.
 
-1. si `execute-only` consume SQL previamente generado desde artifacts o vuelve a pedir resolución al adapter
-2. qué granularidad tendrá el estado operacional del run para UX (`opening_pr`, `pushing`, `validating`, etc.)
-3. cómo se versiona el contrato de artifacts `sql-source` y `db-object`
+### Estructura propuesta
+
+```text
+IProviderAdapter  (packages/@dvt/contracts)
+    -> DbtTemporalAdapter  (packages/@dvt/adapter-dbt-temporal)
+          |- startRun()      -> lanza Workflow de Temporal con Activity dbt-run
+          |- cancelRun()     -> senal de cancelacion al Workflow activo
+          |- getRunStatus()  -> lee desde StateStore (sin llamar al adapter)
+          -> capabilities()  -> ['dbt.run', 'dbt.test', 'dbt.compile', 'dbt.generate']
+```
+
+### Dos capas internas
+
+| Capa                  | Responsabilidad                                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **dbt CLI wrapper**   | Ejecuta `dbt run --select ...`, captura stdout/stderr, parsea `run_results.json` y emite eventos de estado |
+| **Temporal Activity** | Envuelve el CLI wrapper, reporta heartbeat periodico, maneja timeout y senal de cancelacion                |
+
+### Que hace el frontend del plugin dbt vs. el adaptador
+
+| Frontera     | Frontend (plugin dbt)                                  | Backend (DbtTemporalAdapter)             |
+| ------------ | ------------------------------------------------------ | ---------------------------------------- |
+| Manifest     | Lee `manifest.json` para construir el grafo canonico   | -                                        |
+| Plan         | Envia `PlanRef` al engine                              | Descarga y valida el plan (SHA-256)      |
+| Ejecucion    | Inicia run via API, muestra estado                     | Ejecuta dbt CLI, emite RunEvents         |
+| Artifacts    | Lee `run_results.json`, `catalog.json` en el inspector | Persiste artifacts en el StateStore      |
+| SQL generado | Muestra `compiledSql` en el panel SQL del inspector    | Produce el compiledSql via `dbt compile` |
+
+### Notas de diseno
+
+- El adaptador es **dialect-agnostic** en la interfaz - el dialecto SQL (BigQuery, Snowflake, Postgres, etc.) lo resuelve dbt internamente via `profiles.yml`.
+- El plugin frontend **no necesita saber el dialecto** - muestra lo que el adaptador ya compilo.
+- El modo `generate-only` (seccion 10 de este documento) corresponde a `dbt compile` sin `dbt run`.
+- El modo `generate-and-execute` corresponde a `dbt compile` + `dbt run` en secuencia dentro del mismo Workflow.
 
 ---
 
-## 14. Criterio De Aceptación
+## 14. Dudas De Alineacion Pendientes
+
+Estas dudas no bloquean el boundary, pero siguen abiertas:
+
+1. si `execute-only` consume SQL previamente generado desde artifacts o vuelve a pedir resolucion al adapter
+2. que granularidad tendra el estado operacional del run para UX (`opening_pr`, `pushing`, `validating`, etc.)
+3. como se versiona el contrato de artifacts `sql-source` y `db-object`
+
+---
+
+## 15. Criterio De Aceptacion
 
 Este boundary es consistente si:
 
 1. el frontend no se presenta como generador de SQL
 2. el modo dialect-specific vive en el run
-3. el adapter es el único que conoce el dialecto
+3. el adapter es el unico que conoce el dialecto
 4. git ops y apply quedan fuera del plugin frontend
-5. el plan sigue siendo canónico y dialect-agnostic
+5. el plan sigue siendo canonico y dialect-agnostic
 
 ---
 
-_Documento de diseño v1 — 2026-03-28. Revisar con engine, adapters y frontend antes de cerrar contratos de artifacts y estados operativos del run._
+_Documento de diseno v1 - 2026-03-28. Revisar con engine, adapters y frontend antes de cerrar contratos de artifacts y estados operativos del run._

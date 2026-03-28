@@ -176,7 +176,7 @@ tasks:
 
   - task_id: F-12
     priority: P1
-    status: queued
+    status: in_progress
     objective:
       define canonical frontend contracts for plugin capabilities including workspace.import,
       workspace.prepare, plan.preview, run.start, run.observe, artifact.sync, and node.adapt.
@@ -184,6 +184,24 @@ tasks:
     target:
       Typed interfaces and capability registry are documented and implemented in app/services and
       app/types. UI behavior is driven by capabilities, not tool-specific hardcoding.
+    notes: |
+      Substantially done. The following are implemented:
+      - types/canonical.ts: CanonicalNode, CanonicalEdge, CoreNodeRole, PluginNodeKind,
+        CanonicalEdgeRelation — domain-agnostic graph model
+      - plugins/nodeTypeContracts.ts: NodeKindRegistration, EdgeTypeStrategy, EdgeTypeStrategyContext
+      - plugins/nodeTypeCatalog.dbt.ts: full dbt kind catalog (8 kinds), CONNECTION_RULES by
+        CoreNodeRole, EDGE_TYPE_STRATEGIES (strategy pattern), FALLBACK_NODE_KIND
+      - plugins/nodeTypeRegistry.ts: resolveNodeKindRegistration(), canConnectNodeRoles(),
+        resolveCanvasEdgeType() — all consumed by Canvas.tsx
+      - plugins/graphStrategyRegistry.ts: resolveCanvasGraphStrategy() via VITE_CANVAS_GRAPH_STRATEGY
+        env flag — enables non-dbt graph domains without code changes
+      - plugins/dbt/dbtNodeAdapter.ts: CanvasGraphStrategy interface, dbtCanvasGraphStrategy,
+        mapDbtNodeToCanonical(), mapDbtEdgeToCanonical(), parseDropPayload() (typed MIME)
+      - services/workspace/workspaceService.ts: getGraphSnapshot, getDiff, getPlugins, getRoles,
+        getAuditLog — mock/api factory pattern, consumed by Canvas.tsx
+      Canvas.tsx is fully migrated to canonical model — no hardcoded dbt-specific connection logic.
+      Remaining gap (F-12 proper): workspace.import, run.observe, artifact.sync capability
+      contracts are not yet defined — only graph/plan/run/workspace services exist.
 
   - task_id: F-13
     priority: P2

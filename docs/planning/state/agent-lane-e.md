@@ -104,7 +104,7 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - [ ] `P2` `F-09`: wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
 - [ ] `P2` `F-10`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
 - [ ] `P3` `F-11`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
-- [ ] `P1` `F-12`: define canonical frontend contracts for plugin capabilities including workspace.import, workspace.prepare, plan.preview, run.start, run.observe, artifact.sync, and node.adapt.
+- [~] `P1` `F-12`: define canonical frontend contracts for plugin capabilities including workspace.import, workspace.prepare, plan.preview, run.start, run.observe, artifact.sync, and node.adapt. _(in progress — `types/canonical.ts` + `plugins/nodeTypeContracts.ts` + `nodeTypeCatalog.dbt.ts` + `nodeTypeRegistry.ts` + `graphStrategyRegistry.ts` + `dbtNodeAdapter.ts` + `workspaceService.ts` implementados y consumidos por Canvas.tsx; pendientes: workspace.import, run.observe, artifact.sync)_
 - [ ] `P2` `F-13`: implement dbt explorer plugin baseline with source/model/test/exposure navigation plus project import/export and contextual node actions.
 - [ ] `P2` `F-14`: deliver dbt plan lifecycle end-to-end with create plan, import existing plan/project state, preview immutable plan, and execute through run.start.
 - [ ] `P2` `F-15`: implement Snowflake runtime plugin with two modes with direct task/procedure execution and repository DDL generation for external apply workflows.
@@ -210,3 +210,44 @@ Necesitan una capa de mapeo DTO cuando aterricen los endpoints reales. Registrad
   `ExecutionPlan` (tipo dbt) y `listRuns` retorna `Run[]` (tipo dbt). Cuando el backend
   real responda, la shape será diferente. No hay mapper — la integración romperá
   en tiempo de ejecución sin errores de compilación porque los tipos son `any`-compatible.
+
+### 2026-03-27 (revisión plugins/)
+
+**F-12 — mucho más avanzado de lo registrado:**
+
+El sistema de plugins del canvas está sustancialmente implementado:
+
+- `types/canonical.ts` — modelo canónico de grafo (`CanonicalNode`, `CanonicalEdge`,
+  `CoreNodeRole`, `PluginNodeKind`) completamente domain-agnostic.
+- `plugins/nodeTypeContracts.ts` — contratos `NodeKindRegistration` y `EdgeTypeStrategy`.
+- `plugins/nodeTypeCatalog.dbt.ts` — catálogo dbt completo (8 kinds), `CONNECTION_RULES`
+  por `CoreNodeRole`, `EDGE_TYPE_STRATEGIES` con pattern strategy, `FALLBACK_NODE_KIND`.
+- `plugins/nodeTypeRegistry.ts` — `resolveNodeKindRegistration()`, `canConnectNodeRoles()`,
+  `resolveCanvasEdgeType()` — ya consumidos por Canvas.tsx.
+- `plugins/graphStrategyRegistry.ts` — `resolveCanvasGraphStrategy()` via
+  `VITE_CANVAS_GRAPH_STRATEGY` — permite cambiar el dominio del grafo (dbt → otro)
+  sin cambios de código.
+- `plugins/dbt/dbtNodeAdapter.ts` — `CanvasGraphStrategy` interface, mapper
+  `DbtNode → CanonicalNode`, `DbtEdge → CanonicalEdge`, `parseDropPayload()` con
+  MIME type tipado (`application/dbt-node`). **Resuelve el anti-pattern de
+  `(window as any).__pendingConnection`** reportado en la sesión anterior.
+- `services/workspace/workspaceService.ts` — `getGraphSnapshot`, `getDiff`, `getPlugins`,
+  `getRoles`, `getAuditLog` — mock/api factory, consumido por Canvas.tsx.
+
+**Canvas.tsx ya no tiene lógica dbt hardcodeada**: usa `canConnectNodeRoles()`,
+`resolveCanvasEdgeType()`, `resolveNodeKindRegistration()` y `graphStrategy.mapNodeToCanonical()`.
+El cycle detection y el connection validation están delegados al registry.
+
+**Corrección de hallazgo anterior**: el anti-pattern `(window as any).__pendingConnection`
+ya no existe — el drag-and-drop usa `parseDropPayload(dataTransfer)` con MIME type
+`application/dbt-node`. Hallazgo anterior queda obsoleto.
+
+**Gap restante de F-12**: capability contracts de `workspace.import`, `run.observe`,
+`artifact.sync` no están definidos aún — solo existen los servicios de graph/plan/run/workspace.
+
+**Decisión de diseño — Plugin Architecture (2026-03-27):**
+Creado `apps/web/DVT_FRONTEND_PLUGIN_ARCHITECTURE.md` — diseño completo del sistema de plugins
+antes de continuar implementación. Define: `PluginManifest` contrato, 5 plugins (dbt, monitoring,
+cost, etl-designer, dagster), slot system (canvas/inspector/console/nav), overlay system,
+plan import/export handlers, contratos de backend por plugin, y orden de construcción.
+Las tareas F-12 a F-16 deben implementarse contra este diseño.

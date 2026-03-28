@@ -1,6 +1,6 @@
 # DVT+ Frontend — Plan de Alineación con Backend
 
-> **Estado del documento:** v2 — actualizado 2026-03-27
+> **Estado del documento:** v2 — actualizado 2026-03-27 (revisión plugins completada)
 > Sustituye la versión inicial de 2026-02-19.
 > Se mantiene la propuesta de producto pero se incorpora estado actual real,
 > contratos del engine, estrategia SSE y path de autenticación.
@@ -21,14 +21,23 @@ backend real"**
 
 ### 2.1 Lo que ya está construido (Sprint 1 — parcialmente completado)
 
-| Componente                                    | Estado             | Archivo                               |
-| --------------------------------------------- | ------------------ | ------------------------------------- |
-| `platformClient` — health/readyz/version/db   | ✅ Implementado    | `services/platform/platformClient.ts` |
-| `usePlatformHealthQuery` — polling 15s        | ✅ Implementado    | `queries/usePlatformHealthQuery.ts`   |
-| `GlobalStatusBanner` — ok/degraded/offline    | ✅ Implementado    | `components/GlobalStatusBanner.tsx`   |
-| `TopAppBar` — indicador de conexión real      | ✅ Implementado    | `components/TopAppBar.tsx`            |
-| Separación `mock \| api` (`VITE_DATA_SOURCE`) | ❌ No implementado | pendiente                             |
-| Visual cleanup de navegación y headers        | ❌ No implementado | pendiente                             |
+| Componente                                      | Estado          | Archivo                                                     |
+| ----------------------------------------------- | --------------- | ----------------------------------------------------------- |
+| `platformClient` — health/readyz/version/db     | ✅ Implementado | `services/platform/platformClient.ts`                       |
+| `usePlatformHealthQuery` — polling 15s          | ✅ Implementado | `queries/usePlatformHealthQuery.ts`                         |
+| `GlobalStatusBanner` — ok/degraded/offline      | ✅ Implementado | `components/GlobalStatusBanner.tsx`                         |
+| `TopAppBar` — indicador de conexión real        | ✅ Implementado | `components/TopAppBar.tsx`                                  |
+| Separación `mock \| api` (`VITE_DATA_SOURCE`)   | ✅ Implementado | `services/config/dataSource.ts`                             |
+| `createApiClient` con session headers           | ✅ Implementado | `services/api/createApiClient.ts`                           |
+| `sessionStore` con `buildRunContext()`          | ✅ Implementado | `stores/sessionStore.ts`                                    |
+| `runsService` mock/api factory                  | ✅ Implementado | `services/runs/runsService.ts`                              |
+| `plansService` mock/api factory                 | ✅ Implementado | `services/plans/plansService.ts`                            |
+| `workspaceService` mock/api factory             | ✅ Implementado | `services/workspace/workspaceService.ts`                    |
+| Plugin registry canónico (dbt)                  | ✅ Implementado | `plugins/` (5 archivos)                                     |
+| `types/canonical.ts` — modelo canónico          | ✅ Implementado | `types/canonical.ts`                                        |
+| `types/engine.ts` — re-exporta `@dvt/contracts` | ✅ Implementado | `types/engine.ts`                                           |
+| Visual cleanup de navegación y headers          | 🔄 En progreso  | `LeftNavigation` icon-only ✅; TopAppBar contextual menu ❌ |
+| Capa de mapeo DTO (Run/ExecutionPlan → engine)  | ❌ Pendiente    | falta antes de integrar endpoints reales                    |
 
 ### 2.2 Backend disponible hoy
 
