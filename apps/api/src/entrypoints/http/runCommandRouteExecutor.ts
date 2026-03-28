@@ -12,13 +12,16 @@ import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 
-type CommandActionName = Extract<AuthorizationAction, { readonly kind: 'command' }>['name'];
+type AuthorizedCommandActionName = Extract<
+  AuthorizationAction,
+  { readonly kind: 'command' }
+>['name'];
 
 type ParsedCommandRequest<TCommand> = {
   readonly command: TCommand;
   readonly authorization: {
     readonly tenantId: TenantId;
-    readonly actionName: CommandActionName;
+    readonly actionName: AuthorizedCommandActionName;
   };
 };
 
