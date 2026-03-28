@@ -15,8 +15,12 @@ code_refs:
   - apps/api/src/entrypoints/http/runCommandRouteExecutor.ts
   - apps/api/test/app.test.ts
 evidence:
-  - pnpm --filter dvt-api test -- test/app.test.ts
-  - pnpm verify:prepush
+  tests:
+    - pnpm --filter dvt-api test -- test/app.test.ts
+    - pnpm verify:prepush
+  notes:
+    - Planner schema and emitted version were aligned to 1.0 in the same slice.
+    - buildApp composition now proves env-to-route signal policy wiring.
 ---
 
 # Planner version reset and signal policy wiring closeout
