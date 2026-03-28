@@ -16,3 +16,10 @@ Active execution work is tracked in the
 [execution workboard](../state/execution-workboard.md).
 
 All G6 documents are in [archive/gaps/g6/](../archive/gaps/g6/).
+
+## Concept anchors
+
+- [Glossary](../../concepts/glossary.md) for `gap`, `status`, `roadmap`,
+  `canonical spec`, and `verification tuple`
+- [Domain Language](../../concepts/domain-language.md) for the naming rules
+  shared across planning, architecture, and code
