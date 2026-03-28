@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.14.0](https://github.com/dunay2/dvt/compare/v4.13.0...v4.14.0) (2026-03-28)
+
+
+### Features
+
+* **api:** Add explicit cancel route and shared command execution ([#640](https://github.com/dunay2/dvt/issues/640)) ([f782bd4](https://github.com/dunay2/dvt/commit/f782bd4af27591fe35aa3d222c87223f31d7c731))
+
+## [4.13.0](https://github.com/dunay2/dvt/compare/v4.12.3...v4.13.0) (2026-03-27)
+
+
+### Features
+
+* **api:** Admission control operability — decision telemetry and capacity gauges ([#628](https://github.com/dunay2/dvt/issues/628)) ([af10c43](https://github.com/dunay2/dvt/commit/af10c43f50b818cd4913cf2f9397167d69128a86))
+
 ## [4.12.3](https://github.com/dunay2/dvt/compare/v4.12.2...v4.12.3) (2026-03-25)
 
 

@@ -1,0 +1,148 @@
+lane_id: E
+title: Frontend And UI
+owner: Product / UX / Frontend
+status: Active
+last_reviewed: 2026-03-27
+goal:
+  Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
+  contracts.
+expected_outcome:
+  - shell is clean and low-noise
+  - real backend health state is always visible
+  - mock and API modes are explicitly separated
+  - store responsibilities are decomposed by domain
+  - core flow (Plan → Run → Monitor) works with real data
+  - secondary views activate progressively via feature flags
+tasks:
+  - task_id: F-01
+    priority: P0
+    status: queued
+    objective:
+      clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify
+      secondary controls into a contextual menu.
+    dependency: none
+    target:
+      Shell navigation is icon-only with tooltips. No persistent sidebar text labels. TopBar
+      secondary controls are collapsed into a single contextual menu. Canvas area gains visible
+      vertical space.
+
+  - task_id: F-02
+    priority: P0
+    status: queued
+    objective:
+      implement a typed API client covering the existing health endpoints (healthz, readyz, version,
+      db/ready).
+    dependency: none
+    target:
+      app/services/platform-client.ts with typed request/response shapes and error handling. No mock
+      fallback in this client — it talks to real backend only.
+
+  - task_id: F-03
+    priority: P0
+    status: queued
+    objective: wire real backend health state into the top bar and a global degraded/offline banner.
+    dependency: F-02
+    target:
+      TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
+      offline states with retry and backoff. No mock connectivity state anywhere in the shell.
+
+  - task_id: F-04
+    priority: P1
+    status: queued
+    objective:
+      introduce a VITE_DATA_SOURCE=mock|api environment flag and separate data layers so views do
+      not consume mock data directly.
+    dependency: none
+    target:
+      Feature flag documented. Mock data isolated to app/data/. Views consume app/services/* and
+      typed view-models. Both modes runnable without code changes.
+
+  - task_id: F-05
+    priority: P1
+    status: queued
+    objective:
+      decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore,
+      graphStore, runStore, statusStore).
+    dependency: F-04
+    target:
+      Each store has a single declared responsibility. Cross-store reads are explicit. No store
+      reads mock data directly.
+
+  - task_id: F-06
+    priority: P1
+    status: queued
+    objective:
+      introduce TanStack Query as the data-fetching layer and define query/mutation patterns for
+      health, plan, and run domains.
+    dependency: F-05
+    target:
+      TanStack Query installed and configured. Health queries wired. Invalidation strategy
+      documented per domain. Views use useQuery/useMutation — no ad-hoc fetch calls.
+
+  - task_id: F-07
+    priority: P2
+    status: queued
+    objective:
+      define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend
+      is ready before backend endpoints land.
+    dependency: F-06
+    target:
+      app/types/plan.ts and app/types/run.ts define request/response shapes for POST /plans/preview,
+      POST /runs, GET /runs/:id, GET /runs, GET /runs/:id/events. Reviewed against backend contract
+      owners.
+
+  - task_id: F-08
+    priority: P2
+    status: queued
+    objective:
+      integrate the Plan → Run core flow from canvas selection through to run start using real API
+      when available, with a typed adapter for mock when not.
+    dependency: F-07
+    target:
+      Canvas selection triggers Plan Preview. Confirmed plan triggers Run Start. Navigation to
+      RunsView is automatic. Error and permission states (401/403/409/5xx) are handled with
+      actionable messages.
+
+  - task_id: F-09
+    priority: P2
+    status: queued
+    objective:
+      wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
+    dependency: F-08
+    target:
+      RunsView shows real run list. RunView shows real run detail. Status updates via polling or SSE
+      when available. Empty states, loading, and error states are implemented.
+
+  - task_id: F-10
+    priority: P2
+    status: queued
+    objective:
+      implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
+      Console with real log output.
+    dependency: F-09
+    target:
+      Console shows ordered, real-time event stream during an active run. Timeline is consistent
+      across reconnects. Log entries have timestamp, step, and severity.
+
+  - task_id: F-11
+    priority: P3
+    status: queued
+    objective:
+      wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and
+      Admin views progressively via feature flags.
+    dependency: F-10
+    target:
+      ArtifactsView and DiffView work on real data. Level-C views (Lineage, Cost, Plugins, Admin)
+      are hidden by default and activatable by role or flag. No mock data in any active view.
+
+dependency_notes: |
+  - F-01, F-02, F-04 are independent and can start in parallel.
+  - F-03 depends on F-02.
+  - F-05 depends on F-04.
+  - F-06 depends on F-05.
+  - F-07 depends on F-06.
+  - F-08 depends on F-07 and is blocked until backend delivers POST /plans/preview and POST /runs.
+  - F-09 depends on F-08 and is blocked until backend delivers GET /runs and GET /runs/:id.
+  - F-10 depends on F-09 and is blocked until backend delivers GET /runs/:id/events.
+  - F-11 depends on F-10 and requires artifact and lineage endpoints from backend.
+  - F-08 through F-11 coordinate with Lane C (admission) and Lane D (scale/GTM) for API surface readiness.

@@ -12,7 +12,6 @@ Current status snapshots and implementation tracking.
 ## Index
 
 - [Canonical Doc Code Matrix](canonical-doc-code-matrix.md)
-- [Engine DVT - Implementation Status Checklist (Against Requested Spec)](../ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md)
 - [Generated Capability Coverage](generated-capability-coverage.md)
 - [Generated Code State](generated-code-state.md)
 - [Generated Spec Traceability](generated-spec-traceability.md)

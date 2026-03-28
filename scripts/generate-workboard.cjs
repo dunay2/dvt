@@ -18,6 +18,7 @@ const LANE_DOMAIN = {
   B: 'Event Contract And Traceability',
   C: 'Runtime Safety And Admission',
   D: 'Scale And Go-To-Market',
+  E: 'Frontend And UI',
 };
 
 function loadLanes() {

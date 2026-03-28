@@ -19,6 +19,7 @@ generated views — never edit them directly.
 | B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
 | C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
 | D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
+| E    | `agent-lane-e.yaml` | Frontend and UI — shell, API integration, core flow   |
 
 ## Step 2 — Add the task entry
 

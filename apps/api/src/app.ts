@@ -4,14 +4,20 @@ import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
+import type { ICancelRunUseCase } from './application/ports/runtime.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
+import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
+import {
+  PROTECTED_RUNTIME_ROUTE_SUMMARY,
+  RUNTIME_ROUTE_PATH,
+} from './entrypoints/http/runtimeRoutes.constants.js';
 import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
@@ -181,23 +187,30 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.engine,
       protectedModule.stateStore.read
     );
+    const cancelRunUseCase: ICancelRunUseCase = {
+      execute: (command, context) => signalRunUseCase.execute(command, context),
+    };
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
-      '/runs/start',
+      RUNTIME_ROUTE_PATH.start,
       async (request, reply) => startRunRoute(request as never, reply, protectedModule.facade)
     );
 
-    app.get('/runs', async (request, reply) =>
+    app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
       listRunsRoute(request as never, reply, { ...runtimeAuth, useCase: listRunsUseCase })
     );
-    app.get('/runs/:runId', async (request, reply) =>
+    app.get(RUNTIME_ROUTE_PATH.get, async (request, reply) =>
       getRunRoute(request as never, reply, { ...runtimeAuth, useCase: getRunStatusUseCase })
     );
-    app.get('/runs/:runId/events', async (request, reply) =>
+    app.get(RUNTIME_ROUTE_PATH.events, async (request, reply) =>
       getRunEventsRoute(request as never, reply, { ...runtimeAuth, useCase: getRunEventsUseCase })
     );
-    app.post('/runs/:runId/signal', async (request, reply) =>
+    app.post(RUNTIME_ROUTE_PATH.signal, async (request, reply) =>
       signalRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
+    );
+    // Cancel is a dedicated endpoint, but domain-wise it is the CANCEL signal command.
+    app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
+      cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
@@ -205,9 +218,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
 
-    app.log.info(
-      'protected runtime routes registered: POST /runs/start, GET /runs, GET /runs/:runId, GET /runs/:runId/events, POST /runs/:runId/signal'
-    );
+    app.log.info(`protected runtime routes registered: ${PROTECTED_RUNTIME_ROUTE_SUMMARY}`);
   } else {
     app.log.warn(
       'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'

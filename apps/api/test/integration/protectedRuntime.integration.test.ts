@@ -188,11 +188,10 @@ describeIfPg('protected runtime integration', () => {
 
     const signalResponse = await app!.inject({
       method: 'POST',
-      url: `/runs/${runId}/signal`,
+      url: `/runs/${runId}/cancel`,
       headers: { authorization: `Bearer ${token}` },
       payload: {
         tenantId: TENANT_ID,
-        signalType: 'CANCEL',
         reason: 'integration-test',
       },
     });
