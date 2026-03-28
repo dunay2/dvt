@@ -22,11 +22,7 @@ type ParsedCommandRequest<TCommand> = {
   };
 };
 
-type ParsedCommandResult<
-  TCommand,
-  TError extends string,
-  TCode extends string,
-> =
+type ParsedCommandResult<TCommand, TError extends string, TCode extends string> =
   | { readonly ok: true; readonly value: ParsedCommandRequest<TCommand> }
   | {
       readonly ok: false;

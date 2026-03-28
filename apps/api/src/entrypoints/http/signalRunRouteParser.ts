@@ -71,10 +71,7 @@ export function parseSignalRunRequest(input: {
       : badRequest(tenantIdResult.error);
   }
 
-  const signalType = parseSignalType(
-    input.body.signalType,
-    input.compatibilityPolicy
-  );
+  const signalType = parseSignalType(input.body.signalType, input.compatibilityPolicy);
   if (!signalType) {
     return badRequest(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE);
   }
