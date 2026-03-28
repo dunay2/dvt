@@ -1,11 +1,20 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Database, FileText, PanelLeftClose, Upload } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
 import type { CanonicalNode } from '../types/canonical';
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../types/canonical';
 
 import SourceImportWizard from './SourceImportWizard';
+
+type ImportResult = {
+  success: boolean;
+  sourcesCreated: number;
+  tablesImported: number;
+  yamlFiles: string[];
+};
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -34,6 +43,7 @@ function resolveNodeBadgeText(node: CanonicalNode): string {
 
 export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplorerProps) {
   const [importWizardOpen, setImportWizardOpen] = useState(false);
+  const queryClient = useQueryClient();
   const hasDbtNodes = nodes.some((node) => node.pluginId === 'dbt');
 
   const groupedNodes = useMemo(() => {
@@ -161,9 +171,13 @@ export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplo
         <SourceImportWizard
           open={importWizardOpen}
           onClose={() => setImportWizardOpen(false)}
-          onComplete={(result) => {
-            console.log('Import completed:', result);
-            // In a real app, this would refresh the manifest and update the explorer
+          onComplete={(result: ImportResult) => {
+            void queryClient.invalidateQueries({ queryKey: ['workspace', 'graph'] });
+            if (result?.success) {
+              toast.success(
+                `Imported ${result.sourcesCreated} source${result.sourcesCreated !== 1 ? 's' : ''}, ${result.tablesImported} table${result.tablesImported !== 1 ? 's' : ''}`
+              );
+            }
           }}
         />
       )}
