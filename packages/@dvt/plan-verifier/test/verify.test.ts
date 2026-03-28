@@ -27,7 +27,7 @@ describe('@dvt/plan-verifier', () => {
         canonicalPlanJson: canonical,
         planId,
         planVersion: '3.0',
-        supportedMajor: 2,
+        supportedMajor: 1,
       })
     ).rejects.toThrow(/Unsupported planVersion/);
   });
@@ -39,8 +39,8 @@ describe('@dvt/plan-verifier', () => {
       verifyPlanOrThrow({
         canonicalPlanJson: canonical,
         planId,
-        planVersion: '2.3',
-        supportedMajor: 2,
+        planVersion: '1.0',
+        supportedMajor: 1,
       })
     ).resolves.toBeUndefined();
   });
@@ -52,8 +52,8 @@ describe('@dvt/plan-verifier', () => {
       verifyPlanOrThrow({
         canonicalPlanJson: canonical,
         planId,
-        planVersion: '2.3',
-        supportedMajor: 2,
+        planVersion: '1.0',
+        supportedMajor: 1,
         strictSameMinor: true,
       })
     ).rejects.toThrow(/requires supportedMinor/);
@@ -66,12 +66,12 @@ describe('@dvt/plan-verifier', () => {
       verifyPlanOrThrow({
         canonicalPlanJson: canonical,
         planId,
-        planVersion: '2.3',
-        supportedMajor: 2,
+        planVersion: '1.0',
+        supportedMajor: 1,
         strictSameMinor: true,
-        supportedMinor: 4,
+        supportedMinor: 1,
       })
-    ).rejects.toThrow(/Supported 2\.4\.x only/);
+    ).rejects.toThrow(/Supported 1\.1\.x only/);
   });
 
   it('passes when strictSameMinor=true and minor matches', async () => {
@@ -81,10 +81,10 @@ describe('@dvt/plan-verifier', () => {
       verifyPlanOrThrow({
         canonicalPlanJson: canonical,
         planId,
-        planVersion: '2.3',
-        supportedMajor: 2,
+        planVersion: '1.0',
+        supportedMajor: 1,
         strictSameMinor: true,
-        supportedMinor: 3,
+        supportedMinor: 0,
       })
     ).resolves.toBeUndefined();
   });

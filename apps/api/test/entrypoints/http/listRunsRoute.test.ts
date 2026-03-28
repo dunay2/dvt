@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { listRunsRoute } from '../../../src/entrypoints/http/listRunsRoute.js';
 
@@ -52,7 +52,7 @@ function createDeps(): {
             projectId: 'proj-1',
             environmentId: 'env-1',
             planId: 'plan-1',
-            planVersion: '2.3',
+            planVersion: '1.0',
             logicalAttemptId: 1,
             provider: 'mock',
             status: 'FAILED',

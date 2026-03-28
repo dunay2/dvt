@@ -7,7 +7,7 @@ import { StoredExecutablePlanResolver } from '../../../src/application/services/
 const EXECUTABLE_PLAN_TEXT = JSON.stringify({
   metadata: {
     planId: 'plan-1',
-    planVersion: '2.3',
+    planVersion: '1.0',
     schemaVersion: 'v1.2',
     contractVersion: '1.0.0',
   },
@@ -19,7 +19,7 @@ const PLAN_REF = {
   sha256: createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex'),
   schemaVersion: 'v1.2',
   planId: 'plan-1',
-  planVersion: '2.3',
+  planVersion: '1.0',
 };
 
 describe('StoredExecutablePlanResolver', () => {
@@ -34,7 +34,7 @@ describe('StoredExecutablePlanResolver', () => {
     expect(plan).toEqual({
       metadata: {
         planId: 'plan-1',
-        planVersion: '2.3',
+        planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
       },
@@ -89,7 +89,7 @@ describe('StoredExecutablePlanResolver', () => {
     expect(plan).toEqual({
       metadata: {
         planId: 'plan-1',
-        planVersion: '2.3',
+        planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
         requiresCapabilities: ['basic-execution'],

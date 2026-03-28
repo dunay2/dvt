@@ -43,6 +43,7 @@ Concept anchors for this page:
 ## Proposals
 
 - [CI Improvement Plan — Reliability, Scope-Awareness, And Deduplication](proposals/ci-improvement-plan-20260327.md)
+- [Contracts Domain Ownership Migration Plan](proposals/contracts-domain-ownership-migration-plan-20260327.md)
 - [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](proposals/todo.md)
 - [Docs Governance Tooling Future Tasks](proposals/docs-governance-tooling-future-tasks-20260324.md)
@@ -50,6 +51,7 @@ Concept anchors for this page:
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
+- [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
 
 ## Reviews
 
@@ -71,6 +73,7 @@ Concept anchors for this page:
 - [20260326 RunMaintenanceService SRP Review](reviews/20260326-run-maintenance-service-srp-review.md)
 - [20260326 S03 Hard QA Review](reviews/20260326-s03-hard-qa-review.md)
 - [20260328 Lane C AI Efficiency And Cost Review](reviews/20260328-lane-c-ai-efficiency-and-cost-review.md)
+- [20260328 Lineage Outbox Fowler QA Hard Review](reviews/20260328-lineage-outbox-fowler-qa-hard-review.md)
 - [20260328 Runtime Command RBAC Review](reviews/20260328-runtime-command-rbac-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/20260226-dvt-architectural-gap-remediation-tasks-review.md)

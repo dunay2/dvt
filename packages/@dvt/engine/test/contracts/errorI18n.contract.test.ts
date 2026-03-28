@@ -116,10 +116,10 @@ describe('Error i18n contract', () => {
       {
         error: new UnsupportedPlanVersionError({
           planVersion: '9.0',
-          supportedVersions: ['2.3'],
+          supportedVersions: ['1.0'],
         }),
         key: ENGINE_ERROR_MESSAGE_KEY.UNSUPPORTED_PLAN_VERSION,
-        params: { planVersion: '9.0', supportedVersions: ['2.3'] },
+        params: { planVersion: '9.0', supportedVersions: ['1.0'] },
       },
     ] as const;
 

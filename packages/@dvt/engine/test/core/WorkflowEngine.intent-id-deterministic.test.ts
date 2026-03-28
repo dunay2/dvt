@@ -19,7 +19,7 @@ function makePlanRef(): PlanRef {
     sha256: 'deadbeef',
     schemaVersion: 'v1.1',
     planId: 'p',
-    planVersion: '2.3',
+    planVersion: '1.0',
   };
 }
 

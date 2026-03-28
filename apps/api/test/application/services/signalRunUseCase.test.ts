@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
 import { SignalRunUseCase } from '../../../src/application/services/signalRunUseCase.js';
@@ -39,7 +39,7 @@ describe('SignalRunUseCase', () => {
           environmentId: 'env-1',
           runId: 'run-1',
           planId: 'plan-1',
-          planVersion: '2.3',
+          planVersion: '1.0',
           logicalAttemptId: 1,
           provider: 'mock' as const,
           providerWorkflowId: 'wf-1',

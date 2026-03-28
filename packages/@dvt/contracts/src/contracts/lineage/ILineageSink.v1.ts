@@ -4,6 +4,7 @@ export const MAX_LINEAGE_ATTEMPTS = 5;
 
 export interface LineageOutboxRecord {
   id: string;
+  tenantId: string;
   runId: string;
   eventType: string;
   payload: EventEnvelope;
@@ -15,6 +16,7 @@ export interface LineageOutboxRecord {
 export interface LineageDeadLetterRecord {
   id: string;
   originalId: string;
+  tenantId: string;
   runId: string;
   eventType: string;
   payload: EventEnvelope;
@@ -22,13 +24,15 @@ export interface LineageDeadLetterRecord {
   deadLetteredAt: string;
 }
 
+export type LineageFailureDisposition = 'retry_scheduled' | 'dead_lettered' | 'not_found';
+
 export interface ILineageOutboxStore {
   enqueue(runId: string, payload: EventEnvelope): Promise<void>;
   listPending(limit: number): Promise<LineageOutboxRecord[]>;
+  countPending?(): Promise<number>;
   markDelivered(ids: string[]): Promise<void>;
-  markFailed(id: string, error: string, attempts: number): Promise<void>;
-  deadLetter(id: string, error: string): Promise<void>;
-  listDeadLetter?(limit: number): Promise<LineageDeadLetterRecord[]>;
+  markFailed(id: string, error: string): Promise<LineageFailureDisposition>;
+  listDeadLetter(limit: number, tenantId: string): Promise<LineageDeadLetterRecord[]>;
 }
 
 export interface LineagePublishPayload {

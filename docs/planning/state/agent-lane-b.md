@@ -92,19 +92,23 @@ Stabilize event payload versioning and lineage wiring.
 - [ ] `P0` `S05-F1`: add per-eventType payload-content schema validation at write boundary.
 - [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
 - [x] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
+- [x] `P1` `RC-B5`: add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and harden DLQ.
+- [ ] `P1` `RC-B5-F2`: add real-Postgres integration tests for lineage claim-timeout and stale-claimer race semantics.
 - [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.
-- [ ] `P1` `RC-B5`: add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and harden DLQ.
 - [ ] `P2` `manifest S3 fetch cache`: reduce planner egress and build latency.
+- [ ] `P2` `ADP-LINT-ORDER-01`: upgrade eslint import-order toolchain and remove workaround-only inline type alias patterns in adapter-postgres.
 - [ ] `P2` `RC-F2`: externalize adapter-postgres CI path patterns to tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and pr-quality-gate.yml; add path-matcher unit tests.
 
 ## Dependencies
 
 - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
-- `S05-F1` closes deferred payload-content schema enforcement.
-- `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
-- `RC-B5` is a prerequisite to DLQ alerting + automated replay.
-- `RC-F2` is independent — CI-only change with no runtime risk.
-- Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary even further.
+- `S05-F1` moved to `review` after runtime boundary validation in contracts, adapter-postgres, and engine focused suites.
+- `RC-B1` and `RC-B2` are closed in mainline.
+- `RC-B5` is complete; `RC-B5-F2` tracks the remaining integration-depth gap.
+- `RC-B5` remains a prerequisite to DLQ alerting plus automated replay.
+- `ADP-LINT-ORDER-01` tracks deferred tooling hardening for import-order crash behavior.
+- `RC-F2` is independent and CI-only with no runtime risk.
+- Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary further.
 - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
 
 ## Expected Outcome

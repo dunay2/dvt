@@ -5,6 +5,7 @@ import {
   SIGNAL_COMMAND_ACTION,
   SIGNAL_RUN_PARSE_ERROR_CODE,
 } from '../../../src/entrypoints/http/signalRunRouteParser.js';
+import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
 function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
   return {
@@ -17,6 +18,7 @@ function createDeps(): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
+  compatibilityPolicy: { allowCancelSignalType: boolean };
 } {
   return {
     authenticator: {
@@ -50,6 +52,9 @@ function createDeps(): {
     useCase: {
       execute: vi.fn().mockResolvedValue({ runId: 'run-1', signalType: 'CANCEL', accepted: true }),
     },
+    compatibilityPolicy: {
+      allowCancelSignalType: true,
+    },
   };
 }
 
@@ -80,7 +85,7 @@ describe('signalRunRoute', () => {
       }),
       'req-1'
     );
-    expect(reply.code).toHaveBeenCalledWith(202);
+    expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
   });
 
   it('authorizes PAUSE using run:signal action', async () => {
@@ -105,7 +110,7 @@ describe('signalRunRoute', () => {
       }),
       'req-1b'
     );
-    expect(reply.code).toHaveBeenCalledWith(202);
+    expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
   });
 
   it('returns 400 when signalType is not in the allowed vocabulary', async () => {
@@ -128,6 +133,30 @@ describe('signalRunRoute', () => {
       error: 'BAD_REQUEST',
       code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE,
     });
+  });
+
+  it('returns 400 for CANCEL when compatibility policy disables it', async () => {
+    const deps = createDeps();
+    deps.compatibilityPolicy.allowCancelSignalType = false;
+    const reply = createReply();
+
+    await signalRunRoute(
+      {
+        id: 'req-2b',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'BAD_REQUEST',
+      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE,
+    });
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
   it('returns 403 when tenantId is missing', async () => {

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
 import { GetRunEventsUseCase } from '../../../src/application/services/getRunEventsUseCase.js';
@@ -32,7 +32,7 @@ describe('GetRunEventsUseCase', () => {
           environmentId: 'env-1',
           runId: 'run-1',
           planId: 'plan-1',
-          planVersion: '2.3',
+          planVersion: '1.0',
           logicalAttemptId: 1,
           provider: 'mock' as const,
           providerWorkflowId: 'wf-1',
@@ -49,7 +49,7 @@ describe('GetRunEventsUseCase', () => {
             projectId: 'proj-1',
             environmentId: 'env-1',
             planId: 'plan-1',
-            planVersion: '2.3',
+            planVersion: '1.0',
             engineAttemptId: 1,
             logicalAttemptId: 1,
             idempotencyKey: 'idem-1',
@@ -75,7 +75,7 @@ describe('GetRunEventsUseCase', () => {
           projectId: 'proj-1',
           environmentId: 'env-1',
           planId: 'plan-1',
-          planVersion: '2.3',
+          planVersion: '1.0',
           engineAttemptId: 1,
           logicalAttemptId: 1,
           idempotencyKey: 'idem-1',

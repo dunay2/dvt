@@ -14,13 +14,16 @@ import {
   SIGNAL_RUN_PARSE_ERROR_CODE,
   SUPPORTED_SIGNAL_TYPES,
   type SignalCommandActionName,
+  type SignalRouteCompatibilityPolicy,
   type SignalRunParseErrorCode,
 } from './signalRunRouteParser.constants.js';
 
 export {
+  SIGNAL_ROUTE_COMPATIBILITY_POLICY,
   SIGNAL_COMMAND_ACTION,
   SIGNAL_RUN_PARSE_ERROR_CODE,
   type SignalCommandActionName,
+  type SignalRouteCompatibilityPolicy,
   type SignalRunParseErrorCode,
 } from './signalRunRouteParser.constants.js';
 
@@ -50,6 +53,7 @@ type ParsedSignalRunResult =
 export function parseSignalRunRequest(input: {
   readonly runId: string | undefined;
   readonly body: unknown;
+  readonly compatibilityPolicy: SignalRouteCompatibilityPolicy;
 }): ParsedSignalRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
@@ -67,7 +71,7 @@ export function parseSignalRunRequest(input: {
       : badRequest(tenantIdResult.error);
   }
 
-  const signalType = parseSignalType(input.body.signalType);
+  const signalType = parseSignalType(input.body.signalType, input.compatibilityPolicy);
   if (!signalType) {
     return badRequest(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE);
   }
@@ -90,8 +94,14 @@ export function parseSignalRunRequest(input: {
   };
 }
 
-function parseSignalType(raw: unknown): SupportedSignalType | null {
+function parseSignalType(
+  raw: unknown,
+  compatibilityPolicy: SignalRouteCompatibilityPolicy
+): SupportedSignalType | null {
   if (typeof raw !== 'string') return null;
   const normalized = raw.trim().toUpperCase() as SupportedSignalType;
+  if (normalized === 'CANCEL' && !compatibilityPolicy.allowCancelSignalType) {
+    return null;
+  }
   return SUPPORTED_SIGNAL_TYPES.has(normalized) ? normalized : null;
 }
