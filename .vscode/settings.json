@@ -2,9 +2,10 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.eslint": "always"
   },
-  "eslint.validate": ["typescript", "javascript"],
+  "eslint.run": "onSave",
+  "eslint.validate": ["typescript", "typescriptreact", "javascript", "javascriptreact"],
   "prettier.requireConfig": true,
   "[markdown]": {
     "editor.formatOnSave": true
