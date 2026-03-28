@@ -10,6 +10,7 @@
  */
 import type { PoolClient } from 'pg';
 
+import { POSTGRES_RUN_STATE_COORDINATOR_CONSTANTS as C } from './PostgresRunStateCoordinatorConstants.js';
 import type { RunEventWriteRepository } from './RunEventWriteRepository.js';
 import type {
   AppendResult,
@@ -80,11 +81,12 @@ export class PostgresRunStateCoordinator {
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     try {
       return await this.withTransaction(async (client) => {
-        await this.setTenantContext(client, input.metadata.tenantId);
+        const tenantId = requireTenantId(input.metadata.tenantId);
+        await this.setTenantContext(client, tenantId);
         await this.metadataRepo.insertWithClient(client, input.metadata);
         const append = await this.appendEventsTxWithClient(
           client,
-          input.metadata.tenantId,
+          tenantId,
           input.metadata.runId as RunId,
           input.firstEvents
         );
@@ -96,13 +98,17 @@ export class PostgresRunStateCoordinator {
         return append;
       });
     } catch (error: unknown) {
-      if (isUniqueViolation(error)) {
+      if (isRunMetadataUniqueViolation(error)) {
         throw createRunAlreadyExistsError(error);
       }
       throw error;
     }
   }
 
+  /**
+   * Queue-only helper that enqueues already-built envelopes.
+   * Does not append new run events or mutate run metadata.
+   */
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     await this.withTransaction(async (client) => {
       await this.resolveAndSetTenantContext(client, runId);
@@ -111,7 +117,9 @@ export class PostgresRunStateCoordinator {
   }
 
   private async resolveAndSetTenantContext(client: PoolClient, runId: RunId): Promise<string> {
-    const tenantId = await this.metadataRepo.resolveTenantWithClient(client, runId);
+    const tenantId = requireTenantId(
+      await this.metadataRepo.resolveTenantWithClient(client, runId)
+    );
     await this.setTenantContext(client, tenantId);
     return tenantId;
   }
@@ -135,18 +143,43 @@ export class PostgresRunStateCoordinator {
   }
 }
 
-function isUniqueViolation(error: unknown): error is { code: string } {
+function isRunMetadataUniqueViolation(
+  error: unknown
+): error is { code: string; table?: string; constraint?: string } {
   return (
     typeof error === 'object' &&
     error !== null &&
     'code' in error &&
-    (error as { code?: unknown }).code === '23505'
+    (error as { code?: unknown }).code === C.pgUniqueViolationCode &&
+    (isRunMetadataTable(error) || isRunMetadataConstraint(error))
   );
 }
 
 function createRunAlreadyExistsError(cause: unknown): Error {
-  const error = new Error('RUN_ALREADY_EXISTS');
-  error.name = 'RunAlreadyExistsError';
+  const error = new Error(C.runAlreadyExistsErrorMessage);
+  error.name = C.runAlreadyExistsErrorName;
   (error as Error & { cause?: unknown }).cause = cause;
   return error;
+}
+
+function isRunMetadataTable(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('table' in error)) {
+    return false;
+  }
+  return (error as { table?: unknown }).table === C.runMetadataTableName;
+}
+
+function isRunMetadataConstraint(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('constraint' in error)) {
+    return false;
+  }
+  const constraint = (error as { constraint?: unknown }).constraint;
+  return typeof constraint === 'string' && constraint.startsWith(C.runMetadataConstraintPrefix);
+}
+
+function requireTenantId(tenantId: string): string {
+  if (tenantId.trim().length === 0) {
+    throw new Error(C.tenantScopeRequiredErrorMessage);
+  }
+  return tenantId;
 }

@@ -9,15 +9,19 @@
 import { quoteIdentifier } from './sqlUtils.js';
 
 export function listStaleSnapshotRunsSql(schema: string): string {
-  return `SELECT m.run_id, m.tenant_id
-     FROM ${quoteIdentifier(schema)}.run_metadata m
-     LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
+  return `
+    WITH latest_events AS (
+      SELECT e.run_id, MAX(e.run_seq) AS max_run_seq
+      FROM ${quoteIdentifier(schema)}.run_events e
+      GROUP BY e.run_id
+    )
+    SELECT m.run_id, m.tenant_id
+    FROM ${quoteIdentifier(schema)}.run_metadata m
+    LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
+    LEFT JOIN latest_events le ON le.run_id = m.run_id
     WHERE s.run_id IS NULL
-       OR s.last_run_seq < (
-            SELECT MAX(e.run_seq)
-              FROM ${quoteIdentifier(schema)}.run_events e
-             WHERE e.run_id = m.run_id
-          )
+      OR s.last_run_seq < COALESCE(le.max_run_seq, 0)
     ORDER BY m.created_at ASC
-    LIMIT $1`;
+    LIMIT $1
+  `;
 }

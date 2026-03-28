@@ -29,13 +29,13 @@ export class PostgresAdapterClientSession {
   }
 
   async close(ownsPool: boolean): Promise<void> {
-    await this.abortPendingOperations();
+    this.abortPendingOperations();
     if (ownsPool) {
       await this.pool.end();
     }
   }
 
-  async abortPendingOperations(): Promise<void> {
+  abortPendingOperations(): void {
     this.abortPendingOperationsRequested = true;
     const clients = [...this.activeClients];
     for (const client of clients) {
@@ -113,7 +113,7 @@ function asError(error: unknown): Error {
 function createTransactionRollbackError(operationError: Error, rollbackError: unknown): Error {
   const wrapped = new Error('TRANSACTION_ROLLBACK_FAILED');
   wrapped.name = 'PostgresTransactionError';
-  (wrapped as Error & { cause?: unknown }).cause = operationError;
-  (wrapped as Error & { rollbackCause?: unknown }).rollbackCause = rollbackError;
+  (wrapped as Error & { cause?: unknown }).cause = asError(rollbackError);
+  (wrapped as Error & { operationCause?: unknown }).operationCause = operationError;
   return wrapped;
 }

@@ -33,6 +33,20 @@ class RecordingPool {
 }
 
 describe('PostgresBackpressureSnapshotReader', () => {
+  it('rejects empty tenant scope before querying storage', async () => {
+    const pool = new RecordingPool([]);
+    const reader = new PostgresBackpressureSnapshotReader({
+      pool: pool as never,
+      schema: 'dvt',
+      now: () => NOW,
+      stuckEventAgeThresholdMs: 60_000,
+      localOverloadPendingThreshold: 2,
+    });
+
+    await expect(reader.getTenantSnapshot('   ')).rejects.toThrow(/TENANT_SCOPE_REQUIRED/);
+    expect(pool.queries).toHaveLength(0);
+  });
+
   it('maps snapshot rows and applies timeout signal when configured', async () => {
     const pool = new RecordingPool([
       {

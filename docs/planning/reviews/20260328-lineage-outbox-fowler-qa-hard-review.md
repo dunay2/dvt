@@ -435,6 +435,120 @@ e.run_id = m.run_id` in the WHERE clause, evaluated once per row from `run_metad
    - References:
      - `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts:77`
 
+---
+
+## Review — `PostgresRunStateCoordinator.test.ts` (untracked, 2026-03-28)
+
+### Context
+
+The test file arrived after the production code already incorporated fixes for findings 1 and 2
+from the second Fowler QA review. The working-tree version of `PostgresRunStateCoordinator.ts`
+already contains:
+
+- `isRunMetadataUniqueViolation` — scopes the 23505 guard to `table === 'run_metadata'` or
+  `constraint.startsWith('run_metadata_')`.
+- `requireTenantId(...)` — called in `resolveAndSetTenantContext` and directly in
+  `bootstrapRunTx` (line 89); throws `TENANT_SCOPE_REQUIRED` for empty or whitespace tenant.
+- A clarifying docstring on `enqueueTx` distinguishing it from the primary append path.
+
+**All three tests pass against the updated production code.**
+
+### Coverage gaps
+
+1. **`bootstrapRunTx` with empty tenant is not tested.**
+   `bootstrapRunTx` calls `requireTenantId(input.metadata.tenantId)` (line 89) — a separate
+   code path from the one exercised by test 3 (`appendAndEnqueueTx` via
+   `resolveAndSetTenantContext`). A test injecting `tenantId: ''` into `makeBootstrapInput()`
+   would close this.
+
+2. **`enqueueTx` has no tests** — no happy path, no empty-tenant assertion, no outbox call
+   verification.
+
+3. **No happy-path test for any method.**
+   No test verifies that `insertWithClient`, `append`, `updateWithClient`, and `enqueueWithClient`
+   are all called in the correct order within the same transaction. A sequence-capture mock
+   (recording call order) would close this.
+
+4. **Tests 1 and 2 throw from the `withTransaction` wrapper, not from inside `fn`.**
+   In production, the `23505` violation comes from `insertWithClient` within the transaction
+   body. The current mocks bypass `fn` entirely and throw from the wrapper. The error-
+   classification logic is exercised correctly, but the internal propagation path from the
+   failing operation to the catch block is not.
+
+5. **Test 2 uses `.toBe(error)` (object identity), not `.toMatchObject`.**
+   If the coordinator ever copies or re-wraps the error before re-throwing (without converting to
+   `RUN_ALREADY_EXISTS`), the identity check fails even though behavior is correct.
+   `.toMatchObject({ code: '23505', table: 'run_events' })` would be more resilient.
+
 ## Assumption
 
 - This review assumes ADR-0031 tenant-isolation expectations apply to lineage persistence surfaces unless explicitly exempted.
+
+---
+
+## Third Fowler QA review — strict adapter critique (2026-03-28)
+
+### Scope
+
+- `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts`
+- `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts`
+
+### Findings (ordered by criticality)
+
+1. **[High] God object still present in adapter facade (SRP breach)**
+   - `PostgresStateStoreAdapter` still owns wiring, lifecycle, schema migration, transaction delegation,
+     snapshot access, outbox orchestration, and lineage access. This keeps too many reasons to change in one type.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:82`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:101`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:217`
+
+2. **[Medium] Concrete lineage implementation leaks through facade boundary**
+   - `getLineageOutboxStore()` returns `PostgresLineageOutboxStore` (concrete), not a stable port contract.
+     This couples callers to adapter internals and weakens DIP/DDD boundaries.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:347`
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:99`
+
+3. **[Medium] Tenant validation remains inconsistent across adapter surfaces**
+   - `PostgresRunStateCoordinator` enforces `requireTenantId`, but
+     `PostgresBackpressureSnapshotReader.getTenantSnapshot` does not validate tenant input.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts:71`
+     - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts:180`
+
+4. **[Medium] Transaction rollback error shape is ambiguous**
+   - On rollback failure, `PostgresTransactionError` stores operation failure in `cause`
+     and rollback failure in a non-standard `rollbackCause`. Consumers reading only `cause`
+     may miss the rollback failure signal.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:113`
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:116`
+
+5. **[Medium] Missing dedicated tests for `PostgresAdapterClientSession`**
+   - No focused test suite validates `withTransaction` commit/rollback/rollback-failure semantics
+     or direct `close()`/`abortPendingOperations()` behavior at this component boundary.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts:46`
+
+6. **[Low] Async signature mismatch in facade interruption API**
+   - `PostgresStateStoreAdapter.abortPendingOperations()` is declared `async` but executes synchronously.
+     Signature implies awaitable I/O work that is not present.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:217`
+
+7. **[Low] Hardcoded localhost fallback can hide misconfiguration**
+   - Both adapter and reader default to `postgresql://dvt:dvt@localhost:5432/dvt` when env/config is missing,
+     which can mask deployment configuration errors.
+   - References:
+     - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:117`
+     - `packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts:58`
+
+### Validation evidence
+
+- Command: `pnpm vitest packages/@dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts`
+- Result: passed (`7` tests, `1` file)

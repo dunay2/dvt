@@ -12,6 +12,8 @@ import { listStaleSnapshotRunsSql } from './PostgresSnapshotStalenessQuerySql.js
 import type { IRunSnapshotStalenessQuery } from './types.js';
 
 type WithClient = <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
+const MAX_STALE_SNAPSHOT_BATCH_SIZE = 1000;
+const MIN_STALE_SNAPSHOT_BATCH_SIZE = 0;
 
 export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuery {
   constructor(
@@ -22,12 +24,28 @@ export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuer
   async listStaleSnapshotRuns(
     batchSize: number
   ): Promise<Array<{ runId: string; tenantId: string }>> {
+    const boundedBatchSize = normalizeStaleSnapshotBatchSize(batchSize);
+    if (boundedBatchSize === 0) {
+      return [];
+    }
+
     return this.withClient(async (client) => {
       const result = await client.query<{ run_id: string; tenant_id: string }>(
         listStaleSnapshotRunsSql(this.schema),
-        [batchSize]
+        [boundedBatchSize]
       );
       return result.rows.map((row) => ({ runId: row.run_id, tenantId: row.tenant_id }));
     });
   }
+}
+
+function normalizeStaleSnapshotBatchSize(batchSize: number): number {
+  if (
+    !Number.isInteger(batchSize) ||
+    !Number.isFinite(batchSize) ||
+    batchSize < MIN_STALE_SNAPSHOT_BATCH_SIZE
+  ) {
+    throw new Error(`INVALID_STALE_SNAPSHOT_BATCH_SIZE: ${batchSize}`);
+  }
+  return Math.min(batchSize, MAX_STALE_SNAPSHOT_BATCH_SIZE);
 }

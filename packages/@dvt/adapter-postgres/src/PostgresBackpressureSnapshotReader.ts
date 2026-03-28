@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 
-import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
+import { getBackpressureSnapshotSql } from './PostgresBackpressureSnapshotReaderSql.js';
+import { normalizeSchema } from './sqlUtils.js';
 
 export interface PostgresBackpressureSnapshot {
   readonly tenantActivePendingEventCount: number;
@@ -68,54 +69,14 @@ export class PostgresBackpressureSnapshotReader {
   }
 
   public async getTenantSnapshot(tenantId: string): Promise<PostgresBackpressureSnapshot> {
+    assertTenantId(tenantId);
     const nowIso = this.now();
     const stuckCutoffIso = new Date(
       new Date(nowIso).getTime() - this.stuckEventAgeThresholdMs
     ).toISOString();
 
     const result = await this.pool.query<BackpressureSnapshotRow>({
-      text: `
-        WITH active_outbox AS (
-          SELECT m.tenant_id, o.created_at
-          FROM ${quoteIdentifier(this.schema)}.outbox o
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = o.run_id
-          WHERE o.delivered_at IS NULL
-            AND o.created_at >= $3::timestamptz
-        ),
-        stuck_outbox AS (
-          SELECT m.tenant_id
-          FROM ${quoteIdentifier(this.schema)}.outbox o
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = o.run_id
-          WHERE o.delivered_at IS NULL
-            AND o.created_at < $3::timestamptz
-        ),
-        tenant_counts AS (
-          SELECT
-            tenant_id,
-            COUNT(*)::integer AS active_pending_count,
-            MIN(created_at) AS oldest_created_at
-          FROM active_outbox
-          GROUP BY tenant_id
-        )
-        SELECT
-          COALESCE(
-            (SELECT active_pending_count FROM tenant_counts WHERE tenant_id = $1),
-            0
-          )::integer AS tenant_active_pending_event_count,
-          COALESCE(
-            (SELECT COUNT(*) FROM stuck_outbox WHERE tenant_id = $1),
-            0
-          )::integer AS tenant_stuck_pending_event_count,
-          COALESCE((SELECT COUNT(*) FROM active_outbox), 0)::integer AS global_active_pending_event_count,
-          COALESCE(
-            (
-              SELECT FLOOR(EXTRACT(EPOCH FROM (($2::timestamptz) - MIN(oldest_created_at))) * 1000)
-              FROM tenant_counts
-              WHERE active_pending_count <= $4
-            ),
-            0
-          )::bigint AS global_healthy_tenant_oldest_active_age_ms
-      `,
+      text: getBackpressureSnapshotSql(this.schema),
       values: [tenantId, nowIso, stuckCutoffIso, this.localOverloadPendingThreshold],
       ...(this.queryTimeoutMs > 0
         ? { signal: globalThis.AbortSignal.timeout(this.queryTimeoutMs) }
@@ -140,6 +101,12 @@ export class PostgresBackpressureSnapshotReader {
         row.global_healthy_tenant_oldest_active_age_ms
       ),
     };
+  }
+}
+
+function assertTenantId(tenantId: string): void {
+  if (tenantId.trim().length === 0) {
+    throw new Error('TENANT_SCOPE_REQUIRED');
   }
 }
 
