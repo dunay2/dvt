@@ -22,12 +22,21 @@ export function listPendingLineageOutboxForClaimSql(schema: string): string {
     WITH picked AS (
       SELECT o.id
       FROM ${quoteIdentifier(schema)}.lineage_outbox o
-      WHERE o.status = 'pending'
-        AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)
-        AND (
-          o.claimed_at IS NULL
-          OR o.claimed_at < ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))
+      WHERE (
+        (
+          o.status = 'pending'
+          AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)
+          AND (
+            o.claimed_at IS NULL
+            OR o.claimed_at < ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))
+          )
         )
+        OR (
+          o.status = 'claimed'
+          AND o.claimed_at IS NOT NULL
+          AND o.claimed_at < ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))
+        )
+      )
       ORDER BY o.next_attempt_at ASC NULLS FIRST, o.created_at ASC, o.id ASC
       LIMIT $1
       FOR UPDATE SKIP LOCKED
@@ -49,12 +58,21 @@ export function countPendingLineageOutboxSql(schema: string): string {
   return `
     SELECT COUNT(*)::int AS pending_count
     FROM ${quoteIdentifier(schema)}.lineage_outbox o
-    WHERE o.status = 'pending'
-      AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $1::timestamptz)
-      AND (
-        o.claimed_at IS NULL
-        OR o.claimed_at < ($1::timestamptz - ($2::bigint * INTERVAL '1 millisecond'))
+    WHERE (
+      (
+        o.status = 'pending'
+        AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $1::timestamptz)
+        AND (
+          o.claimed_at IS NULL
+          OR o.claimed_at < ($1::timestamptz - ($2::bigint * INTERVAL '1 millisecond'))
+        )
       )
+      OR (
+        o.status = 'claimed'
+        AND o.claimed_at IS NOT NULL
+        AND o.claimed_at < ($1::timestamptz - ($2::bigint * INTERVAL '1 millisecond'))
+      )
+    )
   `;
 }
 

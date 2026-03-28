@@ -256,22 +256,26 @@ function isAbortError(error: unknown): boolean {
 
 function toErrorLike(error: unknown): { message: string; name: string } {
   if (error instanceof Error) {
-    return { message: error.message, name: error.name };
+    return { message: sanitizeErrorForPersistence(error.message), name: error.name };
   }
   if (typeof error === 'object' && error !== null) {
     try {
-      return { message: JSON.stringify(error), name: 'UnknownError' };
+      return { message: sanitizeErrorForPersistence(JSON.stringify(error)), name: 'UnknownError' };
     } catch {
       return { message: '[object with circular reference]', name: 'UnknownError' };
     }
   }
-  return { message: String(error), name: 'UnknownError' };
+  return { message: sanitizeErrorForPersistence(String(error)), name: 'UnknownError' };
 }
 
 function sanitizeErrorForPersistence(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error);
   const singleLine = raw.replace(/\s+/g, ' ').trim();
   const redacted = singleLine
+    .replace(
+      /("(?:password|passwd|pwd|secret|token|apikey|api_key)"\s*:\s*)"[^"]*"/gi,
+      '$1"[REDACTED]"'
+    )
     .replace(
       /(password|passwd|pwd|secret|token|apikey|api_key)\s*[=:]\s*[^,\s;]+/gi,
       '$1=[REDACTED]'

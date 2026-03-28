@@ -139,13 +139,14 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
   async function withClockAdapter(
     nowRef: { value: string },
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
-    options?: { outboxClaimTimeoutMs?: number }
+    options?: { outboxClaimTimeoutMs?: number; lineageOutboxClaimTimeoutMs?: number }
   ): Promise<void> {
     const schema = allocateSchema();
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => nowRef.value,
       outboxClaimTimeoutMs: options?.outboxClaimTimeoutMs,
+      lineageOutboxClaimTimeoutMs: options?.lineageOutboxClaimTimeoutMs,
     });
     try {
       await adapter.migrate();
@@ -572,6 +573,43 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         expect(reclaimed?.payload.runSeq).toBe(1);
       },
       { outboxClaimTimeoutMs: 90_000 }
+    );
+  });
+
+  test('lineage outbox: stale claimed rows are reclaimable after claim-timeout expiry', async () => {
+    const nowRef = { value: NOW };
+
+    await withClockAdapter(
+      nowRef,
+      async (adapter) => {
+        await adapter.bootstrapRunTx(makeBootstrap('run-lineage-stale-claim'));
+        const events = await adapter.listEvents('t1', 'run-lineage-stale-claim');
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStore = adapter.getLineageOutboxStore();
+        await lineageStore.enqueue('run-lineage-stale-claim', event);
+
+        const firstClaim = await lineageStore.listPending(10);
+        const claimed = firstClaim.find((record) => record.runId === 'run-lineage-stale-claim');
+        expect(claimed).toBeDefined();
+
+        nowRef.value = '2026-02-22T00:01:29.000Z';
+        const beforeExpiry = await lineageStore.listPending(10);
+        expect(
+          beforeExpiry.find((record) => record.runId === 'run-lineage-stale-claim')
+        ).toBeUndefined();
+
+        nowRef.value = '2026-02-22T00:01:31.000Z';
+        const afterExpiry = await lineageStore.listPending(10);
+        const reclaimed = afterExpiry.find((record) => record.runId === 'run-lineage-stale-claim');
+        expect(reclaimed).toBeDefined();
+        expect(reclaimed?.id).toBe(claimed?.id);
+
+        if (lineageStore.countPending) {
+          const lag = await lineageStore.countPending();
+          expect(lag).toBeGreaterThanOrEqual(1);
+        }
+      },
+      { lineageOutboxClaimTimeoutMs: 90_000 }
     );
   });
 
