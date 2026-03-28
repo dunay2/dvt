@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-26
+last_reviewed: 2026-03-28
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -41,7 +41,7 @@ tasks:
     target: Compat policy + timer wiring integration coverage.
   - task_id: RBAC at operation level
     priority: P1
-    status: queued
+    status: in_progress
     objective: enforce tenant-aware start/signal/cancel rules.
     dependency: none
     target: Define operation-level authorization boundaries.

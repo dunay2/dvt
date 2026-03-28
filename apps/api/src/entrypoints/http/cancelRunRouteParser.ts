@@ -1,4 +1,3 @@
-import type { SupportedSignalType } from '../../application/ports/runtime.js';
 import type { TenantId } from '../../domain/auth/types.js';
 
 import {
@@ -10,34 +9,27 @@ import {
   parseTenantId,
 } from './runCommandRouteParser.shared.js';
 import {
-  SIGNAL_ACTION_BY_TYPE,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-  SUPPORTED_SIGNAL_TYPES,
-  type SignalCommandActionName,
-  type SignalRunParseErrorCode,
-} from './signalRunRouteParser.constants.js';
-
-export {
   SIGNAL_COMMAND_ACTION,
   SIGNAL_RUN_PARSE_ERROR_CODE,
-  type SignalCommandActionName,
   type SignalRunParseErrorCode,
 } from './signalRunRouteParser.constants.js';
 
-export interface ParsedSignalRunRequest {
+const CANCEL_SIGNAL_TYPE = 'CANCEL' as const;
+
+export interface ParsedCancelRunRequest {
   readonly command: {
     readonly runId: string;
-    readonly signalType: SupportedSignalType;
+    readonly signalType: typeof CANCEL_SIGNAL_TYPE;
     readonly reason?: string;
   };
   readonly authorization: {
     readonly tenantId: TenantId;
-    readonly actionName: SignalCommandActionName;
+    readonly actionName: typeof SIGNAL_COMMAND_ACTION.CANCEL;
   };
 }
 
-type ParsedSignalRunResult =
-  | { readonly ok: true; readonly value: ParsedSignalRunRequest }
+type ParsedCancelRunResult =
+  | { readonly ok: true; readonly value: ParsedCancelRunRequest }
   | {
       readonly ok: false;
       readonly status: 400 | 403;
@@ -47,10 +39,16 @@ type ParsedSignalRunResult =
       };
     };
 
-export function parseSignalRunRequest(input: {
+export {
+  SIGNAL_COMMAND_ACTION,
+  SIGNAL_RUN_PARSE_ERROR_CODE,
+  type SignalRunParseErrorCode,
+} from './signalRunRouteParser.constants.js';
+
+export function parseCancelRunRequest(input: {
   readonly runId: string | undefined;
   readonly body: unknown;
-}): ParsedSignalRunResult {
+}): ParsedCancelRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
     return badRequest(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID);
@@ -67,11 +65,6 @@ export function parseSignalRunRequest(input: {
       : badRequest(tenantIdResult.error);
   }
 
-  const signalType = parseSignalType(input.body.signalType);
-  if (!signalType) {
-    return badRequest(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE);
-  }
-
   const reason = parseOptionalReason(input.body.reason);
 
   return {
@@ -79,19 +72,13 @@ export function parseSignalRunRequest(input: {
     value: {
       command: {
         runId,
-        signalType,
+        signalType: CANCEL_SIGNAL_TYPE,
         ...(reason ? { reason } : {}),
       },
       authorization: {
         tenantId: tenantIdResult.value,
-        actionName: SIGNAL_ACTION_BY_TYPE[signalType],
+        actionName: SIGNAL_COMMAND_ACTION.CANCEL,
       },
     },
   };
-}
-
-function parseSignalType(raw: unknown): SupportedSignalType | null {
-  if (typeof raw !== 'string') return null;
-  const normalized = raw.trim().toUpperCase() as SupportedSignalType;
-  return SUPPORTED_SIGNAL_TYPES.has(normalized) ? normalized : null;
 }
