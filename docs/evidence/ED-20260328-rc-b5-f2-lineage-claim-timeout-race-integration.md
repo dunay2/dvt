@@ -9,9 +9,10 @@ breaking: false
 code_refs:
   - packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.test.ts
 evidence:
-  - pnpm --filter @dvt/adapter-postgres test
-  - pnpm --filter @dvt/adapter-postgres typecheck
-  - pnpm verify:prepush
+  tests:
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/adapter-postgres typecheck
+    - pnpm verify:prepush
 ---
 
 # RC-B5-F2 closeout evidence
