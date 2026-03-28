@@ -208,6 +208,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     app.post(RUNTIME_ROUTE_PATH.signal, async (request, reply) =>
       signalRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
     );
+    // Cancel is a dedicated endpoint, but domain-wise it is the CANCEL signal command.
     app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
       cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })
     );

@@ -6,12 +6,16 @@ import type {
 } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { TenantId } from '../../domain/auth/types.js';
+import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import type { SignalCommandActionName } from './signalRunRouteAuthorization.constants.js';
-import type { SignalRunParseErrorCode } from './signalRunRouteParser.constants.js';
+import {
+  SIGNAL_RUN_PARSE_ERROR_RESPONSE,
+  type SignalRunParseErrorCode,
+} from './signalRunRouteParser.constants.js';
 
 type ParsedCommandRequest<TCommand> = {
   readonly command: TCommand;
@@ -27,7 +31,9 @@ type ParsedCommandResult<TCommand> =
       readonly ok: false;
       readonly status: 400 | 403;
       readonly body: {
-        readonly error: 'BAD_REQUEST' | 'FORBIDDEN';
+        readonly error:
+          | typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST
+          | typeof SIGNAL_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN;
         readonly code: SignalRunParseErrorCode;
       };
     };
@@ -64,7 +70,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
 
   try {
     const result = await deps.execute(parsed.value.command, auth.context);
-    reply.code(202).send(result);
+    reply.code(HTTP_STATUS_CODE.accepted).send(result);
   } catch (error) {
     const mapped = mapRuntimeDomainError(error);
     if (mapped) {

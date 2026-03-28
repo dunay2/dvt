@@ -121,4 +121,32 @@ describe('cancelRunRoute', () => {
       code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY,
     });
   });
+
+  it('returns 401 when authentication fails', async () => {
+    const deps = createDeps();
+    deps.authenticator.authenticateBearerToken.mockResolvedValueOnce({
+      ok: false,
+      code: 'MISSING_TOKEN',
+    });
+    const reply = createReply();
+
+    await cancelRunRoute(
+      {
+        id: 'req-4',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'UNAUTHORIZED',
+      code: 'MISSING_TOKEN',
+    });
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
+  });
 });
