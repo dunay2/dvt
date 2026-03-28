@@ -41,7 +41,9 @@ function CanvasContent() {
         onPlan={() => {
           void controller.handlePlan();
         }}
-        onRun={controller.handleStartRun}
+        onRun={() => {
+          void controller.handleStartRun();
+        }}
         exclusiveOverlayMode={controller.exclusiveOverlayMode}
         canUseCostOverlay={controller.canUseCostOverlay}
         impactOverlayEnabled={controller.impactOverlayEnabled}
@@ -52,7 +54,9 @@ function CanvasContent() {
         open={controller.planModalOpen}
         onClose={() => controller.setPlanModalOpen(false)}
         plan={controller.currentPlan as ExecutionPlan | null}
-        onStartRun={controller.handleStartRun}
+        onStartRun={() => {
+          void controller.handleStartRun();
+        }}
       />
 
       <ConfirmEdgeModal

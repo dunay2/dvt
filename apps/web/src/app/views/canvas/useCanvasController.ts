@@ -236,7 +236,7 @@ export function useCanvasController() {
 
   const handleRunStarted = useCallback(
     (runId: string) => {
-      navigate(`/runs/${runId}`);
+      void navigate(`/runs/${runId}`);
     },
     [navigate]
   );

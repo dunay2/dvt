@@ -23,9 +23,7 @@ export function RunListState({ runs, isLoading }: RunListStateProps) {
       </div>
       <div className="flex-1 p-6">
         <div className="max-w-4xl mx-auto space-y-4">
-          {isLoading && (
-            <p className="text-sm text-slate-400">Loading runs…</p>
-          )}
+          {isLoading && <p className="text-sm text-slate-400">Loading runs…</p>}
 
           {!isLoading && runs.length === 0 && (
             <Card className="bg-slate-900 border-slate-700 p-8 text-center">
@@ -40,7 +38,9 @@ export function RunListState({ runs, isLoading }: RunListStateProps) {
             <Card
               key={runRecord.runId}
               className="bg-slate-900 border-slate-700 p-4 hover:border-slate-600 cursor-pointer transition-colors"
-              onClick={() => navigate(`/runs/${runRecord.runId}`)}
+              onClick={() => {
+                void navigate(`/runs/${runRecord.runId}`);
+              }}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -68,7 +68,14 @@ export function RunListState({ runs, isLoading }: RunListStateProps) {
                     <div>Environment: {runRecord.environment}</div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/runs/${runRecord.runId}`); }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void navigate(`/runs/${runRecord.runId}`);
+                  }}
+                >
                   View Details
                 </Button>
               </div>

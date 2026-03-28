@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router';
 
 import type { Run } from '../../types/dbt';
 import { RunListState, RunNotFoundState } from './RunStates';
@@ -53,7 +54,11 @@ describe('RunStates', () => {
     ];
 
     await act(async () => {
-      root.render(<RunListState runs={runs} />);
+      root.render(
+        <MemoryRouter>
+          <RunListState runs={runs} />
+        </MemoryRouter>
+      );
     });
 
     expect(container.textContent).toContain('Runs');
@@ -70,7 +75,11 @@ describe('RunStates', () => {
 
   it('renders the run-not-found state with the requested run id', async () => {
     await act(async () => {
-      root.render(<RunNotFoundState runId="run_missing" />);
+      root.render(
+        <MemoryRouter>
+          <RunNotFoundState runId="run_missing" />
+        </MemoryRouter>
+      );
     });
 
     expect(container.textContent).toContain('Run not found');
