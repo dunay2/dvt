@@ -10,7 +10,10 @@ interface FakeClient {
   release: ReturnType<typeof vi.fn>;
 }
 
-function createPool(client: FakeClient) {
+function createPool(client: FakeClient): {
+  connect: ReturnType<typeof vi.fn>;
+  end: ReturnType<typeof vi.fn>;
+} {
   return {
     connect: vi.fn(async () => client),
     end: vi.fn(async () => undefined),
@@ -47,9 +50,11 @@ describe('PostgresAdapterClientSession', () => {
     const session = new PostgresAdapterClientSession(pool as never, DISABLED_STATEMENT_TIMEOUT_MS);
     const operationError = new Error('synthetic-operation-failure');
 
-    await expect(session.withTransaction(async () => Promise.reject(operationError))).rejects.toBe(
-      operationError
-    );
+    await expect(
+      session.withTransaction(async () => {
+        throw operationError;
+      })
+    ).rejects.toBe(operationError);
 
     expect(client.query).toHaveBeenNthCalledWith(1, 'BEGIN');
     expect(client.query).toHaveBeenNthCalledWith(2, 'ROLLBACK');

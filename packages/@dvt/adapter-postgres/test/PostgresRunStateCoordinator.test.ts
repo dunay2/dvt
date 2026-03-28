@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PostgresRunStateCoordinator } from '../src/PostgresRunStateCoordinator.js';
-import type { EventInput, RunBootstrapInput } from '../src/types.js';
+import type { AppendResult, EventInput, RunBootstrapInput } from '../src/types.js';
 
 const TEST_TENANT_ID = 'tenant-a';
 const TEST_RUN_ID = 'run-1';
@@ -23,7 +23,12 @@ const EMPTY_TENANT = '   ';
 const ZERO_SEQ = 0;
 const EMPTY_EVENTS: EventInput[] = [];
 
-function makeAppendResult() {
+function makeAppendResult(): {
+  appended: AppendResult['appended'];
+  deduped: AppendResult['deduped'];
+  lastAppendedRunSeq: number;
+  baseRunSeq: number;
+} {
   return {
     appended: [],
     deduped: [],

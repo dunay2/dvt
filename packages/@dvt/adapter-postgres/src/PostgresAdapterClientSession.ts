@@ -107,7 +107,20 @@ function createPendingOperationsAbortedError(): Error {
 }
 
 function asError(error: unknown): Error {
-  return error instanceof Error ? error : new Error(String(error));
+  if (error instanceof Error) return error;
+  let message: string;
+  try {
+    if (typeof error === 'object' && error !== null) {
+      message = JSON.stringify(error);
+    } else if (typeof error === 'string') {
+      message = error;
+    } else {
+      message = JSON.stringify(error);
+    }
+  } catch {
+    message = String(error);
+  }
+  return new Error(message);
 }
 
 function createTransactionRollbackError(operationError: Error, rollbackError: unknown): Error {
