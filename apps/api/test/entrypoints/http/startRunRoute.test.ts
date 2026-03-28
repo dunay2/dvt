@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
+import {
+  START_RUN_ENGINE_ERROR_CODE,
+  START_RUN_ENGINE_ERROR_REASON,
+} from '../../../src/application/ports/startRunContract.js';
 import { startRunRoute } from '../../../src/entrypoints/http/startRunRoute.js';
 
 const VALID_PLAN_REF = {
@@ -9,6 +13,14 @@ const VALID_PLAN_REF = {
   planId: 'plan-1',
   planVersion: '2.0',
 };
+
+function okResult<T>(value: T): { readonly ok: true; readonly value: T } {
+  return { ok: true, value };
+}
+
+function errorResult<T>(error: T): { readonly ok: false; readonly error: T } {
+  return { ok: false, error };
+}
 
 function createReply(): {
   statusCode: number;
@@ -124,7 +136,7 @@ describe('startRunRoute', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, runId: 'r-empty-selection', accepted: true };
+        return okResult({ kind: 'accepted' as const, runId: 'r-empty-selection', accepted: true });
       },
     };
 
@@ -293,7 +305,7 @@ describe('startRunRoute', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, runId: 'r1', accepted: true };
+        return okResult({ kind: 'accepted' as const, runId: 'r1', accepted: true });
       },
     };
 
@@ -327,12 +339,80 @@ describe('startRunRoute', () => {
     });
   });
 
-  it('returns 422 when target adapter is not configured', async () => {
+  it('returns 401 when facade returns ok=true unauthenticated', async () => {
     const reply = createReply();
 
     const facade = {
       async execute() {
-        return { kind: 'adapter_not_configured' as const, adapter: 'temporal' };
+        return okResult({ kind: 'unauthenticated' as const, code: 'MISSING_TOKEN' as const });
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-unauthenticated',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-unauthenticated',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(401);
+    expect(reply.payload).toEqual({
+      error: 'UNAUTHORIZED',
+      code: 'MISSING_TOKEN',
+    });
+  });
+
+  it('returns 403 when facade returns ok=true unauthorized', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return okResult({ kind: 'unauthorized' as const, reason: 'TENANT_NOT_GRANTED' as const });
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-unauthorized',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-unauthorized',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(403);
+    expect(reply.payload).toEqual({
+      error: 'FORBIDDEN',
+      code: 'TENANT_NOT_GRANTED',
+    });
+  });
+
+  it('returns 422 when engine reports adapter_not_registered', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return errorResult({ kind: 'adapter_not_registered' as const, adapter: 'temporal' });
       },
     };
 
@@ -361,6 +441,86 @@ describe('startRunRoute', () => {
     });
   });
 
+  it('returns 422 plan_rejected when engine reports command_invalid', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return errorResult({
+          kind: 'command_invalid' as const,
+          code: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+          reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+        });
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-command-invalid',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-command-invalid',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: 'PLAN_REJECTED',
+      code: 'REJECTED',
+      reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+      cause: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+    });
+  });
+
+  it('returns 422 plan_rejected when engine reports unsupported_plan_version', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return errorResult({
+          kind: 'unsupported_plan_version' as const,
+          planVersion: '2.7',
+          supportedVersions: ['2.3'] as const,
+        });
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-unsupported-plan-version',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-unsupported-plan-version',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: 'PLAN_REJECTED',
+      code: 'UNSUPPORTED_PLAN_VERSION',
+      reason: 'Unsupported plan version: 2.7',
+      supportedVersions: ['2.3'],
+    });
+  });
+
   it('accepts planner-backed starts with a typed graph source', async () => {
     const reply = createReply();
 
@@ -368,7 +528,7 @@ describe('startRunRoute', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, runId: 'r-graph', accepted: true };
+        return okResult({ kind: 'accepted' as const, runId: 'r-graph', accepted: true });
       },
     };
 
@@ -558,7 +718,7 @@ describe('startRunRoute', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, runId: 'r2', accepted: true };
+        return okResult({ kind: 'accepted' as const, runId: 'r2', accepted: true });
       },
     };
 
@@ -592,7 +752,7 @@ describe('startRunRoute', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, runId: 'r3', accepted: true };
+        return okResult({ kind: 'accepted' as const, runId: 'r3', accepted: true });
       },
     };
 
@@ -641,12 +801,12 @@ describe('startRunRoute', () => {
 
     const facade = {
       async execute() {
-        return {
+        return okResult({
           kind: 'duplicate' as const,
           runId: 'run-dup',
           accepted: true,
           duplicateOf: 'intent' as const,
-        };
+        });
       },
     };
 
@@ -682,12 +842,12 @@ describe('startRunRoute', () => {
 
     const facade = {
       async execute() {
-        return {
+        return okResult({
           kind: 'tenant_backpressure' as const,
           accepted: false,
           code: 'TENANT_BACKPRESSURE' as const,
           retryAfterSeconds: 30,
-        };
+        });
       },
     };
 
@@ -722,12 +882,12 @@ describe('startRunRoute', () => {
 
     const facade = {
       async execute() {
-        return {
+        return okResult({
           kind: 'system_backpressure' as const,
           accepted: false,
           code: 'SYSTEM_BACKPRESSURE' as const,
           retryAfterSeconds: 45,
-        };
+        });
       },
     };
 
