@@ -4,6 +4,38 @@ This directory contains scripts for validating contract tests and golden paths a
 
 ## Scripts
 
+### `hygiene.ps1`
+
+Standard repository hygiene script for branch triage and optional preflight checks.
+
+**What it does (diagnostic-first):**
+
+- fetch/prune remotes (unless `-SkipFetch`)
+- compare local branches against a base branch (`-BaseBranch`, default `main`)
+- report `ahead/behind`, `git cherry` superseded signal, and changed-file preview
+- optionally delete superseded local/remote branches (explicit flags + confirmation)
+
+**Usage examples:**
+
+```powershell
+# diagnostics only
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main
+
+# diagnostics + default API runtime slice checks
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -RunSliceChecks
+
+# diagnostics + custom checks command
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -RunChecks -ChecksCommand "pnpm verify:prepush"
+
+# remove superseded local/remote branches non-interactively
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -DeleteLocalSuperseded -DeleteRemoteSuperseded -Yes
+```
+
+**Safety model:**
+
+- default mode is non-destructive
+- deletion actions require explicit flags and interactive confirmation (or `-Yes`)
+
 ### `validate-contracts.cjs`
 
 Validates contract fixtures and core runtime envelopes used by the base-contract workstream.
