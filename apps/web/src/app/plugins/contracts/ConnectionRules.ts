@@ -12,9 +12,7 @@ import type { PluginConnectionRule } from './PluginManifest';
 // These rules are always evaluated FIRST, before plugin connection rules.
 // ---------------------------------------------------------------------------
 
-export type ConnectionRuleResult =
-  | { allowed: true }
-  | { allowed: false; reason: string };
+export type ConnectionRuleResult = { allowed: true } | { allowed: false; reason: string };
 
 /**
  * Full cycle detection via BFS.
@@ -23,7 +21,7 @@ export type ConnectionRuleResult =
 export function wouldCreateCycle(
   sourceId: string,
   targetId: string,
-  edges: readonly CanonicalEdge[],
+  edges: readonly CanonicalEdge[]
 ): boolean {
   const adj = new Map<string, string[]>();
   for (const e of edges) {
@@ -49,7 +47,7 @@ export function wouldCreateCycle(
 export function hasDuplicateEdge(
   sourceId: string,
   targetId: string,
-  edges: readonly CanonicalEdge[],
+  edges: readonly CanonicalEdge[]
 ): boolean {
   return edges.some((e) => e.sourceId === sourceId && e.targetId === targetId);
 }
@@ -66,7 +64,7 @@ export function hasDuplicateEdge(
 export function evaluatePluginConnectionRules(
   source: CanonicalNode,
   target: CanonicalNode,
-  rules: readonly PluginConnectionRule[],
+  rules: readonly PluginConnectionRule[]
 ): ConnectionRuleResult {
   for (const rule of rules) {
     const sourceMatches = rule.sourceKind === '*' || rule.sourceKind === source.kind;
@@ -93,7 +91,7 @@ export function evaluateCrossPluginBridge(
   source: CanonicalNode,
   target: CanonicalNode,
   producerPorts: ReadonlyArray<{ portType: string; forRoles: string[] }>,
-  consumerPorts: ReadonlyArray<{ portType: string; forRoles: string[] }>,
+  consumerPorts: ReadonlyArray<{ portType: string; forRoles: string[] }>
 ): ConnectionRuleResult {
   for (const producer of producerPorts) {
     if (!producer.forRoles.includes(source.role)) continue;
@@ -140,7 +138,7 @@ export function evaluateConnection(
   source: CanonicalNode,
   target: CanonicalNode,
   currentEdges: readonly CanonicalEdge[],
-  pluginPorts: PluginPortMap,
+  pluginPorts: PluginPortMap
 ): ConnectionRuleResult {
   // SHELL-002
   if (source.id === target.id) {
@@ -171,6 +169,6 @@ export function evaluateConnection(
     source,
     target,
     sourcePlugin?.produces ?? [],
-    targetPlugin?.consumes ?? [],
+    targetPlugin?.consumes ?? []
   );
 }

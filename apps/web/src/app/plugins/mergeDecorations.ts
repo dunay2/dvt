@@ -15,21 +15,19 @@ import type { MergedNodeDecoration, NodeDecoration } from './contracts/NodeRende
 
 export function mergeDecorations(
   exclusiveDecoration: NodeDecoration | null,
-  additiveDecorations: NodeDecoration[],
+  additiveDecorations: NodeDecoration[]
 ): MergedNodeDecoration | null {
   if (!exclusiveDecoration && additiveDecorations.length === 0) return null;
 
   const borderColor =
-    exclusiveDecoration?.borderColor ??
-    additiveDecorations.find((d) => d.borderColor)?.borderColor;
+    exclusiveDecoration?.borderColor ?? additiveDecorations.find((d) => d.borderColor)?.borderColor;
 
   const backgroundColor =
     exclusiveDecoration?.backgroundColor ??
     additiveDecorations.find((d) => d.backgroundColor)?.backgroundColor;
 
   const dimmed =
-    (exclusiveDecoration?.dimmed ?? false) ||
-    additiveDecorations.some((d) => d.dimmed === true);
+    (exclusiveDecoration?.dimmed ?? false) || additiveDecorations.some((d) => d.dimmed === true);
 
   // Return null if nothing is actually set
   if (!borderColor && !backgroundColor && !dimmed) return null;

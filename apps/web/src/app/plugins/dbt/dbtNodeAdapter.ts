@@ -1,4 +1,9 @@
-import type { CoreNodeRole, CanonicalEdge, CanonicalNode, PluginNodeKind } from '../../types/canonical';
+import type {
+  CoreNodeRole,
+  CanonicalEdge,
+  CanonicalNode,
+  PluginNodeKind,
+} from '../../types/canonical';
 import type { DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
 
 const DBT_PLUGIN_ID = 'dbt';

@@ -15,7 +15,7 @@ export function mapCanonicalNodeToCanvasNode(
   canonicalNode: CanonicalNode,
   index: number,
   showColumns: boolean,
-  overlayDecoration?: MergedNodeDecoration | null,
+  overlayDecoration?: MergedNodeDecoration | null
 ): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
 
@@ -25,9 +25,7 @@ export function mapCanonicalNodeToCanvasNode(
     position: { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
     data: {
       name: canonicalNode.name,
-      type:
-        (canonicalNode.metadata?.dbtType as string | undefined) ??
-        kindRegistration.label,
+      type: (canonicalNode.metadata?.dbtType as string | undefined) ?? kindRegistration.label,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,

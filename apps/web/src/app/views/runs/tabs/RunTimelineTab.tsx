@@ -34,7 +34,9 @@ export default function RunTimelineTab({ run }: RunTimelineTabProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {step.status === 'running' && <Badge className="bg-blue-600 animate-pulse">Running</Badge>}
+              {step.status === 'running' && (
+                <Badge className="bg-blue-600 animate-pulse">Running</Badge>
+              )}
               {step.status === 'success' && (
                 <Badge className="bg-green-600">
                   <CheckCircle2 className="size-3 mr-1" />

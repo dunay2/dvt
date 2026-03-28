@@ -54,8 +54,7 @@ export function useCanvasExecutionActions({
     }
 
     try {
-      const selectedForPlan =
-        selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
+      const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
       const plan = await plansService.previewPlan({
         selectedNodeIds: selectedForPlan,
         context: buildSessionRunContext(`run_ui_${Date.now()}`),
@@ -64,8 +63,7 @@ export function useCanvasExecutionActions({
       setPlanModalOpen(true);
       toast.success('Execution plan created');
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unable to create execution plan';
+      const message = error instanceof Error ? error.message : 'Unable to create execution plan';
       toast.error(message);
     }
   }, [canPlan, plansService, selectedNodeIds, setCurrentPlan, workspaceNodeIds]);

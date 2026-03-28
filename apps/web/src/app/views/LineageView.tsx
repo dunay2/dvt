@@ -22,11 +22,12 @@ import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 function bfsReachable(
   startId: string,
   edges: CanonicalEdge[],
-  direction: 'upstream' | 'downstream',
+  direction: 'upstream' | 'downstream'
 ): Set<string> {
   const adj = new Map<string, string[]>();
   for (const e of edges) {
-    const [from, to] = direction === 'downstream' ? [e.sourceId, e.targetId] : [e.targetId, e.sourceId];
+    const [from, to] =
+      direction === 'downstream' ? [e.sourceId, e.targetId] : [e.targetId, e.sourceId];
     if (!adj.has(from)) adj.set(from, []);
     adj.get(from)!.push(to);
   }
@@ -75,18 +76,24 @@ function assignLevels(nodes: CanonicalNode[], edges: CanonicalEdge[]): Map<strin
 // ---------------------------------------------------------------------------
 
 const KIND_STYLE: Record<string, { bg: string; border: string; badge: string }> = {
-  'dbt:source':   { bg: 'bg-purple-900/30', border: 'border-purple-500',  badge: 'SOURCE' },
-  'dbt:seed':     { bg: 'bg-green-900/20',  border: 'border-green-500',   badge: 'SEED' },
-  'dbt:model':    { bg: 'bg-blue-900/30',   border: 'border-blue-500',    badge: 'MODEL' },
-  'dbt:snapshot': { bg: 'bg-yellow-900/20', border: 'border-yellow-500',  badge: 'SNAPSHOT' },
-  'dbt:test':     { bg: 'bg-red-900/20',    border: 'border-red-500',     badge: 'TEST' },
-  'dbt:exposure': { bg: 'bg-pink-900/30',   border: 'border-pink-500',    badge: 'EXPOSURE' },
-  'dbt:metric':   { bg: 'bg-orange-900/20', border: 'border-orange-500',  badge: 'METRIC' },
-  'dbt:macro':    { bg: 'bg-slate-800',     border: 'border-slate-500',   badge: 'MACRO' },
+  'dbt:source': { bg: 'bg-purple-900/30', border: 'border-purple-500', badge: 'SOURCE' },
+  'dbt:seed': { bg: 'bg-green-900/20', border: 'border-green-500', badge: 'SEED' },
+  'dbt:model': { bg: 'bg-blue-900/30', border: 'border-blue-500', badge: 'MODEL' },
+  'dbt:snapshot': { bg: 'bg-yellow-900/20', border: 'border-yellow-500', badge: 'SNAPSHOT' },
+  'dbt:test': { bg: 'bg-red-900/20', border: 'border-red-500', badge: 'TEST' },
+  'dbt:exposure': { bg: 'bg-pink-900/30', border: 'border-pink-500', badge: 'EXPOSURE' },
+  'dbt:metric': { bg: 'bg-orange-900/20', border: 'border-orange-500', badge: 'METRIC' },
+  'dbt:macro': { bg: 'bg-slate-800', border: 'border-slate-500', badge: 'MACRO' },
 };
 
 function kindStyle(kind: string) {
-  return KIND_STYLE[kind] ?? { bg: 'bg-slate-800', border: 'border-slate-500', badge: kind.split(':')[1]?.toUpperCase() ?? kind };
+  return (
+    KIND_STYLE[kind] ?? {
+      bg: 'bg-slate-800',
+      border: 'border-slate-500',
+      badge: kind.split(':')[1]?.toUpperCase() ?? kind,
+    }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +105,7 @@ type ColumnLineageEntry = { from: string; to: string };
 function buildColumnLineage(
   focusNode: CanonicalNode,
   nodes: CanonicalNode[],
-  edges: CanonicalEdge[],
+  edges: CanonicalEdge[]
 ): ColumnLineageEntry[] {
   const focusColumns = (focusNode.metadata?.columns as Array<{ name: string }> | undefined) ?? [];
   if (focusColumns.length === 0) return [];
@@ -148,7 +155,10 @@ export default function LineageView() {
     };
   }, [snapshot, graphStrategy]);
 
-  const levels = useMemo(() => assignLevels(canonicalNodes, canonicalEdges), [canonicalNodes, canonicalEdges]);
+  const levels = useMemo(
+    () => assignLevels(canonicalNodes, canonicalEdges),
+    [canonicalNodes, canonicalEdges]
+  );
 
   const focusNode = useMemo(() => {
     if (!searchQuery.trim()) return canonicalNodes[0] ?? null;
@@ -184,7 +194,7 @@ export default function LineageView() {
 
   const columnLineage = useMemo(
     () => (focusNode ? buildColumnLineage(focusNode, canonicalNodes, canonicalEdges) : []),
-    [focusNode, canonicalNodes, canonicalEdges],
+    [focusNode, canonicalNodes, canonicalEdges]
   );
 
   const upstreamCount = upstream.size;
@@ -196,12 +206,19 @@ export default function LineageView() {
   // Breadcrumb path: one representative upstream → focus → one downstream
   const breadcrumbPath = useMemo(() => {
     if (!focusNode) return [];
-    const firstUpstream = canonicalNodes.find((n) => upstream.has(n.id) && (levels.get(n.id) ?? 0) === 0);
+    const firstUpstream = canonicalNodes.find(
+      (n) => upstream.has(n.id) && (levels.get(n.id) ?? 0) === 0
+    );
     const firstDownstream = canonicalNodes.find((n) => downstream.has(n.id));
     return [firstUpstream, focusNode, firstDownstream].filter(Boolean) as CanonicalNode[];
   }, [focusNode, upstream, downstream, canonicalNodes, levels]);
 
-  const LEVEL_LABELS: Record<number, string> = { 0: 'SOURCES & SEEDS', 1: 'STAGING & DIMENSIONS', 2: 'FACTS', 3: 'EXPOSURES & METRICS' };
+  const LEVEL_LABELS: Record<number, string> = {
+    0: 'SOURCES & SEEDS',
+    1: 'STAGING & DIMENSIONS',
+    2: 'FACTS',
+    3: 'EXPOSURES & METRICS',
+  };
 
   return (
     <div className="flex h-full flex-col bg-slate-950">
@@ -211,7 +228,9 @@ export default function LineageView() {
           <GitGraph className="size-6 text-purple-400" />
           <h1 className="text-xl font-semibold">Lineage Analysis</h1>
           {isLoading && <span className="text-xs text-slate-400">Loading…</span>}
-          {!isLoading && <span className="text-xs text-slate-500">{canonicalNodes.length} nodes</span>}
+          {!isLoading && (
+            <span className="text-xs text-slate-500">{canonicalNodes.length} nodes</span>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

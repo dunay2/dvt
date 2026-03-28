@@ -21,11 +21,7 @@ import { memo } from 'react';
 import { FallbackNodeRenderer } from './FallbackNodeRenderer';
 import { getNodeBadges, getNodeRenderer } from './registry';
 import { resolveNodeKindRegistration } from './nodeTypeRegistry';
-import type {
-  BadgeContext,
-  MergedNodeDecoration,
-  NodeBadge,
-} from './contracts/NodeRendering';
+import type { BadgeContext, MergedNodeDecoration, NodeBadge } from './contracts/NodeRendering';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../types/canonical';
 import {
   ContextMenu,

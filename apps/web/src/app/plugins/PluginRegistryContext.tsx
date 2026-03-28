@@ -79,9 +79,7 @@ export function PluginRegistryProvider({
   children: ReactNode;
 }>) {
   const value = useMemo(() => buildContextValue(contributions), [contributions]);
-  return (
-    <PluginRegistryContext.Provider value={value}>{children}</PluginRegistryContext.Provider>
-  );
+  return <PluginRegistryContext.Provider value={value}>{children}</PluginRegistryContext.Provider>;
 }
 
 // ---------------------------------------------------------------------------
