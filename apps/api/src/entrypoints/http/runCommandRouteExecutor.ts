@@ -6,6 +6,7 @@ import type {
 } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { TenantId } from '../../domain/auth/types.js';
+import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
@@ -61,7 +62,7 @@ export async function executeAuthorizedRunCommandRoute<
 
   try {
     const result = await deps.execute(parsed.value.command, auth.context);
-    reply.code(202).send(result);
+    reply.code(HTTP_STATUS_CODE.accepted).send(result);
   } catch (error) {
     const mapped = mapRuntimeDomainError(error);
     if (mapped) {

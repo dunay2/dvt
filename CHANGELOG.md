@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.0](https://github.com/dunay2/dvt/compare/v4.13.0...v4.14.0) (2026-03-28)
+
+
+### Features
+
+* **api:** Add explicit cancel route and shared command execution ([#640](https://github.com/dunay2/dvt/issues/640)) ([f782bd4](https://github.com/dunay2/dvt/commit/f782bd4af27591fe35aa3d222c87223f31d7c731))
+
 ## [4.13.0](https://github.com/dunay2/dvt/compare/v4.12.3...v4.13.0) (2026-03-27)
 
 
