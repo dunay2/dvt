@@ -1,4 +1,14 @@
-import { ArrowLeft, ChevronDown, Columns, FileCheck, GitBranch, Play, Target } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronDown,
+  Columns,
+  FileCheck,
+  GitBranch,
+  Play,
+  Redo2,
+  Target,
+  Undo2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { Button } from '../../components/ui/button';
@@ -7,6 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
 import { Separator } from '../../components/ui/separator';
@@ -27,6 +38,14 @@ type CanvasToolbarProps = {
   readonly edgeCount: number;
 };
 
+const MENU_TRIGGER_CLASS =
+  'inline-flex items-center gap-1 rounded px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-default outline-none select-none';
+
+const MENU_CONTENT_CLASS = 'w-48 bg-slate-800 border border-slate-600 shadow-xl';
+
+const MENU_ITEM_CLASS =
+  'gap-2 text-slate-200 focus:bg-slate-700 focus:text-white data-[disabled]:opacity-40 data-[disabled]:pointer-events-none';
+
 export default function CanvasToolbar({
   onAutoLayout,
   onToggleImpact,
@@ -41,29 +60,18 @@ export default function CanvasToolbar({
   const navigate = useNavigate();
 
   return (
-    <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-3 gap-3">
-      {/* Left — Edit menu + visible toggles */}
-      <div className="flex items-center gap-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-slate-200 hover:text-white gap-1"
-            >
-              Edit
-              <ChevronDown className="size-3 opacity-60" />
-            </Button>
+    <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-2 gap-2 shrink-0">
+      {/* Left — menu bar + overlay toggles */}
+      <div className="flex items-center">
+        {/* File menu */}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger className={MENU_TRIGGER_CLASS}>
+            File
+            <ChevronDown className="size-3 opacity-50" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem className="gap-2" onSelect={onAutoLayout}>
-              <GitBranch className="size-4 shrink-0" />
-              Auto Layout
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="start" className={MENU_CONTENT_CLASS}>
             <DropdownMenuItem
-              className="gap-2"
+              className={MENU_ITEM_CLASS}
               onSelect={() => {
                 void navigate(-1);
               }}
@@ -74,16 +82,41 @@ export default function CanvasToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Separator orientation="vertical" className="h-5 mx-1" />
+        {/* Edit menu */}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger className={MENU_TRIGGER_CLASS}>
+            Edit
+            <ChevronDown className="size-3 opacity-50" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className={MENU_CONTENT_CLASS}>
+            <DropdownMenuItem className={MENU_ITEM_CLASS} disabled>
+              <Undo2 className="size-4 shrink-0" />
+              Undo
+              <DropdownMenuShortcut>⌘Z</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem className={MENU_ITEM_CLASS} disabled>
+              <Redo2 className="size-4 shrink-0" />
+              Redo
+              <DropdownMenuShortcut>⌘⇧Z</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-slate-600" />
+            <DropdownMenuItem className={MENU_ITEM_CLASS} onSelect={onAutoLayout}>
+              <GitBranch className="size-4 shrink-0" />
+              Auto Layout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-        {/* Visible toggles — state immediately visible */}
+        <Separator orientation="vertical" className="h-5 mx-2 bg-slate-700" />
+
+        {/* Overlay toggles — state immediately visible */}
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={onToggleImpact}
           className={cn(
-            'gap-1.5 text-slate-300 hover:text-white',
+            'gap-1.5 text-slate-300 hover:text-white hover:bg-slate-800',
             impactOverlayEnabled && 'bg-slate-700 text-white'
           )}
         >
@@ -97,7 +130,7 @@ export default function CanvasToolbar({
           size="sm"
           onClick={onToggleColumns}
           className={cn(
-            'gap-1.5 text-slate-300 hover:text-white',
+            'gap-1.5 text-slate-300 hover:text-white hover:bg-slate-800',
             columnLevelLineageEnabled && 'bg-slate-700 text-white'
           )}
         >
@@ -107,18 +140,21 @@ export default function CanvasToolbar({
       </div>
 
       {/* Centre — canvas stats */}
-      <div className="flex items-center gap-3 text-[11px] text-slate-500 select-none tabular-nums">
-        <span>
-          {nodeCount} node{nodeCount !== 1 ? 's' : ''}
-        </span>
-        <span>
-          {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
-        </span>
+      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 select-none tabular-nums">
+        <span>{nodeCount} node{nodeCount !== 1 ? 's' : ''}</span>
+        <span className="text-slate-700">·</span>
+        <span>{edgeCount} edge{edgeCount !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Right — execution */}
       <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onPlan}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onPlan}
+          className="border-slate-600 text-slate-200 hover:text-white hover:bg-slate-800 bg-transparent"
+        >
           <FileCheck className="size-4 mr-1.5" />
           Plan
         </Button>

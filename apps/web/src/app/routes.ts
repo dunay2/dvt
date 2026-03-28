@@ -4,9 +4,6 @@ import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 import Root from './Root';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import AdminView from './views/AdminView';
-import ArtifactsView from './views/ArtifactsView';
-import DiffView from './views/DiffView';
-import LineageView from './views/LineageView';
 import PluginsView from './views/PluginsView';
 import { getAllViews, getDefaultCoreViewPath, getRuntimePlugins } from './plugins/registry';
 
@@ -43,7 +40,7 @@ function createPluginRoute(pluginId: string, component: ComponentType): RouteObj
   return createElement(
     Suspense,
     { fallback: createElement(PluginRouteFallback) },
-    createElement(PluginAvailabilityGuard, { pluginId }, createElement(component))
+    createElement(PluginAvailabilityGuard, { pluginId, children: createElement(component) })
   );
 }
 
@@ -55,9 +52,6 @@ const pluginRoutes = getAllViews().map<RouteObject>((view) => ({
 const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));
 
 const shellRoutes: RouteObject[] = [
-  { path: 'artifacts', Component: ArtifactsView },
-  { path: 'diff', Component: DiffView },
-  { path: 'lineage', Component: LineageView },
   { path: 'plugins', Component: PluginsView },
   { path: 'admin', Component: AdminView },
 ].filter((route) => !pluginRoutePaths.has(route.path));

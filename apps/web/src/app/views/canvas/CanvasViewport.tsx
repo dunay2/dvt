@@ -51,7 +51,7 @@ export default function CanvasViewport({
   onShowInspector,
 }: CanvasViewportProps) {
   return (
-    <div className="flex-1 relative" onDrop={onDrop} onDragOver={onDragOver}>
+    <div className="flex-1 relative overflow-hidden" onDrop={onDrop} onDragOver={onDragOver}>
       {!focusMode && !explorerPanelVisible && (
         <Button
           type="button"
