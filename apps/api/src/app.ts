@@ -9,6 +9,7 @@ import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
+import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
@@ -41,6 +42,22 @@ export type AppContext = {
 };
 
 const REQUEST_SPAN = Symbol('requestSpan');
+const RUNTIME_ROUTE_PATH = {
+  start: '/runs/start',
+  list: '/runs',
+  get: '/runs/:runId',
+  events: '/runs/:runId/events',
+  signal: '/runs/:runId/signal',
+  cancel: '/runs/:runId/cancel',
+} as const;
+const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
+  `POST ${RUNTIME_ROUTE_PATH.start}`,
+  `GET ${RUNTIME_ROUTE_PATH.list}`,
+  `GET ${RUNTIME_ROUTE_PATH.get}`,
+  `GET ${RUNTIME_ROUTE_PATH.events}`,
+  `POST ${RUNTIME_ROUTE_PATH.signal}`,
+  `POST ${RUNTIME_ROUTE_PATH.cancel}`,
+].join(', ');
 
 type RequestWithSpan = FastifyRequest & {
   [REQUEST_SPAN]?: ISpan;
@@ -183,21 +200,24 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
-      '/runs/start',
+      RUNTIME_ROUTE_PATH.start,
       async (request, reply) => startRunRoute(request as never, reply, protectedModule.facade)
     );
 
-    app.get('/runs', async (request, reply) =>
+    app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
       listRunsRoute(request as never, reply, { ...runtimeAuth, useCase: listRunsUseCase })
     );
-    app.get('/runs/:runId', async (request, reply) =>
+    app.get(RUNTIME_ROUTE_PATH.get, async (request, reply) =>
       getRunRoute(request as never, reply, { ...runtimeAuth, useCase: getRunStatusUseCase })
     );
-    app.get('/runs/:runId/events', async (request, reply) =>
+    app.get(RUNTIME_ROUTE_PATH.events, async (request, reply) =>
       getRunEventsRoute(request as never, reply, { ...runtimeAuth, useCase: getRunEventsUseCase })
     );
-    app.post('/runs/:runId/signal', async (request, reply) =>
+    app.post(RUNTIME_ROUTE_PATH.signal, async (request, reply) =>
       signalRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
+    );
+    app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
+      cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
@@ -205,9 +225,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
 
-    app.log.info(
-      'protected runtime routes registered: POST /runs/start, GET /runs, GET /runs/:runId, GET /runs/:runId/events, POST /runs/:runId/signal'
-    );
+    app.log.info(`protected runtime routes registered: ${PROTECTED_RUNTIME_ROUTE_SUMMARY}`);
   } else {
     app.log.warn(
       'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'
