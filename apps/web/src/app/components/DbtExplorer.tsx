@@ -1,18 +1,9 @@
-import {
-  Database,
-  Table,
-  FileText,
-  TestTube,
-  Presentation,
-  TrendingUp,
-  Code,
-  Package,
-  PanelLeftClose,
-  Upload,
-} from 'lucide-react';
+import { Database, FileText, PanelLeftClose, Upload } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { DbtNode, DbtNodeType } from '../types/dbt';
+import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
+import type { CanonicalNode } from '../types/canonical';
+import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../types/canonical';
 
 import SourceImportWizard from './SourceImportWizard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
@@ -22,23 +13,12 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from './ui/utils';
 
 interface DbtExplorerProps {
-  nodes: DbtNode[];
-  onNodeDragStart?: (node: DbtNode) => void;
+  nodes: CanonicalNode[];
+  onNodeDragStart?: (node: CanonicalNode) => void;
   onHide?: () => void;
 }
 
-const nodeTypeConfig: Record<DbtNodeType, { icon: any; label: string; color: string }> = {
-  SOURCE: { icon: Database, label: 'Sources', color: 'text-purple-400' },
-  MODEL: { icon: Table, label: 'Models', color: 'text-blue-400' },
-  SEED: { icon: FileText, label: 'Seeds', color: 'text-green-400' },
-  SNAPSHOT: { icon: Package, label: 'Snapshots', color: 'text-yellow-400' },
-  TEST: { icon: TestTube, label: 'Tests', color: 'text-red-400' },
-  EXPOSURE: { icon: Presentation, label: 'Exposures', color: 'text-pink-400' },
-  METRIC: { icon: TrendingUp, label: 'Metrics', color: 'text-orange-400' },
-  MACRO: { icon: Code, label: 'Macros', color: 'text-slate-300' },
-};
-
-const statusColors = {
+const statusColors: Record<CanonicalNode['status'], string> = {
   idle: 'bg-gray-600',
   running: 'bg-blue-500',
   success: 'bg-green-500',
@@ -47,28 +27,38 @@ const statusColors = {
   warn: 'bg-orange-500',
 };
 
+function resolveNodeBadgeText(node: CanonicalNode): string {
+  const packageName = typeof node.metadata?.package === 'string' ? node.metadata.package : null;
+  return packageName ?? node.pluginId;
+}
+
 export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplorerProps) {
   const [importWizardOpen, setImportWizardOpen] = useState(false);
+  const hasDbtNodes = nodes.some((node) => node.pluginId === 'dbt');
 
   const groupedNodes = useMemo(() => {
-    const groups: Record<string, DbtNode[]> = {};
+    const groups: Record<string, CanonicalNode[]> = {};
 
     nodes.forEach((node) => {
-      if (!groups[node.type]) {
-        groups[node.type] = [];
+      if (!groups[node.kind]) {
+        groups[node.kind] = [];
       }
-      const bucket = groups[node.type];
+      const bucket = groups[node.kind];
       if (bucket) {
         bucket.push(node);
       }
     });
 
-    return groups;
+    return Object.entries(groups).sort(([kindA], [kindB]) =>
+      resolveNodeKindRegistration(kindA).label.localeCompare(
+        resolveNodeKindRegistration(kindB).label
+      )
+    );
   }, [nodes]);
 
-  const handleDragStart = (e: React.DragEvent, node: DbtNode) => {
+  const handleDragStart = (e: React.DragEvent, node: CanonicalNode) => {
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/dbt-node', JSON.stringify(node));
+    e.dataTransfer.setData(CANONICAL_NODE_DRAG_MIME_TYPE, JSON.stringify(node));
     onNodeDragStart?.(node);
   };
 
@@ -79,7 +69,7 @@ export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplo
         <div className="px-4 py-3 border-b border-slate-700">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="font-semibold text-sm">dbt Explorer</h2>
+              <h2 className="font-semibold text-sm">Node Explorer</h2>
               <p className="text-xs text-slate-300 mt-0.5">Drag to canvas</p>
             </div>
             {onHide && (
@@ -97,38 +87,43 @@ export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplo
           </div>
 
           {/* Import Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-2"
-            onClick={() => setImportWizardOpen(true)}
-          >
-            <Upload className="size-3 mr-2" />
-            Import Sources
-          </Button>
+          {hasDbtNodes && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2"
+              onClick={() => setImportWizardOpen(true)}
+            >
+              <Upload className="size-3 mr-2" />
+              Import Sources
+            </Button>
+          )}
         </div>
 
         {/* Node Groups */}
         <ScrollArea className="flex-1">
-          <Accordion type="multiple" defaultValue={['SOURCE', 'MODEL', 'TEST']} className="px-2">
-            {Object.entries(groupedNodes).map(([type, typeNodes]) => {
-              const config = nodeTypeConfig[type as DbtNodeType];
-              if (!config) return null;
+          <Accordion
+            type="multiple"
+            defaultValue={groupedNodes.slice(0, 3).map(([kind]) => kind)}
+            className="px-2"
+          >
+            {groupedNodes.map(([kind, kindNodes]) => {
+              const config = resolveNodeKindRegistration(kind);
 
               return (
-                <AccordionItem key={type} value={type} className="border-b border-slate-700">
+                <AccordionItem key={kind} value={kind} className="border-b border-slate-700">
                   <AccordionTrigger className="py-2 px-2 hover:bg-slate-950 text-sm">
                     <div className="flex items-center gap-2">
-                      <config.icon className={cn('size-4', config.color)} />
+                      <config.icon className="size-4" style={{ color: config.minimapColor }} />
                       <span>{config.label}</span>
                       <Badge variant="secondary" className="ml-auto text-xs">
-                        {typeNodes.length}
+                        {kindNodes.length}
                       </Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-2">
                     <div className="space-y-1">
-                      {typeNodes.map((node) => (
+                      {kindNodes.map((node) => (
                         <div
                           key={node.id}
                           draggable
@@ -138,16 +133,16 @@ export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplo
                           <div className={cn('size-2 rounded-full', statusColors[node.status])} />
                           <div className="flex-1 min-w-0">
                             <div className="font-mono text-xs truncate">{node.name}</div>
-                            {node.lastDuration && (
+                            {node.lastDuration != null && (
                               <div className="text-[10px] text-slate-400">
                                 {node.lastDuration}s
-                                {node.lastCost && ` - $${node.lastCost.toFixed(2)}`}
+                                {node.lastCost != null && ` - $${node.lastCost.toFixed(2)}`}
                               </div>
                             )}
                           </div>
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <Badge variant="outline" className="text-[10px] px-1 py-0">
-                              {node.package}
+                              {resolveNodeBadgeText(node)}
                             </Badge>
                           </div>
                         </div>
@@ -162,15 +157,16 @@ export default function DbtExplorer({ nodes, onNodeDragStart, onHide }: DbtExplo
       </div>
 
       {/* Source Import Wizard */}
-      <SourceImportWizard
-        open={importWizardOpen}
-        onClose={() => setImportWizardOpen(false)}
-        onComplete={(result) => {
-          console.log('Import completed:', result);
-          // In a real app, this would refresh the manifest and update the explorer
-        }}
-      />
+      {hasDbtNodes && (
+        <SourceImportWizard
+          open={importWizardOpen}
+          onClose={() => setImportWizardOpen(false)}
+          onComplete={(result) => {
+            console.log('Import completed:', result);
+            // In a real app, this would refresh the manifest and update the explorer
+          }}
+        />
+      )}
     </>
   );
 }
-

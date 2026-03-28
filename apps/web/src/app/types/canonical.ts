@@ -4,6 +4,8 @@ export type CoreNodeRole = 'input' | 'transform' | 'check' | 'output' | 'control
 // Canonical task and run shapes
 // ---------------------------------------------------------------------------
 
+export const CANONICAL_NODE_DRAG_MIME_TYPE = 'application/x-dvt-canonical-node';
+
 export type CanonicalTaskStatus =
   | 'pending'
   | 'running'

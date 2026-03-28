@@ -10,7 +10,6 @@ import {
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
-  MarkerType,
   type NodeTypes,
 } from '@xyflow/react';
 import dagre from 'dagre';
@@ -30,32 +29,155 @@ import { toast } from 'sonner';
 import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
 import DbtExplorer from '../components/DbtExplorer';
 import InspectorPanel from '../components/InspectorPanel';
-import { PlanPreviewModal, ConfirmEdgeModal } from '../components/Modals';
+import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
 import { Button } from '../components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
 import { Separator } from '../components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
-import { resolveDataSource } from '../services/config/dataSource';
+import {
+  canConnectNodeRoles,
+  resolveCanvasEdgeType,
+  resolveNodeKindRegistration,
+} from '../plugins/nodeTypeRegistry';
 import { buildSessionRunContext, createPlansService } from '../services/plans/plansService';
+import { resolveDataSource } from '../services/config/dataSource';
 import { createWorkspaceService } from '../services/workspace/workspaceService';
 import { useAppStore } from '../stores/appStore';
-import { DbtNode, DbtNodeType } from '../types/dbt';
+import {
+  CANONICAL_NODE_DRAG_MIME_TYPE,
+  type CanonicalEdge,
+  type CanonicalNode,
+  type CanonicalNodeStatus,
+  type CoreNodeRole,
+  type PluginNodeKind,
+} from '../types/canonical';
+import type { DbtEdge, DbtNode, DbtNodeType, ExecutionPlan } from '../types/dbt';
+import {
+  createCanvasEdgeFromConnection,
+  mapCanonicalEdgeToCanvasEdge,
+  mapCanonicalNodeToCanvasNode,
+  mapDroppedCanonicalNodeToCanvasNode,
+} from './canvas/canvasNodeMapper';
 
 const nodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
 
-// Allowed connections based on dbt semantics
-const allowedConnections: Record<DbtNodeType, DbtNodeType[]> = {
-  SOURCE: ['MODEL'],
-  SEED: ['MODEL'],
-  MODEL: ['MODEL', 'TEST', 'EXPOSURE', 'METRIC'],
-  SNAPSHOT: ['MODEL'],
-  TEST: [],
-  EXPOSURE: [],
-  METRIC: ['EXPOSURE'],
-  MACRO: [],
+const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
+  SOURCE: 'dbt:source',
+  MODEL: 'dbt:model',
+  SEED: 'dbt:seed',
+  SNAPSHOT: 'dbt:snapshot',
+  TEST: 'dbt:test',
+  EXPOSURE: 'dbt:exposure',
+  METRIC: 'dbt:metric',
+  MACRO: 'dbt:macro',
 };
+
+const CANONICAL_NODE_ROLES: ReadonlySet<CoreNodeRole> = new Set([
+  'input',
+  'transform',
+  'check',
+  'output',
+  'control',
+]);
+
+const CANONICAL_NODE_STATUSES: ReadonlySet<CanonicalNodeStatus> = new Set([
+  'idle',
+  'running',
+  'success',
+  'failed',
+  'skipped',
+  'warn',
+]);
+
+function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
+  const kind = DBT_TYPE_TO_KIND[node.type];
+  const kindRegistration = resolveNodeKindRegistration(kind);
+
+  return {
+    id: node.id,
+    name: node.name,
+    pluginId: 'dbt',
+    kind,
+    role: kindRegistration.role,
+    status: node.status,
+    tags: node.tags,
+    path: node.path,
+    description: node.description,
+    lastDuration: node.lastDuration,
+    lastCost: node.lastCost,
+    metadata: {
+      package: node.package,
+      dependencies: node.dependencies,
+      columns: node.columns,
+      config: node.config,
+      compiledSql: node.compiledSql,
+      dbtType: node.type,
+      typeLabel: kindRegistration.label,
+    },
+  };
+}
+
+function mapDbtEdgeToCanonical(edge: DbtEdge): CanonicalEdge {
+  return {
+    id: edge.id,
+    sourceId: edge.source,
+    targetId: edge.target,
+    relation:
+      edge.type === 'test' ? 'validation' : edge.type === 'metric' ? 'metric' : 'consumption',
+  };
+}
+
+function parseCanonicalDropPayload(dataTransfer: DataTransfer): CanonicalNode | null {
+  const payload = dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE);
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(payload) as Partial<CanonicalNode>;
+    if (
+      typeof parsed.id !== 'string' ||
+      typeof parsed.name !== 'string' ||
+      typeof parsed.pluginId !== 'string' ||
+      typeof parsed.kind !== 'string' ||
+      typeof parsed.role !== 'string' ||
+      typeof parsed.status !== 'string'
+    ) {
+      return null;
+    }
+
+    if (
+      !CANONICAL_NODE_ROLES.has(parsed.role as CoreNodeRole) ||
+      !CANONICAL_NODE_STATUSES.has(parsed.status as CanonicalNodeStatus)
+    ) {
+      return null;
+    }
+
+    return {
+      id: parsed.id,
+      name: parsed.name,
+      pluginId: parsed.pluginId,
+      kind: parsed.kind as PluginNodeKind,
+      role: parsed.role as CoreNodeRole,
+      status: parsed.status as CanonicalNodeStatus,
+      tags: Array.isArray(parsed.tags)
+        ? parsed.tags.filter((tag): tag is string => typeof tag === 'string')
+        : [],
+      path: typeof parsed.path === 'string' ? parsed.path : undefined,
+      description: typeof parsed.description === 'string' ? parsed.description : undefined,
+      lastDuration: typeof parsed.lastDuration === 'number' ? parsed.lastDuration : undefined,
+      lastCost: typeof parsed.lastCost === 'number' ? parsed.lastCost : undefined,
+      metadata:
+        parsed.metadata && typeof parsed.metadata === 'object'
+          ? (parsed.metadata as Record<string, unknown>)
+          : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
 
 function getLayoutedElements(nodes: Node[], edges: Edge[]) {
   const dagreGraph = new dagre.graphlib.Graph();
@@ -119,45 +241,31 @@ function CanvasContent() {
   const workspaceNodes = graphSnapshotQuery.data?.nodes ?? [];
   const workspaceEdges = graphSnapshotQuery.data?.edges ?? [];
 
+  const canonicalNodes = useMemo(() => workspaceNodes.map(mapDbtNodeToCanonical), [workspaceNodes]);
+  const canonicalEdges = useMemo(() => workspaceEdges.map(mapDbtEdgeToCanonical), [workspaceEdges]);
+  const canonicalNodesById = useMemo(
+    () => new Map(canonicalNodes.map((node) => [node.id, node])),
+    [canonicalNodes]
+  );
+
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [confirmEdgeModal, setConfirmEdgeModal] = useState<{
     open: boolean;
     edge: { source: string; target: string; type: string } | null;
   }>({ open: false, edge: null });
 
-  // Convert mock nodes to React Flow nodes
-  const initialNodes: Node[] = useMemo(() => {
-    return workspaceNodes.map((node, idx) => ({
-      id: node.id,
-      type: 'dbtNode',
-      position: { x: (idx % 3) * 250, y: Math.floor(idx / 3) * 150 },
-      data: {
-        name: node.name,
-        type: node.type,
-        status: node.status,
-        lastDuration: node.lastDuration,
-        lastCost: node.lastCost,
-        showColumns: columnLevelLineageEnabled,
-      },
-    }));
-  }, [workspaceNodes, columnLevelLineageEnabled]);
+  const initialNodes: Node[] = useMemo(
+    () =>
+      canonicalNodes.map((node, idx) =>
+        mapCanonicalNodeToCanvasNode(node, idx, columnLevelLineageEnabled)
+      ),
+    [canonicalNodes, columnLevelLineageEnabled]
+  );
 
-  const initialEdges: Edge[] = useMemo(() => {
-    return workspaceEdges.map((edge) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      type: 'smoothstep',
-      animated: false,
-      style: { stroke: '#6b7280', strokeWidth: 2 },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: '#6b7280',
-        width: 20,
-        height: 20,
-      },
-    }));
-  }, [workspaceEdges]);
+  const initialEdges: Edge[] = useMemo(
+    () => canonicalEdges.map((edge) => mapCanonicalEdgeToCanvasEdge(edge)),
+    [canonicalEdges]
+  );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -171,36 +279,30 @@ function CanvasContent() {
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
 
-      // Find source and target nodes
-      const sourceNode = workspaceNodes.find((n) => n.id === connection.source);
-      const targetNode = workspaceNodes.find((n) => n.id === connection.target);
-
+      const sourceNode = canonicalNodesById.get(connection.source);
+      const targetNode = canonicalNodesById.get(connection.target);
       if (!sourceNode || !targetNode) return;
 
-      // Check if connection is allowed
-      const allowedTargets = allowedConnections[sourceNode.type];
-      if (!allowedTargets.includes(targetNode.type)) {
-        toast.error(`Cannot connect ${sourceNode.type} to ${targetNode.type}`);
+      if (!canConnectNodeRoles(sourceNode.role, targetNode.role)) {
+        toast.error(`Cannot connect ${sourceNode.kind} to ${targetNode.kind}`);
         return;
       }
 
-      // Check for cycles (simplified - would need full DAG check in production)
       const wouldCreateCycle = edges.some(
-        (e) => e.source === connection.target && e.target === connection.source
+        (edge) => edge.source === connection.target && edge.target === connection.source
       );
       if (wouldCreateCycle) {
         toast.error('Cannot create cycle in DAG');
         return;
       }
 
-      // Determine edge type
-      let edgeType = 'ref';
-      if (sourceNode.type === 'SOURCE') edgeType = 'source';
-      else if (targetNode.type === 'TEST') edgeType = 'test';
-      else if (targetNode.type === 'EXPOSURE') edgeType = 'exposure';
-      else if (targetNode.type === 'METRIC') edgeType = 'metric';
+      const edgeType = resolveCanvasEdgeType({
+        sourceRole: sourceNode.role,
+        targetRole: targetNode.role,
+        sourceKind: sourceNode.kind,
+        targetKind: targetNode.kind,
+      });
 
-      // Show confirmation modal
       setConfirmEdgeModal({
         open: true,
         edge: {
@@ -210,29 +312,22 @@ function CanvasContent() {
         },
       });
 
-      // Store the connection for later
-      (window as any).__pendingConnection = connection;
+      (window as Window & { __pendingConnection?: Connection }).__pendingConnection = connection;
     },
-    [edges, workspaceNodes]
+    [canonicalNodesById, edges]
   );
 
   const confirmEdgeCreation = useCallback(() => {
-    const connection = (window as any).__pendingConnection;
-    if (connection) {
-      setEdges((eds) =>
+    const connection = (window as Window & { __pendingConnection?: Connection })
+      .__pendingConnection;
+    if (connection?.source && connection.target) {
+      setEdges((existingEdges) =>
         addEdge(
-          {
-            ...connection,
-            type: 'smoothstep',
-            style: { stroke: '#6b7280', strokeWidth: 2 },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#6b7280',
-              width: 20,
-              height: 20,
-            },
-          },
-          eds
+          createCanvasEdgeFromConnection({
+            source: connection.source,
+            target: connection.target,
+          }),
+          existingEdges
         )
       );
       toast.success('Dependency added');
@@ -252,7 +347,6 @@ function CanvasContent() {
 
   const handleNodeClick = useCallback(
     (_event: unknown, node: Node) => {
-      // Keep the right panel in sync with normal node selection only when it is already open.
       if (inspectorPanelVisible && !focusMode) {
         setInspectorNode(node.id);
       }
@@ -261,8 +355,8 @@ function CanvasContent() {
   );
 
   const onSelectionChange = useCallback(
-    ({ nodes }: { nodes: Node[] }) => {
-      setSelectedNodes(nodes.map((n) => n.id));
+    ({ nodes: selectedCanvasNodes }: { nodes: Node[] }) => {
+      setSelectedNodes(selectedCanvasNodes.map((node) => node.id));
     },
     [setSelectedNodes]
   );
@@ -277,41 +371,36 @@ function CanvasContent() {
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const nodeData = event.dataTransfer.getData('application/dbt-node');
-      if (!nodeData) return;
 
-      const dbtNode: DbtNode = JSON.parse(nodeData);
-      const reactFlowBounds = (event.target as HTMLElement).getBoundingClientRect();
+      const canonicalNode = parseCanonicalDropPayload(event.dataTransfer);
+      const legacyPayload = event.dataTransfer.getData('application/dbt-node');
+      const droppedNode =
+        canonicalNode ??
+        (legacyPayload ? mapDbtNodeToCanonical(JSON.parse(legacyPayload) as DbtNode) : null);
+      if (!droppedNode) return;
+
+      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
       const position = {
         x: event.clientX - reactFlowBounds.left - 100,
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      const newNode: Node = {
-        id: dbtNode.id,
-        type: 'dbtNode',
+      const newNode = mapDroppedCanonicalNodeToCanvasNode(
+        droppedNode,
         position,
-        data: {
-          name: dbtNode.name,
-          type: dbtNode.type,
-          status: dbtNode.status,
-          lastDuration: dbtNode.lastDuration,
-          lastCost: dbtNode.lastCost,
-          showColumns: columnLevelLineageEnabled,
-        },
-      };
+        columnLevelLineageEnabled
+      );
 
-      setNodes((nds) => {
-        // Check if node already exists
-        if (nds.find((n) => n.id === dbtNode.id)) {
+      setNodes((existingNodes) => {
+        if (existingNodes.find((node) => node.id === droppedNode.id)) {
           toast.info('Node already on canvas');
-          return nds;
+          return existingNodes;
         }
-        toast.success(`Added ${dbtNode.name} to canvas`);
-        return [...nds, newNode];
+        toast.success(`Added ${droppedNode.name} to canvas`);
+        return [...existingNodes, newNode];
       });
     },
-    [setNodes, columnLevelLineageEnabled]
+    [columnLevelLineageEnabled, setNodes]
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -337,8 +426,10 @@ function CanvasContent() {
   const handleRemoveNode = useCallback(
     (nodeId: string) => {
       const nodeName = nodes.find((node) => node.id === nodeId)?.data?.name ?? nodeId;
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setNodes((existingNodes) => existingNodes.filter((node) => node.id !== nodeId));
+      setEdges((existingEdges) =>
+        existingEdges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+      );
       setSelectedNodes(selectedNodeIds.filter((id) => id !== nodeId));
 
       if (inspectorNodeId === nodeId) {
@@ -347,7 +438,15 @@ function CanvasContent() {
 
       toast.success(`Removed ${nodeName}`);
     },
-    [nodes, setNodes, setEdges, setSelectedNodes, selectedNodeIds, inspectorNodeId, setInspectorNode]
+    [
+      nodes,
+      setNodes,
+      setEdges,
+      setSelectedNodes,
+      selectedNodeIds,
+      inspectorNodeId,
+      setInspectorNode,
+    ]
   );
 
   const handlePlan = useCallback(async () => {
@@ -356,7 +455,8 @@ function CanvasContent() {
       return;
     }
     try {
-      const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodes.map((node) => node.id);
+      const selectedForPlan =
+        selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodes.map((node) => node.id);
       const plan = await plansService.previewPlan({
         selectedNodeIds: selectedForPlan,
         context: buildSessionRunContext(`run_ui_${Date.now()}`),
@@ -375,7 +475,6 @@ function CanvasContent() {
       toast.error('You do not have permission to start runs');
       return;
     }
-    // This would normally start a run via API
     toast.success('Run started');
     setPlanModalOpen(false);
     if (!consolePanelVisible) {
@@ -385,7 +484,6 @@ function CanvasContent() {
     }
   }, [userPermissions, consolePanelVisible, toggleConsolePanel, setConsolePanelHeight]);
 
-  // Update nodes with impact overlay
   const nodesWithImpact = useMemo(() => {
     if (!impactOverlayEnabled || selectedNodeIds.length === 0) {
       return nodes.map((node) => ({
@@ -400,14 +498,10 @@ function CanvasContent() {
       }));
     }
 
-    // Get selected node
     const selectedNode = selectedNodeIds[0];
-
-    // Find upstream and downstream nodes
     const upstream = new Set<string>();
     const downstream = new Set<string>();
 
-    // Simple BFS for upstream
     const queue = [selectedNode];
     const visited = new Set<string>();
     while (queue.length > 0) {
@@ -423,7 +517,6 @@ function CanvasContent() {
       });
     }
 
-    // Simple BFS for downstream
     const queue2 = [selectedNode];
     const visited2 = new Set<string>();
     while (queue2.length > 0) {
@@ -466,22 +559,20 @@ function CanvasContent() {
     handleToggleNodeSelection,
   ]);
 
-  const inspectorNode = workspaceNodes.find((n) => n.id === inspectorNodeId);
+  const inspectorNode = inspectorNodeId ? (canonicalNodesById.get(inspectorNodeId) ?? null) : null;
 
   return (
     <>
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* Left: Explorer */}
         {!focusMode && explorerPanelVisible && (
           <>
             <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
-              <DbtExplorer nodes={workspaceNodes} onHide={toggleExplorerPanel} />
+              <DbtExplorer nodes={canonicalNodes} onHide={toggleExplorerPanel} />
             </ResizablePanel>
             <ResizableHandle />
           </>
         )}
 
-        {/* Center: Canvas */}
         <ResizablePanel
           defaultSize={
             focusMode
@@ -494,7 +585,6 @@ function CanvasContent() {
           }
         >
           <div className="h-full flex flex-col bg-slate-950">
-            {/* Toolbar */}
             <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4">
               <div className="flex items-center gap-2">
                 <TooltipProvider>
@@ -556,7 +646,6 @@ function CanvasContent() {
               </div>
             </div>
 
-            {/* React Flow Canvas */}
             <div className="flex-1 relative" onDrop={handleDrop} onDragOver={handleDragOver}>
               {!focusMode && !explorerPanelVisible && (
                 <Button
@@ -601,42 +690,35 @@ function CanvasContent() {
                 <MiniMap
                   className="bg-slate-900 border border-slate-600"
                   nodeColor={(node) => {
-                    const type = (node.data as any).type;
-                    if (type === 'SOURCE') return '#a855f7';
-                    if (type === 'MODEL') return '#3b82f6';
-                    if (type === 'TEST') return '#ef4444';
-                    return '#6b7280';
+                    const pluginKind =
+                      (node.data as { pluginKind?: string }).pluginKind ?? 'dvt:unknown';
+                    return resolveNodeKindRegistration(pluginKind).minimapColor;
                   }}
                   nodeBorderRadius={4}
-                  onClick={(event, position) => {
-                    // This enables minimap click navigation - React Flow handles it automatically
-                  }}
                 />
               </ReactFlow>
             </div>
           </div>
         </ResizablePanel>
 
-        {/* Right: Inspector */}
         {!focusMode && inspectorPanelVisible && (
           <>
             <ResizableHandle />
             <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
               <InspectorPanel
-                node={inspectorNode || null}
+                node={inspectorNode}
+                activeRunId={null}
                 onHide={toggleInspectorPanel}
-                userPermissions={userPermissions}
               />
             </ResizablePanel>
           </>
         )}
       </ResizablePanelGroup>
 
-      {/* Modals */}
       <PlanPreviewModal
         open={planModalOpen}
         onClose={() => setPlanModalOpen(false)}
-        plan={currentPlan}
+        plan={currentPlan as ExecutionPlan | null}
         onStartRun={handleStartRun}
       />
 
@@ -657,4 +739,3 @@ export default function Canvas() {
     </ReactFlowProvider>
   );
 }
-
