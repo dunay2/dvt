@@ -1,23 +1,19 @@
 import styles from './DbtNodeComponent.module.css';
-import { Handle, Position, Node, NodeProps } from '@xyflow/react';
-import {
-  Database,
-  Table,
-  FileText,
-  TestTube,
-  Presentation,
-  TrendingUp,
-  Package,
-  ChevronDown,
-  ChevronUp,
-  Info,
-  MousePointer,
-  Trash2,
-} from 'lucide-react';
-import { memo, useState } from 'react';
+import { Handle, Node, NodeProps, Position } from '@xyflow/react';
+import { Info, MousePointer, Trash2 } from 'lucide-react';
+import { memo, type CSSProperties } from 'react';
 
+import { mapDbtTypeToPluginKind } from '../../plugins/dbt/dbtNodeAdapter';
+import { getNodeBadges, getNodeRenderer } from '../../plugins/registry';
+import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
+import type {
+  BadgeContext,
+  MergedNodeDecoration,
+  NodeBadge,
+  NodeRendererProps,
+} from '../../plugins/contracts/NodeRendering';
+import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
-import { Badge } from '../ui/badge';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -28,16 +24,33 @@ import {
 } from '../ui/context-menu';
 import { cn } from '../ui/utils';
 
+// ---------------------------------------------------------------------------
+// Canvas node data
+//
+// The name is transitional because the active canvas controller still imports
+// this file under its historical path. The shape is now shell-owned and
+// renderer-agnostic.
+// ---------------------------------------------------------------------------
+
 export interface DbtNodeData extends Record<string, unknown> {
   name: string;
-  type: DbtNodeType;
+  type?: DbtNodeType | string;
+  pluginKind?: PluginNodeKind;
+  role?: CoreNodeRole;
+  typeLabel?: string;
   status: NodeStatus;
   lastDuration?: number;
   lastCost?: number;
-  isHighlighted?: boolean;
-  impactLevel?: 'upstream' | 'downstream' | 'none';
+  /** Plugin overlay decoration — replaces impactLevel/isHighlighted */
+  overlayDecoration?: MergedNodeDecoration | null;
   showColumns?: boolean;
   columns?: Array<{ name: string; type: string }>;
+  tags?: string[];
+  path?: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  activeRunId?: string | null;
+  runStatusByNodeId?: ReadonlyMap<string, string>;
   onInspectNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
@@ -45,64 +58,131 @@ export interface DbtNodeData extends Record<string, unknown> {
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
 
-const nodeTypeConfig: Record<DbtNodeType, { icon: any; bgColor: string; borderColor: string }> = {
-  SOURCE: { icon: Database, bgColor: 'bg-purple-900/30', borderColor: 'border-purple-500' },
-  MODEL: { icon: Table, bgColor: 'bg-blue-900/30', borderColor: 'border-blue-500' },
-  SEED: { icon: FileText, bgColor: 'bg-green-900/30', borderColor: 'border-green-500' },
-  SNAPSHOT: { icon: Package, bgColor: 'bg-yellow-900/30', borderColor: 'border-yellow-500' },
-  TEST: { icon: TestTube, bgColor: 'bg-red-900/30', borderColor: 'border-red-500' },
-  EXPOSURE: { icon: Presentation, bgColor: 'bg-pink-900/30', borderColor: 'border-pink-500' },
-  METRIC: { icon: TrendingUp, bgColor: 'bg-orange-900/30', borderColor: 'border-orange-500' },
-  MACRO: { icon: Table, bgColor: 'bg-gray-900/30', borderColor: 'border-gray-500' },
+const DBT_NODE_TYPES = new Set<string>([
+  'SOURCE',
+  'MODEL',
+  'SEED',
+  'SNAPSHOT',
+  'TEST',
+  'EXPOSURE',
+  'METRIC',
+  'MACRO',
+]);
+
+function isDbtNodeType(value: unknown): value is DbtNodeType {
+  return typeof value === 'string' && DBT_NODE_TYPES.has(value);
+}
+
+const POSITION_CLASSES: Record<NodeBadge['position'], string> = {
+  'top-right': '-top-1.5 -right-1.5',
+  'top-left': '-top-1.5 -left-1.5',
+  'bottom-right': '-bottom-1.5 -right-1.5',
 };
 
-const statusColors: Record<NodeStatus, string> = {
-  idle: 'bg-gray-500',
-  running: 'bg-blue-500 animate-pulse',
-  success: 'bg-green-500',
-  failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
+const COLOR_CLASSES: Record<NodeBadge['color'], string> = {
+  green: 'bg-green-500 text-white',
+  red: 'bg-red-500 text-white',
+  yellow: 'bg-yellow-400 text-black',
+  blue: 'bg-blue-500 text-white',
+  gray: 'bg-neutral-500 text-white',
 };
+
+function NodeBadgeOverlay({ badge }: Readonly<{ badge: NodeBadge }>) {
+  const Icon = badge.icon;
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute z-10 flex items-center gap-0.5 rounded-full px-1 py-0.5 text-[9px] font-semibold leading-none',
+        POSITION_CLASSES[badge.position],
+        COLOR_CLASSES[badge.color]
+      )}
+      title={badge.tooltip}
+    >
+      {Icon && <Icon size={8} />}
+      {badge.text && <span>{badge.text}</span>}
+    </div>
+  );
+}
+
+function FallbackNodeRenderer({ node, overlayDecoration }: Readonly<NodeRendererProps>) {
+  return (
+    <div
+      className={cn(
+        'min-w-[140px] rounded border border-dashed border-neutral-600 bg-neutral-900 px-3 py-2 text-xs text-neutral-300',
+        overlayDecoration?.dimmed && 'opacity-30'
+      )}
+      {...(overlayDecoration?.borderColor
+        ? { style: { borderColor: overlayDecoration.borderColor } as CSSProperties }
+        : {})}
+    >
+      <div className="font-semibold">{node.name}</div>
+      <div className="text-[10px] opacity-60">{node.kind}</div>
+    </div>
+  );
+}
+
+function buildCanonicalNode(
+  nodeId: string,
+  data: DbtNodeData,
+  pluginKind: PluginNodeKind,
+  role: CoreNodeRole
+): CanonicalNode {
+  const pluginId = pluginKind.split(':')[0] ?? 'dvt';
+  const metadata =
+    typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
+
+  if (data.type != null) {
+    metadata.dbtType ??= data.type;
+  }
+  if (data.typeLabel != null) {
+    metadata.typeLabel ??= data.typeLabel;
+  }
+  if (data.columns != null) {
+    metadata.columns ??= data.columns;
+  }
+
+  return {
+    id: nodeId,
+    name: data.name,
+    pluginId,
+    kind: pluginKind,
+    role,
+    status: data.status,
+    tags: data.tags ?? [],
+    path: data.path,
+    description: data.description,
+    lastDuration: data.lastDuration,
+    lastCost: data.lastCost,
+    metadata,
+  };
+}
 
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
-  const { selected } = props;
-  const config = nodeTypeConfig[data.type];
-  const Icon = config.icon;
-  const [columnsExpanded, setColumnsExpanded] = useState(false);
+  const { id, selected } = props;
+  const pluginKind =
+    data.pluginKind ??
+    (isDbtNodeType(data.type)
+      ? mapDbtTypeToPluginKind(data.type)
+      : ('dvt:unknown' as PluginNodeKind));
+  const kindRegistration = resolveNodeKindRegistration(pluginKind);
+  const role = data.role ?? kindRegistration.role;
+  const canonicalNode = buildCanonicalNode(id, data, pluginKind, role);
+  const badgeCtx: BadgeContext = {
+    activeRunId: data.activeRunId ?? null,
+    runStatusByNodeId:
+      data.runStatusByNodeId instanceof Map ? data.runStatusByNodeId : new Map<string, string>(),
+  };
+  const Renderer = getNodeRenderer(canonicalNode.kind, FallbackNodeRenderer);
+  const badges = getNodeBadges(canonicalNode, badgeCtx);
 
-  const shouldShowSourceHandle = data.type !== 'TEST' && data.type !== 'EXPOSURE';
-  const shouldShowTargetHandle = data.type !== 'SOURCE';
-
-  const impactBorderColor =
-    data.impactLevel === 'upstream'
-      ? 'border-yellow-500'
-      : data.impactLevel === 'downstream'
-        ? 'border-orange-500'
-        : '';
-
-  // Mock columns for demonstration
-  const columns = data.columns || [
-    { name: 'id', type: 'INTEGER' },
-    { name: 'name', type: 'VARCHAR' },
-    { name: 'created_at', type: 'TIMESTAMP' },
-  ];
-
-  const showColumnsSection = data.showColumns && (data.type === 'MODEL' || data.type === 'SOURCE');
+  const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
+  const shouldShowTargetHandle = kindRegistration.allowsIncoming;
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div
-          className={cn(
-            styles.root,
-            'relative rounded-lg border-2 transition-all bg-slate-900',
-            selected ? 'border-white shadow-lg' : config.borderColor,
-            data.isHighlighted && 'ring-2 ring-white ring-offset-2 ring-offset-slate-950',
-            impactBorderColor && impactBorderColor
-          )}
-        >
+        <div className={cn(styles.root, 'relative')}>
           {/* Target Handle (input) */}
           {shouldShowTargetHandle && (
             <Handle
@@ -112,79 +192,21 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
             />
           )}
 
-          {/* Node Content */}
-          <div className="p-3">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Icon className="size-4 flex-shrink-0" />
-                <span className="font-mono text-sm font-medium truncate">{data.name}</span>
-              </div>
-              <div className={cn('size-2 rounded-full flex-shrink-0', statusColors[data.status])} />
-            </div>
-
-            {/* Type Badge */}
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
-              {data.type}
-            </Badge>
-
-            {/* Metrics */}
-            {(data.lastDuration || data.lastCost) && (
-              <div className="mt-2 flex gap-2 text-[10px] text-slate-300">
-                {data.lastDuration && <span>{data.lastDuration}s</span>}
-                {data.lastCost && <span>${data.lastCost.toFixed(2)}</span>}
-              </div>
-            )}
-
-            {/* Impact Level Indicator */}
-            {data.impactLevel && data.impactLevel !== 'none' && (
-              <div className="mt-2">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    'text-[10px] px-1.5 py-0.5',
-                    data.impactLevel === 'upstream' && 'border-yellow-500 text-yellow-500',
-                    data.impactLevel === 'downstream' && 'border-orange-500 text-orange-500'
-                  )}
-                >
-                  {data.impactLevel}
-                </Badge>
-              </div>
-            )}
-
-            {/* Columns Section */}
-            {showColumnsSection && (
-              <div className="mt-2 border-t border-slate-600 pt-2">
-                <button
-                  onClick={() => setColumnsExpanded(!columnsExpanded)}
-                  className="flex items-center justify-between w-full text-xs text-slate-300 hover:text-white transition-colors"
-                >
-                  <span className="flex items-center gap-1">
-                    <Table className="size-3" />
-                    Columns ({columns.length})
-                  </span>
-                  {columnsExpanded ? (
-                    <ChevronUp className="size-3" />
-                  ) : (
-                    <ChevronDown className="size-3" />
-                  )}
-                </button>
-
-                {columnsExpanded && (
-                  <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-                    {columns.map((col: { name: string; type: string }, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-[10px] px-2 py-1 bg-slate-950 rounded"
-                      >
-                        <span className="font-mono text-white truncate">{col.name}</span>
-                        <span className="text-slate-400 ml-2 flex-shrink-0">{col.type}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="relative">
+            <Renderer
+              node={canonicalNode}
+              selected={selected}
+              hovered={false}
+              overlayDecoration={data.overlayDecoration ?? null}
+              badges={badges}
+              data={data}
+            />
+            {badges.map((badge, index) => (
+              <NodeBadgeOverlay
+                key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
+                badge={badge}
+              />
+            ))}
           </div>
 
           {/* Source Handle (output) */}
@@ -201,12 +223,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       <ContextMenuContent className="w-48 bg-slate-900 border-slate-600 text-slate-50">
         <ContextMenuLabel className="font-mono text-xs">{data.name}</ContextMenuLabel>
         <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem onSelect={() => data.onInspectNode?.(props.id)}>
+        <ContextMenuItem onSelect={() => data.onInspectNode?.(id)}>
           <Info className="size-4" />
           Open inspector panel
         </ContextMenuItem>
         <ContextMenuItem
-          onSelect={() => data.onToggleNodeSelection?.(props.id, !selected)}
+          onSelect={() => data.onToggleNodeSelection?.(id, !selected)}
           disabled={!data.onToggleNodeSelection}
         >
           <MousePointer className="size-4" />
@@ -215,7 +237,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
         <ContextMenuSeparator className="bg-slate-600" />
         <ContextMenuItem
           variant="destructive"
-          onSelect={() => data.onRemoveNode?.(props.id)}
+          onSelect={() => data.onRemoveNode?.(id)}
           disabled={!data.onRemoveNode}
         >
           <Trash2 className="size-4" />
@@ -227,4 +249,3 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 }
 
 export default memo(DbtNodeComponent);
-
