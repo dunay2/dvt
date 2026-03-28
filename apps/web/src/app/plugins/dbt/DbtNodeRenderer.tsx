@@ -7,7 +7,6 @@ import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
-import styles from './DbtNodeRenderer.module.css';
 
 // ---------------------------------------------------------------------------
 // DbtNodeRenderer
@@ -43,11 +42,10 @@ function buildOverlayProps(
   borderColor?: string,
   backgroundColor?: string
 ): { style?: CSSProperties } {
-  const vars: Record<string, string> = {};
-  if (borderColor) vars['--overlay-border-color'] = borderColor;
-  if (backgroundColor) vars['--overlay-bg-color'] = backgroundColor;
-  if (Object.keys(vars).length === 0) return {};
-  return { style: vars as CSSProperties };
+  const style: CSSProperties = {};
+  if (borderColor) style.borderColor = borderColor;
+  if (backgroundColor) style.backgroundColor = backgroundColor;
+  return Object.keys(style).length > 0 ? { style } : {};
 }
 
 type ColumnMeta = { name: string; type: string };
@@ -98,11 +96,8 @@ export function DbtNodeRenderer({
   return (
     <div
       className={cn(
-        styles.root,
-        'rounded-md border bg-neutral-900 px-3 py-2 text-xs text-neutral-100 transition-opacity',
+        'min-w-[140px] rounded-md border bg-neutral-900 px-3 py-2 text-xs text-neutral-100 transition-opacity',
         meta?.borderClass ?? 'border-neutral-600',
-        overlayDecoration?.borderColor && styles.overlayBorder,
-        overlayDecoration?.backgroundColor && styles.overlayBg,
         selected && 'ring-2 ring-white/40',
         hovered && !selected && 'ring-1 ring-white/20',
         statusRing,
