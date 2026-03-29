@@ -76,6 +76,7 @@ Concept anchors for this page:
 - [20260328 Lane C AI Efficiency And Cost Review](reviews/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - [20260328 Lineage Outbox Fowler QA Hard Review](reviews/20260328-lineage-outbox-fowler-qa-hard-review.md)
 - [20260328 Runtime Command RBAC Review](reviews/20260328-runtime-command-rbac-review.md)
+- [20260329 — Run Event Retention — Fowler Hard QA Review](reviews/20260329-run-event-retention-fowler-hard-review.md)
 - [20260329 Run Event Retention TTL Kickoff Review](reviews/20260329-run-event-retention-ttl-kickoff-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/20260226-dvt-architectural-gap-remediation-tasks-review.md)
