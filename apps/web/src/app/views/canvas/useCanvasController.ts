@@ -69,6 +69,21 @@ function toRunStatusSnapshot(canonicalRun: CanonicalRun | null): RunStatusSnapsh
   };
 }
 
+function areViewportsEqual(
+  left: { x: number; y: number; zoom: number } | null,
+  right: { x: number; y: number; zoom: number } | null
+): boolean {
+  if (left == null && right == null) {
+    return true;
+  }
+
+  if (left == null || right == null) {
+    return false;
+  }
+
+  return left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+}
+
 function areNodePositionsEqual(
   left: Record<string, { x: number; y: number }>,
   right: Record<string, { x: number; y: number }>
@@ -266,7 +281,7 @@ export function useCanvasController() {
           index,
           columnLevelLineageEnabled,
           undefined,
-          currentNode?.position ?? persistedNodePositions[node.id]
+          persistedNodePositions[node.id] ?? currentNode?.position
         );
       });
 
@@ -314,9 +329,13 @@ export function useCanvasController() {
 
   const handleViewportChange = useCallback(
     (viewport: { x: number; y: number; zoom: number }) => {
+      if (areViewportsEqual(persistedViewport, viewport)) {
+        return;
+      }
+
       setCanvasViewport(workspaceLayoutKey, viewport);
     },
-    [setCanvasViewport, workspaceLayoutKey]
+    [persistedViewport, setCanvasViewport, workspaceLayoutKey]
   );
 
   const graphHandlers = useCanvasGraphHandlers({
