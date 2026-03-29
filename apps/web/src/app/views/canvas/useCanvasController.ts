@@ -313,7 +313,14 @@ export function useCanvasController() {
   ]);
 
   useEffect(() => {
+    // Don't write until store is hydrated from localStorage
     if (!_hasHydrated) {
+      return;
+    }
+
+    // Don't write while the workspace query is still loading — nodes would be
+    // empty and would overwrite the saved layout with an empty object.
+    if (graphSnapshotQuery.isPending) {
       return;
     }
 
@@ -330,7 +337,14 @@ export function useCanvasController() {
     }
 
     setCanvasNodePositions(workspaceLayoutKey, nextPositions);
-  }, [_hasHydrated, nodes, persistedNodePositions, setCanvasNodePositions, workspaceLayoutKey]);
+  }, [
+    _hasHydrated,
+    graphSnapshotQuery.isPending,
+    nodes,
+    persistedNodePositions,
+    setCanvasNodePositions,
+    workspaceLayoutKey,
+  ]);
 
   const handleViewportChange = useCallback(
     (viewport: { x: number; y: number; zoom: number }) => {
