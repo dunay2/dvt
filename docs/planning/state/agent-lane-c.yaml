@@ -2,13 +2,25 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-28
+last_reviewed: 2026-03-29
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
   - claim semantics are safe under concurrency
   - API consumers can reason about freshness
 tasks:
+  - task_id: MVP-C1
+    priority: P0
+    status: review
+    objective:
+      produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
+      diagnose, daily operate) without adding feature depth.
+    dependency: MVP-A1, MVP-B1
+    target:
+      Operator-ready runbook for current runtime routes, auth scope handling, health/readiness
+      diagnosis, fallback boundaries, and baseline validation commands
+      (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`); final done status remains
+      aligned with `MVP-A1` and `MVP-B1` dependency closure.
   - task_id: S09
     priority: P0
     status: done
@@ -41,10 +53,13 @@ tasks:
     target: Compat policy + timer wiring integration coverage.
   - task_id: RBAC at operation level
     priority: P1
-    status: in_progress
+    status: done
     objective: enforce tenant-aware start/signal/cancel rules.
     dependency: none
-    target: Define operation-level authorization boundaries.
+    target:
+      Operation-level authorization boundaries are explicit and validated with negative integration
+      coverage plus always-on route-level unit coverage for action-specific denials (`run:cancel` vs
+      `run:signal`).
   - task_id: snapshot staleness in API
     priority: P1
     status: queued
@@ -96,8 +111,10 @@ tasks:
     dependency: S16 merge
     target: Precondition order hardening.
 dependency_notes: |
+  - `MVP-C1` depends on `MVP-A1` and `MVP-B1` so the runbook reflects verified capabilities only.
   - `RC-D1A` depends on `RC-D1`.
   - `RBAC at operation level` is unblocked after `S09`.
+  - Route-level RBAC deny-path tests are always-on; live-DB protected runtime integration is executed in release-candidate/nightly profiles when env posture is present.
   - `Read-your-writes contract` depends on `snapshot staleness in API`.
   - `RC-C1` depends on `RBAC at operation level`.
   - `RC-C2` is independent and may run in parallel with runtime hardening items.

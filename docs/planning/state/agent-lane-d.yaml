@@ -2,13 +2,23 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-26
+last_reviewed: 2026-03-29
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
   - snapshot correctness is preserved
   - GTM work is separated from code execution
 tasks:
+  - task_id: MVP-D1
+    priority: P0
+    status: queued
+    objective:
+      define the residual-risk baseline explicitly accepted after MVP backend operability reset,
+      including what is deferred and why it does not block MVP.
+    dependency: MVP-A1, MVP-B1
+    target:
+      Risk baseline updated with explicit deferred items, lane ownership, and non-blocking rationale
+      for MVP control-plane operation.
   - task_id: run event log retention + TTL
     priority: P1
     status: queued
@@ -97,6 +107,7 @@ tasks:
     dependency: first enterprise pilot
     target: Market positioning collateral.
 dependency_notes: |
+  - `MVP-D1` depends on `MVP-A1` and `MVP-B1` so residual risks are tied to validated MVP scope.
   - `G5-PR2` depends on the archival prerequisite chain already tracked in the workboard.
   - `S15-F1` depends on `S15`.
   - `cost attribution model` depends on `S05`, `S02`, and retention.

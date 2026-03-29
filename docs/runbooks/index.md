@@ -12,6 +12,7 @@ Operational runbooks for incidents, recovery, and maintenance.
 ## Index
 
 - [Admission Control Runbook](admission-control-runbook.md)
+- [Backend MVP Control-Plane Runbook](backend-mvp-control-plane-runbook-20260329.md)
 - [Gap 5 Archive Operations Runbook](gap-5-archive-operations-runbook-20260319.md)
 - [Outbox Worker Runbook](outbox-worker-g5.md)
 - [Workflow Isolation Testing Strategy](workflow-isolation-testing.md)

@@ -88,6 +88,7 @@ Prepare the system for scale and for the first enterprise customer.
 
 > Source of truth: `agent-lane-d.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
+- [ ] `P0` `MVP-D1`: define the residual-risk baseline explicitly accepted after MVP backend operability reset, including what is deferred and why it does not block MVP.
 - [ ] `P1` `run event log retention + TTL`: bound storage growth and automate archival.
 - [ ] `P1` `G5-PR2`: add deferred deletion and restore flow for archived events.
 - [x] `P1` `S15`: add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression under concurrency.
@@ -105,6 +106,7 @@ Prepare the system for scale and for the first enterprise customer.
 
 ## Dependencies
 
+- `MVP-D1` depends on `MVP-A1` and `MVP-B1` so residual risks are tied to validated MVP scope.
 - `G5-PR2` depends on the archival prerequisite chain already tracked in the workboard.
 - `S15-F1` depends on `S15`.
 - `cost attribution model` depends on `S05`, `S02`, and retention.

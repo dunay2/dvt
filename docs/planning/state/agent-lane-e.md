@@ -92,10 +92,11 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 
 > Source of truth: `agent-lane-e.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
+- [ ] `P0` `MVP-E1`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
 - [ ] `P0` `F-01`: clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
 - [ ] `P0` `F-02`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
 - [ ] `P0` `F-03`: wire real backend health state into the top bar and a global degraded/offline banner.
-- [ ] `P1` `F-04`: introduce a VITE_DATA_SOURCE=mock-or-api environment flag and separate data layers so views do not consume mock data directly.
+- [ ] `P1` `F-04`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
 - [ ] `P1` `F-05`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
 - [ ] `P1` `F-06`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.
 - [ ] `P2` `F-07`: define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend is ready before backend endpoints land.
@@ -106,6 +107,7 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 
 ## Dependencies
 
+- `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
 - F-01, F-02, F-04 are independent and can start in parallel.
 - F-03 depends on F-02.
 - F-05 depends on F-04.

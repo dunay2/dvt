@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
-import type { PoolClient } from 'pg';
 
-import { PostgresLineageOutboxStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import type { ILineageOutboxStore } from '@dvt/contracts';
 import { HttpOpenLineageSink } from '@dvt/traceability-service';
 
 import type { Env } from './env.js';
@@ -12,8 +12,8 @@ export interface LineageWorkerBootstrapDeps {
 
 export interface LineageWorkerBootstrapResult {
   stateStore: PostgresStateStoreAdapter;
-  lineageStore: PostgresLineageOutboxStore;
   sink: HttpOpenLineageSink;
+  getLineageStore(): ILineageOutboxStore;
   close(): Promise<void>;
 }
 
@@ -22,7 +22,6 @@ export function buildLineageWorkerBootstrap(
   deps: LineageWorkerBootstrapDeps = {}
 ): LineageWorkerBootstrapResult {
   const pool = deps.poolFactory?.(env) ?? new Pool({ connectionString: env.DATABASE_URL });
-  const withClient = createWithClient(pool);
 
   const stateStore = new PostgresStateStoreAdapter({
     pool,
@@ -30,8 +29,6 @@ export function buildLineageWorkerBootstrap(
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
   });
-
-  const lineageStore = new PostgresLineageOutboxStore(env.DVT_PG_SCHEMA, withClient);
 
   const sink = new HttpOpenLineageSink({
     apiUrl: env.DVT_LINEAGE_API_URL,
@@ -43,22 +40,13 @@ export function buildLineageWorkerBootstrap(
 
   return {
     stateStore,
-    lineageStore,
     sink,
+    getLineageStore(): ILineageOutboxStore {
+      return stateStore.getLineageOutboxStore();
+    },
     async close(): Promise<void> {
       await stateStore.close();
       await pool.end();
     },
-  };
-}
-
-function createWithClient(pool: Pool) {
-  return async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
-    const client = await pool.connect();
-    try {
-      return await fn(client);
-    } finally {
-      client.release();
-    }
   };
 }
