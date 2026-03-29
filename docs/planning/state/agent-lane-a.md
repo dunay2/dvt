@@ -88,6 +88,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 
 > Source of truth: `agent-lane-a.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
+- [ ] `P0` `MVP-A1`: inventory the current backend MVP contractual surface (routes, invariants, and explicit boundaries) without adding new runtime behavior.
 - [x] `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
 - [x] `P0` `S02`: split IRunStateStore into write/read/maintenance roles.
 - [x] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
@@ -103,6 +104,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 
 ## Dependencies
 
+- `MVP-A1` is the baseline-first task for roadmap reset and should run before any new deep-dive slice.
 - `S02` depends on `RC-A6`.
 - `S18` depends on `S02`.
 - `S19` depends on `S18`.

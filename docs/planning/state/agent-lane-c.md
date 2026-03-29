@@ -88,12 +88,13 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 
 > Source of truth: `agent-lane-c.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
+- [ ] `P0` `MVP-C1`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
 - [x] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
 - [x] `P0` `RC-D2`: make the outbox claim timeout configurable.
 - [x] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
 - [x] `P1` `RC-D1`: surface reconciler degradation in API health.
 - [x] `P1` `RC-D1A`: add health compatibility and watchdog integration tests.
-- [ ] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
+- [x] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
 - [ ] `P1` `snapshot staleness in API`: expose freshness to callers.
 - [ ] `P2` `read-your-writes contract`: set a measurable staleness SLO.
 - [ ] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
@@ -104,8 +105,10 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 
 ## Dependencies
 
+- `MVP-C1` depends on `MVP-A1` and `MVP-B1` so the runbook reflects verified capabilities only.
 - `RC-D1A` depends on `RC-D1`.
 - `RBAC at operation level` is unblocked after `S09`.
+- Route-level RBAC deny-path tests are always-on; live-DB protected runtime integration is executed in release-candidate/nightly profiles when env posture is present.
 - `Read-your-writes contract` depends on `snapshot staleness in API`.
 - `RC-C1` depends on `RBAC at operation level`.
 - `RC-C2` is independent and may run in parallel with runtime hardening items.

@@ -113,6 +113,74 @@ describe('signalRunRoute', () => {
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
   });
 
+  it('returns 403 and does not execute when CANCEL authorization is denied', async () => {
+    const deps = createDeps();
+    deps.authorizer.authorize.mockResolvedValueOnce({
+      ok: false,
+      reason: 'ACTION_NOT_GRANTED',
+    });
+    const reply = createReply();
+
+    await signalRunRoute(
+      {
+        id: 'req-1c',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(deps.authorizer.authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.CANCEL },
+      }),
+      'req-1c'
+    );
+    expect(reply.code).toHaveBeenCalledWith(403);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'FORBIDDEN',
+      code: 'ACTION_NOT_GRANTED',
+    });
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 and does not execute when PAUSE authorization is denied', async () => {
+    const deps = createDeps();
+    deps.authorizer.authorize.mockResolvedValueOnce({
+      ok: false,
+      reason: 'ACTION_NOT_GRANTED',
+    });
+    const reply = createReply();
+
+    await signalRunRoute(
+      {
+        id: 'req-1d',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'PAUSE' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(deps.authorizer.authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.SIGNAL },
+      }),
+      'req-1d'
+    );
+    expect(reply.code).toHaveBeenCalledWith(403);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'FORBIDDEN',
+      code: 'ACTION_NOT_GRANTED',
+    });
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when signalType is not in the allowed vocabulary', async () => {
     const deps = createDeps();
     const reply = createReply();

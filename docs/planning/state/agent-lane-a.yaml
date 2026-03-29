@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-26
+last_reviewed: 2026-03-29
 goal: Close the state-store boundary and the smallest contract cleanup slice around it.
 expected_outcome:
   - state-store ownership is explicit
@@ -11,6 +11,16 @@ expected_outcome:
   - optional maintenance ownership is explicit
   - migration recovery is defined
 tasks:
+  - task_id: MVP-A1
+    priority: P0
+    status: queued
+    objective:
+      inventory the current backend MVP contractual surface (routes, invariants, and explicit
+      boundaries) without adding new runtime behavior.
+    dependency: none
+    target:
+      Canonical inventory aligned with real `apps/api` runtime surface and linked from the MVP
+      roadmap reset proposal.
   - task_id: RC-A6
     priority: P0
     status: done
@@ -108,6 +118,7 @@ tasks:
     dependency: none
     target: planVersion canonical value is '1.0' everywhere before first production release.
 dependency_notes: |
+  - `MVP-A1` is the baseline-first task for roadmap reset and should run before any new deep-dive slice.
   - `S02` depends on `RC-A6`.
   - `S18` depends on `S02`.
   - `S19` depends on `S18`.
