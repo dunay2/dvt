@@ -1,4 +1,7 @@
-import { PostgresDeliveryBufferPurgeStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import {
+  PostgresDeliveryBufferPurgeStore,
+  PostgresStateStoreAdapter,
+} from '@dvt/adapter-postgres';
 import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
 import { DeliveryBufferPurger } from '@dvt/state-store';
 
@@ -8,11 +11,14 @@ import { acquirePgPool } from '../db/pool.js';
 import type { ActiveEnv } from '../plugins/env.js';
 
 import { DeliveryBufferPurgeRuntime } from './DeliveryBufferPurgeRuntime.js';
+import { RunEventRetentionRuntime } from './RunEventRetentionRuntime.js';
+import { buildRunEventRetentionRuntime } from './buildRunEventRetentionRuntime.js';
 import {
   OutboxWorkerRuntime,
   type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
+import type { Pool } from 'pg';
 
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;
@@ -82,6 +88,9 @@ export async function createOutboxWorkerRuntime(
     const purgeRuntime = env.DVT_PURGE_ENABLED
       ? buildPurgeRuntime(env, poolLease.pool, logger)
       : null;
+    const retentionRuntime = env.DVT_RUN_EVENT_RETENTION_ENABLED
+      ? buildRunEventRetentionRuntime(env, poolLease.pool, logger)
+      : null;
 
     let stopPromise: Promise<void> | null = null;
 
@@ -89,12 +98,14 @@ export async function createOutboxWorkerRuntime(
       start: (signal?: globalThis.AbortSignal) => {
         const starts: Promise<void>[] = [runtime.start(signal)];
         if (purgeRuntime) starts.push(purgeRuntime.start(signal));
+        if (retentionRuntime) starts.push(retentionRuntime.start(signal));
         return Promise.all(starts).then(() => {});
       },
       stop: () =>
         (stopPromise ??= stopRuntimeResources({
           runtime,
           purgeRuntime,
+          retentionRuntime,
           stateStore,
           poolLease,
         })),
@@ -125,7 +136,7 @@ async function waitForStartupOrAbort(
   startup: () => Promise<void>,
   deps: {
     shutdownSignal?: globalThis.AbortSignal;
-    stateStore: { abortPendingOperations(): Promise<void> };
+    stateStore: { abortPendingOperations(): void | Promise<void> };
     eventBus: InterruptibleEventBus;
   }
 ): Promise<void> {
@@ -166,11 +177,11 @@ async function waitForStartupOrAbort(
 }
 
 async function interruptPendingTick(
-  stateStore: { abortPendingOperations(): Promise<void> },
+  stateStore: { abortPendingOperations(): void | Promise<void> },
   eventBus: InterruptibleEventBus
 ): Promise<void> {
   eventBus.abortPendingPublishes?.();
-  await stateStore.abortPendingOperations();
+  await Promise.resolve(stateStore.abortPendingOperations());
 }
 
 function createAbortError(message: string): Error {
@@ -198,7 +209,7 @@ async function safelyReleaseStartupResources(
 
 function buildPurgeRuntime(
   env: ActiveEnv,
-  pool: { query: (...args: unknown[]) => Promise<unknown> },
+  pool: Pool,
   logger: OutboxWorkerRuntimeLogger
 ): DeliveryBufferPurgeRuntime {
   const purgeStore = new PostgresDeliveryBufferPurgeStore(env.DVT_PG_SCHEMA, pool as never);
@@ -219,6 +230,7 @@ function buildPurgeRuntime(
 async function stopRuntimeResources(deps: {
   runtime: Pick<RuntimeHandle, 'stop'>;
   purgeRuntime: DeliveryBufferPurgeRuntime | null;
+  retentionRuntime: RunEventRetentionRuntime | null;
   stateStore: ClosableStateStore;
   poolLease: { release(): Promise<void> };
 }): Promise<void> {
@@ -233,6 +245,14 @@ async function stopRuntimeResources(deps: {
   if (deps.purgeRuntime) {
     try {
       await deps.purgeRuntime.stop();
+    } catch (error) {
+      firstError ??= error;
+    }
+  }
+
+  if (deps.retentionRuntime) {
+    try {
+      await deps.retentionRuntime.stop();
     } catch (error) {
       firstError ??= error;
     }

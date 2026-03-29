@@ -75,7 +75,6 @@ type ViaIndexed = { node: import('./types.js').Foo }['node'];
 `;
   assert.equal(hasInlineImportTypeAlias(content), true);
 });
-
 test('adapter-postgres source keeps import-type aliases explicit (no type = import(...))', () => {
   const targetFiles = listTypeScriptFiles(ADAPTER_POSTGRES_SRC_ROOT);
   assert.ok(targetFiles.length > 0, 'adapter-postgres src must contain TypeScript source files');

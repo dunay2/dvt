@@ -35,6 +35,12 @@ describe('loadEnv', () => {
     }
     expect(env.DVT_OUTBOX_HTTP_TARGET_URL).toBe('http://localhost:8080/outbox/events');
     expect(env.DVT_OUTBOX_HTTP_TIMEOUT_MS).toBe(10000);
+    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
+    expect(env.DVT_RUN_EVENT_RETENTION_INTERVAL_MS).toBe(3_600_000);
+    expect(env.DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS).toBe(90);
+    expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT).toBe(64);
+    expect(env.DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS).toBe(true);
+    expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY).toBe('.dvt/archive');
     expect(env.DVT_OUTBOX_ADMIN_HOST).toBe('0.0.0.0');
     expect(env.DVT_OUTBOX_ADMIN_PORT).toBe(9464);
     expect(env.SERVICE_NAME).toBe('dvt-outbox-worker');
@@ -304,6 +310,16 @@ describe('loadEnv', () => {
         DVT_OUTBOX_ADMIN_PORT: '70000',
       })
     ).toThrow(/DVT_OUTBOX_ADMIN_PORT/);
+
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS: '0',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS/);
   });
 
   it('rejects ambiguous shard ownership configuration', () => {
@@ -338,5 +354,43 @@ describe('loadEnv', () => {
         DVT_OUTBOX_OWNED_SHARD_IDS: '4',
       })
     ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
+  });
+
+  it('rejects run-event retention in production with filesystem archive storage', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_ENABLED/);
+  });
+
+  it('rejects run-event retention in production for http event bus mode too', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+      })
+    ).toThrow(/file:\/\/ archive storage is prohibited in production/);
+  });
+
+  it('rejects run-event retention in production even with custom archive directory', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+        DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: '/tmp/archive',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_ENABLED/);
   });
 });
