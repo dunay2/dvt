@@ -1,10 +1,12 @@
 import DbtExplorer from '../../components/DbtExplorer';
 import InspectorPanel from '../../components/InspectorPanel';
+import SourceImportWizard from '../../components/SourceImportWizard';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from '../../components/ui/resizable';
+import { useState } from 'react';
 import CanvasToolbar from './CanvasToolbar';
 import CanvasViewport from './CanvasViewport';
 import type { CanvasShellProps } from './canvasShell.types';
@@ -22,11 +24,13 @@ export default function CanvasShell({
   edges,
   nodeTypes,
   gridSize,
+  viewport,
   onNodesChange,
   onEdgesChange,
   onConnect,
   onNodeClick,
   onSelectionChange,
+  onViewportChange,
   onDrop,
   onDragOver,
   onHideExplorer,
@@ -44,12 +48,18 @@ export default function CanvasShell({
   impactOverlayEnabled,
   columnLevelLineageEnabled,
 }: CanvasShellProps) {
+  const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
+
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
       {!focusMode && explorerPanelVisible && (
         <>
           <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
-            <DbtExplorer nodes={explorerNodes} onHide={onHideExplorer} />
+            <DbtExplorer
+              nodes={explorerNodes}
+              onHide={onHideExplorer}
+              onOpenDataRegistry={() => setDataRegistryOpen(true)}
+            />
           </ResizablePanel>
           <ResizableHandle />
         </>
@@ -68,6 +78,7 @@ export default function CanvasShell({
       >
         <div className="h-full flex flex-col bg-slate-950">
           <CanvasToolbar
+            onOpenDataRegistry={() => setDataRegistryOpen(true)}
             onAutoLayout={onAutoLayout}
             onToggleCostOverlay={onToggleCostOverlay}
             onToggleImpact={onToggleImpact}
@@ -89,11 +100,13 @@ export default function CanvasShell({
             edges={edges}
             nodeTypes={nodeTypes}
             gridSize={gridSize}
+            viewport={viewport}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onSelectionChange={onSelectionChange}
+            onViewportChange={onViewportChange}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onShowExplorer={onShowExplorer}
@@ -115,6 +128,8 @@ export default function CanvasShell({
           </ResizablePanel>
         </>
       )}
+
+      <SourceImportWizard open={dataRegistryOpen} onClose={() => setDataRegistryOpen(false)} />
     </ResizablePanelGroup>
   );
 }

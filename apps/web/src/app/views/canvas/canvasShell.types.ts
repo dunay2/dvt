@@ -21,11 +21,13 @@ export type CanvasShellProps = {
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
+  viewport: { x: number; y: number; zoom: number } | null;
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
+  onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onHideExplorer: () => void;

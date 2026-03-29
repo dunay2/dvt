@@ -21,11 +21,13 @@ type CanvasViewportProps = {
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
+  readonly viewport: { x: number; y: number; zoom: number } | null;
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   readonly onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   readonly onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   readonly onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
+  readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   readonly onDrop: React.DragEventHandler<HTMLDivElement>;
   readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
   readonly onShowExplorer: () => void;
@@ -40,11 +42,13 @@ export default function CanvasViewport({
   edges,
   nodeTypes,
   gridSize,
+  viewport,
   onNodesChange,
   onEdgesChange,
   onConnect,
   onNodeClick,
   onSelectionChange,
+  onViewportChange,
   onDrop,
   onDragOver,
   onShowExplorer,
@@ -87,12 +91,18 @@ export default function CanvasViewport({
         onNodeClick={onNodeClick}
         onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
-        fitView
+        fitView={viewport == null}
+        fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
+        minZoom={0.35}
+        defaultViewport={viewport ?? undefined}
+        onMoveEnd={(_event, nextViewport) => onViewportChange(nextViewport)}
         className="bg-slate-950"
       >
         <Background color="#374151" gap={gridSize} />
         <Controls className="bg-slate-900 border-slate-600" />
         <MiniMap
+          pannable
+          zoomable
           style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 6 }}
           maskColor="rgba(2, 6, 23, 0.65)"
           maskStrokeColor="#475569"

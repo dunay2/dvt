@@ -28,7 +28,7 @@ export function deriveConnectionStatus(
     snapshot.dbReady.error !== null;
 
   if (
-    snapshot.healthz.status === 'degraded' ||
+    snapshot.healthz.data.status === 'degraded' ||
     isReadyDegraded ||
     isDbDegraded ||
     hasOptionalEndpointError

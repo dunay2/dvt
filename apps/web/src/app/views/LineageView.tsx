@@ -221,7 +221,7 @@ export default function LineageView() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-slate-950">
+    <div className="flex h-full min-h-0 flex-col bg-slate-950">
       {/* Header */}
       <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
         <div className="mb-4 flex items-center gap-3">
@@ -284,8 +284,8 @@ export default function LineageView() {
       )}
 
       {/* Main Content */}
-      <ScrollArea className="flex-1">
-        <div className="p-6">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="p-6 pb-10">
           <div className="mx-auto max-w-4xl space-y-4">
             {!focusNode && !isLoading && (
               <p className="text-sm text-slate-400">No nodes loaded. Check workspace connection.</p>

@@ -13,14 +13,19 @@ const SHELL_NAV = [
   { to: '/admin', icon: Shield, label: 'Admin', level: 'admin' as const },
 ];
 
+const NAV_LINK_CLASS =
+  'flex size-10 items-center justify-center rounded-xl border border-transparent text-slate-300 transition-colors shrink-0';
+
+const NAV_ICON_CLASS = 'size-[18px] shrink-0';
+
 export default function LeftNavigation() {
   const { data: capabilities } = useCapabilitiesQuery();
   const pluginViews = getNavigationViews(capabilities);
 
   return (
-    <div className="bg-slate-900 border-r border-slate-700 w-14">
+    <div className="w-16 shrink-0 border-r border-slate-700 bg-slate-900">
       <TooltipProvider delayDuration={300}>
-        <nav className="flex h-full flex-col items-center gap-2 overflow-y-auto py-3">
+        <nav className="flex h-full flex-col items-center gap-3.5 overflow-y-auto py-4">
           {/* Plugin-contributed nav items (core + extended), sorted by order */}
           {pluginViews.map((view) => {
             const Icon = view.nav.icon;
@@ -32,13 +37,13 @@ export default function LeftNavigation() {
                     to={view.path}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center justify-center h-10 w-10 text-slate-300 border border-transparent rounded-lg transition-colors',
+                        NAV_LINK_CLASS,
                         'hover:bg-slate-950 hover:text-white',
                         isActive && 'bg-slate-950 text-white border-blue-500'
                       )
                     }
                   >
-                    <Icon className="size-6" />
+                    <Icon className={NAV_ICON_CLASS} />
                   </NavLink>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -59,13 +64,13 @@ export default function LeftNavigation() {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-center h-10 w-10 text-slate-300 border border-transparent rounded-lg transition-colors',
+                      NAV_LINK_CLASS,
                       'hover:bg-slate-950 hover:text-white',
                       isActive && 'bg-slate-950 text-white border-blue-500'
                     )
                   }
                 >
-                  <item.icon className="size-6" />
+                  <item.icon className={NAV_ICON_CLASS} />
                 </NavLink>
               </TooltipTrigger>
               <TooltipContent side="right">

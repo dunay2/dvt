@@ -20,12 +20,7 @@ const queryClient = new QueryClient({
 });
 
 function RootShell() {
-  const {
-    focusMode,
-    consolePanelHeight,
-    consolePanelVisible,
-    setConnectionStatus,
-  } = useAppStore();
+  const { focusMode, consolePanelHeight, consolePanelVisible, setConnectionStatus } = useAppStore();
   const platformHealth = usePlatformHealthQuery();
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import CanvasViewport from './CanvasViewport';
 const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
 const xyflowState = vi.hoisted(() => ({
   miniMapNodeColor: null as null | ((node: { data?: unknown }) => string),
+  lastReactFlowProps: null as null | Record<string, unknown>,
 }));
 
 vi.mock('../../plugins/nodeTypeRegistry', () => ({
@@ -20,20 +21,39 @@ vi.mock('@xyflow/react', () => ({
     children,
     onDrop,
     onDragOver,
+    ...props
   }: {
     children: React.ReactNode;
     onDrop?: React.DragEventHandler<HTMLDivElement>;
     onDragOver?: React.DragEventHandler<HTMLDivElement>;
-  }) => (
-    <div data-testid="react-flow" onDrop={onDrop} onDragOver={onDragOver}>
-      {children}
-    </div>
-  ),
+  }) =>
+    (() => {
+      xyflowState.lastReactFlowProps = props;
+      return (
+        <div data-testid="react-flow" onDrop={onDrop} onDragOver={onDragOver}>
+          {children}
+        </div>
+      );
+    })(),
   Background: ({ gap }: { gap: number }) => <div data-testid="background">gap:{gap}</div>,
   Controls: () => <div data-testid="controls" />,
-  MiniMap: ({ nodeColor }: { nodeColor: (node: { data?: unknown }) => string }) => {
+  MiniMap: ({
+    nodeColor,
+    pannable,
+    zoomable,
+  }: {
+    nodeColor: (node: { data?: unknown }) => string;
+    pannable?: boolean;
+    zoomable?: boolean;
+  }) => {
     xyflowState.miniMapNodeColor = nodeColor;
-    return <div data-testid="minimap" />;
+    return (
+      <div
+        data-testid="minimap"
+        data-pannable={String(Boolean(pannable))}
+        data-zoomable={String(Boolean(zoomable))}
+      />
+    );
   },
 }));
 
@@ -48,11 +68,13 @@ function buildProps(
     edges: [],
     nodeTypes: {},
     gridSize: 24,
+    viewport: null,
     onNodesChange: vi.fn(),
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
     onNodeClick: vi.fn(),
     onSelectionChange: vi.fn(),
+    onViewportChange: vi.fn(),
     onDrop: vi.fn(),
     onDragOver: vi.fn(),
     onShowExplorer: vi.fn(),
@@ -73,6 +95,7 @@ describe('CanvasViewport', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     xyflowState.miniMapNodeColor = null;
+    xyflowState.lastReactFlowProps = null;
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
       minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
     }));
@@ -137,5 +160,30 @@ describe('CanvasViewport', () => {
     expect(xyflowState.miniMapNodeColor?.({ data: {} })).toBe('#6b7280');
     expect(mockResolveNodeKindRegistration).toHaveBeenCalledWith('dbt:model');
     expect(mockResolveNodeKindRegistration).toHaveBeenCalledWith('dvt:unknown');
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      fitView: true,
+      fitViewOptions: { padding: 0.2, maxZoom: 0.82 },
+      minZoom: 0.35,
+    });
+    const minimap = container.querySelector('[data-testid="minimap"]');
+    expect(minimap?.getAttribute('data-pannable')).toBe('true');
+    expect(minimap?.getAttribute('data-zoomable')).toBe('true');
+  });
+
+  it('restores a persisted viewport instead of forcing fitView', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasViewport
+          {...buildProps({
+            viewport: { x: 120, y: 48, zoom: 0.68 },
+          })}
+        />
+      );
+    });
+
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      fitView: false,
+      defaultViewport: { x: 120, y: 48, zoom: 0.68 },
+    });
   });
 });

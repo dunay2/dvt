@@ -23,11 +23,13 @@ function CanvasContent() {
         edges={controller.edges}
         nodeTypes={controller.nodeTypes}
         gridSize={controller.gridSize}
+        viewport={controller.viewport}
         onNodesChange={controller.onNodesChange}
         onEdgesChange={controller.onEdgesChange}
         onConnect={controller.onConnect}
         onNodeClick={controller.handleNodeClick}
         onSelectionChange={controller.onSelectionChange}
+        onViewportChange={controller.handleViewportChange}
         onDrop={controller.handleDrop}
         onDragOver={controller.handleDragOver}
         onHideExplorer={controller.hideExplorerPanel}

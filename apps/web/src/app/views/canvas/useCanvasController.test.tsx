@@ -13,6 +13,9 @@ type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
 type MockStore = {
   focusMode: boolean;
+  selectedTenant: string;
+  selectedProject: string;
+  selectedEnvironment: string;
   selectedNodes: string[];
   setSelectedNodes: ReturnType<typeof vi.fn>;
   inspectorNodeId: string | null;
@@ -38,6 +41,15 @@ type MockStore = {
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   gridSize: number;
+  canvasLayouts: Record<
+    string,
+    {
+      viewport: { x: number; y: number; zoom: number } | null;
+      nodePositions: Record<string, { x: number; y: number }>;
+    }
+  >;
+  setCanvasViewport: ReturnType<typeof vi.fn>;
+  setCanvasNodePositions: ReturnType<typeof vi.fn>;
 };
 
 type MockGraphHandlersResult = {
@@ -89,6 +101,9 @@ const state = vi.hoisted(
 function buildStore(): MockStore {
   return {
     focusMode: false,
+    selectedTenant: 'tenant-a',
+    selectedProject: 'project-a',
+    selectedEnvironment: 'dev',
     selectedNodes: ['node_1'],
     setSelectedNodes: vi.fn(),
     inspectorNodeId: 'node_1' as string | null,
@@ -114,6 +129,9 @@ function buildStore(): MockStore {
     explorerPanelVisible: true,
     inspectorPanelVisible: true,
     gridSize: 24,
+    canvasLayouts: {},
+    setCanvasViewport: vi.fn(),
+    setCanvasNodePositions: vi.fn(),
   };
 }
 

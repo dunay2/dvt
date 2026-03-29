@@ -69,6 +69,30 @@ function toRunStatusSnapshot(canonicalRun: CanonicalRun | null): RunStatusSnapsh
   };
 }
 
+function areNodePositionsEqual(
+  left: Record<string, { x: number; y: number }>,
+  right: Record<string, { x: number; y: number }>
+): boolean {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  return leftKeys.every((key) => {
+    const leftPosition = left[key];
+    const rightPosition = right[key];
+
+    return (
+      leftPosition != null &&
+      rightPosition != null &&
+      leftPosition.x === rightPosition.x &&
+      leftPosition.y === rightPosition.y
+    );
+  });
+}
+
 export function useCanvasController() {
   const navigate = useNavigate();
   const { data: capabilities } = useCapabilitiesQuery();
@@ -80,6 +104,9 @@ export function useCanvasController() {
 
   const {
     focusMode,
+    selectedTenant,
+    selectedProject,
+    selectedEnvironment,
     selectedNodes: selectedNodeIds,
     setSelectedNodes,
     inspectorNodeId,
@@ -100,7 +127,15 @@ export function useCanvasController() {
     explorerPanelVisible,
     inspectorPanelVisible,
     gridSize,
+    canvasLayouts,
+    setCanvasViewport,
+    setCanvasNodePositions,
   } = useAppStore();
+
+  const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
+  const workspaceCanvasLayout = canvasLayouts[workspaceLayoutKey];
+  const persistedViewport = workspaceCanvasLayout?.viewport ?? null;
+  const persistedNodePositions = workspaceCanvasLayout?.nodePositions ?? {};
 
   const graphSnapshotQuery = useQuery({
     queryKey: ['workspace', 'graph'],
@@ -169,9 +204,15 @@ export function useCanvasController() {
   const initialNodes: Node[] = useMemo(
     () =>
       canonicalNodes.map((node, i) =>
-        mapCanonicalNodeToCanvasNode(node, i, columnLevelLineageEnabled)
+        mapCanonicalNodeToCanvasNode(
+          node,
+          i,
+          columnLevelLineageEnabled,
+          undefined,
+          persistedNodePositions[node.id]
+        )
       ),
-    [canonicalNodes, columnLevelLineageEnabled]
+    [canonicalNodes, columnLevelLineageEnabled, persistedNodePositions]
   );
 
   const initialEdges: Edge[] = useMemo(
@@ -216,9 +257,67 @@ export function useCanvasController() {
   ]);
 
   useEffect(() => {
-    setNodes(initialNodes);
+    setNodes((currentNodes) => {
+      const nextNodes = canonicalNodes.map((node, index) => {
+        const currentNode = currentNodes.find((candidate) => candidate.id === node.id);
+
+        return mapCanonicalNodeToCanvasNode(
+          node,
+          index,
+          columnLevelLineageEnabled,
+          undefined,
+          currentNode?.position ?? persistedNodePositions[node.id]
+        );
+      });
+
+      const isSameNodeLayout =
+        currentNodes.length === nextNodes.length &&
+        currentNodes.every((node, index) => {
+          const nextNode = nextNodes[index];
+
+          return (
+            nextNode != null &&
+            node.id === nextNode.id &&
+            node.position.x === nextNode.position.x &&
+            node.position.y === nextNode.position.y &&
+            node.data.showColumns === nextNode.data.showColumns
+          );
+        });
+
+      return isSameNodeLayout ? currentNodes : nextNodes;
+    });
     setEdges(initialEdges);
-  }, [initialEdges, initialNodes, setEdges, setNodes]);
+  }, [
+    canonicalNodes,
+    columnLevelLineageEnabled,
+    initialEdges,
+    persistedNodePositions,
+    setEdges,
+    setNodes,
+  ]);
+
+  useEffect(() => {
+    if (nodes.some((node) => node.dragging)) {
+      return;
+    }
+
+    const nextPositions = Object.fromEntries(
+      nodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
+    );
+
+    if (areNodePositionsEqual(persistedNodePositions, nextPositions)) {
+      return;
+    }
+
+    setCanvasNodePositions(workspaceLayoutKey, nextPositions);
+  }, [nodes, persistedNodePositions, setCanvasNodePositions, workspaceLayoutKey]);
+
+  const handleViewportChange = useCallback(
+    (viewport: { x: number; y: number; zoom: number }) => {
+      setCanvasViewport(workspaceLayoutKey, viewport);
+    },
+    [setCanvasViewport, workspaceLayoutKey]
+  );
 
   const graphHandlers = useCanvasGraphHandlers({
     graphStrategy,
@@ -318,11 +417,13 @@ export function useCanvasController() {
     edges,
     nodeTypes,
     gridSize,
+    viewport: persistedViewport,
     onNodesChange,
     onEdgesChange,
     onConnect: graphHandlers.onConnect,
     handleNodeClick: graphHandlers.handleNodeClick,
     onSelectionChange: graphHandlers.onSelectionChange,
+    handleViewportChange,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
     hideExplorerPanel: toggleExplorerPanel,

@@ -1,4 +1,5 @@
 import {
+  Blocks,
   Database,
   Table,
   CheckCircle2,
@@ -6,6 +7,8 @@ import {
   Loader2,
   ArrowRight,
   ArrowLeft,
+  FileJson,
+  RadioTower,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -40,7 +43,16 @@ interface SourceImportWizardProps {
   onComplete?: (result: ImportSourcesResult) => void;
 }
 
-type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | 'review' | 'result';
+type WizardStep =
+  | 'sourceType'
+  | 'connection'
+  | 'selection'
+  | 'grouping'
+  | 'options'
+  | 'review'
+  | 'result';
+
+type DataObjectSourceType = 'database' | 'file' | 'api' | 'stream';
 
 interface TableInfo {
   database: string;
@@ -53,7 +65,8 @@ interface TableInfo {
 
 export default function SourceImportWizard({ open, onClose, onComplete }: SourceImportWizardProps) {
   const workspaceService = useMemo(() => createWorkspaceService(resolveDataSource()), []);
-  const [currentStep, setCurrentStep] = useState<WizardStep>('connection');
+  const [currentStep, setCurrentStep] = useState<WizardStep>('sourceType');
+  const [selectedSourceType, setSelectedSourceType] = useState<DataObjectSourceType>('database');
   const [connections, setConnections] = useState<WarehouseConnection[]>([]);
   const [selectedConnection, setSelectedConnection] = useState<string | null>(null);
   const [tables, setTables] = useState<TableInfo[]>([]);
@@ -150,6 +163,10 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
   }, [open, selectedConnection, workspaceService]);
 
   const handleNext = () => {
+    if (currentStep === 'sourceType' && selectedSourceType !== 'database') {
+      toast.error('Only Database is available in the current product slice');
+      return;
+    }
     if (currentStep === 'connection' && !selectedConnection) {
       toast.error('Please select a connection');
       return;
@@ -160,6 +177,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     }
 
     const steps: WizardStep[] = [
+      'sourceType',
       'connection',
       'selection',
       'grouping',
@@ -178,6 +196,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
   const handleBack = () => {
     const steps: WizardStep[] = [
+      'sourceType',
       'connection',
       'selection',
       'grouping',
@@ -222,9 +241,9 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
       setImportResult(result);
       setCurrentStep('result');
-      toast.success('Sources imported successfully');
+      toast.success('Data objects registered successfully');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to import sources.';
+      const message = error instanceof Error ? error.message : 'Failed to register data objects.';
       setLoadError(message);
       toast.error(message);
     } finally {
@@ -238,7 +257,8 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     }
     onClose();
     // Reset wizard
-    setCurrentStep('connection');
+    setCurrentStep('sourceType');
+    setSelectedSourceType('database');
     setConnections([]);
     setSelectedConnection(null);
     setTables([]);
@@ -260,13 +280,105 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
   const renderStepContent = () => {
     switch (currentStep) {
+      case 'sourceType':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h3 className="mb-2 text-lg font-medium">Choose data source type</h3>
+              <p className="mb-4 text-sm text-slate-300">
+                Select which kind of DataObject you want to discover and register into the graph
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  id: 'database' as const,
+                  label: 'Database',
+                  description: 'Schemas and tables from a relational or warehouse source',
+                  icon: Database,
+                  available: true,
+                },
+                {
+                  id: 'file' as const,
+                  label: 'File',
+                  description: 'CSV, Excel, JSON or parquet-backed data objects',
+                  icon: FileJson,
+                  available: false,
+                },
+                {
+                  id: 'api' as const,
+                  label: 'API',
+                  description: 'Service endpoints and schema-driven data objects',
+                  icon: Blocks,
+                  available: false,
+                },
+                {
+                  id: 'stream' as const,
+                  label: 'Stream',
+                  description: 'Event or message stream descriptors',
+                  icon: RadioTower,
+                  available: false,
+                },
+              ].map((sourceType) => {
+                const Icon = sourceType.icon;
+                const isSelected = selectedSourceType === sourceType.id;
+
+                return (
+                  <Card
+                    key={sourceType.id}
+                    className={`p-4 transition-all ${
+                      sourceType.available
+                        ? isSelected
+                          ? 'cursor-pointer border-blue-500 bg-blue-900/20'
+                          : 'cursor-pointer border-slate-600 hover:border-gray-600'
+                        : 'border-slate-700 bg-slate-950/40 opacity-70'
+                    }`}
+                    onClick={() => {
+                      if (sourceType.available) {
+                        setSelectedSourceType(sourceType.id);
+                      }
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg border border-slate-700 bg-slate-900 p-2">
+                          <Icon className="size-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{sourceType.label}</div>
+                          <div className="mt-1 text-xs text-slate-300">
+                            {sourceType.description}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={sourceType.available ? 'outline' : 'secondary'}>
+                        {sourceType.available ? 'available' : 'not available yet'}
+                      </Badge>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">
+              This slice supports real registration only for{' '}
+              <span className="text-slate-200">Database</span>. File, API, and Stream remain visible
+              to establish the DataObject Registry boundary.
+            </div>
+          </div>
+        );
+
       case 'connection':
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium mb-2">Select Connection</h3>
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-lg font-medium">Choose database connection</h3>
+                <Badge variant="outline">Database</Badge>
+              </div>
               <p className="text-sm text-slate-300 mb-4">
-                Choose a warehouse connection to import sources from
+                Choose which database connection should be used to discover candidate data objects
               </p>
             </div>
 
@@ -334,7 +446,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             <div>
               <h3 className="text-lg font-medium mb-2">Select Tables</h3>
               <p className="text-sm text-slate-300 mb-4">
-                Choose tables to import as sources. Selected: {selectedCount}
+                Choose tables to register as data objects. Selected: {selectedCount}
               </p>
             </div>
 
@@ -416,7 +528,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             <div>
               <h3 className="text-lg font-medium mb-2">Grouping Strategy</h3>
               <p className="text-sm text-slate-300 mb-4">
-                Choose how to group tables into dbt source definitions
+                Choose how discovered tables should be grouped into registered data objects
               </p>
             </div>
 
@@ -477,7 +589,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             <div>
               <h3 className="text-lg font-medium mb-2">Metadata Options</h3>
               <p className="text-sm text-slate-300 mb-4">
-                Configure what metadata to include in source definitions
+                Configure what metadata to include when registering data objects
               </p>
             </div>
 
@@ -551,7 +663,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             <div>
               <h3 className="text-lg font-medium mb-2">Review & Confirm</h3>
               <p className="text-sm text-slate-300 mb-4">
-                Review your import configuration before proceeding
+                Review your DataObject Registry configuration before proceeding
               </p>
             </div>
 
@@ -567,7 +679,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
                   <span className="font-medium">{selectedCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-300">Sources to Create:</span>
+                  <span className="text-slate-300">Data object groups:</span>
                   <span className="font-medium">{previewSchemaGroups.size}</span>
                 </div>
                 <div className="flex justify-between">
@@ -597,13 +709,15 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             </Card>
 
             <Card className="p-4 border-slate-600">
-              <h4 className="font-medium text-sm mb-3">Sources Preview</h4>
+              <h4 className="font-medium text-sm mb-3">Registry preview</h4>
               <ScrollArea className="h-48">
                 <div className="space-y-2">
                   {Array.from(previewSchemaGroups.entries()).map(([key, groupTables]) => (
                     <div key={key} className="border border-slate-600 rounded p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <code className="text-sm text-blue-400">source: {key.toLowerCase()}</code>
+                        <code className="text-sm text-blue-400">
+                          data-object-group: {key.toLowerCase()}
+                        </code>
                         <Badge variant="secondary" className="text-xs">
                           {groupTables.length} tables
                         </Badge>
@@ -634,27 +748,27 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-2">Import Complete!</h3>
+              <h3 className="text-lg font-medium mb-2">Registry update complete</h3>
               <p className="text-sm text-slate-300">
-                Your sources have been successfully imported and are ready to use
+                Your selected tables have been registered into the workspace graph
               </p>
             </div>
 
             <Card className="p-4 border-slate-600 text-left">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-300">Sources Created:</span>
+                  <span className="text-slate-300">Groups created:</span>
                   <span className="font-medium text-green-400">{importResult.sourcesCreated}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-300">Tables Imported:</span>
+                  <span className="text-slate-300">Tables registered:</span>
                   <span className="font-medium text-green-400">{importResult.tablesImported}</span>
                 </div>
               </div>
             </Card>
 
             <Card className="p-4 border-slate-600 text-left">
-              <h4 className="font-medium text-sm mb-2">YAML Files Created</h4>
+              <h4 className="font-medium text-sm mb-2">Registry files created</h4>
               <ScrollArea className="h-24">
                 <div className="space-y-1 text-xs font-mono">
                   {importResult.yamlFiles.map((file: string, i: number) => (
@@ -668,8 +782,8 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
             <div className="text-xs text-slate-400 bg-blue-900/20 border border-blue-800 rounded p-3">
               <AlertCircle className="size-4 inline-block mr-2" />
-              The workspace graph has been refreshed locally. Persisted backend import requires a
-              dedicated API endpoint in `api` mode.
+              The workspace graph has been refreshed locally. Persisted backend registry writes
+              require a dedicated API endpoint in `api` mode.
             </div>
           </div>
         );
@@ -689,44 +803,40 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Import Sources from Warehouse</DialogTitle>
+          <DialogTitle>DataObject Registry</DialogTitle>
           <DialogDescription>
-            Import warehouse tables as dbt source nodes and refresh the current workspace graph
+            Choose a source type, discover candidate data objects, and register them into the
+            current workspace graph
           </DialogDescription>
         </DialogHeader>
 
         {/* Progress Steps */}
         {currentStep !== 'result' && (
           <div className="flex items-center justify-between mb-4">
-            {['connection', 'selection', 'grouping', 'options', 'review'].map((step, idx) => (
-              <div key={step} className="flex items-center flex-1">
-                <div
-                  className={`flex items-center justify-center size-8 rounded-full text-xs font-medium ${
-                    currentStep === step
-                      ? 'bg-blue-500 text-white'
-                      : ['connection', 'selection', 'grouping', 'options', 'review'].indexOf(
-                            currentStep
-                          ) >
-                          ['connection', 'selection', 'grouping', 'options', 'review'].indexOf(step)
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-700 text-slate-300'
-                  }`}
-                >
-                  {idx + 1}
-                </div>
-                {idx < 4 && (
+            {['sourceType', 'connection', 'selection', 'grouping', 'options', 'review'].map(
+              (step, idx, allSteps) => (
+                <div key={step} className="flex items-center flex-1">
                   <div
-                    className={`flex-1 h-0.5 ${
-                      ['connection', 'selection', 'grouping', 'options', 'review'].indexOf(
-                        currentStep
-                      ) > idx
-                        ? 'bg-green-500'
-                        : 'bg-gray-700'
+                    className={`flex items-center justify-center size-8 rounded-full text-xs font-medium ${
+                      currentStep === step
+                        ? 'bg-blue-500 text-white'
+                        : allSteps.indexOf(currentStep) > allSteps.indexOf(step)
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-700 text-slate-300'
                     }`}
-                  />
-                )}
-              </div>
-            ))}
+                  >
+                    {idx + 1}
+                  </div>
+                  {idx < allSteps.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 ${
+                        allSteps.indexOf(currentStep) > idx ? 'bg-green-500' : 'bg-gray-700'
+                      }`}
+                    />
+                  )}
+                </div>
+              )
+            )}
           </div>
         )}
 
@@ -744,7 +854,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 'connection'}
+                disabled={currentStep === 'sourceType'}
               >
                 <ArrowLeft className="size-4 mr-2" />
                 Back
@@ -758,12 +868,12 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
                   {isProcessing ? (
                     <>
                       <Loader2 className="size-4 mr-2 animate-spin" />
-                      Importing...
+                      Registering...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="size-4 mr-2" />
-                      Import Sources
+                      Register data objects
                     </>
                   )}
                 </Button>

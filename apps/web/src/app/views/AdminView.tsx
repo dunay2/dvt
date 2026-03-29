@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Database,
+  FileText,
+  Link2,
+  Radio,
+  Search,
+  Server,
   Shield,
   Users,
-  FileText,
-  CheckCircle2,
   XCircle,
-  Search,
-  Activity,
-  Database,
-  Radio,
-  Server,
-  AlertTriangle,
-  Link2,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -78,9 +78,8 @@ export default function AdminView() {
     : auditLog;
 
   return (
-    <div className="h-full bg-slate-950 flex flex-col">
-      {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4">
+    <div className="flex h-full flex-col bg-slate-950">
+      <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Shield className="size-6 text-red-400" />
@@ -89,30 +88,29 @@ export default function AdminView() {
         </div>
       </div>
 
-      {/* Main Content */}
       <ScrollArea className="flex-1">
         <div className="p-6">
-          <Tabs defaultValue="roles" className="max-w-6xl mx-auto">
-            <TabsList className="bg-slate-900 border border-slate-700">
+          <Tabs defaultValue="platform" className="mx-auto max-w-6xl">
+            <TabsList className="border border-slate-700 bg-slate-900">
               <TabsTrigger value="platform">
-                <Server className="size-4 mr-2" />
+                <Server className="mr-2 size-4" />
                 Platform
               </TabsTrigger>
               <TabsTrigger value="roles">
-                <Users className="size-4 mr-2" />
+                <Users className="mr-2 size-4" />
                 Roles
               </TabsTrigger>
               <TabsTrigger value="permissions">
-                <Shield className="size-4 mr-2" />
+                <Shield className="mr-2 size-4" />
                 Permissions
               </TabsTrigger>
               <TabsTrigger value="audit">
-                <FileText className="size-4 mr-2" />
+                <FileText className="mr-2 size-4" />
                 Audit Log
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="platform" className="space-y-6 mt-6">
+            <TabsContent value="platform" className="mt-6 space-y-6">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Card className="border-slate-700 bg-slate-900 p-5">
                   <div className="flex items-start justify-between">
@@ -138,7 +136,7 @@ export default function AdminView() {
                     />
                   </div>
                   <div className="mt-4 text-sm text-slate-400">
-                    REST: {connectionStatus.rest} · events: {connectionStatus.liveEvents}
+                    REST: {connectionStatus.rest} - events: {connectionStatus.liveEvents}
                   </div>
                 </Card>
 
@@ -153,7 +151,7 @@ export default function AdminView() {
                     <Radio className="size-5 text-cyan-400" />
                   </div>
                   <div className="mt-4 text-sm text-slate-400">
-                    {platformHealth.data?.version.data?.name ?? 'backend'} · API{' '}
+                    {platformHealth.data?.version.data?.name ?? 'backend'} - API{' '}
                     {capabilities.data?.apiVersion ?? 'n/a'}
                   </div>
                 </Card>
@@ -181,15 +179,17 @@ export default function AdminView() {
                 <Card className="border-slate-700 bg-slate-900 p-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">Database</div>
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Data source mode
+                      </div>
                       <div className="mt-2 text-lg font-semibold">
-                        {platformHealth.data?.dbReady.data?.ok ? 'Ready' : 'Unavailable'}
+                        {platformHealth.data?.dataSourceMode ?? 'unknown'}
                       </div>
                     </div>
                     <Database className="size-5 text-emerald-400" />
                   </div>
                   <div className="mt-4 text-sm text-slate-400">
-                    {platformHealth.data?.dbReady.data?.reason ?? 'db/ready endpoint available'}
+                    API base: {platformHealth.data?.apiBaseUrl ?? 'not resolved'}
                   </div>
                 </Card>
               </div>
@@ -211,13 +211,18 @@ export default function AdminView() {
                       <div className="mb-2 flex items-center justify-between">
                         <span className="text-sm font-medium">/healthz</span>
                         <StatusBadge
-                          ok={platformHealth.data?.healthz.status === 'healthy'}
-                          label={platformHealth.data?.healthz.status ?? 'offline'}
+                          ok={platformHealth.data?.healthz.data.status === 'healthy'}
+                          label={platformHealth.data?.healthz.data.status ?? 'offline'}
                         />
                       </div>
                       <div className="text-xs text-slate-400">
                         intent reconciler:{' '}
-                        {platformHealth.data?.healthz.components.intentReconciler.status ?? 'n/a'}
+                        {platformHealth.data?.healthz.data.components.intentReconciler.status ??
+                          'n/a'}
+                      </div>
+                      <div className="mt-2 text-[11px] text-slate-500">
+                        HTTP {platformHealth.data?.healthz.statusCode ?? 'n/a'} -{' '}
+                        {platformHealth.data?.healthz.latencyMs ?? 'n/a'} ms
                       </div>
                     </div>
 
@@ -234,6 +239,10 @@ export default function AdminView() {
                           ? (platformHealth.data?.readyz.error ?? 'endpoint responded')
                           : 'endpoint not enabled'}
                       </div>
+                      <div className="mt-2 text-[11px] text-slate-500">
+                        HTTP {platformHealth.data?.readyz.statusCode ?? 'n/a'} -{' '}
+                        {platformHealth.data?.readyz.latencyMs ?? 'n/a'} ms
+                      </div>
                     </div>
 
                     <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
@@ -244,10 +253,14 @@ export default function AdminView() {
                           label={platformHealth.data?.version.statusCode?.toString() ?? 'n/a'}
                         />
                       </div>
-                      <div className="text-xs text-slate-400 font-mono">
+                      <div className="font-mono text-xs text-slate-400">
                         {platformHealth.data?.version.data
                           ? `${platformHealth.data.version.data.name}@${platformHealth.data.version.data.version}`
                           : (platformHealth.data?.version.error ?? 'endpoint not enabled')}
+                      </div>
+                      <div className="mt-2 text-[11px] text-slate-500">
+                        HTTP {platformHealth.data?.version.statusCode ?? 'n/a'} -{' '}
+                        {platformHealth.data?.version.latencyMs ?? 'n/a'} ms
                       </div>
                     </div>
 
@@ -264,17 +277,33 @@ export default function AdminView() {
                           platformHealth.data?.dbReady.error ??
                           'endpoint not enabled'}
                       </div>
+                      <div className="mt-2 text-[11px] text-slate-500">
+                        HTTP {platformHealth.data?.dbReady.statusCode ?? 'n/a'} -{' '}
+                        {platformHealth.data?.dbReady.latencyMs ?? 'n/a'} ms
+                      </div>
                     </div>
                   </div>
 
                   <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">
-                      API base URL
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <div className="text-xs uppercase tracking-wide text-slate-500">
+                          API base URL
+                        </div>
+                        <div className="mt-2 break-all font-mono text-sm text-slate-200">
+                          {platformHealth.data?.apiBaseUrl ?? 'not resolved'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-wide text-slate-500">
+                          Data source mode
+                        </div>
+                        <div className="mt-2 text-sm text-slate-200">
+                          {platformHealth.data?.dataSourceMode ?? 'unknown'}
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-2 font-mono text-sm text-slate-200 break-all">
-                      {platformHealth.data?.apiBaseUrl ?? 'not resolved'}
-                    </div>
-                    <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-3 text-xs text-slate-500">
                       fetched at {platformHealth.data?.fetchedAt ?? 'n/a'}
                     </div>
                   </div>
@@ -345,18 +374,17 @@ export default function AdminView() {
               </div>
             </TabsContent>
 
-            {/* Roles Tab */}
-            <TabsContent value="roles" className="space-y-4 mt-6">
-              <div className="flex items-center justify-between mb-4">
+            <TabsContent value="roles" className="mt-6 space-y-4">
+              <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-slate-300">Manage user roles and permissions</p>
                 <Button variant="default">Create Role</Button>
               </div>
 
               {roles.map((role) => (
-                <Card key={role.id} className="bg-slate-900 border-slate-700 p-5">
-                  <div className="flex items-start justify-between mb-4">
+                <Card key={role.id} className="border-slate-700 bg-slate-900 p-5">
+                  <div className="mb-4 flex items-start justify-between">
                     <div>
-                      <h3 className="font-semibold mb-2">{role.name}</h3>
+                      <h3 className="mb-2 font-semibold">{role.name}</h3>
                       {Object.keys(role.scope).length > 0 && (
                         <div className="flex gap-2">
                           {Object.entries(role.scope).map(([key, value]) => (
@@ -377,10 +405,10 @@ export default function AdminView() {
                       <div
                         key={perm}
                         className={cn(
-                          'flex items-center gap-2 p-2 rounded border',
+                          'flex items-center gap-2 rounded border p-2',
                           enabled
-                            ? 'bg-green-900/20 border-green-800 text-green-400'
-                            : 'bg-gray-900/20 border-slate-700 text-slate-400'
+                            ? 'border-green-800 bg-green-900/20 text-green-400'
+                            : 'border-slate-700 bg-gray-900/20 text-slate-400'
                         )}
                       >
                         {enabled ? (
@@ -401,21 +429,20 @@ export default function AdminView() {
               ))}
             </TabsContent>
 
-            {/* Permissions Matrix Tab */}
             <TabsContent value="permissions" className="mt-6">
-              <Card className="bg-slate-900 border-slate-700">
+              <Card className="border-slate-700 bg-slate-900">
                 <div className="p-5">
-                  <h3 className="font-semibold mb-4">Permission Matrix</h3>
+                  <h3 className="mb-4 font-semibold">Permission Matrix</h3>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-slate-700">
                           <TableHead className="text-white">Role</TableHead>
-                          <TableHead className="text-white text-center">Plan</TableHead>
-                          <TableHead className="text-white text-center">Run</TableHead>
-                          <TableHead className="text-white text-center">Edit Edges</TableHead>
-                          <TableHead className="text-white text-center">Manage Plugins</TableHead>
-                          <TableHead className="text-white text-center">Manage RBAC</TableHead>
+                          <TableHead className="text-center text-white">Plan</TableHead>
+                          <TableHead className="text-center text-white">Run</TableHead>
+                          <TableHead className="text-center text-white">Edit Edges</TableHead>
+                          <TableHead className="text-center text-white">Manage Plugins</TableHead>
+                          <TableHead className="text-center text-white">Manage RBAC</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -424,37 +451,37 @@ export default function AdminView() {
                             <TableCell className="font-medium">{role.name}</TableCell>
                             <TableCell className="text-center">
                               {role.permissions.canPlan ? (
-                                <CheckCircle2 className="size-4 text-green-400 mx-auto" />
+                                <CheckCircle2 className="mx-auto size-4 text-green-400" />
                               ) : (
-                                <XCircle className="size-4 text-gray-600 mx-auto" />
+                                <XCircle className="mx-auto size-4 text-gray-600" />
                               )}
                             </TableCell>
                             <TableCell className="text-center">
                               {role.permissions.canRun ? (
-                                <CheckCircle2 className="size-4 text-green-400 mx-auto" />
+                                <CheckCircle2 className="mx-auto size-4 text-green-400" />
                               ) : (
-                                <XCircle className="size-4 text-gray-600 mx-auto" />
+                                <XCircle className="mx-auto size-4 text-gray-600" />
                               )}
                             </TableCell>
                             <TableCell className="text-center">
                               {role.permissions.canEditEdges ? (
-                                <CheckCircle2 className="size-4 text-green-400 mx-auto" />
+                                <CheckCircle2 className="mx-auto size-4 text-green-400" />
                               ) : (
-                                <XCircle className="size-4 text-gray-600 mx-auto" />
+                                <XCircle className="mx-auto size-4 text-gray-600" />
                               )}
                             </TableCell>
                             <TableCell className="text-center">
                               {role.permissions.canManagePlugins ? (
-                                <CheckCircle2 className="size-4 text-green-400 mx-auto" />
+                                <CheckCircle2 className="mx-auto size-4 text-green-400" />
                               ) : (
-                                <XCircle className="size-4 text-gray-600 mx-auto" />
+                                <XCircle className="mx-auto size-4 text-gray-600" />
                               )}
                             </TableCell>
                             <TableCell className="text-center">
                               {role.permissions.canManageRBAC ? (
-                                <CheckCircle2 className="size-4 text-green-400 mx-auto" />
+                                <CheckCircle2 className="mx-auto size-4 text-green-400" />
                               ) : (
-                                <XCircle className="size-4 text-gray-600 mx-auto" />
+                                <XCircle className="mx-auto size-4 text-gray-600" />
                               )}
                             </TableCell>
                           </TableRow>
@@ -466,21 +493,20 @@ export default function AdminView() {
               </Card>
             </TabsContent>
 
-            {/* Audit Log Tab */}
             <TabsContent value="audit" className="mt-6">
               <div className="mb-4">
                 <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-300" />
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search audit log..."
-                    className="pl-10 bg-slate-950 border-slate-600"
+                    className="border-slate-600 bg-slate-950 pl-10"
                   />
                 </div>
               </div>
 
-              <Card className="bg-slate-900 border-slate-700">
+              <Card className="border-slate-700 bg-slate-900">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-700">
@@ -495,7 +521,7 @@ export default function AdminView() {
                   <TableBody>
                     {filteredAuditLog.map((entry) => (
                       <TableRow key={entry.id} className="border-slate-700">
-                        <TableCell className="text-xs font-mono text-slate-300">
+                        <TableCell className="font-mono text-xs text-slate-300">
                           {new Date(entry.timestamp).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-sm">{entry.user}</TableCell>
@@ -505,7 +531,7 @@ export default function AdminView() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-mono text-sm">{entry.resource}</TableCell>
-                        <TableCell className="text-sm text-slate-300 max-w-md truncate">
+                        <TableCell className="max-w-md truncate text-sm text-slate-300">
                           {entry.details}
                         </TableCell>
                         <TableCell>

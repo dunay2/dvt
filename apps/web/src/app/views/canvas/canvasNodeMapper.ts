@@ -15,14 +15,15 @@ export function mapCanonicalNodeToCanvasNode(
   canonicalNode: CanonicalNode,
   index: number,
   showColumns: boolean,
-  overlayDecoration?: MergedNodeDecoration | null
+  overlayDecoration?: MergedNodeDecoration | null,
+  persistedPosition?: { x: number; y: number }
 ): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
 
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
-    position: { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
+    position: persistedPosition ?? { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
     data: {
       name: canonicalNode.name,
       type: (canonicalNode.metadata?.dbtType as string | undefined) ?? kindRegistration.label,

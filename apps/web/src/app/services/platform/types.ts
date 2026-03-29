@@ -53,14 +53,23 @@ export type DbReadyPayload = {
 export type OptionalEndpointProbe<T> = {
   available: boolean;
   statusCode: number | null;
+  latencyMs: number | null;
   data: T | null;
   error: string | null;
+};
+
+export type RequiredEndpointProbe<T> = {
+  available: true;
+  statusCode: number;
+  latencyMs: number;
+  data: T;
 };
 
 export type PlatformHealthSnapshot = {
   fetchedAt: string;
   apiBaseUrl: string;
-  healthz: HealthzPayload;
+  dataSourceMode: 'mock' | 'api';
+  healthz: RequiredEndpointProbe<HealthzPayload>;
   readyz: OptionalEndpointProbe<ReadyzPayload>;
   version: OptionalEndpointProbe<VersionPayload>;
   dbReady: OptionalEndpointProbe<DbReadyPayload>;

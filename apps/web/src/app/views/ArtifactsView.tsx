@@ -317,7 +317,7 @@ export default function ArtifactsView() {
   const artifacts = importedArtifact ? [importedArtifact, ...SERVER_ARTIFACTS] : SERVER_ARTIFACTS;
 
   return (
-    <div className="flex h-full flex-col bg-slate-950 text-slate-50">
+    <div className="flex h-full min-h-0 flex-col bg-slate-950 text-slate-50">
       <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -337,8 +337,8 @@ export default function ArtifactsView() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-6">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="p-6 pb-10">
           <div className="mx-auto max-w-5xl space-y-6">
             <div>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
