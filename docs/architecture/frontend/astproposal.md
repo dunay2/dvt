@@ -1,11 +1,12 @@
-Ventajas
-más legible para humanos
-más cercano a pasos de ejecución
-mejor narrativa
-Desventaja
-puede ocultar la estructura del grafo
-puede derivar en un pseudo-lenguaje procedural
-Mi recomendación
+1. Introduccion
+   Ventajas
+   más legible para humanos
+   más cercano a pasos de ejecución
+   mejor narrativa
+   Desventaja
+   puede ocultar la estructura del grafo
+   puede derivar en un pseudo-lenguaje procedural
+   Mi recomendación
 
 Para Raven Plan, no iría a un DSL demasiado imperativo.
 
