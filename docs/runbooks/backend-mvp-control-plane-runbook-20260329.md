@@ -28,6 +28,20 @@ Public operational routes:
 - `GET /healthz` (always registered)
 - `GET /readyz` only when `DVT_READYZ_ENABLED=true`
 
+## Operation-Level Authorization Matrix
+
+Required action grants by endpoint:
+
+| Endpoint                                                       | Action          |
+| -------------------------------------------------------------- | --------------- |
+| `POST /runs/start`                                             | `run:start`     |
+| `GET /runs`                                                    | `run:list`      |
+| `GET /runs/:runId`                                             | `run:view`      |
+| `GET /runs/:runId/events`                                      | `run:logs:view` |
+| `POST /runs/:runId/signal` with `PAUSE`/`RESUME`               | `run:signal`    |
+| `POST /runs/:runId/cancel`                                     | `run:cancel`    |
+| `POST /runs/:runId/signal` with `CANCEL` (compat mode enabled) | `run:cancel`    |
+
 ## Required Environment Posture
 
 To enable protected runtime routes:

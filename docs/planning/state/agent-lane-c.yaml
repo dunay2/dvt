@@ -52,10 +52,12 @@ tasks:
     target: Compat policy + timer wiring integration coverage.
   - task_id: RBAC at operation level
     priority: P1
-    status: in_progress
+    status: done
     objective: enforce tenant-aware start/signal/cancel rules.
     dependency: none
-    target: Define operation-level authorization boundaries.
+    target:
+      Operation-level authorization boundaries are explicit and validated with negative integration
+      coverage for action-specific denials (`run:cancel` vs `run:signal`).
   - task_id: snapshot staleness in API
     priority: P1
     status: queued

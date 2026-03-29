@@ -37,6 +37,14 @@ const VALID_PLAN_REF = {
   planId: 'integration-plan',
   planVersion: '1.0',
 };
+const TENANT_ACTIONS_FULL = [
+  'run:start',
+  'run:list',
+  'run:view',
+  'run:logs:view',
+  'run:signal',
+  'run:cancel',
+] as const;
 
 type JwksServerHandle = {
   readonly server: Server;
@@ -91,14 +99,7 @@ describeIfPg('protected runtime integration', () => {
       tenantId: TENANT_ID,
       projectId: PROJECT_ID,
       environmentId: ENVIRONMENT_ID,
-      tenantActions: [
-        'run:start',
-        'run:list',
-        'run:view',
-        'run:logs:view',
-        'run:signal',
-        'run:cancel',
-      ],
+      tenantActions: TENANT_ACTIONS_FULL,
     });
 
     signingKey = jwksServer.privateKey;
@@ -294,6 +295,100 @@ describeIfPg('protected runtime integration', () => {
     expect(response.json()).toEqual({
       error: 'FORBIDDEN',
       code: 'TOKEN_ASSERTION_CONFLICT',
+    });
+  });
+
+  it('rejects /runs/:runId/cancel when principal lacks run:cancel permission', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: ['run:start', 'run:list', 'run:view', 'run:logs:view', 'run:signal'],
+    });
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/runs/non-authorized-cancel/cancel',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        reason: 'permission-check',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      error: 'FORBIDDEN',
+      code: 'ACTION_NOT_GRANTED',
+    });
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_FULL,
+    });
+  });
+
+  it('rejects /runs/:runId/signal for PAUSE when principal lacks run:signal permission', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: ['run:start', 'run:list', 'run:view', 'run:logs:view', 'run:cancel'],
+    });
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/runs/non-authorized-signal/signal',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        signalType: 'PAUSE',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      error: 'FORBIDDEN',
+      code: 'ACTION_NOT_GRANTED',
+    });
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_FULL,
     });
   });
 });

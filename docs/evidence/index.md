@@ -30,6 +30,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260320 - API runtime query integration](ED-20260320-api-runtime-query-integration.md)
 - [ED-20260320 - Planner R2 typed graph-source boundary](ED-20260320-planner-r2-typed-graph-source-boundary.md)
 - [ED-20260321 - Planner-backed startRun QA rationale and discoveries](ED-20260321-planner-start-run-qa-rationale.md)
+- [ED-20260329 Lane C RBAC operation-level closeout](ED-20260329-lane-c-rbac-operation-level-closeout.md)
 - [ED-20260329 MVP backend operability roadmap reset](ED-20260329-mvp-backend-operability-roadmap-reset.md)
 - [ED-20260329 MVP-C1 backend control-plane runbook](ED-20260329-mvp-c1-backend-control-plane-runbook.md)
 - [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
