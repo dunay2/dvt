@@ -156,6 +156,34 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     }
   }
 
+  async function withClockAdaptersOnSharedSchema(
+    nowRef: { value: string },
+    fn: (adapterA: PostgresStateStoreAdapter, adapterB: PostgresStateStoreAdapter) => Promise<void>,
+    options?: { outboxClaimTimeoutMs?: number; lineageOutboxClaimTimeoutMs?: number }
+  ): Promise<void> {
+    const schema = allocateSchema();
+    const adapterA = new PostgresStateStoreAdapter({
+      schema,
+      now: () => nowRef.value,
+      outboxClaimTimeoutMs: options?.outboxClaimTimeoutMs,
+      lineageOutboxClaimTimeoutMs: options?.lineageOutboxClaimTimeoutMs,
+    });
+    const adapterB = new PostgresStateStoreAdapter({
+      schema,
+      now: () => nowRef.value,
+      assumeSchemaReady: true,
+      outboxClaimTimeoutMs: options?.outboxClaimTimeoutMs,
+      lineageOutboxClaimTimeoutMs: options?.lineageOutboxClaimTimeoutMs,
+    });
+    try {
+      await adapterA.migrate();
+      await fn(adapterA, adapterB);
+    } finally {
+      await adapterB.close();
+      await adapterA.close();
+    }
+  }
+
   // Ã¢â€â‚¬Ã¢â€â‚¬ bootstrapRunTx Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   test('bootstrapRunTx: stores metadata and RunQueued event atomically', () =>
@@ -296,6 +324,50 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await expect(
         adapter.listEvents('tenant-a', 'run-tenant-mismatch-guard')
       ).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: rejects RunFailed payloads that violate per-eventType schema', () =>
+    withAdapter(async (adapter) => {
+      const runId = 'run-invalid-runfailed-payload';
+      await adapter.bootstrapRunTx(makeBootstrap(runId));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid(runId), [
+          makeEvent({
+            runId,
+            eventType: 'RunFailed',
+            idempotencyKey: `${runId}:failed`,
+            payload: { reason: 'NOT_A_VALID_REASON' } as EventInput['payload'],
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventSchemaError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      });
+
+      await expect(adapter.listEvents('t1', runId)).resolves.toHaveLength(1);
+    }));
+
+  test('appendAndEnqueueTx: rejects StepCompleted payloads that violate per-eventType schema', () =>
+    withAdapter(async (adapter) => {
+      const runId = 'run-invalid-step-completed-payload';
+      await adapter.bootstrapRunTx(makeBootstrap(runId));
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid(runId), [
+          makeEvent({
+            runId,
+            eventType: 'StepCompleted',
+            idempotencyKey: `${runId}:step-completed`,
+            payload: { unexpected: true } as EventInput['payload'],
+          }),
+        ])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventSchemaError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      });
+
+      await expect(adapter.listEvents('t1', runId)).resolves.toHaveLength(1);
     }));
 
   test('appendAndEnqueueTx: does not consume runSeq slots for deduped entries within the same batch', () =>
@@ -615,6 +687,261 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }
       },
       { lineageOutboxClaimTimeoutMs: 90_000 }
+    );
+  });
+
+  test('lineage outbox: concurrent claimers do not double-claim and reclaim exactly once after timeout', async () => {
+    const nowRef = { value: NOW };
+    const claimLimit = 10;
+    const configuredClaimTimeoutMs = 90_000;
+    const beforeClaimExpiry = '2026-02-22T00:01:29.000Z';
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+    const runId = 'run-lineage-concurrent-claim';
+
+    await withClockAdaptersOnSharedSchema(
+      nowRef,
+      async (adapterA, adapterB) => {
+        await adapterA.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapterA.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStoreA = adapterA.getLineageOutboxStore();
+        const lineageStoreB = adapterB.getLineageOutboxStore();
+        await lineageStoreA.enqueue(runId, event);
+
+        const [firstClaimsA, firstClaimsB] = await Promise.all([
+          lineageStoreA.listPending(claimLimit),
+          lineageStoreB.listPending(claimLimit),
+        ]);
+        const firstClaims = [...firstClaimsA, ...firstClaimsB].filter(
+          (record) => record.runId === runId
+        );
+        expect(firstClaims).toHaveLength(1);
+        const firstClaimedRecord = requireDefined(
+          firstClaims[0],
+          'expected one worker to claim the lineage record'
+        );
+
+        nowRef.value = beforeClaimExpiry;
+        const beforeExpiryFromOtherWorker = await lineageStoreB.listPending(claimLimit);
+        expect(
+          beforeExpiryFromOtherWorker.find((record) => record.runId === runId)
+        ).toBeUndefined();
+        if (lineageStoreA.countPending) {
+          const lagBeforeExpiry = await lineageStoreA.countPending();
+          expect(lagBeforeExpiry).toBe(0);
+        }
+
+        nowRef.value = afterClaimExpiry;
+        if (lineageStoreA.countPending) {
+          const lagAfterExpiryBeforeReclaim = await lineageStoreA.countPending();
+          expect(lagAfterExpiryBeforeReclaim).toBeGreaterThanOrEqual(1);
+        }
+
+        const [reclaimsA, reclaimsB] = await Promise.all([
+          lineageStoreA.listPending(claimLimit),
+          lineageStoreB.listPending(claimLimit),
+        ]);
+        const reclaimedRecords = [...reclaimsA, ...reclaimsB].filter(
+          (record) => record.runId === runId
+        );
+        expect(reclaimedRecords).toHaveLength(1);
+        expect(reclaimedRecords[0]?.id).toBe(firstClaimedRecord.id);
+
+        if (lineageStoreA.countPending) {
+          const lagAfterReclaim = await lineageStoreA.countPending();
+          expect(lagAfterReclaim).toBe(0);
+        }
+      },
+      { lineageOutboxClaimTimeoutMs: configuredClaimTimeoutMs }
+    );
+  });
+
+  test('lineage outbox: markDelivered does not remove claims after timeout expiry', async () => {
+    const nowRef = { value: NOW };
+    const runId = 'run-lineage-mark-delivered-timeout-fence';
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+
+    await withClockAdapter(
+      nowRef,
+      async (adapter) => {
+        await adapter.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapter.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStore = adapter.getLineageOutboxStore();
+        await lineageStore.enqueue(runId, event);
+
+        const initialClaims = await lineageStore.listPending(claimLimit);
+        const claimed = requireDefined(
+          initialClaims.find((record) => record.runId === runId),
+          'expected initial lineage claim'
+        );
+
+        nowRef.value = afterClaimExpiry;
+        await lineageStore.markDelivered([claimed.id]);
+
+        if (lineageStore.countPending) {
+          const lagBeforeReclaim = await lineageStore.countPending();
+          expect(lagBeforeReclaim).toBeGreaterThanOrEqual(1);
+        }
+
+        const reclaimed = await lineageStore.listPending(claimLimit);
+        const reclaimedRecord = reclaimed.find((record) => record.runId === runId);
+        expect(reclaimedRecord).toBeDefined();
+        expect(reclaimedRecord?.id).toBe(claimed.id);
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
+  test('lineage outbox: markFailed returns not_found after timeout expiry and keeps event reclaimable', async () => {
+    const nowRef = { value: NOW };
+    const runId = 'run-lineage-mark-failed-timeout-fence';
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+
+    await withClockAdapter(
+      nowRef,
+      async (adapter) => {
+        await adapter.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapter.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStore = adapter.getLineageOutboxStore();
+        await lineageStore.enqueue(runId, event);
+
+        const initialClaims = await lineageStore.listPending(claimLimit);
+        const claimed = requireDefined(
+          initialClaims.find((record) => record.runId === runId),
+          'expected initial lineage claim'
+        );
+
+        nowRef.value = afterClaimExpiry;
+        const disposition = await lineageStore.markFailed(claimed.id, 'late-failure');
+        expect(disposition).toBe('not_found');
+
+        if (lineageStore.countPending) {
+          const lagBeforeReclaim = await lineageStore.countPending();
+          expect(lagBeforeReclaim).toBeGreaterThanOrEqual(1);
+        }
+
+        const reclaimed = await lineageStore.listPending(claimLimit);
+        const reclaimedRecord = reclaimed.find((record) => record.runId === runId);
+        expect(reclaimedRecord).toBeDefined();
+        expect(reclaimedRecord?.id).toBe(claimed.id);
+        expect(reclaimedRecord?.attempts).toBe(0);
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
+  test('lineage outbox: concurrent claimers split a pending batch without duplicate claims', async () => {
+    const nowRef = { value: NOW };
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const runIds = [
+      'run-lineage-batch-claim-a',
+      'run-lineage-batch-claim-b',
+      'run-lineage-batch-claim-c',
+    ];
+
+    await withClockAdaptersOnSharedSchema(
+      nowRef,
+      async (adapterA, adapterB) => {
+        const lineageStoreA = adapterA.getLineageOutboxStore();
+        const lineageStoreB = adapterB.getLineageOutboxStore();
+
+        for (const runId of runIds) {
+          await adapterA.bootstrapRunTx(makeBootstrap(runId));
+          const events = await adapterA.listEvents('t1', runId);
+          const event = requireDefined(events[0], `expected bootstrap event for ${runId}`);
+          await lineageStoreA.enqueue(runId, event);
+        }
+
+        const [claimsA, claimsB] = await Promise.all([
+          lineageStoreA.listPending(claimLimit),
+          lineageStoreB.listPending(claimLimit),
+        ]);
+        const claimedTargetRecords = [...claimsA, ...claimsB].filter((record) =>
+          runIds.includes(record.runId)
+        );
+        const uniqueClaimedIds = new Set(claimedTargetRecords.map((record) => record.id));
+
+        expect(claimedTargetRecords).toHaveLength(runIds.length);
+        expect(uniqueClaimedIds.size).toBe(runIds.length);
+        for (const runId of runIds) {
+          expect(claimedTargetRecords.some((record) => record.runId === runId)).toBe(true);
+        }
+
+        const [secondPassA, secondPassB] = await Promise.all([
+          lineageStoreA.listPending(claimLimit),
+          lineageStoreB.listPending(claimLimit),
+        ]);
+        const secondPassClaims = [...secondPassA, ...secondPassB].filter((record) =>
+          runIds.includes(record.runId)
+        );
+        expect(secondPassClaims).toHaveLength(0);
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
+    );
+  });
+
+  test('lineage outbox: stale worker markFailed cannot increment attempts after claim ownership changes', async () => {
+    const nowRef = { value: NOW };
+    const runId = 'run-lineage-stale-failed-owner-change';
+    const claimLimit = 10;
+    const claimTimeoutMs = 90_000;
+    const afterClaimExpiry = '2026-02-22T00:01:31.000Z';
+    const afterFirstBackoff = '2026-02-22T00:01:33.000Z';
+    const expectedAttemptsAfterSingleFailure = 1;
+
+    await withClockAdaptersOnSharedSchema(
+      nowRef,
+      async (adapterA, adapterB) => {
+        await adapterA.bootstrapRunTx(makeBootstrap(runId));
+        const events = await adapterA.listEvents('t1', runId);
+        const event = requireDefined(events[0], 'expected bootstrap event for lineage enqueue');
+        const lineageStoreA = adapterA.getLineageOutboxStore();
+        const lineageStoreB = adapterB.getLineageOutboxStore();
+        await lineageStoreA.enqueue(runId, event);
+
+        const firstClaims = await lineageStoreA.listPending(claimLimit);
+        const firstClaimedRecord = requireDefined(
+          firstClaims.find((record) => record.runId === runId),
+          'expected initial lineage claim'
+        );
+
+        nowRef.value = afterClaimExpiry;
+        const reclaimedByWorkerB = await lineageStoreB.listPending(claimLimit);
+        const reclaimedRecord = requireDefined(
+          reclaimedByWorkerB.find((record) => record.runId === runId),
+          'expected worker B reclaim after timeout'
+        );
+        expect(reclaimedRecord.id).toBe(firstClaimedRecord.id);
+
+        const ownerDisposition = await lineageStoreB.markFailed(
+          reclaimedRecord.id,
+          'owner-worker-failure'
+        );
+        expect(ownerDisposition).toBe('retry_scheduled');
+
+        const staleDisposition = await lineageStoreA.markFailed(
+          firstClaimedRecord.id,
+          'stale-worker-failure'
+        );
+        expect(staleDisposition).toBe('not_found');
+
+        nowRef.value = afterFirstBackoff;
+        const nextClaims = await lineageStoreA.listPending(claimLimit);
+        const retriedRecord = requireDefined(
+          nextClaims.find((record) => record.runId === runId),
+          'expected retried record after first backoff'
+        );
+        expect(retriedRecord.attempts).toBe(expectedAttemptsAfterSingleFailure);
+        expect(retriedRecord.lastError).toBe('owner-worker-failure');
+      },
+      { lineageOutboxClaimTimeoutMs: claimTimeoutMs }
     );
   });
 

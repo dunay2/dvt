@@ -1,38 +1,39 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const bootstrapMocks = vi.hoisted(() => {
-  const clientRelease = vi.fn();
-  const poolConnect = vi.fn().mockResolvedValue({ release: clientRelease });
   const poolEnd = vi.fn().mockResolvedValue(undefined);
   const poolCtor = vi.fn().mockImplementation(() => ({
-    connect: poolConnect,
     end: poolEnd,
   }));
 
+  const lineageStore = {
+    enqueue: vi.fn(),
+    listPending: vi.fn(),
+    markDelivered: vi.fn(),
+    markFailed: vi.fn(),
+    listDeadLetter: vi.fn(),
+    countPending: vi.fn(),
+  };
+  const stateStoreGetLineageOutboxStore = vi.fn().mockReturnValue(lineageStore);
   const stateStoreClose = vi.fn().mockResolvedValue(undefined);
   const stateStoreMigrate = vi.fn().mockResolvedValue(undefined);
   const stateStoreCtor = vi.fn().mockImplementation((config: unknown) => ({
     close: stateStoreClose,
     migrate: stateStoreMigrate,
+    getLineageOutboxStore: stateStoreGetLineageOutboxStore,
     config,
-  }));
-
-  const lineageStoreCtor = vi.fn().mockImplementation((schema: string, withClient: unknown) => ({
-    schema,
-    withClient,
   }));
 
   const sinkCtor = vi.fn().mockImplementation((config: unknown) => ({ config }));
 
   return {
-    clientRelease,
-    poolConnect,
     poolEnd,
     poolCtor,
+    lineageStore,
+    stateStoreGetLineageOutboxStore,
     stateStoreClose,
     stateStoreMigrate,
     stateStoreCtor,
-    lineageStoreCtor,
     sinkCtor,
   };
 });
@@ -43,7 +44,6 @@ vi.mock('pg', () => ({
 
 vi.mock('@dvt/adapter-postgres', () => ({
   PostgresStateStoreAdapter: bootstrapMocks.stateStoreCtor,
-  PostgresLineageOutboxStore: bootstrapMocks.lineageStoreCtor,
 }));
 
 vi.mock('@dvt/traceability-service', () => ({
@@ -55,7 +55,7 @@ afterEach(() => {
 });
 
 describe('buildLineageWorkerBootstrap', () => {
-  it('wires lineage outbox directly from the composition root', async () => {
+  it('resolves lineage outbox through the state-store port', async () => {
     const { buildLineageWorkerBootstrap } = await import('../src/bootstrap.js');
 
     const bootstrap = buildLineageWorkerBootstrap({
@@ -79,7 +79,7 @@ describe('buildLineageWorkerBootstrap', () => {
 
     expect(bootstrapMocks.poolCtor).toHaveBeenCalledTimes(1);
     expect(bootstrapMocks.stateStoreCtor).toHaveBeenCalledTimes(1);
-    expect(bootstrapMocks.lineageStoreCtor).toHaveBeenCalledWith('dvt', expect.any(Function));
+    expect(bootstrapMocks.stateStoreGetLineageOutboxStore).not.toHaveBeenCalled();
     expect(bootstrapMocks.sinkCtor).toHaveBeenCalledWith(
       expect.objectContaining({
         apiUrl: 'https://lineage.example/api',
@@ -87,22 +87,9 @@ describe('buildLineageWorkerBootstrap', () => {
       })
     );
 
-    const withClient = bootstrapMocks.lineageStoreCtor.mock.calls[0]?.[1];
-    expect(typeof withClient).toBe('function');
-    if (typeof withClient !== 'function') {
-      throw new TypeError('expected lineage outbox withClient bridge');
-    }
-
-    await withClient(async (client: { release(): void }) => {
-      expect(client).toEqual(
-        expect.objectContaining({
-          release: bootstrapMocks.clientRelease,
-        })
-      );
-    });
-
-    expect(bootstrapMocks.poolConnect).toHaveBeenCalledTimes(1);
-    expect(bootstrapMocks.clientRelease).toHaveBeenCalledTimes(1);
+    const lineageStore = bootstrap.getLineageStore();
+    expect(lineageStore).toBe(bootstrapMocks.lineageStore);
+    expect(bootstrapMocks.stateStoreGetLineageOutboxStore).toHaveBeenCalledTimes(1);
 
     await bootstrap.close();
 

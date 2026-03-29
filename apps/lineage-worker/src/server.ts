@@ -17,7 +17,7 @@ async function main(): Promise<void> {
 
   const mapper = createStepStartedLineageMapper(env);
   const bootstrap = buildLineageWorkerBootstrap(env);
-  const { stateStore, lineageStore, sink } = bootstrap;
+  const { stateStore, sink, getLineageStore } = bootstrap;
   const shutdown = new globalThis.AbortController();
   let runtime: LineageWorkerRuntime | undefined;
   const adminServer = createServer((_req, res) => {
@@ -31,6 +31,7 @@ async function main(): Promise<void> {
 
   try {
     await stateStore.migrate();
+    const lineageStore = getLineageStore();
 
     runtime = new LineageWorkerRuntime(lineageStore, sink, mapper, logger, {
       batchSize: env.DVT_LINEAGE_BATCH_SIZE,
