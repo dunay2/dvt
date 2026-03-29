@@ -1,9 +1,11 @@
+import type { PoolClient } from 'pg';
 import { describe, expect, it, vi } from 'vitest';
 
 import { __internal } from '../../src/runtime/buildRunEventRetentionRuntime.js';
-import type { PoolClient } from 'pg';
 
-function createQuerySpy() {
+function createQuerySpy(): ReturnType<
+  typeof vi.fn<(queryConfig: unknown) => Promise<{ rows: unknown[] }>>
+> {
   return vi
     .fn<(queryConfig: unknown) => Promise<{ rows: unknown[] }>>()
     .mockResolvedValue({ rows: [] });

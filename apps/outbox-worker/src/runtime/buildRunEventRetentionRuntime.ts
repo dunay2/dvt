@@ -4,6 +4,7 @@ import {
   ObjectStorageRunArchiveExporter,
   RunArchiveCoordinator,
 } from '@dvt/state-store';
+import type { Pool, PoolClient } from 'pg';
 
 import type { ActiveEnv } from '../plugins/env.js';
 
@@ -11,7 +12,6 @@ import {
   RunEventRetentionRuntime,
   type RunEventRetentionRuntimeLogger,
 } from './RunEventRetentionRuntime.js';
-import type { Pool, PoolClient } from 'pg';
 
 type QueryInput = string | { text: string; values?: readonly unknown[] };
 type QueryConfigWithSignal = {
