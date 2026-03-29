@@ -87,6 +87,7 @@ function buildPersistedEvent(ordinal: number): RunEventPersisted {
     engineAttemptId: runtimeEventFixture.engineAttemptId,
     emittedAt: runtimeEventFixture.emittedAt,
     idempotencyKey: buildIdempotencyKey(ordinal),
+    payloadVersion: 1,
     runSeq: runtimeEventFixture.runSeq,
     persistedAt: runtimeEventFixture.persistedAt,
   };
@@ -217,6 +218,14 @@ export class MemoryOutboxStorage implements IOutboxStorage {
 
   async hasPendingRetries(_selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     return this.records.some((record) => record.attempts > 0);
+  }
+
+  async listDeadLetter(): Promise<[]> {
+    return [];
+  }
+
+  async replayDeadLetters(): Promise<number> {
+    return 0;
   }
 }
 

@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-03-28
+last_reviewed: 2026-03-29
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-03-28.
+Generated automatically from repository code on 2026-03-29.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 488   |
-| Total test files             | 190   |
+| Total source files           | 490   |
+| Total test files             | 191   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
@@ -26,7 +26,7 @@ Generated automatically from repository code on 2026-03-28.
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
 | dvt-api                   | `apps/api`                           | 109       | 48         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 4          | yes   | yes  | yes       | -                       |
-| dvt-outbox-worker         | `apps/outbox-worker`                 | 14        | 17         | yes   | yes  | yes       | -                       |
+| dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 18         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 78        | 0          | yes   | no   | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 38        | 18         | yes   | yes  | yes       | 22                      |

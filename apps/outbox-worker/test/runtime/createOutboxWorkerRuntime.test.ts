@@ -2,6 +2,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { RunArchiveCoordinator } from '@dvt/state-store';
 import type { Pool } from 'pg';
 import { describe, it, expect } from 'vitest';
 
@@ -33,6 +34,7 @@ function makePendingEvent(): RunEventPersisted {
     engineAttemptId: 1,
     emittedAt: '2026-03-08T00:00:00.000Z',
     idempotencyKey: 'key-1',
+    payloadVersion: 1,
     runSeq: 1,
     persistedAt: '2026-03-08T00:00:00.000Z',
   };
@@ -684,6 +686,119 @@ describe('createOutboxWorkerRuntime', () => {
       PostgresStateStoreAdapter.prototype.close = originalClose;
       PostgresStateStoreAdapter.prototype.listPending = originalListPending;
       PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
+      await closePgPool();
+    }
+  });
+
+  it('starts run-event retention runtime when enabled', async () => {
+    await closePgPool();
+
+    const poolConfig = {
+      connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+    };
+    const pool = getPgPool(poolConfig);
+    let archiveCalls = 0;
+
+    const originalEnd = pool.end;
+    const originalClose = PostgresStateStoreAdapter.prototype.close;
+    const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+    const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
+    const originalArchiveEligible = RunArchiveCoordinator.prototype.archiveEligibleHotData;
+
+    pool.end = async function end(): Promise<void> {};
+    PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {};
+    PostgresStateStoreAdapter.prototype.listPending = async function listPending(): Promise<[]> {
+      return [];
+    };
+    PostgresStateStoreAdapter.prototype.listPendingForClaim =
+      async function listPendingForClaim(): Promise<[]> {
+        return [];
+      };
+    RunArchiveCoordinator.prototype.archiveEligibleHotData = async function archiveEligibleHotData() {
+      archiveCalls += 1;
+      return [];
+    };
+
+    try {
+      const runtime = await createOutboxWorkerRuntime(
+        loadActiveTestEnv({
+          NODE_ENV: 'test',
+          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+          DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+          DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+          DVT_RUN_EVENT_RETENTION_INTERVAL_MS: '60000',
+        }),
+        makeLogger()
+      );
+
+      const loop = runtime.start();
+      await waitFor(() => archiveCalls > 0);
+      await runtime.stop();
+      await loop;
+
+      expect(archiveCalls).toBeGreaterThan(0);
+    } finally {
+      pool.end = originalEnd;
+      PostgresStateStoreAdapter.prototype.close = originalClose;
+      PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+      PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
+      RunArchiveCoordinator.prototype.archiveEligibleHotData = originalArchiveEligible;
+      await closePgPool();
+    }
+  });
+
+  it('does not start run-event retention runtime when disabled', async () => {
+    await closePgPool();
+
+    const poolConfig = {
+      connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+    };
+    const pool = getPgPool(poolConfig);
+    let archiveCalls = 0;
+
+    const originalEnd = pool.end;
+    const originalClose = PostgresStateStoreAdapter.prototype.close;
+    const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+    const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
+    const originalArchiveEligible = RunArchiveCoordinator.prototype.archiveEligibleHotData;
+
+    pool.end = async function end(): Promise<void> {};
+    PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {};
+    PostgresStateStoreAdapter.prototype.listPending = async function listPending(): Promise<[]> {
+      return [];
+    };
+    PostgresStateStoreAdapter.prototype.listPendingForClaim =
+      async function listPendingForClaim(): Promise<[]> {
+        return [];
+      };
+    RunArchiveCoordinator.prototype.archiveEligibleHotData = async function archiveEligibleHotData() {
+      archiveCalls += 1;
+      return [];
+    };
+
+    try {
+      const runtime = await createOutboxWorkerRuntime(
+        loadActiveTestEnv({
+          NODE_ENV: 'test',
+          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+          DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+          DVT_RUN_EVENT_RETENTION_ENABLED: 'false',
+        }),
+        makeLogger()
+      );
+
+      const loop = runtime.start();
+      await sleep(50);
+      await runtime.stop();
+      await loop;
+
+      expect(archiveCalls).toBe(0);
+    } finally {
+      pool.end = originalEnd;
+      PostgresStateStoreAdapter.prototype.close = originalClose;
+      PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+      PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
+      RunArchiveCoordinator.prototype.archiveEligibleHotData = originalArchiveEligible;
       await closePgPool();
     }
   });

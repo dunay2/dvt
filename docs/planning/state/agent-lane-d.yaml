@@ -11,7 +11,7 @@ expected_outcome:
 tasks:
   - task_id: run event log retention + TTL
     priority: P1
-    status: queued
+    status: in_progress
     objective: bound storage growth and automate archival.
     dependency: none
     target: Retention and archival automation.

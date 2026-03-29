@@ -59,6 +59,12 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_PURGE_OUTBOX_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   DVT_PURGE_MAX_ROWS_PER_RUN: z.coerce.number().int().positive().default(5_000),
+  DVT_RUN_EVENT_RETENTION_ENABLED: envBoolean.default(false),
+  DVT_RUN_EVENT_RETENTION_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
+  DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
+  DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT: z.coerce.number().int().positive().default(64),
+  DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS: envBoolean.default(true),
+  DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: nonBlankString.default('.dvt/archive'),
   DVT_OUTBOX_HTTP_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   DVT_OUTBOX_HTTP_BEARER_TOKEN: z.string().optional(),
 });
@@ -153,6 +159,8 @@ function isValidHttpTargetUrl(value: string): boolean {
 }
 
 function normalizeActiveEnv(env: ParsedActiveEnv): ActiveEnv {
+  validateRunEventRetentionConfiguration(env);
+
   const ownedShardIds =
     env.DVT_OUTBOX_OWNED_SHARD_IDS ?? (env.DVT_OUTBOX_SHARD_COUNT === 1 ? [0] : null);
 
@@ -190,4 +198,12 @@ function normalizeActiveEnv(env: ParsedActiveEnv): ActiveEnv {
   };
 
   return normalizedEnv as ActiveEnv;
+}
+
+function validateRunEventRetentionConfiguration(env: ParsedActiveEnv): void {
+  if (env.NODE_ENV === 'production' && env.DVT_RUN_EVENT_RETENTION_ENABLED) {
+    throw new Error(
+      'Invalid environment: DVT_RUN_EVENT_RETENTION_ENABLED: file:// archive storage is prohibited in production'
+    );
+  }
 }
