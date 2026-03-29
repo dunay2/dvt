@@ -52,6 +52,25 @@ export function insertEventSql(schema: string): string {
   `;
 }
 
+export function upsertRunEventHeadSql(schema: string): string {
+  return `
+    INSERT INTO ${quoteIdentifier(schema)}.run_event_heads (
+      run_id,
+      tenant_id,
+      latest_run_seq,
+      updated_at
+    )
+    VALUES ($1, $2, $3, $4::timestamptz)
+    ON CONFLICT (run_id, tenant_id)
+    DO UPDATE
+    SET latest_run_seq = GREATEST(
+      ${quoteIdentifier(schema)}.run_event_heads.latest_run_seq,
+      EXCLUDED.latest_run_seq
+    ),
+        updated_at = EXCLUDED.updated_at
+  `;
+}
+
 export function selectExistingEventSql(schema: string): string {
   return `
     SELECT payload

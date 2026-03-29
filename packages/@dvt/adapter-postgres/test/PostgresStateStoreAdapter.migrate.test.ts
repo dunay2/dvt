@@ -281,8 +281,8 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (14 steps)
-    expect(insertQueries.length).toBe(14);
+    // One INSERT per named migration step (15 steps)
+    expect(insertQueries.length).toBe(15);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -292,6 +292,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_012_lineage_outbox_retry_schedule');
     expect(versions).toContain('core_013_lineage_outbox_claim_timeout');
     expect(versions).toContain('core_014_lineage_tenant_scope_hardening');
+    expect(versions).toContain('core_015_run_event_heads');
   });
 
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {
@@ -402,5 +403,23 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain('outbox_delivered_at_idx');
     expect(executedSql).toContain('outbox_dead_letter_dead_lettered_at_idx');
     expect(executedSql).toContain('lineage_dead_letter_dead_lettered_at_idx');
+  });
+
+  it('creates and backfills run_event_heads for S19-F1', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+
+    expect(executedSql).toContain('run_event_heads');
+    expect(executedSql).toContain('latest_run_seq INTEGER NOT NULL');
+    expect(executedSql).toContain('run_event_heads_tenant_updated_idx');
+    expect(executedSql).toContain('INSERT INTO "DvtOps".run_event_heads');
+    expect(executedSql).toContain('GROUP BY e.run_id, e.tenant_id');
   });
 });

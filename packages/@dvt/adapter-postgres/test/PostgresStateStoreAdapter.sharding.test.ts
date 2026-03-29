@@ -150,6 +150,7 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     expect(staleQuery).toBeDefined();
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
     expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = m.run_id');
+    expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_event_heads h');
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_events e');
     expect(staleQuery?.params).toEqual([5]);
   });
