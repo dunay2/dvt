@@ -17,8 +17,9 @@ code_refs:
   - docs/planning/state/agent-lane-d.yaml
   - docs/planning/state/agent-lane-e.yaml
 evidence:
-  - docs sync and planning-view regeneration complete after roadmap reset edits
-  - validation baseline commands executed for dvt-api, engine, and prepush gate
+  tests:
+    - docs sync and planning-view regeneration complete after roadmap reset edits
+    - validation baseline commands executed for dvt-api, engine, and prepush gate
 ---
 
 # ED-20260329 MVP backend operability roadmap reset

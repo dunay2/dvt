@@ -12,9 +12,10 @@ code_refs:
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
 evidence:
-  - lane C MVP-C1 moved to review with explicit closure target
-  - runbook defines bootstrap, diagnose, daily operations, and fallback boundaries
-  - roadmap scope aligns readiness endpoint as conditional by DVT_READYZ_ENABLED flag
+  tests:
+    - lane C MVP-C1 moved to review with explicit closure target
+    - runbook defines bootstrap, diagnose, daily operations, and fallback boundaries
+    - roadmap scope aligns readiness endpoint as conditional by DVT_READYZ_ENABLED flag
 ---
 
 # ED-20260329 MVP-C1 backend control-plane runbook
