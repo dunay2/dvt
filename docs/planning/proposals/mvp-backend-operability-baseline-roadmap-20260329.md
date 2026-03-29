@@ -42,7 +42,7 @@ Not included in MVP definition:
 - `POST /runs/:runId/signal`
 - `POST /runs/:runId/cancel`
 - `GET /healthz`
-- `GET /readyz`
+- `GET /readyz` when `DVT_READYZ_ENABLED=true`
 - OIDC auth + tenant policy for protected runtime routes
 
 ### OUT (explicit)
@@ -55,14 +55,14 @@ Not included in MVP definition:
 
 ## Capability Matrix (Claim -> Evidence -> Command)
 
-| MVP claim                                                                                                | Evidence in repo                                                                                                                                                                                          | Validation command                       |
-| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Protected runtime route surface exists and is wired                                                      | `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`, `apps/api/src/app.ts`                                                                                                                         | `pnpm --filter dvt-api test`             |
-| `POST /runs/start` works in protected runtime path                                                       | `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                                                                          | `pnpm --filter dvt-api test:integration` |
-| Query routes (`GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`) are available under protection | `apps/api/src/app.ts`, `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                                                   | `pnpm --filter dvt-api test:integration` |
-| Signal and cancel operations are available (`POST /runs/:runId/signal`, `POST /runs/:runId/cancel`)      | `apps/api/src/app.ts`, `apps/api/test/integration/protectedRuntime.integration.test.ts`, `apps/api/test/entrypoints/http/signalRunRoute.test.ts`, `apps/api/test/entrypoints/http/cancelRunRoute.test.ts` | `pnpm --filter dvt-api test`             |
-| Health/readiness endpoints expose operational status                                                     | `apps/api/src/routes/health.ts`, `apps/api/src/routes/healthReadinessPolicy.ts`, `apps/api/test/app.test.ts`                                                                                              | `pnpm --filter dvt-api test`             |
-| OIDC + tenant authorization gates protected runtime                                                      | `apps/api/src/modules/buildProtectedRuntimeModule.ts`, `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                   | `pnpm --filter dvt-api test:integration` |
+| MVP claim                                                                                                               | Evidence in repo                                                                                                                                                                                          | Validation command                       |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Protected runtime route surface exists and is wired                                                                     | `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`, `apps/api/src/app.ts`                                                                                                                         | `pnpm --filter dvt-api test`             |
+| `POST /runs/start` works in protected runtime path                                                                      | `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                                                                          | `pnpm --filter dvt-api test:integration` |
+| Query routes (`GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`) are available under protection                | `apps/api/src/app.ts`, `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                                                   | `pnpm --filter dvt-api test:integration` |
+| Signal and cancel operations are available (`POST /runs/:runId/signal`, `POST /runs/:runId/cancel`)                     | `apps/api/src/app.ts`, `apps/api/test/integration/protectedRuntime.integration.test.ts`, `apps/api/test/entrypoints/http/signalRunRoute.test.ts`, `apps/api/test/entrypoints/http/cancelRunRoute.test.ts` | `pnpm --filter dvt-api test`             |
+| Health/readiness endpoints expose operational status (`/healthz` always, `/readyz` only when `DVT_READYZ_ENABLED=true`) | `apps/api/src/routes/health.ts`, `apps/api/src/routes/healthReadinessPolicy.ts`, `apps/api/test/app.test.ts`                                                                                              | `pnpm --filter dvt-api test`             |
+| OIDC + tenant authorization gates protected runtime                                                                     | `apps/api/src/modules/buildProtectedRuntimeModule.ts`, `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                   | `pnpm --filter dvt-api test:integration` |
 
 ## Deferred Backlog (Explicitly Out Of MVP)
 
