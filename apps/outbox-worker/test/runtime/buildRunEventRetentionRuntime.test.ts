@@ -52,7 +52,9 @@ describe('buildRunEventRetentionRuntime internals', () => {
     const client = { query } as unknown as PoolClient;
     const abortAwareClient = __internal.createAbortAwareClient(client, controller.signal);
 
-    expect(() => abortAwareClient.query('SELECT 1')).toThrowError(/run-event retention cycle aborted/);
+    expect(() => abortAwareClient.query('SELECT 1')).toThrowError(
+      /run-event retention cycle aborted/
+    );
     expect(query).not.toHaveBeenCalled();
   });
 });

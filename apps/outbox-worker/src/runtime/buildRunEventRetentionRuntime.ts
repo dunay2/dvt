@@ -7,11 +7,18 @@ import {
 
 import type { ActiveEnv } from '../plugins/env.js';
 
-import { RunEventRetentionRuntime, type RunEventRetentionRuntimeLogger } from './RunEventRetentionRuntime.js';
+import {
+  RunEventRetentionRuntime,
+  type RunEventRetentionRuntimeLogger,
+} from './RunEventRetentionRuntime.js';
 import type { Pool, PoolClient } from 'pg';
 
 type QueryInput = string | { text: string; values?: readonly unknown[] };
-type QueryConfigWithSignal = { text: string; values?: readonly unknown[]; signal?: globalThis.AbortSignal };
+type QueryConfigWithSignal = {
+  text: string;
+  values?: readonly unknown[];
+  signal?: globalThis.AbortSignal;
+};
 
 export function buildRunEventRetentionRuntime(
   env: ActiveEnv,
@@ -20,9 +27,7 @@ export function buildRunEventRetentionRuntime(
 ): RunEventRetentionRuntime {
   let activeCycleSignal: globalThis.AbortSignal | undefined;
 
-  const withClient = async <T>(
-    fn: (client: PoolClient) => Promise<T>
-  ): Promise<T> => {
+  const withClient = async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
     const client = await pool.connect();
     const abortAwareClient = createAbortAwareClient(client, activeCycleSignal);
     try {
@@ -86,10 +91,7 @@ export function buildRunEventRetentionRuntime(
   );
 }
 
-function createAbortAwareClient(
-  client: PoolClient,
-  signal?: globalThis.AbortSignal
-): PoolClient {
+function createAbortAwareClient(client: PoolClient, signal?: globalThis.AbortSignal): PoolClient {
   if (!signal) {
     return client;
   }
