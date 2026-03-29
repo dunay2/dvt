@@ -45,6 +45,10 @@ export class FileSystemArchiveObjectStore implements IArchiveObjectStore {
     }
   }
 
+  getObjectUri(objectKey: string): string {
+    return pathToFileURL(this.toAbsolutePath(objectKey)).href;
+  }
+
   private toAbsolutePath(objectKey: string): string {
     const normalizedKey = objectKey.trim().replace(/\\/g, '/');
     if (!normalizedKey) {

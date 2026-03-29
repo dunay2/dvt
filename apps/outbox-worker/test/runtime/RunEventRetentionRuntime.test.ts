@@ -40,6 +40,7 @@ describe('RunEventRetentionRuntime', () => {
         });
       },
       60_000,
+      0,
       loggerState.logger
     );
 
@@ -60,6 +61,7 @@ describe('RunEventRetentionRuntime', () => {
         cycles += 1;
       },
       60_000,
+      0,
       loggerState.logger
     );
 
@@ -72,6 +74,27 @@ describe('RunEventRetentionRuntime', () => {
     const elapsedMs = Date.now() - startedAt;
 
     expect(elapsedMs).toBeLessThan(1_000);
+    expect(loggerState.getErrorCount()).toBe(0);
+  });
+
+  it('does not run a cycle before the configured initial delay', async () => {
+    const loggerState = makeLogger();
+    let cycles = 0;
+    const runtime = new RunEventRetentionRuntime(
+      async () => {
+        cycles += 1;
+      },
+      60_000,
+      200,
+      loggerState.logger
+    );
+
+    const loop = runtime.start();
+    await sleep(50);
+    expect(cycles).toBe(0);
+
+    await runtime.stop();
+    await loop;
     expect(loggerState.getErrorCount()).toBe(0);
   });
 });

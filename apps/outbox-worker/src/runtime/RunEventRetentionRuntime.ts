@@ -16,11 +16,13 @@ export class RunEventRetentionRuntime {
   private running = false;
   private waitController: globalThis.AbortController | null = null;
   private cycleController: globalThis.AbortController | null = null;
+  private initialDelayController: globalThis.AbortController | null = null;
   private detachAbortListener: (() => void) | null = null;
 
   constructor(
     private readonly runRetentionCycle: (signal: globalThis.AbortSignal) => Promise<unknown>,
     private readonly intervalMs: number,
+    private readonly initialDelayMs: number,
     private readonly logger: RunEventRetentionRuntimeLogger
   ) {}
 
@@ -46,6 +48,7 @@ export class RunEventRetentionRuntime {
     this.loopPromise = this.runLoop().finally(() => {
       this.running = false;
       this.waitController = null;
+      this.initialDelayController = null;
       this.detachAbortListener?.();
       this.detachAbortListener = null;
       this.loopPromise = null;
@@ -59,6 +62,7 @@ export class RunEventRetentionRuntime {
     if (!this.running && loopPromise === null) return;
     this.running = false;
     this.cycleController?.abort();
+    this.initialDelayController?.abort();
     this.waitController?.abort();
     if (loopPromise !== null) {
       try {
@@ -71,6 +75,17 @@ export class RunEventRetentionRuntime {
 
   private async runLoop(): Promise<void> {
     this.logger.info({}, 'run event retention runtime started');
+
+    if (this.initialDelayMs > 0) {
+      this.initialDelayController = new globalThis.AbortController();
+      try {
+        await sleep(this.initialDelayMs, undefined, { signal: this.initialDelayController.signal });
+      } catch {
+        // AbortError from stop() - do not execute a cycle.
+      } finally {
+        this.initialDelayController = null;
+      }
+    }
 
     while (this.running) {
       this.cycleController = new globalThis.AbortController();

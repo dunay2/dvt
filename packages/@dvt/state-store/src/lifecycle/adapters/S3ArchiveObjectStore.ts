@@ -70,4 +70,8 @@ export class S3ArchiveObjectStore implements IArchiveObjectStore {
       return false;
     }
   }
+
+  getObjectUri(objectKey: string): string {
+    return `s3://${this.bucket}/${objectKey}`;
+  }
 }

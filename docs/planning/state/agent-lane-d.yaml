@@ -11,14 +11,15 @@ expected_outcome:
 tasks:
   - task_id: MVP-D1
     priority: P0
-    status: queued
+    status: in_progress
     objective:
       define the residual-risk baseline explicitly accepted after MVP backend operability reset,
       including what is deferred and why it does not block MVP.
     dependency: MVP-A1, MVP-B1
     target:
-      Risk baseline updated with explicit deferred items, lane ownership, and non-blocking rationale
-      for MVP control-plane operation.
+      Provisional residual-risk baseline published with explicit deferred items, lane ownership, and
+      non-blocking rationale for MVP control-plane operation; final lock pending MVP-A1 and MVP-B1
+      evidence.
   - task_id: run event log retention + TTL
     priority: P1
     status: in_progress

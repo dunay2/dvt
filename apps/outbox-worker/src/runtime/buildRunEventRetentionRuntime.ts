@@ -82,6 +82,7 @@ export function buildRunEventRetentionRuntime(
       }
     },
     env.DVT_RUN_EVENT_RETENTION_INTERVAL_MS,
+    env.DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS,
     logger
   );
 }
