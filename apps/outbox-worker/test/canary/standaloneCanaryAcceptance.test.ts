@@ -605,6 +605,7 @@ function makeRunQueuedEvent(runSeq = 1): RunEventPersisted {
     engineAttemptId: 1,
     emittedAt: '2026-03-10T00:00:00.000Z',
     idempotencyKey: `key-canary-${runSeq}`,
+    payloadVersion: 1,
     runSeq,
     persistedAt: '2026-03-10T00:00:00.000Z',
   };
