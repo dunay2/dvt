@@ -11,7 +11,7 @@ expected_outcome:
 tasks:
   - task_id: MVP-C1
     priority: P0
-    status: review
+    status: done
     objective:
       produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
       diagnose, daily operate) without adding feature depth.

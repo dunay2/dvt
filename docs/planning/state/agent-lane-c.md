@@ -88,7 +88,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 
 > Source of truth: `agent-lane-c.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
-- [ ] `P0` `MVP-C1`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
+- [x] `P0` `MVP-C1`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
 - [x] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
 - [x] `P0` `RC-D2`: make the outbox claim timeout configurable.
 - [x] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
