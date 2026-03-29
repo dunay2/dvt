@@ -3,8 +3,8 @@ title: Retention and archive object-store hardening
 status: Accepted
 date: 2026-03-30
 owners:
-  - @dvt/state-store
-  - dvt-outbox-worker
+  - '@dvt/state-store'
+  - 'dvt-outbox-worker'
 arc_level: ARC-2
 breaking: false
 code_refs:
