@@ -2,13 +2,23 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-28
+last_reviewed: 2026-03-29
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
   - claim semantics are safe under concurrency
   - API consumers can reason about freshness
 tasks:
+  - task_id: MVP-C1
+    priority: P0
+    status: queued
+    objective:
+      produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
+      diagnose, daily operate) without adding feature depth.
+    dependency: MVP-A1, MVP-B1
+    target:
+      Operator-ready runbook for current runtime routes, auth scope handling, health/readiness
+      diagnosis, and baseline validation commands.
   - task_id: S09
     priority: P0
     status: done
@@ -96,6 +106,7 @@ tasks:
     dependency: S16 merge
     target: Precondition order hardening.
 dependency_notes: |
+  - `MVP-C1` depends on `MVP-A1` and `MVP-B1` so the runbook reflects verified capabilities only.
   - `RC-D1A` depends on `RC-D1`.
   - `RBAC at operation level` is unblocked after `S09`.
   - `Read-your-writes contract` depends on `snapshot staleness in API`.

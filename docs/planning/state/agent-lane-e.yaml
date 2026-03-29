@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: 2026-03-27
+last_reviewed: 2026-03-29
 goal:
   Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
   contracts.
@@ -14,6 +14,16 @@ expected_outcome:
   - core flow (Plan → Run → Monitor) works with real data
   - secondary views activate progressively via feature flags
 tasks:
+  - task_id: MVP-E1
+    priority: P0
+    status: queued
+    objective:
+      define the frontend consumption contract for the backend MVP surface that exists today,
+      without promising non-implemented behavior.
+    dependency: MVP-A1, MVP-B1
+    target:
+      Frontend-facing backend contract document listing available routes, auth expectations, and
+      explicit out-of-scope assumptions.
   - task_id: F-01
     priority: P0
     status: queued
@@ -136,6 +146,7 @@ tasks:
       are hidden by default and activatable by role or flag. No mock data in any active view.
 
 dependency_notes: |
+  - `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
   - F-01, F-02, F-04 are independent and can start in parallel.
   - F-03 depends on F-02.
   - F-05 depends on F-04.

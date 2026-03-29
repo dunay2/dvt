@@ -2,7 +2,7 @@
 title: Roadmap Of Record
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-29
 ---
 
 # Roadmap Of Record
@@ -42,6 +42,9 @@ Concept anchors for this page:
 - `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
   Classification: subsystem roadmap proposal
   Use it for: planner target-state closure sequencing after the current-state assessment baseline
+- `docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md`
+  Classification: subsystem roadmap proposal
+  Use it for: MVP backend operability baseline scope (`IN`/`OUT`) and consolidation lanes
 - `docs/architecture/system-delivery-status.md`
   Classification: status board
   Use it for: what is true now in implementation
@@ -76,6 +79,7 @@ Repository-wide planning should currently be read in this order:
 
 Current subsystem roadmaps worth consulting:
 
+- [MVP Backend Operability Baseline Roadmap](../proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [Gap 5 Executive Delivery Roadmap](gap-5-executive-delivery-roadmap-20260319.md)
 - [Planner Target State And Hardening Roadmap](../proposals/planner-target-state-roadmap-20260320.md)
 - [Roadmap By Domain](roadmap-by-domain.md)
