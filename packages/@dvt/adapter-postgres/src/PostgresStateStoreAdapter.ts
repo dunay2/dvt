@@ -8,35 +8,36 @@
  * @version 1.0.0
  * @date 2026-03-28
  */
+import type { ILineageOutboxStore } from '@dvt/contracts';
+import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
+
 import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
+import type { PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
 import { PostgresStateStoreRuntime } from './PostgresStateStoreRuntime.js';
-type PostgresSchemaRollbackPlan = import('./PostgresSchemaManager.js').PostgresSchemaRollbackPlan;
-type AppendResult = import('./types.js').AppendResult;
-type DeadLetterRecord = import('./types.js').DeadLetterRecord;
-type EventEnvelope = import('./types.js').EventEnvelope;
-type EventInput = import('./types.js').EventInput;
-type IOutboxStorage = import('./types.js').IOutboxStorage;
-type IRunSnapshotStalenessQuery = import('./types.js').IRunSnapshotStalenessQuery;
-type IRunStateStore = import('./types.js').IRunStateStore;
-type ListEventsOptions = import('./types.js').ListEventsOptions;
-type ListRunsOptions = import('./types.js').ListRunsOptions;
-type OutboxRecord = import('./types.js').OutboxRecord;
-type RetryAttemptReservation = import('./types.js').RetryAttemptReservation;
-type RunBootstrapInput = import('./types.js').RunBootstrapInput;
-type RunId = import('./types.js').RunId;
-type RunMetadata = import('./types.js').RunMetadata;
-type WorkflowSnapshot = import('./types.js').WorkflowSnapshot;
-type ILineageOutboxStore = import('@dvt/contracts').ILineageOutboxStore;
-type ArchivedTerminalSnapshot = import('@dvt/state-store').ArchivedTerminalSnapshot;
-type TerminalSnapshotPinResult = import('@dvt/state-store').TerminalSnapshotPinResult;
+import type { PostgresStateStoreRuntimeConfig } from './PostgresStateStoreRuntimeConfig.js';
+import type {
+  AppendResult,
+  DeadLetterRecord,
+  EventEnvelope,
+  EventInput,
+  IOutboxStorage,
+  IRunSnapshotStalenessQuery,
+  IRunStateStore,
+  ListEventsOptions,
+  ListRunsOptions,
+  OutboxRecord,
+  RetryAttemptReservation,
+  RunBootstrapInput,
+  RunId,
+  RunMetadata,
+  WorkflowSnapshot,
+} from './types.js';
 
 export class PostgresStateStoreAdapter
   extends PostgresStateStoreRuntime
   implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage
 {
-  constructor(
-    config: import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig = {}
-  ) {
+  constructor(config: PostgresStateStoreRuntimeConfig = {}) {
     super(config);
   }
 

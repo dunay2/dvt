@@ -13,9 +13,10 @@ code_refs:
   - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
   - docs/planning/state/agent-lane-c.yaml
 evidence:
-  - operation-level action matrix is explicit in MVP runbook
-  - integration negative coverage proves ACTION_NOT_GRANTED for cancel and signal action splits
-  - route-level unit coverage (always-on in CI) proves cancel-vs-signal authorization split and deny-path no-execute behavior
+  tests:
+    - operation-level action matrix is explicit in MVP runbook
+    - integration negative coverage proves ACTION_NOT_GRANTED for cancel and signal action splits
+    - route-level unit coverage (always-on in CI) proves cancel-vs-signal authorization split and deny-path no-execute behavior
 ---
 
 # ED-20260329 Lane C RBAC operation-level closeout
