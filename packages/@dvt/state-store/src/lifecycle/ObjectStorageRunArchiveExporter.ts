@@ -15,6 +15,18 @@ export interface ObjectStorageRunArchiveExporterOptions {
   prefix?: string;
 }
 
+interface ArchiveUnitManifest {
+  archiveUnitKey: string;
+  tenantBucket: string;
+  tenantIds: readonly string[];
+  rowCount: number;
+  minRunSeq: number;
+  maxRunSeq: number;
+  checksumSha256: string;
+  objectKey: string;
+  exportedAt: string;
+}
+
 export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
   readonly archiveFormat = 'jsonl';
   readonly destinationKind: 'file' | 's3';
@@ -61,10 +73,20 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
         this.objectStore.readObject(checksumObjectKey),
       ]);
 
-      const checksumMatches =
-        checksumBuffer.toString('utf8').trim() === manifestResult.manifestSha256;
+      const existingManifest = parseArchiveManifest(manifestBuffer);
+      const canonicalExistingManifest = jcsCanonicalize(existingManifest);
+      const existingManifestSha256 = sha256Hex(canonicalExistingManifest);
+      const rebuiltFromExistingManifest = buildArchiveUnitManifest({
+        archiveUnitKey: input.archiveUnitKey,
+        tenantBucket: input.tenantBucket,
+        objectKey,
+        exportedAtIso: existingManifest.exportedAt,
+        events,
+      });
+
+      const checksumMatches = checksumBuffer.toString('utf8').trim() === existingManifestSha256;
       const manifestMatches =
-        sha256Hex(canonicalizeManifest(manifestBuffer)) === manifestResult.manifestSha256;
+        rebuiltFromExistingManifest.canonicalManifestJson === canonicalExistingManifest;
       const eventsMatch = eventsBuffer.equals(eventsPayload);
 
       if (!checksumMatches || !manifestMatches || !eventsMatch) {
@@ -74,17 +96,17 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
       return {
         archiveUnitKey: input.archiveUnitKey,
         tenantBucket: input.tenantBucket,
-        tenantIds: manifestResult.manifest.tenantIds,
-        rowCount: manifestResult.manifest.rowCount,
-        minRunSeq: manifestResult.manifest.minRunSeq,
-        maxRunSeq: manifestResult.manifest.maxRunSeq,
+        tenantIds: rebuiltFromExistingManifest.manifest.tenantIds,
+        rowCount: rebuiltFromExistingManifest.manifest.rowCount,
+        minRunSeq: rebuiltFromExistingManifest.manifest.minRunSeq,
+        maxRunSeq: rebuiltFromExistingManifest.manifest.maxRunSeq,
         objectKey,
         objectUri: buildExistingObjectUri(objectKey),
         manifestObjectKey,
         checksumObjectKey,
-        checksumSha256: manifestResult.manifest.checksumSha256,
-        manifestSha256: manifestResult.manifestSha256,
-        exportedAtIso: manifestResult.manifest.exportedAt,
+        checksumSha256: rebuiltFromExistingManifest.manifest.checksumSha256,
+        manifestSha256: rebuiltFromExistingManifest.manifestSha256,
+        exportedAtIso: rebuiltFromExistingManifest.manifest.exportedAt,
       };
     }
 
@@ -140,17 +162,7 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
     ]);
 
     const events = parseNdjsonEvents(eventsBuffer);
-    const manifest = JSON.parse(manifestBuffer.toString('utf8')) as {
-      archiveUnitKey: string;
-      tenantBucket: string;
-      tenantIds: readonly string[];
-      rowCount: number;
-      minRunSeq: number;
-      maxRunSeq: number;
-      checksumSha256: string;
-      objectKey: string;
-      exportedAt: string;
-    };
+    const manifest = parseArchiveManifest(manifestBuffer);
 
     const canonicalManifestJson = jcsCanonicalize(manifest);
     const manifestSha256 = sha256Hex(canonicalManifestJson);
@@ -229,9 +241,8 @@ function parseNdjsonEvents(buffer: Buffer): readonly EventEnvelope[] {
   return lines.map((line) => JSON.parse(line) as EventEnvelope);
 }
 
-function canonicalizeManifest(manifestBuffer: Buffer): string {
-  const parsed = JSON.parse(manifestBuffer.toString('utf8')) as Record<string, unknown>;
-  return jcsCanonicalize(parsed);
+function parseArchiveManifest(manifestBuffer: Buffer): ArchiveUnitManifest {
+  return JSON.parse(manifestBuffer.toString('utf8')) as ArchiveUnitManifest;
 }
 
 function buildEventsObjectKey(prefix: string, archiveUnitKey: string): string {

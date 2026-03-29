@@ -59,4 +59,42 @@ describe('buildRunEventRetentionRuntime internals', () => {
     );
     expect(query).not.toHaveBeenCalled();
   });
+
+  it('executes rollback on raw client even when cycle signal is aborted', async () => {
+    const controller = new globalThis.AbortController();
+    const query = vi.fn(async (queryConfig: unknown) => {
+      if (typeof queryConfig === 'string') {
+        return { rows: [] };
+      }
+      const typed = queryConfig as { text: string; signal?: globalThis.AbortSignal };
+      if (typed.signal?.aborted) {
+        throw new Error('ABORTED_QUERY');
+      }
+      return { rows: [] };
+    });
+    const client = {
+      query,
+      release: vi.fn(),
+    } as unknown as PoolClient;
+    const logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
+
+    await expect(
+      __internal.executeAbortAwareTransaction(
+        client,
+        controller.signal,
+        async () => {
+          controller.abort();
+          throw new Error('CYCLE_FAILED');
+        },
+        logger
+      )
+    ).rejects.toThrow(/CYCLE_FAILED/);
+
+    const callArgs = query.mock.calls.map((call) => call[0]);
+    expect(callArgs).toContain('ROLLBACK');
+    expect(logger.error).not.toHaveBeenCalled();
+  });
 });

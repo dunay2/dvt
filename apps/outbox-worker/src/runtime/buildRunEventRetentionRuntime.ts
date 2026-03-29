@@ -38,17 +38,12 @@ export function buildRunEventRetentionRuntime(
   };
 
   const withTransaction = async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
-    return withClient(async (client) => {
-      await client.query('BEGIN');
-      try {
-        const result = await fn(client);
-        await client.query('COMMIT');
-        return result;
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      }
-    });
+    const client = await pool.connect();
+    try {
+      return await executeAbortAwareTransaction(client, activeCycleSignal, fn, logger);
+    } finally {
+      client.release();
+    }
   };
 
   const snapshotStore = new PostgresRunSnapshotStore(
@@ -132,6 +127,35 @@ function createAbortError(message: string): Error {
   return error;
 }
 
+async function executeAbortAwareTransaction<T>(
+  client: PoolClient,
+  signal: globalThis.AbortSignal | undefined,
+  fn: (client: PoolClient) => Promise<T>,
+  logger: RunEventRetentionRuntimeLogger
+): Promise<T> {
+  const abortAwareClient = createAbortAwareClient(client, signal);
+  await abortAwareClient.query('BEGIN');
+  try {
+    const result = await fn(abortAwareClient);
+    await abortAwareClient.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      logger.error(
+        {
+          err: rollbackError,
+          originalError: error,
+        },
+        'run event retention rollback failed'
+      );
+    }
+    throw error;
+  }
+}
+
 export const __internal = {
   createAbortAwareClient,
+  executeAbortAwareTransaction,
 };
