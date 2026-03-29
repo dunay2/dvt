@@ -13,14 +13,15 @@ expected_outcome:
 tasks:
   - task_id: MVP-A1
     priority: P0
-    status: queued
+    status: in_progress
     objective:
       inventory the current backend MVP contractual surface (routes, invariants, and explicit
       boundaries) without adding new runtime behavior.
     dependency: none
     target:
       Canonical inventory aligned with real `apps/api` runtime surface and linked from the MVP
-      roadmap reset proposal.
+      roadmap reset proposal
+      (`docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`).
   - task_id: RC-A6
     priority: P0
     status: done

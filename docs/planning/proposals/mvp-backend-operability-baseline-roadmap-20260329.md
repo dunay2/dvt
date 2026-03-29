@@ -77,7 +77,8 @@ Not included in MVP definition:
 ## Agent Task Allocation (Consolidation Only)
 
 - `MVP-A1` (Lane A): contractual inventory of backend runtime surface and
-  invariants.
+  invariants. Artifact:
+  `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`.
 - `MVP-B1` (Lane B): traceability matrix linking each MVP claim to evidence and
   tests.
 - `MVP-C1` (Lane C): minimal operational runbook (start, diagnose, operate).
