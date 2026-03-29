@@ -97,4 +97,35 @@ describe('buildRunEventRetentionRuntime internals', () => {
     expect(callArgs).toContain('ROLLBACK');
     expect(logger.error).not.toHaveBeenCalled();
   });
+
+  it('reports rollback failure via callback for safe client disposal', async () => {
+    const rollbackError = new Error('ROLLBACK_FAILED');
+    const releaseErrorCallback = vi.fn();
+    const query = vi.fn(async (queryConfig: unknown) => {
+      if (queryConfig === 'ROLLBACK') {
+        throw rollbackError;
+      }
+      return { rows: [] };
+    });
+    const client = { query } as unknown as PoolClient;
+    const logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
+
+    await expect(
+      __internal.executeAbortAwareTransaction(
+        client,
+        undefined,
+        async () => {
+          throw new Error('CYCLE_FAILED');
+        },
+        logger,
+        releaseErrorCallback
+      )
+    ).rejects.toThrow(/CYCLE_FAILED/);
+
+    expect(releaseErrorCallback).toHaveBeenCalledWith(rollbackError);
+    expect(logger.error).toHaveBeenCalledTimes(1);
+  });
 });
