@@ -45,6 +45,7 @@ function makeRuntimeEvent(runId: string, runSeq: number): RunEventPersisted {
     engineAttemptId: runtimeEventFixture.engineAttemptId,
     emittedAt: runtimeEventFixture.emittedAt,
     idempotencyKey: `key-${runId}-${runSeq}`,
+    payloadVersion: 1,
     runSeq,
     persistedAt: runtimeEventFixture.persistedAt,
   };
@@ -77,6 +78,14 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
 
   async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     return (await this.inner.hasPendingRetries?.(selection)) ?? false;
+  }
+
+  async listDeadLetter(limit: number, tenantId: string) {
+    return this.inner.listDeadLetter(limit, tenantId);
+  }
+
+  async replayDeadLetters(options: { tenantId: string; limit?: number; runId?: string; ids?: string[] }) {
+    return this.inner.replayDeadLetters(options);
   }
 }
 
@@ -131,6 +140,12 @@ describe('OutboxWorkerRuntime', () => {
         },
         async markDelivered(): Promise<void> {},
         async markFailed(): Promise<void> {},
+        async listDeadLetter(): Promise<[]> {
+          return [];
+        },
+        async replayDeadLetters(): Promise<number> {
+          return 0;
+        },
       };
       const bus = new InMemoryEventBus();
       let interruptCalls = 0;

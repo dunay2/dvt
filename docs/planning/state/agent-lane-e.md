@@ -3,7 +3,6 @@ title: Agent Lane E - Frontend And UI
 status: Active
 owner: Product / UX / Frontend
 last_reviewed: 2026-03-27
-<!-- tasks synced from agent-lane-e.yaml on 2026-03-27 -->
 planning_type: status
 ---
 
@@ -93,25 +92,22 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 
 > Source of truth: `agent-lane-e.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
-- [ ] `P0` `F-01`: clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
-- [x] `P0` `F-02`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
-- [x] `P0` `F-03`: wire real backend health state into the top bar and a global degraded/offline banner.
-- [x] `P1` `F-04`: introduce a VITE_DATA_SOURCE=mock-or-api environment flag and separate data layers so views do not consume mock data directly.
+- [ ] `P0` `MVP-E1`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
+- [ ] `P0` `F-01`: clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
+- [ ] `P0` `F-02`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
+- [ ] `P0` `F-03`: wire real backend health state into the top bar and a global degraded/offline banner.
+- [ ] `P1` `F-04`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
 - [ ] `P1` `F-05`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
 - [ ] `P1` `F-06`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.
 - [ ] `P2` `F-07`: define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend is ready before backend endpoints land.
-- [ ] `P2` `F-08`: integrate the Plan -> Run core flow from canvas selection through to run start using real API when available, with a typed adapter for mock when not.
-- [ ] `P2` `F-09`: wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
+- [ ] `P2` `F-08`: integrate the Plan → Run core flow from canvas selection through to run start using real API when available, with a typed adapter for mock when not.
+- [ ] `P2` `F-09`: wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
 - [ ] `P2` `F-10`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
 - [ ] `P3` `F-11`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
-- [ ] `P1` `F-12`: define canonical frontend contracts for plugin capabilities including workspace.import, workspace.prepare, plan.preview, run.start, run.observe, artifact.sync, and node.adapt.
-- [ ] `P2` `F-13`: implement dbt explorer plugin baseline with source/model/test/exposure navigation plus project import/export and contextual node actions.
-- [ ] `P2` `F-14`: deliver dbt plan lifecycle end-to-end with create plan, import existing plan/project state, preview immutable plan, and execute through run.start.
-- [ ] `P2` `F-15`: implement Snowflake runtime plugin with two modes with direct task/procedure execution and repository DDL generation for external apply workflows.
-- [ ] `P2` `F-16`: persist and expose project deltas with immutable snapshots, timeline messages, and Git linkage to support before/after auditability.
 
 ## Dependencies
 
+- `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
 - F-01, F-02, F-04 are independent and can start in parallel.
 - F-03 depends on F-02.
 - F-05 depends on F-04.
@@ -121,11 +117,6 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - F-09 depends on F-08 and is blocked until backend delivers GET /runs and GET /runs/:id.
 - F-10 depends on F-09 and is blocked until backend delivers GET /runs/:id/events.
 - F-11 depends on F-10 and requires artifact and lineage endpoints from backend.
-- F-12 depends on F-06 and defines plugin capability contracts for all tool adapters.
-- F-13 depends on F-12 and introduces the dbt explorer plugin baseline.
-- F-14 depends on F-13 and delivers create/import/execute dbt plan lifecycle.
-- F-15 depends on F-12 and introduces Snowflake runtime modes (direct or DDL-to-repo).
-- F-16 depends on F-14 and captures deltas/snapshots with Git-linked auditability.
 - F-08 through F-11 coordinate with Lane C (admission) and Lane D (scale/GTM) for API surface readiness.
 
 ## Expected Outcome
@@ -134,8 +125,5 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - real backend health state is always visible
 - mock and API modes are explicitly separated
 - store responsibilities are decomposed by domain
-- core flow (Plan -> Run -> Monitor) works with real data
+- core flow (Plan → Run → Monitor) works with real data
 - secondary views activate progressively via feature flags
-- dbt plan lifecycle (create, import, execute) is available through typed contracts
-- plugin-driven execution supports dbt explorer and Snowflake runtime modes
-- project deltas are persisted with snapshots and Git-linked audit history

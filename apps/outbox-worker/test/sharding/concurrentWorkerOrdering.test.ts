@@ -46,6 +46,7 @@ function makeEvent(
     emittedAt: '2026-03-12T00:00:00.000Z',
     persistedAt: '2026-03-12T00:00:00.000Z',
     idempotencyKey,
+    payloadVersion: 1,
     runSeq,
   };
 }

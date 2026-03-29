@@ -12,16 +12,17 @@ import RunTabsContent from './runs/RunTabsContent';
 export default function RunsView() {
   const { runId } = useParams();
   const [activeTab, setActiveTab] = useState('timeline');
-  const { setCurrentRun } = useAppStore();
+  const { setCurrentRun, selectedTenant, selectedProject, selectedEnvironment } = useAppStore();
   const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
+  const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
 
   const runsQuery = useQuery({
-    queryKey: ['runs', 'list'],
+    queryKey: ['runs', 'list', workspaceLayoutKey],
     queryFn: () => runsService.listRuns(),
   });
 
   const runDetailQuery = useQuery({
-    queryKey: ['runs', 'detail', runId],
+    queryKey: ['runs', 'detail', workspaceLayoutKey, runId],
     queryFn: () => runsService.getRun(runId ?? ''),
     enabled: Boolean(runId),
   });

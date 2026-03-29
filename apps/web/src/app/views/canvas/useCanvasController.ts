@@ -130,7 +130,7 @@ export function useCanvasController() {
   const persistedNodePositions = workspaceCanvasLayout?.nodePositions ?? {};
 
   const graphSnapshotQuery = useQuery({
-    queryKey: ['workspace', 'graph'],
+    queryKey: ['workspace', 'graph', workspaceLayoutKey],
     queryFn: () => workspaceService.getGraphSnapshot(),
   });
 

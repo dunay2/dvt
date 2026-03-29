@@ -11,6 +11,9 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import type { ILineageOutboxStore } from '@dvt/contracts';
+import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
+
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
 import { PostgresOutboxStore } from './PostgresOutboxStore.js';
@@ -20,25 +23,22 @@ import { PostgresRunStateCoordinator } from './PostgresRunStateCoordinator.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { PostgresSnapshotStalenessQuery } from './PostgresSnapshotStalenessQuery.js';
 import { composePostgresStateStoreRuntime } from './PostgresStateStoreRuntimeComposer.js';
-type PostgresStateStoreRuntimeConfig =
-  import('./PostgresStateStoreRuntimeConfig.js').PostgresStateStoreRuntimeConfig;
-type RunEventReadRepository = import('./RunEventWriteRepository.js').RunEventReadRepository;
-type RunEventWriteRepository = import('./RunEventWriteRepository.js').RunEventWriteRepository;
-type AppendResult = import('./types.js').AppendResult;
-type DeadLetterRecord = import('./types.js').DeadLetterRecord;
-type EventEnvelope = import('./types.js').EventEnvelope;
-type EventInput = import('./types.js').EventInput;
-type ListEventsOptions = import('./types.js').ListEventsOptions;
-type ListRunsOptions = import('./types.js').ListRunsOptions;
-type OutboxRecord = import('./types.js').OutboxRecord;
-type RetryAttemptReservation = import('./types.js').RetryAttemptReservation;
-type RunBootstrapInput = import('./types.js').RunBootstrapInput;
-type RunId = import('./types.js').RunId;
-type RunMetadata = import('./types.js').RunMetadata;
-type WorkflowSnapshot = import('./types.js').WorkflowSnapshot;
-type ILineageOutboxStore = import('@dvt/contracts').ILineageOutboxStore;
-type ArchivedTerminalSnapshot = import('@dvt/state-store').ArchivedTerminalSnapshot;
-type TerminalSnapshotPinResult = import('@dvt/state-store').TerminalSnapshotPinResult;
+import type { PostgresStateStoreRuntimeConfig } from './PostgresStateStoreRuntimeConfig.js';
+import type { RunEventReadRepository, RunEventWriteRepository } from './RunEventWriteRepository.js';
+import type {
+  AppendResult,
+  DeadLetterRecord,
+  EventEnvelope,
+  EventInput,
+  ListEventsOptions,
+  ListRunsOptions,
+  OutboxRecord,
+  RetryAttemptReservation,
+  RunBootstrapInput,
+  RunId,
+  RunMetadata,
+  WorkflowSnapshot,
+} from './types.js';
 
 /**
  * Runtime composition base for the Postgres state-store adapter.

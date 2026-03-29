@@ -191,6 +191,98 @@ describe('ObjectStorageRunArchiveExporter', () => {
 
       expect(store.putCalls[0]).toMatch(/^archive\//);
     });
+
+    it('fails when a partial archive already exists', async () => {
+      const events = [makeEvent()];
+      store.objects.set(`archive/${ARCHIVE_UNIT_KEY}/events.jsonl`, Buffer.from('stale\n', 'utf8'));
+
+      await expect(
+        exporter.exportArchiveUnit({
+          archiveUnitKey: ARCHIVE_UNIT_KEY,
+          tenantBucket: TENANT_BUCKET,
+          exportedAtIso: EXPORTED_AT,
+          events,
+        })
+      ).rejects.toThrow(/ARCHIVE_EXPORT_PARTIAL_EXISTS/);
+    });
+
+    it('retries idempotently when all archive objects already match', async () => {
+      const events = [
+        makeEvent({ runId: 'run-a', runSeq: 1 }),
+        makeEvent({ runId: 'run-a', runSeq: 2 }),
+      ];
+
+      const first = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+      const writesAfterFirstExport = store.putCalls.length;
+
+      const second = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      expect(store.putCalls).toHaveLength(writesAfterFirstExport);
+      expect(second.objectKey).toBe(first.objectKey);
+      expect(second.manifestSha256).toBe(first.manifestSha256);
+      expect(second.checksumSha256).toBe(first.checksumSha256);
+      expect(second.objectUri).toBe(`existing://archive/${ARCHIVE_UNIT_KEY}/events.jsonl`);
+    });
+
+    it('retries idempotently when exportedAtIso changes across retries', async () => {
+      const events = [
+        makeEvent({ runId: 'run-a', runSeq: 1 }),
+        makeEvent({ runId: 'run-a', runSeq: 2 }),
+      ];
+
+      const first = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+      const second = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: '2026-03-20T00:30:00.000Z',
+        events,
+      });
+
+      expect(second.objectKey).toBe(first.objectKey);
+      expect(second.manifestSha256).toBe(first.manifestSha256);
+      expect(second.checksumSha256).toBe(first.checksumSha256);
+      expect(second.exportedAtIso).toBe(first.exportedAtIso);
+    });
+
+    it('fails with conflict when existing archive objects do not match input payload', async () => {
+      const events = [makeEvent({ runId: 'run-a', runSeq: 1 })];
+
+      await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      store.objects.set(
+        `archive/${ARCHIVE_UNIT_KEY}/events.jsonl`,
+        Buffer.from('{"bad":"payload"}\n', 'utf8')
+      );
+
+      await expect(
+        exporter.exportArchiveUnit({
+          archiveUnitKey: ARCHIVE_UNIT_KEY,
+          tenantBucket: TENANT_BUCKET,
+          exportedAtIso: EXPORTED_AT,
+          events,
+        })
+      ).rejects.toThrow(/ARCHIVE_EXPORT_CONFLICT/);
+    });
   });
 
   describe('verifyArchiveUnit', () => {

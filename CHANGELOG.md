@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.1.0](https://github.com/dunay2/dvt/compare/v5.0.2...v5.1.0) (2026-03-29)
+
+
+### Features
+
+* **web:** Set raven loading screen and favicon ([#657](https://github.com/dunay2/dvt/issues/657)) ([81bf074](https://github.com/dunay2/dvt/commit/81bf074d47392bd9db15d17169f67de7202fb332))
+
+
+### Bug Fixes
+
+* **state-store:** Harden retention export idempotency and runtime abort checks ([#659](https://github.com/dunay2/dvt/issues/659)) ([651292e](https://github.com/dunay2/dvt/commit/651292e9edf35887d99fc16666a4d42e65ea2f20))
+
 ## [5.0.2](https://github.com/dunay2/dvt/compare/v5.0.1...v5.0.2) (2026-03-28)
 
 

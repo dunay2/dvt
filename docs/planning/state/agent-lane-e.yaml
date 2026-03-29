@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: 2026-03-27
+last_reviewed: 2026-03-29
 goal:
   Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
   contracts.
@@ -17,6 +17,16 @@ expected_outcome:
   - plugin-driven execution supports dbt explorer and Snowflake runtime modes
   - project deltas are persisted with snapshots and Git-linked audit history
 tasks:
+  - task_id: MVP-E1
+    priority: P0
+    status: queued
+    objective:
+      define the frontend consumption contract for the backend MVP surface that exists today,
+      without promising non-implemented behavior.
+    dependency: MVP-A1, MVP-B1
+    target:
+      Frontend-facing backend contract document listing available routes, auth expectations, and
+      explicit out-of-scope assumptions.
   - task_id: F-01
     priority: P0
     status: in_progress
@@ -67,7 +77,7 @@ tasks:
     priority: P1
     status: done
     objective:
-      introduce a VITE_DATA_SOURCE=mock|api environment flag and separate data layers so views do
+      introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do
       not consume mock data directly.
     dependency: none
     target:
@@ -248,6 +258,7 @@ tasks:
       when available, with reproducible project state transitions.
 
 dependency_notes: |
+  - `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
   - F-01, F-02, F-04 are independent and can start in parallel.
   - F-03 depends on F-02.
   - F-05 depends on F-04.

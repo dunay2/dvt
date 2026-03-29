@@ -88,6 +88,7 @@ Stabilize event payload versioning and lineage wiring.
 
 > Source of truth: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
+- [ ] `P0` `MVP-B1`: build a claim-to-evidence traceability matrix for backend MVP operability assertions (capability, proof source, and executable validation command).
 - [ ] `P0` `S05`: S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level write-boundary schema gating.
 - [x] `P0` `S05-F1`: add per-eventType payload-content schema validation at write boundary.
 - [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
@@ -101,12 +102,13 @@ Stabilize event payload versioning and lineage wiring.
 
 ## Dependencies
 
+- `MVP-B1` depends on `MVP-A1` to avoid traceability drift from an unstable capability inventory.
 - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
 - `S05-F1` is closed after runtime boundary validation in contracts, adapter-postgres, and engine focused suites, plus negative write-boundary coverage.
 - `RC-B1` and `RC-B2` are closed in mainline.
 - `RC-B5` is complete; `RC-B5-F2` tracks the remaining integration-depth gap.
 - `RC-B5` remains a prerequisite to DLQ alerting plus automated replay.
-- `ADP-LINT-ORDER-01` tracks deferred tooling hardening for import-order crash behavior.
+- `ADP-LINT-ORDER-01` moved to `review`: inline type-import aliases were replaced with idiomatic `import type` and a CI regression guard was added in `tools/ci`.
 - `RC-F2` is independent and CI-only with no runtime risk.
 - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary further.
 - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.

@@ -43,6 +43,7 @@ function makeEvent(id: string): RunEventPersisted {
     engineAttemptId: 1,
     emittedAt: '2026-03-08T00:00:00.000Z',
     idempotencyKey: `key-${id}`,
+    payloadVersion: 1,
     runSeq: 1,
     persistedAt: '2026-03-08T00:00:00.000Z',
   };

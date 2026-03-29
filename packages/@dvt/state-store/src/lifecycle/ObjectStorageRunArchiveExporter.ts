@@ -15,6 +15,18 @@ export interface ObjectStorageRunArchiveExporterOptions {
   prefix?: string;
 }
 
+interface ArchiveUnitManifest {
+  archiveUnitKey: string;
+  tenantBucket: string;
+  tenantIds: readonly string[];
+  rowCount: number;
+  minRunSeq: number;
+  maxRunSeq: number;
+  checksumSha256: string;
+  objectKey: string;
+  exportedAt: string;
+}
+
 export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
   readonly archiveFormat = 'jsonl';
   readonly destinationKind: 'file' | 's3';
@@ -42,6 +54,61 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
       exportedAtIso: input.exportedAtIso,
       events,
     });
+
+    const [eventsExists, manifestExists, checksumExists] = await Promise.all([
+      this.objectStore.existsObject(objectKey),
+      this.objectStore.existsObject(manifestObjectKey),
+      this.objectStore.existsObject(checksumObjectKey),
+    ]);
+
+    const existingCount = [eventsExists, manifestExists, checksumExists].filter(Boolean).length;
+    if (existingCount > 0 && existingCount < 3) {
+      throw new Error('ARCHIVE_EXPORT_PARTIAL_EXISTS');
+    }
+
+    if (existingCount === 3) {
+      const [eventsBuffer, manifestBuffer, checksumBuffer] = await Promise.all([
+        this.objectStore.readObject(objectKey),
+        this.objectStore.readObject(manifestObjectKey),
+        this.objectStore.readObject(checksumObjectKey),
+      ]);
+
+      const existingManifest = parseArchiveManifest(manifestBuffer);
+      const canonicalExistingManifest = jcsCanonicalize(existingManifest);
+      const existingManifestSha256 = sha256Hex(canonicalExistingManifest);
+      const rebuiltFromExistingManifest = buildArchiveUnitManifest({
+        archiveUnitKey: input.archiveUnitKey,
+        tenantBucket: input.tenantBucket,
+        objectKey,
+        exportedAtIso: existingManifest.exportedAt,
+        events,
+      });
+
+      const checksumMatches = checksumBuffer.toString('utf8').trim() === existingManifestSha256;
+      const manifestMatches =
+        rebuiltFromExistingManifest.canonicalManifestJson === canonicalExistingManifest;
+      const eventsMatch = eventsBuffer.equals(eventsPayload);
+
+      if (!checksumMatches || !manifestMatches || !eventsMatch) {
+        throw new Error('ARCHIVE_EXPORT_CONFLICT');
+      }
+
+      return {
+        archiveUnitKey: input.archiveUnitKey,
+        tenantBucket: input.tenantBucket,
+        tenantIds: rebuiltFromExistingManifest.manifest.tenantIds,
+        rowCount: rebuiltFromExistingManifest.manifest.rowCount,
+        minRunSeq: rebuiltFromExistingManifest.manifest.minRunSeq,
+        maxRunSeq: rebuiltFromExistingManifest.manifest.maxRunSeq,
+        objectKey,
+        objectUri: buildExistingObjectUri(objectKey),
+        manifestObjectKey,
+        checksumObjectKey,
+        checksumSha256: rebuiltFromExistingManifest.manifest.checksumSha256,
+        manifestSha256: rebuiltFromExistingManifest.manifestSha256,
+        exportedAtIso: rebuiltFromExistingManifest.manifest.exportedAt,
+      };
+    }
 
     const [eventsWrite] = await Promise.all([
       this.objectStore.putObject(objectKey, eventsPayload, 'application/x-ndjson; charset=utf-8'),
@@ -95,17 +162,7 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
     ]);
 
     const events = parseNdjsonEvents(eventsBuffer);
-    const manifest = JSON.parse(manifestBuffer.toString('utf8')) as {
-      archiveUnitKey: string;
-      tenantBucket: string;
-      tenantIds: readonly string[];
-      rowCount: number;
-      minRunSeq: number;
-      maxRunSeq: number;
-      checksumSha256: string;
-      objectKey: string;
-      exportedAt: string;
-    };
+    const manifest = parseArchiveManifest(manifestBuffer);
 
     const canonicalManifestJson = jcsCanonicalize(manifest);
     const manifestSha256 = sha256Hex(canonicalManifestJson);
@@ -184,6 +241,10 @@ function parseNdjsonEvents(buffer: Buffer): readonly EventEnvelope[] {
   return lines.map((line) => JSON.parse(line) as EventEnvelope);
 }
 
+function parseArchiveManifest(manifestBuffer: Buffer): ArchiveUnitManifest {
+  return JSON.parse(manifestBuffer.toString('utf8')) as ArchiveUnitManifest;
+}
+
 function buildEventsObjectKey(prefix: string, archiveUnitKey: string): string {
   return `${prefix}/${archiveUnitKey}/events.jsonl`;
 }
@@ -221,4 +282,8 @@ function resolveDestinationKind(objectStore: IArchiveObjectStore): 'file' | 's3'
     return 's3';
   }
   return 'file';
+}
+
+function buildExistingObjectUri(objectKey: string): string {
+  return `existing://${objectKey}`;
 }
