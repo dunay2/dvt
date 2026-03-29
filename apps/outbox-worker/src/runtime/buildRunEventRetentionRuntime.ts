@@ -11,6 +11,7 @@ import { RunEventRetentionRuntime, type RunEventRetentionRuntimeLogger } from '.
 import type { Pool, PoolClient } from 'pg';
 
 type QueryInput = string | { text: string; values?: readonly unknown[] };
+type QueryConfigWithSignal = { text: string; values?: readonly unknown[]; signal?: globalThis.AbortSignal };
 
 export function buildRunEventRetentionRuntime(
   env: ActiveEnv,
@@ -105,21 +106,19 @@ function createAbortAwareClient(
         }
 
         if (typeof input === 'string') {
-          return target.query(
-            {
-              text: input,
-              ...(values === undefined ? {} : { values }),
-              signal,
-            } as never
-          );
+          const queryConfig: QueryConfigWithSignal = {
+            text: input,
+            ...(values === undefined ? {} : { values }),
+            signal,
+          };
+          return target.query(queryConfig as unknown as Parameters<PoolClient['query']>[0]);
         }
 
-        return target.query(
-          {
-            ...input,
-            signal,
-          } as never
-        );
+        const queryConfig: QueryConfigWithSignal = {
+          ...input,
+          signal,
+        };
+        return target.query(queryConfig as unknown as Parameters<PoolClient['query']>[0]);
       };
     },
   }) as PoolClient;
@@ -130,3 +129,7 @@ function createAbortError(message: string): Error {
   error.name = 'AbortError';
   return error;
 }
+
+export const __internal = {
+  createAbortAwareClient,
+};

@@ -43,6 +43,51 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
       events,
     });
 
+    const [eventsExists, manifestExists, checksumExists] = await Promise.all([
+      this.objectStore.existsObject(objectKey),
+      this.objectStore.existsObject(manifestObjectKey),
+      this.objectStore.existsObject(checksumObjectKey),
+    ]);
+
+    const existingCount = [eventsExists, manifestExists, checksumExists].filter(Boolean).length;
+    if (existingCount > 0 && existingCount < 3) {
+      throw new Error('ARCHIVE_EXPORT_PARTIAL_EXISTS');
+    }
+
+    if (existingCount === 3) {
+      const [eventsBuffer, manifestBuffer, checksumBuffer] = await Promise.all([
+        this.objectStore.readObject(objectKey),
+        this.objectStore.readObject(manifestObjectKey),
+        this.objectStore.readObject(checksumObjectKey),
+      ]);
+
+      const checksumMatches =
+        checksumBuffer.toString('utf8').trim() === manifestResult.manifestSha256;
+      const manifestMatches =
+        sha256Hex(canonicalizeManifest(manifestBuffer)) === manifestResult.manifestSha256;
+      const eventsMatch = eventsBuffer.equals(eventsPayload);
+
+      if (!checksumMatches || !manifestMatches || !eventsMatch) {
+        throw new Error('ARCHIVE_EXPORT_CONFLICT');
+      }
+
+      return {
+        archiveUnitKey: input.archiveUnitKey,
+        tenantBucket: input.tenantBucket,
+        tenantIds: manifestResult.manifest.tenantIds,
+        rowCount: manifestResult.manifest.rowCount,
+        minRunSeq: manifestResult.manifest.minRunSeq,
+        maxRunSeq: manifestResult.manifest.maxRunSeq,
+        objectKey,
+        objectUri: buildExistingObjectUri(objectKey),
+        manifestObjectKey,
+        checksumObjectKey,
+        checksumSha256: manifestResult.manifest.checksumSha256,
+        manifestSha256: manifestResult.manifestSha256,
+        exportedAtIso: manifestResult.manifest.exportedAt,
+      };
+    }
+
     const [eventsWrite] = await Promise.all([
       this.objectStore.putObject(objectKey, eventsPayload, 'application/x-ndjson; charset=utf-8'),
       this.objectStore.putObject(
@@ -184,6 +229,11 @@ function parseNdjsonEvents(buffer: Buffer): readonly EventEnvelope[] {
   return lines.map((line) => JSON.parse(line) as EventEnvelope);
 }
 
+function canonicalizeManifest(manifestBuffer: Buffer): string {
+  const parsed = JSON.parse(manifestBuffer.toString('utf8')) as Record<string, unknown>;
+  return jcsCanonicalize(parsed);
+}
+
 function buildEventsObjectKey(prefix: string, archiveUnitKey: string): string {
   return `${prefix}/${archiveUnitKey}/events.jsonl`;
 }
@@ -221,4 +271,8 @@ function resolveDestinationKind(objectStore: IArchiveObjectStore): 'file' | 's3'
     return 's3';
   }
   return 'file';
+}
+
+function buildExistingObjectUri(objectKey: string): string {
+  return `existing://${objectKey}`;
 }
