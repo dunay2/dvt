@@ -34,3 +34,7 @@ Even with policy defined in docs and env vars, production drift can occur if one
 1. Runtime emits explicit retention lag and last-success timestamps.
 2. Integration tests cover scheduler disabled/enabled modes and stale watermark recovery.
 3. Operational runbook includes alert thresholds and rollback steps for retention lag.
+
+## 2026-03-29 status update
+
+1. ARC docs gate requirement (`riskUpdate`) is now explicitly satisfied in this slice.
