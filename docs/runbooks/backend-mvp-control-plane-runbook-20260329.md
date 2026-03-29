@@ -1,6 +1,6 @@
 ---
 title: Backend MVP Control-Plane Runbook
-status: Draft
+status: Review
 owner: API / Runtime / Docs
 last_reviewed: 2026-03-29
 ---
@@ -79,6 +79,14 @@ curl -i http://localhost:3000/runs \
   -H "x-tenant-id: <tenant-id>"
 ```
 
+Run command checks:
+
+```bash
+curl -i http://localhost:3000/runs/<runId>/events \
+  -H "Authorization: Bearer <token>" \
+  -H "x-tenant-id: <tenant-id>"
+```
+
 ## Diagnosis Guide
 
 ### Symptom: `/readyz` returns 404
@@ -103,6 +111,25 @@ Likely cause: readiness probes fail (database/runtime readiness/reconciler
 state).  
 Action: inspect API logs for readiness probe failures and reconciler health
 status transitions.
+
+## Fallback And Boundaries
+
+Fallback posture for MVP operation:
+
+- If protected runtime cannot start because OIDC posture is incomplete, keep
+  API liveness available via `/healthz` and fix env posture before exposing
+  runtime commands.
+- If readiness is required by deployment policy, enforce
+  `DVT_READYZ_ENABLED=true`; otherwise treat `/readyz` as intentionally
+  unavailable.
+
+Out of scope for this runbook:
+
+- automatic run terminalization guarantees
+- scale-tuning and sharding procedures
+- retention and partition operations
+
+Use dedicated lane-D runbooks/procedures when those slices are promoted.
 
 ## Validation Baseline
 
