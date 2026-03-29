@@ -50,7 +50,7 @@ tasks:
     priority: P1
     status: queued
     objective:
-      introduce a VITE_DATA_SOURCE=mock|api environment flag and separate data layers so views do
+      introduce a VITE_DATA_SOURCE=mock-or-api environment flag and separate data layers so views do
       not consume mock data directly.
     dependency: none
     target:
