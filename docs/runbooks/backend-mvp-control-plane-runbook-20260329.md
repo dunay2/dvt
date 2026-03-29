@@ -88,17 +88,17 @@ curl -i http://localhost:3000/readyz
 Protected route check (example):
 
 ```bash
-curl -i http://localhost:3000/runs \
+curl -i "http://localhost:3000/runs?tenantId=<tenant-id>&projectId=<project-id>&environmentId=<environment-id>" \
   -H "Authorization: Bearer <token>" \
-  -H "x-tenant-id: <tenant-id>"
+  -H "Accept: application/json"
 ```
 
 Run command checks:
 
 ```bash
-curl -i http://localhost:3000/runs/<runId>/events \
+curl -i "http://localhost:3000/runs/<runId>/events?tenantId=<tenant-id>&limit=10" \
   -H "Authorization: Bearer <token>" \
-  -H "x-tenant-id: <tenant-id>"
+  -H "Accept: application/json"
 ```
 
 ## Diagnosis Guide

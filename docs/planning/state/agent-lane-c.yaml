@@ -11,7 +11,7 @@ expected_outcome:
 tasks:
   - task_id: MVP-C1
     priority: P0
-    status: done
+    status: review
     objective:
       produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
       diagnose, daily operate) without adding feature depth.
@@ -19,7 +19,8 @@ tasks:
     target:
       Operator-ready runbook for current runtime routes, auth scope handling, health/readiness
       diagnosis, fallback boundaries, and baseline validation commands
-      (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`).
+      (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`); final done status remains
+      aligned with `MVP-A1` and `MVP-B1` dependency closure.
   - task_id: S09
     priority: P0
     status: done
@@ -57,7 +58,8 @@ tasks:
     dependency: none
     target:
       Operation-level authorization boundaries are explicit and validated with negative integration
-      coverage for action-specific denials (`run:cancel` vs `run:signal`).
+      coverage plus always-on route-level unit coverage for action-specific denials (`run:cancel` vs
+      `run:signal`).
   - task_id: snapshot staleness in API
     priority: P1
     status: queued
@@ -112,6 +114,7 @@ dependency_notes: |
   - `MVP-C1` depends on `MVP-A1` and `MVP-B1` so the runbook reflects verified capabilities only.
   - `RC-D1A` depends on `RC-D1`.
   - `RBAC at operation level` is unblocked after `S09`.
+  - Route-level RBAC deny-path tests are always-on; live-DB protected runtime integration is executed in release-candidate/nightly profiles when env posture is present.
   - `Read-your-writes contract` depends on `snapshot staleness in API`.
   - `RC-C1` depends on `RBAC at operation level`.
   - `RC-C2` is independent and may run in parallel with runtime hardening items.

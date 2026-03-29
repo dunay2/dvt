@@ -9,20 +9,22 @@ arc_level: ARC-1
 breaking: false
 code_refs:
   - apps/api/test/integration/protectedRuntime.integration.test.ts
+  - apps/api/test/entrypoints/http/signalRunRoute.test.ts
   - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
   - docs/planning/state/agent-lane-c.yaml
 evidence:
   - operation-level action matrix is explicit in MVP runbook
   - integration negative coverage proves ACTION_NOT_GRANTED for cancel and signal action splits
+  - route-level unit coverage (always-on in CI) proves cancel-vs-signal authorization split and deny-path no-execute behavior
 ---
 
 # ED-20260329 Lane C RBAC operation-level closeout
 
 ## Decision captured
 
-Lane C task `RBAC at operation level` is closed by locking endpoint-level
-authorization boundaries and proving denied-path behavior with real
-integration coverage.
+Lane C task `RBAC at operation level` is implemented by locking endpoint-level
+authorization boundaries, adding denied-path integration coverage, and proving
+always-on deny behavior in route-level unit tests.
 
 ## What this evidence proves
 
@@ -32,6 +34,21 @@ integration coverage.
    `run:signal`.
 4. Runtime remains tenant-scoped and permission-based without introducing new
    feature depth.
+5. Route-level authorization deny paths are validated independently of live-DB
+   environment gating.
+
+Integration execution note:
+
+- `protectedRuntime.integration` is environment-gated (`DATABASE_URL`/`DVT_PG_URL` required), so
+  denied-path integration assertions execute when that lane is enabled.
+
+Execution policy note:
+
+- Route-level deny-path RBAC checks (`signalRunRoute.test.ts`) are the always-on
+  CI baseline.
+- `protectedRuntime.integration` is required in environments that provide
+  live-DB posture (release-candidate/nightly profiles), not as an unconditional
+  default lane.
 
 ## Validation commands
 

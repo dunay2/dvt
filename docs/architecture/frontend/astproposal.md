@@ -42,7 +42,7 @@ from mart_sales_daily
 
 Eso es más claro que la sintaxis anterior y sigue siendo muy gráfico.
 
-2. Panel derecho: graph preview en tiempo real
+## Panel derecho: graph preview en tiempo real
 
 Esto sí lo veo obligatorio.
 
@@ -68,7 +68,7 @@ se marcan sus dependencias
 
 Eso hace que la UX sea realmente poderosa.
 
-3. Bottom panel
+## Bottom panel
 
 Necesitas una zona inferior con pestañas.
 
@@ -83,7 +83,7 @@ Por qué
 Porque esta pantalla no es solo de edición.
 Es una pantalla de authoring + compile + inspect.
 
-4. Modos de trabajo
+## Modos de trabajo
 
 Esta pantalla debería admitir al menos 3 modos.
 
@@ -99,16 +99,17 @@ Mode: Split
 
 Izquierda DSL / derecha SQL o preview.
 
-5. Qué evitaría
-   No haría esto
-   un editor full-screen sin preview
-   una preview estática no interactiva
-   un DSL demasiado “programación general”
-   sintaxis críptica tipo Cypher si no es estrictamente necesaria
+## Qué evitaría
+
+No haría esto
+un editor full-screen sin preview
+una preview estática no interactiva
+un DSL demasiado “programación general”
+sintaxis críptica tipo Cypher si no es estrictamente necesaria
 
 Porque entonces pierdes legibilidad y propósito.
 
-6. Qué debería comunicar la pantalla
+## Qué debería comunicar la pantalla
 
 No es:
 
@@ -118,7 +119,7 @@ Es:
 
 Graph Authoring Studio
 Plan Authoring + Visual Feedback
-DSL to DAG editor 7. Conclusión
+DSL to DAG editor`r`n`r`n## Conclusión
 
 Tu intuición es correcta.
 
