@@ -5,7 +5,7 @@ type RunEventsTabProps = {
   run: Run;
 };
 
-export default function RunEventsTab({ run }: RunEventsTabProps) {
+export default function RunEventsTab({ run }: Readonly<RunEventsTabProps>) {
   return (
     <div className="space-y-2 font-mono text-sm">
       {run.events.map((event) => (

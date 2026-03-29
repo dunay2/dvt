@@ -6,6 +6,7 @@ import type { InspectorContext } from '../plugins/contracts/PluginManifest';
 import { getInspectorPanels } from '../plugins/registry';
 import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Button } from './ui/button';
+import { Card } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { cn } from './ui/utils';
@@ -41,19 +42,13 @@ export default function InspectorPanel({
   const panels = node ? getInspectorPanels(node, ctx) : [];
   const defaultTab = panels[0]?.id;
 
-  // Empty state
-  if (!node || panels.length === 0) {
+  if (!node) {
     return (
       <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
         <PanelHeader title="Inspector" status={null} kind="" onHide={onHide} />
         <div className="flex flex-1 items-center justify-center px-6">
           <div className="max-w-xs text-center text-sm text-slate-400">
-            <p>{node ? 'No panels registered for this node type.' : 'Select a node to inspect.'}</p>
-            {node && (
-              <p className="mt-2 font-mono text-xs text-slate-500">
-                {node.kind} is renderable but has no inspector contribution yet.
-              </p>
-            )}
+            <p>Select a node to inspect.</p>
           </div>
         </div>
       </div>
@@ -63,39 +58,48 @@ export default function InspectorPanel({
   return (
     <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
       <PanelHeader title={node.name} status={node.status} kind={node.kind} onHide={onHide} />
+      <ScrollArea className="flex-1">
+        <div className="space-y-4 p-4">
+          <CoreNodeDetails node={node} />
 
-      <Tabs
-        value={activeTab ?? defaultTab}
-        onValueChange={setActiveTab}
-        className="flex flex-1 flex-col overflow-hidden"
-      >
-        <TabsList className="justify-start rounded-none border-b border-slate-700 bg-transparent px-4">
-          {panels.map((panel) => {
-            const Icon = panel.icon;
-            return (
-              <TabsTrigger
-                key={panel.id}
-                value={panel.id}
-                className="text-slate-200 data-[state=active]:bg-slate-950 data-[state=active]:text-white"
-              >
-                <Icon className="mr-1 size-3" />
-                {resolveString(panel.label)}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+          {panels.length === 0 ? (
+            <Card className="border-slate-700 bg-slate-950 p-3 text-sm text-slate-400">
+              No plugin inspector panels are registered for this node.
+            </Card>
+          ) : (
+            <Tabs
+              value={activeTab ?? defaultTab}
+              onValueChange={setActiveTab}
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              <TabsList className="justify-start rounded-md border border-slate-700 bg-transparent p-1">
+                {panels.map((panel) => {
+                  const Icon = panel.icon;
+                  return (
+                    <TabsTrigger
+                      key={panel.id}
+                      value={panel.id}
+                      className="text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                    >
+                      <Icon className="mr-1 size-3" />
+                      {resolveString(panel.label)}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
 
-        <ScrollArea className="flex-1">
-          {panels.map((panel) => {
-            const PanelComponent = panel.component;
-            return (
-              <TabsContent key={panel.id} value={panel.id} className="m-0 p-4">
-                <PanelComponent node={node} activeRunId={activeRunId} onClose={onHide} />
-              </TabsContent>
-            );
-          })}
-        </ScrollArea>
-      </Tabs>
+              {panels.map((panel) => {
+                const PanelComponent = panel.component;
+                return (
+                  <TabsContent key={panel.id} value={panel.id} className="m-0 pt-3">
+                    <PanelComponent node={node} activeRunId={activeRunId} onClose={onHide} />
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
@@ -133,6 +137,54 @@ function PanelHeader({ title, status, kind, onHide }: PanelHeaderProps) {
       >
         <PanelRightClose className="size-4" />
       </Button>
+    </div>
+  );
+}
+
+function CoreNodeDetails({ node }: Readonly<{ node: CanonicalNode }>) {
+  const sql =
+    typeof node.metadata?.compiledSql === 'string'
+      ? node.metadata.compiledSql
+      : typeof node.metadata?.sql === 'string'
+        ? node.metadata.sql
+        : null;
+
+  return (
+    <div className="space-y-3">
+      <Card className="border-slate-700 bg-slate-950 p-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+          <span className="text-slate-400">Type</span>
+          <span className="truncate">{node.kind}</span>
+          <span className="text-slate-400">Status</span>
+          <span className="capitalize">{node.status}</span>
+          <span className="text-slate-400">Role</span>
+          <span className="capitalize">{node.role}</span>
+          {node.lastDuration != null && (
+            <>
+              <span className="text-slate-400">Duration</span>
+              <span>{node.lastDuration}s</span>
+            </>
+          )}
+          {node.lastCost != null && (
+            <>
+              <span className="text-slate-400">Cost</span>
+              <span>${node.lastCost.toFixed(2)}</span>
+            </>
+          )}
+        </div>
+        {node.path && <p className="mt-2 truncate font-mono text-xs text-slate-400">{node.path}</p>}
+      </Card>
+
+      {sql && (
+        <Card className="border-slate-700 bg-slate-950 p-3">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+            Code
+          </h3>
+          <pre className="max-h-44 overflow-auto whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-2 text-xs text-slate-100">
+            {sql}
+          </pre>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { Download } from 'lucide-react';
 
 import { Button } from '../../../components/ui/button';
-import { Card } from '../../../components/ui/card';
 import type { Run } from '../../../types/dbt';
+import { RunSurfaceCard } from './RunTabPrimitives';
 
 type RunArtifactsTabProps = {
   run: Run;
@@ -15,7 +15,7 @@ type ArtifactCardProps = {
 
 function ArtifactCard({ title, path }: Readonly<ArtifactCardProps>) {
   return (
-    <Card className="bg-slate-900 border-slate-700 p-4">
+    <RunSurfaceCard className="p-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold mb-1">{title}</h3>
@@ -26,7 +26,7 @@ function ArtifactCard({ title, path }: Readonly<ArtifactCardProps>) {
           Download
         </Button>
       </div>
-    </Card>
+    </RunSurfaceCard>
   );
 }
 

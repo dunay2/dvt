@@ -253,13 +253,21 @@ export function useCanvasController() {
     setNodes((currentNodes) => {
       const nextNodes = canonicalNodes.map((node, index) => {
         const currentNode = currentNodes.find((candidate) => candidate.id === node.id);
+        const persisted = persistedNodePositions[node.id];
+
+        console.debug('[canvas] sync node', node.id, {
+          persisted,
+          current: currentNode?.position,
+          hydrated: _hasHydrated,
+          pending: graphSnapshotQuery.isPending,
+        });
 
         return mapCanonicalNodeToCanvasNode(
           node,
           index,
           columnLevelLineageEnabled,
           undefined,
-          persistedNodePositions[node.id] ?? currentNode?.position
+          persisted ?? currentNode?.position
         );
       });
 
@@ -291,6 +299,12 @@ export function useCanvasController() {
 
   const handleNodePositionsSave = useCallback(
     (positions: Record<string, { x: number; y: number }>) => {
+      console.debug('[canvas] save positions', {
+        _hasHydrated,
+        isPending: graphSnapshotQuery.isPending,
+        positionKeys: Object.keys(positions),
+        positions,
+      });
       if (!_hasHydrated || graphSnapshotQuery.isPending) {
         return;
       }
@@ -298,6 +312,15 @@ export function useCanvasController() {
     },
     [_hasHydrated, graphSnapshotQuery.isPending, setCanvasNodePositions, workspaceLayoutKey]
   );
+
+  useEffect(() => {
+    console.debug('[canvas] hydration/query state', {
+      _hasHydrated,
+      isPending: graphSnapshotQuery.isPending,
+      persistedKeys: Object.keys(persistedNodePositions),
+      workspaceLayoutKey,
+    });
+  }, [_hasHydrated, graphSnapshotQuery.isPending, persistedNodePositions, workspaceLayoutKey]);
 
   const handleNodeDragStop = useCallback<
     NonNullable<import('@xyflow/react').ReactFlowProps['onNodeDragStop']>
