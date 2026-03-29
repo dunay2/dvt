@@ -24,6 +24,7 @@ export type UseCanvasGraphHandlersParams = {
   setSelectedNodes: (ids: string[]) => void;
   setInspectorNode: (nodeId: string | null) => void;
   toggleInspectorPanel: () => void;
+  onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
 };
 
 export type UseCanvasGraphHandlersResult = {

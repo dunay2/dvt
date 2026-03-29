@@ -26,6 +26,7 @@ export default function CanvasShell({
   gridSize,
   viewport,
   onNodesChange,
+  onNodeDragStop,
   onEdgesChange,
   onConnect,
   onNodeClick,
@@ -102,6 +103,7 @@ export default function CanvasShell({
             gridSize={gridSize}
             viewport={viewport}
             onNodesChange={onNodesChange}
+            onNodeDragStop={onNodeDragStop}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={onNodeClick}

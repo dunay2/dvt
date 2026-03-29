@@ -25,6 +25,7 @@ function CanvasContent() {
         gridSize={controller.gridSize}
         viewport={controller.viewport}
         onNodesChange={controller.onNodesChange}
+        onNodeDragStop={controller.handleNodeDragStop}
         onEdgesChange={controller.onEdgesChange}
         onConnect={controller.onConnect}
         onNodeClick={controller.handleNodeClick}

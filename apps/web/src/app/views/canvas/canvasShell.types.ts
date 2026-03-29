@@ -1,4 +1,5 @@
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
+import type React from 'react';
 
 import type { CanonicalNode } from '../../types/canonical';
 
@@ -23,6 +24,7 @@ export type CanvasShellProps = {
   gridSize: number;
   viewport: { x: number; y: number; zoom: number } | null;
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
+  onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;

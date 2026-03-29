@@ -3,12 +3,14 @@ import {
   Controls,
   MiniMap,
   ReactFlow,
+  useReactFlow,
   type Edge,
   type Node,
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
 import { PanelLeftOpen, PanelRightOpen } from 'lucide-react';
+import { useEffect } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
@@ -28,6 +30,7 @@ type CanvasViewportProps = {
   readonly onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   readonly onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
+  readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   readonly onDrop: React.DragEventHandler<HTMLDivElement>;
   readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
   readonly onShowExplorer: () => void;
@@ -49,11 +52,22 @@ export default function CanvasViewport({
   onNodeClick,
   onSelectionChange,
   onViewportChange,
+  onNodeDragStop,
   onDrop,
   onDragOver,
   onShowExplorer,
   onShowInspector,
 }: CanvasViewportProps) {
+  const reactFlow = useReactFlow<Node, Edge>();
+
+  useEffect(() => {
+    if (viewport == null) {
+      return;
+    }
+
+    void reactFlow.setViewport(viewport, { duration: 0 });
+  }, [reactFlow, viewport]);
+
   return (
     <div className="flex-1 relative overflow-hidden" onDrop={onDrop} onDragOver={onDragOver}>
       {!focusMode && !explorerPanelVisible && (
@@ -89,6 +103,7 @@ export default function CanvasViewport({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onNodeDragStop={onNodeDragStop}
         onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         fitView={viewport == null}

@@ -84,29 +84,6 @@ function areViewportsEqual(
   return left.x === right.x && left.y === right.y && left.zoom === right.zoom;
 }
 
-function areNodePositionsEqual(
-  left: Record<string, { x: number; y: number }>,
-  right: Record<string, { x: number; y: number }>
-): boolean {
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-
-  if (leftKeys.length !== rightKeys.length) {
-    return false;
-  }
-
-  return leftKeys.every((key) => {
-    const leftPosition = left[key];
-    const rightPosition = right[key];
-
-    return (
-      leftPosition != null &&
-      rightPosition != null &&
-      leftPosition.x === rightPosition.x &&
-      leftPosition.y === rightPosition.y
-    );
-  });
-}
 
 export function useCanvasController() {
   const navigate = useNavigate();
@@ -312,39 +289,26 @@ export function useCanvasController() {
     setNodes,
   ]);
 
-  useEffect(() => {
-    // Don't write until store is hydrated from localStorage
-    if (!_hasHydrated) {
-      return;
-    }
+  const handleNodePositionsSave = useCallback(
+    (positions: Record<string, { x: number; y: number }>) => {
+      if (!_hasHydrated || graphSnapshotQuery.isPending) {
+        return;
+      }
+      setCanvasNodePositions(workspaceLayoutKey, positions);
+    },
+    [_hasHydrated, graphSnapshotQuery.isPending, setCanvasNodePositions, workspaceLayoutKey]
+  );
 
-    // Don't write while the workspace query is still loading — nodes would be
-    // empty and would overwrite the saved layout with an empty object.
-    if (graphSnapshotQuery.isPending) {
-      return;
-    }
-
-    if (nodes.some((node) => node.dragging)) {
-      return;
-    }
-
-    const nextPositions = Object.fromEntries(
-      nodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
-    );
-
-    if (areNodePositionsEqual(persistedNodePositions, nextPositions)) {
-      return;
-    }
-
-    setCanvasNodePositions(workspaceLayoutKey, nextPositions);
-  }, [
-    _hasHydrated,
-    graphSnapshotQuery.isPending,
-    nodes,
-    persistedNodePositions,
-    setCanvasNodePositions,
-    workspaceLayoutKey,
-  ]);
+  const handleNodeDragStop = useCallback<
+    NonNullable<import('@xyflow/react').ReactFlowProps['onNodeDragStop']>
+  >(
+    (_event, _node, allNodes) => {
+      handleNodePositionsSave(
+        Object.fromEntries(allNodes.map((n) => [n.id, { x: n.position.x, y: n.position.y }]))
+      );
+    },
+    [handleNodePositionsSave]
+  );
 
   const handleViewportChange = useCallback(
     (viewport: { x: number; y: number; zoom: number }) => {
@@ -372,6 +336,7 @@ export function useCanvasController() {
     setSelectedNodes,
     setInspectorNode,
     toggleInspectorPanel,
+    onLayoutComplete: handleNodePositionsSave,
   });
 
   const handleRunStarted = useCallback(
@@ -462,6 +427,7 @@ export function useCanvasController() {
     handleNodeClick: graphHandlers.handleNodeClick,
     onSelectionChange: graphHandlers.onSelectionChange,
     handleViewportChange,
+    handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
     hideExplorerPanel: toggleExplorerPanel,

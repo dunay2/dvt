@@ -104,6 +104,7 @@ export function useCanvasGraphHandlers({
   setSelectedNodes,
   setInspectorNode,
   toggleInspectorPanel,
+  onLayoutComplete,
 }: UseCanvasGraphHandlersParams): UseCanvasGraphHandlersResult {
   const pendingConnectionRef = useRef<Connection | null>(null);
   const [confirmEdgeModal, setConfirmEdgeModal] = useState<ConfirmEdgeModalState>({
@@ -210,7 +211,10 @@ export function useCanvasGraphHandlers({
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
     toast.success('Layout applied');
-  }, [edges, nodes, setEdges, setNodes]);
+    onLayoutComplete(
+      Object.fromEntries(layoutedNodes.map((n) => [n.id, { x: n.position.x, y: n.position.y }]))
+    );
+  }, [edges, nodes, onLayoutComplete, setEdges, setNodes]);
 
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {

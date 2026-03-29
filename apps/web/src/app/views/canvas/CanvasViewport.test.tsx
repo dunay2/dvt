@@ -10,6 +10,7 @@ const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
 const xyflowState = vi.hoisted(() => ({
   miniMapNodeColor: null as null | ((node: { data?: unknown }) => string),
   lastReactFlowProps: null as null | Record<string, unknown>,
+  setViewport: vi.fn(),
 }));
 
 vi.mock('../../plugins/nodeTypeRegistry', () => ({
@@ -55,6 +56,9 @@ vi.mock('@xyflow/react', () => ({
       />
     );
   },
+  useReactFlow: () => ({
+    setViewport: xyflowState.setViewport,
+  }),
 }));
 
 function buildProps(
@@ -70,6 +74,7 @@ function buildProps(
     gridSize: 24,
     viewport: null,
     onNodesChange: vi.fn(),
+    onNodeDragStop: vi.fn(),
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
     onNodeClick: vi.fn(),
@@ -96,6 +101,7 @@ describe('CanvasViewport', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
     xyflowState.miniMapNodeColor = null;
     xyflowState.lastReactFlowProps = null;
+    xyflowState.setViewport.mockReset();
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
       minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
     }));
@@ -185,5 +191,9 @@ describe('CanvasViewport', () => {
       fitView: false,
       defaultViewport: { x: 120, y: 48, zoom: 0.68 },
     });
+    expect(xyflowState.setViewport).toHaveBeenCalledWith(
+      { x: 120, y: 48, zoom: 0.68 },
+      { duration: 0 }
+    );
   });
 });
