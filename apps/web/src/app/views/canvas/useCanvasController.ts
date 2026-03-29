@@ -118,6 +118,7 @@ export function useCanvasController() {
   const runsService = useMemo(() => createRunsService(dataSourceMode), [dataSourceMode]);
 
   const {
+    _hasHydrated,
     focusMode,
     selectedTenant,
     selectedProject,
@@ -312,6 +313,10 @@ export function useCanvasController() {
   ]);
 
   useEffect(() => {
+    if (!_hasHydrated) {
+      return;
+    }
+
     if (nodes.some((node) => node.dragging)) {
       return;
     }
@@ -325,7 +330,7 @@ export function useCanvasController() {
     }
 
     setCanvasNodePositions(workspaceLayoutKey, nextPositions);
-  }, [nodes, persistedNodePositions, setCanvasNodePositions, workspaceLayoutKey]);
+  }, [_hasHydrated, nodes, persistedNodePositions, setCanvasNodePositions, workspaceLayoutKey]);
 
   const handleViewportChange = useCallback(
     (viewport: { x: number; y: number; zoom: number }) => {

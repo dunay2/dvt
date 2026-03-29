@@ -25,6 +25,8 @@ type WorkspaceCanvasLayout = {
 };
 
 interface AppState {
+  _hasHydrated: boolean;
+
   // Global selectors
   selectedTenant: string;
   selectedProject: string;
@@ -112,6 +114,8 @@ const sessionContext = useSessionStore.getState();
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
+      _hasHydrated: false,
+
       // Initial state
       selectedTenant: sessionContext.tenantId,
       selectedProject: sessionContext.projectId,
@@ -235,6 +239,9 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dvt-web-shell-layout',
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => () => {
+        useAppStore.setState({ _hasHydrated: true });
+      },
       partialize: (state) => ({
         leftNavCollapsed: state.leftNavCollapsed,
         explorerPanelWidth: state.explorerPanelWidth,
