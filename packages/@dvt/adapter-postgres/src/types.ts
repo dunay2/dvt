@@ -1,3 +1,5 @@
+import type { WorkflowSnapshot as ContractWorkflowSnapshot } from '@dvt/contracts';
+
 export type {
   AppendResult,
   DeadLetterRecord,
@@ -23,7 +25,7 @@ export type {
 } from '@dvt/contracts';
 export { MAX_OUTBOX_ATTEMPTS } from '@dvt/contracts';
 
-export type StepSnapshot = import('@dvt/contracts').WorkflowSnapshot['steps'][string];
+export type StepSnapshot = ContractWorkflowSnapshot['steps'][string];
 export type {
   ArchivedTerminalSnapshot,
   TerminalSnapshotPinResult,
