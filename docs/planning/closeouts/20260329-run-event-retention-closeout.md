@@ -7,7 +7,22 @@ owner: Architecture / Runtime / QA
 
 # Closeout: QA Dura Fowler — DDD / SOLID
 
-Cierre crítico del slice de retención y archivado de eventos en `outbox-worker`, bajo principios DDD y SOLID, con formato explícito de riesgos, mitigaciones y controles de calidad.
+Cierre crítico del slice de retención y archivado de eventos en `outbox-worker`, bajo principios DDD y SOLID, con formato explícito de errores, incumplimientos, riesgos, mitigaciones y controles de calidad.
+
+---
+
+## Errores detectados
+
+- No se detectaron errores funcionales ni de integración en los tests y validaciones del slice.
+- No se observaron fallos de wiring ni de regresión en el worker principal.
+
+---
+
+## Incumplimientos
+
+- No se detectan incumplimientos de ADRs, gobernanza ni de los principios DDD/SOLID en el diseño y la implementación.
+- El slice cumple con la política de no deuda, no stubs y evidencia de validación.
+- El borrado y restauración están planificados para el siguiente slice, no como incumplimiento sino como scope explícito.
 
 ---
 
