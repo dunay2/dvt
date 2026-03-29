@@ -84,7 +84,6 @@ function areViewportsEqual(
   return left.x === right.x && left.y === right.y && left.zoom === right.zoom;
 }
 
-
 export function useCanvasController() {
   const navigate = useNavigate();
   const { data: capabilities } = useCapabilitiesQuery();

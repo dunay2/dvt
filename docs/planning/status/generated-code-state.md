@@ -12,12 +12,11 @@ Generated automatically from repository code on 2026-03-29.
 
 ## Summary
 
-<<<<<<< HEAD
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 524   |
-| Total test files             | 181   |
+| Total source files           | 545   |
+| Total test files             | 190   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
@@ -25,12 +24,12 @@ Generated automatically from repository code on 2026-03-29.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 101       | 43         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 109       | 48         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 4          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 14        | 17         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 135       | 0          | yes   | no   | yes       | -                       |
-| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 25        | 14         | yes   | yes  | yes       | 22                      |
+| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 38        | 18         | yes   | yes  | yes       | 22                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 9         | 1          | yes   | yes  | no        | 8                       |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
@@ -48,46 +47,5 @@ Generated automatically from repository code on 2026-03-29.
 | @dvt/run-domain           | `packages/@dvt/run-domain`           | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/state-store          | `packages/@dvt/state-store`          | 15        | 9          | yes   | yes  | no        | 19                      |
 | @dvt/traceability-service | `packages/@dvt/traceability-service` | 24        | 5          | yes   | yes  | yes       | 8                       |
-> > > > > > > | @dvt/planner-contracts | `packages/@dvt/planner-contracts` | 0 | 0 | yes | no | no | - |
-> > > > > > > | @dvt/run-domain | `packages/@dvt/run-domain` | 3 | 1 | yes | yes | no | 2 |
-> > > > > > > | @dvt/state-store | `packages/@dvt/state-store` | 15 | 9 | yes | yes | no | 19 |
-> > > > > > > | @dvt/traceability-service | `packages/@dvt/traceability-service` | 24 | 5 | yes | yes | yes | 8 |
-=======
-| Metric                       | Value |
-| ---------------------------- | ----- |
-| Total workspaces             | 23    |
-| Total source files           | 528   |
-| Total test files             | 181   |
-| Workspaces with build script | 22/23 |
-| Workspaces with test script  | 20/23 |
-
-## Workspace Matrix
-
-| Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
-| ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 101       | 43         | yes   | yes  | yes       | -                       |
-| dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 4          | yes   | yes  | yes       | -                       |
-| dvt-outbox-worker         | `apps/outbox-worker`                 | 14        | 17         | yes   | yes  | yes       | -                       |
-| dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 139       | 0          | yes   | no   | yes       | -                       |
-| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 25        | 14         | yes   | yes  | yes       | 22                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
-| @dvt/artifacts            | `packages/@dvt/artifacts`            | 9         | 1          | yes   | yes  | no        | 8                       |
-| @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
-| @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 33        | 10         | yes   | yes  | no        | 31                      |
-| packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
-| @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 87        | 33         | yes   | yes  | no        | 31                      |
-| @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
-| @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/plan-verifier        | `packages/@dvt/plan-verifier`        | 5         | 2          | yes   | yes  | no        | 4                       |
-| @dvt/planner              | `packages/@dvt/planner`              | 22        | 16         | yes   | yes  | no        | 15                      |
-| @dvt/planner-contracts    | `packages/@dvt/planner-contracts`    | 0         | 0          | yes   | no   | no        | -                       |
-| @dvt/run-domain           | `packages/@dvt/run-domain`           | 3         | 1          | yes   | yes  | no        | 2                       |
-| @dvt/state-store          | `packages/@dvt/state-store`          | 15        | 9          | yes   | yes  | no        | 19                      |
-| @dvt/traceability-service | `packages/@dvt/traceability-service` | 24        | 5          | yes   | yes  | yes       | 8                       |
->>>>>>> e3e3ca46... test(web): Add canvas controller hook coverage
 
 > This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.
