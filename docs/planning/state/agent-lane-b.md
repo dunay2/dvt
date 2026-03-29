@@ -106,7 +106,7 @@ Stabilize event payload versioning and lineage wiring.
 - `RC-B1` and `RC-B2` are closed in mainline.
 - `RC-B5` is complete; `RC-B5-F2` tracks the remaining integration-depth gap.
 - `RC-B5` remains a prerequisite to DLQ alerting plus automated replay.
-- `ADP-LINT-ORDER-01` tracks deferred tooling hardening for import-order crash behavior.
+- `ADP-LINT-ORDER-01` moved to `review`: inline type-import aliases were replaced with idiomatic `import type` and a CI regression guard was added in `tools/ci`.
 - `RC-F2` is independent and CI-only with no runtime risk.
 - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary further.
 - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
