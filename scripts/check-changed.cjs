@@ -65,6 +65,17 @@ function hasUpstream() {
   }
 }
 
+function hasRef(ref) {
+  try {
+    execSync(`git rev-parse --verify ${ref}`, {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function chunk(items, size) {
   const out = [];
   for (let i = 0; i < items.length; i += size) {
@@ -123,7 +134,9 @@ function gitChangedFiles() {
   try {
     const diffCommand = hasUpstream()
       ? 'git diff --name-only @{u}..HEAD'
-      : 'git diff --name-only HEAD~1..HEAD';
+      : hasRef('origin/main')
+        ? 'git diff --name-only origin/main..HEAD'
+        : 'git diff --name-only HEAD~1..HEAD';
     return parseChangedFiles(runGit(diffCommand));
   } catch {
     return parseChangedFiles(runGit('git diff --name-only HEAD~1..HEAD'));
