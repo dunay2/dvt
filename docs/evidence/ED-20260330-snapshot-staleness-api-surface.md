@@ -13,9 +13,10 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts
   - apps/api/src/application/services/getRunStatusUseCase.ts
 evidence:
-  - pnpm --filter @dvt/engine test -- test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
-  - pnpm --filter @dvt/adapter-postgres test -- test/PostgresSnapshotStalenessQuery.test.ts test/PostgresStateStoreAdapter.sharding.test.ts
-  - pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts test/entrypoints/http/getRunRoute.test.ts test/modules/stateStoreRoles.test.ts
+  tests:
+    - pnpm --filter @dvt/engine test -- test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
+    - pnpm --filter @dvt/adapter-postgres test -- test/PostgresSnapshotStalenessQuery.test.ts test/PostgresStateStoreAdapter.sharding.test.ts
+    - pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts test/entrypoints/http/getRunRoute.test.ts test/modules/stateStoreRoles.test.ts
 ---
 
 ## Summary
