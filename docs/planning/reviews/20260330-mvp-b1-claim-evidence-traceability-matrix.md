@@ -37,6 +37,19 @@ MVP capability.
 | Protected runtime routes are OIDC + tenant gated                                                           | Roadmap MVP Definition, Runbook Required Environment Posture         | `apps/api/src/modules/buildProtectedRuntimeModule.ts`                                                | `apps/api/test/integration/protectedRuntime.integration.test.ts`                                                                                                                   | `pnpm --filter dvt-api test:integration`                               |
 | Run state/event queryability supports operator diagnosis                                                   | Roadmap MVP Definition, Runbook Daily Operations and Diagnosis Guide | `apps/api/src/app.ts`, `apps/api/src/routes/health.ts`                                               | `apps/api/test/integration/protectedRuntime.integration.test.ts`, `apps/api/test/app.test.ts`                                                                                      | `pnpm --filter dvt-api test && pnpm --filter dvt-api test:integration` |
 
+## Coverage Check Against MVP Roadmap "IN" Claims
+
+The roadmap `IN` set contains nine scope items (six protected runtime routes,
+two operational endpoints, one auth posture claim). This matrix covers each of
+them through route-level and posture-level rows:
+
+- protected command/query routes: covered by rows 1-4
+- public operational routes (`/healthz`, `/readyz`): covered by rows 5-6
+- OIDC + tenant authorization posture: covered by row 7
+- operator diagnosis through run/event queryability: covered by row 8
+
+No `IN` claim from the roadmap is left without evidence + executable command.
+
 ## Baseline Command Set
 
 ```bash
@@ -49,5 +62,7 @@ pnpm verify:prepush
 
 - This matrix is `MVP-B1` delivery evidence but remains provisional until
   dependency `MVP-A1` (canonical MVP contractual inventory) is accepted.
+- `MVP-A1` source doc is currently `Proposed`; therefore `MVP-B1` cannot be
+  marked `done` yet, only `review` with provisional closure evidence.
 - If `MVP-A1` changes claim boundaries, this matrix must be updated in the same
   PR that changes those claims.

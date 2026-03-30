@@ -33,7 +33,7 @@ header_markdown: |
 tasks:
   - task_id: MVP-B1
     priority: P0
-    status: in_progress
+    status: review
     objective:
       build a claim-to-evidence traceability matrix for backend MVP operability assertions
       (capability, proof source, and executable validation command).
@@ -109,7 +109,7 @@ tasks:
     target: Stable autofix behavior with idiomatic import type usage restored.
   - task_id: RC-F2
     priority: P2
-    status: queued
+    status: review
     objective:
       externalize adapter-postgres CI path patterns to
       tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and

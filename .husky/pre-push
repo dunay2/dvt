@@ -1,19 +1,24 @@
 #!/bin/sh
 set -e
 
-# Detect changed files against upstream branch; fall back to last commit.
-changed=$(git diff --name-only @{u}..HEAD 2>/dev/null || git diff --name-only HEAD~1..HEAD)
+# Detect changed files against upstream branch.
+# Fallback order: upstream → origin/main → last commit only.
+changed=$(git diff --name-only @{u}..HEAD 2>/dev/null \
+  || git diff --name-only origin/main..HEAD 2>/dev/null \
+  || git diff --name-only HEAD~1..HEAD 2>/dev/null \
+  || true)
 
 # Mirror the any_code path filter from pr-quality-gate.yml.
 # If none of the changed files match code paths, skip contracts compile and
 # type-check — docs-only pushes do not need them.
 code_changed=$(printf '%s\n' "$changed" | grep -E \
-  '^(apps|packages|specs|tools)/|^\.github/workflows/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|vitest\.config\.ts|eslint\.config\.cjs)$|^tsconfig' \
+  '^(apps|packages|specs|tools)/|^\.github/workflows/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|vitest\.config\.ts|eslint\.config\.cjs|\.prettierrc\.json|commitlint\.config\.cjs)$|^tsconfig' \
   2>/dev/null || true)
 
 if [ -z "$code_changed" ]; then
-  echo "Docs-only push detected — skipping contracts compile and type-check."
-  pnpm -s docs:gov:locations
+  echo "Docs-only push detected — running docs gates only."
+  pnpm -s docs:gov:locations -- --changed-only
+  pnpm -s docs:arc:evidence:check -- --changed-only
   node scripts/check-changed.cjs
 else
   echo "Running pre-push verifications: pnpm verify:prepush"

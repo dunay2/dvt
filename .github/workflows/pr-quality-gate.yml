@@ -61,6 +61,14 @@ jobs:
               - 'tsconfig*.json'
               - 'vitest.config.ts'
               - 'eslint.config.cjs'
+            docs_changed:
+              - 'docs/**'
+              - 'AGENTS.md'
+              - 'CLAUDE.md'
+              - 'scripts/docs-*.cjs'
+              - 'scripts/generate-*.cjs'
+              - 'commitlint.config.cjs'
+              - '.prettierrc.json'
 
       - name: Validate adapter-postgres policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
@@ -88,31 +96,35 @@ jobs:
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate docs sync outputs (ADR/index coherence)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:sync:check
 
       - name: Validate docs quality policy (English/no duplicate indexes)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:quality:check
 
       - name: Run docs doctor (duplicates/legacy/staleness)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:doctor
 
       - name: Enforce Markdown location policy
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:gov:locations
 
       - name: Enforce canonical docs paths and links
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:canonical:check
 
       - name: Validate generated code-state status doc
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request' && (steps.scope.outputs.docs_changed == 'true' ||
+          steps.scope.outputs.any_code == 'true')
         run: pnpm docs:status:check
 
       - name: Validate generated capability coverage doc
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request' && (steps.scope.outputs.docs_changed == 'true' ||
+          steps.scope.outputs.any_code == 'true')
         run: pnpm docs:capability:check
 
       - name: Workspace type-check (fast-fail)
@@ -187,10 +199,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [pr-checks]
-    if:
+    if: >-
       needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name !=
-      'workflow_dispatch' || (github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.run_temporal_integration == 'true'))
+      'workflow_dispatch' ||
+       github.event.inputs.run_temporal_integration == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -208,51 +220,11 @@ jobs:
       - name: Run Temporal adapter integration (time-skipping)
         run: pnpm --filter @dvt/adapter-temporal test:integration
 
-  adapter-postgres-smoke:
-    name: Adapter Postgres Smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [pr-checks]
-    if:
-      needs.pr-checks.outputs.adapter_postgres_changed == 'true' && github.event_name ==
-      'pull_request' && github.event.pull_request.draft == false
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: dvt_test
-          POSTGRES_PASSWORD: dvt_test
-          POSTGRES_DB: dvt_test
-        options: >-
-          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        ports:
-          - 5432:5432
-    env:
-      DVT_PG_INTEGRATION: '1'
-      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Setup pnpm, cache and dependencies
-        uses: ./.github/actions/setup-node-pnpm
-        with:
-          node-version: 22.x
-
-      - name: Enforce adapter-postgres import alias guard
-        run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
-
-      - name: Build adapter-postgres dependency graph
-        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
-
-      - name: Run adapter-postgres integration-enabled suite
-        run: pnpm test:adapter-postgres:integration
-
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pr-checks, temporal-integration, adapter-postgres-smoke]
+    needs: [pr-checks, temporal-integration]
     if: always()
     steps:
       - name: Check all jobs

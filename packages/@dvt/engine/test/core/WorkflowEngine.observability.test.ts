@@ -15,15 +15,12 @@ import {
 
 type CollectorReturn = ReturnType<typeof makeObservabilityCollector>;
 type EngineReturn = ReturnType<typeof createEngine>;
-type AdaptersReturn = ReturnType<typeof makeAdapters>;
 
 function setupMarkResolvedFailTest(opts?: {
   collectorOverrides?: Parameters<typeof makeObservabilityCollector>[0];
   adapterOverrides?: Parameters<typeof makeAdapters>[0];
   failOnce?: boolean;
-  runId?: string;
 }): Pick<CollectorReturn, 'obs' | 'warns' | 'metricCalls' | 'warnEntries'> & {
-  adapters: AdaptersReturn;
   engine: EngineReturn['engine'];
   intentStore: EngineReturn['intentStore'];
 } {
@@ -37,26 +34,7 @@ function setupMarkResolvedFailTest(opts?: {
   } else {
     vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
   }
-  return { obs, warns, metricCalls, warnEntries, adapters, engine, intentStore };
-}
-
-function startEngineWithFailingMarkResolved(opts?: { once?: boolean }): {
-  engine: EngineReturn['engine'];
-  intentStore: EngineReturn['intentStore'];
-  obs: CollectorReturn['obs'];
-  warns: CollectorReturn['warns'];
-  metricCalls: CollectorReturn['metricCalls'];
-  warnEntries: CollectorReturn['warnEntries'];
-} {
-  const { obs, warns, metricCalls, warnEntries } = makeObservabilityCollector();
-  const adapters = makeAdapters();
-  const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  if (opts?.once) {
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-  } else {
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
-  }
-  return { engine, intentStore, obs, warns, metricCalls, warnEntries } as const;
+  return { obs, warns, metricCalls, warnEntries, engine, intentStore };
 }
 
 /* Observability-focused tests moved from WorkflowEngine.test.ts to improve Code Health */
@@ -234,7 +212,7 @@ it('keeps startRun non-fatal when both metric and warning sinks throw on markRes
 });
 
 it('emits one warning per failed markResolved under concurrent starts', async () => {
-  const { engine, warns } = startEngineWithFailingMarkResolved();
+  const { engine, warns } = setupMarkResolvedFailTest();
 
   await Promise.all([
     engine.startRun(makePlanRef(), makeContext('obs-concurrent-1')),
@@ -246,7 +224,7 @@ it('emits one warning per failed markResolved under concurrent starts', async ()
 });
 
 it('records expected metric labels when markResolved fails', async () => {
-  const { engine, metricCalls } = startEngineWithFailingMarkResolved({ once: true });
+  const { engine, metricCalls } = setupMarkResolvedFailTest({ failOnce: true });
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-metric-labels-on-resolve-fail-1'))
@@ -275,7 +253,7 @@ it('records expected metric labels when markResolved fails', async () => {
 });
 
 it('emits one warning per failed markResolved under burst concurrency', async () => {
-  const { engine, warns } = startEngineWithFailingMarkResolved();
+  const { engine, warns } = setupMarkResolvedFailTest();
 
   const runIds = Array.from({ length: 5 }, (_, idx) => `obs-concurrent-burst-${idx + 1}`);
   await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
@@ -286,7 +264,7 @@ it('emits one warning per failed markResolved under burst concurrency', async ()
 
 it('emits warning with stable payload shape on markResolved failure', async () => {
   const runId = 'obs-warning-payload-shape-1';
-  const { engine, warnEntries } = startEngineWithFailingMarkResolved({ once: true });
+  const { engine, warnEntries } = setupMarkResolvedFailTest({ failOnce: true });
 
   await expect(engine.startRun(makePlanRef(), makeContext(runId))).resolves.toEqual(
     expect.objectContaining({
@@ -358,7 +336,7 @@ it('attempts metric emission before warning emission when markResolved fails', a
 });
 
 it('emits one warning per failed markResolved under high burst concurrency', async () => {
-  const { engine, warns } = startEngineWithFailingMarkResolved();
+  const { engine, warns } = setupMarkResolvedFailTest();
 
   const runIds = Array.from({ length: 20 }, (_, idx) => `obs-concurrent-high-burst-${idx + 1}`);
   await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
