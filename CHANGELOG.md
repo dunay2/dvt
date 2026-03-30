@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.4.0](https://github.com/dunay2/dvt/compare/v5.3.0...v5.4.0) (2026-03-30)
+
+
+### Features
+
+* **api:** Expose snapshot staleness in run status route ([#671](https://github.com/dunay2/dvt/issues/671)) ([8b16ee4](https://github.com/dunay2/dvt/commit/8b16ee481771ca8b5726c21bb4e18acacf4932cc))
+
 ## [5.3.0](https://github.com/dunay2/dvt/compare/v5.2.0...v5.3.0) (2026-03-30)
 
 
