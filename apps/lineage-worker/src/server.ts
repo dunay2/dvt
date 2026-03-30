@@ -22,7 +22,7 @@ async function main(): Promise<void> {
   let runtime: LineageWorkerRuntime | undefined;
   const adminServer = createServer((_req, res) => {
     const lag = runtime?.lagCount ?? 0;
-    const deadLetterLag = runtime?.deadLetterCount ?? 0;
+    const deadLetterLag = runtime?.deadLetterCount ?? null;
     res.statusCode = 200;
     res.setHeader('content-type', 'application/json; charset=utf-8');
     res.end(JSON.stringify({ ok: true, lag, deadLetterLag, service: env.SERVICE_NAME }));

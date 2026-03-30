@@ -53,7 +53,7 @@ export class LineageWorkerRuntime {
   private running = false;
   private detachAbortListener: (() => void) | null = null;
   private _lagCount = 0;
-  private _deadLetterCount = 0;
+  private _deadLetterCount: number | null = null;
 
   constructor(
     private readonly store: ILineageOutboxStore,
@@ -79,13 +79,23 @@ export class LineageWorkerRuntime {
     if (this.autoReplayEnabled && this.deadLetterTenantId === null) {
       throw new Error('INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required');
     }
+    if (this.deadLetterTenantId !== null && this.store.countDeadLetter === undefined) {
+      throw new Error(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: store.countDeadLetter is required for dead-letter scope'
+      );
+    }
+    if (this.autoReplayEnabled && this.store.replayDeadLetters === undefined) {
+      throw new Error(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: store.replayDeadLetters is required for auto replay'
+      );
+    }
   }
 
   get lagCount(): number {
     return this._lagCount;
   }
 
-  get deadLetterCount(): number {
+  get deadLetterCount(): number | null {
     return this._deadLetterCount;
   }
 
@@ -154,7 +164,7 @@ export class LineageWorkerRuntime {
     }
 
     const deadLetterCount = await this.collectDeadLetterCount();
-    this._deadLetterCount = deadLetterCount ?? 0;
+    this._deadLetterCount = deadLetterCount;
     await this.runDeadLetterAutoReplay(deadLetterCount);
     this.maybeAlertDeadLetterBacklog(deadLetterCount);
 
@@ -162,6 +172,7 @@ export class LineageWorkerRuntime {
       {
         lag: this._lagCount,
         deadLetterLag: this._deadLetterCount,
+        deadLetterLagKnown: this._deadLetterCount !== null,
         processed,
         deadLettered,
         batchSize: this.batchSize,

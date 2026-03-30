@@ -359,6 +359,51 @@ describe('LineageWorkerRuntime', () => {
           })
       ).toThrow('INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required');
     });
+
+    it('rejects dead-letter scope when store cannot count dead letters', () => {
+      const storeWithoutDeadLetterCount = {
+        ...makeStore([]),
+        countDeadLetter: undefined,
+      } as unknown as ILineageOutboxStore;
+
+      expect(
+        () =>
+          new LineageWorkerRuntime(
+            storeWithoutDeadLetterCount,
+            makeSink(),
+            makeMapper(),
+            makeSilentLogger(),
+            {
+              deadLetterTenantId: 'tenant-a',
+            }
+          )
+      ).toThrow(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: store.countDeadLetter is required for dead-letter scope'
+      );
+    });
+
+    it('rejects auto-replay when store cannot replay dead letters', () => {
+      const storeWithoutReplay = {
+        ...makeStore([]),
+        replayDeadLetters: undefined,
+      } as unknown as ILineageOutboxStore;
+
+      expect(
+        () =>
+          new LineageWorkerRuntime(
+            storeWithoutReplay,
+            makeSink(),
+            makeMapper(),
+            makeSilentLogger(),
+            {
+              deadLetterTenantId: 'tenant-a',
+              autoReplayEnabled: true,
+            }
+          )
+      ).toThrow(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: store.replayDeadLetters is required for auto replay'
+      );
+    });
   });
 
   describe('LineageOutboxObserver', () => {
