@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.4.1](https://github.com/dunay2/dvt/compare/v5.4.0...v5.4.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* **api:** Align staleness telemetry wiring and null handling ([#690](https://github.com/dunay2/dvt/issues/690)) ([17f765c](https://github.com/dunay2/dvt/commit/17f765c490befbc00585d56ad5517aba42489bab))
+* **api:** Harden snapshot staleness and retention integration ([#688](https://github.com/dunay2/dvt/issues/688)) ([1fb5923](https://github.com/dunay2/dvt/commit/1fb5923a66cb00574c22590504bdb8e5a1287adc))
+
 ## [5.4.0](https://github.com/dunay2/dvt/compare/v5.3.0...v5.4.0) (2026-03-30)
 
 
