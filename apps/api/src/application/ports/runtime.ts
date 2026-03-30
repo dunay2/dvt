@@ -1,4 +1,4 @@
-﻿import type { EventEnvelope, RunStatusSnapshot } from '@dvt/contracts';
+import type { EventEnvelope, RunStatusSnapshot } from '@dvt/contracts';
 
 import type { AuthorizationAction } from '../../domain/auth/types.js';
 
@@ -9,12 +9,31 @@ export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<
 >;
 
 export type SupportedSignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
-export type SnapshotStaleness = 'FRESH' | 'STALE' | 'UNKNOWN';
-export type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
 export interface GetRunStatusQuery {
   readonly runId: string;
   readonly enriched: boolean;
+}
+
+export type RunSnapshotStaleness = 'FRESH' | 'STALE' | 'UNKNOWN';
+
+export interface IRunSnapshotStalenessReader {
+  isSnapshotStale(tenantId: string, runId: string): Promise<boolean | null>;
+}
+
+export type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
+
+export interface IRunStatusStalenessTelemetry {
+  recordSnapshotStalenessResult(
+    result: RunSnapshotStaleness,
+    tenantId: string,
+    runId: string
+  ): void;
+  recordSnapshotStalenessFallback(
+    reason: SnapshotStalenessFallbackReason,
+    tenantId: string,
+    runId: string
+  ): void;
 }
 
 export type GetRunStatusResult = Pick<
@@ -23,23 +42,8 @@ export type GetRunStatusResult = Pick<
 > & {
   readonly tenantId: string;
   readonly enriched: boolean;
-  readonly snapshotStaleness: SnapshotStaleness;
+  readonly snapshotStaleness: RunSnapshotStaleness;
 };
-
-export interface IRunSnapshotStalenessReader {
-  /**
-   * Returns null when staleness cannot be resolved due to infrastructure
-   * availability/failure conditions. Callers map null to UNKNOWN.
-   */
-  isSnapshotStale(tenantId: string, runId: string): Promise<boolean | null>;
-}
-
-export interface IRunStatusStalenessTelemetry {
-  reportUnknown(
-    reason: SnapshotStalenessFallbackReason,
-    context: { tenantId: string; runId: string }
-  ): Promise<void>;
-}
 
 export interface IGetRunStatusUseCase {
   execute(

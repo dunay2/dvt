@@ -1,5 +1,3 @@
-import type { RunMetadata } from './IRunStateStore.v1.js';
-
 /**
  * Dedicated query port for snapshot projection catch-up workers.
  *
@@ -24,5 +22,3 @@ export interface IRunSnapshotStalenessQuery {
    */
   listStaleSnapshotRuns(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
 }
-
-export type RunSnapshotStalenessCandidate = Pick<RunMetadata, 'runId' | 'tenantId' | 'createdAt'>;

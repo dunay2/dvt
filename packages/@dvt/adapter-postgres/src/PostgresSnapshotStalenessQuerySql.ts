@@ -8,6 +8,8 @@
  */
 import { quoteIdentifier } from './sqlUtils.js';
 
+export const IS_SNAPSHOT_STALE_ALIAS = 'is_snapshot_stale' as const;
+
 export function listStaleSnapshotRunsSql(schema: string): string {
   return `
     SELECT m.run_id, m.tenant_id
@@ -51,6 +53,18 @@ export function listStaleSnapshotRunsSql(schema: string): string {
   `;
 }
 
+/**
+ * Per-run staleness check for the API read path (GET /runs/:runId).
+ *
+ * Uses a LATERAL join directly against run_events instead of run_event_heads
+ * because run_id + tenant_id are already known: the planner uses the
+ * (run_id, tenant_id, run_seq DESC) index with LIMIT 1, so the cost is a
+ * single index seek regardless of run_event_heads availability.
+ *
+ * listStaleSnapshotRunsSql uses run_event_heads because it must discover
+ * stale runs across the entire run_metadata table (projector worker use case)
+ * — without the heads cache that would require a run_events scan per row.
+ */
 export function isSnapshotStaleSql(schema: string): string {
   return `
     SELECT EXISTS (
@@ -68,6 +82,6 @@ export function isSnapshotStaleSql(schema: string): string {
       WHERE m.tenant_id = $1
         AND m.run_id = $2
         AND ((s.run_id IS NULL AND le.run_seq IS NOT NULL) OR s.last_run_seq < COALESCE(le.run_seq, 0))
-    ) AS is_snapshot_stale
+    ) AS ${IS_SNAPSHOT_STALE_ALIAS}
   `;
 }

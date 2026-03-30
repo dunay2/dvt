@@ -1,5 +1,5 @@
-import type { IRunStateStoreRead, IWorkflowEngine } from '@dvt/engine';
-import { RunMetadataNotFoundError } from '@dvt/engine';
+import type { IRunStateStoreRead } from '@dvt/engine';
+import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
 
 import type {
   AuthorizedQueryExecutionContext,
@@ -8,8 +8,7 @@ import type {
   IGetRunStatusUseCase,
   IRunSnapshotStalenessReader,
   IRunStatusStalenessTelemetry,
-  SnapshotStaleness,
-  SnapshotStalenessFallbackReason,
+  RunSnapshotStaleness,
 } from '../ports/runtime.js';
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
@@ -38,9 +37,10 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     const snapshot = query.enriched
       ? await this.engine.enrichRunStatus(runRef)
       : await this.engine.getRunStatus(runRef);
+
     const snapshotStaleness = await this.resolveSnapshotStaleness(
-      context.scope.tenantId.value,
-      query.runId
+      metadata.tenantId,
+      metadata.runId
     );
 
     return {
@@ -60,30 +60,28 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   private async resolveSnapshotStaleness(
     tenantId: string,
     runId: string
-  ): Promise<SnapshotStaleness> {
+  ): Promise<RunSnapshotStaleness> {
     if (!this.stalenessReader) {
-      this.reportUnknown('query_not_wired', tenantId, runId);
+      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_not_wired', tenantId, runId);
+      this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
       return 'UNKNOWN';
     }
 
-    const isStale = await this.stalenessReader.isSnapshotStale(tenantId, runId);
-    if (isStale === null) {
-      this.reportUnknown('query_failed', tenantId, runId);
+    try {
+      const isStale = await this.stalenessReader.isSnapshotStale(tenantId, runId);
+      if (isStale === null) {
+        this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
+        this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
+        return 'UNKNOWN';
+      }
+
+      const result = isStale ? 'STALE' : 'FRESH';
+      this.stalenessTelemetry?.recordSnapshotStalenessResult(result, tenantId, runId);
+      return result;
+    } catch {
+      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
+      this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
       return 'UNKNOWN';
     }
-
-    return isStale ? 'STALE' : 'FRESH';
-  }
-
-  private reportUnknown(
-    reason: SnapshotStalenessFallbackReason,
-    tenantId: string,
-    runId: string
-  ): void {
-    if (!this.stalenessTelemetry) {
-      return;
-    }
-
-    void this.stalenessTelemetry.reportUnknown(reason, { tenantId, runId }).catch(() => undefined);
   }
 }
