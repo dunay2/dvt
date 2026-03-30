@@ -234,6 +234,37 @@ describe('ObjectStorageRunArchiveExporter', () => {
       expect(second.objectUri).toBe(`existing://archive/${ARCHIVE_UNIT_KEY}/events.jsonl`);
     });
 
+    it('returns resolved object URI on idempotent retry when store exposes URI resolver', async () => {
+      class ResolvableInMemoryArchiveObjectStore extends InMemoryArchiveObjectStore {
+        getObjectUri(objectKey: string): string {
+          return `mem://${objectKey}`;
+        }
+      }
+
+      const resolvableStore = new ResolvableInMemoryArchiveObjectStore();
+      const resolvableExporter = new ObjectStorageRunArchiveExporter({
+        objectStore: resolvableStore,
+        prefix: 'archive',
+      });
+      const events = [makeEvent({ runId: 'run-a', runSeq: 1 })];
+
+      await resolvableExporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      const retry = await resolvableExporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      expect(retry.objectUri).toBe(`mem://archive/${ARCHIVE_UNIT_KEY}/events.jsonl`);
+    });
+
     it('retries idempotently when exportedAtIso changes across retries', async () => {
       const events = [
         makeEvent({ runId: 'run-a', runSeq: 1 }),
@@ -246,6 +277,7 @@ describe('ObjectStorageRunArchiveExporter', () => {
         exportedAtIso: EXPORTED_AT,
         events,
       });
+
       const second = await exporter.exportArchiveUnit({
         archiveUnitKey: ARCHIVE_UNIT_KEY,
         tenantBucket: TENANT_BUCKET,

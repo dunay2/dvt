@@ -73,6 +73,10 @@ export class S3ArchiveObjectStore implements IArchiveObjectStore {
       throw error;
     }
   }
+
+  getObjectUri(objectKey: string): string {
+    return `s3://${this.bucket}/${objectKey}`;
+  }
 }
 
 function isS3NotFoundError(error: unknown): boolean {
