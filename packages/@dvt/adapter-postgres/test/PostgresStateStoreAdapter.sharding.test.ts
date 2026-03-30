@@ -153,7 +153,25 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_events e');
     expect(staleQuery?.params).toEqual([5]);
   });
+  it('supports tenant-scoped staleness checks for a single run', async () => {
+    const client = new RecordingPoolClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+      assumeSchemaReady: true,
+    });
 
+    await adapter.isSnapshotStale('tenant-1', 'run-1');
+
+    const staleQuery = client.queries.find((entry) => entry.sql.includes('AS is_stale'));
+    expect(staleQuery).toBeDefined();
+    expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
+    expect(staleQuery?.sql).toContain('WHERE m.tenant_id = $1');
+    expect(staleQuery?.sql).toContain('AND m.run_id = $2');
+    expect(staleQuery?.params).toEqual(['tenant-1', 'run-1']);
+  });
   it('rejects invalid outbox claim timeout values', () => {
     expect(normalizeOutboxClaimTimeoutMs(undefined)).toBe(300_000);
     expect(normalizeOutboxClaimTimeoutMs(86_400_000)).toBe(86_400_000);

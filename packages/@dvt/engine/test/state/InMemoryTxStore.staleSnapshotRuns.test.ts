@@ -66,4 +66,18 @@ describe('InMemoryTxStore stale snapshot runs', () => {
       { runId: 'run-stale-snapshot', tenantId: 't1' },
     ]);
   });
+
+  it('checks staleness for a specific run with tenant scope', async () => {
+    const store = new InMemoryTxStore();
+
+    await store.bootstrapRunTx(makeBootstrap('run-stale-snapshot', '2026-03-11T00:00:00.000Z'));
+    (store as unknown as InMemoryTxStoreInternals).snapshotLastRunSeqByRunId.set(
+      'run-stale-snapshot',
+      0
+    );
+
+    await expect(store.isSnapshotStale('t1', 'run-stale-snapshot')).resolves.toBe(true);
+    await expect(store.isSnapshotStale('other-tenant', 'run-stale-snapshot')).resolves.toBe(false);
+    await expect(store.isSnapshotStale('t1', 'missing-run')).resolves.toBe(false);
+  });
 });

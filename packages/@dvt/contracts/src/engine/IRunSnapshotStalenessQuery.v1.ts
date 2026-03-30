@@ -7,6 +7,13 @@ import type { RunMetadata } from './IRunStateStore.v1.js';
  */
 export interface IRunSnapshotStalenessQuery {
   /**
+   * Returns true when the materialized snapshot for `runId` is stale or missing.
+   *
+   * Implementations MUST scope the check by tenant to preserve isolation.
+   */
+  isSnapshotStale(tenantId: string, runId: string): Promise<boolean>;
+
+  /**
    * Returns up to `batchSize` runs that have a missing or stale snapshot.
    *
    * A snapshot is stale when `run_snapshots.last_run_seq` is less than the

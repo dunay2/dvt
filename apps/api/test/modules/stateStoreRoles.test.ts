@@ -12,6 +12,8 @@ function createStateStoreSource(): StateStoreRoleSource {
     listRuns: async () => [],
     getSnapshot: async () => null as never,
     rebuildSnapshot: async () => null as never,
+    listStaleSnapshotRuns: async () => [],
+    isSnapshotStale: async () => false,
   };
 }
 
@@ -25,9 +27,10 @@ describe('bindStateStoreRoles', () => {
     expect(bindings.read).toBe(source);
     expect(bindings.write).toBe(source);
     expect(bindings.maintenance).toBe(source);
+    expect(bindings.staleness).toBe(source);
   });
 
-  it('rejects a partial source missing maintenance behavior', () => {
+  it('rejects a partial source missing staleness behavior', () => {
     const partialSource = {
       bootstrapRunTx: async () => null as never,
       appendAndEnqueueTx: async () => null as never,
@@ -35,7 +38,9 @@ describe('bindStateStoreRoles', () => {
       listEvents: async () => [],
       listRuns: async () => [],
       getSnapshot: async () => null as never,
-    } satisfies Omit<StateStoreRoleSource, 'rebuildSnapshot'>;
+      rebuildSnapshot: async () => null as never,
+      listStaleSnapshotRuns: async () => [],
+    } satisfies Omit<StateStoreRoleSource, 'isSnapshotStale'>;
 
     expect(() => bindStateStoreRoles(partialSource as unknown as StateStoreRoleSource)).toThrow(
       /STATE_STORE_ROLE_SOURCE_INVALID/

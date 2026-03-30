@@ -142,6 +142,11 @@ export class PostgresStateStoreAdapter
     return this.listStaleSnapshotRunsInternal(batchSize);
   }
 
+  async isSnapshotStale(tenantId: string, runId: RunId): Promise<boolean> {
+    this.ready();
+    return this.isSnapshotStaleInternal(tenantId, runId);
+  }
+
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     this.ready();
     await this.enqueueTxInternal(runId, events);

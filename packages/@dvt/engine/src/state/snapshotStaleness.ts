@@ -1,5 +1,13 @@
 import type { RunMetadata } from '../contracts/runEvents.js';
 
+export function isSnapshotStaleForRun(
+  snapshotLastRunSeq: number | undefined,
+  latestRunSeq: number
+): boolean {
+  if (snapshotLastRunSeq === undefined) return true;
+  return snapshotLastRunSeq < latestRunSeq;
+}
+
 export function collectStaleSnapshotRuns(
   runs: Iterable<RunMetadata>,
   getSnapshotLastRunSeq: (runId: string) => number | undefined,
@@ -13,11 +21,9 @@ export function collectStaleSnapshotRuns(
   };
 
   return Array.from(runs)
-    .filter((meta) => {
-      const snapshotLastRunSeq = getSnapshotLastRunSeq(meta.runId);
-      if (snapshotLastRunSeq === undefined) return true;
-      return snapshotLastRunSeq < getLatestRunSeq(meta.runId);
-    })
+    .filter((meta) =>
+      isSnapshotStaleForRun(getSnapshotLastRunSeq(meta.runId), getLatestRunSeq(meta.runId))
+    )
     .sort((left, right) => {
       const leftKey = toSortKey(left.createdAt);
       const rightKey = toSortKey(right.createdAt);

@@ -1,4 +1,4 @@
-﻿import type { ISpan } from '@dvt/observability';
+import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
@@ -179,7 +179,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     };
     const getRunStatusUseCase = new GetRunStatusUseCase(
       protectedModule.engine,
-      protectedModule.stateStore.read
+      protectedModule.stateStore.read,
+      protectedModule.stateStore.staleness
     );
     const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore.read);
     const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore.read);

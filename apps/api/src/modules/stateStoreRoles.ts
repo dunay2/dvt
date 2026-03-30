@@ -1,4 +1,5 @@
 import type {
+  IRunSnapshotStalenessQuery,
   IRunStateStoreMaintenance,
   IRunStateStoreRead,
   IRunStateStoreWrite,
@@ -6,12 +7,14 @@ import type {
 
 export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreWrite &
-  IRunStateStoreMaintenance;
+  IRunStateStoreMaintenance &
+  IRunSnapshotStalenessQuery;
 
 export interface StateStoreRoleBindings {
   readonly read: IRunStateStoreRead;
   readonly write: IRunStateStoreWrite;
   readonly maintenance: IRunStateStoreMaintenance;
+  readonly staleness: IRunSnapshotStalenessQuery;
 }
 
 const REQUIRED_METHODS = [
@@ -22,6 +25,8 @@ const REQUIRED_METHODS = [
   'listRuns',
   'getSnapshot',
   'rebuildSnapshot',
+  'listStaleSnapshotRuns',
+  'isSnapshotStale',
 ] as const;
 
 function isStateStoreRoleSource(value: unknown): value is StateStoreRoleSource {
@@ -36,7 +41,7 @@ function isStateStoreRoleSource(value: unknown): value is StateStoreRoleSource {
 export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStoreRoleBindings {
   if (!isStateStoreRoleSource(stateStore)) {
     throw new Error(
-      'STATE_STORE_ROLE_SOURCE_INVALID: explicit read/write/maintenance roles are required'
+      'STATE_STORE_ROLE_SOURCE_INVALID: explicit read/write/maintenance/staleness roles are required'
     );
   }
 
@@ -44,5 +49,6 @@ export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStor
     read: stateStore,
     write: stateStore,
     maintenance: stateStore,
+    staleness: stateStore,
   });
 }

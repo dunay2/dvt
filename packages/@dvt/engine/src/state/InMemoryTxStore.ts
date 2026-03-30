@@ -42,7 +42,7 @@ import {
   createDefaultWorkflowSnapshot,
   IN_MEMORY_PERSISTED_AT_EPOCH_ISO,
 } from './runEventWritePolicy.js';
-import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
+import { collectStaleSnapshotRuns, isSnapshotStaleForRun } from './snapshotStaleness.js';
 
 export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage {
   private readonly metadataByRunId = new Map<string, RunMetadata>();
@@ -264,6 +264,18 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       (runId) => this.snapshotLastRunSeqByRunId.get(runId),
       (runId) => this.eventsByRunId.get(runId)?.at(-1)?.runSeq ?? 0,
       batchSize
+    );
+  }
+
+  async isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
+    const metadata = this.metadataByRunId.get(runId);
+    if (!metadata || metadata.tenantId !== tenantId) {
+      return false;
+    }
+
+    return isSnapshotStaleForRun(
+      this.snapshotLastRunSeqByRunId.get(runId),
+      this.eventsByRunId.get(runId)?.at(-1)?.runSeq ?? 0
     );
   }
 

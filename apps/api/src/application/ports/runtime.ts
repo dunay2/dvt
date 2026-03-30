@@ -1,4 +1,4 @@
-﻿import type { EventEnvelope, RunStatusSnapshot } from '@dvt/contracts';
+import type { EventEnvelope, RunStatusSnapshot } from '@dvt/contracts';
 
 import type { AuthorizationAction } from '../../domain/auth/types.js';
 
@@ -15,12 +15,15 @@ export interface GetRunStatusQuery {
   readonly enriched: boolean;
 }
 
+export type RunSnapshotStaleness = 'FRESH' | 'STALE' | 'UNKNOWN';
+
 export type GetRunStatusResult = Pick<
   RunStatusSnapshot,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'hash'
 > & {
   readonly tenantId: string;
   readonly enriched: boolean;
+  readonly snapshotStaleness: RunSnapshotStaleness;
 };
 
 export interface IGetRunStatusUseCase {

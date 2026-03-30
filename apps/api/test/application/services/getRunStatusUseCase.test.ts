@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
 import { GetRunStatusUseCase } from '../../../src/application/services/getRunStatusUseCase.js';
@@ -22,8 +22,27 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
+function createStateStore(): { getRunMetadataByRunId: () => Promise<unknown> } {
+  return {
+    async getRunMetadataByRunId() {
+      return {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        provider: 'mock' as const,
+        providerWorkflowId: 'wf-1',
+        providerRunId: 'provider-run-1',
+      };
+    },
+  };
+}
+
 describe('GetRunStatusUseCase', () => {
-  it('loads metadata and returns the projected engine status', async () => {
+  it('loads metadata and returns projected engine status with FRESH staleness', async () => {
     const engine = {
       async getRunStatus(runRef: unknown) {
         expect(runRef).toEqual({
@@ -42,24 +61,16 @@ describe('GetRunStatusUseCase', () => {
       },
     };
 
-    const stateStore = {
-      async getRunMetadataByRunId() {
-        return {
-          tenantId: 'tenant-a',
-          projectId: 'proj-1',
-          environmentId: 'env-1',
-          runId: 'run-1',
-          planId: 'plan-1',
-          planVersion: '1.0',
-          logicalAttemptId: 1,
-          provider: 'mock' as const,
-          providerWorkflowId: 'wf-1',
-          providerRunId: 'provider-run-1',
-        };
-      },
+    const stalenessQuery = {
+      isSnapshotStale: vi.fn().mockResolvedValue(false),
+      listStaleSnapshotRuns: vi.fn(),
     };
 
-    const useCase = new GetRunStatusUseCase(engine as never, stateStore as never);
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      stalenessQuery as never
+    );
 
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
@@ -68,6 +79,88 @@ describe('GetRunStatusUseCase', () => {
       tenantId: 'tenant-a',
       status: 'RUNNING',
       enriched: false,
+      snapshotStaleness: 'FRESH',
+    });
+    expect(stalenessQuery.isSnapshotStale).toHaveBeenCalledWith('tenant-a', 'run-1');
+  });
+
+  it('returns STALE staleness when staleness query reports stale snapshot', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(true),
+        listStaleSnapshotRuns: vi.fn(),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      snapshotStaleness: 'STALE',
+    });
+  });
+
+  it('uses UNKNOWN staleness when query capability is not wired', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(engine as never, createStateStore() as never);
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      snapshotStaleness: 'UNKNOWN',
+    });
+  });
+
+  it('uses UNKNOWN staleness when staleness query fails', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockRejectedValue(new Error('staleness query failed')),
+        listStaleSnapshotRuns: vi.fn(),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      snapshotStaleness: 'UNKNOWN',
     });
   });
 
@@ -85,24 +178,14 @@ describe('GetRunStatusUseCase', () => {
       },
     };
 
-    const stateStore = {
-      async getRunMetadataByRunId() {
-        return {
-          tenantId: 'tenant-a',
-          projectId: 'proj-1',
-          environmentId: 'env-1',
-          runId: 'run-1',
-          planId: 'plan-1',
-          planVersion: '1.0',
-          logicalAttemptId: 1,
-          provider: 'mock' as const,
-          providerWorkflowId: 'wf-1',
-          providerRunId: 'provider-run-1',
-        };
-      },
-    };
-
-    const useCase = new GetRunStatusUseCase(engine as never, stateStore as never);
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+        listStaleSnapshotRuns: vi.fn(),
+      } as never
+    );
 
     await expect(
       useCase.execute({ runId: 'run-1', enriched: true }, queryContext as never)
@@ -111,6 +194,7 @@ describe('GetRunStatusUseCase', () => {
       tenantId: 'tenant-a',
       status: 'RUNNING',
       enriched: true,
+      snapshotStaleness: 'FRESH',
       substatus: 'mock/QUEUED',
     });
   });
