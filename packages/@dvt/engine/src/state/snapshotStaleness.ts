@@ -15,7 +15,7 @@ export function collectStaleSnapshotRuns(
   return Array.from(runs)
     .filter((meta) => {
       const snapshotLastRunSeq = getSnapshotLastRunSeq(meta.runId);
-      if (snapshotLastRunSeq === undefined) return true;
+      if (snapshotLastRunSeq === undefined) return getLatestRunSeq(meta.runId) > 0;
       return snapshotLastRunSeq < getLatestRunSeq(meta.runId);
     })
     .sort((left, right) => {
@@ -28,4 +28,15 @@ export function collectStaleSnapshotRuns(
       runId: meta.runId,
       tenantId: meta.tenantId,
     }));
+}
+
+export function isSnapshotProjectionStale(
+  getSnapshotLastRunSeq: () => number | undefined,
+  getLatestRunSeq: () => number
+): boolean {
+  const snapshotLastRunSeq = getSnapshotLastRunSeq();
+  if (snapshotLastRunSeq === undefined) {
+    return getLatestRunSeq() > 0;
+  }
+  return snapshotLastRunSeq < getLatestRunSeq();
 }

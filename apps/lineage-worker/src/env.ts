@@ -1,5 +1,29 @@
 import { z } from 'zod';
 
+const BOOLEAN_TRUE_VALUES = new Set(['true', '1', 'yes', 'y', 'on']);
+const BOOLEAN_FALSE_VALUES = new Set(['false', '0', 'no', 'n', 'off']);
+
+function explicitBooleanWithDefault(defaultValue: boolean) {
+  return z.preprocess((value) => {
+    if (value === undefined) {
+      return defaultValue;
+    }
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (BOOLEAN_TRUE_VALUES.has(normalized)) {
+        return true;
+      }
+      if (BOOLEAN_FALSE_VALUES.has(normalized)) {
+        return false;
+      }
+    }
+    return value;
+  }, z.boolean());
+}
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
@@ -10,7 +34,7 @@ const EnvSchema = z.object({
   DVT_COMPILED_CODE_RESOLVER_BACKEND: z.enum(['auto', 'file', 's3']).default('auto'),
   DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT: z.string().url().optional(),
   DVT_COMPILED_CODE_RESOLVER_S3_REGION: z.string().min(1).optional(),
-  DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: z.coerce.boolean().default(false),
+  DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: explicitBooleanWithDefault(false),
   /** Base URL for the OpenLineage / Marquez API. */
   DVT_LINEAGE_API_URL: z.string().url(),
   /** Namespace for all OpenLineage RunEvents emitted by this worker. */

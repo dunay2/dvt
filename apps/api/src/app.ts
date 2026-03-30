@@ -20,6 +20,8 @@ import {
 } from './entrypoints/http/runtimeRoutes.constants.js';
 import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
+import { ObservabilityRunStatusStalenessTelemetry } from './infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
+import { SafeRunSnapshotStalenessReader } from './infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
 import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
 import { loadEnv, type Env } from './plugins/env.js';
@@ -179,7 +181,9 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     };
     const getRunStatusUseCase = new GetRunStatusUseCase(
       protectedModule.engine,
-      protectedModule.stateStore.read
+      protectedModule.stateStore.read,
+      new SafeRunSnapshotStalenessReader(protectedModule.stateStore.snapshotStaleness, observability),
+      new ObservabilityRunStatusStalenessTelemetry(observability)
     );
     const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore.read);
     const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore.read);

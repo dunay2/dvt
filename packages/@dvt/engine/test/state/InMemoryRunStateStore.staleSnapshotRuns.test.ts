@@ -62,4 +62,32 @@ describe('InMemoryRunStateStore stale snapshot runs', () => {
       { runId: 'run-stale-snapshot', tenantId: 't1' },
     ]);
   });
+
+  it('checks staleness for a single run with tenant scope', async () => {
+    const store = new InMemoryRunStateStore();
+    await store.bootstrapRunTx(makeBootstrap('run-stale', '2026-03-13T00:00:00.000Z'));
+    (store as unknown as InMemoryRunStateStoreInternals).snapshotLastRunSeqByRunId.set(
+      'run-stale',
+      0
+    );
+
+    await expect(store.isSnapshotStale('t1', 'run-stale')).resolves.toBe(true);
+    await expect(store.isSnapshotStale('t2', 'run-stale')).resolves.toBe(false);
+    await expect(store.isSnapshotStale('t1', 'run-missing')).resolves.toBe(false);
+  });
+
+  it('does not mark missing snapshot as stale when there are no events', async () => {
+    const store = new InMemoryRunStateStore();
+    await store.bootstrapRunTx(makeBootstrap('run-empty', '2026-03-14T00:00:00.000Z'));
+
+    const internals = store as unknown as InMemoryRunStateStoreInternals & {
+      eventsByRunId: Map<string, unknown[]>;
+    };
+    internals.eventsByRunId.set('run-empty', []);
+    internals.snapshotByRunId.delete('run-empty');
+    internals.snapshotLastRunSeqByRunId.delete('run-empty');
+
+    await expect(store.isSnapshotStale('t1', 'run-empty')).resolves.toBe(false);
+    await expect(store.listStaleSnapshotRuns(10)).resolves.toEqual([]);
+  });
 });

@@ -15,7 +15,13 @@ function createReply(): RouteReply {
 }
 
 function createDeps(
-  result = { runId: 'run-1', tenantId: 'tenant-a', status: 'RUNNING', enriched: false }
+  result = {
+    runId: 'run-1',
+    tenantId: 'tenant-a',
+    status: 'RUNNING',
+    enriched: false,
+    snapshotStaleness: 'FRESH',
+  }
 ): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
@@ -85,6 +91,7 @@ describe('getRunRoute', () => {
       tenantId: 'tenant-a',
       status: 'RUNNING',
       enriched: true,
+      snapshotStaleness: 'FRESH',
     });
     const reply = createReply();
 
