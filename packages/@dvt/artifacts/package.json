@@ -22,7 +22,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.868.0",
+    "@aws-sdk/client-s3": "^3.1019.0",
     "@dvt/contracts": "workspace:*"
   },
   "devDependencies": {
