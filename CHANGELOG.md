@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.0](https://github.com/dunay2/dvt/compare/v5.1.2...v5.2.0) (2026-03-30)
+
+
+### Features
+
+* **adapters:** Add lineage DLQ alerting and automatic replay controls ([#672](https://github.com/dunay2/dvt/issues/672)) ([451a60f](https://github.com/dunay2/dvt/commit/451a60f6692c07095798b45ceab6af1556644bac))
+
 ## [5.1.2](https://github.com/dunay2/dvt/compare/v5.1.1...v5.1.2) (2026-03-30)
 
 
