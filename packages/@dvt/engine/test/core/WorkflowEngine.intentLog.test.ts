@@ -1,22 +1,15 @@
 /**
  * @file packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
- * @decision Verify PENDING→DISPATCHED→RESOLVED lifecycle and crash-compensation intent resolution
+ * @decision Verify PENDING->DISPATCHED->RESOLVED lifecycle and crash-compensation intent resolution
  * @consequence Ensures WorkflowEngine.startRun() intent store integration matches ADR-0030 invariants
  * @version 1.0.0
  * @date 2026-03-03
  */
 import type { EngineRunRef } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -31,7 +24,7 @@ import {
 } from './WorkflowEngine.helpers.js';
 
 describe('WorkflowEngine intent log (startRun crash consistency)', () => {
-  it('happy path: intent transitions PENDING → DISPATCHED → RESOLVED', async () => {
+  it('happy path: intent transitions PENDING -> DISPATCHED -> RESOLVED', async () => {
     const adapters = makeAdapters();
     const { engine, intentStore } = createEngine({ adapters });
 
@@ -39,7 +32,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     // Intent should exist and be resolved
     const allIntents = await intentStore.listOrphaned(0, Date.now());
-    expect(allIntents).toHaveLength(0); // no orphans — all resolved
+    expect(allIntents).toHaveLength(0); // no orphans; all resolved
   });
 
   it('after successful startRun, intent is RESOLVED', async () => {
@@ -81,20 +74,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const createSpy = vi.spyOn(intentStore, 'createIntent');
 
     const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      stateStore: store,
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
     });
 
     await expect(engine.startRun(makePlanRef(), makeContext('il-adapter-fail-1'))).rejects.toThrow(
@@ -108,22 +92,17 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   });
 
   it('does not emit RunFailed when intent persistence fails after pre-bootstrap start succeeds', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          estimateRunRef(ctx) {
-            return {
-              provider: 'temporal',
-              tenantId: ctx.tenantId,
-              namespace: 'default',
-              workflowId: `wf-${ctx.runId}`,
-              runId: ctx.runId,
-            } as EngineRunRef;
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+    });
 
     const intentStore = new InMemoryStartRunIntentStore();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
@@ -132,19 +111,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     };
 
     const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      stateStore: store,
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
     });
 
     await expect(
@@ -165,16 +136,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
   it('when bootstrapRunTx() throws, compensation fires AND intent is RESOLVED', async () => {
     let cancelCalled = false;
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async cancelRun() {
-            cancelCalled = true;
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async cancelRun() {
+        cancelCalled = true;
+      },
+    });
 
     const intentStore = new InMemoryStartRunIntentStore();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
@@ -189,20 +155,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       return originalBootstrap(input);
     };
 
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      stateStore: store,
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
     });
 
     await expect(
@@ -220,16 +177,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   });
 
   it('when bootstrapRunTx and cancelRun both throw, intent markResolved is still attempted', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async cancelRun() {
-            throw new Error('cancel boom');
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async cancelRun() {
+        throw new Error('cancel boom');
+      },
+    });
 
     const intentStore = new InMemoryStartRunIntentStore();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
@@ -244,20 +196,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       return originalBootstrap(input);
     };
 
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      stateStore: store,
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
     });
 
     await expect(engine.startRun(makePlanRef(), makeContext('il-double-fail-1'))).rejects.toThrow(
@@ -309,28 +252,17 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   });
 
   it('intent engineRunRef is set only after markDispatched', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
+    const adapters = makeAdapters();
 
     const intentStore = new InMemoryStartRunIntentStore();
     const dispatchSpy = vi.spyOn(intentStore, 'markDispatched');
 
     const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      stateStore: store,
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
     });
 
     await engine.startRun(makePlanRef(), makeContext('il-ref-1'));
@@ -347,7 +279,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       [
         'temporal',
         makeTemporalAdapter({
-          async startRun(planRef, ctx) {
+          async startRun(_planRef, ctx) {
             adapterCalled = true;
             return {
               provider: 'temporal',
@@ -367,20 +299,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     );
 
     const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      stateStore: store,
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
     });
 
     await expect(engine.startRun(makePlanRef(), makeContext('il-intent-fail-1'))).rejects.toThrow(
