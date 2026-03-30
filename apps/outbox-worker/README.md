@@ -62,6 +62,7 @@ Core env vars:
 - `DVT_OUTBOX_WORKER_RUN_MIGRATIONS`: set `true` only in environments where the worker role is allowed to run DDL
 - `DVT_OUTBOX_EVENT_BUS_MODE`: `http` or `log`
 - `DVT_OUTBOX_HTTP_TARGET_URL`: downstream HTTP sink when bus mode is `http`
+- `DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD`: must be `true` when `NODE_ENV=production` and `DVT_RUN_EVENT_RETENTION_ENABLED=true`; this is an explicit risk-acceptance opt-in for filesystem archive storage
 
 Shard ownership rule:
 

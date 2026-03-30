@@ -60,6 +60,8 @@ export interface PlannerFacadeOptions extends PlannerOptions {
    * Required when callers provide `input.manifestRef`; ignored otherwise.
    */
   resolver?: IArtifactResolver;
+  /** Maximum number of resolved manifestRef graph sources cached in-memory. */
+  manifestRefCacheSize?: number;
 }
 
 // ── PlannerFacade ────────────────────────────────────────────────────────────
@@ -67,11 +69,14 @@ export interface PlannerFacadeOptions extends PlannerOptions {
 export class PlannerFacade implements IPlanner {
   private readonly planner: Planner;
   private readonly resolver: IArtifactResolver | undefined;
+  private readonly manifestRefCacheSize: number;
+  private readonly manifestRefCache = new Map<string, PlannerGraphSourceV1>();
 
   constructor(options?: PlannerFacadeOptions) {
-    const { resolver, ...plannerOptions } = options ?? {};
+    const { resolver, manifestRefCacheSize, ...plannerOptions } = options ?? {};
     this.planner = new Planner(plannerOptions);
     this.resolver = resolver;
+    this.manifestRefCacheSize = this.normalizeManifestRefCacheSize(manifestRefCacheSize);
   }
 
   async buildPlan(input: ContractEnvelope): Promise<PlannerBuildResultV2> {
@@ -92,8 +97,8 @@ export class PlannerFacade implements IPlanner {
           'manifestRef provided but no IArtifactResolver is configured.'
         );
       }
-      const resolvedGraphSource = this.validateGraphSource(
-        await this.resolver.resolveGraphSource(this.toManifestRef(manifestRef))
+      const resolvedGraphSource = await this.resolveManifestRefWithCache(
+        this.toManifestRef(manifestRef)
       );
       return { ...domainRest, graphSource: resolvedGraphSource };
     }
@@ -210,5 +215,35 @@ export class PlannerFacade implements IPlanner {
       kind: PLANNER_GRAPH_SOURCE_KIND,
       nodes: new ManifestGraphDeriver().execute(new DeriveNodesCommand(manifest)),
     };
+  }
+
+  private normalizeManifestRefCacheSize(input: number | undefined): number {
+    if (input === undefined) return 64;
+    if (!Number.isInteger(input) || input < 0) {
+      throw new Error('manifestRefCacheSize must be a non-negative integer.');
+    }
+    return input;
+  }
+
+  private async resolveManifestRefWithCache(ref: DbtManifestRef): Promise<PlannerGraphSourceV1> {
+    if (this.manifestRefCacheSize === 0) {
+      return this.validateGraphSource(await this.resolver!.resolveGraphSource(ref));
+    }
+
+    const cacheKey = `${ref.sha256}:${ref.uri}`;
+    const cached = this.manifestRefCache.get(cacheKey);
+    if (cached !== undefined) {
+      this.manifestRefCache.delete(cacheKey);
+      this.manifestRefCache.set(cacheKey, cached);
+      return cached;
+    }
+
+    const resolved = this.validateGraphSource(await this.resolver!.resolveGraphSource(ref));
+    if (this.manifestRefCache.size >= this.manifestRefCacheSize) {
+      const oldestKey = this.manifestRefCache.keys().next().value;
+      if (typeof oldestKey === 'string') this.manifestRefCache.delete(oldestKey);
+    }
+    this.manifestRefCache.set(cacheKey, resolved);
+    return resolved;
   }
 }
