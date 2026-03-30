@@ -1,0 +1,17 @@
+id: R-20260330-SNAPSHOT-STALENESS-CALLER-VIEW
+title: Caller-visible freshness may be misinterpreted as read-your-writes guarantee
+status: Open
+date: 2026-03-30
+owners:
+  - apps/api
+  - packages/@dvt/engine
+severity: Medium
+probability: Medium
+context: API now exposes snapshot freshness state for GET /runs/:runId.
+risk:
+  Clients may treat FRESH as a strict read-your-writes guarantee before an SLO-backed contract
+  exists.
+mitigations:
+  - Keep UNKNOWN explicit when staleness query is not wired.
+  - Define the read-your-writes SLO in the follow-up Lane C contract task.
+  - Keep freshness signal additive and backward-compatible.
