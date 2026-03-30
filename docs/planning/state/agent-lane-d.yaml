@@ -50,7 +50,7 @@ tasks:
     target: Retention and archival automation.
   - task_id: G5-PR2
     priority: P1
-    status: queued
+    status: done
     objective: add deferred deletion and restore flow for archived events.
     dependency: none
     target: Restore + grace delete worker.
