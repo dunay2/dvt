@@ -53,6 +53,18 @@ export function listStaleSnapshotRunsSql(schema: string): string {
   `;
 }
 
+/**
+ * Per-run staleness check for the API read path (GET /runs/:runId).
+ *
+ * Uses a LATERAL join directly against run_events instead of run_event_heads
+ * because run_id + tenant_id are already known: the planner uses the
+ * (run_id, tenant_id, run_seq DESC) index with LIMIT 1, so the cost is a
+ * single index seek regardless of run_event_heads availability.
+ *
+ * listStaleSnapshotRunsSql uses run_event_heads because it must discover
+ * stale runs across the entire run_metadata table (projector worker use case)
+ * — without the heads cache that would require a run_events scan per row.
+ */
 export function isSnapshotStaleSql(schema: string): string {
   return `
     SELECT EXISTS (
