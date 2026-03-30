@@ -5,7 +5,8 @@ set -e
 # Fallback order: upstream → origin/main → last commit only.
 changed=$(git diff --name-only @{u}..HEAD 2>/dev/null \
   || git diff --name-only origin/main..HEAD 2>/dev/null \
-  || git diff --name-only HEAD~1..HEAD)
+  || git diff --name-only HEAD~1..HEAD 2>/dev/null \
+  || true)
 
 # Mirror the any_code path filter from pr-quality-gate.yml.
 # If none of the changed files match code paths, skip contracts compile and

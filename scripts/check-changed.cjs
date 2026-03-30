@@ -130,16 +130,19 @@ function runNodeCli(toolName, cliPath, args) {
   return spawnSync(process.execPath, [cliPath, ...args], { stdio: 'inherit' });
 }
 
+function resolveDiffCommand() {
+  if (hasUpstream()) return 'git diff --name-only @{u}..HEAD';
+  if (hasRef('origin/main')) return 'git diff --name-only origin/main..HEAD';
+  return 'git diff --name-only HEAD~1..HEAD';
+}
+
 function gitChangedFiles() {
   try {
-    const diffCommand = hasUpstream()
-      ? 'git diff --name-only @{u}..HEAD'
-      : hasRef('origin/main')
-        ? 'git diff --name-only origin/main..HEAD'
-        : 'git diff --name-only HEAD~1..HEAD';
-    return parseChangedFiles(runGit(diffCommand));
+    return parseChangedFiles(runGit(resolveDiffCommand()));
   } catch {
-    return parseChangedFiles(runGit('git diff --name-only HEAD~1..HEAD'));
+    // All diff strategies failed (e.g. single-commit repo with no upstream).
+    // Return empty so prettier/eslint are skipped rather than crashing.
+    return [];
   }
 }
 
