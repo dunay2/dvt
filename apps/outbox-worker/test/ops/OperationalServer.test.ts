@@ -48,6 +48,14 @@ describe('OperationalServer', () => {
         oldestClaimedAgeMs: null,
         retryBacklogActive: false,
       });
+      monitor.onRunEventRetentionCycleSucceeded({
+        durationMs: 21,
+        archivedUnits: 2,
+      });
+      monitor.onRunEventRetentionCycleFailed({
+        durationMs: 7,
+        error: new Error('synthetic retention failure'),
+      });
 
       response = await globalThis.fetch(`${baseUrl}/healthz`);
       expect(response.status).toBe(200);
@@ -63,6 +71,10 @@ describe('OperationalServer', () => {
       const metrics = await metricsResponse.text();
       expect(metrics).toMatch(/dvt_outbox_runtime_ready 1/);
       expect(metrics).toMatch(/dvt_outbox_runtime_state\{state="idle"\} 1/);
+      expect(metrics).toMatch(/dvt_run_event_retention_cycles_total 2/);
+      expect(metrics).toMatch(/dvt_run_event_retention_cycle_failures_total 1/);
+      expect(metrics).toMatch(/dvt_run_event_retention_archived_units_total 2/);
+      expect(metrics).toMatch(/dvt_run_event_retention_last_cycle_duration_ms 7/);
     } finally {
       await server.stop();
     }

@@ -331,6 +331,7 @@ async function createRuntimeUntilShutdown(options: {
     .createRuntime(options.env, options.logger, {
       observer: options.monitor,
       hooks: options.monitor,
+      retentionHooks: options.monitor,
       shutdownSignal: options.shutdownSignal,
     })
     .then(async (runtime) => {

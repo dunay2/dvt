@@ -1,5 +1,5 @@
-import type { IRunStateStoreRead } from '@dvt/engine';
-import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
+import type { IRunStateStoreRead, IWorkflowEngine } from '@dvt/engine';
+import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import type {
   AuthorizedQueryExecutionContext,
@@ -57,7 +57,10 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     };
   }
 
-  private async resolveSnapshotStaleness(tenantId: string, runId: string): Promise<SnapshotStaleness> {
+  private async resolveSnapshotStaleness(
+    tenantId: string,
+    runId: string
+  ): Promise<SnapshotStaleness> {
     if (!this.stalenessReader) {
       this.reportUnknown('query_not_wired', tenantId, runId);
       return 'UNKNOWN';
@@ -81,8 +84,6 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       return;
     }
 
-    void this.stalenessTelemetry
-      .reportUnknown(reason, { tenantId, runId })
-      .catch(() => undefined);
+    void this.stalenessTelemetry.reportUnknown(reason, { tenantId, runId }).catch(() => undefined);
   }
 }

@@ -126,6 +126,59 @@ describe('RunEventRetentionRuntime', () => {
     expect(cycles).toBe(0);
     expect(loggerState.getErrorCount()).toBe(0);
   });
+
+  it('reports cycle success/failure hook data', async () => {
+    const loggerState = makeLogger();
+    const callbacks = {
+      started: 0,
+      stopped: 0,
+      success: [] as Array<{ durationMs: number; archivedUnits: number }>,
+      failure: [] as Array<{ durationMs: number; error: unknown }>,
+    };
+    let cycle = 0;
+    const runtime = new RunEventRetentionRuntime(
+      async () => {
+        cycle += 1;
+        if (cycle === 1) {
+          return [
+            { archiveUnitKey: 'u1', exported: true },
+            { archiveUnitKey: 'u2', exported: false },
+          ];
+        }
+        throw new Error('synthetic retention failure');
+      },
+      5,
+      0,
+      loggerState.logger,
+      {
+        onRunEventRetentionStarted: () => {
+          callbacks.started += 1;
+        },
+        onRunEventRetentionStopped: () => {
+          callbacks.stopped += 1;
+        },
+        onRunEventRetentionCycleSucceeded: (details) => {
+          callbacks.success.push(details);
+        },
+        onRunEventRetentionCycleFailed: (details) => {
+          callbacks.failure.push(details);
+        },
+      }
+    );
+
+    const loop = runtime.start();
+    await waitFor(() => callbacks.success.length > 0);
+    await waitFor(() => callbacks.failure.length > 0);
+    await runtime.stop();
+    await loop;
+
+    expect(callbacks.started).toBe(1);
+    expect(callbacks.stopped).toBe(1);
+    expect(callbacks.success[0]?.archivedUnits).toBe(1);
+    expect(callbacks.success[0]?.durationMs).toBeGreaterThanOrEqual(0);
+    expect(callbacks.failure[0]?.durationMs).toBeGreaterThanOrEqual(0);
+    expect(callbacks.failure[0]?.error).toBeInstanceOf(Error);
+  });
 });
 
 async function waitFor(predicate: () => boolean, timeoutMs = 1_000): Promise<void> {
