@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { Outlet } from 'react-router';
 
 import Console from './components/Console';
 import LeftNavigation from './components/LeftNavigation';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
+import { deriveConnectionStatus, usePlatformHealthQuery } from './queries/usePlatformHealthQuery';
 import { useAppStore } from './stores/appStore';
 import '@xyflow/react/dist/style.css';
 
@@ -17,43 +19,63 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function Root() {
-  const { leftNavCollapsed, focusMode, consolePanelHeight } = useAppStore();
+function RootShell() {
+  const { focusMode, consolePanelHeight, consolePanelVisible, setConnectionStatus } = useAppStore();
+  const platformHealth = usePlatformHealthQuery();
+
+  useEffect(() => {
+    if (platformHealth.isPending && !platformHealth.data && !platformHealth.isError) {
+      return;
+    }
+
+    setConnectionStatus(deriveConnectionStatus(platformHealth.data, platformHealth.isError));
+  }, [platformHealth.data, platformHealth.isError, platformHealth.isPending, setConnectionStatus]);
+
+  const errorMessage = platformHealth.isError
+    ? platformHealth.error instanceof Error
+      ? platformHealth.error.message
+      : 'Unknown platform health query error'
+    : null;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="h-screen w-screen flex flex-col bg-[#1a1d23] text-white overflow-hidden">
-        {/* Top App Bar */}
-        <TopAppBar />
+    <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">
+      <TopAppBar connectionDetail={errorMessage} />
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Navigation */}
-          {!focusMode && <LeftNavigation />}
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Navigation */}
+        {!focusMode && <LeftNavigation />}
 
-          {/* Main Workspace */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <ResizablePanelGroup direction="vertical">
-              {/* Main Content Area */}
-              <ResizablePanel defaultSize={consolePanelHeight > 0 ? 70 : 100}>
-                <div className="h-full w-full overflow-hidden">
-                  <Outlet />
-                </div>
-              </ResizablePanel>
+        {/* Main Workspace */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ResizablePanelGroup direction="vertical">
+            {/* Main Content Area */}
+            <ResizablePanel defaultSize={consolePanelVisible && consolePanelHeight > 0 ? 78 : 100}>
+              <div className="h-full w-full overflow-hidden">
+                <Outlet />
+              </div>
+            </ResizablePanel>
 
-              {/* Bottom Console Drawer */}
-              {!focusMode && consolePanelHeight > 0 && (
-                <>
-                  <ResizableHandle />
-                  <ResizablePanel defaultSize={30} minSize={15} maxSize={50}>
-                    <Console />
-                  </ResizablePanel>
-                </>
-              )}
-            </ResizablePanelGroup>
-          </div>
+            {/* Bottom Console Drawer */}
+            {!focusMode && consolePanelVisible && consolePanelHeight > 0 && (
+              <>
+                <ResizableHandle />
+                <ResizablePanel defaultSize={22} minSize={12} maxSize={40}>
+                  <Console />
+                </ResizablePanel>
+              </>
+            )}
+          </ResizablePanelGroup>
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function Root() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RootShell />
     </QueryClientProvider>
   );
 }

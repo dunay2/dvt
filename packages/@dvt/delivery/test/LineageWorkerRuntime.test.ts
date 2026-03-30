@@ -42,6 +42,8 @@ function makeStore(pending: LineageOutboxRecord[] = []): ILineageOutboxStore & {
   markDelivered: ReturnType<typeof vi.fn>;
   markFailed: ReturnType<typeof vi.fn>;
   listDeadLetter: ReturnType<typeof vi.fn>;
+  countDeadLetter: ReturnType<typeof vi.fn>;
+  replayDeadLetters: ReturnType<typeof vi.fn>;
 } {
   return {
     enqueue: vi.fn().mockResolvedValue(undefined),
@@ -50,6 +52,8 @@ function makeStore(pending: LineageOutboxRecord[] = []): ILineageOutboxStore & {
     markDelivered: vi.fn().mockResolvedValue(undefined),
     markFailed: vi.fn().mockResolvedValue('retry_scheduled'),
     listDeadLetter: vi.fn().mockResolvedValue([]),
+    countDeadLetter: vi.fn().mockResolvedValue(0),
+    replayDeadLetters: vi.fn().mockResolvedValue(0),
   };
 }
 
@@ -207,6 +211,54 @@ describe('LineageWorkerRuntime', () => {
       expect(store.listPending).toHaveBeenCalledWith(23);
     });
 
+    it('emits dead-letter backlog alert when threshold is reached', async () => {
+      const store = makeStore([]);
+      store.countDeadLetter.mockResolvedValueOnce(4);
+      const logger = makeSilentLogger();
+      const runtime = new LineageWorkerRuntime(store, makeSink(), makeMapper(), logger, {
+        deadLetterTenantId: 'tenant-a',
+        deadLetterAlertThreshold: 3,
+      });
+
+      await runtime.runOnce();
+
+      expect(store.countDeadLetter).toHaveBeenCalledWith('tenant-a');
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: 'tenant-a',
+          deadLetterLag: 4,
+          deadLetterAlertThreshold: 3,
+        }),
+        'lineage worker: dead-letter backlog threshold reached'
+      );
+      expect(runtime.deadLetterCount).toBe(4);
+    });
+
+    it('replays dead letters automatically when enabled and backlog exists', async () => {
+      const store = makeStore([]);
+      store.countDeadLetter.mockResolvedValueOnce(2);
+      store.replayDeadLetters.mockResolvedValueOnce(2);
+      const logger = makeSilentLogger();
+      const runtime = new LineageWorkerRuntime(store, makeSink(), makeMapper(), logger, {
+        deadLetterTenantId: 'tenant-a',
+        autoReplayEnabled: true,
+        autoReplayBatchSize: 7,
+      });
+
+      await runtime.runOnce();
+
+      expect(store.replayDeadLetters).toHaveBeenCalledWith({ tenantId: 'tenant-a', limit: 7 });
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          moved: 2,
+          tenantId: 'tenant-a',
+          replayBatchSize: 7,
+          deadLetterLagBeforeReplay: 2,
+        }),
+        'lineage worker: automatic dead-letter replay moved records back to pending'
+      );
+    });
+
     it('sanitizes sensitive error fragments before persisting last_error', async () => {
       const record = makeRecord({ id: 'r-secret' });
       const store = makeStore([record]);
@@ -295,6 +347,73 @@ describe('LineageWorkerRuntime', () => {
 
       await runtime.stop();
       await runtime.stop();
+    });
+  });
+
+  describe('configuration', () => {
+    it('rejects auto-replay when tenant scope is missing', () => {
+      expect(
+        () =>
+          new LineageWorkerRuntime(makeStore([]), makeSink(), makeMapper(), makeSilentLogger(), {
+            autoReplayEnabled: true,
+          })
+      ).toThrow('INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required');
+    });
+
+    it('rejects dead-letter scope when store cannot count dead letters', () => {
+      const storeWithoutDeadLetterCount = {
+        ...makeStore([]),
+        countDeadLetter: undefined,
+      } as unknown as ILineageOutboxStore;
+
+      expect(
+        () =>
+          new LineageWorkerRuntime(
+            storeWithoutDeadLetterCount,
+            makeSink(),
+            makeMapper(),
+            makeSilentLogger(),
+            {
+              deadLetterTenantId: 'tenant-a',
+            }
+          )
+      ).toThrow(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: store.countDeadLetter is required for dead-letter scope'
+      );
+    });
+
+    it('rejects dead-letter alert threshold when tenant scope is missing', () => {
+      expect(
+        () =>
+          new LineageWorkerRuntime(makeStore([]), makeSink(), makeMapper(), makeSilentLogger(), {
+            deadLetterAlertThreshold: 1,
+          })
+      ).toThrow(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required for dead-letter alerts'
+      );
+    });
+
+    it('rejects auto-replay when store cannot replay dead letters', () => {
+      const storeWithoutReplay = {
+        ...makeStore([]),
+        replayDeadLetters: undefined,
+      } as unknown as ILineageOutboxStore;
+
+      expect(
+        () =>
+          new LineageWorkerRuntime(
+            storeWithoutReplay,
+            makeSink(),
+            makeMapper(),
+            makeSilentLogger(),
+            {
+              deadLetterTenantId: 'tenant-a',
+              autoReplayEnabled: true,
+            }
+          )
+      ).toThrow(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: store.replayDeadLetters is required for auto replay'
+      );
     });
   });
 

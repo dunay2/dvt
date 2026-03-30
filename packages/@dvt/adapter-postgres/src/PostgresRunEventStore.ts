@@ -121,6 +121,13 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
     const inserted = await this.storage.insertEvent(executor, runId, withSeq);
 
     if (inserted) {
+      await this.storage.upsertRunEventHead(
+        executor,
+        runId,
+        withSeq.tenantId,
+        withSeq.runSeq,
+        withSeq.persistedAt
+      );
       result.appended.push(withSeq);
       result.setLastAppendedRunSeq(withSeq.runSeq);
       return true;

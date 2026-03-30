@@ -17,6 +17,7 @@ import type {
 import type { PoolClient } from 'pg';
 
 import {
+  countLineageDeadLetterSql,
   countPendingLineageOutboxSql,
   deleteLineageOutboxByIdSql,
   deleteLineageOutboxByIdsSql,
@@ -24,6 +25,7 @@ import {
   insertLineageOutboxSql,
   listLineageDeadLetterSql,
   listPendingLineageOutboxForClaimSql,
+  replayLineageDeadLetterSql,
   updateLineageOutboxFailureSql,
 } from './PostgresLineageOutboxStoreSql.js';
 import type { EventEnvelope } from './types.js';
@@ -70,6 +72,14 @@ interface PendingLineageCountRow {
   pending_count: number;
 }
 
+interface LineageDeadLetterCountRow {
+  dead_letter_count: number;
+}
+
+interface ReplayLineageDeadLetterRow {
+  moved_count: number;
+}
+
 // ---------------------------------------------------------------------------
 // PostgresLineageOutboxStore
 // ---------------------------------------------------------------------------
@@ -83,6 +93,13 @@ export function normalizeLineageOutboxClaimTimeoutMs(value: number | undefined):
     throw new Error(`INVALID_LINEAGE_OUTBOX_CLAIM_TIMEOUT_MS: ${value}`);
   }
   return claimTimeoutMs;
+}
+
+function normalizeTenantScope(tenantId: unknown): string {
+  if (typeof tenantId !== 'string') {
+    return '';
+  }
+  return tenantId.trim();
 }
 
 function normalizeLineageQueryLimit(limit: number, fieldName: string): number {
@@ -182,7 +199,8 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<LineageDeadLetterRecord[]> {
-    if (!tenantId) {
+    const normalizedTenantId = normalizeTenantScope(tenantId);
+    if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
     const boundedLimit = normalizeLineageQueryLimit(limit, 'LINEAGE_DEAD_LETTER_LIMIT');
@@ -191,7 +209,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     const result = await this.withClient((client) =>
       client.query<LineageDeadLetterRow>(listLineageDeadLetterSql(this.schema), [
         boundedLimit,
-        tenantId,
+        normalizedTenantId,
       ])
     );
     return result.rows.map((row) => ({
@@ -204,6 +222,67 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
       lastError: row.last_error,
       deadLetteredAt: row.dead_lettered_at,
     }));
+  }
+
+  async countDeadLetter(tenantId: string): Promise<number> {
+    const normalizedTenantId = normalizeTenantScope(tenantId);
+    if (!normalizedTenantId) {
+      throw new Error('TENANT_SCOPE_REQUIRED');
+    }
+
+    const result = await this.withClient((client) =>
+      client.query<LineageDeadLetterCountRow>(countLineageDeadLetterSql(this.schema), [
+        normalizedTenantId,
+      ])
+    );
+    return Number(result.rows[0]?.dead_letter_count ?? 0);
+  }
+
+  async replayDeadLetters(options: {
+    tenantId: string;
+    limit: number;
+    runId?: string;
+    eventType?: string;
+  }): Promise<number> {
+    const tenantId = normalizeTenantScope(options.tenantId);
+    if (!tenantId) {
+      throw new Error('TENANT_SCOPE_REQUIRED');
+    }
+    const boundedLimit = normalizeLineageQueryLimit(
+      options.limit,
+      'LINEAGE_DEAD_LETTER_REPLAY_LIMIT'
+    );
+    if (boundedLimit === 0) return 0;
+
+    const params: unknown[] = [tenantId, boundedLimit];
+    const where: string[] = ['WHERE dl.tenant_id = $1'];
+    if (options.runId !== undefined) {
+      const runId = options.runId.trim();
+      if (!runId) {
+        throw new Error('RUN_ID_SCOPE_REQUIRED');
+      }
+      params.push(runId);
+      where.push(`AND dl.run_id = $${params.length}`);
+    }
+    if (options.eventType !== undefined) {
+      const eventType = options.eventType.trim();
+      if (!eventType) {
+        throw new Error('EVENT_TYPE_SCOPE_REQUIRED');
+      }
+      params.push(eventType);
+      where.push(`AND dl.event_type = $${params.length}`);
+    }
+    const replayedAt = this.now();
+    params.push(replayedAt);
+    const replayedAtParam = `$${params.length}`;
+
+    const result = await this.withTransaction((client) =>
+      client.query<ReplayLineageDeadLetterRow>(
+        replayLineageDeadLetterSql(this.schema, where.join('\n      '), replayedAtParam),
+        params
+      )
+    );
+    return Number(result.rows[0]?.moved_count ?? 0);
   }
 }
 

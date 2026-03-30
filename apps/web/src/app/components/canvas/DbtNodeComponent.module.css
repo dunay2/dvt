@@ -2,3 +2,8 @@
   min-width: 200px;
   min-height: 80px;
 }
+
+/* Applied when a plugin overlay sets a dynamic border color */
+.overlayBorder {
+  border-color: var(--overlay-border-color);
+}

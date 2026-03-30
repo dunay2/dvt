@@ -1,271 +1,190 @@
-import { X, Info, Settings, Code, TestTube, Table, Clock, Shield } from 'lucide-react';
+import { useState } from 'react';
+import { PanelRightClose } from 'lucide-react';
 
-import { DbtNode } from '../types/dbt';
-
-import { Badge } from './ui/badge';
+import type { CanonicalNode } from '../types/canonical';
+import type { InspectorContext } from '../plugins/contracts/PluginManifest';
+import { getInspectorPanels } from '../plugins/registry';
+import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { cn } from './ui/utils';
 
+// ---------------------------------------------------------------------------
+// InspectorPanel
+// ---------------------------------------------------------------------------
+
 interface InspectorPanelProps {
-  node: DbtNode | null;
-  onClose: () => void;
-  userPermissions: {
-    canRun: boolean;
-    canPlan: boolean;
-    canEditEdges: boolean;
-  };
+  node: CanonicalNode | null;
+  activeRunId: string | null;
+  registeredPlugins?: ReadonlySet<string>;
+  onHide: () => void;
 }
 
-const statusColors = {
+const STATUS_DOT: Record<string, string> = {
   idle: 'bg-gray-600',
-  running: 'bg-blue-500',
+  running: 'bg-blue-500 animate-pulse',
   success: 'bg-green-500',
   failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
+  skipped: 'bg-yellow-400',
 };
 
-export default function InspectorPanel({ node, onClose, userPermissions }: InspectorPanelProps) {
+export default function InspectorPanel({
+  node,
+  activeRunId,
+  registeredPlugins = new Set(),
+  onHide,
+}: Readonly<InspectorPanelProps>) {
+  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+
+  const ctx: InspectorContext = { activeRunId, registeredPlugins };
+  const panels = node ? getInspectorPanels(node, ctx) : [];
+  const defaultTab = panels[0]?.id;
+
   if (!node) {
     return (
-      <div className="h-full bg-[#0f1116] border-l border-gray-800 flex items-center justify-center">
-        <p className="text-sm text-gray-500">Select a node to inspect</p>
+      <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
+        <PanelHeader title="Inspector" status={null} kind="" onHide={onHide} />
+        <div className="flex flex-1 items-center justify-center px-6">
+          <div className="max-w-xs text-center text-sm text-slate-400">
+            <p>Select a node to inspect.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-[#0f1116] border-l border-gray-800 flex flex-col">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-800 flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <div className={cn('size-2 rounded-full', statusColors[node.status])} />
-            <h2 className="font-semibold text-sm truncate">{node.name}</h2>
-          </div>
-          <p className="text-xs text-gray-400 mt-1">{node.type}</p>
-        </div>
-        <Button variant="ghost" size="icon" className="size-6" onClick={onClose}>
-          <X className="size-4" />
-        </Button>
-      </div>
+    <div className="flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50">
+      <PanelHeader title={node.name} status={node.status} kind={node.kind} onHide={onHide} />
+      <ScrollArea className="flex-1">
+        <div className="space-y-4 p-4">
+          <CoreNodeDetails node={node} />
 
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="flex-1 flex flex-col">
-        <TabsList className="bg-transparent border-b border-gray-800 rounded-none px-4 justify-start">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-[#1a1d23]">
-            <Info className="size-3 mr-1" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="config" className="data-[state=active]:bg-[#1a1d23]">
-            <Settings className="size-3 mr-1" />
-            Config
-          </TabsTrigger>
-          <TabsTrigger value="sql" className="data-[state=active]:bg-[#1a1d23]">
-            <Code className="size-3 mr-1" />
-            SQL
-          </TabsTrigger>
-          {node.type === 'MODEL' && (
+          {panels.length === 0 ? (
+            <Card className="border-slate-700 bg-slate-950 p-3 text-sm text-slate-400">
+              No plugin inspector panels are registered for this node.
+            </Card>
+          ) : (
+            <Tabs
+              value={activeTab ?? defaultTab}
+              onValueChange={setActiveTab}
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              <TabsList className="justify-start rounded-md border border-slate-700 bg-transparent p-1">
+                {panels.map((panel) => {
+                  const Icon = panel.icon;
+                  return (
+                    <TabsTrigger
+                      key={panel.id}
+                      value={panel.id}
+                      className="text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                    >
+                      <Icon className="mr-1 size-3" />
+                      {resolveString(panel.label)}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+
+              {panels.map((panel) => {
+                const PanelComponent = panel.component;
+                return (
+                  <TabsContent key={panel.id} value={panel.id} className="m-0 pt-3">
+                    <PanelComponent node={node} activeRunId={activeRunId} onClose={onHide} />
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PanelHeader
+// ---------------------------------------------------------------------------
+
+type PanelHeaderProps = {
+  title: string;
+  status: string | null;
+  kind: string;
+  onHide: () => void;
+};
+
+function PanelHeader({ title, status, kind, onHide }: PanelHeaderProps) {
+  const dotClass = status ? (STATUS_DOT[status] ?? 'bg-gray-600') : null;
+
+  return (
+    <div className="flex items-start justify-between border-b border-slate-700 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          {dotClass && <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />}
+          <h2 className="truncate text-sm font-semibold">{title}</h2>
+        </div>
+        {kind && <p className="mt-0.5 font-mono text-xs text-slate-400">{kind}</p>}
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-7 shrink-0 text-slate-300 hover:text-white"
+        onClick={onHide}
+        aria-label="Hide inspector panel"
+      >
+        <PanelRightClose className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
+function CoreNodeDetails({ node }: Readonly<{ node: CanonicalNode }>) {
+  const sql =
+    typeof node.metadata?.compiledSql === 'string'
+      ? node.metadata.compiledSql
+      : typeof node.metadata?.sql === 'string'
+        ? node.metadata.sql
+        : null;
+
+  return (
+    <div className="space-y-3">
+      <Card className="border-slate-700 bg-slate-950 p-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+          <span className="text-slate-400">Type</span>
+          <span className="truncate">{node.kind}</span>
+          <span className="text-slate-400">Status</span>
+          <span className="capitalize">{node.status}</span>
+          <span className="text-slate-400">Role</span>
+          <span className="capitalize">{node.role}</span>
+          {node.lastDuration != null && (
             <>
-              <TabsTrigger value="tests" className="data-[state=active]:bg-[#1a1d23]">
-                <TestTube className="size-3 mr-1" />
-                Tests
-              </TabsTrigger>
-              <TabsTrigger value="columns" className="data-[state=active]:bg-[#1a1d23]">
-                <Table className="size-3 mr-1" />
-                Columns
-              </TabsTrigger>
+              <span className="text-slate-400">Duration</span>
+              <span>{node.lastDuration}s</span>
             </>
           )}
-          <TabsTrigger value="history" className="data-[state=active]:bg-[#1a1d23]">
-            <Clock className="size-3 mr-1" />
-            History
-          </TabsTrigger>
-        </TabsList>
+          {node.lastCost != null && (
+            <>
+              <span className="text-slate-400">Cost</span>
+              <span>${node.lastCost.toFixed(2)}</span>
+            </>
+          )}
+        </div>
+        {node.path && <p className="mt-2 truncate font-mono text-xs text-slate-400">{node.path}</p>}
+      </Card>
 
-        <ScrollArea className="flex-1">
-          <TabsContent value="overview" className="p-4 space-y-4 m-0">
-            <Card className="bg-[#1a1d23] border-gray-800 p-3">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Package:</span>
-                  <span>{node.package}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Path:</span>
-                  <span className="text-xs font-mono truncate ml-2">{node.path}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Status:</span>
-                  <Badge variant="outline">{node.status}</Badge>
-                </div>
-                {node.lastDuration && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Last Duration:</span>
-                    <span>{node.lastDuration}s</span>
-                  </div>
-                )}
-                {node.lastCost && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Last Cost:</span>
-                    <span>${node.lastCost.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {node.description && (
-              <Card className="bg-[#1a1d23] border-gray-800 p-3">
-                <h3 className="text-sm font-medium mb-2">Description</h3>
-                <p className="text-xs text-gray-400">{node.description}</p>
-              </Card>
-            )}
-
-            {node.tags.length > 0 && (
-              <Card className="bg-[#1a1d23] border-gray-800 p-3">
-                <h3 className="text-sm font-medium mb-2">Tags</h3>
-                <div className="flex flex-wrap gap-1">
-                  {node.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            <Card className="bg-[#1a1d23] border-gray-800 p-3">
-              <h3 className="text-sm font-medium mb-2">Dependencies</h3>
-              {node.dependencies.length === 0 ? (
-                <p className="text-xs text-gray-500">No dependencies</p>
-              ) : (
-                <div className="space-y-1">
-                  {node.dependencies.map((dep) => (
-                    <div key={dep} className="text-xs font-mono text-gray-400">
-                      → {dep}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Permissions Section */}
-            <Card className="bg-[#1a1d23] border-gray-800 p-3">
-              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-                <Shield className="size-4" />
-                Permissions
-              </h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Can Plan:</span>
-                  <Badge variant={userPermissions.canPlan ? 'default' : 'secondary'}>
-                    {userPermissions.canPlan ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Can Run:</span>
-                  <Badge variant={userPermissions.canRun ? 'default' : 'secondary'}>
-                    {userPermissions.canRun ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Can Edit Edges:</span>
-                  <Badge variant={userPermissions.canEditEdges ? 'default' : 'secondary'}>
-                    {userPermissions.canEditEdges ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="config" className="p-4 m-0">
-            <Card className="bg-[#1a1d23] border-gray-800 p-3">
-              <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap">
-                {JSON.stringify(node.config || { materialized: 'table' }, null, 2)}
-              </pre>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="sql" className="p-4 m-0">
-            <Card className="bg-[#1a1d23] border-gray-800 p-3">
-              <h3 className="text-sm font-medium mb-2">Compiled SQL</h3>
-              <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap bg-[#0f1116] p-3 rounded border border-gray-800">
-                {node.compiledSql || 'No compiled SQL available'}
-              </pre>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="tests" className="p-4 m-0">
-            <div className="space-y-2">
-              <Card className="bg-[#1a1d23] border-gray-800 p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-mono">test_not_null_store_id</span>
-                  <Badge className="bg-green-600">Passed</Badge>
-                </div>
-                <p className="text-xs text-gray-400">Generic test: not_null on store_id</p>
-              </Card>
-              <Card className="bg-[#1a1d23] border-gray-800 p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-mono">test_unique_store_id</span>
-                  <Badge className="bg-green-600">Passed</Badge>
-                </div>
-                <p className="text-xs text-gray-400">Generic test: unique on store_id</p>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="columns" className="p-4 m-0">
-            <div className="space-y-2">
-              {node.columns?.map((col) => (
-                <Card key={col.name} className="bg-[#1a1d23] border-gray-800 p-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="font-mono text-sm">{col.name}</div>
-                      <div className="text-xs text-gray-400 mt-1">{col.type}</div>
-                      {col.description && (
-                        <p className="text-xs text-gray-500 mt-2">{col.description}</p>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {col.nullable ? 'nullable' : 'not null'}
-                    </Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="history" className="p-4 m-0">
-            <div className="space-y-3">
-              <Card className="bg-[#1a1d23] border-gray-800 p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <div className="font-medium">Run #xyz789</div>
-                    <div className="text-xs text-gray-400 mt-1">2026-02-13 10:35:00</div>
-                  </div>
-                  <Badge className="bg-green-600">Success</Badge>
-                </div>
-                <div className="mt-2 text-xs text-gray-400">
-                  Duration: {node.lastDuration}s · Cost: ${node.lastCost?.toFixed(2)}
-                </div>
-              </Card>
-              <Card className="bg-[#1a1d23] border-gray-800 p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <div className="font-medium">Run #abc456</div>
-                    <div className="text-xs text-gray-400 mt-1">2026-02-12 14:22:00</div>
-                  </div>
-                  <Badge className="bg-green-600">Success</Badge>
-                </div>
-                <div className="mt-2 text-xs text-gray-400">Duration: 2.1s · Cost: $0.04</div>
-              </Card>
-            </div>
-          </TabsContent>
-        </ScrollArea>
-      </Tabs>
+      {sql && (
+        <Card className="border-slate-700 bg-slate-950 p-3">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+            Code
+          </h3>
+          <pre className="max-h-44 overflow-auto whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-2 text-xs text-slate-100">
+            {sql}
+          </pre>
+        </Card>
+      )}
     </div>
   );
 }

@@ -40,7 +40,7 @@ export function listStaleSnapshotRunsSql(schema: string): string {
             FROM ${quoteIdentifier(schema)}.run_events e
             WHERE e.run_id = m.run_id
               AND e.tenant_id = m.tenant_id
-              AND e.run_seq > s.last_run_seq
+              AND e.run_seq > COALESCE(s.last_run_seq, 0)
             LIMIT 1
           )
         )

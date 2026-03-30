@@ -33,6 +33,13 @@ export interface ILineageOutboxStore {
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<LineageFailureDisposition>;
   listDeadLetter(limit: number, tenantId: string): Promise<LineageDeadLetterRecord[]>;
+  countDeadLetter?(tenantId: string): Promise<number>;
+  replayDeadLetters?(options: {
+    tenantId: string;
+    limit: number;
+    runId?: string;
+    eventType?: string;
+  }): Promise<number>;
 }
 
 export interface LineagePublishPayload {
