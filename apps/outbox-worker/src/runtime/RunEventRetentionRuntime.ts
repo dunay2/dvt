@@ -76,7 +76,7 @@ export class RunEventRetentionRuntime {
   private async runLoop(): Promise<void> {
     this.logger.info({}, 'run event retention runtime started');
 
-    if (this.initialDelayMs > 0) {
+    if (this.running && this.initialDelayMs > 0) {
       this.initialDelayController = new globalThis.AbortController();
       try {
         await sleep(this.initialDelayMs, undefined, { signal: this.initialDelayController.signal });
