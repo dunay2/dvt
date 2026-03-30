@@ -1,6 +1,7 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type {
+  DeadLetterRecord,
   EventEnvelope as RunEventPersisted,
   IOutboxStorage,
   OutboxRecord,
@@ -80,7 +81,7 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     return (await this.inner.hasPendingRetries?.(selection)) ?? false;
   }
 
-  async listDeadLetter(limit: number, tenantId: string): Promise<OutboxRecord[]> {
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
     return this.inner.listDeadLetter(limit, tenantId);
   }
 
@@ -89,7 +90,7 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     limit?: number;
     runId?: string;
     ids?: string[];
-  }): Promise<{ replayed: number }> {
+  }): Promise<number> {
     return this.inner.replayDeadLetters(options);
   }
 }
