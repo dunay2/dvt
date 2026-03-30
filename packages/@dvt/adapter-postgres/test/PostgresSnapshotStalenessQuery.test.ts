@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { PostgresSnapshotStalenessQuery } from '../src/PostgresSnapshotStalenessQuery.js';
+import { IS_SNAPSHOT_STALE_ALIAS } from '../src/PostgresSnapshotStalenessQuerySql.js';
 const TEST_SCHEMA = 'dvt';
 const TEST_RUN_ID = 'run-1';
 const TEST_TENANT_ID = 'tenant-a';
@@ -90,7 +91,7 @@ describe('PostgresSnapshotStalenessQuery', () => {
 
   it('checks staleness for a single tenant-scoped run', async () => {
     const client = new RecordingClient();
-    client.enqueueRows([{ is_snapshot_stale: true }]);
+    client.enqueueRows([{ [IS_SNAPSHOT_STALE_ALIAS]: true }]);
     const query = new PostgresSnapshotStalenessQuery(
       TEST_SCHEMA,
       withRecordingClient(client) as never
@@ -100,6 +101,7 @@ describe('PostgresSnapshotStalenessQuery', () => {
 
     expect(isStale).toBe(true);
     expect(client.queries).toHaveLength(1);
+    expect(client.queries[0]?.sql).toContain(`AS ${IS_SNAPSHOT_STALE_ALIAS}`);
     expect(client.queries[0]?.sql).toContain('SELECT EXISTS (');
     expect(client.queries[0]?.sql).toContain('LEFT JOIN LATERAL (');
     expect(client.queries[0]?.sql).toContain('m.tenant_id = $1');

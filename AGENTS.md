@@ -230,6 +230,23 @@ PR title must follow Conventional Commits — same format as commits:
 
 PR body must be at least 50 characters or CI will reject it.
 
+**Before running `gh pr create`, always validate the title locally:**
+
+```bash
+pnpm pr:validate-title "<title>"
+```
+
+This replicates the `amannn/action-semantic-pull-request` check in CI exactly.
+A failed validation here means a failed CI check — fix the title before creating the PR.
+
+**Full PR creation sequence:**
+
+```bash
+pnpm verify:prepush
+pnpm pr:validate-title "<title>"
+gh pr create --title "<title>" --body "..."
+```
+
 Use `gh pr create` with an explicit `--body`. Never open a PR with an empty or one-line description.
 
 ## Generated Docs Rule
