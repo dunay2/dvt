@@ -7,15 +7,18 @@ export interface ProjectorWorkerRuntimeLogger {
 }
 
 export interface ProjectorStateStore {
-  claimSnapshotWork?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
+  claimSnapshotWork?(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string; claimToken: string }>>;
   listStaleSnapshotRuns?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
   isSnapshotStale?(tenantId: string, runId: string): Promise<boolean>;
-  completeSnapshotWork?(tenantId: string, runId: string): Promise<void>;
+  completeSnapshotWork?(tenantId: string, runId: string, claimToken: string): Promise<void>;
   failSnapshotWork?(
     tenantId: string,
     runId: string,
     retryDelayMs: number,
-    errorMessage: string
+    errorMessage: string,
+    claimToken: string
   ): Promise<void>;
   rebuildSnapshot(tenantId: string, runId: string): Promise<unknown>;
 }
@@ -140,13 +143,25 @@ export class ProjectorWorkerRuntime {
     let lag = 0;
     let processed = 0;
 
-    for (const { runId, tenantId, claimedFromQueue } of workItems) {
+    for (const { runId, tenantId, claimedFromQueue, claimToken } of workItems) {
+      const queueClaimToken = claimedFromQueue ? claimToken : undefined;
+      if (claimedFromQueue && !queueClaimToken) {
+        this.logger.error(
+          {
+            runId,
+            tenantId,
+          },
+          'projector worker: queue claim missing claim token'
+        );
+        continue;
+      }
+
       try {
         if (this.stateStore.isSnapshotStale) {
           const stale = await this.stateStore.isSnapshotStale(tenantId, runId);
           if (!stale) {
             if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
-              await this.stateStore.completeSnapshotWork(tenantId, runId);
+              await this.stateStore.completeSnapshotWork(tenantId, runId, queueClaimToken!);
             }
             continue;
           }
@@ -154,7 +169,7 @@ export class ProjectorWorkerRuntime {
         lag += 1;
         await this.stateStore.rebuildSnapshot(tenantId, runId);
         if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
-          await this.stateStore.completeSnapshotWork(tenantId, runId);
+          await this.stateStore.completeSnapshotWork(tenantId, runId, queueClaimToken!);
         }
         processed++;
       } catch (err) {
@@ -164,7 +179,8 @@ export class ProjectorWorkerRuntime {
               tenantId,
               runId,
               this.errorBackoffMs,
-              toErrorLike(err).message
+              toErrorLike(err).message,
+              queueClaimToken!
             );
           } catch (releaseErr) {
             this.logger.error(
@@ -190,16 +206,27 @@ export class ProjectorWorkerRuntime {
     runId: string;
     tenantId: string;
     claimedFromQueue: boolean;
+    claimToken?: string;
   }> | null> {
     const claimedByKey = new Set<string>();
-    const workItems: Array<{ runId: string; tenantId: string; claimedFromQueue: boolean }> = [];
+    const workItems: Array<{
+      runId: string;
+      tenantId: string;
+      claimedFromQueue: boolean;
+      claimToken?: string;
+    }> = [];
 
     if (this.stateStore.claimSnapshotWork) {
       const claimed = await this.stateStore.claimSnapshotWork(this.batchSize);
       for (const item of claimed) {
         const key = `${item.tenantId}::${item.runId}`;
         claimedByKey.add(key);
-        workItems.push({ ...item, claimedFromQueue: true });
+        workItems.push({
+          runId: item.runId,
+          tenantId: item.tenantId,
+          claimedFromQueue: true,
+          claimToken: item.claimToken,
+        });
       }
     }
 
@@ -214,7 +241,11 @@ export class ProjectorWorkerRuntime {
         for (const item of staleByPolling) {
           const key = `${item.tenantId}::${item.runId}`;
           if (!claimedByKey.has(key)) {
-            workItems.push({ ...item, claimedFromQueue: false });
+            workItems.push({
+              runId: item.runId,
+              tenantId: item.tenantId,
+              claimedFromQueue: false,
+            });
           }
         }
       }

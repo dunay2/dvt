@@ -9,6 +9,7 @@ const MAX_BATCH_SIZE = 1000;
 const DEFAULT_CLAIM_TIMEOUT_MS = 300_000;
 const INVALID_BATCH_SIZE_ERROR_CODE = 'INVALID_SNAPSHOT_WORK_BATCH_SIZE';
 const INVALID_RETRY_DELAY_ERROR_CODE = 'INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS';
+const INVALID_CLAIM_TOKEN_ERROR_CODE = 'INVALID_SNAPSHOT_WORK_CLAIM_TOKEN';
 
 export class PostgresSnapshotWorkQueue {
   constructor(
@@ -17,22 +18,29 @@ export class PostgresSnapshotWorkQueue {
     private readonly claimTimeoutMs = DEFAULT_CLAIM_TIMEOUT_MS
   ) {}
 
-  async claimSnapshotWork(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>> {
+  async claimSnapshotWork(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string; claimToken: string }>> {
     const boundedBatchSize = normalizeBatchSize(batchSize);
     if (boundedBatchSize === 0) {
       return [];
     }
 
     return this.withClient(async (client) => {
-      const result = await client.query<{ run_id: string; tenant_id: string }>(
+      const result = await client.query<{ run_id: string; tenant_id: string; claim_token: string }>(
         claimSnapshotWorkSql(this.schema),
         [boundedBatchSize, this.claimTimeoutMs]
       );
-      return result.rows.map((row) => ({ runId: row.run_id, tenantId: row.tenant_id }));
+      return result.rows.map((row) => ({
+        runId: row.run_id,
+        tenantId: row.tenant_id,
+        claimToken: row.claim_token,
+      }));
     });
   }
 
-  async completeSnapshotWork(tenantId: string, runId: string): Promise<void> {
+  async completeSnapshotWork(tenantId: string, runId: string, claimToken: string): Promise<void> {
+    const normalizedClaimToken = normalizeClaimToken(claimToken);
     await this.withClient((client) =>
       client.query(
         `
@@ -43,6 +51,7 @@ export class PostgresSnapshotWorkQueue {
               AND q.run_id = $2
               AND s.run_id = q.run_id
               AND q.latest_run_seq <= COALESCE(s.last_run_seq, 0)
+              AND ${claimTokenSql('q.claimed_at')} = $3
             RETURNING q.run_id, q.tenant_id
           )
           UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue q
@@ -52,8 +61,9 @@ export class PostgresSnapshotWorkQueue {
           WHERE q.tenant_id = $1
             AND q.run_id = $2
             AND NOT EXISTS (SELECT 1 FROM deleted)
+            AND ${claimTokenSql('q.claimed_at')} = $3
         `,
-        [tenantId, runId]
+        [tenantId, runId, normalizedClaimToken]
       )
     );
   }
@@ -62,10 +72,12 @@ export class PostgresSnapshotWorkQueue {
     tenantId: string,
     runId: string,
     retryDelayMs: number,
-    errorMessage: string
+    errorMessage: string,
+    claimToken: string
   ): Promise<void> {
     const boundedRetryDelayMs = normalizeRetryDelay(retryDelayMs);
     const boundedErrorMessage = normalizeErrorMessage(errorMessage);
+    const normalizedClaimToken = normalizeClaimToken(claimToken);
     await this.withClient((client) =>
       client.query(
         `
@@ -76,8 +88,9 @@ export class PostgresSnapshotWorkQueue {
               next_attempt_at = (NOW() + ($3::bigint * INTERVAL '1 millisecond'))
           WHERE tenant_id = $1
             AND run_id = $2
+            AND ${claimTokenSql('claimed_at')} = $5
         `,
-        [tenantId, runId, boundedRetryDelayMs, boundedErrorMessage]
+        [tenantId, runId, boundedRetryDelayMs, boundedErrorMessage, normalizedClaimToken]
       )
     );
   }
@@ -104,7 +117,7 @@ function claimSnapshotWorkSql(schema: string): string {
     FROM picked
     WHERE q.run_id = picked.run_id
       AND q.tenant_id = picked.tenant_id
-    RETURNING q.run_id, q.tenant_id
+    RETURNING q.run_id, q.tenant_id, ${claimTokenSql('q.claimed_at')} AS claim_token
   `;
 }
 
@@ -128,4 +141,16 @@ function normalizeErrorMessage(errorMessage: string): string {
     return 'unknown_error';
   }
   return normalized.slice(0, 1024);
+}
+
+function normalizeClaimToken(claimToken: string): string {
+  const normalized = claimToken.trim();
+  if (normalized.length === 0) {
+    throw new Error(`${INVALID_CLAIM_TOKEN_ERROR_CODE}: <empty>`);
+  }
+  return normalized;
+}
+
+function claimTokenSql(columnExpr: string): string {
+  return `to_char(${columnExpr} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
 }

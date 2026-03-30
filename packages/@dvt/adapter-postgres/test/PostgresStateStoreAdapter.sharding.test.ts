@@ -21,7 +21,9 @@ class RecordingPoolClient {
 
     if (statement.includes('snapshot_work_queue') && statement.includes('RETURNING q.run_id')) {
       return {
-        rows: [{ run_id: 'run-1', tenant_id: 'tenant-1' }],
+        rows: [
+          { run_id: 'run-1', tenant_id: 'tenant-1', claim_token: '2026-03-12T00:00:00.000000Z' },
+        ],
         rowCount: 1,
       };
     }
@@ -195,7 +197,9 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     const result = await adapter.claimSnapshotWork(7);
 
-    expect(result).toEqual([{ runId: 'run-1', tenantId: 'tenant-1' }]);
+    expect(result).toEqual([
+      { runId: 'run-1', tenantId: 'tenant-1', claimToken: '2026-03-12T00:00:00.000000Z' },
+    ]);
     const claimQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('FROM "DvtOps".snapshot_work_queue') &&
@@ -216,26 +220,44 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       assumeSchemaReady: true,
     });
 
-    await adapter.completeSnapshotWork('tenant-1', 'run-1');
-    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500, 'rebuild failed');
+    await adapter.completeSnapshotWork('tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z');
+    await adapter.failSnapshotWork(
+      'tenant-1',
+      'run-1',
+      1500,
+      'rebuild failed',
+      '2026-03-12T00:00:00.000000Z'
+    );
 
     const completeQuery = client.queries.find((entry) =>
       entry.sql.includes('DELETE FROM "DvtOps".snapshot_work_queue q')
     );
     expect(completeQuery).toBeDefined();
-    expect(completeQuery?.params).toEqual(['tenant-1', 'run-1']);
+    expect(completeQuery?.params).toEqual(['tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z']);
     expect(completeQuery?.sql).toContain('WITH deleted AS (');
     expect(completeQuery?.sql).toContain('SET claimed_at = NULL');
     expect(completeQuery?.sql).toContain('next_attempt_at = NULL');
     expect(completeQuery?.sql).toContain('last_error = NULL');
     expect(completeQuery?.sql).toContain('NOT EXISTS (SELECT 1 FROM deleted)');
+    expect(completeQuery?.sql).toContain(
+      `to_char(q.claimed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') = $3`
+    );
 
     const failQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('attempts = attempts + 1') && entry.sql.includes('last_error = $4')
     );
     expect(failQuery).toBeDefined();
-    expect(failQuery?.params).toEqual(['tenant-1', 'run-1', 1500, 'rebuild failed']);
+    expect(failQuery?.params).toEqual([
+      'tenant-1',
+      'run-1',
+      1500,
+      'rebuild failed',
+      '2026-03-12T00:00:00.000000Z',
+    ]);
+    expect(failQuery?.sql).toContain(
+      `to_char(claimed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') = $5`
+    );
   });
 
   it('normalizes snapshot work fail error payload before writing', async () => {
@@ -248,14 +270,20 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       assumeSchemaReady: true,
     });
 
-    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500, '   ');
+    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500, '   ', '2026-03-12T00:00:00.000000Z');
 
     const failQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('attempts = attempts + 1') && entry.sql.includes('last_error = $4')
     );
     expect(failQuery).toBeDefined();
-    expect(failQuery?.params).toEqual(['tenant-1', 'run-1', 1500, 'unknown_error']);
+    expect(failQuery?.params).toEqual([
+      'tenant-1',
+      'run-1',
+      1500,
+      'unknown_error',
+      '2026-03-12T00:00:00.000000Z',
+    ]);
   });
 
   it('rejects invalid snapshot work retry delay values', async () => {
@@ -268,15 +296,45 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       assumeSchemaReady: true,
     });
 
-    await expect(adapter.failSnapshotWork('tenant-1', 'run-1', -1, 'boom')).rejects.toThrow(
-      'INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS'
-    );
-    await expect(adapter.failSnapshotWork('tenant-1', 'run-1', Number.NaN, 'boom')).rejects.toThrow(
-      'INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS'
+    await expect(
+      adapter.failSnapshotWork('tenant-1', 'run-1', -1, 'boom', '2026-03-12T00:00:00.000000Z')
+    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
+    await expect(
+      adapter.failSnapshotWork(
+        'tenant-1',
+        'run-1',
+        Number.NaN,
+        'boom',
+        '2026-03-12T00:00:00.000000Z'
+      )
+    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
+    await expect(
+      adapter.failSnapshotWork(
+        'tenant-1',
+        'run-1',
+        Number.POSITIVE_INFINITY,
+        'boom',
+        '2026-03-12T00:00:00.000000Z'
+      )
+    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
+  });
+
+  it('rejects empty snapshot work claim token values', async () => {
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => {
+          throw new Error('connect should not be reached');
+        },
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    await expect(adapter.completeSnapshotWork('tenant-1', 'run-1', '   ')).rejects.toThrow(
+      'INVALID_SNAPSHOT_WORK_CLAIM_TOKEN'
     );
     await expect(
-      adapter.failSnapshotWork('tenant-1', 'run-1', Number.POSITIVE_INFINITY, 'boom')
-    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
+      adapter.failSnapshotWork('tenant-1', 'run-1', 1000, 'boom', '   ')
+    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_CLAIM_TOKEN');
   });
 
   it('rejects invalid outbox claim timeout values', () => {
