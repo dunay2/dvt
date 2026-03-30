@@ -136,14 +136,14 @@ describe('mapStartRunEngineError', () => {
     const result = mapStartRunEngineError({
       kind: 'unsupported_plan_version',
       planVersion: '2.7',
-      supportedVersions: ['2.3'],
+      supportedVersions: ['1.0'],
     });
     expect(result.status).toBe(422);
     expect(result.body).toEqual({
       error: 'PLAN_REJECTED',
       code: START_RUN_PLAN_REJECTION_CODE.unsupportedPlanVersion,
       reason: 'Unsupported plan version: 2.7',
-      supportedVersions: ['2.3'],
+      supportedVersions: ['1.0'],
     });
   });
 });
