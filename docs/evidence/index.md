@@ -40,6 +40,7 @@ Evidence documents that justify or validate relevant changes.
 - [Evidence Doc: G6 US-G6.1 facet contract surface](ED-20260308-g6-us-g6-1-facet-contract-surface.md)
 - [Evidence Doc: G6 US-G6.2 lineage contract artifacts](ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
 - [Evidence Doc: Temporal adapter operational close-out](ED-20260308-temporal-operational-close-out.md)
+- [Lineage DLQ alerting and automatic replay](ED-20260330-lineage-dlq-alerting-auto-replay.md)
 - [Planner version reset and signal policy wiring closeout](ED-20260328-planner-version-reset-signal-policy-wiring.md)
 - [RC-B5-F2 closeout evidence](ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md)
 - [Summary](ED-20260330-retention-archive-object-store-hardening.md)
