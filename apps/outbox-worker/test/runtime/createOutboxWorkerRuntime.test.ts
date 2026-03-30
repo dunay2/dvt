@@ -357,7 +357,7 @@ describe('createOutboxWorkerRuntime', () => {
       this: object
     ): void {
       abortPendingOperationsCalls += 1;
-      void Reflect.apply(originalAbortPendingOperations, this, []);
+      Reflect.apply(originalAbortPendingOperations, this, []);
     };
 
     try {
@@ -424,7 +424,7 @@ describe('createOutboxWorkerRuntime', () => {
         migrationReleased = true;
         rejectMigration?.(new Error('synthetic migration interrupted'));
       }
-      void Reflect.apply(originalAbortPendingOperations, this, []);
+      Reflect.apply(originalAbortPendingOperations, this, []);
     };
 
     try {
@@ -592,7 +592,7 @@ describe('createOutboxWorkerRuntime', () => {
       this: object
     ): void {
       abortPendingOperationsCalls += 1;
-      void Reflect.apply(originalAbortPendingOperations, this, []);
+      Reflect.apply(originalAbortPendingOperations, this, []);
     };
 
     try {

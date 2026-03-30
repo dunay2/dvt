@@ -5,7 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { RunEventRetentionRuntime } from '../../src/runtime/RunEventRetentionRuntime.js';
 
 function makeLogger(): {
-  logger: { info: () => void; error: () => void };
+  logger: {
+    info: () => void;
+    error: () => void;
+  };
   getErrorCount: () => number;
 } {
   let errorCount = 0;

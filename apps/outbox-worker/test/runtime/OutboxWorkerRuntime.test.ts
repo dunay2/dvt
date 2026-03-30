@@ -89,7 +89,7 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     limit?: number;
     runId?: string;
     ids?: string[];
-  }): Promise<number> {
+  }): Promise<{ replayed: number }> {
     return this.inner.replayDeadLetters(options);
   }
 }

@@ -34,14 +34,20 @@ function loadYaml(filePath) {
 }
 
 function isDoneStatus(status) {
-  return String(status || '').trim().toLowerCase() === 'done';
+  return (
+    String(status || '')
+      .trim()
+      .toLowerCase() === 'done'
+  );
 }
 
 function renderTaskLine(task) {
   const checked = isDoneStatus(task.status) ? '[x]' : '[ ]';
   const priority = task.priority ? `\`${task.priority}\`` : '`P?`';
   const taskId = task.task_id ? `\`${task.task_id}\`` : '`unassigned-task`';
-  const objective = String(task.objective || '').trim().replace(/\s+/g, ' ');
+  const objective = String(task.objective || '')
+    .trim()
+    .replace(/\s+/g, ' ');
   return `- ${checked} ${priority} ${taskId}: ${objective}`;
 }
 
@@ -99,6 +105,38 @@ function renderExpectedOutcomeSection(spec) {
   return lines.join('\n');
 }
 
+function findFrontmatterEnd(content) {
+  const frontmatterStart = content.match(/^---\r?\n/);
+  if (!frontmatterStart) {
+    return -1;
+  }
+  const closingFence = content.indexOf('\n---', frontmatterStart[0].length);
+  if (closingFence === -1) {
+    return -1;
+  }
+  const newlineAfterFence = content.indexOf('\n', closingFence + '\n---'.length);
+  if (newlineAfterFence === -1) {
+    return -1;
+  }
+  return newlineAfterFence + 1;
+}
+
+function applyHeaderMarkdown(content, spec) {
+  if (!spec.header_markdown || typeof spec.header_markdown !== 'string') {
+    return content;
+  }
+  const frontmatterEnd = findFrontmatterEnd(content);
+  const laneHeadingIndex = content.indexOf('\n# Agent Lane ');
+  if (frontmatterEnd === -1 || laneHeadingIndex === -1 || laneHeadingIndex <= frontmatterEnd) {
+    return content;
+  }
+
+  const headerMarkdown = spec.header_markdown.trim();
+  const prefix = content.slice(0, frontmatterEnd).replace(/\s*$/, '');
+  const suffix = content.slice(laneHeadingIndex + 1).replace(/^\s*/, '');
+  return `${prefix}\n\n${headerMarkdown}\n\n${suffix}`;
+}
+
 function updateLaneDoc(yamlFileName) {
   const yamlPath = path.join(stateDir, yamlFileName);
   const mdPath = yamlPath.replace(/\.yaml$/i, '.md');
@@ -114,7 +152,13 @@ function updateLaneDoc(yamlFileName) {
   }
 
   let next = current;
-  next = replaceSection(next, '## Tasks', '## Dependencies', renderTasksSection(spec, yamlFileName));
+  next = applyHeaderMarkdown(next, spec);
+  next = replaceSection(
+    next,
+    '## Tasks',
+    '## Dependencies',
+    renderTasksSection(spec, yamlFileName)
+  );
   next = replaceSection(
     next,
     '## Dependencies',
