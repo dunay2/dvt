@@ -434,4 +434,44 @@ describe('loadEnv', () => {
     );
     warningSpy.mockRestore();
   });
+
+  it('does not warn in production when run-event retention is disabled', () => {
+    const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+    const env = loadEnv({
+      NODE_ENV: 'production',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_RUN_EVENT_RETENTION_ENABLED: 'false',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
+    expect(warningSpy).not.toHaveBeenCalled();
+    warningSpy.mockRestore();
+  });
+
+  it('emits one warning per loadEnv call when production retention is enabled', () => {
+    const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+    loadEnv({
+      NODE_ENV: 'production',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+    });
+
+    loadEnv({
+      NODE_ENV: 'production',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+    });
+
+    expect(warningSpy).toHaveBeenCalledTimes(2);
+    warningSpy.mockRestore();
+  });
 });

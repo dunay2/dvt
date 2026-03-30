@@ -21,7 +21,7 @@ evidence:
     - pnpm --filter @dvt/adapter-postgres test -- test/PostgresSnapshotStalenessQuery.test.ts test/PostgresStateStoreAdapter.sharding.test.ts
     - pnpm --filter @dvt/engine test -- test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
     - pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts test/modules/stateStoreRoles.test.ts test/entrypoints/http/getRunRoute.test.ts
-    - pnpm --filter dvt-lineage-worker test -- test/env.test.ts
+    - pnpm --filter dvt-outbox-worker test -- test/plugins/env.test.ts
     - pnpm type-check
     - pnpm verify:prepush
 ---
