@@ -71,6 +71,28 @@ export function upsertRunEventHeadSql(schema: string): string {
   `;
 }
 
+export function upsertSnapshotWorkItemSql(schema: string): string {
+  return `
+    INSERT INTO ${quoteIdentifier(schema)}.snapshot_work_queue (
+      run_id,
+      tenant_id,
+      latest_run_seq,
+      enqueued_at
+    )
+    VALUES ($1, $2, $3, $4::timestamptz)
+    ON CONFLICT (run_id, tenant_id)
+    DO UPDATE
+    SET latest_run_seq = GREATEST(
+      ${quoteIdentifier(schema)}.snapshot_work_queue.latest_run_seq,
+      EXCLUDED.latest_run_seq
+    ),
+        enqueued_at = LEAST(
+          ${quoteIdentifier(schema)}.snapshot_work_queue.enqueued_at,
+          EXCLUDED.enqueued_at
+        )
+  `;
+}
+
 export function selectExistingEventSql(schema: string): string {
   return `
     SELECT payload

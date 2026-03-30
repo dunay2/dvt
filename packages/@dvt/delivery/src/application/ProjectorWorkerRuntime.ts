@@ -7,7 +7,11 @@ export interface ProjectorWorkerRuntimeLogger {
 }
 
 export interface ProjectorStateStore {
+  claimSnapshotWork?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
   listStaleSnapshotRuns?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
+  isSnapshotStale?(tenantId: string, runId: string): Promise<boolean>;
+  completeSnapshotWork?(tenantId: string, runId: string): Promise<void>;
+  failSnapshotWork?(tenantId: string, runId: string, retryDelayMs: number): Promise<void>;
   rebuildSnapshot(tenantId: string, runId: string): Promise<unknown>;
 }
 
@@ -107,7 +111,8 @@ export class ProjectorWorkerRuntime {
   }
 
   async runOnce(): Promise<ProjectorTickResult> {
-    if (!this.stateStore.listStaleSnapshotRuns) {
+    const workItems = await this.loadSnapshotWorkBatch();
+    if (workItems === null) {
       this._lagCount = 0;
       this.logger.info(
         { lag: 0, processed: 0, batchSize: this.batchSize },
@@ -116,15 +121,37 @@ export class ProjectorWorkerRuntime {
       return { processed: 0, lag: 0 };
     }
 
-    const staleRuns = await this.stateStore.listStaleSnapshotRuns(this.batchSize);
-    this._lagCount = staleRuns.length;
+    let lag = 0;
     let processed = 0;
 
-    for (const { runId, tenantId } of staleRuns) {
+    for (const { runId, tenantId, claimedFromQueue } of workItems) {
       try {
+        if (this.stateStore.isSnapshotStale) {
+          const stale = await this.stateStore.isSnapshotStale(tenantId, runId);
+          if (!stale) {
+            if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
+              await this.stateStore.completeSnapshotWork(tenantId, runId);
+            }
+            continue;
+          }
+        }
+        lag += 1;
         await this.stateStore.rebuildSnapshot(tenantId, runId);
+        if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
+          await this.stateStore.completeSnapshotWork(tenantId, runId);
+        }
         processed++;
       } catch (err) {
+        if (claimedFromQueue && this.stateStore.failSnapshotWork) {
+          try {
+            await this.stateStore.failSnapshotWork(tenantId, runId, this.errorBackoffMs);
+          } catch (releaseErr) {
+            this.logger.error(
+              { err: toErrorLike(releaseErr), runId, tenantId },
+              'projector worker: failSnapshotWork failed'
+            );
+          }
+        }
         this.logger.error(
           { err: toErrorLike(err), runId, tenantId },
           'projector worker: rebuildSnapshot failed'
@@ -132,12 +159,52 @@ export class ProjectorWorkerRuntime {
       }
     }
 
-    this.logger.info(
-      { lag: this._lagCount, processed, batchSize: this.batchSize },
-      'projector worker tick'
-    );
+    this._lagCount = lag;
+    this.logger.info({ lag, processed, batchSize: this.batchSize }, 'projector worker tick');
 
-    return { processed, lag: this._lagCount };
+    return { processed, lag };
+  }
+
+  private async loadSnapshotWorkBatch(): Promise<Array<{
+    runId: string;
+    tenantId: string;
+    claimedFromQueue: boolean;
+  }> | null> {
+    const claimedByKey = new Set<string>();
+    const workItems: Array<{ runId: string; tenantId: string; claimedFromQueue: boolean }> = [];
+
+    if (this.stateStore.claimSnapshotWork) {
+      const claimed = await this.stateStore.claimSnapshotWork(this.batchSize);
+      for (const item of claimed) {
+        const key = `${item.tenantId}::${item.runId}`;
+        claimedByKey.add(key);
+        workItems.push({ ...item, claimedFromQueue: true });
+      }
+    }
+
+    if (
+      this.stateStore.listStaleSnapshotRuns &&
+      (workItems.length === 0 || workItems.length < this.batchSize)
+    ) {
+      const pollingBatchSize = this.batchSize - workItems.length;
+      if (pollingBatchSize > 0) {
+        const staleByPolling = await this.stateStore.listStaleSnapshotRuns(pollingBatchSize);
+        for (const item of staleByPolling) {
+          const key = `${item.tenantId}::${item.runId}`;
+          if (!claimedByKey.has(key)) {
+            workItems.push({ ...item, claimedFromQueue: false });
+          }
+        }
+      }
+    }
+
+    if (workItems.length > 0) {
+      return workItems;
+    }
+    if (this.stateStore.claimSnapshotWork || this.stateStore.listStaleSnapshotRuns) {
+      return [];
+    }
+    return null;
   }
 
   private async runLoop(): Promise<void> {

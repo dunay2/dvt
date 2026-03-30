@@ -19,6 +19,13 @@ class RecordingPoolClient {
       return { rows: [], rowCount: 0 };
     }
 
+    if (statement.includes('snapshot_work_queue') && statement.includes('RETURNING q.run_id')) {
+      return {
+        rows: [{ run_id: 'run-1', tenant_id: 'tenant-1' }],
+        rowCount: 1,
+      };
+    }
+
     return {
       rows: [
         {
@@ -175,6 +182,53 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     expect(staleQuery?.sql).toContain('WHERE m.tenant_id = $1');
     expect(staleQuery?.sql).toContain('AND m.run_id = $2');
     expect(staleQuery?.params).toEqual(['tenant-1', 'run-1']);
+  });
+  it('claims snapshot work queue rows with mixed-case schema quoting', async () => {
+    const client = new RecordingPoolClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+      assumeSchemaReady: true,
+    });
+
+    const result = await adapter.claimSnapshotWork(7);
+
+    expect(result).toEqual([{ runId: 'run-1', tenantId: 'tenant-1' }]);
+    const claimQuery = client.queries.find(
+      (entry) =>
+        entry.sql.includes('FROM "DvtOps".snapshot_work_queue') &&
+        entry.sql.includes('FOR UPDATE SKIP LOCKED')
+    );
+    expect(claimQuery).toBeDefined();
+    expect(claimQuery?.sql).toContain('UPDATE "DvtOps".snapshot_work_queue q');
+    expect(claimQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = q.run_id');
+    expect(claimQuery?.params).toEqual([7, 300000]);
+  });
+  it('can complete and fail claimed snapshot work entries', async () => {
+    const client = new RecordingPoolClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+      assumeSchemaReady: true,
+    });
+
+    await adapter.completeSnapshotWork('tenant-1', 'run-1');
+    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500);
+
+    const completeQuery = client.queries.find(
+      (entry) =>
+        entry.sql.includes('SET claimed_at = NULL') && entry.sql.includes('last_error = NULL')
+    );
+    expect(completeQuery).toBeDefined();
+    expect(completeQuery?.params).toEqual(['tenant-1', 'run-1']);
+
+    const failQuery = client.queries.find((entry) => entry.sql.includes('attempts = attempts + 1'));
+    expect(failQuery).toBeDefined();
+    expect(failQuery?.params).toEqual(['tenant-1', 'run-1', 1500]);
   });
   it('rejects invalid outbox claim timeout values', () => {
     expect(normalizeOutboxClaimTimeoutMs(undefined)).toBe(300_000);

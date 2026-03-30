@@ -76,7 +76,7 @@ tasks:
     target: Keep maintenance write-only and expose the staleness query separately.
   - task_id: S19-F1
     priority: P2
-    status: queued
+    status: in_progress
     objective:
       remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid
       O(N)-per-row behavior at high run concurrency.

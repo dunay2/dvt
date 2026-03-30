@@ -22,6 +22,7 @@ import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 import { PostgresRunStateCoordinator } from './PostgresRunStateCoordinator.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { PostgresSnapshotStalenessQuery } from './PostgresSnapshotStalenessQuery.js';
+import { PostgresSnapshotWorkQueue } from './PostgresSnapshotWorkQueue.js';
 import { composePostgresStateStoreRuntime } from './PostgresStateStoreRuntimeComposer.js';
 import type { PostgresStateStoreRuntimeConfig } from './PostgresStateStoreRuntimeConfig.js';
 import type { RunEventReadRepository, RunEventWriteRepository } from './RunEventWriteRepository.js';
@@ -57,6 +58,7 @@ export class PostgresStateStoreRuntime {
   private readonly snapshotStore: PostgresRunSnapshotStore;
   private readonly runStateCoordinator: PostgresRunStateCoordinator;
   private readonly snapshotStalenessQuery: PostgresSnapshotStalenessQuery;
+  private readonly snapshotWorkQueue: PostgresSnapshotWorkQueue;
   private readonly lineageOutboxStore: PostgresLineageOutboxStore;
 
   constructor(readonly config: PostgresStateStoreRuntimeConfig = {}) {
@@ -70,6 +72,7 @@ export class PostgresStateStoreRuntime {
     this.snapshotStore = services.snapshotStore;
     this.runStateCoordinator = services.runStateCoordinator;
     this.snapshotStalenessQuery = services.snapshotStalenessQuery;
+    this.snapshotWorkQueue = services.snapshotWorkQueue;
     this.lineageOutboxStore = services.lineageOutboxStore;
   }
 
@@ -168,6 +171,24 @@ export class PostgresStateStoreRuntime {
 
   protected async isSnapshotStaleInternal(tenantId: string, runId: string): Promise<boolean> {
     return this.snapshotStalenessQuery.isSnapshotStale(tenantId, runId);
+  }
+
+  protected async claimSnapshotWorkInternal(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string }>> {
+    return this.snapshotWorkQueue.claimSnapshotWork(batchSize);
+  }
+
+  protected async completeSnapshotWorkInternal(tenantId: string, runId: string): Promise<void> {
+    await this.snapshotWorkQueue.completeSnapshotWork(tenantId, runId);
+  }
+
+  protected async failSnapshotWorkInternal(
+    tenantId: string,
+    runId: string,
+    retryDelayMs: number
+  ): Promise<void> {
+    await this.snapshotWorkQueue.failSnapshotWork(tenantId, runId, retryDelayMs);
   }
 
   protected async enqueueTxInternal(runId: RunId, events: EventEnvelope[]): Promise<void> {

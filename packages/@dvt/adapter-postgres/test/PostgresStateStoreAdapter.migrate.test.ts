@@ -281,8 +281,8 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (15 steps)
-    expect(insertQueries.length).toBe(15);
+    // One INSERT per named migration step (16 steps)
+    expect(insertQueries.length).toBe(16);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -293,6 +293,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_013_lineage_outbox_claim_timeout');
     expect(versions).toContain('core_014_lineage_tenant_scope_hardening');
     expect(versions).toContain('core_015_run_event_heads');
+    expect(versions).toContain('core_016_snapshot_work_queue');
   });
 
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {
@@ -421,5 +422,26 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain('run_event_heads_tenant_updated_idx');
     expect(executedSql).toContain('INSERT INTO "DvtOps".run_event_heads');
     expect(executedSql).toContain('GROUP BY e.run_id, e.tenant_id');
+  });
+
+  it('creates and backfills snapshot_work_queue for S19-F1 phase 2', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+
+    expect(executedSql).toContain('snapshot_work_queue');
+    expect(executedSql).toContain('latest_run_seq INTEGER NOT NULL');
+    expect(executedSql).toContain('claimed_at TIMESTAMPTZ');
+    expect(executedSql).toContain('next_attempt_at TIMESTAMPTZ');
+    expect(executedSql).toContain('attempts INTEGER NOT NULL DEFAULT 0');
+    expect(executedSql).toContain('snapshot_work_queue_enqueued_idx');
+    expect(executedSql).toContain('INSERT INTO "DvtOps".snapshot_work_queue');
+    expect(executedSql).toContain('h.latest_run_seq > COALESCE(s.last_run_seq, 0)');
   });
 });

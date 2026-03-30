@@ -758,6 +758,57 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_event_heads`);
     },
   },
+  {
+    version: 'core_016_snapshot_work_queue',
+    description:
+      'Create snapshot work queue and backfill stale runs for push-based projector discovery',
+    run: async (client, schema) => {
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ${sq(schema)}.snapshot_work_queue (
+          run_id TEXT NOT NULL,
+          tenant_id TEXT NOT NULL,
+          latest_run_seq INTEGER NOT NULL,
+          enqueued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          claimed_at TIMESTAMPTZ,
+          next_attempt_at TIMESTAMPTZ,
+          attempts INTEGER NOT NULL DEFAULT 0,
+          last_error TEXT,
+          PRIMARY KEY (run_id, tenant_id)
+        )
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS snapshot_work_queue_enqueued_idx
+        ON ${sq(schema)}.snapshot_work_queue (enqueued_at ASC)
+      `);
+      await client.query(`
+        INSERT INTO ${sq(schema)}.snapshot_work_queue (run_id, tenant_id, latest_run_seq, enqueued_at)
+        SELECT m.run_id, m.tenant_id, h.latest_run_seq, NOW()
+        FROM ${sq(schema)}.run_metadata m
+        INNER JOIN ${sq(schema)}.run_event_heads h
+          ON h.run_id = m.run_id
+          AND h.tenant_id = m.tenant_id
+        LEFT JOIN ${sq(schema)}.run_snapshots s ON s.run_id = m.run_id
+        WHERE h.latest_run_seq > COALESCE(s.last_run_seq, 0)
+        ON CONFLICT (run_id, tenant_id)
+        DO UPDATE
+        SET latest_run_seq = GREATEST(
+          ${sq(schema)}.snapshot_work_queue.latest_run_seq,
+          EXCLUDED.latest_run_seq
+        ),
+            enqueued_at = LEAST(
+              ${sq(schema)}.snapshot_work_queue.enqueued_at,
+              EXCLUDED.enqueued_at
+            )
+      `);
+    },
+    rollbackDescription: 'Drop snapshot_work_queue table and supporting index',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('snapshot_work_queue_enqueued_idx')}`
+      );
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.snapshot_work_queue`);
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
