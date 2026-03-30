@@ -12,7 +12,6 @@ function createStateStoreSource(): StateStoreRoleSource {
     listRuns: async () => [],
     getSnapshot: async () => null as never,
     rebuildSnapshot: async () => null as never,
-    listStaleSnapshotRuns: async () => [],
     isSnapshotStale: async () => false,
   };
 }
@@ -39,7 +38,6 @@ describe('bindStateStoreRoles', () => {
       listRuns: async () => [],
       getSnapshot: async () => null as never,
       rebuildSnapshot: async () => null as never,
-      listStaleSnapshotRuns: async () => [],
     } satisfies Omit<StateStoreRoleSource, 'isSnapshotStale'>;
 
     expect(() => bindStateStoreRoles(partialSource as unknown as StateStoreRoleSource)).toThrow(
