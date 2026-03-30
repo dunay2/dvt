@@ -489,7 +489,7 @@ describe('startRunRoute', () => {
         return errorResult({
           kind: 'unsupported_plan_version' as const,
           planVersion: '2.7',
-          supportedVersions: ['2.3'] as const,
+          supportedVersions: ['1.0'] as const,
         });
       },
     };
@@ -517,7 +517,7 @@ describe('startRunRoute', () => {
       error: 'PLAN_REJECTED',
       code: 'UNSUPPORTED_PLAN_VERSION',
       reason: 'Unsupported plan version: 2.7',
-      supportedVersions: ['2.3'],
+      supportedVersions: ['1.0'],
     });
   });
 

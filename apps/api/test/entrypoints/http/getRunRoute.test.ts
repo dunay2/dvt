@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 
 import { getRunRoute } from '../../../src/entrypoints/http/getRunRoute.js';
 
@@ -20,7 +20,7 @@ function createDeps(
     tenantId: 'tenant-a',
     status: 'RUNNING',
     enriched: false,
-    snapshotStaleness: 'UNKNOWN',
+    snapshotStaleness: 'FRESH',
   }
 ): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
@@ -91,7 +91,7 @@ describe('getRunRoute', () => {
       tenantId: 'tenant-a',
       status: 'RUNNING',
       enriched: true,
-      snapshotStaleness: 'UNKNOWN',
+      snapshotStaleness: 'FRESH',
     });
     const reply = createReply();
 

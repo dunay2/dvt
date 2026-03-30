@@ -1,4 +1,4 @@
-import type { Attributes, IObservability } from '@dvt/observability';
+import type { IObservability } from '@dvt/observability';
 
 import type {
   IRunStatusStalenessTelemetry,
@@ -6,42 +6,35 @@ import type {
 } from '../../application/ports/runtime.js';
 import { safeWarn } from '../admissionTelemetry/safeWarn.js';
 
-const RUN_STATUS_STALENESS_METRIC = {
-  fallbackUnknownTotal: 'dvt.api.run_status.snapshot_staleness_fallback_unknown_total',
-} as const;
+const RUN_STATUS_STALENESS_FALLBACK_UNKNOWN_TOTAL =
+  'dvt.api.run_status.snapshot_staleness_fallback_unknown_total';
 
 export class ObservabilityRunStatusStalenessTelemetry implements IRunStatusStalenessTelemetry {
-  private readonly fallbackUnknownCounter;
+  private readonly unknownCounter;
 
-  public constructor(
-    private readonly deps: {
-      readonly observability: IObservability;
-    }
-  ) {
-    this.fallbackUnknownCounter = deps.observability.metrics.counter(
-      RUN_STATUS_STALENESS_METRIC.fallbackUnknownTotal
+  public constructor(private readonly observability: IObservability) {
+    this.unknownCounter = observability.metrics.counter(
+      RUN_STATUS_STALENESS_FALLBACK_UNKNOWN_TOTAL
     );
   }
 
-  public recordSnapshotStalenessFallback(
+  public async reportUnknown(
     reason: SnapshotStalenessFallbackReason,
-    tenantId: string,
-    runId: string
-  ): void {
+    context: { tenantId: string; runId: string }
+  ): Promise<void> {
     try {
-      this.fallbackUnknownCounter.add(1, {
-        reason,
-      });
-      this.deps.observability.logs.warn({
-        msg: 'run_status.snapshot_staleness_fallback_unknown',
+      this.unknownCounter.add(1, { reason });
+      this.observability.logs.warn({
+        msg: 'run_status.snapshot_staleness_unknown',
         attributes: {
           reason,
-          tenantId,
-          runId,
-        } as Attributes,
+          tenantId: context.tenantId,
+          runId: context.runId,
+        },
       });
-    } catch (err) {
-      safeWarn(this.deps.observability.logs, 'run_status.snapshot_staleness_telemetry_drop', err);
+    } catch (error) {
+      // Telemetry paths must not break read routes.
+      safeWarn(this.observability.logs, 'run_status.snapshot_staleness_telemetry_drop', error);
     }
   }
 }

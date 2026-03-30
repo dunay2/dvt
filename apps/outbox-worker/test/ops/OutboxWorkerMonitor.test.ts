@@ -375,4 +375,36 @@ describe('OutboxWorkerMonitor', () => {
     const afterStartMetrics = monitor.renderMetrics();
     expect(afterStartMetrics).toMatch(/dvt_outbox_process_start_timestamp_seconds 1741392000/);
   });
+
+  it('renders retention runtime cycle metrics and timestamps', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
+
+    let metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_run_event_retention_cycles_total 0/);
+    expect(metrics).toMatch(/dvt_run_event_retention_cycle_failures_total 0/);
+    expect(metrics).toMatch(/dvt_run_event_retention_last_success_timestamp_seconds 0/);
+    expect(metrics).toMatch(/dvt_run_event_retention_last_failure_timestamp_seconds 0/);
+
+    monitor.onRunEventRetentionCycleSucceeded({ durationMs: 42, archivedUnits: 3 });
+
+    clock.nowMs += 5_000;
+    monitor.onRunEventRetentionCycleFailed({
+      durationMs: 9,
+      error: new Error('synthetic retention cycle failure'),
+    });
+
+    metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_run_event_retention_cycles_total 2/);
+    expect(metrics).toMatch(/dvt_run_event_retention_cycle_failures_total 1/);
+    expect(metrics).toMatch(/dvt_run_event_retention_archived_units_total 3/);
+    expect(metrics).toMatch(/dvt_run_event_retention_last_cycle_duration_ms 9/);
+    expect(metrics).toMatch(/dvt_run_event_retention_last_success_timestamp_seconds 1741392000/);
+    expect(metrics).toMatch(/dvt_run_event_retention_last_failure_timestamp_seconds 1741392005/);
+  });
 });

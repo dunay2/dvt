@@ -44,11 +44,11 @@ export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuer
 
   async isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
     return this.withClient(async (client) => {
-      const result = await client.query<{ is_stale: boolean }>(isSnapshotStaleSql(this.schema), [
-        tenantId,
-        runId,
-      ]);
-      return result.rows[0]?.is_stale === true;
+      const result = await client.query<{ is_snapshot_stale: boolean }>(
+        isSnapshotStaleSql(this.schema),
+        [tenantId, runId]
+      );
+      return result.rows[0]?.is_snapshot_stale ?? false;
     });
   }
 }

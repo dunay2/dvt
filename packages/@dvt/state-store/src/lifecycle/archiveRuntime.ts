@@ -114,6 +114,7 @@ export interface IArchiveObjectStore {
   ): Promise<ArchiveObjectWriteResult>;
   readObject(objectKey: string): Promise<Buffer>;
   existsObject(objectKey: string): Promise<boolean>;
+  getObjectUri?(objectKey: string): string;
 }
 
 export interface ArchiveExportRequest {

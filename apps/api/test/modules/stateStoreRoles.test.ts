@@ -26,10 +26,10 @@ describe('bindStateStoreRoles', () => {
     expect(bindings.read).toBe(source);
     expect(bindings.write).toBe(source);
     expect(bindings.maintenance).toBe(source);
-    expect(bindings.staleness).toBe(source);
+    expect(bindings.snapshotStaleness).toBe(source);
   });
 
-  it('rejects a partial source missing staleness behavior', () => {
+  it('rejects a partial source missing maintenance behavior', () => {
     const partialSource = {
       bootstrapRunTx: async () => null as never,
       appendAndEnqueueTx: async () => null as never,

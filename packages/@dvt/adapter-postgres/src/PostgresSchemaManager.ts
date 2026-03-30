@@ -722,6 +722,42 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       );
     },
   },
+  {
+    version: 'core_015_run_event_heads',
+    description: 'Create run_event_heads materialized sequence heads and backfill from run_events',
+    run: async (client, schema) => {
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ${sq(schema)}.run_event_heads (
+          run_id TEXT NOT NULL,
+          tenant_id TEXT NOT NULL,
+          latest_run_seq INTEGER NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          PRIMARY KEY (run_id, tenant_id)
+        )
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS run_event_heads_tenant_updated_idx
+        ON ${sq(schema)}.run_event_heads (tenant_id, updated_at DESC)
+      `);
+      await client.query(`
+        INSERT INTO ${sq(schema)}.run_event_heads (run_id, tenant_id, latest_run_seq, updated_at)
+        SELECT e.run_id, e.tenant_id, MAX(e.run_seq), NOW()
+        FROM ${sq(schema)}.run_events e
+        GROUP BY e.run_id, e.tenant_id
+        ON CONFLICT (run_id, tenant_id)
+        DO UPDATE
+        SET latest_run_seq = GREATEST(${sq(schema)}.run_event_heads.latest_run_seq, EXCLUDED.latest_run_seq),
+            updated_at = EXCLUDED.updated_at
+      `);
+    },
+    rollbackDescription: 'Drop run_event_heads table and supporting index',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_event_heads_tenant_updated_idx')}`
+      );
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_event_heads`);
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------

@@ -1,34 +1,57 @@
 ---
-title: Snapshot staleness query and API freshness surface
+title: Snapshot staleness caller surface and fallback telemetry
 status: Accepted
 date: 2026-03-30
 owners:
+  - apps/api
   - packages/@dvt/contracts
-  - packages/@dvt/adapter-postgres
   - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
 arc_level: ARC-2
-breaking: false
+breaking: true
 code_refs:
   - packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts
+  - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
+  - packages/@dvt/engine/src/state/InMemoryTxStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts
   - apps/api/src/application/services/getRunStatusUseCase.ts
+  - apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts
 evidence:
   tests:
-    - pnpm --filter @dvt/engine test -- test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- test/PostgresSnapshotStalenessQuery.test.ts test/PostgresStateStoreAdapter.sharding.test.ts
-    - pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts test/entrypoints/http/getRunRoute.test.ts test/modules/stateStoreRoles.test.ts
+    - pnpm --filter @dvt/engine test -- test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
+    - pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts test/modules/stateStoreRoles.test.ts test/entrypoints/http/getRunRoute.test.ts
+    - pnpm --filter dvt-outbox-worker test -- test/plugins/env.test.ts
+    - pnpm type-check
+    - pnpm verify:prepush
 ---
 
 ## Summary
 
-This change introduces a per-run snapshot staleness check and propagates that signal to API callers as `snapshotStaleness` (`FRESH | STALE | UNKNOWN`) on `GET /runs/:runId`.
+This change makes snapshot freshness explicit for run status callers while keeping
+the read path fail-soft. The API now returns `snapshotStaleness` as `FRESH`,
+`STALE`, or `UNKNOWN`.
 
-## Why
+When staleness lookup is unavailable or fails, the route still returns status
+successfully and emits a fallback metric/log event. This preserves read
+availability and gives operations visibility into degraded freshness telemetry.
 
-Batch-oriented stale listing is not safe for per-run API freshness decisions because bounded batch size can produce false negatives.
+## SRP rationale
 
-## What was validated
+- Runtime status read (`GetRunStatusUseCase`) owns orchestration only.
+- Snapshot freshness lookup is isolated behind a minimal reader boundary
+  (`isSnapshotStale`).
+- Fallback observability is isolated in
+  `ObservabilityRunStatusStalenessTelemetry`.
 
-- In-memory state stores expose deterministic per-run staleness checks.
-- Postgres adapter supports tenant-scoped per-run staleness query and preserves existing batch listing behavior.
-- API read use case returns caller-visible freshness while preserving existing runtime query contract semantics.
+This keeps domain read behavior, infrastructure query behavior, and telemetry
+behavior independently changeable.
+
+## Breaking acceptance (pre-prod)
+
+The shared contract `IRunSnapshotStalenessQuery.v1` now requires
+`isSnapshotStale(tenantId, runId)`. This is an intentional breaking change
+accepted for active development stage before production cutover.
+
+Before production readiness freeze, this contract line must be reconciled with
+formal versioning policy (major-line evolution or explicit compatibility note).

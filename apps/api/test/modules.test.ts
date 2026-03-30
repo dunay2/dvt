@@ -35,7 +35,7 @@ describe('modules', () => {
         read: {} as never,
         write: {} as never,
         maintenance: {} as never,
-        staleness: {} as never,
+        snapshotStaleness: {} as never,
       },
       async migrate() {
         migrateCalls += 1;

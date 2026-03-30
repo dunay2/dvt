@@ -5,18 +5,16 @@ import type {
   IRunStateStoreWrite,
 } from '@dvt/engine';
 
-type RunSnapshotStalenessReader = Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
-
 export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreWrite &
   IRunStateStoreMaintenance &
-  RunSnapshotStalenessReader;
+  Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
 
 export interface StateStoreRoleBindings {
   readonly read: IRunStateStoreRead;
   readonly write: IRunStateStoreWrite;
   readonly maintenance: IRunStateStoreMaintenance;
-  readonly staleness: RunSnapshotStalenessReader;
+  readonly snapshotStaleness: Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
 }
 
 const REQUIRED_METHODS = [
@@ -42,7 +40,7 @@ function isStateStoreRoleSource(value: unknown): value is StateStoreRoleSource {
 export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStoreRoleBindings {
   if (!isStateStoreRoleSource(stateStore)) {
     throw new Error(
-      'STATE_STORE_ROLE_SOURCE_INVALID: explicit read/write/maintenance/staleness roles are required'
+      'STATE_STORE_ROLE_SOURCE_INVALID: explicit read/write/maintenance roles are required'
     );
   }
 
@@ -50,6 +48,6 @@ export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStor
     read: stateStore,
     write: stateStore,
     maintenance: stateStore,
-    staleness: stateStore,
+    snapshotStaleness: stateStore,
   });
 }

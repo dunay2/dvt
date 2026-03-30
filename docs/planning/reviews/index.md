@@ -34,6 +34,8 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [20260329 - Run Event Retention - Fowler Hard QA Review](20260329-run-event-retention-fowler-hard-review.md)
 - [20260329 Run Event Retention TTL Kickoff Review](20260329-run-event-retention-ttl-kickoff-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](20260307-architecture-doc-consolidation-matrix-review.md)
+- [CI Performance Review And Action Plan](20260330-ci-performance-review-and-action-plan.md)
+- [CI, Prepush & PR Process — Observations and Improvement Log](20260330-ci-prepush-pr-process-observations.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](20260226-dvt-architectural-gap-remediation-tasks-review.md)
 - [DVT+ — Consolidated Architectural Review](20260305-dvt-architectural-review-consolidated.md)
 - [DVT+ — Principal Architectural Review 2026-03-26](20260326-dvt-principal-architectural-review.md)

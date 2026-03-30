@@ -11,6 +11,7 @@ Welcome to the DVT+ Web documentation. This index provides quick access and cont
 
 ## 🗺️ Product & UX Strategy
 
+- [Plugin System Architecture](DVT_FRONTEND_PLUGIN_ARCHITECTURE.md) ← **leer primero**
 - [Frontend Clean Interface & Backend Alignment Plan](FRONTEND_PLAN_BACK_ALIGNMENT.md)
 - [Graph Canvas UX Optimization](DVT_GRAPH_CANVAS_UX_OPTIMIZATION.md)
 - [Sprint, Task & Risk Execution Plan](FRONTEND_SPRINT_PLAN_TASKS_RISKS.md)

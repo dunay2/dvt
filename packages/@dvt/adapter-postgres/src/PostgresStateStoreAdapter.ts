@@ -142,7 +142,7 @@ export class PostgresStateStoreAdapter
     return this.listStaleSnapshotRunsInternal(batchSize);
   }
 
-  async isSnapshotStale(tenantId: string, runId: RunId): Promise<boolean> {
+  async isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
     this.ready();
     return this.isSnapshotStaleInternal(tenantId, runId);
   }

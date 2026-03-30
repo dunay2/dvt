@@ -7,9 +7,11 @@ import type { RunMetadata } from './IRunStateStore.v1.js';
  */
 export interface IRunSnapshotStalenessQuery {
   /**
-   * Returns true when the materialized snapshot for `runId` is stale or missing.
+   * Returns whether the snapshot projection for a run is stale.
    *
-   * Implementations MUST scope the check by tenant to preserve isolation.
+   * A snapshot is stale when `run_snapshots.last_run_seq` is less than the
+   * maximum `run_seq` in `run_events` for that run, or when no snapshot row
+   * exists but at least one event exists.
    */
   isSnapshotStale(tenantId: string, runId: string): Promise<boolean>;
 
@@ -18,7 +20,7 @@ export interface IRunSnapshotStalenessQuery {
    *
    * A snapshot is stale when `run_snapshots.last_run_seq` is less than the
    * maximum `run_seq` in `run_events` for that run, or when no snapshot row
-   * exists at all.
+   * exists and at least one event exists.
    */
   listStaleSnapshotRuns(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
 }

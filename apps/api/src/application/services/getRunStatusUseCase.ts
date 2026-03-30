@@ -1,5 +1,5 @@
-import type { IRunStateStoreRead } from '@dvt/engine';
-import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
+import type { IRunStateStoreRead, IWorkflowEngine } from '@dvt/engine';
+import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import type {
   AuthorizedQueryExecutionContext,
@@ -8,7 +8,8 @@ import type {
   IGetRunStatusUseCase,
   IRunSnapshotStalenessReader,
   IRunStatusStalenessTelemetry,
-  RunSnapshotStaleness,
+  SnapshotStaleness,
+  SnapshotStalenessFallbackReason,
 } from '../ports/runtime.js';
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
@@ -37,10 +38,9 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     const snapshot = query.enriched
       ? await this.engine.enrichRunStatus(runRef)
       : await this.engine.getRunStatus(runRef);
-
     const snapshotStaleness = await this.resolveSnapshotStaleness(
-      metadata.tenantId,
-      metadata.runId
+      context.scope.tenantId.value,
+      query.runId
     );
 
     return {
@@ -60,17 +60,30 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   private async resolveSnapshotStaleness(
     tenantId: string,
     runId: string
-  ): Promise<RunSnapshotStaleness> {
+  ): Promise<SnapshotStaleness> {
     if (!this.stalenessReader) {
-      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_not_wired', tenantId, runId);
+      this.reportUnknown('query_not_wired', tenantId, runId);
       return 'UNKNOWN';
     }
 
-    try {
-      return (await this.stalenessReader.isSnapshotStale(tenantId, runId)) ? 'STALE' : 'FRESH';
-    } catch {
-      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
+    const isStale = await this.stalenessReader.isSnapshotStale(tenantId, runId);
+    if (isStale === null) {
+      this.reportUnknown('query_failed', tenantId, runId);
       return 'UNKNOWN';
     }
+
+    return isStale ? 'STALE' : 'FRESH';
+  }
+
+  private reportUnknown(
+    reason: SnapshotStalenessFallbackReason,
+    tenantId: string,
+    runId: string
+  ): void {
+    if (!this.stalenessTelemetry) {
+      return;
+    }
+
+    void this.stalenessTelemetry.reportUnknown(reason, { tenantId, runId }).catch(() => undefined);
   }
 }

@@ -13,16 +13,39 @@ export function listStaleSnapshotRunsSql(schema: string): string {
     SELECT m.run_id, m.tenant_id
     FROM ${quoteIdentifier(schema)}.run_metadata m
     LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
-    LEFT JOIN LATERAL (
-      SELECT e.run_seq AS max_run_seq
-      FROM ${quoteIdentifier(schema)}.run_events e
-      WHERE e.run_id = m.run_id
-        AND e.tenant_id = m.tenant_id
-      ORDER BY e.run_seq DESC
-      LIMIT 1
-    ) le ON TRUE
-    WHERE s.run_id IS NULL
-      OR s.last_run_seq < COALESCE(le.max_run_seq, 0)
+    LEFT JOIN ${quoteIdentifier(schema)}.run_event_heads h
+      ON h.run_id = m.run_id
+      AND h.tenant_id = m.tenant_id
+    WHERE (
+      s.run_id IS NULL
+      AND (
+        COALESCE(h.latest_run_seq, 0) > 0
+        OR EXISTS (
+          SELECT 1
+          FROM ${quoteIdentifier(schema)}.run_events e
+          WHERE e.run_id = m.run_id
+            AND e.tenant_id = m.tenant_id
+          LIMIT 1
+        )
+      )
+    )
+    OR (
+      s.run_id IS NOT NULL
+      AND (
+        s.last_run_seq < COALESCE(h.latest_run_seq, 0)
+        OR (
+          h.run_id IS NULL
+          AND EXISTS (
+            SELECT 1
+            FROM ${quoteIdentifier(schema)}.run_events e
+            WHERE e.run_id = m.run_id
+              AND e.tenant_id = m.tenant_id
+              AND e.run_seq > COALESCE(s.last_run_seq, 0)
+            LIMIT 1
+          )
+        )
+      )
+    )
     ORDER BY m.created_at ASC
     LIMIT $1
   `;
@@ -35,7 +58,7 @@ export function isSnapshotStaleSql(schema: string): string {
       FROM ${quoteIdentifier(schema)}.run_metadata m
       LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
       LEFT JOIN LATERAL (
-        SELECT e.run_seq AS max_run_seq
+        SELECT e.run_seq
         FROM ${quoteIdentifier(schema)}.run_events e
         WHERE e.run_id = m.run_id
           AND e.tenant_id = m.tenant_id
@@ -44,10 +67,7 @@ export function isSnapshotStaleSql(schema: string): string {
       ) le ON TRUE
       WHERE m.tenant_id = $1
         AND m.run_id = $2
-        AND (
-          s.run_id IS NULL
-          OR s.last_run_seq < COALESCE(le.max_run_seq, 0)
-        )
-    ) AS is_stale
+        AND ((s.run_id IS NULL AND le.run_seq IS NOT NULL) OR s.last_run_seq < COALESCE(le.run_seq, 0))
+    ) AS is_snapshot_stale
   `;
 }

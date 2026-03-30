@@ -204,4 +204,36 @@ describe('PlannerFacade - resolver requirements', () => {
       'graphSource failed contract validation'
     );
   });
+
+  it('caches repeated manifestRef resolution by default', async () => {
+    const resolver = makeResolver(BASE_GRAPH_SOURCE);
+    const facade = new PlannerFacade({ resolver });
+
+    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
+    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
+
+    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables manifestRef cache when manifestRefCacheSize is zero', async () => {
+    const resolver = makeResolver(BASE_GRAPH_SOURCE);
+    const facade = new PlannerFacade({ resolver, manifestRefCacheSize: 0 });
+
+    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
+    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
+
+    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(2);
+  });
+
+  it('evicts least-recently-used manifestRef entries when cache is full', async () => {
+    const resolver = makeResolver(BASE_GRAPH_SOURCE);
+    const facade = new PlannerFacade({ resolver, manifestRefCacheSize: 1 });
+    const altManifestRef = { uri: 's3://bucket/manifest-alt.json', sha256: 'b'.repeat(64) };
+
+    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
+    await facade.buildPlan({ manifestRef: altManifestRef, selection: BASE_SELECTION });
+    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
+
+    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(3);
+  });
 });

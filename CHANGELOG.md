@@ -1,5 +1,33 @@
 # Changelog
 
+## [5.3.0](https://github.com/dunay2/dvt/compare/v5.2.0...v5.3.0) (2026-03-30)
+
+
+### Features
+
+* **planner:** Add manifestRef cache in PlannerFacade ([#681](https://github.com/dunay2/dvt/issues/681)) ([8c32c89](https://github.com/dunay2/dvt/commit/8c32c89d661dab1b929900367466f34e8136e414))
+
+
+### Bug Fixes
+
+* **adapters:** Resolve merge conflicts for snapshot staleness ([#682](https://github.com/dunay2/dvt/issues/682)) ([8c96fbf](https://github.com/dunay2/dvt/commit/8c96fbf8d112dfce870e96894a2d88500a28bfb5))
+* **api:** Expose snapshot staleness safely and harden boolean env parsing ([#680](https://github.com/dunay2/dvt/issues/680)) ([436eae0](https://github.com/dunay2/dvt/commit/436eae0ad3ccb63b264f562f4d2a21a683e20eff))
+
+## [5.2.0](https://github.com/dunay2/dvt/compare/v5.1.2...v5.2.0) (2026-03-30)
+
+
+### Features
+
+* **adapters:** Add lineage DLQ alerting and automatic replay controls ([#672](https://github.com/dunay2/dvt/issues/672)) ([451a60f](https://github.com/dunay2/dvt/commit/451a60f6692c07095798b45ceab6af1556644bac))
+
+## [5.1.2](https://github.com/dunay2/dvt/compare/v5.1.1...v5.1.2) (2026-03-30)
+
+
+### Bug Fixes
+
+* **adapters:** Harden retention archive destination and object-store checks ([#666](https://github.com/dunay2/dvt/issues/666)) ([a331c7d](https://github.com/dunay2/dvt/commit/a331c7d7ff308765065abc56f8b3b1a7ff44056e))
+* **state-store:** Harden archive object store adapters and lane planning updates ([#667](https://github.com/dunay2/dvt/issues/667)) ([c4222cc](https://github.com/dunay2/dvt/commit/c4222cc723631a8a0b60d46667b98d26d060b97b))
+
 ## [5.1.1](https://github.com/dunay2/dvt/compare/v5.1.0...v5.1.1) (2026-03-29)
 
 

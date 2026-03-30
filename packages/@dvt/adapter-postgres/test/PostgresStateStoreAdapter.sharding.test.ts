@@ -150,7 +150,11 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     expect(staleQuery).toBeDefined();
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
     expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = m.run_id');
-    expect(staleQuery?.sql).toContain('FROM "DvtOps".run_events e');
+    expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_event_heads h');
+    expect(staleQuery?.sql).toContain('h.run_id = m.run_id');
+    expect(staleQuery?.sql).toContain('h.tenant_id = m.tenant_id');
+    expect(staleQuery?.sql).toContain('h.run_id IS NULL');
+    expect(staleQuery?.sql).toContain('AND EXISTS (');
     expect(staleQuery?.params).toEqual([5]);
   });
   it('supports tenant-scoped staleness checks for a single run', async () => {

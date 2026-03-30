@@ -166,7 +166,7 @@ export class PostgresStateStoreRuntime {
     return this.snapshotStalenessQuery.listStaleSnapshotRuns(batchSize);
   }
 
-  protected async isSnapshotStaleInternal(tenantId: string, runId: RunId): Promise<boolean> {
+  protected async isSnapshotStaleInternal(tenantId: string, runId: string): Promise<boolean> {
     return this.snapshotStalenessQuery.isSnapshotStale(tenantId, runId);
   }
 

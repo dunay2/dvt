@@ -31,6 +31,12 @@ const NOOP_SQL_EXECUTOR: SqlCommandExecutor = {
 class InMemoryRunEventStorage implements RunEventStoragePort {
   private readonly byRunAndIdempotency = new Map<string, EventEnvelope>();
   private maxRunSeq = 0;
+  public readonly upsertedHeads: Array<{
+    runId: RunId;
+    tenantId: string;
+    runSeq: number;
+    updatedAt: string;
+  }> = [];
 
   async acquireRunLock(_executor: SqlCommandExecutor, _runId: RunId): Promise<void> {
     // no-op for append policy tests
@@ -52,6 +58,16 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
     this.byRunAndIdempotency.set(key, envelope);
     this.maxRunSeq = Math.max(this.maxRunSeq, envelope.runSeq);
     return true;
+  }
+
+  async upsertRunEventHead(
+    _executor: SqlCommandExecutor,
+    runId: RunId,
+    tenantId: string,
+    runSeq: number,
+    updatedAt: string
+  ): Promise<void> {
+    this.upsertedHeads.push({ runId, tenantId, runSeq, updatedAt });
   }
 
   async selectExistingEvent(
@@ -238,6 +254,44 @@ describe('PostgresRunEventStore append invariants', () => {
       code: RUN_EVENT_STORE_ERROR_CODE.INVALID_RUN_SEQUENCE_VALUE,
       messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_RUN_SEQUENCE_VALUE,
     });
+  });
+
+  it('upserts run_event_heads only for newly appended events', async () => {
+    const storage = new InMemoryRunEventStorage();
+    const { store, executor } = makeAppendStoreHarness(storage);
+
+    await store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+      makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:started`,
+        eventType: 'RunStarted',
+      }),
+      makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:started`,
+        eventType: 'RunStarted',
+      }),
+      makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:completed`,
+        eventType: 'RunCompleted',
+      }),
+    ]);
+
+    expect(storage.upsertedHeads).toEqual([
+      {
+        runId: TEST_RUN_ID,
+        tenantId: TEST_TENANT_ID,
+        runSeq: 1,
+        updatedAt: TEST_NOW_ISO,
+      },
+      {
+        runId: TEST_RUN_ID,
+        tenantId: TEST_TENANT_ID,
+        runSeq: 2,
+        updatedAt: TEST_NOW_ISO,
+      },
+    ]);
   });
 });
 
