@@ -33,6 +33,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [20260328 Runtime Command RBAC Review](20260328-runtime-command-rbac-review.md)
 - [20260329 - Run Event Retention - Fowler Hard QA Review](20260329-run-event-retention-fowler-hard-review.md)
 - [20260329 Run Event Retention TTL Kickoff Review](20260329-run-event-retention-ttl-kickoff-review.md)
+- [20260330 Snapshot Staleness PR-671 Code Review](20260330-snapshot-staleness-pr671-code-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](20260307-architecture-doc-consolidation-matrix-review.md)
 - [CI Performance Review And Action Plan](20260330-ci-performance-review-and-action-plan.md)
 - [CI, Prepush & PR Process — Observations and Improvement Log](20260330-ci-prepush-pr-process-observations.md)
