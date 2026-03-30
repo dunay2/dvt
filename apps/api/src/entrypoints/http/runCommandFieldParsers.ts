@@ -30,9 +30,7 @@ export function isBodyObject(raw: unknown): raw is Record<string, unknown> {
   return raw !== null && typeof raw === 'object' && !Array.isArray(raw);
 }
 
-export function parseTenantId(
-  body: Record<string, unknown>
-):
+export function parseTenantId(body: Record<string, unknown>):
   | { readonly ok: true; readonly value: TenantId }
   | {
       readonly ok: false;
