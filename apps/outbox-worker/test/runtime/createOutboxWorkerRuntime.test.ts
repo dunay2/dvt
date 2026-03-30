@@ -353,11 +353,12 @@ describe('createOutboxWorkerRuntime', () => {
     PostgresStateStoreAdapter.prototype.migrate = async function migrate(): Promise<void> {
       migrateCalls += 1;
     };
-    PostgresStateStoreAdapter.prototype.abortPendingOperations =
-      async function abortPendingOperations(this: object): Promise<void> {
-        abortPendingOperationsCalls += 1;
-        await Reflect.apply(originalAbortPendingOperations, this, []);
-      };
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = function abortPendingOperations(
+      this: object
+    ): void {
+      abortPendingOperationsCalls += 1;
+      Reflect.apply(originalAbortPendingOperations, this, []);
+    };
 
     try {
       const shutdown = new globalThis.AbortController();
@@ -415,15 +416,16 @@ describe('createOutboxWorkerRuntime', () => {
         rejectMigration = reject;
       });
     };
-    PostgresStateStoreAdapter.prototype.abortPendingOperations =
-      async function abortPendingOperations(this: object): Promise<void> {
-        abortPendingOperationsCalls += 1;
-        if (!migrationReleased) {
-          migrationReleased = true;
-          rejectMigration?.(new Error('synthetic migration interrupted'));
-        }
-        await Reflect.apply(originalAbortPendingOperations, this, []);
-      };
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = function abortPendingOperations(
+      this: object
+    ): void {
+      abortPendingOperationsCalls += 1;
+      if (!migrationReleased) {
+        migrationReleased = true;
+        rejectMigration?.(new Error('synthetic migration interrupted'));
+      }
+      Reflect.apply(originalAbortPendingOperations, this, []);
+    };
 
     try {
       const shutdown = new globalThis.AbortController();
@@ -586,11 +588,12 @@ describe('createOutboxWorkerRuntime', () => {
         },
       ];
     };
-    PostgresStateStoreAdapter.prototype.abortPendingOperations =
-      async function abortPendingOperations(this: object): Promise<void> {
-        abortPendingOperationsCalls += 1;
-        await Reflect.apply(originalAbortPendingOperations, this, []);
-      };
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = function abortPendingOperations(
+      this: object
+    ): void {
+      abortPendingOperationsCalls += 1;
+      Reflect.apply(originalAbortPendingOperations, this, []);
+    };
 
     try {
       const runtime = await createOutboxWorkerRuntime(
@@ -714,10 +717,11 @@ describe('createOutboxWorkerRuntime', () => {
       async function listPendingForClaim(): Promise<[]> {
         return [];
       };
-    RunArchiveCoordinator.prototype.archiveEligibleHotData = async function archiveEligibleHotData() {
-      archiveCalls += 1;
-      return [];
-    };
+    RunArchiveCoordinator.prototype.archiveEligibleHotData =
+      async function archiveEligibleHotData() {
+        archiveCalls += 1;
+        return [];
+      };
 
     try {
       const runtime = await createOutboxWorkerRuntime(
@@ -772,10 +776,11 @@ describe('createOutboxWorkerRuntime', () => {
       async function listPendingForClaim(): Promise<[]> {
         return [];
       };
-    RunArchiveCoordinator.prototype.archiveEligibleHotData = async function archiveEligibleHotData() {
-      archiveCalls += 1;
-      return [];
-    };
+    RunArchiveCoordinator.prototype.archiveEligibleHotData =
+      async function archiveEligibleHotData() {
+        archiveCalls += 1;
+        return [];
+      };
 
     try {
       const runtime = await createOutboxWorkerRuntime(

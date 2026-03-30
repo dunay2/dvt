@@ -360,16 +360,19 @@ describe('Run archive lifecycle integration', () => {
     const store = new InMemoryArchiveLifecycleStore(initialEvents);
     const objectStore = new (class {
       readonly objects = new Map<string, Buffer>();
-      async putObject(objectKey: string, content: Buffer) {
+      async putObject(
+        objectKey: string,
+        content: Buffer
+      ): Promise<{ objectKey: string; uri: string }> {
         this.objects.set(objectKey, Buffer.from(content));
         return { objectKey, uri: `mem://${objectKey}` };
       }
-      async readObject(objectKey: string) {
+      async readObject(objectKey: string): Promise<Buffer> {
         const value = this.objects.get(objectKey);
         if (!value) throw new Error(`OBJECT_NOT_FOUND: ${objectKey}`);
         return value;
       }
-      async existsObject(objectKey: string) {
+      async existsObject(objectKey: string): Promise<boolean> {
         return this.objects.has(objectKey);
       }
     })();
@@ -424,16 +427,19 @@ describe('Run archive lifecycle integration', () => {
     const store = new InMemoryArchiveLifecycleStore([makeEvent({ runSeq: 1 })], true);
     const objectStore = new (class {
       readonly objects = new Map<string, Buffer>();
-      async putObject(objectKey: string, content: Buffer) {
+      async putObject(
+        objectKey: string,
+        content: Buffer
+      ): Promise<{ objectKey: string; uri: string }> {
         this.objects.set(objectKey, Buffer.from(content));
         return { objectKey, uri: `mem://${objectKey}` };
       }
-      async readObject(objectKey: string) {
+      async readObject(objectKey: string): Promise<Buffer> {
         const value = this.objects.get(objectKey);
         if (!value) throw new Error(`OBJECT_NOT_FOUND: ${objectKey}`);
         return value;
       }
-      async existsObject(objectKey: string) {
+      async existsObject(objectKey: string): Promise<boolean> {
         return this.objects.has(objectKey);
       }
     })();

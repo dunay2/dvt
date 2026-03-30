@@ -66,12 +66,42 @@ export class S3ArchiveObjectStore implements IArchiveObjectStore {
         })
       );
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      if (isS3NotFoundError(error)) {
+        return false;
+      }
+      throw error;
     }
   }
 
   getObjectUri(objectKey: string): string {
     return `s3://${this.bucket}/${objectKey}`;
   }
+}
+
+function isS3NotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeS3Error = error as {
+    name?: string;
+    code?: string;
+    Code?: string;
+    statusCode?: number;
+    $metadata?: { httpStatusCode?: number };
+  };
+
+  const symbolicCode = maybeS3Error.code ?? maybeS3Error.Code ?? maybeS3Error.name;
+  if (
+    symbolicCode === 'NotFound' ||
+    symbolicCode === 'NoSuchKey' ||
+    symbolicCode === 'NoSuchObject' ||
+    symbolicCode === 'NotFoundException'
+  ) {
+    return true;
+  }
+
+  const httpStatus = maybeS3Error.$metadata?.httpStatusCode ?? maybeS3Error.statusCode;
+  return httpStatus === 404;
 }

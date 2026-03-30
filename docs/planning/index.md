@@ -85,6 +85,7 @@ Concept anchors for this page:
 - [DVT+ — Consolidated Architectural Review](reviews/20260305-dvt-architectural-review-consolidated.md)
 - [DVT+ — Principal Architectural Review 2026-03-26](reviews/20260326-dvt-principal-architectural-review.md)
 - [DVT+ Review Action Plan](reviews/20260314-dvt-action-plan-review.md)
+- [MVP-B1 Claim-To-Evidence Traceability Matrix](reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md)
 - [MVP-D1 Residual Risk Baseline Review](reviews/20260330-mvp-d1-residual-risk-baseline-review.md)
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](reviews/20260315-postgres-state-store-adapter-refactor-review.md)
 - [Principal Architecture Review - DVT+](reviews/20260316-principal-architecture-review.md)

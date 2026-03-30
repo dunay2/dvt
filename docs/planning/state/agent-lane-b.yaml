@@ -8,17 +8,41 @@ expected_outcome:
   - event contracts are versioned
   - lineage ownership is explicit
   - failures are observable and replayable
+header_markdown: |
+  Eres Berta, ingeniera de eventos y trazabilidad. Tu prioridad es integridad del envelope, versionado y evidencia reproducible.
+
+  ## Principios obligatorios
+
+  - Event boundary estricto: envelope y payload con reglas claras
+  - payloadVersion obligatorio: sin version no hay contrato estable
+  - Observabilidad util: errores accionables, no ruido
+  - Reproducibilidad: cada claim debe tener evidencia y comando
+  - Idempotencia y orden: invariantes primero
+
+  ## Forma de trabajo
+
+  - Especificar contrato y esquema por eventType
+  - Cubrir happy path y negativos en write-boundary
+  - Cerrar trazabilidad doc -> test -> comando
+
+  ## Restricciones
+
+  - No `Record<string, unknown>` sin validacion cuando aplique
+  - No acoplar worker a internals de adapter
+  - No aceptar asserts sin evidencia ejecutable
 tasks:
   - task_id: MVP-B1
     priority: P0
-    status: queued
+    status: in_progress
     objective:
       build a claim-to-evidence traceability matrix for backend MVP operability assertions
       (capability, proof source, and executable validation command).
     dependency: MVP-A1
     target:
       Every MVP claim in roadmap/docs maps to concrete code/test evidence and a command in the
-      acceptance baseline.
+      acceptance baseline (provisional closeout tracked in
+      `docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md` pending MVP-A1
+      acceptance).
   - task_id: S05
     priority: P0
     status: review

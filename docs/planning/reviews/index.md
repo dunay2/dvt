@@ -38,6 +38,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [DVT+ — Consolidated Architectural Review](20260305-dvt-architectural-review-consolidated.md)
 - [DVT+ — Principal Architectural Review 2026-03-26](20260326-dvt-principal-architectural-review.md)
 - [DVT+ Review Action Plan](20260314-dvt-action-plan-review.md)
+- [MVP-B1 Claim-To-Evidence Traceability Matrix](20260330-mvp-b1-claim-evidence-traceability-matrix.md)
 - [MVP-D1 Residual Risk Baseline Review](20260330-mvp-d1-residual-risk-baseline-review.md)
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](20260315-postgres-state-store-adapter-refactor-review.md)
 - [Principal Architecture Review - DVT+](20260316-principal-architecture-review.md)
