@@ -30,3 +30,9 @@ Consumers that assume strict freshness may mis-handle this state.
 - Pre-prod exception accepted: `IRunSnapshotStalenessQuery.v1` includes a
   breaking method addition during active development. Reconcile with formal
   contract versioning policy before production freeze.
+
+## Update 2026-03-30
+
+- Post-merge branch validation keeps the adapter staleness coverage in place.
+- Current PR still carries no production contract expansion; caller handling for
+  `UNKNOWN` remains the governing mitigation.
