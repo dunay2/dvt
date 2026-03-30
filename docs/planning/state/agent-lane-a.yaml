@@ -126,12 +126,15 @@ tasks:
     target: Engine Result type + facade catch-block elimination.
   - task_id: DHM
     priority: P1
-    status: queued
+    status: in_progress
     objective:
       drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization),
       then WS1, WS3, WS4, WS2, WS6.
     dependency: none
-    target: WS5 test fixture modularization complete; roadmap for remaining workstreams defined.
+    target:
+      WS5 fixture modularization is in progress (WorkflowEngine core tests moved to shared
+      builders); complete remaining WS5 helper-heavy engine tests, then lock roadmap for
+      WS1/WS3/WS4/WS2/WS6.
   - task_id: plan-version-reset
     priority: P1
     status: done
