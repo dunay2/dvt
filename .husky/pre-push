@@ -17,7 +17,7 @@ code_changed=$(printf '%s\n' "$changed" | grep -E \
 if [ -z "$code_changed" ]; then
   echo "Docs-only push detected — running docs gates only."
   pnpm -s docs:gov:locations
-  pnpm docs:arc:evidence:check -- --changed-only
+  pnpm -s docs:arc:evidence:check -- --changed-only
   node scripts/check-changed.cjs
 else
   echo "Running pre-push verifications: pnpm verify:prepush"
