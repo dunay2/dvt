@@ -1,17 +1,17 @@
-import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
-
 import {
   START_RUN_TARGET_ADAPTER,
   type StartRunCommand,
-  type StartRunPlanRef,
 } from '../../application/ports/startRunCommandContract.js';
+import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
+
 import {
-  type AuthorizationAction,
-  EnvironmentId,
-  ProjectId,
-  TenantId,
-  type RequestedScope,
-} from '../../domain/auth/types.js';
+  asNonEmptyTrimmedStringOrUndefined,
+  parseStartRunBodyRecord,
+  type StartRunParseResult,
+} from './startRunRouteBodyValidation.js';
+import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
+import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
+import { parseStartRunScope } from './startRunRouteScopeParser.js';
 
 type ParsedStartRunRequest = {
   readonly command: StartRunCommand;
@@ -24,35 +24,16 @@ type ParseStartRunRequestResult =
   | { readonly ok: true; readonly value: ParsedStartRunRequest }
   | { readonly ok: false; readonly status: 400; readonly body: Readonly<Record<string, unknown>> };
 
-type ParseStartRunFieldResult<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly code: string };
-
-type ParsedStartRunScope = {
-  readonly tenantId: TenantId;
-  readonly projectId: ProjectId;
-  readonly environmentId: EnvironmentId;
-};
+type ParseStartRunFieldResult<T> = StartRunParseResult<T, string>;
 
 type ParseStartRunBadRequestResult = Extract<ParseStartRunRequestResult, { readonly ok: false }>;
-
-type PlannerCommandFields = {
-  -readonly [K in
-    | 'graphSource'
-    | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
-    | 'policies'
-    | 'environment'
-    | 'observability']?: StartRunCommand[K];
-};
 
 function badRequest(code: string): ParseStartRunBadRequestResult {
   return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code } };
 }
 
 export function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
-  const bodyRecord = parseBodyRecord(body);
+  const bodyRecord = parseStartRunBodyRecord(body);
   if (!bodyRecord.ok) {
     return badRequest(bodyRecord.code);
   }
@@ -98,26 +79,6 @@ function parseSelection(
   return { ok: false };
 }
 
-function parsePlanRef(
-  raw: unknown
-):
-  | { readonly ok: true; readonly value: StartRunPlanRef }
-  | { readonly ok: false; readonly code: string } {
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
-    return { ok: false, code: 'INVALID_PLAN_REF' };
-  }
-  const r = raw as Record<string, unknown>;
-  const uri = asNonEmptyTrimmedStringOrUndefined(r.uri);
-  const sha256 = asNonEmptyTrimmedStringOrUndefined(r.sha256);
-  const schemaVersion = asNonEmptyTrimmedStringOrUndefined(r.schemaVersion);
-  const planId = asNonEmptyTrimmedStringOrUndefined(r.planId);
-  const planVersion = asNonEmptyTrimmedStringOrUndefined(r.planVersion);
-  if (uri && sha256 && schemaVersion && planId && planVersion) {
-    return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
-  }
-  return { ok: false, code: 'INVALID_PLAN_REF' };
-}
-
 function parseTargetAdapter(
   raw: unknown
 ):
@@ -131,29 +92,6 @@ function parseTargetAdapter(
     return { ok: true, value: normalized };
   }
   return { ok: false };
-}
-
-function parseBodyRecord(body: unknown): ParseStartRunFieldResult<Record<string, unknown>> {
-  if (!isPlainRecord(body)) {
-    return { ok: false, code: 'INVALID_BODY' };
-  }
-
-  return { ok: true, value: body };
-}
-
-function parseStartRunScope(
-  record: Record<string, unknown>
-): ParseStartRunFieldResult<ParsedStartRunScope> {
-  const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
-  const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
-  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
-
-  const parsedScope = buildParsedStartRunScope(tenantId, projectId, environmentId);
-  if (parsedScope.ok) {
-    return parsedScope;
-  }
-
-  return { ok: false, code: parsedScope.code };
 }
 
 function parseStartRunCommand(
@@ -208,7 +146,7 @@ function buildPlanRefCommand(
   targetAdapter: StartRunCommand['targetAdapter'],
   selection: ReadonlyArray<string>
 ): ParseStartRunFieldResult<StartRunCommand> {
-  const planRef = parsePlanRef(rawPlanRef);
+  const planRef = parseStartRunPlanRef(rawPlanRef);
   if (!planRef.ok) {
     return { ok: false, code: planRef.code };
   }
@@ -230,7 +168,7 @@ function buildPlannerBackedCommand(
   targetAdapter: StartRunCommand['targetAdapter'],
   selection: ReadonlyArray<string>
 ): ParseStartRunFieldResult<StartRunCommand> {
-  const plannerInput = parsePlannerInput(record, selection);
+  const plannerInput = parseStartRunPlannerEnvelope(record, selection);
   if (!plannerInput.ok) {
     return { ok: false, code: plannerInput.code };
   }
@@ -244,178 +182,4 @@ function buildPlannerBackedCommand(
       ...plannerInput.value,
     },
   };
-}
-
-function parsePlannerInput(
-  record: Record<string, unknown>,
-  selection: ReadonlyArray<string>
-): ParseStartRunFieldResult<
-  Pick<
-    StartRunCommand,
-    | 'graphSource'
-    | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
-    | 'policies'
-    | 'environment'
-    | 'observability'
-  >
-> {
-  try {
-    const parsed = parsePlannerInputEnvelopeV2({
-      ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
-      ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
-      ...(record.manifest === undefined ? {} : { manifest: record.manifest }),
-      ...(record.nodes === undefined ? {} : { nodes: record.nodes }),
-      ...(record.policies === undefined ? {} : { policies: record.policies }),
-      ...(record.environment === undefined ? {} : { environment: record.environment }),
-      ...(record.observability === undefined ? {} : { observability: record.observability }),
-      selection: { selectedNodeIds: selection },
-    });
-
-    return {
-      ok: true,
-      value: toPlannerCommandFields(parsed),
-    };
-  } catch {
-    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
-  }
-}
-
-function toPlannerCommandFields(
-  parsed: ReturnType<typeof parsePlannerInputEnvelopeV2>
-): Pick<
-  StartRunCommand,
-  | 'graphSource'
-  | 'manifestRef'
-  | 'manifest'
-  | 'nodes'
-  | 'policies'
-  | 'environment'
-  | 'observability'
-> {
-  const result: PlannerCommandFields = {};
-
-  const graphSource = mapGraphSource(parsed.graphSource);
-  if (graphSource !== undefined) result.graphSource = graphSource;
-
-  const manifestRef = mapManifestRef(parsed.manifestRef);
-  if (manifestRef !== undefined) result.manifestRef = manifestRef;
-
-  if (parsed.manifest !== undefined) result.manifest = parsed.manifest;
-
-  const nodes = mapNodes(parsed.nodes);
-  if (nodes !== undefined) result.nodes = nodes;
-
-  if (parsed.policies !== undefined) result.policies = parsed.policies;
-
-  const environment = mapEnvironment(parsed.environment);
-  if (environment !== undefined) result.environment = environment;
-
-  const observability = mapObservability(parsed.observability);
-  if (observability !== undefined) result.observability = observability;
-
-  return result;
-}
-
-function mapGraphSource(
-  graphSource: ReturnType<typeof parsePlannerInputEnvelopeV2>['graphSource']
-): StartRunCommand['graphSource'] | undefined {
-  if (graphSource === undefined) return undefined;
-
-  return {
-    kind: graphSource.kind,
-    nodes: graphSource.nodes.map((node) => ({
-      nodeId: node.nodeId,
-      resourceType: node.resourceType,
-      dependsOn: [...node.dependsOn],
-    })),
-  };
-}
-
-function mapManifestRef(
-  manifestRef: ReturnType<typeof parsePlannerInputEnvelopeV2>['manifestRef']
-): StartRunCommand['manifestRef'] | undefined {
-  if (manifestRef === undefined) return undefined;
-
-  return {
-    uri: manifestRef.uri,
-    sha256: manifestRef.sha256,
-    ...(manifestRef.artifactId === undefined ? {} : { artifactId: manifestRef.artifactId }),
-  };
-}
-
-function mapNodes(
-  nodes: ReturnType<typeof parsePlannerInputEnvelopeV2>['nodes']
-): StartRunCommand['nodes'] | undefined {
-  if (nodes === undefined) return undefined;
-
-  return nodes.map((node) => ({
-    nodeId: node.nodeId,
-    resourceType: node.resourceType,
-    dependsOn: [...node.dependsOn],
-  }));
-}
-
-function mapEnvironment(
-  environment: ReturnType<typeof parsePlannerInputEnvelopeV2>['environment']
-): StartRunCommand['environment'] | undefined {
-  if (environment === undefined) return undefined;
-
-  return {
-    ...(environment.environmentId === undefined
-      ? {}
-      : { environmentId: environment.environmentId }),
-    ...(environment.targetProfile === undefined
-      ? {}
-      : { targetProfile: environment.targetProfile }),
-    ...(environment.vars === undefined ? {} : { vars: environment.vars }),
-  };
-}
-
-function mapObservability(
-  observability: ReturnType<typeof parsePlannerInputEnvelopeV2>['observability']
-): StartRunCommand['observability'] | undefined {
-  if (observability === undefined) return undefined;
-
-  return {
-    ...(observability.tags === undefined ? {} : { tags: observability.tags }),
-    ...(observability.extra === undefined ? {} : { extra: observability.extra }),
-  };
-}
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function buildParsedStartRunScope(
-  tenantId: ReturnType<typeof TenantId.parse>,
-  projectId: ReturnType<typeof ProjectId.parse>,
-  environmentId: ReturnType<typeof EnvironmentId.parse>
-): ParseStartRunFieldResult<ParsedStartRunScope> {
-  if (!tenantId.ok) return { ok: false, code: tenantId.code };
-  if (!projectId.ok) return { ok: false, code: projectId.code };
-  if (!environmentId.ok) return { ok: false, code: environmentId.code };
-
-  return {
-    ok: true,
-    value: {
-      tenantId: tenantId.value,
-      projectId: projectId.value,
-      environmentId: environmentId.value,
-    },
-  };
-}
-
-function asStringOrUndefined(value: unknown): string | undefined {
-  return typeof value === 'string' ? value : undefined;
-}
-
-function asNonEmptyTrimmedStringOrUndefined(value: unknown): string | undefined {
-  if (typeof value !== 'string') {
-    return undefined;
-  }
-
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : undefined;
 }

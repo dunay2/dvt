@@ -15,19 +15,37 @@ export function listStaleSnapshotRunsSql(schema: string): string {
     LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
     LEFT JOIN ${quoteIdentifier(schema)}.run_event_heads h
       ON h.run_id = m.run_id
-     AND h.tenant_id = m.tenant_id
-    WHERE s.run_id IS NULL
-      OR s.last_run_seq < COALESCE(h.latest_run_seq, 0)
-      OR (
-        h.run_id IS NULL
-        AND EXISTS (
+      AND h.tenant_id = m.tenant_id
+    WHERE (
+      s.run_id IS NULL
+      AND (
+        COALESCE(h.latest_run_seq, 0) > 0
+        OR EXISTS (
           SELECT 1
           FROM ${quoteIdentifier(schema)}.run_events e
           WHERE e.run_id = m.run_id
             AND e.tenant_id = m.tenant_id
-            AND e.run_seq > COALESCE(s.last_run_seq, 0)
+          LIMIT 1
         )
       )
+    )
+    OR (
+      s.run_id IS NOT NULL
+      AND (
+        s.last_run_seq < COALESCE(h.latest_run_seq, 0)
+        OR (
+          h.run_id IS NULL
+          AND EXISTS (
+            SELECT 1
+            FROM ${quoteIdentifier(schema)}.run_events e
+            WHERE e.run_id = m.run_id
+              AND e.tenant_id = m.tenant_id
+              AND e.run_seq > COALESCE(s.last_run_seq, 0)
+            LIMIT 1
+          )
+        )
+      )
+    )
     ORDER BY m.created_at ASC
     LIMIT $1
   `;
