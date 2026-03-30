@@ -109,7 +109,7 @@ tasks:
     target: Stable autofix behavior with idiomatic import type usage restored.
   - task_id: RC-F2
     priority: P2
-    status: queued
+    status: review
     objective:
       externalize adapter-postgres CI path patterns to
       tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and

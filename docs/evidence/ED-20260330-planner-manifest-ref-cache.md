@@ -10,8 +10,9 @@ code_refs:
   - packages/@dvt/planner/src/application/PlannerFacade.ts
   - packages/@dvt/planner/test/unit/planner-facade.test.ts
 evidence:
-  - pnpm -C packages/@dvt/planner exec vitest run test/unit/planner-facade.test.ts
-  - pnpm verify:prepush
+  tests:
+    - pnpm -C packages/@dvt/planner exec vitest run test/unit/planner-facade.test.ts
+    - pnpm verify:prepush
 ---
 
 ## Summary
