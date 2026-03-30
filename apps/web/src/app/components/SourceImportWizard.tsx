@@ -1,4 +1,5 @@
 import {
+  Blocks,
   Database,
   Table,
   CheckCircle2,
@@ -6,10 +7,19 @@ import {
   Loader2,
   ArrowRight,
   ArrowLeft,
+  FileJson,
+  RadioTower,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { resolveDataSource } from '../services/config/dataSource';
+import {
+  createWorkspaceService,
+  type ImportSourcesResult,
+  type WarehouseConnection,
+  type WarehouseTable,
+} from '../services/workspace/workspaceService';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -22,56 +32,44 @@ import {
   DialogDescription,
   DialogFooter,
 } from './ui/dialog';
-import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { ScrollArea } from './ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Separator } from './ui/separator';
 
 interface SourceImportWizardProps {
   open: boolean;
   onClose: () => void;
-  onComplete?: (result: any) => void;
+  onComplete?: (result: ImportSourcesResult) => void;
 }
 
-type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | 'review' | 'result';
+type WizardStep =
+  | 'sourceType'
+  | 'connection'
+  | 'selection'
+  | 'grouping'
+  | 'options'
+  | 'review'
+  | 'result';
 
-interface Connection {
-  id: string;
-  name: string;
-  type: 'snowflake' | 'bigquery' | 'redshift' | 'postgres';
-  database: string;
-}
+type DataObjectSourceType = 'database' | 'file' | 'api' | 'stream';
 
 interface TableInfo {
   database: string;
   schema: string;
   table: string;
   rowCount?: number;
+  columns?: WarehouseTable['columns'];
   selected: boolean;
 }
 
-const mockConnections: Connection[] = [
-  { id: 'conn-1', name: 'Production Warehouse', type: 'snowflake', database: 'RAW' },
-  { id: 'conn-2', name: 'Analytics DB', type: 'bigquery', database: 'analytics' },
-  { id: 'conn-3', name: 'Dev Redshift', type: 'redshift', database: 'dev' },
-];
-
-const mockTables: TableInfo[] = [
-  { database: 'RAW', schema: 'ERP', table: 'ORDERS', rowCount: 125000, selected: false },
-  { database: 'RAW', schema: 'ERP', table: 'CUSTOMERS', rowCount: 45000, selected: false },
-  { database: 'RAW', schema: 'ERP', table: 'PRODUCTS', rowCount: 3500, selected: false },
-  { database: 'RAW', schema: 'CRM', table: 'CONTACTS', rowCount: 89000, selected: false },
-  { database: 'RAW', schema: 'CRM', table: 'ACTIVITIES', rowCount: 230000, selected: false },
-  { database: 'RAW', schema: 'MARKETING', table: 'CAMPAIGNS', rowCount: 1200, selected: false },
-  { database: 'RAW', schema: 'MARKETING', table: 'EVENTS', rowCount: 45000, selected: false },
-];
-
 export default function SourceImportWizard({ open, onClose, onComplete }: SourceImportWizardProps) {
-  const [currentStep, setCurrentStep] = useState<WizardStep>('connection');
+  const workspaceService = useMemo(() => createWorkspaceService(resolveDataSource()), []);
+  const [currentStep, setCurrentStep] = useState<WizardStep>('sourceType');
+  const [selectedSourceType, setSelectedSourceType] = useState<DataObjectSourceType>('database');
+  const [connections, setConnections] = useState<WarehouseConnection[]>([]);
   const [selectedConnection, setSelectedConnection] = useState<string | null>(null);
-  const [tables, setTables] = useState<TableInfo[]>(mockTables);
+  const [tables, setTables] = useState<TableInfo[]>([]);
   const [groupingStrategy, setGroupingStrategy] = useState<'schema' | 'database' | 'custom'>(
     'schema'
   );
@@ -79,12 +77,96 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
   const [addTests, setAddTests] = useState(false);
   const [addFreshness, setAddFreshness] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [importResult, setImportResult] = useState<any>(null);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(false);
+  const [isLoadingTables, setIsLoadingTables] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [importResult, setImportResult] = useState<ImportSourcesResult | null>(null);
 
   const selectedCount = tables.filter((t) => t.selected).length;
-  const connection = mockConnections.find((c) => c.id === selectedConnection);
+  const connection = connections.find((c) => c.id === selectedConnection);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadConnections = async () => {
+      setIsLoadingConnections(true);
+      setLoadError(null);
+
+      try {
+        const loadedConnections = await workspaceService.listWarehouseConnections();
+        if (!cancelled) {
+          setConnections(loadedConnections);
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to load warehouse connections.';
+        if (!cancelled) {
+          setLoadError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingConnections(false);
+        }
+      }
+    };
+
+    void loadConnections();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, workspaceService]);
+
+  useEffect(() => {
+    if (!open || !selectedConnection) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadTables = async () => {
+      setIsLoadingTables(true);
+      setLoadError(null);
+
+      try {
+        const loadedTables = await workspaceService.listWarehouseTables(selectedConnection);
+        if (!cancelled) {
+          setTables(
+            loadedTables.map((table) => ({
+              ...table,
+              selected: false,
+            }))
+          );
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to load warehouse tables.';
+        if (!cancelled) {
+          setLoadError(message);
+          setTables([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingTables(false);
+        }
+      }
+    };
+
+    void loadTables();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, selectedConnection, workspaceService]);
 
   const handleNext = () => {
+    if (currentStep === 'sourceType' && selectedSourceType !== 'database') {
+      toast.error('Only Database is available in the current product slice');
+      return;
+    }
     if (currentStep === 'connection' && !selectedConnection) {
       toast.error('Please select a connection');
       return;
@@ -95,6 +177,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     }
 
     const steps: WizardStep[] = [
+      'sourceType',
       'connection',
       'selection',
       'grouping',
@@ -113,6 +196,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
   const handleBack = () => {
     const steps: WizardStep[] = [
+      'sourceType',
       'connection',
       'selection',
       'grouping',
@@ -131,49 +215,54 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
   const handleImport = async () => {
     setIsProcessing(true);
+    setLoadError(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const selectedTables = tables.filter((t) => t.selected);
-    const schemaGroups = new Map<string, TableInfo[]>();
-
-    selectedTables.forEach((table) => {
-      const key = groupingStrategy === 'schema' ? table.schema : table.database;
-      if (!schemaGroups.has(key)) {
-        schemaGroups.set(key, []);
+    try {
+      if (!selectedConnection) {
+        throw new Error('Please select a connection');
       }
-      schemaGroups.get(key)!.push(table);
-    });
 
-    const result = {
-      success: true,
-      sourcesCreated: schemaGroups.size,
-      tablesImported: selectedTables.length,
-      yamlFiles: Array.from(schemaGroups.keys()).map(
-        (key) => `models/sources/src_${key.toLowerCase()}.yml`
-      ),
-      grouping: groupingStrategy,
-      options: {
+      const result = await workspaceService.importSources({
+        connectionId: selectedConnection,
+        tables: tables
+          .filter((table) => table.selected)
+          .map((table) => ({
+            database: table.database,
+            schema: table.schema,
+            table: table.table,
+            rowCount: table.rowCount,
+            columns: table.columns,
+          })),
+        groupingStrategy,
         includeColumns,
         addTests,
         addFreshness,
-      },
-    };
+      });
 
-    setImportResult(result);
-    setIsProcessing(false);
-    setCurrentStep('result');
-    toast.success('Sources imported successfully!');
+      setImportResult(result);
+      setCurrentStep('result');
+      toast.success('Data objects registered successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to register data objects.';
+      setLoadError(message);
+      toast.error(message);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleComplete = () => {
-    onComplete?.(importResult);
+    if (importResult) {
+      onComplete?.(importResult);
+    }
     onClose();
     // Reset wizard
-    setCurrentStep('connection');
+    setCurrentStep('sourceType');
+    setSelectedSourceType('database');
+    setConnections([]);
     setSelectedConnection(null);
-    setTables(mockTables);
+    setTables([]);
+    setLoadError(null);
     setImportResult(null);
   };
 
@@ -191,43 +280,148 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
 
   const renderStepContent = () => {
     switch (currentStep) {
+      case 'sourceType':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h3 className="mb-2 text-lg font-medium">Choose data source type</h3>
+              <p className="mb-4 text-sm text-slate-300">
+                Select which kind of DataObject you want to discover and register into the graph
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  id: 'database' as const,
+                  label: 'Database',
+                  description: 'Schemas and tables from a relational or warehouse source',
+                  icon: Database,
+                  available: true,
+                },
+                {
+                  id: 'file' as const,
+                  label: 'File',
+                  description: 'CSV, Excel, JSON or parquet-backed data objects',
+                  icon: FileJson,
+                  available: false,
+                },
+                {
+                  id: 'api' as const,
+                  label: 'API',
+                  description: 'Service endpoints and schema-driven data objects',
+                  icon: Blocks,
+                  available: false,
+                },
+                {
+                  id: 'stream' as const,
+                  label: 'Stream',
+                  description: 'Event or message stream descriptors',
+                  icon: RadioTower,
+                  available: false,
+                },
+              ].map((sourceType) => {
+                const Icon = sourceType.icon;
+                const isSelected = selectedSourceType === sourceType.id;
+
+                return (
+                  <Card
+                    key={sourceType.id}
+                    className={`p-4 transition-all ${
+                      sourceType.available
+                        ? isSelected
+                          ? 'cursor-pointer border-blue-500 bg-blue-900/20'
+                          : 'cursor-pointer border-slate-600 hover:border-gray-600'
+                        : 'border-slate-700 bg-slate-950/40 opacity-70'
+                    }`}
+                    onClick={() => {
+                      if (sourceType.available) {
+                        setSelectedSourceType(sourceType.id);
+                      }
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg border border-slate-700 bg-slate-900 p-2">
+                          <Icon className="size-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{sourceType.label}</div>
+                          <div className="mt-1 text-xs text-slate-300">
+                            {sourceType.description}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={sourceType.available ? 'outline' : 'secondary'}>
+                        {sourceType.available ? 'available' : 'not available yet'}
+                      </Badge>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">
+              This slice supports real registration only for{' '}
+              <span className="text-slate-200">Database</span>. File, API, and Stream remain visible
+              to establish the DataObject Registry boundary.
+            </div>
+          </div>
+        );
+
       case 'connection':
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium mb-2">Select Connection</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Choose a warehouse connection to import sources from
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-lg font-medium">Choose database connection</h3>
+                <Badge variant="outline">Database</Badge>
+              </div>
+              <p className="text-sm text-slate-300 mb-4">
+                Choose which database connection should be used to discover candidate data objects
               </p>
             </div>
 
+            {loadError && (
+              <Card className="p-3 border-red-700 bg-red-950/30 text-sm text-red-200">
+                {loadError}
+              </Card>
+            )}
+
             <div className="space-y-2">
-              {mockConnections.map((conn) => (
-                <Card
-                  key={conn.id}
-                  className={`p-4 cursor-pointer transition-all ${
-                    selectedConnection === conn.id
-                      ? 'border-blue-500 bg-blue-900/20'
-                      : 'border-gray-700 hover:border-gray-600'
-                  }`}
-                  onClick={() => setSelectedConnection(conn.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Database className="size-5 text-blue-400" />
-                      <div>
-                        <div className="font-medium">{conn.name}</div>
-                        <div className="text-xs text-gray-400">
-                          {conn.type} · {conn.database}
+              {isLoadingConnections ? (
+                <Card className="p-4 border-slate-600 flex items-center gap-3 text-slate-300">
+                  <Loader2 className="size-4 animate-spin" />
+                  Loading connections...
+                </Card>
+              ) : (
+                connections.map((conn) => (
+                  <Card
+                    key={conn.id}
+                    className={`p-4 cursor-pointer transition-all ${
+                      selectedConnection === conn.id
+                        ? 'border-blue-500 bg-blue-900/20'
+                        : 'border-slate-600 hover:border-gray-600'
+                    }`}
+                    onClick={() => setSelectedConnection(conn.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Database className="size-5 text-blue-400" />
+                        <div>
+                          <div className="font-medium">{conn.name}</div>
+                          <div className="text-xs text-slate-300">
+                            {conn.type} - {conn.database}
+                          </div>
                         </div>
                       </div>
+                      {selectedConnection === conn.id && (
+                        <CheckCircle2 className="size-5 text-blue-400" />
+                      )}
                     </div>
-                    {selectedConnection === conn.id && (
-                      <CheckCircle2 className="size-5 text-blue-400" />
-                    )}
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         );
@@ -251,61 +445,80 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-2">Select Tables</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Choose tables to import as sources. Selected: {selectedCount}
+              <p className="text-sm text-slate-300 mb-4">
+                Choose tables to register as data objects. Selected: {selectedCount}
               </p>
             </div>
 
-            <ScrollArea className="h-96">
-              <div className="space-y-4">
-                {Object.entries(schemaGroups).map(([schema, schemaTables]) => (
-                  <div key={schema}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Checkbox
-                        checked={schemaTables.every((t) => t.selected)}
-                        onCheckedChange={() => toggleSchema(schema)}
-                      />
-                      <h4 className="font-medium text-sm">{schema}</h4>
-                      <Badge variant="secondary" className="text-xs">
-                        {schemaTables.length}
-                      </Badge>
-                    </div>
+            {loadError && (
+              <Card className="p-3 border-red-700 bg-red-950/30 text-sm text-red-200">
+                {loadError}
+              </Card>
+            )}
 
-                    <div className="ml-6 space-y-1">
-                      {schemaTables.map((table, idx) => {
-                        const globalIndex = tables.findIndex(
-                          (t) =>
-                            t.database === table.database &&
-                            t.schema === table.schema &&
-                            t.table === table.table
-                        );
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-2 rounded hover:bg-[#1a1d23] cursor-pointer"
-                            onClick={() => toggleTable(globalIndex)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={table.selected}
-                                onCheckedChange={() => toggleTable(globalIndex)}
-                              />
-                              <Table className="size-4 text-gray-400" />
-                              <span className="text-sm font-mono">{table.table}</span>
-                            </div>
-                            {table.rowCount && (
-                              <span className="text-xs text-gray-500">
-                                {table.rowCount.toLocaleString()} rows
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+            {isLoadingTables ? (
+              <Card className="p-4 border-slate-600 flex items-center gap-3 text-slate-300">
+                <Loader2 className="size-4 animate-spin" />
+                Loading tables...
+              </Card>
+            ) : (
+              <ScrollArea className="h-96">
+                <div className="space-y-4">
+                  {Object.entries(schemaGroups).length === 0 ? (
+                    <Card className="p-4 border-slate-600 text-sm text-slate-300">
+                      No tables available for this connection.
+                    </Card>
+                  ) : (
+                    Object.entries(schemaGroups).map(([schema, schemaTables]) => (
+                      <div key={schema}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Checkbox
+                            checked={schemaTables.every((t) => t.selected)}
+                            onCheckedChange={() => toggleSchema(schema)}
+                          />
+                          <h4 className="font-medium text-sm">{schema}</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {schemaTables.length}
+                          </Badge>
+                        </div>
+
+                        <div className="ml-6 space-y-1">
+                          {schemaTables.map((table, idx) => {
+                            const globalIndex = tables.findIndex(
+                              (t) =>
+                                t.database === table.database &&
+                                t.schema === table.schema &&
+                                t.table === table.table
+                            );
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between p-2 rounded hover:bg-slate-950 cursor-pointer"
+                                onClick={() => toggleTable(globalIndex)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    checked={table.selected}
+                                    onCheckedChange={() => toggleTable(globalIndex)}
+                                  />
+                                  <Table className="size-4 text-slate-300" />
+                                  <span className="text-sm font-mono">{table.table}</span>
+                                </div>
+                                {table.rowCount && (
+                                  <span className="text-xs text-slate-400">
+                                    {table.rowCount.toLocaleString()} rows
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            )}
           </div>
         );
 
@@ -314,21 +527,21 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-2">Grouping Strategy</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Choose how to group tables into dbt source definitions
+              <p className="text-sm text-slate-300 mb-4">
+                Choose how discovered tables should be grouped into registered data objects
               </p>
             </div>
 
             <RadioGroup value={groupingStrategy} onValueChange={(v: any) => setGroupingStrategy(v)}>
-              <Card className="p-4 border-gray-700">
+              <Card className="p-4 border-slate-600">
                 <div className="flex items-start gap-3">
                   <RadioGroupItem value="schema" id="schema" />
                   <div className="flex-1">
                     <Label htmlFor="schema" className="font-medium cursor-pointer">
                       Group by Schema (Recommended)
                     </Label>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Creates one source per schema. Example: RAW.ERP.ORDERS → source(erp)
+                    <p className="text-xs text-slate-300 mt-1">
+                      Creates one source per schema. Example: RAW.ERP.ORDERS -&gt; source(erp)
                     </p>
                     <div className="mt-2 text-xs">
                       <Badge variant="outline" className="text-green-400 border-green-400">
@@ -339,28 +552,28 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
                 </div>
               </Card>
 
-              <Card className="p-4 border-gray-700">
+              <Card className="p-4 border-slate-600">
                 <div className="flex items-start gap-3">
                   <RadioGroupItem value="database" id="database" />
                   <div className="flex-1">
                     <Label htmlFor="database" className="font-medium cursor-pointer">
                       Group by Database
                     </Label>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-slate-300 mt-1">
                       Creates one source per database. Best for small projects.
                     </p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-4 border-gray-700">
+              <Card className="p-4 border-slate-600">
                 <div className="flex items-start gap-3">
                   <RadioGroupItem value="custom" id="custom" />
                   <div className="flex-1">
                     <Label htmlFor="custom" className="font-medium cursor-pointer">
                       Custom Grouping
                     </Label>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-slate-300 mt-1">
                       Manually organize sources (advanced)
                     </p>
                   </div>
@@ -375,16 +588,16 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-2">Metadata Options</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Configure what metadata to include in source definitions
+              <p className="text-sm text-slate-300 mb-4">
+                Configure what metadata to include when registering data objects
               </p>
             </div>
 
-            <Card className="p-4 border-gray-700">
+            <Card className="p-4 border-slate-600">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="font-medium text-sm mb-1">Include Column Metadata</h4>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-slate-300">
                     Add column names and data types to YAML (stored under meta.warehouse_data_type)
                   </p>
                   <Badge variant="secondary" className="text-xs mt-2">
@@ -398,11 +611,11 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
               </div>
             </Card>
 
-            <Card className="p-4 border-gray-700">
+            <Card className="p-4 border-slate-600">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="font-medium text-sm mb-1">Add Generic Tests</h4>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-slate-300">
                     Automatically add not_null and unique tests for detected primary keys
                   </p>
                   <Badge variant="secondary" className="text-xs mt-2">
@@ -413,11 +626,11 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
               </div>
             </Card>
 
-            <Card className="p-4 border-gray-700">
+            <Card className="p-4 border-slate-600">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="font-medium text-sm mb-1">Add Freshness Checks</h4>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-slate-300">
                     Add default freshness thresholds (warn_after: 24h, error_after: 48h)
                   </p>
                   <Badge variant="secondary" className="text-xs mt-2">
@@ -449,45 +662,45 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-2">Review & Confirm</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Review your import configuration before proceeding
+              <p className="text-sm text-slate-300 mb-4">
+                Review your DataObject Registry configuration before proceeding
               </p>
             </div>
 
-            <Card className="p-4 border-gray-700">
+            <Card className="p-4 border-slate-600">
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Connection:</span>
+                  <span className="text-slate-300">Connection:</span>
                   <span className="font-medium">{connection?.name}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Tables Selected:</span>
+                  <span className="text-slate-300">Tables Selected:</span>
                   <span className="font-medium">{selectedCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Sources to Create:</span>
+                  <span className="text-slate-300">Data object groups:</span>
                   <span className="font-medium">{previewSchemaGroups.size}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Grouping Strategy:</span>
+                  <span className="text-slate-300">Grouping Strategy:</span>
                   <Badge variant="outline">{groupingStrategy}</Badge>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Include Columns:</span>
+                  <span className="text-slate-300">Include Columns:</span>
                   <Badge variant={includeColumns ? 'default' : 'secondary'}>
                     {includeColumns ? 'Yes' : 'No'}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Add Tests:</span>
+                  <span className="text-slate-300">Add Tests:</span>
                   <Badge variant={addTests ? 'default' : 'secondary'}>
                     {addTests ? 'Yes' : 'No'}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Add Freshness:</span>
+                  <span className="text-slate-300">Add Freshness:</span>
                   <Badge variant={addFreshness ? 'default' : 'secondary'}>
                     {addFreshness ? 'Yes' : 'No'}
                   </Badge>
@@ -495,21 +708,23 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
               </div>
             </Card>
 
-            <Card className="p-4 border-gray-700">
-              <h4 className="font-medium text-sm mb-3">Sources Preview</h4>
+            <Card className="p-4 border-slate-600">
+              <h4 className="font-medium text-sm mb-3">Registry preview</h4>
               <ScrollArea className="h-48">
                 <div className="space-y-2">
                   {Array.from(previewSchemaGroups.entries()).map(([key, groupTables]) => (
-                    <div key={key} className="border border-gray-700 rounded p-3">
+                    <div key={key} className="border border-slate-600 rounded p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <code className="text-sm text-blue-400">source: {key.toLowerCase()}</code>
+                        <code className="text-sm text-blue-400">
+                          data-object-group: {key.toLowerCase()}
+                        </code>
                         <Badge variant="secondary" className="text-xs">
                           {groupTables.length} tables
                         </Badge>
                       </div>
-                      <div className="text-xs text-gray-500 space-y-1">
+                      <div className="text-xs text-slate-400 space-y-1">
                         {groupTables.slice(0, 3).map((t, i) => (
-                          <div key={i}>→ {t.table}</div>
+                          <div key={i}>-&gt; {t.table}</div>
                         ))}
                         {groupTables.length > 3 && <div>... and {groupTables.length - 3} more</div>}
                       </div>
@@ -533,42 +748,42 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-2">Import Complete!</h3>
-              <p className="text-sm text-gray-400">
-                Your sources have been successfully imported and are ready to use
+              <h3 className="text-lg font-medium mb-2">Registry update complete</h3>
+              <p className="text-sm text-slate-300">
+                Your selected tables have been registered into the workspace graph
               </p>
             </div>
 
-            <Card className="p-4 border-gray-700 text-left">
+            <Card className="p-4 border-slate-600 text-left">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Sources Created:</span>
+                  <span className="text-slate-300">Groups created:</span>
                   <span className="font-medium text-green-400">{importResult.sourcesCreated}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Tables Imported:</span>
+                  <span className="text-slate-300">Tables registered:</span>
                   <span className="font-medium text-green-400">{importResult.tablesImported}</span>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-4 border-gray-700 text-left">
-              <h4 className="font-medium text-sm mb-2">YAML Files Created</h4>
+            <Card className="p-4 border-slate-600 text-left">
+              <h4 className="font-medium text-sm mb-2">Registry files created</h4>
               <ScrollArea className="h-24">
                 <div className="space-y-1 text-xs font-mono">
                   {importResult.yamlFiles.map((file: string, i: number) => (
-                    <div key={i} className="text-gray-400">
-                      📄 {file}
+                    <div key={i} className="text-slate-300">
+                      [file] {file}
                     </div>
                   ))}
                 </div>
               </ScrollArea>
             </Card>
 
-            <div className="text-xs text-gray-500 bg-blue-900/20 border border-blue-800 rounded p-3">
+            <div className="text-xs text-slate-400 bg-blue-900/20 border border-blue-800 rounded p-3">
               <AlertCircle className="size-4 inline-block mr-2" />
-              Run <code className="bg-[#0f1116] px-1 py-0.5 rounded">dbt parse</code> to refresh the
-              manifest
+              The workspace graph has been refreshed locally. Persisted backend registry writes
+              require a dedicated API endpoint in `api` mode.
             </div>
           </div>
         );
@@ -576,18 +791,6 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
       default:
         return null;
     }
-  };
-
-  const getStepTitle = () => {
-    const titles = {
-      connection: 'Connection',
-      selection: 'Table Selection',
-      grouping: 'Grouping',
-      options: 'Options',
-      review: 'Review',
-      result: 'Complete',
-    };
-    return titles[currentStep];
   };
 
   const canProceed = () => {
@@ -600,44 +803,40 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Import Sources from Warehouse</DialogTitle>
+          <DialogTitle>DataObject Registry</DialogTitle>
           <DialogDescription>
-            Import tables from your warehouse as dbt sources with schema-based grouping
+            Choose a source type, discover candidate data objects, and register them into the
+            current workspace graph
           </DialogDescription>
         </DialogHeader>
 
         {/* Progress Steps */}
         {currentStep !== 'result' && (
           <div className="flex items-center justify-between mb-4">
-            {['connection', 'selection', 'grouping', 'options', 'review'].map((step, idx) => (
-              <div key={step} className="flex items-center flex-1">
-                <div
-                  className={`flex items-center justify-center size-8 rounded-full text-xs font-medium ${
-                    currentStep === step
-                      ? 'bg-blue-500 text-white'
-                      : ['connection', 'selection', 'grouping', 'options', 'review'].indexOf(
-                            currentStep
-                          ) >
-                          ['connection', 'selection', 'grouping', 'options', 'review'].indexOf(step)
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-700 text-gray-400'
-                  }`}
-                >
-                  {idx + 1}
-                </div>
-                {idx < 4 && (
+            {['sourceType', 'connection', 'selection', 'grouping', 'options', 'review'].map(
+              (step, idx, allSteps) => (
+                <div key={step} className="flex items-center flex-1">
                   <div
-                    className={`flex-1 h-0.5 ${
-                      ['connection', 'selection', 'grouping', 'options', 'review'].indexOf(
-                        currentStep
-                      ) > idx
-                        ? 'bg-green-500'
-                        : 'bg-gray-700'
+                    className={`flex items-center justify-center size-8 rounded-full text-xs font-medium ${
+                      currentStep === step
+                        ? 'bg-blue-500 text-white'
+                        : allSteps.indexOf(currentStep) > allSteps.indexOf(step)
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-700 text-slate-300'
                     }`}
-                  />
-                )}
-              </div>
-            ))}
+                  >
+                    {idx + 1}
+                  </div>
+                  {idx < allSteps.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 ${
+                        allSteps.indexOf(currentStep) > idx ? 'bg-green-500' : 'bg-gray-700'
+                      }`}
+                    />
+                  )}
+                </div>
+              )
+            )}
           </div>
         )}
 
@@ -655,7 +854,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 'connection'}
+                disabled={currentStep === 'sourceType'}
               >
                 <ArrowLeft className="size-4 mr-2" />
                 Back
@@ -669,12 +868,12 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
                   {isProcessing ? (
                     <>
                       <Loader2 className="size-4 mr-2 animate-spin" />
-                      Importing...
+                      Registering...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="size-4 mr-2" />
-                      Import Sources
+                      Register data objects
                     </>
                   )}
                 </Button>

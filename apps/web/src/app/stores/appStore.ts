@@ -1,13 +1,32 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { DbtNode, Run, ExecutionPlan } from '../types/dbt';
+import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import { useSessionStore } from './sessionStore';
 
 interface ConnectionStatus {
   rest: 'ok' | 'degraded' | 'offline';
   liveEvents: 'connected' | 'polling' | 'disconnected';
 }
 
+type CanvasPosition = {
+  x: number;
+  y: number;
+};
+
+type CanvasViewportState = CanvasPosition & {
+  zoom: number;
+};
+
+type WorkspaceCanvasLayout = {
+  viewport: CanvasViewportState | null;
+  nodePositions: Record<string, CanvasPosition>;
+};
+
 interface AppState {
+  _hasHydrated: boolean;
+
   // Global selectors
   selectedTenant: string;
   selectedProject: string;
@@ -28,9 +47,9 @@ interface AppState {
 
   // Canvas State
   selectedNodes: string[];
-  highlightedNodes: string[];
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
+  canvasLayouts: Record<string, WorkspaceCanvasLayout>;
 
   // Active tabs
   activeTabs: Array<{
@@ -74,9 +93,10 @@ interface AppState {
   toggleConsolePanel: () => void;
   setGridSize: (size: number) => void;
   setSelectedNodes: (nodes: string[]) => void;
-  setHighlightedNodes: (nodes: string[]) => void;
   toggleImpactOverlay: () => void;
   toggleColumnLevelLineage: () => void;
+  setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
+  setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
   addTab: (tab: { id: string; type: TabType; label: string; data?: any }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
@@ -88,96 +108,154 @@ interface AppState {
 
 type TabType = 'canvas' | 'run' | 'diff' | 'lineage';
 
-export const useAppStore = create<AppState>((set) => ({
-  // Initial state
-  selectedTenant: 'acme-corp',
-  selectedProject: 'dbt-analytics',
-  selectedEnvironment: 'dev',
-  gitBranch: 'main',
-  gitSha: 'a3f2b91',
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
+const sessionContext = useSessionStore.getState();
 
-  leftNavCollapsed: false,
-  explorerPanelWidth: 280,
-  explorerPanelVisible: true,
-  inspectorPanelWidth: 380,
-  inspectorPanelVisible: true,
-  consolePanelHeight: 200,
-  consolePanelVisible: false,
-  focusMode: false,
-  gridSize: 20,
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      _hasHydrated: false,
 
-  selectedNodes: [],
-  highlightedNodes: [],
-  impactOverlayEnabled: false,
-  columnLevelLineageEnabled: false,
+      // Initial state
+      selectedTenant: sessionContext.tenantId,
+      selectedProject: sessionContext.projectId,
+      selectedEnvironment: sessionContext.environmentId,
+      gitBranch: workspaceBootstrap.gitBranch,
+      gitSha: workspaceBootstrap.gitSha,
 
-  activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
-  activeTabId: 'main-canvas',
+      leftNavCollapsed: false,
+      explorerPanelWidth: 280,
+      explorerPanelVisible: false,
+      inspectorPanelWidth: 380,
+      inspectorPanelVisible: false,
+      consolePanelHeight: 0,
+      consolePanelVisible: false,
+      focusMode: false,
+      gridSize: 20,
 
-  connectionStatus: {
-    rest: 'ok',
-    liveEvents: 'connected',
-  },
+      selectedNodes: [],
+      impactOverlayEnabled: false,
+      columnLevelLineageEnabled: false,
+      canvasLayouts: {},
 
-  currentPlan: null,
-  currentRun: null,
-  inspectorNodeId: null,
+      activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
+      activeTabId: 'main-canvas',
 
-  userPermissions: {
-    canPlan: true,
-    canRun: true,
-    canEditEdges: true,
-    canManagePlugins: true,
-    canManageRBAC: true,
-  },
+      connectionStatus: {
+        rest: 'ok',
+        liveEvents: 'connected',
+      },
 
-  // Actions
-  setSelectedTenant: (tenant) => set({ selectedTenant: tenant }),
-  setSelectedProject: (project) => set({ selectedProject: project }),
-  setSelectedEnvironment: (env) => set({ selectedEnvironment: env }),
-  toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
-  setExplorerPanelWidth: (width) => set({ explorerPanelWidth: width }),
-  setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
-  setConsolePanelHeight: (height) => set({ consolePanelHeight: height }),
-  toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
-  toggleExplorerPanel: () =>
-    set((state) => ({ explorerPanelVisible: !state.explorerPanelVisible })),
-  toggleInspectorPanel: () =>
-    set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible })),
-  toggleConsolePanel: () =>
-    set((state) => ({
-      consolePanelVisible: !state.consolePanelVisible,
-      consolePanelHeight: !state.consolePanelVisible ? 200 : 0,
-    })),
-  setGridSize: (size: number) => set({ gridSize: size }),
-  setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
-  setHighlightedNodes: (nodes) => set({ highlightedNodes: nodes }),
-  toggleImpactOverlay: () =>
-    set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled })),
-  toggleColumnLevelLineage: () =>
-    set((state) => ({ columnLevelLineageEnabled: !state.columnLevelLineageEnabled })),
+      currentPlan: null,
+      currentRun: null,
+      inspectorNodeId: null,
 
-  addTab: (tab) =>
-    set((state) => ({
-      activeTabs: [...state.activeTabs, tab],
-      activeTabId: tab.id,
-    })),
+      userPermissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
+        canManagePlugins: true,
+        canManageRBAC: true,
+      },
 
-  closeTab: (tabId) =>
-    set((state) => {
-      const newTabs = state.activeTabs.filter((t) => t.id !== tabId);
-      const nextActiveTab = newTabs.at(-1);
-      const newActiveId =
-        state.activeTabId === tabId && nextActiveTab ? nextActiveTab.id : state.activeTabId;
-      return { activeTabs: newTabs, activeTabId: newActiveId };
+      // Actions
+      setSelectedTenant: (tenant) => {
+        useSessionStore.getState().setTenantId(tenant);
+        set({ selectedTenant: tenant });
+      },
+      setSelectedProject: (project) => {
+        useSessionStore.getState().setProjectId(project);
+        set({ selectedProject: project });
+      },
+      setSelectedEnvironment: (env) => {
+        useSessionStore.getState().setEnvironmentId(env);
+        set({ selectedEnvironment: env });
+      },
+      toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
+      setExplorerPanelWidth: (width) => set({ explorerPanelWidth: width }),
+      setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
+      setConsolePanelHeight: (height) => set({ consolePanelHeight: height }),
+      toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
+      toggleExplorerPanel: () =>
+        set((state) => ({ explorerPanelVisible: !state.explorerPanelVisible })),
+      toggleInspectorPanel: () =>
+        set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible })),
+      toggleConsolePanel: () =>
+        set((state) => ({
+          consolePanelVisible: !state.consolePanelVisible,
+          consolePanelHeight: !state.consolePanelVisible ? 160 : 0,
+        })),
+      setGridSize: (size: number) => set({ gridSize: size }),
+      setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
+      toggleImpactOverlay: () =>
+        set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled })),
+      toggleColumnLevelLineage: () =>
+        set((state) => ({ columnLevelLineageEnabled: !state.columnLevelLineageEnabled })),
+      setCanvasViewport: (workspaceKey, viewport) =>
+        set((state) => ({
+          canvasLayouts: {
+            ...state.canvasLayouts,
+            [workspaceKey]: {
+              viewport,
+              nodePositions: state.canvasLayouts[workspaceKey]?.nodePositions ?? {},
+            },
+          },
+        })),
+      setCanvasNodePositions: (workspaceKey, positions) =>
+        set((state) => ({
+          canvasLayouts: {
+            ...state.canvasLayouts,
+            [workspaceKey]: {
+              viewport: state.canvasLayouts[workspaceKey]?.viewport ?? null,
+              nodePositions: positions,
+            },
+          },
+        })),
+
+      addTab: (tab) =>
+        set((state) => ({
+          activeTabs: [...state.activeTabs, tab],
+          activeTabId: tab.id,
+        })),
+
+      closeTab: (tabId) =>
+        set((state) => {
+          const newTabs = state.activeTabs.filter((t) => t.id !== tabId);
+          const nextActiveTab = newTabs.at(-1);
+          const newActiveId =
+            state.activeTabId === tabId && nextActiveTab ? nextActiveTab.id : state.activeTabId;
+          return { activeTabs: newTabs, activeTabId: newActiveId };
+        }),
+
+      setActiveTab: (tabId) => set({ activeTabId: tabId }),
+      setConnectionStatus: (status) =>
+        set((state) => ({
+          connectionStatus: { ...state.connectionStatus, ...status },
+        })),
+      setCurrentPlan: (plan) => set({ currentPlan: plan }),
+      setCurrentRun: (run) => set({ currentRun: run }),
+      setInspectorNode: (nodeId) => set({ inspectorNodeId: nodeId }),
     }),
-
-  setActiveTab: (tabId) => set({ activeTabId: tabId }),
-  setConnectionStatus: (status) =>
-    set((state) => ({
-      connectionStatus: { ...state.connectionStatus, ...status },
-    })),
-  setCurrentPlan: (plan) => set({ currentPlan: plan }),
-  setCurrentRun: (run) => set({ currentRun: run }),
-  setInspectorNode: (nodeId) => set({ inspectorNodeId: nodeId }),
-}));
+    {
+      name: 'dvt-web-shell-layout',
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => () => {
+        useAppStore.setState({ _hasHydrated: true });
+      },
+      partialize: (state) => ({
+        leftNavCollapsed: state.leftNavCollapsed,
+        explorerPanelWidth: state.explorerPanelWidth,
+        explorerPanelVisible: state.explorerPanelVisible,
+        inspectorPanelWidth: state.inspectorPanelWidth,
+        inspectorPanelVisible: state.inspectorPanelVisible,
+        consolePanelHeight: state.consolePanelHeight,
+        consolePanelVisible: state.consolePanelVisible,
+        focusMode: state.focusMode,
+        gridSize: state.gridSize,
+        impactOverlayEnabled: state.impactOverlayEnabled,
+        columnLevelLineageEnabled: state.columnLevelLineageEnabled,
+        canvasLayouts: state.canvasLayouts,
+      }),
+    }
+  )
+);

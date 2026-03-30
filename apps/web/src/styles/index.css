@@ -31,7 +31,7 @@
 }
 
 .react-flow__minimap {
-  background: #0f1116;
+  overflow: hidden;
 }
 
 .react-flow__attribution {
