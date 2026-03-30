@@ -67,7 +67,7 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries).toHaveLength(0);
   });
 
-  it('uses tenant-scoped lateral max-run-seq lookup and caps batch size', async () => {
+  it('uses run_event_heads with run_events fallback and caps batch size', async () => {
     const client = new RecordingClient();
     client.enqueueRows([{ run_id: TEST_RUN_ID, tenant_id: TEST_TENANT_ID }]);
     const query = new PostgresSnapshotStalenessQuery(
@@ -79,10 +79,11 @@ describe('PostgresSnapshotStalenessQuery', () => {
 
     expect(rows).toEqual([{ runId: TEST_RUN_ID, tenantId: TEST_TENANT_ID }]);
     expect(client.queries).toHaveLength(1);
-    expect(client.queries[0]?.sql).toContain('LEFT JOIN LATERAL (');
-    expect(client.queries[0]?.sql).toContain('WHERE e.run_id = m.run_id');
-    expect(client.queries[0]?.sql).toContain('AND e.tenant_id = m.tenant_id');
-    expect(client.queries[0]?.sql).toContain('ORDER BY e.run_seq DESC');
+    expect(client.queries[0]?.sql).toContain('LEFT JOIN "dvt".run_event_heads h');
+    expect(client.queries[0]?.sql).toContain('ON h.run_id = m.run_id');
+    expect(client.queries[0]?.sql).toContain('AND h.tenant_id = m.tenant_id');
+    expect(client.queries[0]?.sql).toContain('FROM "dvt".run_events e');
+    expect(client.queries[0]?.sql).toContain('AND e.run_seq > s.last_run_seq');
     expect(client.queries[0]?.params).toEqual([MAX_STALE_BATCH_SIZE]);
   });
 });
