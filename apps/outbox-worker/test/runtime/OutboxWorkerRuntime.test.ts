@@ -80,7 +80,7 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     return (await this.inner.hasPendingRetries?.(selection)) ?? false;
   }
 
-  async listDeadLetter(limit: number, tenantId: string) {
+  async listDeadLetter(limit: number, tenantId: string): Promise<OutboxRecord[]> {
     return this.inner.listDeadLetter(limit, tenantId);
   }
 
@@ -89,7 +89,7 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     limit?: number;
     runId?: string;
     ids?: string[];
-  }) {
+  }): Promise<number> {
     return this.inner.replayDeadLetters(options);
   }
 }

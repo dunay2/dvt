@@ -1,21 +1,21 @@
 import { PostgresDeliveryBufferPurgeStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
 import { DeliveryBufferPurger } from '@dvt/state-store';
+import type { Pool } from 'pg';
 
 import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';
 import { acquirePgPool } from '../db/pool.js';
 import type { ActiveEnv } from '../plugins/env.js';
 
-import { DeliveryBufferPurgeRuntime } from './DeliveryBufferPurgeRuntime.js';
-import { RunEventRetentionRuntime } from './RunEventRetentionRuntime.js';
 import { buildRunEventRetentionRuntime } from './buildRunEventRetentionRuntime.js';
+import { DeliveryBufferPurgeRuntime } from './DeliveryBufferPurgeRuntime.js';
 import {
   OutboxWorkerRuntime,
   type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
-import type { Pool } from 'pg';
+import { RunEventRetentionRuntime } from './RunEventRetentionRuntime.js';
 
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;
