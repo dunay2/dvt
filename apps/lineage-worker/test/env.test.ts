@@ -51,6 +51,15 @@ describe('loadEnv', () => {
     ).toThrow(/DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE/i);
   });
 
+  it('parses explicit false string as false for DLQ auto replay flag', () => {
+    const env = loadEnv({
+      ...baseEnv(),
+      DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED: 'false',
+    });
+
+    expect(env.DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED).toBe(false);
+  });
+
   it('accepts a trimmed DLQ alert tenant id', () => {
     const env = loadEnv({
       ...baseEnv(),
