@@ -20,7 +20,7 @@ const EnvSchema = z.object({
   DVT_LINEAGE_BATCH_SIZE: z.coerce.number().int().positive().default(50),
   DVT_LINEAGE_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
   DVT_LINEAGE_ERROR_BACKOFF_MS: z.coerce.number().int().positive().default(10000),
-  DVT_LINEAGE_DLQ_ALERT_TENANT_ID: z.string().min(1).optional(),
+  DVT_LINEAGE_DLQ_ALERT_TENANT_ID: z.string().trim().min(1).optional(),
   DVT_LINEAGE_DLQ_ALERT_THRESHOLD: z.coerce.number().int().min(0).default(0),
   DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED: z.coerce.boolean().default(false),
   DVT_LINEAGE_DLQ_AUTO_REPLAY_BATCH_SIZE: z.coerce.number().int().positive().default(25),

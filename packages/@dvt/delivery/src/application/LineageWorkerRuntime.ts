@@ -79,6 +79,11 @@ export class LineageWorkerRuntime {
     if (this.autoReplayEnabled && this.deadLetterTenantId === null) {
       throw new Error('INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required');
     }
+    if (this.deadLetterAlertThreshold > 0 && this.deadLetterTenantId === null) {
+      throw new Error(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required for dead-letter alerts'
+      );
+    }
     if (this.deadLetterTenantId !== null && this.store.countDeadLetter === undefined) {
       throw new Error(
         'INVALID_LINEAGE_RUNTIME_CONFIG: store.countDeadLetter is required for dead-letter scope'

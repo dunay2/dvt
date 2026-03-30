@@ -382,6 +382,17 @@ describe('LineageWorkerRuntime', () => {
       );
     });
 
+    it('rejects dead-letter alert threshold when tenant scope is missing', () => {
+      expect(
+        () =>
+          new LineageWorkerRuntime(makeStore([]), makeSink(), makeMapper(), makeSilentLogger(), {
+            deadLetterAlertThreshold: 1,
+          })
+      ).toThrow(
+        'INVALID_LINEAGE_RUNTIME_CONFIG: deadLetterTenantId is required for dead-letter alerts'
+      );
+    });
+
     it('rejects auto-replay when store cannot replay dead letters', () => {
       const storeWithoutReplay = {
         ...makeStore([]),
