@@ -22,6 +22,7 @@
     "ci:code": "pnpm type-check && pnpm test && pnpm lint:determinism",
     "ci:full": "pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine",
     "verify:prepush": "pnpm type-check && pnpm docs:gov:locations -- --changed-only && pnpm docs:arc:evidence:check -- --changed-only && node scripts/check-changed.cjs",
+    "pr:validate-title": "node scripts/validate-pr-title.cjs",
     "build": "pnpm -r build",
     "build:clean": "rimraf dist && pnpm -r build",
     "test": "pnpm -r test",
