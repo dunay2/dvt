@@ -28,14 +28,44 @@ function listEvidenceDocs(dir) {
     .map((d) => path.join(dir, d.name));
 }
 
+function gitExec(cmd) {
+  return cp
+    .execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+    .trim();
+}
+
+function hasRef(ref) {
+  try {
+    cp.execSync(`git rev-parse --verify ${ref}`, {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function hasUpstream() {
+  try {
+    cp.execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function listChangedFiles() {
   try {
-    const out = cp
-      .execSync('git diff --name-only --diff-filter=ACMR origin/main...HEAD', {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      })
-      .trim();
+    // Use merge-base (3-dot) diff so unrelated upstream commits are excluded.
+    // Fallback order mirrors the pre-push hook: upstream → origin/main → last commit.
+    const base = hasUpstream()
+      ? '@{u}'
+      : hasRef('origin/main')
+        ? 'origin/main'
+        : 'HEAD~1';
+    const out = gitExec(`git diff --name-only --diff-filter=ACMR ${base}...HEAD`);
     return out ? out.split(/\r?\n/) : [];
   } catch {
     return [];
