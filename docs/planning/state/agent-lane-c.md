@@ -50,7 +50,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [x] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
 - [x] `P1` `snapshot staleness in API`: expose freshness to callers.
 - [x] `P2` `read-your-writes contract`: set a measurable staleness SLO.
-- [ ] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
+- [x] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
 - [ ] `P3` `RC-C1`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
 - [ ] `P2` `RC-C2`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
 - [x] `P1` `RC-E1`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).

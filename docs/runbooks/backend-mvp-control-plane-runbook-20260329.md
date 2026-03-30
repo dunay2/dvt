@@ -12,6 +12,12 @@ last_reviewed: 2026-03-29
 Operate and diagnose the current backend MVP control-plane without assuming any
 non-implemented runtime behavior.
 
+Operator outcome for this runbook:
+
+- bring the API up in a safe baseline (`bootstrap`)
+- keep it healthy during routine operations (`daily operate`)
+- isolate failures quickly with explicit checks (`diagnose`)
+
 ## MVP Surface
 
 Protected runtime routes (enabled only when OIDC is configured):
@@ -42,6 +48,21 @@ Required action grants by endpoint:
 | `POST /runs/:runId/cancel`                                     | `run:cancel`    |
 | `POST /runs/:runId/signal` with `CANCEL` (compat mode enabled) | `run:cancel`    |
 
+## Auth Scope Handling (MVP)
+
+For protected runtime calls, enforce all of the following:
+
+- valid bearer token (`Authorization: Bearer <token>`)
+- tenant-scoped request context (`tenantId` in query/path where applicable)
+- action grant that matches the endpoint matrix above
+
+When denied, treat the response as expected policy behavior first, not as
+runtime instability:
+
+- `401`: authentication failure (token/jwks/issuer/audience mismatch)
+- `403`: authenticated but missing scope/action grant
+- `404` on protected routes: runtime route registration not active (OIDC posture not complete)
+
 ## Required Environment Posture
 
 To enable protected runtime routes:
@@ -70,6 +91,15 @@ Optional route exposure flags:
 5. Verify protected runtime path with valid token and tenant scope:
    - `POST /runs/start`
    - `GET /runs`
+
+## Bootstrap Failure Shortcuts
+
+- If startup fails with OIDC/runtime wiring errors: re-check the required env
+  posture section and restart.
+- If protected routes do not register: verify OIDC variables are all present
+  and non-empty.
+- If `/healthz` is not reachable: treat as process/container issue first
+  (service not listening / crash loop).
 
 ## Daily Operations
 
@@ -101,7 +131,24 @@ curl -i "http://localhost:3000/runs/<runId>/events?tenantId=<tenant-id>&limit=10
   -H "Accept: application/json"
 ```
 
+Daily minimum cadence:
+
+1. Confirm `/healthz` remains `200`.
+2. If enabled, confirm `/readyz` stays stable (no sustained `503`).
+3. Sample one protected read route (`GET /runs` or `GET /runs/:runId`) with a
+   valid token and tenant scope.
+4. If authorization failures increase, verify policy/token posture before
+   runtime rollback decisions.
+
 ## Diagnosis Guide
+
+Use this order to reduce false signals:
+
+1. Process up? (`/healthz`)
+2. Readiness posture correct? (`/readyz` enabled + response)
+3. Protected route registration active? (OIDC env complete)
+4. Auth/policy correct? (`401` vs `403`)
+5. Runtime dependency degraded? (readiness probe failures, reconciler state)
 
 ### Symptom: `/readyz` returns 404
 

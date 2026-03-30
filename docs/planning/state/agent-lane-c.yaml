@@ -108,10 +108,12 @@ tasks:
       telemetry and operator alert thresholds.
   - task_id: granular RBAC
     priority: P2
-    status: queued
+    status: done
     objective: split CANCEL and PAUSE privileges.
     dependency: none
-    target: Refine operation-level authorization split.
+    target:
+      CANCEL authorization is enforced through `run:cancel`, while PAUSE/RESUME remain under
+      `run:signal`, with explicit parser and integration-deny coverage for both paths.
   - task_id: RC-C1
     priority: P3
     status: queued
