@@ -402,7 +402,6 @@ describe('loadEnv', () => {
       DVT_OUTBOX_EVENT_BUS_MODE: 'http',
       DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     assertActiveEnv(env);
@@ -425,7 +424,6 @@ describe('loadEnv', () => {
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
       DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: '/tmp/archive',
     });
 
@@ -466,7 +464,6 @@ describe('loadEnv', () => {
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     loadEnv({
@@ -475,7 +472,6 @@ describe('loadEnv', () => {
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
