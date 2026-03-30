@@ -1,0 +1,21 @@
+id: R-20260330-STALENESS-PARALLEL-TELEMETRY-ON-ENGINE-FAILURE
+title: Staleness telemetry fires on engine failures after Promise.all parallelization
+status: Accepted
+date: 2026-03-30
+owners:
+  - apps/api
+severity: Low
+probability: Low
+context: >
+  GetRunStatusUseCase.execute now runs engine.getRunStatus and resolveSnapshotStaleness
+  concurrently. Previously, if the engine threw, resolveSnapshotStaleness was never reached.
+risk: >
+  When the engine query fails, staleness telemetry (UNKNOWN/query_not_wired) may now fire even
+  though the route will ultimately return an error. Operators observing the
+  staleness_fallback_unknown_total counter may see spikes correlated with engine failures rather
+  than staleness infrastructure issues.
+mitigations:
+  - Staleness telemetry is fire-and-forget and does not affect route correctness.
+  - The counter includes a reason label (query_not_wired / query_failed) that distinguishes
+    infrastructure degradation from wiring issues.
+  - Engine failures are independently observable via separate error metrics.

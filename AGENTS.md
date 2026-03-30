@@ -117,6 +117,41 @@ At minimum, this means:
 - `pnpm verify:prepush` before claiming the slice is ready, unless the user
   explicitly limits validation and that limit is reported
 
+## Prettier Pre-Commit Behaviour
+
+Prettier runs as part of `lint-staged` inside the **pre-commit** hook, not
+pre-push. lint-staged auto-formats staged files and re-stages them. If the
+formatter modifies a file after staging, the commit succeeds with the
+auto-fixed version — no manual re-stage is needed.
+
+**Do not run a separate `prettier --write` pass before committing.** The hook
+handles it. If a push fails citing Prettier, the cause is a file that was
+committed while bypassing the pre-commit hook; fix it with a follow-up commit
+that runs `pnpm format:changed` (if it exists) or stages and recommits the
+affected files.
+
+## ARC Requirements For Contracts And Adapter Changes
+
+`.arc-policy.yaml` mandates **ARC-2** (evidence doc + risk register update) for
+any PR that touches:
+
+- `packages/@dvt/contracts/**`
+- `packages/@dvt/adapter-*/**`
+- `packages/@dvt/engine/**`
+
+Before creating a PR that modifies any of these paths, the agent MUST:
+
+1. Run `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs` to
+   check whether `evidenceDoc` and `riskUpdate` are required.
+2. If required, create:
+   - `docs/evidence/ED-YYYYMMDD-<slug>.md` (see existing files for format)
+   - `docs/risk-register/quality/R-YYYYMMDD-<SLUG>.yaml` (see existing files)
+3. Run `pnpm docs:sync` and commit the updated index files.
+4. Commit the evidence and risk files before pushing.
+
+Skipping this causes `DOCS-VALIDATION-FAIL: Risk update required but no changes
+under docs/risk-register` in the `ARC docs / evidence validate` CI step.
+
 ## No Debt And No Stub Policy
 
 By default, every task is expected to close without creating new debt.
