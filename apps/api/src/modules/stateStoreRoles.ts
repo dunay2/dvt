@@ -5,16 +5,18 @@ import type {
   IRunStateStoreWrite,
 } from '@dvt/engine';
 
+type RunSnapshotStalenessReader = Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
+
 export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreWrite &
   IRunStateStoreMaintenance &
-  IRunSnapshotStalenessQuery;
+  RunSnapshotStalenessReader;
 
 export interface StateStoreRoleBindings {
   readonly read: IRunStateStoreRead;
   readonly write: IRunStateStoreWrite;
   readonly maintenance: IRunStateStoreMaintenance;
-  readonly staleness: IRunSnapshotStalenessQuery;
+  readonly staleness: RunSnapshotStalenessReader;
 }
 
 const REQUIRED_METHODS = [
@@ -25,7 +27,6 @@ const REQUIRED_METHODS = [
   'listRuns',
   'getSnapshot',
   'rebuildSnapshot',
-  'listStaleSnapshotRuns',
   'isSnapshotStale',
 ] as const;
 

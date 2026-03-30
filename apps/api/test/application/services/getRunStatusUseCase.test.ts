@@ -61,15 +61,14 @@ describe('GetRunStatusUseCase', () => {
       },
     };
 
-    const stalenessQuery = {
+    const stalenessReader = {
       isSnapshotStale: vi.fn().mockResolvedValue(false),
-      listStaleSnapshotRuns: vi.fn(),
     };
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
       createStateStore() as never,
-      stalenessQuery as never
+      stalenessReader as never
     );
 
     await expect(
@@ -81,7 +80,7 @@ describe('GetRunStatusUseCase', () => {
       enriched: false,
       snapshotStaleness: 'FRESH',
     });
-    expect(stalenessQuery.isSnapshotStale).toHaveBeenCalledWith('tenant-a', 'run-1');
+    expect(stalenessReader.isSnapshotStale).toHaveBeenCalledWith('tenant-a', 'run-1');
   });
 
   it('returns STALE staleness when staleness query reports stale snapshot', async () => {
@@ -102,7 +101,6 @@ describe('GetRunStatusUseCase', () => {
       createStateStore() as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(true),
-        listStaleSnapshotRuns: vi.fn(),
       } as never
     );
 
@@ -113,7 +111,7 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 
-  it('uses UNKNOWN staleness when query capability is not wired', async () => {
+  it('uses UNKNOWN staleness and emits telemetry when query capability is not wired', async () => {
     const engine = {
       async getRunStatus() {
         return {
@@ -126,35 +124,15 @@ describe('GetRunStatusUseCase', () => {
       },
     };
 
-    const useCase = new GetRunStatusUseCase(engine as never, createStateStore() as never);
-
-    await expect(
-      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
-    ).resolves.toMatchObject({
-      snapshotStaleness: 'UNKNOWN',
-    });
-  });
-
-  it('uses UNKNOWN staleness when staleness query fails', async () => {
-    const engine = {
-      async getRunStatus() {
-        return {
-          runId: 'provider-run-1',
-          status: 'RUNNING' as const,
-        };
-      },
-      async enrichRunStatus() {
-        throw new Error('should not be called');
-      },
+    const telemetry = {
+      recordSnapshotStalenessFallback: vi.fn(),
     };
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
       createStateStore() as never,
-      {
-        isSnapshotStale: vi.fn().mockRejectedValue(new Error('staleness query failed')),
-        listStaleSnapshotRuns: vi.fn(),
-      } as never
+      undefined,
+      telemetry as never
     );
 
     await expect(
@@ -162,6 +140,51 @@ describe('GetRunStatusUseCase', () => {
     ).resolves.toMatchObject({
       snapshotStaleness: 'UNKNOWN',
     });
+
+    expect(telemetry.recordSnapshotStalenessFallback).toHaveBeenCalledWith(
+      'query_not_wired',
+      'tenant-a',
+      'run-1'
+    );
+  });
+
+  it('uses UNKNOWN staleness and emits telemetry when staleness query fails', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const telemetry = {
+      recordSnapshotStalenessFallback: vi.fn(),
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockRejectedValue(new Error('staleness query failed')),
+      } as never,
+      telemetry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      snapshotStaleness: 'UNKNOWN',
+    });
+
+    expect(telemetry.recordSnapshotStalenessFallback).toHaveBeenCalledWith(
+      'query_failed',
+      'tenant-a',
+      'run-1'
+    );
   });
 
   it('uses the enriched path when requested', async () => {
@@ -183,7 +206,6 @@ describe('GetRunStatusUseCase', () => {
       createStateStore() as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
-        listStaleSnapshotRuns: vi.fn(),
       } as never
     );
 

@@ -17,6 +17,20 @@ export interface GetRunStatusQuery {
 
 export type RunSnapshotStaleness = 'FRESH' | 'STALE' | 'UNKNOWN';
 
+export interface IRunSnapshotStalenessReader {
+  isSnapshotStale(tenantId: string, runId: string): Promise<boolean>;
+}
+
+export type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
+
+export interface IRunStatusStalenessTelemetry {
+  recordSnapshotStalenessFallback(
+    reason: SnapshotStalenessFallbackReason,
+    tenantId: string,
+    runId: string
+  ): void;
+}
+
 export type GetRunStatusResult = Pick<
   RunStatusSnapshot,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'hash'

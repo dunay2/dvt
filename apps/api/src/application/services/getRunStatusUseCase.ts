@@ -1,4 +1,4 @@
-import type { IRunSnapshotStalenessQuery, IRunStateStoreRead } from '@dvt/engine';
+import type { IRunStateStoreRead } from '@dvt/engine';
 import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
 
 import type {
@@ -6,6 +6,8 @@ import type {
   GetRunStatusQuery,
   GetRunStatusResult,
   IGetRunStatusUseCase,
+  IRunSnapshotStalenessReader,
+  IRunStatusStalenessTelemetry,
   RunSnapshotStaleness,
 } from '../ports/runtime.js';
 
@@ -15,7 +17,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
     private readonly stateStore: IRunStateStoreRead,
-    private readonly stalenessQuery?: IRunSnapshotStalenessQuery
+    private readonly stalenessReader?: IRunSnapshotStalenessReader,
+    private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry
   ) {}
 
   public async execute(
@@ -58,13 +61,15 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     tenantId: string,
     runId: string
   ): Promise<RunSnapshotStaleness> {
-    if (!this.stalenessQuery) {
+    if (!this.stalenessReader) {
+      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_not_wired', tenantId, runId);
       return 'UNKNOWN';
     }
 
     try {
-      return (await this.stalenessQuery.isSnapshotStale(tenantId, runId)) ? 'STALE' : 'FRESH';
+      return (await this.stalenessReader.isSnapshotStale(tenantId, runId)) ? 'STALE' : 'FRESH';
     } catch {
+      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
       return 'UNKNOWN';
     }
   }
