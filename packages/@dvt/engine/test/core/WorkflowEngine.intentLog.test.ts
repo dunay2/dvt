@@ -22,17 +22,17 @@ import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
 import {
+  makeAdapters,
+  makeScriptedClock,
   makePlanRef,
   makeContext,
   makeTemporalAdapter,
   createEngine,
-} from './WorkflowEngine.helpers';
+} from './WorkflowEngine.helpers.js';
 
 describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   it('happy path: intent transitions PENDING → DISPATCHED → RESOLVED', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
+    const adapters = makeAdapters();
     const { engine, intentStore } = createEngine({ adapters });
 
     await engine.startRun(makePlanRef(), makeContext('il-happy-1'));
@@ -43,29 +43,15 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   });
 
   it('after successful startRun, intent is RESOLVED', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
+    const adapters = makeAdapters();
 
     // Use a spy on intentStore to capture the intentId
     const intentStore = new InMemoryStartRunIntentStore();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
 
-    const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
     });
 
     await engine.startRun(makePlanRef(), makeContext('il-resolved-1'));
@@ -288,28 +274,15 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   });
 
   it('intent uses the engine clock for createdAt', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
+    const adapters = makeAdapters();
 
     const intentStore = new InMemoryStartRunIntentStore();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
 
-    const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T12:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
+      clock: makeScriptedClock(['2026-03-01T12:00:00.000Z']),
     });
 
     await engine.startRun(makePlanRef(), makeContext('il-clock-1'));
@@ -319,28 +292,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   });
 
   it('intent provider matches context.targetAdapter', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
+    const adapters = makeAdapters();
 
     const intentStore = new InMemoryStartRunIntentStore();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
 
-    const store = new InMemoryTxStore();
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
+    const { engine } = createEngine({
       adapters,
+      intentStore,
     });
 
     await engine.startRun(makePlanRef(), makeContext('il-provider-1'));
