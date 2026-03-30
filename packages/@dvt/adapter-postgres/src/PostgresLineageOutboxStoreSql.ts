@@ -132,3 +132,73 @@ export function listLineageDeadLetterSql(schema: string): string {
     LIMIT $1
   `;
 }
+
+export function countLineageDeadLetterSql(schema: string): string {
+  return `
+    SELECT COUNT(*)::int AS dead_letter_count
+    FROM ${quoteIdentifier(schema)}.lineage_dead_letter
+    WHERE tenant_id = $1
+  `;
+}
+
+export function replayLineageDeadLetterSql(
+  schema: string,
+  whereClause: string,
+  replayedAtParam: string
+): string {
+  return `
+    WITH picked AS (
+      SELECT dl.id, dl.original_id, dl.tenant_id, dl.run_id, dl.event_type, dl.payload
+      FROM ${quoteIdentifier(schema)}.lineage_dead_letter dl
+      ${whereClause}
+      ORDER BY dl.dead_lettered_at ASC
+      LIMIT $2
+      FOR UPDATE SKIP LOCKED
+    ), upserted AS (
+      INSERT INTO ${quoteIdentifier(schema)}.lineage_outbox (
+        id,
+        tenant_id,
+        run_id,
+        event_type,
+        payload,
+        attempts,
+        last_error,
+        status,
+        created_at,
+        next_attempt_at,
+        claimed_at
+      )
+      SELECT
+        picked.original_id,
+        picked.tenant_id,
+        picked.run_id,
+        picked.event_type,
+        picked.payload,
+        0,
+        NULL,
+        'pending',
+        ${replayedAtParam}::timestamptz,
+        NULL,
+        NULL
+      FROM picked
+      ON CONFLICT (id) DO UPDATE
+      SET tenant_id = EXCLUDED.tenant_id,
+          run_id = EXCLUDED.run_id,
+          event_type = EXCLUDED.event_type,
+          payload = EXCLUDED.payload,
+          attempts = 0,
+          last_error = NULL,
+          status = 'pending',
+          created_at = EXCLUDED.created_at,
+          next_attempt_at = NULL,
+          claimed_at = NULL
+    ), deleted AS (
+      DELETE FROM ${quoteIdentifier(schema)}.lineage_dead_letter dl
+      USING picked
+      WHERE dl.id = picked.id
+      RETURNING dl.id
+    )
+    SELECT COUNT(*)::int AS moved_count
+    FROM deleted
+  `;
+}

@@ -17,6 +17,7 @@ import type {
 import type { PoolClient } from 'pg';
 
 import {
+  countLineageDeadLetterSql,
   countPendingLineageOutboxSql,
   deleteLineageOutboxByIdSql,
   deleteLineageOutboxByIdsSql,
@@ -24,6 +25,7 @@ import {
   insertLineageOutboxSql,
   listLineageDeadLetterSql,
   listPendingLineageOutboxForClaimSql,
+  replayLineageDeadLetterSql,
   updateLineageOutboxFailureSql,
 } from './PostgresLineageOutboxStoreSql.js';
 import type { EventEnvelope } from './types.js';
@@ -68,6 +70,14 @@ interface LineageDeadLetterRow {
 
 interface PendingLineageCountRow {
   pending_count: number;
+}
+
+interface LineageDeadLetterCountRow {
+  dead_letter_count: number;
+}
+
+interface ReplayLineageDeadLetterRow {
+  moved_count: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -204,6 +214,64 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
       lastError: row.last_error,
       deadLetteredAt: row.dead_lettered_at,
     }));
+  }
+
+  async countDeadLetter(tenantId: string): Promise<number> {
+    if (!tenantId) {
+      throw new Error('TENANT_SCOPE_REQUIRED');
+    }
+
+    const result = await this.withClient((client) =>
+      client.query<LineageDeadLetterCountRow>(countLineageDeadLetterSql(this.schema), [tenantId])
+    );
+    return Number(result.rows[0]?.dead_letter_count ?? 0);
+  }
+
+  async replayDeadLetters(options: {
+    tenantId: string;
+    limit: number;
+    runId?: string;
+    eventType?: string;
+  }): Promise<number> {
+    const tenantId = options.tenantId.trim();
+    if (!tenantId) {
+      throw new Error('TENANT_SCOPE_REQUIRED');
+    }
+    const boundedLimit = normalizeLineageQueryLimit(
+      options.limit,
+      'LINEAGE_DEAD_LETTER_REPLAY_LIMIT'
+    );
+    if (boundedLimit === 0) return 0;
+
+    const params: unknown[] = [tenantId, boundedLimit];
+    const where: string[] = ['WHERE dl.tenant_id = $1'];
+    if (options.runId !== undefined) {
+      const runId = options.runId.trim();
+      if (!runId) {
+        throw new Error('RUN_ID_SCOPE_REQUIRED');
+      }
+      params.push(runId);
+      where.push(`AND dl.run_id = $${params.length}`);
+    }
+    if (options.eventType !== undefined) {
+      const eventType = options.eventType.trim();
+      if (!eventType) {
+        throw new Error('EVENT_TYPE_SCOPE_REQUIRED');
+      }
+      params.push(eventType);
+      where.push(`AND dl.event_type = $${params.length}`);
+    }
+    const replayedAt = this.now();
+    params.push(replayedAt);
+    const replayedAtParam = `$${params.length}`;
+
+    const result = await this.withTransaction((client) =>
+      client.query<ReplayLineageDeadLetterRow>(
+        replayLineageDeadLetterSql(this.schema, where.join('\n      '), replayedAtParam),
+        params
+      )
+    );
+    return Number(result.rows[0]?.moved_count ?? 0);
   }
 }
 

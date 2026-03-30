@@ -22,9 +22,10 @@ async function main(): Promise<void> {
   let runtime: LineageWorkerRuntime | undefined;
   const adminServer = createServer((_req, res) => {
     const lag = runtime?.lagCount ?? 0;
+    const deadLetterLag = runtime?.deadLetterCount ?? 0;
     res.statusCode = 200;
     res.setHeader('content-type', 'application/json; charset=utf-8');
-    res.end(JSON.stringify({ ok: true, lag, service: env.SERVICE_NAME }));
+    res.end(JSON.stringify({ ok: true, lag, deadLetterLag, service: env.SERVICE_NAME }));
   });
 
   let adminServerStarted = false;
@@ -37,6 +38,10 @@ async function main(): Promise<void> {
       batchSize: env.DVT_LINEAGE_BATCH_SIZE,
       pollIntervalMs: env.DVT_LINEAGE_POLL_INTERVAL_MS,
       errorBackoffMs: env.DVT_LINEAGE_ERROR_BACKOFF_MS,
+      deadLetterTenantId: env.DVT_LINEAGE_DLQ_ALERT_TENANT_ID,
+      deadLetterAlertThreshold: env.DVT_LINEAGE_DLQ_ALERT_THRESHOLD,
+      autoReplayEnabled: env.DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED,
+      autoReplayBatchSize: env.DVT_LINEAGE_DLQ_AUTO_REPLAY_BATCH_SIZE,
     });
 
     await new Promise<void>((resolve, reject) => {
