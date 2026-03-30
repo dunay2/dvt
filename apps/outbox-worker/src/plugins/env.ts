@@ -203,8 +203,11 @@ function normalizeActiveEnv(env: ParsedActiveEnv): ActiveEnv {
 
 function validateRunEventRetentionConfiguration(env: ParsedActiveEnv): void {
   if (env.NODE_ENV === 'production' && env.DVT_RUN_EVENT_RETENTION_ENABLED) {
-    throw new Error(
-      'Invalid environment: DVT_RUN_EVENT_RETENTION_ENABLED: file:// archive storage is prohibited in production'
+    process.emitWarning(
+      'DVT_RUN_EVENT_RETENTION_ENABLED is active in production with filesystem archive storage. This mode risks data loss across node restarts/replacements.',
+      {
+        code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
+      }
     );
   }
 }

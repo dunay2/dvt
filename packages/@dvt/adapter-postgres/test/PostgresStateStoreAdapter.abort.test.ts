@@ -44,7 +44,7 @@ describe('PostgresStateStoreAdapter shutdown interruption', () => {
     const pendingList = adapter.listPending(1);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    await adapter.abortPendingOperations();
+    adapter.abortPendingOperations();
 
     await expect(pendingList).rejects.toThrow(/synthetic connection terminated/);
     expect(client.releaseCalls).toContain(true);
@@ -63,7 +63,7 @@ describe('PostgresStateStoreAdapter shutdown interruption', () => {
     const pendingSnapshot = adapter.getSnapshot('tenant-1', 'run-1' as never);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    await adapter.abortPendingOperations();
+    adapter.abortPendingOperations();
 
     const outcome = await Promise.race([
       pendingSnapshot.then(
@@ -89,7 +89,7 @@ describe('PostgresStateStoreAdapter shutdown interruption', () => {
       assumeSchemaReady: true,
     });
 
-    await adapter.abortPendingOperations();
+    adapter.abortPendingOperations();
 
     await expect(adapter.markFailed('outbox_1', 'synthetic failure')).rejects.toThrow(
       /PENDING_OPERATIONS_ABORTED/

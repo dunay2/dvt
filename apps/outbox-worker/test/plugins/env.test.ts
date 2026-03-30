@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { isActiveEnv, loadEnv, type ActiveEnv, type Env } from '../../src/plugins/env.js';
 
@@ -367,41 +367,71 @@ describe('loadEnv', () => {
     ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
   });
 
-  it('rejects run-event retention in production with filesystem archive storage', () => {
-    expect(() =>
-      loadEnv({
-        NODE_ENV: 'production',
-        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+  it('allows run-event retention in production with warning for filesystem archive storage', () => {
+    const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+    const env = loadEnv({
+      NODE_ENV: 'production',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(true);
+    expect(warningSpy).toHaveBeenCalledWith(
+      expect.stringContaining('DVT_RUN_EVENT_RETENTION_ENABLED is active in production'),
+      expect.objectContaining({
+        code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
       })
-    ).toThrow(/DVT_RUN_EVENT_RETENTION_ENABLED/);
+    );
+    warningSpy.mockRestore();
   });
 
-  it('rejects run-event retention in production for http event bus mode too', () => {
-    expect(() =>
-      loadEnv({
-        NODE_ENV: 'production',
-        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-        DVT_OUTBOX_EVENT_BUS_MODE: 'http',
-        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+  it('also warns in production when event bus mode is http', () => {
+    const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+    const env = loadEnv({
+      NODE_ENV: 'production',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(true);
+    expect(warningSpy).toHaveBeenCalledWith(
+      expect.stringContaining('DVT_RUN_EVENT_RETENTION_ENABLED is active in production'),
+      expect.objectContaining({
+        code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
       })
-    ).toThrow(/file:\/\/ archive storage is prohibited in production/);
+    );
+    warningSpy.mockRestore();
   });
 
-  it('rejects run-event retention in production even with custom archive directory', () => {
-    expect(() =>
-      loadEnv({
-        NODE_ENV: 'production',
-        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-        DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: '/tmp/archive',
+  it('keeps warning behavior in production even with custom archive directory', () => {
+    const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+    const env = loadEnv({
+      NODE_ENV: 'production',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+      DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: '/tmp/archive',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY).toBe('/tmp/archive');
+    expect(warningSpy).toHaveBeenCalledWith(
+      expect.stringContaining('DVT_RUN_EVENT_RETENTION_ENABLED is active in production'),
+      expect.objectContaining({
+        code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
       })
-    ).toThrow(/DVT_RUN_EVENT_RETENTION_ENABLED/);
+    );
+    warningSpy.mockRestore();
   });
 });
