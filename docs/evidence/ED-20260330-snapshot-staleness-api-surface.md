@@ -8,7 +8,7 @@ owners:
   - packages/@dvt/engine
   - packages/@dvt/adapter-postgres
 arc_level: ARC-2
-breaking: false
+breaking: true
 code_refs:
   - packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts
   - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
@@ -46,3 +46,12 @@ availability and gives operations visibility into degraded freshness telemetry.
 
 This keeps domain read behavior, infrastructure query behavior, and telemetry
 behavior independently changeable.
+
+## Breaking acceptance (pre-prod)
+
+The shared contract `IRunSnapshotStalenessQuery.v1` now requires
+`isSnapshotStale(tenantId, runId)`. This is an intentional breaking change
+accepted for active development stage before production cutover.
+
+Before production readiness freeze, this contract line must be reconciled with
+formal versioning policy (major-line evolution or explicit compatibility note).

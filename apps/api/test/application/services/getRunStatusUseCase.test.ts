@@ -189,6 +189,58 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 
+  it('swallows telemetry rejection on UNKNOWN fallback', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+    const stateStore = {
+      async getRunMetadataByRunId() {
+        return {
+          tenantId: 'tenant-a',
+          projectId: 'proj-1',
+          environmentId: 'env-1',
+          runId: 'run-1',
+          planId: 'plan-1',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          provider: 'mock' as const,
+          providerWorkflowId: 'wf-1',
+          providerRunId: 'provider-run-1',
+        };
+      },
+    };
+    const stalenessReader = {
+      async isSnapshotStale() {
+        return null;
+      },
+    };
+    const telemetry = {
+      reportUnknown: vi.fn().mockRejectedValue(new Error('sink unavailable')),
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      stalenessReader as never,
+      telemetry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      runId: 'provider-run-1',
+      snapshotStaleness: 'UNKNOWN',
+    });
+  });
+
   it('returns UNKNOWN and emits telemetry when staleness query fails', async () => {
     const engine = {
       async getRunStatus() {

@@ -81,6 +81,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       return;
     }
 
-    void this.stalenessTelemetry.reportUnknown(reason, { tenantId, runId });
+    void this.stalenessTelemetry
+      .reportUnknown(reason, { tenantId, runId })
+      .catch(() => undefined);
   }
 }
