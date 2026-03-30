@@ -5,6 +5,7 @@
 
 ### Bug Fixes
 
+* **adapters:** Require explicit prod opt-in for filesystem retention ([#692](https://github.com/dunay2/dvt/issues/692)) ([f42b25d](https://github.com/dunay2/dvt/commit/f42b25df633e1e3b466c82a5b726f9daceb385ff))
 * **api:** Align staleness telemetry wiring and null handling ([#690](https://github.com/dunay2/dvt/issues/690)) ([17f765c](https://github.com/dunay2/dvt/commit/17f765c490befbc00585d56ad5517aba42489bab))
 * **api:** Harden snapshot staleness and retention integration ([#688](https://github.com/dunay2/dvt/issues/688)) ([1fb5923](https://github.com/dunay2/dvt/commit/1fb5923a66cb00574c22590504bdb8e5a1287adc))
 
