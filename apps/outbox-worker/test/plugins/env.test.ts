@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { isActiveEnv, loadEnv, type ActiveEnv, type Env } from '../../src/plugins/env.js';
 
@@ -11,10 +11,6 @@ function assertActiveEnv(env: Env): asserts env is ActiveEnv {
 }
 
 describe('loadEnv', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('applies active worker defaults when ownership mode is explicit', () => {
     const env = loadEnv({
       NODE_ENV: 'test',
@@ -45,7 +41,6 @@ describe('loadEnv', () => {
     expect(env.DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS).toBe(90);
     expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT).toBe(64);
     expect(env.DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS).toBe(true);
-    expect(env.DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD).toBe(false);
     expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY).toBe('.dvt/archive');
     expect(env.DVT_OUTBOX_ADMIN_HOST).toBe('0.0.0.0');
     expect(env.DVT_OUTBOX_ADMIN_PORT).toBe(9464);
@@ -372,42 +367,31 @@ describe('loadEnv', () => {
     ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
   });
 
-  it('rejects production run-event retention without explicit filesystem opt-in', () => {
-    expect(() =>
-      loadEnv({
-        NODE_ENV: 'production',
-        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      })
-    ).toThrow(/DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD/);
-  });
-
-  it('allows production run-event retention with explicit filesystem opt-in and warning', () => {
+  it('allows run-event retention in production with warning for filesystem archive storage', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
     const env = loadEnv({
       NODE_ENV: 'production',
       DVT_OUTBOX_OWNERSHIP_MODE: 'active',
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     assertActiveEnv(env);
     expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(true);
-    expect(env.DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD).toBe(true);
     expect(warningSpy).toHaveBeenCalledWith(
       expect.stringContaining('DVT_RUN_EVENT_RETENTION_ENABLED is active in production'),
       expect.objectContaining({
         code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
       })
     );
+    warningSpy.mockRestore();
   });
 
-  it('allows production run-event retention with explicit opt-in in http mode too', () => {
+  it('also warns in production when event bus mode is http', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
     const env = loadEnv({
       NODE_ENV: 'production',
       DVT_OUTBOX_OWNERSHIP_MODE: 'active',
@@ -415,7 +399,6 @@ describe('loadEnv', () => {
       DVT_OUTBOX_EVENT_BUS_MODE: 'http',
       DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     assertActiveEnv(env);
@@ -426,17 +409,18 @@ describe('loadEnv', () => {
         code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
       })
     );
+    warningSpy.mockRestore();
   });
 
-  it('keeps explicit opt-in behavior in production with custom archive directory', () => {
+  it('keeps warning behavior in production even with custom archive directory', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
     const env = loadEnv({
       NODE_ENV: 'production',
       DVT_OUTBOX_OWNERSHIP_MODE: 'active',
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
       DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: '/tmp/archive',
     });
 
@@ -448,6 +432,7 @@ describe('loadEnv', () => {
         code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
       })
     );
+    warningSpy.mockRestore();
   });
 
   it('does not warn in production when run-event retention is disabled', () => {
@@ -464,9 +449,10 @@ describe('loadEnv', () => {
     assertActiveEnv(env);
     expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
     expect(warningSpy).not.toHaveBeenCalled();
+    warningSpy.mockRestore();
   });
 
-  it('emits exactly one warning per loadEnv call when production retention is enabled', () => {
+  it('emits one warning per loadEnv call when production retention is enabled', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
 
     loadEnv({
@@ -475,7 +461,6 @@ describe('loadEnv', () => {
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     loadEnv({
@@ -484,9 +469,9 @@ describe('loadEnv', () => {
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-      DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'true',
     });
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
+    warningSpy.mockRestore();
   });
 });

@@ -68,7 +68,7 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries).toHaveLength(0);
   });
 
-  it('uses tenant-scoped run_event_heads with run_events fallback and caps batch size', async () => {
+  it('uses run_event_heads first, fallback guard, and caps batch size', async () => {
     const client = new RecordingClient();
     client.enqueueRows([{ run_id: TEST_RUN_ID, tenant_id: TEST_TENANT_ID }]);
     const query = new PostgresSnapshotStalenessQuery(
@@ -81,15 +81,15 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(rows).toEqual([{ runId: TEST_RUN_ID, tenantId: TEST_TENANT_ID }]);
     expect(client.queries).toHaveLength(1);
     expect(client.queries[0]?.sql).toContain('LEFT JOIN "dvt".run_event_heads h');
-    expect(client.queries[0]?.sql).toContain('ON h.run_id = m.run_id');
-    expect(client.queries[0]?.sql).toContain('AND h.tenant_id = m.tenant_id');
-    expect(client.queries[0]?.sql).toContain('FROM "dvt".run_events e');
+    expect(client.queries[0]?.sql).toContain('h.run_id = m.run_id');
+    expect(client.queries[0]?.sql).toContain('h.tenant_id = m.tenant_id');
     expect(client.queries[0]?.sql).toContain('h.run_id IS NULL');
-    expect(client.queries[0]?.sql).toContain('AND e.run_seq > COALESCE(s.last_run_seq, 0)');
+    expect(client.queries[0]?.sql).toContain('AND EXISTS (');
+    expect(client.queries[0]?.sql).toContain('e.run_seq > COALESCE(s.last_run_seq, 0)');
     expect(client.queries[0]?.params).toEqual([MAX_STALE_BATCH_SIZE]);
   });
 
-  it('checks staleness for a specific run with tenant scope', async () => {
+  it('checks staleness for a single tenant-scoped run', async () => {
     const client = new RecordingClient();
     client.enqueueRows([{ [IS_SNAPSHOT_STALE_ALIAS]: true }]);
     const query = new PostgresSnapshotStalenessQuery(
@@ -97,14 +97,16 @@ describe('PostgresSnapshotStalenessQuery', () => {
       withRecordingClient(client) as never
     );
 
-    const stale = await query.isSnapshotStale(TEST_TENANT_ID, TEST_RUN_ID);
+    const isStale = await query.isSnapshotStale(TEST_TENANT_ID, TEST_RUN_ID);
 
-    expect(stale).toBe(true);
+    expect(isStale).toBe(true);
     expect(client.queries).toHaveLength(1);
     expect(client.queries[0]?.sql).toContain(`AS ${IS_SNAPSHOT_STALE_ALIAS}`);
     expect(client.queries[0]?.sql).toContain('SELECT EXISTS (');
-    expect(client.queries[0]?.sql).toContain('WHERE m.tenant_id = $1');
-    expect(client.queries[0]?.sql).toContain('AND m.run_id = $2');
+    expect(client.queries[0]?.sql).toContain('LEFT JOIN LATERAL (');
+    expect(client.queries[0]?.sql).toContain('m.tenant_id = $1');
+    expect(client.queries[0]?.sql).toContain('m.run_id = $2');
+    expect(client.queries[0]?.sql).toContain('s.run_id IS NULL AND le.run_seq IS NOT NULL');
     expect(client.queries[0]?.params).toEqual([TEST_TENANT_ID, TEST_RUN_ID]);
   });
 });
