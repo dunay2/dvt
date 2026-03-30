@@ -35,6 +35,18 @@ runs:
         restore-keys: |
           pnpm-store-${{ runner.os }}-
 
+    - name: Cache node_modules
+      id: nm-cache
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: |
+          node_modules
+          apps/*/node_modules
+          packages/*/node_modules
+          packages/@dvt/*/node_modules
+        key: nm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
     - name: Install dependencies
+      if: steps.nm-cache.outputs.cache-hit != 'true'
       shell: bash
       run: pnpm install ${{ inputs.install-args }}
