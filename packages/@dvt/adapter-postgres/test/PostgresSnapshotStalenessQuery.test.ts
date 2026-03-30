@@ -90,7 +90,7 @@ describe('PostgresSnapshotStalenessQuery', () => {
 
   it('checks staleness for a specific run with tenant scope', async () => {
     const client = new RecordingClient();
-    client.enqueueRows([{ is_stale: true }]);
+    client.enqueueRows([{ is_snapshot_stale: true }]);
     const query = new PostgresSnapshotStalenessQuery(
       TEST_SCHEMA,
       withRecordingClient(client) as never

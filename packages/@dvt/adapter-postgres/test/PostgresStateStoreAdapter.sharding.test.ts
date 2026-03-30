@@ -169,7 +169,7 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     await adapter.isSnapshotStale('tenant-1', 'run-1');
 
-    const staleQuery = client.queries.find((entry) => entry.sql.includes('AS is_stale'));
+    const staleQuery = client.queries.find((entry) => entry.sql.includes('AS is_snapshot_stale'));
     expect(staleQuery).toBeDefined();
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
     expect(staleQuery?.sql).toContain('WHERE m.tenant_id = $1');
