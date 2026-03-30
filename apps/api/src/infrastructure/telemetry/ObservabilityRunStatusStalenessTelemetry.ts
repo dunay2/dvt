@@ -12,9 +12,7 @@ const RUN_STATUS_STALENESS_FALLBACK_UNKNOWN_TOTAL =
 export class ObservabilityRunStatusStalenessTelemetry implements IRunStatusStalenessTelemetry {
   private readonly unknownCounter;
 
-  public constructor(
-    private readonly observability: IObservability
-  ) {
+  public constructor(private readonly observability: IObservability) {
     this.unknownCounter = observability.metrics.counter(
       RUN_STATUS_STALENESS_FALLBACK_UNKNOWN_TOTAL
     );
