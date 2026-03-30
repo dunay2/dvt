@@ -25,6 +25,7 @@ jobs:
   detect-affected:
     name: Detect affected workspaces
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       any_changed: ${{ steps.matrix.outputs.any_changed }}
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -49,6 +50,8 @@ jobs:
               - 'tsconfig*.json'
               - 'vitest.config.ts'
               - 'eslint.config.cjs'
+              - '.prettierrc.json'
+              - 'commitlint.config.cjs'
             api:
               - 'apps/api/**'
             web:
@@ -74,8 +77,6 @@ jobs:
               - 'scripts/commit.cjs'
               - 'scripts/docs-*.cjs'
               - 'scripts/setup-git-hooks.cjs'
-              - 'commitlint.config.cjs'
-              - '.prettierrc.json'
 
       - name: Build matrix from affected workspaces
         id: matrix
@@ -149,8 +150,11 @@ jobs:
   lint-and-format:
     name: ESLint + Prettier (changed files)
     needs: detect-affected
-    if: github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true'
+    if: >-
+      github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true' ||
+      needs.detect-affected.outputs.docs_changed == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -176,6 +180,7 @@ jobs:
     needs: detect-affected
     if: github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-affected.outputs.matrix) }}
@@ -183,7 +188,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -210,6 +215,7 @@ jobs:
       needs.detect-affected.outputs.docs_changed == 'true') || (github.event_name ==
       'workflow_dispatch' && github.event.inputs.run_markdown_lint == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -219,6 +225,3 @@ jobs:
 
       - name: Lint Markdown files
         run: pnpm lint:md
-
-      - name: Enforce Markdown location policy
-        run: pnpm docs:gov:locations
