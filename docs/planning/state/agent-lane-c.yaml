@@ -49,6 +49,16 @@ tasks:
     objective: decide retry ownership across planner, engine, and adapters.
     dependency: none
     target: Lock ADR-0040 and the runtime ownership baseline.
+  - task_id: S16
+    priority: P1
+    status: done
+    objective:
+      enforce governed planVersion validation at start-run admission to reject unsupported or stale
+      plan references.
+    dependency: none
+    target:
+      Start-run preconditions use typed UnsupportedPlanVersionError with registry-backed supported
+      versions and explicit contract coverage.
   - task_id: RC-D2
     priority: P0
     status: done
@@ -118,7 +128,7 @@ tasks:
     target: Apply the Lane C efficiency playbook in three consecutive PR cycles.
   - task_id: RC-E1
     priority: P1
-    status: queued
+    status: done
     objective:
       harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and
       dangerous schemes (data:, javascript:, mailto:).
@@ -126,7 +136,7 @@ tasks:
     target: SSRF/CIDR hardening + dedicated unit tests.
   - task_id: RC-E2
     priority: P1
-    status: queued
+    status: done
     objective:
       move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent
       plan-URI information leakage to unauthorized callers.
