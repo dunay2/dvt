@@ -20,9 +20,9 @@ import {
 } from './entrypoints/http/runtimeRoutes.constants.js';
 import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
+import { ObservabilityRunStatusStalenessTelemetry } from './infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
 import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
-import { ObservabilityRunStatusStalenessTelemetry } from './infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
@@ -225,7 +225,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     app.log.info(`protected runtime routes registered: ${PROTECTED_RUNTIME_ROUTE_SUMMARY}`);
   } else {
     app.log.warn(
-      'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) Ã¢â‚¬â€ protected runtime endpoints are disabled'
+      'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'
     );
   }
 
