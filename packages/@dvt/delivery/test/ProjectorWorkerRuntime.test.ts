@@ -29,6 +29,80 @@ function makeStateStore(
 }
 
 describe('ProjectorWorkerRuntime', () => {
+  describe('constructor validation', () => {
+    it('rejects batchSize that is not a positive integer finite number', () => {
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            batchSize: 0,
+          })
+      ).toThrow('INVALID_BATCH_SIZE');
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            batchSize: -1,
+          })
+      ).toThrow('INVALID_BATCH_SIZE');
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            batchSize: 1.5,
+          })
+      ).toThrow('INVALID_BATCH_SIZE');
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            batchSize: Number.NaN,
+          })
+      ).toThrow('INVALID_BATCH_SIZE');
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            batchSize: Number.POSITIVE_INFINITY,
+          })
+      ).toThrow('INVALID_BATCH_SIZE');
+    });
+
+    it('rejects fallbackPollEveryTicks = 0', () => {
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            fallbackPollEveryTicks: 0,
+          })
+      ).toThrow('INVALID_FALLBACK_POLL_EVERY_TICKS');
+    });
+
+    it('rejects fallbackPollEveryTicks < 0', () => {
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            fallbackPollEveryTicks: -1,
+          })
+      ).toThrow('INVALID_FALLBACK_POLL_EVERY_TICKS');
+    });
+
+    it('rejects fallbackPollEveryTicks that is not an integer finite number', () => {
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            fallbackPollEveryTicks: 1.5,
+          })
+      ).toThrow('INVALID_FALLBACK_POLL_EVERY_TICKS');
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            fallbackPollEveryTicks: Number.NaN,
+          })
+      ).toThrow('INVALID_FALLBACK_POLL_EVERY_TICKS');
+      expect(
+        () =>
+          new ProjectorWorkerRuntime(makeStateStore([]), makeSilentLogger(), {
+            fallbackPollEveryTicks: Number.POSITIVE_INFINITY,
+          })
+      ).toThrow('INVALID_FALLBACK_POLL_EVERY_TICKS');
+    });
+  });
+
   describe('runOnce', () => {
     it('returns zero lag and zero processed when the store has no stale runs', async () => {
       const store = makeStateStore([]);
@@ -166,7 +240,7 @@ describe('ProjectorWorkerRuntime', () => {
       const result = await runtime.runOnce();
 
       expect(result).toEqual({ processed: 0, lag: 1 });
-      expect(failSnapshotWork).toHaveBeenCalledWith('tenant-1', 'run-1', 4321);
+      expect(failSnapshotWork).toHaveBeenCalledWith('tenant-1', 'run-1', 4321, 'boom');
     });
 
     it('falls back to listStaleSnapshotRuns to fill uncovered stale work', async () => {
@@ -186,9 +260,55 @@ describe('ProjectorWorkerRuntime', () => {
       expect(rebuild).toHaveBeenCalledWith('tenant-1', 'run-queue');
       expect(rebuild).toHaveBeenCalledWith('tenant-1', 'run-poll');
     });
+
+    it('does not run fallback polling every tick when queue mode is enabled', async () => {
+      const rebuild = vi.fn().mockResolvedValue(undefined);
+      const store: ProjectorStateStore = {
+        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-queue')]),
+        listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
+        rebuildSnapshot: rebuild,
+      };
+      const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), {
+        batchSize: 2,
+        fallbackPollEveryTicks: 3,
+      });
+
+      await runtime.runOnce(); // tick 1 -> poll allowed
+      await runtime.runOnce(); // tick 2 -> poll skipped
+      await runtime.runOnce(); // tick 3 -> poll allowed
+
+      expect(store.listStaleSnapshotRuns).toHaveBeenCalledTimes(2);
+      expect(store.listStaleSnapshotRuns).toHaveBeenNthCalledWith(1, 1);
+      expect(store.listStaleSnapshotRuns).toHaveBeenNthCalledWith(2, 1);
+    });
   });
 
   describe('start / stop', () => {
+    it('resets fallback polling cadence across start-stop cycles', async () => {
+      const store: ProjectorStateStore = {
+        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-queue')]),
+        listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
+        rebuildSnapshot: vi.fn().mockResolvedValue(undefined),
+      };
+      const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), {
+        pollIntervalMs: 60_000,
+        batchSize: 2,
+        fallbackPollEveryTicks: 3,
+      });
+
+      const firstLoop = runtime.start();
+      await new Promise<void>((resolve) => setTimeout(resolve, 20));
+      await runtime.stop();
+      await firstLoop;
+
+      const secondLoop = runtime.start();
+      await new Promise<void>((resolve) => setTimeout(resolve, 20));
+      await runtime.stop();
+      await secondLoop;
+
+      expect(store.listStaleSnapshotRuns).toHaveBeenCalledTimes(2);
+    });
+
     it('resolves immediately when started with an already-aborted signal', async () => {
       const store = makeStateStore([]);
       const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), {

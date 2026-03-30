@@ -36,31 +36,48 @@ export class PostgresSnapshotWorkQueue {
     await this.withClient((client) =>
       client.query(
         `
-          UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue
+          WITH deleted AS (
+            DELETE FROM ${quoteIdentifier(this.schema)}.snapshot_work_queue q
+            USING ${quoteIdentifier(this.schema)}.run_snapshots s
+            WHERE q.tenant_id = $1
+              AND q.run_id = $2
+              AND s.run_id = q.run_id
+              AND q.latest_run_seq <= COALESCE(s.last_run_seq, 0)
+            RETURNING q.run_id, q.tenant_id
+          )
+          UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue q
           SET claimed_at = NULL,
               next_attempt_at = NULL,
               last_error = NULL
-          WHERE tenant_id = $1
-            AND run_id = $2
+          WHERE q.tenant_id = $1
+            AND q.run_id = $2
+            AND NOT EXISTS (SELECT 1 FROM deleted)
         `,
         [tenantId, runId]
       )
     );
   }
 
-  async failSnapshotWork(tenantId: string, runId: string, retryDelayMs: number): Promise<void> {
+  async failSnapshotWork(
+    tenantId: string,
+    runId: string,
+    retryDelayMs: number,
+    errorMessage: string
+  ): Promise<void> {
     const boundedRetryDelayMs = normalizeRetryDelay(retryDelayMs);
+    const boundedErrorMessage = normalizeErrorMessage(errorMessage);
     await this.withClient((client) =>
       client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue
           SET claimed_at = NULL,
               attempts = attempts + 1,
+              last_error = $4,
               next_attempt_at = (NOW() + ($3::bigint * INTERVAL '1 millisecond'))
           WHERE tenant_id = $1
             AND run_id = $2
         `,
-        [tenantId, runId, boundedRetryDelayMs]
+        [tenantId, runId, boundedRetryDelayMs, boundedErrorMessage]
       )
     );
   }
@@ -103,4 +120,12 @@ function normalizeRetryDelay(retryDelayMs: number): number {
     throw new Error(`${INVALID_RETRY_DELAY_ERROR_CODE}: ${retryDelayMs}`);
   }
   return retryDelayMs;
+}
+
+function normalizeErrorMessage(errorMessage: string): string {
+  const normalized = errorMessage.trim();
+  if (normalized.length === 0) {
+    return 'unknown_error';
+  }
+  return normalized.slice(0, 1024);
 }

@@ -186,9 +186,10 @@ export class PostgresStateStoreRuntime {
   protected async failSnapshotWorkInternal(
     tenantId: string,
     runId: string,
-    retryDelayMs: number
+    retryDelayMs: number,
+    errorMessage: string
   ): Promise<void> {
-    await this.snapshotWorkQueue.failSnapshotWork(tenantId, runId, retryDelayMs);
+    await this.snapshotWorkQueue.failSnapshotWork(tenantId, runId, retryDelayMs, errorMessage);
   }
 
   protected async enqueueTxInternal(runId: RunId, events: EventEnvelope[]): Promise<void> {

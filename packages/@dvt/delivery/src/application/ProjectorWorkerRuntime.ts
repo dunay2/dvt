@@ -11,7 +11,12 @@ export interface ProjectorStateStore {
   listStaleSnapshotRuns?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
   isSnapshotStale?(tenantId: string, runId: string): Promise<boolean>;
   completeSnapshotWork?(tenantId: string, runId: string): Promise<void>;
-  failSnapshotWork?(tenantId: string, runId: string, retryDelayMs: number): Promise<void>;
+  failSnapshotWork?(
+    tenantId: string,
+    runId: string,
+    retryDelayMs: number,
+    errorMessage: string
+  ): Promise<void>;
   rebuildSnapshot(tenantId: string, runId: string): Promise<unknown>;
 }
 
@@ -24,32 +29,41 @@ export interface ProjectorWorkerRuntimeOptions {
   batchSize?: number;
   pollIntervalMs?: number;
   errorBackoffMs?: number;
+  fallbackPollEveryTicks?: number;
 }
 
 const DEFAULT_OPTIONS = {
   batchSize: 50,
   pollIntervalMs: 5000,
   errorBackoffMs: 10000,
+  fallbackPollEveryTicks: 12,
 } as const;
+const INVALID_BATCH_SIZE = 'INVALID_BATCH_SIZE';
+const INVALID_FALLBACK_POLL_EVERY_TICKS = 'INVALID_FALLBACK_POLL_EVERY_TICKS';
 
 export class ProjectorWorkerRuntime {
   private readonly batchSize: number;
   private readonly pollIntervalMs: number;
   private readonly errorBackoffMs: number;
+  private readonly fallbackPollEveryTicks: number;
   private loopPromise: Promise<void> | null = null;
   private waitController: globalThis.AbortController | null = null;
   private running = false;
   private detachAbortListener: (() => void) | null = null;
   private _lagCount = 0;
+  private tickCount = 0;
 
   constructor(
     private readonly stateStore: ProjectorStateStore,
     private readonly logger: ProjectorWorkerRuntimeLogger,
     options: ProjectorWorkerRuntimeOptions = {}
   ) {
-    this.batchSize = options.batchSize ?? DEFAULT_OPTIONS.batchSize;
+    this.batchSize = normalizeBatchSize(options.batchSize ?? DEFAULT_OPTIONS.batchSize);
     this.pollIntervalMs = options.pollIntervalMs ?? DEFAULT_OPTIONS.pollIntervalMs;
     this.errorBackoffMs = options.errorBackoffMs ?? DEFAULT_OPTIONS.errorBackoffMs;
+    this.fallbackPollEveryTicks = normalizeFallbackPollEveryTicks(
+      options.fallbackPollEveryTicks ?? DEFAULT_OPTIONS.fallbackPollEveryTicks
+    );
   }
 
   get lagCount(): number {
@@ -83,6 +97,7 @@ export class ProjectorWorkerRuntime {
       return Promise.resolve();
     }
 
+    this.tickCount = 0;
     this.loopPromise = this.runLoop().finally(() => {
       this.running = false;
       this.waitController = null;
@@ -111,7 +126,8 @@ export class ProjectorWorkerRuntime {
   }
 
   async runOnce(): Promise<ProjectorTickResult> {
-    const workItems = await this.loadSnapshotWorkBatch();
+    this.tickCount += 1;
+    const workItems = await this.loadSnapshotWorkBatch(this.shouldRunFallbackPoll());
     if (workItems === null) {
       this._lagCount = 0;
       this.logger.info(
@@ -144,7 +160,12 @@ export class ProjectorWorkerRuntime {
       } catch (err) {
         if (claimedFromQueue && this.stateStore.failSnapshotWork) {
           try {
-            await this.stateStore.failSnapshotWork(tenantId, runId, this.errorBackoffMs);
+            await this.stateStore.failSnapshotWork(
+              tenantId,
+              runId,
+              this.errorBackoffMs,
+              toErrorLike(err).message
+            );
           } catch (releaseErr) {
             this.logger.error(
               { err: toErrorLike(releaseErr), runId, tenantId },
@@ -165,7 +186,7 @@ export class ProjectorWorkerRuntime {
     return { processed, lag };
   }
 
-  private async loadSnapshotWorkBatch(): Promise<Array<{
+  private async loadSnapshotWorkBatch(allowFallbackPoll: boolean): Promise<Array<{
     runId: string;
     tenantId: string;
     claimedFromQueue: boolean;
@@ -184,7 +205,8 @@ export class ProjectorWorkerRuntime {
 
     if (
       this.stateStore.listStaleSnapshotRuns &&
-      (workItems.length === 0 || workItems.length < this.batchSize)
+      (workItems.length === 0 || workItems.length < this.batchSize) &&
+      (!this.stateStore.claimSnapshotWork || allowFallbackPoll)
     ) {
       const pollingBatchSize = this.batchSize - workItems.length;
       if (pollingBatchSize > 0) {
@@ -205,6 +227,13 @@ export class ProjectorWorkerRuntime {
       return [];
     }
     return null;
+  }
+
+  private shouldRunFallbackPoll(): boolean {
+    if (!this.stateStore.claimSnapshotWork || !this.stateStore.listStaleSnapshotRuns) {
+      return true;
+    }
+    return this.tickCount === 1 || this.tickCount % this.fallbackPollEveryTicks === 0;
   }
 
   private async runLoop(): Promise<void> {
@@ -277,4 +306,18 @@ function toErrorLike(error: unknown): { message: string; name: string } {
     return { message: error.message, name: error.name };
   }
   return { message: String(error), name: 'UnknownError' };
+}
+
+function normalizeFallbackPollEveryTicks(value: number): number {
+  if (!Number.isInteger(value) || !Number.isFinite(value) || value < 1) {
+    throw new Error(`${INVALID_FALLBACK_POLL_EVERY_TICKS}: ${value}`);
+  }
+  return value;
+}
+
+function normalizeBatchSize(value: number): number {
+  if (!Number.isInteger(value) || !Number.isFinite(value) || value < 1) {
+    throw new Error(`${INVALID_BATCH_SIZE}: ${value}`);
+  }
+  return value;
 }

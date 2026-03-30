@@ -157,9 +157,14 @@ export class PostgresStateStoreAdapter
     await this.completeSnapshotWorkInternal(tenantId, runId);
   }
 
-  async failSnapshotWork(tenantId: string, runId: string, retryDelayMs: number): Promise<void> {
+  async failSnapshotWork(
+    tenantId: string,
+    runId: string,
+    retryDelayMs: number,
+    errorMessage: string
+  ): Promise<void> {
     this.ready();
-    await this.failSnapshotWorkInternal(tenantId, runId, retryDelayMs);
+    await this.failSnapshotWorkInternal(tenantId, runId, retryDelayMs, errorMessage);
   }
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
