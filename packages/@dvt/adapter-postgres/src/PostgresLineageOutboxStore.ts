@@ -95,6 +95,13 @@ export function normalizeLineageOutboxClaimTimeoutMs(value: number | undefined):
   return claimTimeoutMs;
 }
 
+function normalizeTenantScope(tenantId: unknown): string {
+  if (typeof tenantId !== 'string') {
+    return '';
+  }
+  return tenantId.trim();
+}
+
 function normalizeLineageQueryLimit(limit: number, fieldName: string): number {
   if (!Number.isInteger(limit) || !Number.isFinite(limit) || limit < 0) {
     throw new Error(`INVALID_${fieldName}: ${limit}`);
@@ -192,7 +199,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<LineageDeadLetterRecord[]> {
-    const normalizedTenantId = tenantId.trim();
+    const normalizedTenantId = normalizeTenantScope(tenantId);
     if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
@@ -218,7 +225,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async countDeadLetter(tenantId: string): Promise<number> {
-    const normalizedTenantId = tenantId.trim();
+    const normalizedTenantId = normalizeTenantScope(tenantId);
     if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
@@ -237,7 +244,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     runId?: string;
     eventType?: string;
   }): Promise<number> {
-    const tenantId = options.tenantId.trim();
+    const tenantId = normalizeTenantScope(options.tenantId);
     if (!tenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }

@@ -318,6 +318,12 @@ describe('PostgresLineageOutboxStore', () => {
 
     await expect(store.listDeadLetter(10, '')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
     await expect(store.listDeadLetter(10, '   ')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+    await expect(store.listDeadLetter(10, undefined as unknown as string)).rejects.toThrow(
+      'TENANT_SCOPE_REQUIRED'
+    );
+    await expect(store.listDeadLetter(10, null as unknown as string)).rejects.toThrow(
+      'TENANT_SCOPE_REQUIRED'
+    );
   });
 
   it('listDeadLetter filters by tenant and maps tenantId', async () => {
@@ -393,6 +399,12 @@ describe('PostgresLineageOutboxStore', () => {
 
     await expect(store.countDeadLetter('')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
     await expect(store.countDeadLetter('   ')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+    await expect(store.countDeadLetter(undefined as unknown as string)).rejects.toThrow(
+      'TENANT_SCOPE_REQUIRED'
+    );
+    await expect(store.countDeadLetter(null as unknown as string)).rejects.toThrow(
+      'TENANT_SCOPE_REQUIRED'
+    );
   });
 
   it('countDeadLetter returns tenant-scoped dead-letter count', async () => {
@@ -454,6 +466,12 @@ describe('PostgresLineageOutboxStore', () => {
     await expect(store.replayDeadLetters({ tenantId: '', limit: 10 })).rejects.toThrow(
       'TENANT_SCOPE_REQUIRED'
     );
+    await expect(
+      store.replayDeadLetters({ tenantId: undefined as unknown as string, limit: 10 })
+    ).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+    await expect(
+      store.replayDeadLetters({ tenantId: null as unknown as string, limit: 10 })
+    ).rejects.toThrow('TENANT_SCOPE_REQUIRED');
     await expect(
       store.replayDeadLetters({ tenantId: 'tenant-a', limit: Number.NaN })
     ).rejects.toThrow('INVALID_LINEAGE_DEAD_LETTER_REPLAY_LIMIT');
