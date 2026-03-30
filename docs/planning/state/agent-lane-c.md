@@ -48,7 +48,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [x] `P1` `RC-D1`: surface reconciler degradation in API health.
 - [x] `P1` `RC-D1A`: add health compatibility and watchdog integration tests.
 - [x] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
-- [ ] `P1` `snapshot staleness in API`: expose freshness to callers.
+- [x] `P1` `snapshot staleness in API`: expose freshness to callers.
 - [ ] `P2` `read-your-writes contract`: set a measurable staleness SLO.
 - [ ] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
 - [ ] `P3` `RC-C1`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
