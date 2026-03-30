@@ -36,6 +36,7 @@ describe('loadEnv', () => {
     expect(env.DVT_OUTBOX_HTTP_TARGET_URL).toBe('http://localhost:8080/outbox/events');
     expect(env.DVT_OUTBOX_HTTP_TIMEOUT_MS).toBe(10000);
     expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
+    expect(env.DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS).toBe(30_000);
     expect(env.DVT_RUN_EVENT_RETENTION_INTERVAL_MS).toBe(3_600_000);
     expect(env.DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS).toBe(90);
     expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT).toBe(64);
@@ -320,6 +321,16 @@ describe('loadEnv', () => {
         DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS: '0',
       })
     ).toThrow(/DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS/);
+
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: '-1',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS/);
   });
 
   it('rejects ambiguous shard ownership configuration', () => {

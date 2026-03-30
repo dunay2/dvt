@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.2](https://github.com/dunay2/dvt/compare/v5.1.1...v5.1.2) (2026-03-30)
+
+
+### Bug Fixes
+
+* **adapters:** Harden retention archive destination and object-store checks ([#666](https://github.com/dunay2/dvt/issues/666)) ([a331c7d](https://github.com/dunay2/dvt/commit/a331c7d7ff308765065abc56f8b3b1a7ff44056e))
+* **state-store:** Harden archive object store adapters and lane planning updates ([#667](https://github.com/dunay2/dvt/issues/667)) ([c4222cc](https://github.com/dunay2/dvt/commit/c4222cc723631a8a0b60d46667b98d26d060b97b))
+
 ## [5.1.1](https://github.com/dunay2/dvt/compare/v5.1.0...v5.1.1) (2026-03-29)
 
 

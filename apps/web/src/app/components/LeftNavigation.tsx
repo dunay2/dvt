@@ -1,57 +1,76 @@
-import {
-  LayoutGrid,
-  GitBranch,
-  PlayCircle,
-  FileText,
-  GitCompare,
-  GitGraph,
-  DollarSign,
-  Puzzle,
-  Shield,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { Shield, Puzzle } from 'lucide-react';
 import { NavLink } from 'react-router';
 
-import { useAppStore } from '../stores/appStore';
-
-import { Button } from './ui/button';
+import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
+import { getNavigationViews } from '../plugins/registry';
+import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
 
-const navItems = [
-  { to: '/canvas', icon: LayoutGrid, label: 'Canvas' },
-  { to: '/runs', icon: PlayCircle, label: 'Runs' },
-  { to: '/artifacts', icon: FileText, label: 'Artifacts' },
-  { to: '/diff', icon: GitCompare, label: 'Diff' },
-  { to: '/lineage', icon: GitGraph, label: 'Lineage' },
-  { to: '/cost', icon: DollarSign, label: 'Cost & Observability' },
-  { to: '/plugins', icon: Puzzle, label: 'Plugins' },
-  { to: '/admin', icon: Shield, label: 'Admin' },
+// Shell-owned fixed routes (not plugin contributions)
+const SHELL_NAV = [
+  { to: '/plugins', icon: Puzzle, label: 'Plugins', level: 'extended' as const },
+  { to: '/admin', icon: Shield, label: 'Admin', level: 'admin' as const },
 ];
 
+const NAV_LINK_CLASS =
+  'flex size-10 items-center justify-center rounded-xl border border-transparent text-slate-300 transition-colors shrink-0';
+
+const NAV_ICON_CLASS = 'size-[18px] shrink-0';
+
 export default function LeftNavigation() {
-  const { leftNavCollapsed } = useAppStore();
+  const { data: capabilities } = useCapabilitiesQuery();
+  const pluginViews = getNavigationViews(capabilities);
 
   return (
-    <div className="bg-[#0f1116] border-r border-gray-800 flex flex-col w-14">
-      {/* Navigation Items - Icon Only */}
-      <nav className="flex flex-col items-center gap-2 flex-1 py-3 overflow-y-auto">
-        <TooltipProvider delayDuration={300}>
-          {navItems.map((item) => (
+    <div className="w-16 shrink-0 border-r border-slate-700 bg-slate-900">
+      <TooltipProvider delayDuration={300}>
+        <nav className="flex h-full flex-col items-center gap-3.5 overflow-y-auto py-4">
+          {/* Plugin-contributed nav items (core + extended), sorted by order */}
+          {pluginViews.map((view) => {
+            const Icon = view.nav.icon;
+            const label = resolveString(view.nav.label);
+            return (
+              <Tooltip key={view.path}>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={view.path}
+                    className={({ isActive }) =>
+                      cn(
+                        NAV_LINK_CLASS,
+                        'hover:bg-slate-950 hover:text-white',
+                        isActive && 'bg-slate-950 text-white border-blue-500'
+                      )
+                    }
+                  >
+                    <Icon className={NAV_ICON_CLASS} />
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>{label}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+
+          {/* Spacer pushes shell items to bottom */}
+          <div className="flex-1" />
+
+          {/* Shell-owned fixed nav (plugins page, admin) */}
+          {SHELL_NAV.map((item) => (
             <Tooltip key={item.to}>
               <TooltipTrigger asChild>
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-center h-10 w-10 text-gray-400 border border-transparent rounded-lg transition-colors',
-                      'hover:bg-[#1a1d23] hover:text-white',
-                      isActive && 'bg-[#1a1d23] text-white border-blue-500'
+                      NAV_LINK_CLASS,
+                      'hover:bg-slate-950 hover:text-white',
+                      isActive && 'bg-slate-950 text-white border-blue-500'
                     )
                   }
                 >
-                  <item.icon className="size-6" />
+                  <item.icon className={NAV_ICON_CLASS} />
                 </NavLink>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -59,8 +78,8 @@ export default function LeftNavigation() {
               </TooltipContent>
             </Tooltip>
           ))}
-        </TooltipProvider>
-      </nav>
+        </nav>
+      </TooltipProvider>
     </div>
   );
 }

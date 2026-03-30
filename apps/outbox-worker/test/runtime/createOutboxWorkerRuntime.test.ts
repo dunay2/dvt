@@ -730,6 +730,7 @@ describe('createOutboxWorkerRuntime', () => {
           DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
           DVT_OUTBOX_EVENT_BUS_MODE: 'log',
           DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+          DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: '0',
           DVT_RUN_EVENT_RETENTION_INTERVAL_MS: '60000',
         }),
         makeLogger()

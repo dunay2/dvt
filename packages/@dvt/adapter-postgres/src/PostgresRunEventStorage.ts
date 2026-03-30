@@ -6,6 +6,7 @@ import {
   listEventsSql,
   maxRunSeqSql,
   selectExistingEventSql,
+  upsertRunEventHeadSql,
 } from './PostgresRunEventStoreSql.js';
 import { InvalidRunSequenceValueError } from './runEventStoreErrors.js';
 import type { SqlCommandExecutor } from './RunEventWriteRepository.js';
@@ -32,6 +33,13 @@ export interface RunEventStoragePort {
     runId: RunId,
     envelope: EventEnvelope
   ): Promise<boolean>;
+  upsertRunEventHead(
+    executor: SqlCommandExecutor,
+    runId: RunId,
+    tenantId: string,
+    runSeq: number,
+    updatedAt: string
+  ): Promise<void>;
   selectExistingEvent(
     executor: SqlCommandExecutor,
     runId: RunId,
@@ -85,6 +93,16 @@ export class PostgresRunEventStorage implements RunEventStoragePort {
       JSON.stringify(envelope),
     ]);
     return (inserted.rowCount ?? 0) > 0;
+  }
+
+  async upsertRunEventHead(
+    executor: SqlCommandExecutor,
+    runId: RunId,
+    tenantId: string,
+    runSeq: number,
+    updatedAt: string
+  ): Promise<void> {
+    await executor.query(upsertRunEventHeadSql(this.schema), [runId, tenantId, runSeq, updatedAt]);
   }
 
   async selectExistingEvent(

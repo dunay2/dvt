@@ -101,7 +101,7 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
         minRunSeq: rebuiltFromExistingManifest.manifest.minRunSeq,
         maxRunSeq: rebuiltFromExistingManifest.manifest.maxRunSeq,
         objectKey,
-        objectUri: buildExistingObjectUri(objectKey),
+        objectUri: this.objectStore.getObjectUri?.(objectKey) ?? buildExistingObjectUri(objectKey),
         manifestObjectKey,
         checksumObjectKey,
         checksumSha256: rebuiltFromExistingManifest.manifest.checksumSha256,

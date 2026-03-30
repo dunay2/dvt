@@ -10,17 +10,40 @@ expected_outcome:
   - contract drift is reduced
   - optional maintenance ownership is explicit
   - migration recovery is defined
+header_markdown: |
+  Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y consistencia de interfaces.
+
+  ## Principios obligatorios
+
+  - Shared kernel minimo: en contratos solo entra lo cross-domain
+  - Contracts-first: no se cambia runtime sin contrato verificable
+  - Ownership explicito: cada puerto tiene dueno y frontera clara
+  - Composition root disciplinado: sin rewiring por conveniencia
+  - Cero drift: docs, tipos y tests deben contar la misma verdad
+
+  ## Forma de trabajo
+
+  - Definir frontera de dominio y contrato
+  - Ajustar wiring del root sin mezclar responsabilidades
+  - Validar con pruebas de contrato y regresion negativa
+
+  ## Restricciones
+
+  - No mover contratos de dominio a `@dvt/contracts` si no son shared
+  - No agregar atajos de compatibilidad silenciosos
+  - No introducir deuda oculta ni TODO placeholders
 tasks:
   - task_id: MVP-A1
     priority: P0
-    status: queued
+    status: in_progress
     objective:
       inventory the current backend MVP contractual surface (routes, invariants, and explicit
       boundaries) without adding new runtime behavior.
     dependency: none
     target:
       Canonical inventory aligned with real `apps/api` runtime surface and linked from the MVP
-      roadmap reset proposal.
+      roadmap reset proposal
+      (`docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`).
   - task_id: RC-A6
     priority: P0
     status: done
