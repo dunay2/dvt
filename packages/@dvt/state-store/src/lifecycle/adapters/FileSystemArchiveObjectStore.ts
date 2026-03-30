@@ -37,8 +37,9 @@ export class FileSystemArchiveObjectStore implements IArchiveObjectStore {
   }
 
   async existsObject(objectKey: string): Promise<boolean> {
+    const absolutePath = this.toAbsolutePath(objectKey);
     try {
-      await readFile(this.toAbsolutePath(objectKey));
+      await readFile(absolutePath);
       return true;
     } catch {
       return false;

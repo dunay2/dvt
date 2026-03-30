@@ -265,6 +265,32 @@ describe('ObjectStorageRunArchiveExporter', () => {
       expect(retry.objectUri).toBe(`mem://archive/${ARCHIVE_UNIT_KEY}/events.jsonl`);
     });
 
+    it('retries idempotently when exportedAtIso changes across retries', async () => {
+      const events = [
+        makeEvent({ runId: 'run-a', runSeq: 1 }),
+        makeEvent({ runId: 'run-a', runSeq: 2 }),
+      ];
+
+      const first = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      const second = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: '2026-03-20T00:30:00.000Z',
+        events,
+      });
+
+      expect(second.objectKey).toBe(first.objectKey);
+      expect(second.manifestSha256).toBe(first.manifestSha256);
+      expect(second.checksumSha256).toBe(first.checksumSha256);
+      expect(second.exportedAtIso).toBe(first.exportedAtIso);
+    });
+
     it('fails with conflict when existing archive objects do not match input payload', async () => {
       const events = [makeEvent({ runId: 'run-a', runSeq: 1 })];
 

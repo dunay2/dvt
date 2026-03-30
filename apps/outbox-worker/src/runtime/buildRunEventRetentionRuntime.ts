@@ -39,10 +39,23 @@ export function buildRunEventRetentionRuntime(
 
   const withTransaction = async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
     const client = await pool.connect();
+    let releaseError: Error | undefined;
     try {
-      return await executeAbortAwareTransaction(client, activeCycleSignal, fn, logger);
+      return await executeAbortAwareTransaction(
+        client,
+        activeCycleSignal,
+        fn,
+        logger,
+        (rollbackError) => {
+          releaseError = rollbackError;
+        }
+      );
     } finally {
-      client.release();
+      if (releaseError) {
+        client.release(releaseError);
+      } else {
+        client.release();
+      }
     }
   };
 
@@ -132,7 +145,8 @@ async function executeAbortAwareTransaction<T>(
   client: PoolClient,
   signal: globalThis.AbortSignal | undefined,
   fn: (client: PoolClient) => Promise<T>,
-  logger: RunEventRetentionRuntimeLogger
+  logger: RunEventRetentionRuntimeLogger,
+  onRollbackFailure?: (rollbackError: Error) => void
 ): Promise<T> {
   const abortAwareClient = createAbortAwareClient(client, signal);
   await abortAwareClient.query('BEGIN');
@@ -144,9 +158,12 @@ async function executeAbortAwareTransaction<T>(
     try {
       await client.query('ROLLBACK');
     } catch (rollbackError) {
+      const normalizedRollbackError =
+        rollbackError instanceof Error ? rollbackError : new Error(String(rollbackError));
+      onRollbackFailure?.(normalizedRollbackError);
       logger.error(
         {
-          err: rollbackError,
+          err: normalizedRollbackError,
           originalError: error,
         },
         'run event retention rollback failed'
