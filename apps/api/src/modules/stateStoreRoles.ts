@@ -1,4 +1,5 @@
 import type {
+  IRunSnapshotStalenessQuery,
   IRunStateStoreMaintenance,
   IRunStateStoreRead,
   IRunStateStoreWrite,
@@ -6,12 +7,14 @@ import type {
 
 export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreWrite &
-  IRunStateStoreMaintenance;
+  IRunStateStoreMaintenance &
+  Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
 
 export interface StateStoreRoleBindings {
   readonly read: IRunStateStoreRead;
   readonly write: IRunStateStoreWrite;
   readonly maintenance: IRunStateStoreMaintenance;
+  readonly snapshotStaleness: Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
 }
 
 const REQUIRED_METHODS = [
@@ -22,6 +25,7 @@ const REQUIRED_METHODS = [
   'listRuns',
   'getSnapshot',
   'rebuildSnapshot',
+  'isSnapshotStale',
 ] as const;
 
 function isStateStoreRoleSource(value: unknown): value is StateStoreRoleSource {
@@ -44,5 +48,6 @@ export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStor
     read: stateStore,
     write: stateStore,
     maintenance: stateStore,
+    snapshotStaleness: stateStore,
   });
 }

@@ -16,6 +16,7 @@ import {
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
 import { RunEventRetentionRuntime } from './RunEventRetentionRuntime.js';
+import type { RunEventRetentionRuntimeHooks } from './RunEventRetentionRuntime.js';
 
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;
@@ -25,6 +26,7 @@ export interface RuntimeHandle {
 export interface CreateOutboxWorkerRuntimeOptions {
   observer?: OutboxWorkerObserver;
   hooks?: OutboxWorkerRuntimeHooks;
+  retentionHooks?: RunEventRetentionRuntimeHooks;
   shutdownSignal?: globalThis.AbortSignal;
 }
 
@@ -86,7 +88,7 @@ export async function createOutboxWorkerRuntime(
       ? buildPurgeRuntime(env, poolLease.pool, logger)
       : null;
     const retentionRuntime = env.DVT_RUN_EVENT_RETENTION_ENABLED
-      ? buildRunEventRetentionRuntime(env, poolLease.pool, logger)
+      ? buildRunEventRetentionRuntime(env, poolLease.pool, logger, options.retentionHooks)
       : null;
 
     let stopPromise: Promise<void> | null = null;

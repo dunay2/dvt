@@ -42,7 +42,7 @@ Prepare the system for scale and for the first enterprise customer.
 
 - [ ] `P0` `MVP-D1`: define the residual-risk baseline explicitly accepted after MVP backend operability reset, including what is deferred and why it does not block MVP.
 - [ ] `P1` `run event log retention + TTL`: bound storage growth and automate archival.
-- [ ] `P1` `G5-PR2`: add deferred deletion and restore flow for archived events.
+- [x] `P1` `G5-PR2`: add deferred deletion and restore flow for archived events.
 - [x] `P1` `S15`: add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression under concurrency.
 - [x] `P1` `S15-F1`: surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
 - [x] `P1` `S14`: preserve gateway evaluation context across `continueAsNew` segments.

@@ -10,6 +10,7 @@ import type { ActiveEnv } from '../plugins/env.js';
 
 import {
   RunEventRetentionRuntime,
+  type RunEventRetentionRuntimeHooks,
   type RunEventRetentionRuntimeLogger,
 } from './RunEventRetentionRuntime.js';
 
@@ -23,7 +24,8 @@ type QueryConfigWithSignal = {
 export function buildRunEventRetentionRuntime(
   env: ActiveEnv,
   pool: Pool,
-  logger: RunEventRetentionRuntimeLogger
+  logger: RunEventRetentionRuntimeLogger,
+  hooks?: RunEventRetentionRuntimeHooks
 ): RunEventRetentionRuntime {
   let activeCycleSignal: globalThis.AbortSignal | undefined;
 
@@ -96,7 +98,8 @@ export function buildRunEventRetentionRuntime(
     },
     env.DVT_RUN_EVENT_RETENTION_INTERVAL_MS,
     env.DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS,
-    logger
+    logger,
+    hooks
   );
 }
 

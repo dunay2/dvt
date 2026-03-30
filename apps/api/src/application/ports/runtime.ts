@@ -9,6 +9,8 @@ export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<
 >;
 
 export type SupportedSignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
+export type SnapshotStaleness = 'FRESH' | 'STALE' | 'UNKNOWN';
+export type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
 export interface GetRunStatusQuery {
   readonly runId: string;
@@ -21,7 +23,23 @@ export type GetRunStatusResult = Pick<
 > & {
   readonly tenantId: string;
   readonly enriched: boolean;
+  readonly snapshotStaleness: SnapshotStaleness;
 };
+
+export interface IRunSnapshotStalenessReader {
+  /**
+   * Returns null when staleness cannot be resolved due to infrastructure
+   * availability/failure conditions. Callers map null to UNKNOWN.
+   */
+  isSnapshotStale(tenantId: string, runId: string): Promise<boolean | null>;
+}
+
+export interface IRunStatusStalenessTelemetry {
+  reportUnknown(
+    reason: SnapshotStalenessFallbackReason,
+    context: { tenantId: string; runId: string }
+  ): Promise<void>;
+}
 
 export interface IGetRunStatusUseCase {
   execute(

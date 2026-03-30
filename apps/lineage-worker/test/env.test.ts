@@ -24,6 +24,42 @@ function baseEnv(): NodeJS.ProcessEnv {
 }
 
 describe('loadEnv', () => {
+  it('parses explicit false string as false', () => {
+    const env = loadEnv({
+      ...baseEnv(),
+      DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'false',
+    });
+
+    expect(env.DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE).toBe(false);
+  });
+
+  it('parses explicit true string as true', () => {
+    const env = loadEnv({
+      ...baseEnv(),
+      DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'true',
+    });
+
+    expect(env.DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE).toBe(true);
+  });
+
+  it('rejects invalid boolean strings', () => {
+    expect(() =>
+      loadEnv({
+        ...baseEnv(),
+        DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'not-a-bool',
+      })
+    ).toThrow(/DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE/i);
+  });
+
+  it('parses explicit false string as false for DLQ auto replay flag', () => {
+    const env = loadEnv({
+      ...baseEnv(),
+      DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED: 'false',
+    });
+
+    expect(env.DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED).toBe(false);
+  });
+
   it('accepts a trimmed DLQ alert tenant id', () => {
     const env = loadEnv({
       ...baseEnv(),
