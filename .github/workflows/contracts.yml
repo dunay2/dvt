@@ -87,6 +87,7 @@ jobs:
   validate-json-schemas:
     name: Validate JSON Schemas
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes]
     if:
       github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
@@ -153,6 +154,7 @@ jobs:
   determinism-checks:
     name: Determinism Pattern Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes]
     if: >
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.determinism_relevant ==
@@ -174,6 +176,7 @@ jobs:
   contract-compile:
     name: Compile TypeScript Contracts
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [detect-changes]
     if:
       github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
@@ -214,6 +217,7 @@ jobs:
   contract-validate:
     name: Validate Golden JSON Fixtures
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes, contract-compile]
     if: >
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
@@ -238,6 +242,7 @@ jobs:
   contract-hashes:
     name: Execute Golden Paths & Validate Hashes
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [detect-changes, contract-compile]
     if: >
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.golden_relevant ==
@@ -259,7 +264,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: 0
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
