@@ -714,10 +714,11 @@ describe('createOutboxWorkerRuntime', () => {
       async function listPendingForClaim(): Promise<[]> {
         return [];
       };
-    RunArchiveCoordinator.prototype.archiveEligibleHotData = async function archiveEligibleHotData() {
-      archiveCalls += 1;
-      return [];
-    };
+    RunArchiveCoordinator.prototype.archiveEligibleHotData =
+      async function archiveEligibleHotData() {
+        archiveCalls += 1;
+        return [];
+      };
 
     try {
       const runtime = await createOutboxWorkerRuntime(
@@ -771,10 +772,11 @@ describe('createOutboxWorkerRuntime', () => {
       async function listPendingForClaim(): Promise<[]> {
         return [];
       };
-    RunArchiveCoordinator.prototype.archiveEligibleHotData = async function archiveEligibleHotData() {
-      archiveCalls += 1;
-      return [];
-    };
+    RunArchiveCoordinator.prototype.archiveEligibleHotData =
+      async function archiveEligibleHotData() {
+        archiveCalls += 1;
+        return [];
+      };
 
     try {
       const runtime = await createOutboxWorkerRuntime(

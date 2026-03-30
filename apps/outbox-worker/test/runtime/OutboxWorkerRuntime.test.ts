@@ -84,7 +84,12 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     return this.inner.listDeadLetter(limit, tenantId);
   }
 
-  async replayDeadLetters(options: { tenantId: string; limit?: number; runId?: string; ids?: string[] }) {
+  async replayDeadLetters(options: {
+    tenantId: string;
+    limit?: number;
+    runId?: string;
+    ids?: string[];
+  }) {
     return this.inner.replayDeadLetters(options);
   }
 }

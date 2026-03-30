@@ -1,7 +1,4 @@
-import {
-  PostgresDeliveryBufferPurgeStore,
-  PostgresStateStoreAdapter,
-} from '@dvt/adapter-postgres';
+import { PostgresDeliveryBufferPurgeStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
 import { DeliveryBufferPurger } from '@dvt/state-store';
 
