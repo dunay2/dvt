@@ -16,7 +16,7 @@ Generated automatically from repository code on 2026-03-30.
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
 | Total source files           | 547   |
-| Total test files             | 195   |
+| Total test files             | 196   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
