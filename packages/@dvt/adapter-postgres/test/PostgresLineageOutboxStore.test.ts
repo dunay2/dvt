@@ -317,6 +317,7 @@ describe('PostgresLineageOutboxStore', () => {
     );
 
     await expect(store.listDeadLetter(10, '')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+    await expect(store.listDeadLetter(10, '   ')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
   });
 
   it('listDeadLetter filters by tenant and maps tenantId', async () => {
@@ -391,6 +392,7 @@ describe('PostgresLineageOutboxStore', () => {
     );
 
     await expect(store.countDeadLetter('')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+    await expect(store.countDeadLetter('   ')).rejects.toThrow('TENANT_SCOPE_REQUIRED');
   });
 
   it('countDeadLetter returns tenant-scoped dead-letter count', async () => {

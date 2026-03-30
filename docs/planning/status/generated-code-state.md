@@ -2,13 +2,13 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-03-29
+last_reviewed: 2026-03-30
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-03-29.
+Generated automatically from repository code on 2026-03-30.
 
 ## Summary
 
@@ -16,7 +16,7 @@ Generated automatically from repository code on 2026-03-29.
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
 | Total source files           | 490   |
-| Total test files             | 193   |
+| Total test files             | 194   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
@@ -25,7 +25,7 @@ Generated automatically from repository code on 2026-03-29.
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
 | dvt-api                   | `apps/api`                           | 109       | 48         | yes   | yes  | yes       | -                       |
-| dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 4          | yes   | yes  | yes       | -                       |
+| dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 19         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 78        | 0          | yes   | no   | yes       | -                       |

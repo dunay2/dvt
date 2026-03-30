@@ -192,7 +192,8 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<LineageDeadLetterRecord[]> {
-    if (!tenantId) {
+    const normalizedTenantId = tenantId.trim();
+    if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
     const boundedLimit = normalizeLineageQueryLimit(limit, 'LINEAGE_DEAD_LETTER_LIMIT');
@@ -201,7 +202,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     const result = await this.withClient((client) =>
       client.query<LineageDeadLetterRow>(listLineageDeadLetterSql(this.schema), [
         boundedLimit,
-        tenantId,
+        normalizedTenantId,
       ])
     );
     return result.rows.map((row) => ({
@@ -217,12 +218,15 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async countDeadLetter(tenantId: string): Promise<number> {
-    if (!tenantId) {
+    const normalizedTenantId = tenantId.trim();
+    if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
 
     const result = await this.withClient((client) =>
-      client.query<LineageDeadLetterCountRow>(countLineageDeadLetterSql(this.schema), [tenantId])
+      client.query<LineageDeadLetterCountRow>(countLineageDeadLetterSql(this.schema), [
+        normalizedTenantId,
+      ])
     );
     return Number(result.rows[0]?.dead_letter_count ?? 0);
   }
