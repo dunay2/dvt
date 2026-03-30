@@ -30,33 +30,25 @@ export function isBodyObject(raw: unknown): raw is Record<string, unknown> {
   return raw !== null && typeof raw === 'object' && !Array.isArray(raw);
 }
 
-export function parseTenantId(body: Record<string, unknown>):
-  | { readonly ok: true; readonly value: TenantId }
-  | {
-      readonly ok: false;
-      readonly error:
-        | (typeof RUN_COMMAND_PARSE_ERROR_CODE)['MISSING_TENANT_SCOPE']
-        | (typeof RUN_COMMAND_PARSE_ERROR_CODE)['INVALID_TENANT_ID'];
-    };
-export function parseTenantId<TMissingTenantScope extends string, TInvalidTenantId extends string>(
+export function parseTenantId<
+  TMissingTenantScope extends string =
+    (typeof RUN_COMMAND_PARSE_ERROR_CODE)['MISSING_TENANT_SCOPE'],
+  TInvalidTenantId extends string = (typeof RUN_COMMAND_PARSE_ERROR_CODE)['INVALID_TENANT_ID'],
+>(
   body: Record<string, unknown>,
-  codes: TenantParseErrorCodes<TMissingTenantScope, TInvalidTenantId>
+  codes?: TenantParseErrorCodes<TMissingTenantScope, TInvalidTenantId>
 ):
   | { readonly ok: true; readonly value: TenantId }
   | {
       readonly ok: false;
       readonly error: TMissingTenantScope | TInvalidTenantId;
-    };
-export function parseTenantId(
-  body: Record<string, unknown>,
-  codes?: TenantParseErrorCodes<string, string>
-):
-  | { readonly ok: true; readonly value: TenantId }
-  | {
-      readonly ok: false;
-      readonly error: string;
     } {
-  const resolvedCodes = codes ?? RUN_COMMAND_PARSE_ERROR_CODE;
+  const resolvedCodes =
+    codes ??
+    (RUN_COMMAND_PARSE_ERROR_CODE as unknown as TenantParseErrorCodes<
+      TMissingTenantScope,
+      TInvalidTenantId
+    >);
   if (!Object.hasOwn(body, 'tenantId') || body.tenantId === undefined) {
     return { ok: false, error: resolvedCodes.MISSING_TENANT_SCOPE };
   }
