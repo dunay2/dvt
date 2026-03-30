@@ -9,6 +9,7 @@ import type {
   OutboxWorkerRuntimeHooks,
   OutboxWorkerRuntimeLogger,
 } from '../runtime/OutboxWorkerRuntime.js';
+import type { RunEventRetentionRuntimeHooks } from '../runtime/RunEventRetentionRuntime.js';
 
 export type OutboxRuntimeState =
   | 'starting'
@@ -59,7 +60,9 @@ const RUNTIME_STATES: readonly OutboxRuntimeState[] = [
 
 const DEFAULT_READY_STALE_AFTER_MS = 30_000;
 
-export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRuntimeHooks {
+export class OutboxWorkerMonitor
+  implements OutboxWorkerObserver, OutboxWorkerRuntimeHooks, RunEventRetentionRuntimeHooks
+{
   private readonly serviceName: string;
   private readonly logger: OutboxWorkerRuntimeLogger;
   private readonly nowMs: () => number;
@@ -83,6 +86,12 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   private pendingDeliveryFailureMessage: string | null = null;
   private lastClaimedLagSeconds = 0;
   private lastBatchClaimedCount = 0;
+  private retentionCyclesTotal = 0;
+  private retentionCycleFailuresTotal = 0;
+  private retentionArchivedUnitsTotal = 0;
+  private retentionLastCycleDurationMs = 0;
+  private retentionLastSuccessAtMs: number | null = null;
+  private retentionLastFailureAtMs: number | null = null;
 
   constructor(options: OutboxWorkerMonitorOptions) {
     this.serviceName = options.serviceName;
@@ -205,6 +214,21 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     this.logger.warn?.(data, 'outbox record scheduled for retry');
   }
 
+  onRunEventRetentionCycleSucceeded(details: { durationMs: number; archivedUnits: number }): void {
+    this.retentionCyclesTotal += 1;
+    this.retentionArchivedUnitsTotal += details.archivedUnits;
+    this.retentionLastCycleDurationMs = Math.max(0, details.durationMs);
+    this.retentionLastSuccessAtMs = this.nowMs();
+  }
+
+  onRunEventRetentionCycleFailed(details: { durationMs: number; error: unknown }): void {
+    this.retentionCyclesTotal += 1;
+    this.retentionCycleFailuresTotal += 1;
+    this.retentionLastCycleDurationMs = Math.max(0, details.durationMs);
+    this.retentionLastFailureAtMs = this.nowMs();
+    void details.error;
+  }
+
   getHealthSnapshot(): HealthSnapshot {
     const tickFresh = this.isTickFresh();
     return {
@@ -270,6 +294,24 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
       '# HELP dvt_outbox_process_start_timestamp_seconds Unix timestamp when the worker started.',
       '# TYPE dvt_outbox_process_start_timestamp_seconds gauge',
       `dvt_outbox_process_start_timestamp_seconds ${this.startedAtMs === null ? 0 : Math.floor(this.startedAtMs / 1000)}`,
+      '# HELP dvt_run_event_retention_cycles_total Total run-event retention cycles executed.',
+      '# TYPE dvt_run_event_retention_cycles_total counter',
+      `dvt_run_event_retention_cycles_total ${this.retentionCyclesTotal}`,
+      '# HELP dvt_run_event_retention_cycle_failures_total Total failed run-event retention cycles.',
+      '# TYPE dvt_run_event_retention_cycle_failures_total counter',
+      `dvt_run_event_retention_cycle_failures_total ${this.retentionCycleFailuresTotal}`,
+      '# HELP dvt_run_event_retention_archived_units_total Total archive units exported successfully by retention cycles.',
+      '# TYPE dvt_run_event_retention_archived_units_total counter',
+      `dvt_run_event_retention_archived_units_total ${this.retentionArchivedUnitsTotal}`,
+      '# HELP dvt_run_event_retention_last_cycle_duration_ms Duration of the last retention cycle.',
+      '# TYPE dvt_run_event_retention_last_cycle_duration_ms gauge',
+      `dvt_run_event_retention_last_cycle_duration_ms ${this.retentionLastCycleDurationMs}`,
+      '# HELP dvt_run_event_retention_last_success_timestamp_seconds Unix timestamp of the last successful retention cycle.',
+      '# TYPE dvt_run_event_retention_last_success_timestamp_seconds gauge',
+      `dvt_run_event_retention_last_success_timestamp_seconds ${this.retentionLastSuccessAtMs === null ? 0 : Math.floor(this.retentionLastSuccessAtMs / 1000)}`,
+      '# HELP dvt_run_event_retention_last_failure_timestamp_seconds Unix timestamp of the last failed retention cycle.',
+      '# TYPE dvt_run_event_retention_last_failure_timestamp_seconds gauge',
+      `dvt_run_event_retention_last_failure_timestamp_seconds ${this.retentionLastFailureAtMs === null ? 0 : Math.floor(this.retentionLastFailureAtMs / 1000)}`,
     ];
 
     return `${lines.join('\n')}\n`;

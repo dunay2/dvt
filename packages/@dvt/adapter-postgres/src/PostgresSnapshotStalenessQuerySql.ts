@@ -50,3 +50,24 @@ export function listStaleSnapshotRunsSql(schema: string): string {
     LIMIT $1
   `;
 }
+
+export function isSnapshotStaleSql(schema: string): string {
+  return `
+    SELECT EXISTS (
+      SELECT 1
+      FROM ${quoteIdentifier(schema)}.run_metadata m
+      LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
+      LEFT JOIN LATERAL (
+        SELECT e.run_seq
+        FROM ${quoteIdentifier(schema)}.run_events e
+        WHERE e.run_id = m.run_id
+          AND e.tenant_id = m.tenant_id
+        ORDER BY e.run_seq DESC
+        LIMIT 1
+      ) le ON TRUE
+      WHERE m.tenant_id = $1
+        AND m.run_id = $2
+        AND ((s.run_id IS NULL AND le.run_seq IS NOT NULL) OR s.last_run_seq < COALESCE(le.run_seq, 0))
+    ) AS is_snapshot_stale
+  `;
+}

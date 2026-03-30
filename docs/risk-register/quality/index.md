@@ -14,6 +14,8 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [R 20260328 RCB5F2 LINEAGE CLAIM RACE](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
 - [R 20260329 ADAPTER IMPORT ALIAS DRIFT](R-20260329-ADAPTER-IMPORT-ALIAS-DRIFT.md)
 - [R 20260330 LINEAGE DLQ AUTO REPLAY](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
+- [R 20260330 PLANNER MANIFEST CACHE STALENESS](R-20260330-PLANNER-MANIFEST-CACHE-STALENESS.md)
+- [R 20260330 Snapshot Staleness Caller View](R-20260330-snapshot-staleness-caller-view.md)
 - [R 20260330 WS5 ENGINE TEST FIXTURE DRIFT](R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md)
 - [R-20260307-GOLDEN-PATH-01 - Golden-path coverage debt can hide engine and adapter regressions](R-20260307-golden-path-coverage-debt.md)
 - [R-20260308-API-AUTH-01 - API auth runtime can regress without a full OIDC plus Postgres integration lane](R-20260308-api-auth-runtime-integration-coverage.md)

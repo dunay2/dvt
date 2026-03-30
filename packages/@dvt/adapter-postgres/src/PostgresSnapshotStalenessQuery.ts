@@ -9,7 +9,10 @@
 import type { PoolClient } from 'pg';
 
 import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
-import { listStaleSnapshotRunsSql } from './PostgresSnapshotStalenessQuerySql.js';
+import {
+  isSnapshotStaleSql,
+  listStaleSnapshotRunsSql,
+} from './PostgresSnapshotStalenessQuerySql.js';
 import type { IRunSnapshotStalenessQuery } from './types.js';
 
 type WithClient = <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
@@ -36,6 +39,16 @@ export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuer
         [boundedBatchSize]
       );
       return result.rows.map((row) => ({ runId: row.run_id, tenantId: row.tenant_id }));
+    });
+  }
+
+  async isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
+    return this.withClient(async (client) => {
+      const result = await client.query<{ is_snapshot_stale: boolean }>(
+        isSnapshotStaleSql(this.schema),
+        [tenantId, runId]
+      );
+      return result.rows[0]?.is_snapshot_stale ?? false;
     });
   }
 }
