@@ -100,10 +100,12 @@ tasks:
     target: Caller-visible staleness surface.
   - task_id: read-your-writes contract
     priority: P2
-    status: queued
+    status: done
     objective: set a measurable staleness SLO.
     dependency: snapshot staleness in API
-    target: SLO-backed freshness contract.
+    target:
+      SLO-backed freshness contract defined for `GET /runs/:runId` with measurable staleness outcome
+      telemetry and operator alert thresholds.
   - task_id: granular RBAC
     priority: P2
     status: queued

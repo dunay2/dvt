@@ -1,40 +1,71 @@
-import type { IObservability } from '@dvt/observability';
+import type { Attributes, IObservability } from '@dvt/observability';
 
 import type {
   IRunStatusStalenessTelemetry,
+  RunSnapshotStaleness,
   SnapshotStalenessFallbackReason,
 } from '../../application/ports/runtime.js';
 import { safeWarn } from '../admissionTelemetry/safeWarn.js';
 
-const RUN_STATUS_STALENESS_FALLBACK_UNKNOWN_TOTAL =
-  'dvt.api.run_status.snapshot_staleness_fallback_unknown_total';
+const RUN_STATUS_STALENESS_METRIC = {
+  resultTotal: 'dvt.api.run_status.snapshot_staleness_result_total',
+  fallbackUnknownTotal: 'dvt.api.run_status.snapshot_staleness_fallback_unknown_total',
+} as const;
 
 export class ObservabilityRunStatusStalenessTelemetry implements IRunStatusStalenessTelemetry {
-  private readonly unknownCounter;
+  private readonly resultCounter;
+  private readonly fallbackUnknownCounter;
 
-  public constructor(private readonly observability: IObservability) {
-    this.unknownCounter = observability.metrics.counter(
-      RUN_STATUS_STALENESS_FALLBACK_UNKNOWN_TOTAL
+  public constructor(
+    private readonly deps: {
+      readonly observability: IObservability;
+    }
+  ) {
+    this.resultCounter = deps.observability.metrics.counter(RUN_STATUS_STALENESS_METRIC.resultTotal);
+    this.fallbackUnknownCounter = deps.observability.metrics.counter(
+      RUN_STATUS_STALENESS_METRIC.fallbackUnknownTotal
     );
   }
 
-  public async reportUnknown(
-    reason: SnapshotStalenessFallbackReason,
-    context: { tenantId: string; runId: string }
-  ): Promise<void> {
+  public recordSnapshotStalenessResult(
+    result: RunSnapshotStaleness,
+    tenantId: string,
+    runId: string
+  ): void {
     try {
-      this.unknownCounter.add(1, { reason });
-      this.observability.logs.warn({
-        msg: 'run_status.snapshot_staleness_unknown',
+      this.resultCounter.add(1, { result });
+      this.deps.observability.logs.info({
+        msg: 'run_status.snapshot_staleness_result',
+        attributes: {
+          result,
+          tenantId,
+          runId,
+        } as Attributes,
+      });
+    } catch (err) {
+      safeWarn(this.deps.observability.logs, 'run_status.snapshot_staleness_telemetry_drop', err);
+    }
+  }
+
+  public recordSnapshotStalenessFallback(
+    reason: SnapshotStalenessFallbackReason,
+    tenantId: string,
+    runId: string
+  ): void {
+    try {
+      this.fallbackUnknownCounter.add(1, {
+        reason,
+      });
+      this.deps.observability.logs.warn({
+        msg: 'run_status.snapshot_staleness_fallback_unknown',
         attributes: {
           reason,
-          tenantId: context.tenantId,
-          runId: context.runId,
-        },
+          tenantId,
+          runId,
+        } as Attributes,
       });
-    } catch (error) {
-      // Telemetry paths must not break read routes.
-      safeWarn(this.observability.logs, 'run_status.snapshot_staleness_telemetry_drop', error);
+    } catch (err) {
+      safeWarn(this.deps.observability.logs, 'run_status.snapshot_staleness_telemetry_drop', err);
     }
   }
 }
