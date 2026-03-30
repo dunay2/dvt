@@ -13,9 +13,10 @@ code_refs:
   - packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts
   - apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts
 evidence:
-  - pnpm --filter @dvt/state-store test
-  - pnpm --filter dvt-outbox-worker test
-  - pnpm verify:prepush
+  tests:
+    - pnpm --filter @dvt/state-store test
+    - pnpm --filter dvt-outbox-worker test
+    - pnpm verify:prepush
 ---
 
 # Summary
