@@ -35,13 +35,10 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     }
 
     const runRef = runMetadataToEngineRunRef(metadata);
-    const snapshot = query.enriched
-      ? await this.engine.enrichRunStatus(runRef)
-      : await this.engine.getRunStatus(runRef);
-    const snapshotStaleness = await this.resolveSnapshotStaleness(
-      context.scope.tenantId.value,
-      query.runId
-    );
+    const [snapshot, snapshotStaleness] = await Promise.all([
+      query.enriched ? this.engine.enrichRunStatus(runRef) : this.engine.getRunStatus(runRef),
+      this.resolveSnapshotStaleness(context.scope.tenantId.value, query.runId),
+    ]);
 
     return {
       runId: snapshot.runId,

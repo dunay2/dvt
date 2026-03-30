@@ -8,6 +8,8 @@
  */
 import { quoteIdentifier } from './sqlUtils.js';
 
+export const IS_SNAPSHOT_STALE_ALIAS = 'is_snapshot_stale' as const;
+
 export function listStaleSnapshotRunsSql(schema: string): string {
   return `
     SELECT m.run_id, m.tenant_id
@@ -68,6 +70,6 @@ export function isSnapshotStaleSql(schema: string): string {
       WHERE m.tenant_id = $1
         AND m.run_id = $2
         AND ((s.run_id IS NULL AND le.run_seq IS NOT NULL) OR s.last_run_seq < COALESCE(le.run_seq, 0))
-    ) AS is_snapshot_stale
+    ) AS ${IS_SNAPSHOT_STALE_ALIAS}
   `;
 }

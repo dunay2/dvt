@@ -182,7 +182,6 @@ describe('GetRunStatusUseCase', () => {
       runId: 'provider-run-1',
       snapshotStaleness: 'UNKNOWN',
     });
-    await Promise.resolve();
     expect(telemetry.reportUnknown).toHaveBeenCalledWith('query_not_wired', {
       tenantId: 'tenant-a',
       runId: 'run-1',
@@ -291,7 +290,6 @@ describe('GetRunStatusUseCase', () => {
       runId: 'provider-run-1',
       snapshotStaleness: 'UNKNOWN',
     });
-    await Promise.resolve();
     expect(telemetry.reportUnknown).toHaveBeenCalledWith('query_failed', {
       tenantId: 'tenant-a',
       runId: 'run-1',
