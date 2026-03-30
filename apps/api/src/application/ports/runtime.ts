@@ -18,13 +18,17 @@ export interface GetRunStatusQuery {
 export type RunSnapshotStaleness = 'FRESH' | 'STALE' | 'UNKNOWN';
 
 export interface IRunSnapshotStalenessReader {
-  isSnapshotStale(tenantId: string, runId: string): Promise<boolean>;
+  isSnapshotStale(tenantId: string, runId: string): Promise<boolean | null>;
 }
 
 export type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
 export interface IRunStatusStalenessTelemetry {
-  recordSnapshotStalenessResult(result: RunSnapshotStaleness, tenantId: string, runId: string): void;
+  recordSnapshotStalenessResult(
+    result: RunSnapshotStaleness,
+    tenantId: string,
+    runId: string
+  ): void;
   recordSnapshotStalenessFallback(
     reason: SnapshotStalenessFallbackReason,
     tenantId: string,

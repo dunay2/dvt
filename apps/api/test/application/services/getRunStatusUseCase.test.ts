@@ -223,6 +223,51 @@ describe('GetRunStatusUseCase', () => {
     );
   });
 
+  it('uses UNKNOWN staleness and emits telemetry when staleness query returns null', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const telemetry = {
+      recordSnapshotStalenessResult: vi.fn(),
+      recordSnapshotStalenessFallback: vi.fn(),
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(null),
+      } as never,
+      telemetry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      snapshotStaleness: 'UNKNOWN',
+    });
+
+    expect(telemetry.recordSnapshotStalenessFallback).toHaveBeenCalledWith(
+      'query_failed',
+      'tenant-a',
+      'run-1'
+    );
+    expect(telemetry.recordSnapshotStalenessResult).toHaveBeenCalledWith(
+      'UNKNOWN',
+      'tenant-a',
+      'run-1'
+    );
+  });
+
   it('uses the enriched path when requested', async () => {
     const engine = {
       async getRunStatus() {

@@ -21,7 +21,9 @@ export class ObservabilityRunStatusStalenessTelemetry implements IRunStatusStale
       readonly observability: IObservability;
     }
   ) {
-    this.resultCounter = deps.observability.metrics.counter(RUN_STATUS_STALENESS_METRIC.resultTotal);
+    this.resultCounter = deps.observability.metrics.counter(
+      RUN_STATUS_STALENESS_METRIC.resultTotal
+    );
     this.fallbackUnknownCounter = deps.observability.metrics.counter(
       RUN_STATUS_STALENESS_METRIC.fallbackUnknownTotal
     );

@@ -68,9 +68,14 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     }
 
     try {
-      const result = (await this.stalenessReader.isSnapshotStale(tenantId, runId))
-        ? 'STALE'
-        : 'FRESH';
+      const isStale = await this.stalenessReader.isSnapshotStale(tenantId, runId);
+      if (isStale === null) {
+        this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
+        this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
+        return 'UNKNOWN';
+      }
+
+      const result = isStale ? 'STALE' : 'FRESH';
       this.stalenessTelemetry?.recordSnapshotStalenessResult(result, tenantId, runId);
       return result;
     } catch {
