@@ -33,12 +33,14 @@ function hasInlineImportTypeAlias(content) {
   const sourceFile = ts.createSourceFile('inline-import-alias-check.ts', content, ts.ScriptTarget.Latest);
   let found = false;
 
+  function containsImportType(node) {
+    if (!node) return false;
+    if (ts.isImportTypeNode(node)) return true;
+    return ts.forEachChild(node, containsImportType) === true;
+  }
+
   function visit(node) {
-    if (
-      ts.isTypeAliasDeclaration(node) &&
-      node.type &&
-      ts.isImportTypeNode(node.type)
-    ) {
+    if (ts.isTypeAliasDeclaration(node) && node.type && containsImportType(node.type)) {
       found = true;
       return;
     }
@@ -66,6 +68,13 @@ type Real = { ok: true };
   assert.equal(hasInlineImportTypeAlias(content), false);
 });
 
+test('detects nested inline import aliases inside union and indexed access types', () => {
+  const content = `
+type ViaUnion = import('./types.js').Foo | null;
+type ViaIndexed = { node: import('./types.js').Foo }['node'];
+`;
+  assert.equal(hasInlineImportTypeAlias(content), true);
+});
 test('adapter-postgres source keeps import-type aliases explicit (no type = import(...))', () => {
   const targetFiles = listTypeScriptFiles(ADAPTER_POSTGRES_SRC_ROOT);
   assert.ok(targetFiles.length > 0, 'adapter-postgres src must contain TypeScript source files');

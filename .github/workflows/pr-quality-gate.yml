@@ -239,6 +239,9 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Enforce adapter-postgres import alias guard
+        run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
+
       - name: Build adapter-postgres dependency graph
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build
 
