@@ -367,29 +367,32 @@ describe('loadEnv', () => {
     ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
   });
 
-  it('allows run-event retention in production with warning for filesystem archive storage', () => {
-    const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
-
-    const env = loadEnv({
-      NODE_ENV: 'production',
-      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-      DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
-    });
-
-    assertActiveEnv(env);
-    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(true);
-    expect(warningSpy).toHaveBeenCalledWith(
-      expect.stringContaining('DVT_RUN_EVENT_RETENTION_ENABLED is active in production'),
-      expect.objectContaining({
-        code: 'DVT_RUN_EVENT_RETENTION_PROD_FILESYSTEM',
+  it('fails in production when retention is enabled without explicit filesystem opt-in', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
       })
-    );
-    warningSpy.mockRestore();
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD/);
   });
 
-  it('also warns in production when event bus mode is http', () => {
+  it('fails in production when retention is enabled and filesystem opt-in is false', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
+        DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: 'false',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD/);
+  });
+
+  it('allows production retention with warning when filesystem opt-in is true in http mode', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
 
     const env = loadEnv({
@@ -412,7 +415,7 @@ describe('loadEnv', () => {
     warningSpy.mockRestore();
   });
 
-  it('keeps warning behavior in production even with custom archive directory', () => {
+  it('keeps warning behavior in production with opt-in and custom archive directory', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
 
     const env = loadEnv({
@@ -452,7 +455,7 @@ describe('loadEnv', () => {
     warningSpy.mockRestore();
   });
 
-  it('emits one warning per loadEnv call when production retention is enabled', () => {
+  it('emits one warning per loadEnv call when production retention is enabled with opt-in', () => {
     const warningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
 
     loadEnv({

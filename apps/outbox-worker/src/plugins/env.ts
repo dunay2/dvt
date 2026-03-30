@@ -60,6 +60,7 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   DVT_PURGE_MAX_ROWS_PER_RUN: z.coerce.number().int().positive().default(5_000),
   DVT_RUN_EVENT_RETENTION_ENABLED: envBoolean.default(false),
+  DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: envBoolean.default(false),
   DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: z.coerce.number().int().min(0).default(30_000),
   DVT_RUN_EVENT_RETENTION_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
   DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
@@ -203,6 +204,12 @@ function normalizeActiveEnv(env: ParsedActiveEnv): ActiveEnv {
 
 function validateRunEventRetentionConfiguration(env: ParsedActiveEnv): void {
   if (env.NODE_ENV === 'production' && env.DVT_RUN_EVENT_RETENTION_ENABLED) {
+    if (!env.DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD) {
+      throw new Error(
+        'Invalid environment: DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: must be true when DVT_RUN_EVENT_RETENTION_ENABLED is true in production'
+      );
+    }
+
     process.emitWarning(
       'DVT_RUN_EVENT_RETENTION_ENABLED is active in production with filesystem archive storage. This mode risks data loss across node restarts/replacements.',
       {
