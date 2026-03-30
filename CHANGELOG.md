@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.1](https://github.com/dunay2/dvt/compare/v5.1.0...v5.1.1) (2026-03-29)
+
+
+### Bug Fixes
+
+* **state-store:** Protect rollback disposal and retry timestamp idempotency ([#662](https://github.com/dunay2/dvt/issues/662)) ([ad9a030](https://github.com/dunay2/dvt/commit/ad9a03051f2ab668d5dd2374454105178452f28f))
+
 ## [5.1.0](https://github.com/dunay2/dvt/compare/v5.0.2...v5.1.0) (2026-03-29)
 
 
