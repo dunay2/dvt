@@ -87,4 +87,22 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries[0]?.sql).toContain('AND e.run_seq > COALESCE(s.last_run_seq, 0)');
     expect(client.queries[0]?.params).toEqual([MAX_STALE_BATCH_SIZE]);
   });
+
+  it('checks staleness for a specific run with tenant scope', async () => {
+    const client = new RecordingClient();
+    client.enqueueRows([{ is_snapshot_stale: true }]);
+    const query = new PostgresSnapshotStalenessQuery(
+      TEST_SCHEMA,
+      withRecordingClient(client) as never
+    );
+
+    const stale = await query.isSnapshotStale(TEST_TENANT_ID, TEST_RUN_ID);
+
+    expect(stale).toBe(true);
+    expect(client.queries).toHaveLength(1);
+    expect(client.queries[0]?.sql).toContain('SELECT EXISTS (');
+    expect(client.queries[0]?.sql).toContain('WHERE m.tenant_id = $1');
+    expect(client.queries[0]?.sql).toContain('AND m.run_id = $2');
+    expect(client.queries[0]?.params).toEqual([TEST_TENANT_ID, TEST_RUN_ID]);
+  });
 });

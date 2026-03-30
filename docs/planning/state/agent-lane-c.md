@@ -42,18 +42,19 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 
 - [ ] `P0` `MVP-C1`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
 - [x] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
+- [x] `P1` `S16`: enforce governed planVersion validation at start-run admission to reject unsupported or stale plan references.
 - [x] `P0` `RC-D2`: make the outbox claim timeout configurable.
 - [x] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
 - [x] `P1` `RC-D1`: surface reconciler degradation in API health.
 - [x] `P1` `RC-D1A`: add health compatibility and watchdog integration tests.
 - [x] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
-- [ ] `P1` `snapshot staleness in API`: expose freshness to callers.
+- [x] `P1` `snapshot staleness in API`: expose freshness to callers.
 - [ ] `P2` `read-your-writes contract`: set a measurable staleness SLO.
 - [ ] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
 - [ ] `P3` `RC-C1`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
 - [ ] `P2` `RC-C2`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
-- [ ] `P1` `RC-E1`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
-- [ ] `P1` `RC-E2`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
+- [x] `P1` `RC-E1`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
+- [x] `P1` `RC-E2`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
 
 ## Dependencies
 

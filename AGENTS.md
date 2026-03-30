@@ -198,7 +198,8 @@ breaking: false
 code_refs:
   - <file or function changed>
 evidence:
-  - <test or validation that proves correctness>
+  tests:
+    - <pnpm command or validation that proves correctness>
 ---
 ```
 
