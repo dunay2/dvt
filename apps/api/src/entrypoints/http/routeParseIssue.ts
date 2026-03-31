@@ -4,9 +4,7 @@ import {
   type HttpErrorType,
 } from './httpErrorContract.js';
 
-type RouteParseErrorType =
-  | typeof HTTP_ERROR_TYPE.badRequest
-  | typeof HTTP_ERROR_TYPE.forbidden;
+type RouteParseErrorType = typeof HTTP_ERROR_TYPE.badRequest | typeof HTTP_ERROR_TYPE.forbidden;
 
 export interface RouteParseIssue {
   readonly type: RouteParseErrorType;
@@ -19,17 +17,11 @@ export type RouteParseResult<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly issue: RouteParseIssue };
 
-export function badRequestIssue(
-  reason: string,
-  options?: RouteParseIssueOptions
-): RouteParseIssue {
+export function badRequestIssue(reason: string, options?: RouteParseIssueOptions): RouteParseIssue {
   return createRouteParseIssue(HTTP_ERROR_TYPE.badRequest, reason, options);
 }
 
-export function forbiddenIssue(
-  reason: string,
-  options?: RouteParseIssueOptions
-): RouteParseIssue {
+export function forbiddenIssue(reason: string, options?: RouteParseIssueOptions): RouteParseIssue {
   return createRouteParseIssue(HTTP_ERROR_TYPE.forbidden, reason, options);
 }
 

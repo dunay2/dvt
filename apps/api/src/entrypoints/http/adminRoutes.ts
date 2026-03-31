@@ -13,6 +13,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestIssue } from './routeParseIssue.js';
 
 export function registerAdminRoutes(
@@ -27,25 +28,24 @@ export function registerAdminRoutes(
    *
    * Body: { tenantId: string }
    * Response 200: { runId, status, lastSeq (implied) }
-   * Response 400: { error: { type: "bad_request", reason: "missing_tenant_id" } }
+   * Response 400: { error: { type: "bad_request", reason: "invalid_body|missing_tenant_id|invalid_tenant_id" } }
    * Response 404: { error: { type: "not_found", reason: "run_not_found" } }
    * Response 500: { error: { type: "internal_server_error", reason: "internal_error" } }
    */
-  app.post<{ Params: { runId: string }; Body: { tenantId?: string } }>(
+  app.post<{ Params: { runId: string }; Body: unknown }>(
     '/admin/runs/:runId/rebuild-snapshot',
     async (request, reply) => {
       const { runId } = request.params;
-      const tenantId = request.body?.tenantId;
-
-      if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
-        sendHttpResponse(reply, mapRouteParseIssue(badRequestIssue('missing_tenant_id', {
-          target: 'tenantId',
-        })));
+      const tenantIdResult = parseTenantIdFromAdminBody(request.body);
+      if (!tenantIdResult.ok) {
+        sendHttpResponse(reply, mapRouteParseIssue(tenantIdResult.issue));
         return;
       }
 
+      const tenantId = tenantIdResult.value;
+
       try {
-        const snapshot = await stateStore.rebuildSnapshot(tenantId.trim(), runId);
+        const snapshot = await stateStore.rebuildSnapshot(tenantId, runId);
         reply.code(200).send({ runId, status: snapshot.status });
       } catch (err) {
         const mapped = mapRuntimeDomainError(err);
@@ -59,10 +59,46 @@ export function registerAdminRoutes(
           reply,
           createHttpErrorResponse({
             type: HTTP_ERROR_TYPE.internalServerError,
-            reason: 'internal_error',
+            reason: HTTP_ERROR_REASON.internalError,
           })
         );
       }
     }
   );
+}
+
+function parseTenantIdFromAdminBody(
+  body: unknown
+):
+  | { readonly ok: true; readonly value: string }
+  | { readonly ok: false; readonly issue: ReturnType<typeof badRequestIssue> } {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return { ok: false, issue: badRequestIssue(HTTP_ERROR_REASON.invalidBody) };
+  }
+
+  const record = body as Record<string, unknown>;
+
+  if (!Object.hasOwn(record, 'tenantId') || record.tenantId === undefined) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.missingTenantId, { target: 'tenantId' }),
+    };
+  }
+
+  if (typeof record.tenantId !== 'string') {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }),
+    };
+  }
+
+  const tenantId = record.tenantId.trim();
+  if (tenantId.length === 0) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }),
+    };
+  }
+
+  return { ok: true, value: tenantId };
 }

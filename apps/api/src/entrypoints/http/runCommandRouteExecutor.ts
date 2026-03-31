@@ -8,10 +8,10 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import type { TenantId } from '../../domain/auth/types.js';
 import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
-import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { sendHttpResponse } from './httpErrorContract.js';
+import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 import type { RunCommandActionName } from './runCommandRoute.constants.js';
 

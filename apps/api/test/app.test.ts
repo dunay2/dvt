@@ -11,7 +11,11 @@ const adapterPostgres = await import('@dvt/adapter-postgres');
 const { PostgresPlanStore, PostgresStartRunIntentStore, PostgresStateStoreAdapter } =
   adapterPostgres;
 
-function httpError(type: string, reason: string, target?: string) {
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
   return {
     error: {
       type,

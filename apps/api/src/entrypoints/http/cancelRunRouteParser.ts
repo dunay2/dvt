@@ -1,13 +1,14 @@
 import type { TenantId } from '../../domain/auth/types.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   isBodyObject,
   normalizeRunId,
   parseOptionalReason,
   parseTenantId,
 } from './runCommandFieldParsers.js';
-import { RUN_COMMAND_ACTION, RUN_COMMAND_PARSE_ERROR_CODE } from './runCommandRoute.constants.js';
-import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
+import { RUN_COMMAND_ACTION } from './runCommandRoute.constants.js';
 
 const CANCEL_SIGNAL_TYPE = 'CANCEL' as const;
 
@@ -31,11 +32,11 @@ export function parseCancelRunRequest(input: {
 }): ParsedCancelRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
-    return badRequestResult(RUN_COMMAND_PARSE_ERROR_CODE.INVALID_RUN_ID, { target: 'runId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
 
   if (!isBodyObject(input.body)) {
-    return badRequestResult(RUN_COMMAND_PARSE_ERROR_CODE.INVALID_BODY);
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
   const tenantIdResult = parseTenantId(input.body);

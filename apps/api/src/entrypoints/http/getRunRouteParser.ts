@@ -1,6 +1,7 @@
 import type { RequestedScope } from '../../domain/auth/types.js';
 
 import { GET_RUN_ACTION } from './getRunRouteParser.constants.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, forbiddenResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   normalizeRequiredString,
@@ -27,20 +28,20 @@ export function parseGetRunRequest(input: {
 }): ParsedGetRunResult {
   const runId = normalizeRequiredString(input.runId);
   if (!runId) {
-    return badRequestResult('invalid_run_id', { target: 'runId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
 
   const tenant = parseRequiredTenantId(input.tenantId);
   if (tenant.kind === 'missing') {
-    return forbiddenResult('missing_tenant_scope', { target: 'tenantId' });
+    return forbiddenResult(HTTP_ERROR_REASON.missingTenantScope, { target: 'tenantId' });
   }
   if (tenant.kind === 'invalid') {
-    return badRequestResult('invalid_tenant_id', { target: 'tenantId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
   }
 
   const enriched = parseBooleanQuery(input.enriched);
   if (!enriched.ok) {
-    return badRequestResult('invalid_enriched_flag', { target: 'enriched' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidEnrichedFlag, { target: 'enriched' });
   }
 
   return {

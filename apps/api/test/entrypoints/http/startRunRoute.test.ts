@@ -26,7 +26,7 @@ function httpError(
   type: string,
   reason: string,
   extra?: { target?: string; details?: Record<string, unknown> }
-) {
+): { error: { type: string; reason: string; target?: string; details?: Record<string, unknown> } } {
   return {
     error: {
       type,
@@ -314,7 +314,9 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }));
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' })
+    );
   });
 
   it('returns 400 on invalid planRef shape', async () => {
@@ -345,7 +347,9 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }));
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' })
+    );
   });
 
   it('passes normalized command and requested scope', async () => {

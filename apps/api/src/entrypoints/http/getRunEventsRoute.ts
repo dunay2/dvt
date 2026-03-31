@@ -6,9 +6,9 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { parseGetRunEventsRequest } from './getRunEventsRouteParser.js';
 import { sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
-import { parseGetRunEventsRequest } from './getRunEventsRouteParser.js';
 
 export async function getRunEventsRoute(
   request: FastifyRequest<{

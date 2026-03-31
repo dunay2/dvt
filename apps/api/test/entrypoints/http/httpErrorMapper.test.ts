@@ -192,7 +192,6 @@ describe('mapStartRunEngineError', () => {
 });
 
 describe('mapRuntimeDomainError', () => {
-
   it.each([
     ['maps run metadata not found to 404', RunMetadataNotFoundError, 'run-1'],
     ['maps typed run not found errors to 404', RunNotFoundError, 'run-2'],

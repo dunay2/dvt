@@ -77,6 +77,9 @@ message parsing.
   configurable code equality.
 - Route/domain mapping must derive status from typed semantic outcomes or typed
   errors, not from exception message text.
+- Implementation anchor: `apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts`
+  (`HTTP_ERROR_REASON`) is the canonical source for route-level static reason
+  tokens in `apps/api`.
 
 Examples:
 

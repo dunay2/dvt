@@ -4,6 +4,7 @@ import {
 } from '../../application/ports/startRunCommandContract.js';
 import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   asNonEmptyTrimmedStringOrUndefined,
@@ -112,7 +113,10 @@ function validateSelection(
   | { ok: false; error: RouteParseResult<StartRunCommand> } {
   const selection = parseSelection(record.selection);
   if (!selection.ok)
-    return { ok: false, error: badRequestResult('invalid_selection', { target: 'selection' }) };
+    return {
+      ok: false,
+      error: badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' }),
+    };
   return { ok: true, selection: selection.value };
 }
 
@@ -121,7 +125,10 @@ function validateRunId(
 ): { ok: true; runId: string } | { ok: false; error: RouteParseResult<StartRunCommand> } {
   const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
   if (runId === undefined) {
-    return { ok: false, error: badRequestResult('invalid_run_id', { target: 'runId' }) };
+    return {
+      ok: false,
+      error: badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' }),
+    };
   }
   return { ok: true, runId };
 }
@@ -135,7 +142,7 @@ function validateTargetAdapter(
   if (!targetAdapter.ok) {
     return {
       ok: false,
-      error: badRequestResult('invalid_target_adapter', { target: 'targetAdapter' }),
+      error: badRequestResult(HTTP_ERROR_REASON.invalidTargetAdapter, { target: 'targetAdapter' }),
     };
   }
   return { ok: true, targetAdapter: targetAdapter.value };
@@ -147,10 +154,10 @@ function validatePlanSource(
   const plannerSourceCount = countPlannerSources(record);
   const hasPlanRef = record.planRef !== undefined;
   if (hasPlanRef && plannerSourceCount > 0) {
-    return { ok: false, error: badRequestResult('conflicting_plan_inputs') };
+    return { ok: false, error: badRequestResult(HTTP_ERROR_REASON.conflictingPlanInputs) };
   }
   if (!hasPlanRef && plannerSourceCount !== 1) {
-    return { ok: false, error: badRequestResult('invalid_plan_source') };
+    return { ok: false, error: badRequestResult(HTTP_ERROR_REASON.invalidPlanSource) };
   }
   return { ok: true, hasPlanRef };
 }

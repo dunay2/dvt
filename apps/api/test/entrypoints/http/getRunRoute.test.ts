@@ -34,7 +34,7 @@ function httpError(
   type: string,
   reason: string,
   extra?: { target?: string; details?: Record<string, unknown> }
-) {
+): { error: { type: string; reason: string; target?: string; details?: Record<string, unknown> } } {
   return {
     error: {
       type,
@@ -45,9 +45,7 @@ function httpError(
   };
 }
 
-function createDeps(
-  result = DEFAULT_RESULT
-): {
+function createDeps(result = DEFAULT_RESULT): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };

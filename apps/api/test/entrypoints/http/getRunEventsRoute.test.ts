@@ -14,7 +14,11 @@ function createReply(): {
   };
 }
 
-function httpError(type: string, reason: string, target?: string) {
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
   return {
     error: {
       type,
@@ -112,7 +116,9 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'missing_tenant_scope', 'tenantId'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('forbidden', 'missing_tenant_scope', 'tenantId')
+    );
   });
 
   it('returns 400 when tenantId is present but invalid', async () => {
@@ -131,7 +137,9 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_tenant_id', 'tenantId'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_tenant_id', 'tenantId')
+    );
   });
 
   it('returns 400 when afterSeq is not numeric', async () => {
@@ -150,6 +158,8 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_after_seq', 'afterSeq'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_after_seq', 'afterSeq')
+    );
   });
 });

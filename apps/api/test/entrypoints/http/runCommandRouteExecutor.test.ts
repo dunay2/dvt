@@ -26,7 +26,7 @@ function httpError(
   type: string,
   reason: string,
   extra?: { target?: string; details?: Record<string, unknown> }
-) {
+): { error: { type: string; reason: string; target?: string; details?: Record<string, unknown> } } {
   return {
     error: {
       type,

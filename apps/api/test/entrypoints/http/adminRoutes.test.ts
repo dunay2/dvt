@@ -1,6 +1,6 @@
-import Fastify from 'fastify';
 import { RunNotFoundError } from '@dvt/engine';
-import { describe, it, expect } from 'vitest';
+import Fastify from 'fastify';
+import { describe, expect, it } from 'vitest';
 
 import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 
@@ -30,6 +30,54 @@ describe('adminRoutes', () => {
         error: {
           type: 'bad_request',
           reason: 'missing_tenant_id',
+          target: 'tenantId',
+        },
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('returns 400 when body is not an object', async () => {
+    const app = createApp(async () => ({ runId: 'r1', status: 'PENDING' }));
+
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/runs/r1/rebuild-snapshot',
+        payload: ['tenant-a'],
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'bad_request',
+          reason: 'invalid_body',
+        },
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it.each([
+    ['tenantId has invalid type', { tenantId: 123 }],
+    ['tenantId is blank', { tenantId: '   ' }],
+  ])('returns 400 when %s', async (_desc, payload) => {
+    const app = createApp(async () => ({ runId: 'r1', status: 'PENDING' }));
+
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/runs/r1/rebuild-snapshot',
+        payload,
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'bad_request',
+          reason: 'invalid_tenant_id',
           target: 'tenantId',
         },
       });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
 import { parseStartRunBodyRecord } from '../../../src/entrypoints/http/startRunRouteBodyValidation.js';
+import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
 import { parseStartRunPlannerEnvelope } from '../../../src/entrypoints/http/startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from '../../../src/entrypoints/http/startRunRoutePlanRefParser.js';
 import { parseStartRunScope } from '../../../src/entrypoints/http/startRunRouteScopeParser.js';
@@ -59,9 +59,19 @@ describe('startRunRoute parser helpers', () => {
       { type: 'bad_request', reason: 'missing_project_id', target: 'projectId' },
     ],
     [
+      'invalid project',
+      { tenantId: 't1', projectId: '   ', environmentId: 'e1' },
+      { type: 'bad_request', reason: 'invalid_project_id', target: 'projectId' },
+    ],
+    [
       'missing environment',
       { tenantId: 't1', projectId: 'p1' },
       { type: 'bad_request', reason: 'missing_environment_id', target: 'environmentId' },
+    ],
+    [
+      'invalid environment',
+      { tenantId: 't1', projectId: 'p1', environmentId: '   ' },
+      { type: 'bad_request', reason: 'invalid_environment_id', target: 'environmentId' },
     ],
   ])('returns semantic issue for %s', (_desc, input, issue) => {
     expect(parseStartRunScope(input)).toEqual({

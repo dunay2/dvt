@@ -1,5 +1,6 @@
 import { TenantId } from '../../domain/auth/types.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, forbiddenResult, type RouteParseResult } from './routeParseIssue.js';
 
 export function normalizeRunId(raw: string | undefined): string | null {
@@ -13,17 +14,17 @@ export function isBodyObject(raw: unknown): raw is Record<string, unknown> {
 
 export function parseTenantId(body: Record<string, unknown>): RouteParseResult<TenantId> {
   if (!Object.hasOwn(body, 'tenantId') || body.tenantId === undefined) {
-    return forbiddenResult('missing_tenant_scope', { target: 'tenantId' });
+    return forbiddenResult(HTTP_ERROR_REASON.missingTenantScope, { target: 'tenantId' });
   }
 
   const rawTenantId = readString(body.tenantId);
   if (rawTenantId === undefined) {
-    return badRequestResult('invalid_tenant_id', { target: 'tenantId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
   }
 
   const tenant = TenantId.parse(rawTenantId);
   if (!tenant.ok) {
-    return badRequestResult('invalid_tenant_id', { target: 'tenantId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
   }
 
   return { ok: true, value: tenant.value };

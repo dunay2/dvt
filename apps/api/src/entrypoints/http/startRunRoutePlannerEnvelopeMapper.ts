@@ -2,6 +2,7 @@ import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
 
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 type PlannerCommandFields = {
@@ -47,7 +48,7 @@ export function parseStartRunPlannerEnvelope(
       value: toPlannerCommandFields(parsed),
     };
   } catch {
-    return badRequestResult('invalid_plan_source');
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 }
 

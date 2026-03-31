@@ -10,7 +10,6 @@ import {
 
 import type { AuthenticationFailureCode } from '../../application/ports/auth.js';
 import {
-  START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_KIND,
   type StartRunEngineError,
 } from '../../application/ports/startRunEngineErrorContract.js';
@@ -28,6 +27,7 @@ import {
   normalizeHttpErrorReason,
   type HttpResponseModel,
 } from './httpErrorContract.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import type { RouteParseIssue } from './routeParseIssue.js';
 
 export { HTTP_HEADER, type HttpResponseModel } from './httpErrorContract.js';
@@ -104,7 +104,7 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
     case START_RUN_ENGINE_ERROR_KIND.adapterNotRegistered:
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
-        reason: 'adapter_not_configured',
+        reason: HTTP_ERROR_REASON.adapterNotConfigured,
         details: { adapter: error.adapter },
       });
     case START_RUN_ENGINE_ERROR_KIND.commandInvalid: {
@@ -114,7 +114,7 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
       });
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
-        reason: 'plan_rejected',
+        reason: HTTP_ERROR_REASON.planRejected,
         ...withDetails(commandInvalidDetails),
       });
     }
@@ -125,7 +125,7 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
       });
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
-        reason: 'unsupported_plan_version',
+        reason: HTTP_ERROR_REASON.unsupportedPlanVersion,
         ...withDetails(unsupportedPlanDetails),
       });
     }
@@ -188,7 +188,7 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     );
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.unprocessable,
-      reason: 'adapter_not_configured',
+      reason: HTTP_ERROR_REASON.adapterNotConfigured,
       ...withDetails(adapterNotRegisteredDetails),
     });
   }
@@ -196,7 +196,7 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
   if (isAuthorizationError(error)) {
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.forbidden,
-      reason: 'tenant_access_denied',
+      reason: HTTP_ERROR_REASON.tenantAccessDenied,
     });
   }
 
@@ -206,7 +206,7 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     });
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.conflict,
-      reason: 'run_already_exists',
+      reason: HTTP_ERROR_REASON.runAlreadyExists,
       ...withDetails(runAlreadyExistsDetails),
     });
   }
@@ -227,14 +227,14 @@ function mapRunNotFound(runId: string | undefined): HttpResponseModel {
   });
   return createHttpErrorResponse({
     type: HTTP_ERROR_TYPE.notFound,
-    reason: 'run_not_found',
+    reason: HTTP_ERROR_REASON.runNotFound,
     ...withDetails(runNotFoundDetails),
   });
 }
 
 function mapPlanRejectionReason(code: string): string {
   return code === START_RUN_PLAN_REJECTION_CODE.rejected
-    ? 'plan_rejected'
+    ? HTTP_ERROR_REASON.planRejected
     : normalizeHttpErrorReason(code);
 }
 

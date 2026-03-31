@@ -14,7 +14,11 @@ function createReply(): {
   };
 }
 
-function httpError(type: string, reason: string, target?: string) {
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
   return {
     error: {
       type,
@@ -105,7 +109,9 @@ describe('listRunsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'missing_tenant_scope', 'tenantId'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('forbidden', 'missing_tenant_scope', 'tenantId')
+    );
   });
 
   it('returns 400 when tenantId is present but invalid', async () => {
@@ -119,7 +125,9 @@ describe('listRunsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_tenant_id', 'tenantId'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_tenant_id', 'tenantId')
+    );
   });
 
   it('returns 400 when limit is not numeric', async () => {
@@ -147,7 +155,9 @@ describe('listRunsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'limit_out_of_range', 'limit'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'limit_out_of_range', 'limit')
+    );
   });
 
   it('returns 400 when cursor is supplied before keyset paging is implemented', async () => {
@@ -161,7 +171,9 @@ describe('listRunsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'unsupported_cursor', 'cursor'));
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'unsupported_cursor', 'cursor')
+    );
   });
 
   it('returns 400 when projectId is invalid', async () => {

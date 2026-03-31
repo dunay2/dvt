@@ -1,16 +1,16 @@
 import type { SupportedSignalType } from '../../application/ports/runtime.js';
 import type { TenantId } from '../../domain/auth/types.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   isBodyObject,
   normalizeRunId,
   parseOptionalReason,
   parseTenantId,
 } from './runCommandFieldParsers.js';
-import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   SIGNAL_ACTION_BY_TYPE,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
   SUPPORTED_SIGNAL_TYPES,
   type SignalCommandActionName,
   type SignalRouteCompatibilityPolicy,
@@ -19,7 +19,6 @@ import {
 export {
   SIGNAL_ROUTE_COMPATIBILITY_POLICY,
   SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
   type SignalCommandActionName,
   type SignalRouteCompatibilityPolicy,
 } from './signalRunRouteParser.constants.js';
@@ -45,11 +44,11 @@ export function parseSignalRunRequest(input: {
 }): ParsedSignalRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
-    return badRequestResult(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID, { target: 'runId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
 
   if (!isBodyObject(input.body)) {
-    return badRequestResult(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY);
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
   const tenantIdResult = parseTenantId(input.body);
@@ -59,9 +58,7 @@ export function parseSignalRunRequest(input: {
 
   const signalType = parseSignalType(input.body.signalType, input.compatibilityPolicy);
   if (!signalType) {
-    return badRequestResult(SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE, {
-      target: 'signalType',
-    });
+    return badRequestResult(HTTP_ERROR_REASON.invalidSignalType, { target: 'signalType' });
   }
 
   const reason = parseOptionalReason(input.body.reason);

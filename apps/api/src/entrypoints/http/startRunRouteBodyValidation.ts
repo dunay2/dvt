@@ -1,10 +1,9 @@
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
-export function parseStartRunBodyRecord(
-  body: unknown
-): RouteParseResult<Record<string, unknown>> {
+export function parseStartRunBodyRecord(body: unknown): RouteParseResult<Record<string, unknown>> {
   if (!isPlainRecord(body)) {
-    return badRequestResult('invalid_body');
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
   return { ok: true, value: body };

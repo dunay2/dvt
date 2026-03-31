@@ -1,6 +1,10 @@
 import type { RequestedScope } from '../../domain/auth/types.js';
 
-import { GET_RUN_EVENTS_ACTION, GET_RUN_EVENTS_LIMIT } from './getRunEventsRouteParser.constants.js';
+import {
+  GET_RUN_EVENTS_ACTION,
+  GET_RUN_EVENTS_LIMIT,
+} from './getRunEventsRouteParser.constants.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, forbiddenResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   normalizeRequiredString,
@@ -29,28 +33,28 @@ export function parseGetRunEventsRequest(input: {
 }): ParsedGetRunEventsResult {
   const runId = normalizeRequiredString(input.runId);
   if (!runId) {
-    return badRequestResult('invalid_run_id', { target: 'runId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
 
   const tenant = parseRequiredTenantId(input.tenantId);
   if (tenant.kind === 'missing') {
-    return forbiddenResult('missing_tenant_scope', { target: 'tenantId' });
+    return forbiddenResult(HTTP_ERROR_REASON.missingTenantScope, { target: 'tenantId' });
   }
   if (tenant.kind === 'invalid') {
-    return badRequestResult('invalid_tenant_id', { target: 'tenantId' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
   }
 
   const afterSeq = parseOptionalInt(input.afterSeq);
   if (afterSeq === null) {
-    return badRequestResult('invalid_after_seq', { target: 'afterSeq' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidAfterSeq, { target: 'afterSeq' });
   }
 
   const limit = parseOptionalInt(input.limit);
   if (limit === null) {
-    return badRequestResult('invalid_limit', { target: 'limit' });
+    return badRequestResult(HTTP_ERROR_REASON.invalidLimit, { target: 'limit' });
   }
   if (limit !== undefined && (limit <= 0 || limit > GET_RUN_EVENTS_LIMIT.MAX)) {
-    return badRequestResult('limit_out_of_range', { target: 'limit' });
+    return badRequestResult(HTTP_ERROR_REASON.limitOutOfRange, { target: 'limit' });
   }
 
   return {

@@ -16,7 +16,11 @@ function createReply(): {
   };
 }
 
-function httpError(type: string, reason: string, target?: string) {
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
   return {
     error: {
       type,
