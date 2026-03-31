@@ -2,7 +2,12 @@
 
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 
-import { mapStartRunEngineError, mapStartRunFacadeResult } from './authErrorMapper.js';
+import {
+  mapRouteParseIssue,
+  mapStartRunEngineError,
+  mapStartRunFacadeResult,
+} from './httpErrorMapper.js';
+import { sendHttpResponse } from './httpErrorContract.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
 
@@ -13,7 +18,7 @@ export async function startRunRoute(
 ): Promise<void> {
   const parsed = parseStartRunBody(request.body);
   if (!parsed.ok) {
-    reply.code(parsed.status).send(parsed.body);
+    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
     return;
   }
 

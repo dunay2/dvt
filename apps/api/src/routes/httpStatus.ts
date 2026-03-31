@@ -6,6 +6,7 @@ export const HTTP_STATUS_CODE = Object.freeze({
   forbidden: 403,
   notFound: 404,
   conflict: 409,
+  internalServerError: 500,
   unprocessableEntity: 422,
   tooManyRequests: 429,
   serviceUnavailable: 503,
