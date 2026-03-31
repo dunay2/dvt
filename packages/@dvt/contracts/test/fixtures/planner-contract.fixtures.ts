@@ -81,6 +81,8 @@ export const MULTI_SOURCE_PLANNER_INPUT_FIXTURE = {
 export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
   metadata: {
     planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+    schemaVersion: 'v1.2',
+    contractVersion: '1.0.0',
     inputHashSha256: HEX_64_A,
     planId: HEX_64_B,
     createdAtIso: '2026-02-26T22:01:00.000Z',

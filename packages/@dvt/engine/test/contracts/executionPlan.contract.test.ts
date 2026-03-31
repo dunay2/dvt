@@ -8,15 +8,14 @@
  * Scope:
  *   - Shape of ExecutionPlan: required vs optional fields compile and satisfy the TypeScript interface.
  *   - contractVersion validation: MockAdapter rejects plans with unknown versions.
- *   - Provenance fields: plannerVersion, plannerGitSha, generatedAt are optional and structurally inert.
+ *   - Provenance fields: plannerVersion and plannerGitSha are optional and structurally inert.
  *   - Step metadata passthrough: extra step fields are rejected by the mock adapter narrowing rule.
  */
-import type { PlanRef } from '@dvt/contracts';
+import type { ExecutionPlan, PlanRef } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
-import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
@@ -88,6 +87,8 @@ function makeMinimalPlan(): ExecutionPlan {
       planVersion: '1.0',
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
+      inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      createdAtIso: '2026-02-23T00:00:00.000Z',
     },
     steps: [],
   };
@@ -126,15 +127,14 @@ describe('ExecutionPlan — interface shape', (): void => {
     expect(plan.metadata.plannerGitSha).toHaveLength(40);
   });
 
-  it('generatedAt is optional', (): void => {
+  it('createdAtIso is required on canonical metadata', (): void => {
     const plan: ExecutionPlan = {
       ...makeMinimalPlan(),
       metadata: {
         ...makeMinimalPlan().metadata,
-        generatedAt: '2026-02-23T00:00:00.000Z',
       },
     };
-    expect(plan.metadata.generatedAt).toBe('2026-02-23T00:00:00.000Z');
+    expect(plan.metadata.createdAtIso).toBe('2026-02-23T00:00:00.000Z');
   });
 
   it('requiresCapabilities is optional', (): void => {
@@ -147,7 +147,7 @@ describe('ExecutionPlan — interface shape', (): void => {
     expect(withoutCaps.metadata.requiresCapabilities).toBeUndefined();
   });
 
-  it('steps array accepts extra fields (open record)', (): void => {
+  it('steps array uses the governed shared shape', (): void => {
     const plan: ExecutionPlan = {
       ...makeMinimalPlan(),
       steps: [{ stepId: 's1', kind: 'noop', dependsOn: [] }],
@@ -190,9 +190,10 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
         planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
+        inputHashSha256: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        createdAtIso: '2026-02-23T00:00:00.000Z',
         plannerVersion: '3.1.4',
         plannerGitSha: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
-        generatedAt: '2026-02-23T00:00:00.000Z',
         requiresCapabilities: ['basic-execution'],
         targetAdapter: 'mock',
         fallbackBehavior: 'reject',

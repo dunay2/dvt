@@ -6,6 +6,8 @@ export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/IStartRunIntentStore.v1.js';
 export * from './contracts/engine/StartRunIntentPolicy.v1.js';
 export {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GRAPH_SOURCE_COMPATIBILITY_POLICY,
   PLANNER_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v2.js';
@@ -19,6 +21,8 @@ export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js
 export type {
   DbtManifestLike,
   DbtManifestRef,
+  ExecutionPlan,
+  ExecutionStep,
   ExecutionPlanV2,
   ExecutionStepV2,
   GraphNode,
@@ -111,7 +115,6 @@ export type {
   EventType,
   ListEventsOptions,
   ListRunsOptions,
-  ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,
   IPlanFetcher,

@@ -32,7 +32,12 @@ import {
   setHandler,
 } from '@temporalio/workflow';
 
-import type { EventType, ExecutionPlan, ResolvedRunContext } from '../engine-types.js';
+import type {
+  EventType,
+  ExecutionPlan,
+  ExecutionStep,
+  ResolvedRunContext,
+} from '../engine-types.js';
 
 import {
   buildCompletedStepFact,
@@ -47,7 +52,7 @@ import {
   validateGatewayDependencies,
 } from './workflowHelpers.js';
 
-type WorkflowStep = ExecutionPlan['steps'][number];
+type WorkflowStep = ExecutionStep;
 
 type ExecutedStepResult = {
   stepId: string;
@@ -360,7 +365,7 @@ type LayerLoopOutcome =
 
 interface ExecutePlanLayersArgs {
   input: RunPlanWorkflowInput;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   executionLayers: ReadonlyArray<ReadonlyArray<WorkflowStep>>;
   resumeFromLayerIndex: number;
   continueAsNewAfterLayerCount: number;
@@ -586,7 +591,7 @@ interface LayerStepExecution {
 
 async function executeLayerSteps(args: {
   layer: ReadonlyArray<WorkflowStep>;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
   state: WorkflowState;
   runtime: LayerRuntimeState;
@@ -596,7 +601,7 @@ async function executeLayerSteps(args: {
 
 async function executeLayerStep(args: {
   step: WorkflowStep;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
   state: WorkflowState;
   runtime: LayerRuntimeState;
@@ -648,7 +653,7 @@ function resolveGatewayDecision(
 function applyGatewayDecisionEffects(args: {
   gatewayDecision: boolean | undefined;
   stepId: string;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   state: WorkflowState;
   runtime: LayerRuntimeState;
 }): void {

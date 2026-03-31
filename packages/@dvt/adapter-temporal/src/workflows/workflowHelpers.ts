@@ -9,7 +9,7 @@
 // normalizeDependsOn
 // ---------------------------------------------------------------------------
 
-import type { CompiledCodeRef } from '@dvt/contracts';
+import type { CompiledCodeRef, ExecutionStep } from '@dvt/contracts';
 import { DbtStepTypeConfigSchema } from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {
@@ -149,9 +149,7 @@ type StepStartedPayload = {
   compiledCodeRef: CompiledCodeRef;
 };
 
-export function buildStepStartedPayload(
-  step: Readonly<Record<string, unknown>>
-): StepStartedPayload | undefined {
+export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload | undefined {
   const compiledCodeRef = extractCompiledCodeRef(step.stepTypeConfig);
   if (!compiledCodeRef) return undefined;
   return { compiledCodeRef };

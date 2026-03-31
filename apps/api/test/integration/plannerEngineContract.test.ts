@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
+  parseExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunContext,
@@ -20,25 +21,8 @@ import {
 } from '@dvt/engine';
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
-import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
-
-function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
-  return {
-    metadata: {
-      planId: plannerPlan.metadata.planId,
-      planVersion: plannerPlan.metadata.planVersion,
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-      inputHashSha256: plannerPlan.metadata.inputHashSha256,
-    },
-    steps: plannerPlan.steps.map((step) => ({
-      stepId: step.stepId,
-      kind: step.kind,
-      dependsOn: [...step.dependsOn],
-    })),
-  };
-}
 
 function utf8(value: string): Uint8Array {
   return Buffer.from(value, 'utf8');
@@ -200,7 +184,7 @@ describe('planner -> engine contract', () => {
     expect(indexOf('staging.orders') < indexOf('mart.revenue')).toBe(true);
     expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
-    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    const enginePlan: ExecutionPlan = plannerPlan;
     expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
     expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
@@ -301,7 +285,7 @@ describe('planner -> engine contract', () => {
       }
     }
 
-    const enginePlan = plannerOutputToEnginePlan(plan);
+    const enginePlan: ExecutionPlan = parseExecutionPlan(plan);
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const mock = new MockAdapter({
@@ -315,7 +299,7 @@ describe('planner -> engine contract', () => {
     expect(runRef.provider).toBe('mock');
   });
 
-  it('bridge preserves planner planId and step order', async () => {
+  it('canonical plan preserves planner planId and step order without a bridge', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
       nodes: [
@@ -326,7 +310,7 @@ describe('planner -> engine contract', () => {
       selection: { selectedNodeIds: ['z'], includeUpstream: true },
     });
 
-    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    const enginePlan: ExecutionPlan = plannerPlan;
 
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
     expect(enginePlan.steps.length).toBe(plannerPlan.steps.length);
@@ -337,7 +321,7 @@ describe('planner -> engine contract', () => {
     }
   });
 
-  it('planner output still documents current schema drift against engine metadata', async () => {
+  it('planner output already satisfies the engine-visible canonical metadata', async () => {
     const planner = new PlannerFacade();
     const { plan } = await planner.buildPlan({
       nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
@@ -345,8 +329,8 @@ describe('planner -> engine contract', () => {
     });
 
     const metadata = plan.metadata as Record<string, unknown>;
-    expect(metadata['schemaVersion']).toBe(undefined);
-    expect(metadata['contractVersion']).toBe(undefined);
+    expect(metadata['schemaVersion']).toBe('v1.2');
+    expect(metadata['contractVersion']).toBe('1.0.0');
     expect(metadata['planId']).not.toBe(undefined);
     expect(metadata['planVersion']).not.toBe(undefined);
     expect(metadata['inputHashSha256']).not.toBe(undefined);
