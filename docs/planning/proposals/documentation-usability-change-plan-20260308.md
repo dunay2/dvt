@@ -17,7 +17,7 @@ This document is part of the repository governance proposal set.
 - Complementary proposals:
   - [Documentation Restructuring Diagnostic And Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md) is the diagnostic precursor
   - [Package Module Build Policy v2](../archive/proposals/package-module-build-policy-v2-20260317.md) defines the technical target model for packages and builds
-  - [CI Improvement Plan](ci-improvement-plan-20260327.md) defines enforcement strategy for reusable CI checks
+  - [CI Delivery Governance Consolidated Action Plan](ci-delivery-governance-consolidated-action-plan-20260331.md) defines enforcement strategy for reusable CI checks
 
 ## Execution Status
 

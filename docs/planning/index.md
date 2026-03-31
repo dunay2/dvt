@@ -35,19 +35,18 @@ Concept anchors for this page:
   planning order
 - [System Delivery Status](../architecture/system-delivery-status.md) for
   what is currently true in implementation
-- [Gap Execution Plans](gaps/GAP_EXECUTION_PLANS.md) for active execution
-  gaps and closure posture
+- [Planning Gaps](gaps/index.md) for current gap posture and archived gap
+  references
 - [Planning Status](status/index.md) for generated or curated status
   artifacts
 
 ## Proposals
 
-- [CI Improvement Plan — Reliability, Scope-Awareness, And Deduplication](proposals/ci-improvement-plan-20260327.md)
+- [CI Delivery Governance Consolidated Action Plan](proposals/ci-delivery-governance-consolidated-action-plan-20260331.md)
 - [Contracts Domain Ownership Migration Plan](proposals/contracts-domain-ownership-migration-plan-20260327.md)
 - [DataMode Concept Proposal](proposals/datamode_proposal.md)
 - [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](proposals/todo.md)
-- [Docs Governance Tooling Future Tasks](proposals/docs-governance-tooling-future-tasks-20260324.md)
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)

@@ -11,12 +11,11 @@ Draft proposals and candidate changes. Non-normative.
 
 ## Index
 
-- [CI Improvement Plan — Reliability, Scope-Awareness, And Deduplication](ci-improvement-plan-20260327.md)
+- [CI Delivery Governance Consolidated Action Plan](ci-delivery-governance-consolidated-action-plan-20260331.md)
 - [Contracts Domain Ownership Migration Plan](contracts-domain-ownership-migration-plan-20260327.md)
 - [DataMode Concept Proposal](datamode_proposal.md)
 - [DDD Hexagonal Modularization Plan](ddd-hexagonal-modularization-plan-20260323.md)
 - [DDD Pure Root And Aggregate Boundaries](todo.md)
-- [Docs Governance Tooling Future Tasks](docs-governance-tooling-future-tasks-20260324.md)
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](../domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
