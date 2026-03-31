@@ -1,8 +1,8 @@
-lane_id: A
+﻿lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-30
+last_reviewed: '2026-03-31'
 goal: Close the state-store boundary and the smallest contract cleanup slice around it.
 expected_outcome:
   - state-store ownership is explicit
@@ -10,74 +10,141 @@ expected_outcome:
   - contract drift is reduced
   - optional maintenance ownership is explicit
   - migration recovery is defined
-header_markdown: |
-  Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y consistencia de interfaces.
+header_markdown: >
+  Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y
+  consistencia de interfaces.
+
 
   ## Principios obligatorios
 
+
   - Shared kernel minimo: en contratos solo entra lo cross-domain
+
   - Contracts-first: no se cambia runtime sin contrato verificable
+
   - Ownership explicito: cada puerto tiene dueno y frontera clara
+
   - Composition root disciplinado: sin rewiring por conveniencia
+
   - Cero drift: docs, tipos y tests deben contar la misma verdad
+
 
   ## Forma de trabajo
 
+
   - Definir frontera de dominio y contrato
+
   - Ajustar wiring del root sin mezclar responsabilidades
+
   - Validar con pruebas de contrato y regresion negativa
+
 
   ## Restricciones
 
+
   - No mover contratos de dominio a `@dvt/contracts` si no son shared
+
   - No agregar atajos de compatibilidad silenciosos
+
   - No introducir deuda oculta ni TODO placeholders
 tasks:
   - task_id: MVP-A1
     priority: P0
-    status: done
-    objective:
+    status: review
+    objective: >-
       inventory the current backend MVP contractual surface (routes, invariants, and explicit
       boundaries) without adding new runtime behavior.
     dependency: none
-    target:
+    target: >-
       Canonical inventory aligned with real `apps/api` runtime surface and linked from the MVP
       roadmap reset proposal
       (`docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`).
+    complexity: M
+    effort_points: 5
+    progress_pct: 90
+    evidence_refs:
+      - docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md
+      - docs/evidence/ED-20260329-mvp-backend-operability-roadmap-reset.md
+      - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
+    status_reason: >-
+      Canonical inventory exists, but the governing artifact is still Proposed, so closure remains
+      provisional.
+    last_verified: '2026-03-31'
   - task_id: RC-A6
     priority: P0
     status: done
     objective: align dead-letter signatures with tenant-scoped concrete APIs.
     dependency: none
     target: Merge and lock tenant-scoped dead-letter contract parity.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.test.ts
+      - packages/@dvt/adapter-postgres/test/smoke.test.ts
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: >-
+      Tenant-scoped dead-letter behavior is present in code and tests; this pass found equivalent
+      closure evidence even without a dedicated accepted evidence doc.
+    last_verified: '2026-03-31'
   - task_id: S02
     priority: P0
     status: done
     objective: split IRunStateStore into write/read/maintenance roles.
     dependency: RC-A6
     target: Merge review and lock the write/read/maintenance contract split.
+    complexity: L
+    effort_points: 8
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+      - apps/api/src/modules/stateStoreRoles.ts
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+    status_reason: >-
+      The state-store split is code-grounded and explicitly called closed in the principal
+      architecture review.
+    last_verified: '2026-03-31'
   - task_id: S18
     priority: P0
     status: done
-    objective:
+    objective: >-
       make composition-root state-store role bindings explicit instead of reconstructing the
       aggregate by intersection.
     dependency: S02
-    target:
+    target: >-
       Bind read/write roles directly in the root and stop reconstructing the aggregate by
       convenience.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s18-explicit-state-store-root-bindings-closeout.md
+    status_reason:
+      Composition-root role binding is closed with a dedicated closeout and validation baseline.
+    last_verified: '2026-03-31'
   - task_id: S19
     priority: P1
     status: done
-    objective:
+    objective: >-
       isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated
       query port.
     dependency: S18
     target: Keep maintenance write-only and expose the staleness query separately.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts
+      - packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+    status_reason: >-
+      Maintenance-query ownership is now isolated behind a dedicated staleness query port and the
+      review marks the slice as merged.
+    last_verified: '2026-03-31'
   - task_id: S19-F1
     priority: P2
     status: in_progress
-    objective:
+    objective: >-
       remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid
       O(N)-per-row behavior at high run concurrency.
     dependency: S19
@@ -86,72 +153,374 @@ tasks:
       latest_run_seq)` maintained in the event-append transaction. Phase 2 (optional) moves
       projector discovery to a push-based snapshot work queue. Lock the rollout with EXPLAIN-backed
       performance coverage at the 5000-concurrent-runs target load.
+    complexity: L
+    effort_points: 2
+    progress_pct: 70
+    evidence_refs:
+      - docs/evidence/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+      - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
+    status_reason: >-
+      Phase 1 and 2 are delivered, but the original closure target still includes performance proof
+      and residual claim-semantics retirement.
+    last_verified: '2026-03-31'
+  - task_id: S19-F1-A
+    parent_task: S19-F1
+    priority: P2
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective:
+      replace the correlated stale-snapshot polling query with a run_event_heads-backed path.
+    dependency: S19
+    target: >-
+      The stale snapshot selector uses run_event_heads and avoids correlated MAX(run_seq) scans on
+      the hot path.
+    evidence_refs:
+      - docs/evidence/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+    status_reason: Phase 1 is delivered and covered by the accepted evidence artifact.
+    last_verified: '2026-03-31'
+  - task_id: S19-F1-B
+    parent_task: S19-F1
+    priority: P2
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective: add snapshot_work_queue push-based projector discovery and queue claim wiring.
+    dependency: S19-F1-A
+    target: >-
+      Projector runtime can claim queue-backed snapshot work and use polling only as bounded
+      fallback coverage.
+    evidence_refs:
+      - docs/evidence/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+    status_reason: Phase 2 is delivered and covered by the accepted evidence artifact.
+    last_verified: '2026-03-31'
+  - task_id: S19-F1-C
+    parent_task: S19-F1
+    priority: P2
+    status: queued
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    objective: >-
+      close the remaining performance proof and claim-semantics risk for the snapshot work queue
+      path.
+    dependency: S19-F1-B
+    target: >-
+      EXPLAIN-backed evidence and claim-semantics closure retire the residual risk entry at the
+      5000-concurrent-runs target.
+    evidence_refs:
+      - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+    status_reason: The remaining closure work is defined but not yet executed.
+    last_verified: '2026-03-31'
   - task_id: S18-F1
     priority: P2
     status: queued
-    objective:
+    objective: >-
       harden the explicit state-store role bundle into a root-owned boundary and prevent convenience
       rewiring drift.
     dependency: S18
-    target:
+    target: >-
       Keep the explicit role bundle but lock its semantics behind a stricter root-owned boundary and
       regression guard.
+    complexity: M
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
+      - docs/planning/proposals/todo.md
+    status_reason: The follow-up is canonically captured but implementation has not started.
+    last_verified: '2026-03-31'
+  - task_id: S18-F1-A
+    parent_task: S18-F1
+    priority: P2
+    status: queued
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    objective: lock the explicit role bundle behind a stricter root-owned boundary.
+    dependency: S18
+    target:
+      Composition roots cannot reconstruct the role bundle ad hoc outside the sanctioned boundary.
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
+      - docs/planning/proposals/todo.md
+    status_reason: Planned boundary-hardening slice; implementation not started.
+    last_verified: '2026-03-31'
+  - task_id: S18-F1-B
+    parent_task: S18-F1
+    priority: P2
+    status: queued
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    objective: add regression guards against convenience rewiring of state-store roles.
+    dependency: S18-F1-A
+    target: >-
+      Regression coverage fails if roots drift back to convenience aliasing or aggregate
+      reconstruction.
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
+      - docs/planning/proposals/todo.md
+    status_reason: Guard-rail slice is planned but not started.
+    last_verified: '2026-03-31'
+  - task_id: S18-F1-C
+    parent_task: S18-F1
+    priority: P2
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective:
+      close the bundle contract shape with explicit export semantics and negative-path tests.
+    dependency: S18-F1-B
+    target:
+      Consumers see a locked boundary shape with negative-path coverage for invalid role sources.
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
+      - docs/planning/proposals/todo.md
+    status_reason: Contract-shape closure remains backlog work.
+    last_verified: '2026-03-31'
   - task_id: schema-migration-rollback
     priority: P1
     status: done
     objective: make storage changes recoverable after S02.
     dependency: S02
     target: Define and implement rollback recovery for state-store changes.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260324-schema-migration-rollback-closeout.md
+    status_reason:
+      Rollback planning and execution are closed with adapter code, tests, and closeout evidence.
+    last_verified: '2026-03-31'
   - task_id: S13
     priority: P1
     status: done
     objective: remove duplicate estimateRunRef declaration.
     dependency: none
     target: Remove duplicate provider-adapter contract drift.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+    status_reason: >-
+      The duplicate declaration is no longer present in the provider contract path and the review
+      records the slice as closed.
+    last_verified: '2026-03-31'
   - task_id: RC-A5
     priority: P1
     status: done
-    objective:
+    objective: >-
       replace silent markResolved catch with warning/metric telemetry so intent-resolution failures
       are observable.
     dependency: none
     target: Merged in main (#554); intent-resolution observability locked.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/reviews/20260322-rc-a5-qa-hard-review.md
+      - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
+    status_reason: >-
+      QA findings were explicitly resolved in the review artifact and the engine tests now cover the
+      negative paths.
+    last_verified: '2026-03-31'
   - task_id: RC-E3
     priority: P1
     status: done
-    objective:
+    objective: >-
       replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError>
       return type to eliminate the Divergent Change smell.
     dependency: none
     target: Engine Result type + facade catch-block elimination.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/rc-e3-execution-tracking-plan-20260328.md
+      - apps/api/src/application/services/startRunAuthorizedFacade.ts
+      - apps/api/src/entrypoints/http/authErrorMapper.ts
+    status_reason: >-
+      The execution-tracking plan records implementation and closure, and the facade/mapper code
+      reflects the typed Result boundary.
+    last_verified: '2026-03-31'
   - task_id: DHM
     priority: P1
     status: in_progress
-    objective:
+    objective: >-
       drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization),
       then WS1, WS3, WS4, WS2, WS6.
     dependency: none
-    target:
+    target: >-
       WS5 fixture modularization is in progress (WorkflowEngine core tests moved to shared
       builders); complete remaining WS5 helper-heavy engine tests, then lock roadmap for
       WS1/WS3/WS4/WS2/WS6.
+    complexity: L
+    effort_points: 2
+    progress_pct: 18
+    evidence_refs:
+      - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+      - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
+    status_reason: >-
+      The first WS5 fixture-modularization slice is accepted, but the remaining DDD modularization
+      workstreams are still open.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS5-A
+    parent_task: DHM
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective:
+      modularize the first WS5 engine fixture slice around intent-log tests using shared builders.
+    dependency: none
+    target: >-
+      Initial WS5 helper extraction is closed without semantic drift in WorkflowEngine intent-log
+      coverage.
+    evidence_refs:
+      - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+    status_reason: Accepted evidence covers the first WS5 fixture-modularization slice.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS5-B
+    parent_task: DHM
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    objective: finish the remaining WS5 helper-heavy engine test fixture modularization.
+    dependency: DHM-WS5-A
+    target: Remaining WS5 tests use shared builders and stop duplicating inline engine construction.
+    evidence_refs:
+      - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+      - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
+    status_reason: The remaining WS5 backlog is identified but still open.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS1
+    parent_task: DHM
+    priority: P1
+    status: queued
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    objective: execute the WS1 DDD modularization slice after WS5 fixture extraction is complete.
+    dependency: DHM-WS5-B
+    target: WS1 module boundaries are explicit and independently testable.
+    evidence_refs:
+      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+    status_reason: Sequenced after WS5 completion; no implementation evidence yet.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS3
+    parent_task: DHM
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    objective: execute the WS3 modularization slice for the next bounded DDD seam.
+    dependency: DHM-WS1
+    target: WS3 responsibilities are isolated behind clearer ports and module seams.
+    evidence_refs:
+      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+    status_reason: Sequenced backlog item; no implementation evidence yet.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS4
+    parent_task: DHM
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    objective: execute the WS4 modularization slice after WS3.
+    dependency: DHM-WS3
+    target: WS4 boundaries are extracted without widening composition-root leakage.
+    evidence_refs:
+      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+    status_reason: Sequenced backlog item; no implementation evidence yet.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS2
+    parent_task: DHM
+    priority: P1
+    status: queued
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    objective: execute the WS2 modularization slice after WS4.
+    dependency: DHM-WS4
+    target: WS2 responsibilities are pulled behind explicit DDD seams and testable adapters.
+    evidence_refs:
+      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+    status_reason: Sequenced backlog item; no implementation evidence yet.
+    last_verified: '2026-03-31'
+  - task_id: DHM-WS6
+    parent_task: DHM
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    objective: close the final WS6 modularization stream after the preceding workstreams land.
+    dependency: DHM-WS2
+    target:
+      The remaining helper and module graph drift is retired with explicit architecture ownership.
+    evidence_refs:
+      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+    status_reason: Final modularization backlog item; no implementation evidence yet.
+    last_verified: '2026-03-31'
   - task_id: plan-version-reset
     priority: P1
     status: done
-    objective:
+    objective: >-
       reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before
       go-live.
     dependency: none
     target: planVersion canonical value is '1.0' everywhere before first production release.
-dependency_notes: |
-  - `MVP-A1` is the baseline-first task for roadmap reset and should run before any new deep-dive slice.
-  - `S02` depends on `RC-A6`.
-  - `S18` depends on `S02`.
-  - `S19` depends on `S18`.
-  - `S19-F1` depends on `S19`.
-  - `S18-F1` depends on `S18`.
-  - `Schema migration rollback` depends on `S02`.
-  - `S13` is independent and can run in parallel.
-  - `RC-E3` was closed and integrated to mainline via PR #639.
-  - `DHM` starts with WS5; follow WS1, WS3, WS4, WS2, WS6 dependency order.
-  - `plan-version-reset` is independent and can run in parallel.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260328-planner-version-reset-signal-policy-wiring.md
+    status_reason: Accepted evidence proves the canonical planVersion reset and its runtime wiring.
+    last_verified: '2026-03-31'
+dependency_notes:
+  - >-
+    `MVP-A1` remains the contractual baseline artifact but is still provisional until the proposal
+    is accepted.
+  - >-
+    `S02` depends on `RC-A6` and is now code-grounded by the split role contracts plus
+    composition-root wiring.
+  - >-
+    `S18` and `S19` are verified as closed slices; `S19-F1` is now decomposed into phase-level
+    subtasks.
+  - >-
+    `S19-F1-A` and `S19-F1-B` are delivered; `S19-F1-C` remains the benchmark and residual-risk
+    closeout slice.
+  - >-
+    `S18-F1` is decomposed into boundary hardening, anti-rewiring guards, and export/negative-path
+    contract closure.
+  - >-
+    `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete
+    adapter rollback path.
+  - >-
+    `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization
+    work is schedulable.
+  - '`plan-version-reset` is closed and remains independent.'
+verification_summary:
+  status_model: evidence-backed lane registry
+  done_rule: done only with accepted evidence or equivalent verifiable closure
+  verified_on: '2026-03-31'
+  total_tasks: 26
+  total_effort_points: 102
+  completed_weighted_points: 50.26
+  lane_progress_pct: 49
+  notes: >-
+    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
+    coordination-only effort.

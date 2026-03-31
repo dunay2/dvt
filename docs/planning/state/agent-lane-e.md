@@ -2,7 +2,7 @@
 title: Agent Lane E - Frontend And UI
 status: Active
 owner: Product / UX / Frontend
-last_reviewed: 2026-03-27
+last_reviewed: 2026-03-31
 planning_type: status
 ---
 
@@ -84,42 +84,46 @@ Al terminar la tarea informaras de posibles campos de mejora detectados: friccio
 
 # Agent Lane E - Frontend And UI
 
-Unassigned lane for parallel work. Use this file when assigning Agent E.
+Generated from the verified lane registry `agent-lane-e.yaml`. Use this file when assigning Agent E.
 
 ## Goal
 
 Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API contracts.
 
+## Verification Summary
+
+- Status model: `evidence-backed lane registry`
+- Done rule: `done only with accepted evidence or equivalent verifiable closure`
+- Verified on: `2026-03-31`
+- Total tasks: `12`
+- Total effort points: `62`
+- Completed weighted points: `0`
+- Lane progress: `0%`
+- Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
+
 ## Tasks
 
-> Source of truth: `agent-lane-e.yaml`. Edit the YAML and run `pnpm docs:sync`.
+> Verified registry source: `agent-lane-e.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-E1`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
-- [ ] `P0` `F-01`: clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
-- [ ] `P0` `F-02`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
-- [ ] `P0` `F-03`: wire real backend health state into the top bar and a global degraded/offline banner.
-- [ ] `P1` `F-04`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
-- [ ] `P1` `F-05`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
-- [ ] `P1` `F-06`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.
-- [ ] `P2` `F-07`: define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend is ready before backend endpoints land.
-- [ ] `P2` `F-08`: integrate the Plan → Run core flow from canvas selection through to run start using real API when available, with a typed adapter for mock when not.
-- [ ] `P2` `F-09`: wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
-- [ ] `P2` `F-10`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
-- [ ] `P3` `F-11`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
+- [ ] `P0` `MVP-E1` `blocked` `M` `5pt` `0%`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
+- [ ] `P0` `F-01` `queued` `M` `5pt` `0%`: clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
+- [ ] `P0` `F-02` `queued` `S` `3pt` `0%`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
+- [ ] `P0` `F-03` `blocked` `M` `5pt` `0%`: wire real backend health state into the top bar and a global degraded/offline banner.
+- [ ] `P1` `F-04` `queued` `M` `5pt` `0%`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
+- [ ] `P1` `F-05` `blocked` `M` `5pt` `0%`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
+- [ ] `P1` `F-06` `blocked` `M` `5pt` `0%`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.
+- [ ] `P2` `F-07` `blocked` `M` `3pt` `0%`: define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend is ready before backend endpoints land.
+- [ ] `P2` `F-08` `blocked` `L` `8pt` `0%`: integrate the Plan → Run core flow from canvas selection through to run start using real API when available, with a typed adapter for mock when not.
+- [ ] `P2` `F-09` `blocked` `M` `5pt` `0%`: wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
+- [ ] `P2` `F-10` `blocked` `M` `5pt` `0%`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
+- [ ] `P3` `F-11` `blocked` `L` `8pt` `0%`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
 
 ## Dependencies
 
-- `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
-- F-01, F-02, F-04 are independent and can start in parallel.
-- F-03 depends on F-02.
-- F-05 depends on F-04.
-- F-06 depends on F-05.
-- F-07 depends on F-06.
-- F-08 depends on F-07 and is blocked until backend delivers POST /plans/preview and POST /runs.
-- F-09 depends on F-08 and is blocked until backend delivers GET /runs and GET /runs/:id.
-- F-10 depends on F-09 and is blocked until backend delivers GET /runs/:id/events.
-- F-11 depends on F-10 and requires artifact and lineage endpoints from backend.
-- F-08 through F-11 coordinate with Lane C (admission) and Lane D (scale/GTM) for API surface readiness.
+- `MVP-E1` remains blocked on the acceptance of `MVP-A1` and `MVP-B1` so the frontend does not overclaim backend behavior.
+- `F-01`, `F-02`, and `F-04` remain the first independent frontend execution slices.
+- `F-08` through `F-11` remain blocked by backend endpoint delivery and must stay contracts-first.
+- No lane-E task in this pass has accepted implementation evidence yet; the lane is a verified backlog rather than an active build stream.
 
 ## Expected Outcome
 

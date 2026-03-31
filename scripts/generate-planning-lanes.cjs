@@ -33,22 +33,83 @@ function loadYaml(filePath) {
   return yaml.load(content);
 }
 
-function isDoneStatus(status) {
-  return (
-    String(status || '')
-      .trim()
-      .toLowerCase() === 'done'
-  );
+function normalizeStatus(status) {
+  return String(status || 'queued')
+    .trim()
+    .toLowerCase();
 }
 
-function renderTaskLine(task) {
-  const checked = isDoneStatus(task.status) ? '[x]' : '[ ]';
-  const priority = task.priority ? `\`${task.priority}\`` : '`P?`';
-  const taskId = task.task_id ? `\`${task.task_id}\`` : '`unassigned-task`';
-  const objective = String(task.objective || '')
-    .trim()
-    .replace(/\s+/g, ' ');
-  return `- ${checked} ${priority} ${taskId}: ${objective}`;
+function isDoneStatus(status) {
+  return normalizeStatus(status) === 'done';
+}
+
+function formatStatus(status) {
+  const normalized = normalizeStatus(status);
+  return normalized.length > 0 ? normalized : 'queued';
+}
+
+function coerceComplexity(task) {
+  const complexity = String(task.complexity || '-').trim().toUpperCase();
+  return complexity.length > 0 ? complexity : '-';
+}
+
+function coerceEffort(task) {
+  return Number.isFinite(task.effort_points) ? String(task.effort_points) : '-';
+}
+
+function coerceProgress(task) {
+  if (Number.isFinite(task.progress_pct)) {
+    const clamped = Math.max(0, Math.min(100, Math.round(task.progress_pct)));
+    return String(clamped);
+  }
+  return isDoneStatus(task.status) ? '100' : '0';
+}
+
+function summarizeTasks(tasks, lastVerified) {
+  const normalizedTasks = Array.isArray(tasks) ? tasks : [];
+  const totalTasks = normalizedTasks.length;
+  const totalEffortPoints = normalizedTasks.reduce(
+    (sum, task) => sum + (Number.isFinite(task.effort_points) ? task.effort_points : 0),
+    0
+  );
+  const completedWeightedPoints = normalizedTasks.reduce((sum, task) => {
+    const effort = Number.isFinite(task.effort_points) ? task.effort_points : 0;
+    const progress = Number.parseFloat(coerceProgress(task));
+    return sum + (effort * progress) / 100;
+  }, 0);
+  const laneProgressPct =
+    totalEffortPoints > 0 ? Math.round((completedWeightedPoints / totalEffortPoints) * 100) : 0;
+
+  return {
+    status_model: 'evidence-backed lane registry',
+    done_rule: 'done only with accepted evidence or equivalent verifiable closure',
+    verified_on: lastVerified || '-',
+    total_tasks: totalTasks,
+    total_effort_points: totalEffortPoints,
+    completed_weighted_points: Number(completedWeightedPoints.toFixed(2)),
+    lane_progress_pct: laneProgressPct,
+    notes:
+      'Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.',
+  };
+}
+
+function normalizeVerificationSummary(spec) {
+  const computed = summarizeTasks(spec.tasks, spec.last_reviewed);
+  const raw = spec.verification_summary && typeof spec.verification_summary === 'object'
+    ? spec.verification_summary
+    : {};
+
+  return {
+    status_model: raw.status_model || computed.status_model,
+    done_rule: raw.done_rule || computed.done_rule,
+    verified_on: raw.verified_on || raw.last_verified || computed.verified_on,
+    total_tasks: raw.total_tasks ?? computed.total_tasks,
+    total_effort_points: raw.total_effort_points ?? computed.total_effort_points,
+    completed_weighted_points:
+      raw.completed_weighted_points ?? computed.completed_weighted_points,
+    lane_progress_pct: raw.lane_progress_pct ?? computed.lane_progress_pct,
+    notes: raw.notes || computed.notes,
+  };
 }
 
 function renderBulletList(items) {
@@ -65,23 +126,49 @@ function renderBulletList(items) {
   return items.map((item) => `- ${String(item).trim()}`);
 }
 
-function replaceSection(content, startHeading, endHeading, replacement) {
-  const start = content.indexOf(startHeading);
-  if (start === -1) {
-    throw new Error(`Could not find "${startHeading}" in lane document.`);
+function renderTaskLine(task) {
+  const checked = isDoneStatus(task.status) ? '[x]' : '[ ]';
+  const priority = task.priority ? `\`${task.priority}\`` : '`P?`';
+  const taskId = task.task_id ? `\`${task.task_id}\`` : '`unassigned-task`';
+  const status = `\`${formatStatus(task.status)}\``;
+  const complexity = `\`${coerceComplexity(task)}\``;
+  const effort = `\`${coerceEffort(task)}pt\``;
+  const progress = `\`${coerceProgress(task)}%\``;
+  const parentTask = task.parent_task ? ` parent:\`${task.parent_task}\`` : '';
+  const objective = String(task.objective || '')
+    .trim()
+    .replace(/\s+/g, ' ');
+
+  return `- ${checked} ${priority} ${taskId} ${status} ${complexity} ${effort} ${progress}${parentTask}: ${objective}`;
+}
+
+function renderVerificationSummarySection(spec) {
+  const summary = normalizeVerificationSummary(spec);
+  const lines = ['## Verification Summary', ''];
+
+  if (summary.status_model) {
+    lines.push(`- Status model: \`${summary.status_model}\``);
   }
-  const end = endHeading ? content.indexOf(endHeading, start + startHeading.length) : -1;
-  if (end === -1) {
-    return `${content.slice(0, start)}${replacement}`;
+  if (summary.done_rule) {
+    lines.push(`- Done rule: \`${summary.done_rule}\``);
   }
-  return `${content.slice(0, start)}${replacement}${content.slice(end)}`;
+  lines.push(`- Verified on: \`${summary.verified_on ?? spec.last_reviewed ?? '-'}\``);
+  lines.push(`- Total tasks: \`${summary.total_tasks ?? 0}\``);
+  lines.push(`- Total effort points: \`${summary.total_effort_points ?? 0}\``);
+  lines.push(`- Completed weighted points: \`${summary.completed_weighted_points ?? 0}\``);
+  lines.push(`- Lane progress: \`${summary.lane_progress_pct ?? 0}%\``);
+  if (summary.notes) {
+    lines.push(`- Notes: ${String(summary.notes).trim()}`);
+  }
+  lines.push('');
+  return lines.join('\n');
 }
 
 function renderTasksSection(spec, yamlFileName) {
   const lines = [
     '## Tasks',
     '',
-    `> Source of truth: \`${yamlFileName}\`. Edit the YAML and run \`pnpm docs:sync\`.`,
+    `> Verified registry source: \`${yamlFileName}\`. Edit the YAML and run \`pnpm docs:planning:lanes:generate\` plus \`pnpm docs:workboard:generate\`.`,
     '',
   ];
   for (const task of spec.tasks || []) {
@@ -105,36 +192,43 @@ function renderExpectedOutcomeSection(spec) {
   return lines.join('\n');
 }
 
-function findFrontmatterEnd(content) {
-  const frontmatterStart = content.match(/^---\r?\n/);
-  if (!frontmatterStart) {
-    return -1;
-  }
-  const closingFence = content.indexOf('\n---', frontmatterStart[0].length);
-  if (closingFence === -1) {
-    return -1;
-  }
-  const newlineAfterFence = content.indexOf('\n', closingFence + '\n---'.length);
-  if (newlineAfterFence === -1) {
-    return -1;
-  }
-  return newlineAfterFence + 1;
-}
+function renderLaneMarkdown(spec, yamlFileName) {
+  const title = `Agent Lane ${spec.lane_id} - ${spec.title}`;
+  const headerMarkdown =
+    typeof spec.header_markdown === 'string' && spec.header_markdown.trim().length > 0
+      ? `${spec.header_markdown.trim()}\n\n`
+      : '';
 
-function applyHeaderMarkdown(content, spec) {
-  if (!spec.header_markdown || typeof spec.header_markdown !== 'string') {
-    return content;
-  }
-  const frontmatterEnd = findFrontmatterEnd(content);
-  const laneHeadingIndex = content.indexOf('\n# Agent Lane ');
-  if (frontmatterEnd === -1 || laneHeadingIndex === -1 || laneHeadingIndex <= frontmatterEnd) {
-    return content;
-  }
-
-  const headerMarkdown = spec.header_markdown.trim();
-  const prefix = content.slice(0, frontmatterEnd).replace(/\s*$/, '');
-  const suffix = content.slice(laneHeadingIndex + 1).replace(/^\s*/, '');
-  return `${prefix}\n\n${headerMarkdown}\n\n${suffix}`;
+  return [
+    '---',
+    `title: ${title}`,
+    `status: ${spec.status || 'Active'}`,
+    `owner: ${spec.owner || 'generated'}`,
+    `last_reviewed: ${spec.last_reviewed || '-'}`,
+    'planning_type: status',
+    '---',
+    '',
+    headerMarkdown.trimEnd(),
+    headerMarkdown ? '' : null,
+    `# ${title}`,
+    '',
+    `Generated from the verified lane registry \`${yamlFileName}\`. Use this file when assigning Agent ${spec.lane_id}.`,
+    '',
+    '## Goal',
+    '',
+    String(spec.goal || '').trim(),
+    '',
+    renderVerificationSummarySection(spec).trimEnd(),
+    '',
+    renderTasksSection(spec, yamlFileName).trimEnd(),
+    '',
+    renderDependenciesSection(spec).trimEnd(),
+    '',
+    renderExpectedOutcomeSection(spec).trimEnd(),
+    '',
+  ]
+    .filter((line) => line !== null)
+    .join('\n');
 }
 
 function updateLaneDoc(yamlFileName) {
@@ -146,27 +240,7 @@ function updateLaneDoc(yamlFileName) {
     throw new Error(`Planning lane YAML is not an object: ${yamlFileName}`);
   }
 
-  const current = readIfExists(mdPath);
-  if (current === null) {
-    throw new Error(`Missing planning lane markdown: ${path.relative(repoRoot, mdPath)}`);
-  }
-
-  let next = current;
-  next = applyHeaderMarkdown(next, spec);
-  next = replaceSection(
-    next,
-    '## Tasks',
-    '## Dependencies',
-    renderTasksSection(spec, yamlFileName)
-  );
-  next = replaceSection(
-    next,
-    '## Dependencies',
-    '## Expected Outcome',
-    renderDependenciesSection(spec)
-  );
-  next = replaceSection(next, '## Expected Outcome', null, renderExpectedOutcomeSection(spec));
-
+  const next = renderLaneMarkdown(spec, yamlFileName);
   if (writeIfChanged(mdPath, next)) {
     console.log(`[planning:lanes] Regenerated ${path.relative(repoRoot, mdPath)}`);
   } else {

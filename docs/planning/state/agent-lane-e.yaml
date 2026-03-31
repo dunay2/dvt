@@ -2,8 +2,8 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: 2026-03-29
-goal:
+last_reviewed: '2026-03-31'
+goal: >-
   Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
   contracts.
 expected_outcome:
@@ -13,223 +13,363 @@ expected_outcome:
   - store responsibilities are decomposed by domain
   - core flow (Plan → Run → Monitor) works with real data
   - secondary views activate progressively via feature flags
-header_markdown: |
-  Eres Eva, una ingeniero frontend experta en React, TypeScript y sistemas de diseno, y te identificaras como tal.
+header_markdown: >
+  Eres Eva, una ingeniero frontend experta en React, TypeScript y sistemas de diseno, y te
+  identificaras como tal.
+
 
   ## Principios obligatorios
 
+
   - Arquitectura: componentes de presentacion desacoplados de datos
+
   - Contracts-first: nunca asumir shape de API, siempre tipar antes de integrar
+
   - Separacion de capas: Views -> Services -> API Client (nunca fetch directo en un componente)
+
   - Tipado estricto: prohibido `any`
-  - UX primero: cada feature debe tener estado vacio, estado de carga, estado de error y estado de exito
+
+  - UX primero: cada feature debe tener estado vacio, estado de carga, estado de error y estado de
+  exito
+
   - Alineacion con backend: coordinar interfaces con los lane owners de A, C y D antes de integrar
+
 
   ## Forma de trabajo
 
+
   Contratos antes que implementacion:
 
+
   - Definir tipos TypeScript del contrato API
+
   - Implementar el servicio/query
+
   - Conectar la vista
+
 
   Microcommits obligatorios:
 
+
   - 1 cambio = 1 commit
+
   - formato Conventional Commits
+
 
   ## Formato de respuesta (obligatorio)
 
+
   Siempre responde con:
+
 
   ### 1. Task
 
+
   Descripcion clara del objetivo y la vista o capa afectada
+
 
   ### 2. Plan
 
+
   Pasos pequenos y secuenciales
+
 
   ### 3. Tipos y Contrato
 
+
   Interfaces TypeScript relevantes y shape del API
+
 
   ### 4. Implementation
 
+
   Codigo minimo necesario (componente, servicio, query)
+
 
   ### 5. Estados UX
 
+
   Empty / Loading / Error / Success para la feature
+
 
   ### 6. Commit
 
+
   Mensaje en formato:
+
   feat(web): descripcion
+
 
   ## Reglas de calidad
 
+
   - Views no consumen mock directamente
+
   - Servicios encapsulan logica de fetch y error handling
+
   - Queries TanStack Query con invalidacion explicita
+
   - Feature flags para views de nivel C (Lineage, Cost, Plugins, Admin)
+
   - Sin CSS inline, usar clases utilitarias o modulos CSS
+
 
   ## Restricciones
 
+
   - No usar `any`
+
   - No fetch directo en componentes
+
   - No mock en produccion (`VITE_DATA_SOURCE` controla el modo)
+
   - No activar views de nivel C sin feature flag aprobado
+
 
   ## Objetivo
 
+
   Producir una UI operacional, limpia y alineada con el backend real, no un prototipo extendido.
+
 
   ## Anexo
 
-  Al terminar la tarea informaras de posibles campos de mejora detectados: friccion UX, deuda de tipos, desalineacion con contratos backend, o cualquier otro aspecto que pueda mejorarse en futuras iteraciones.
+
+  Al terminar la tarea informaras de posibles campos de mejora detectados: friccion UX, deuda de
+  tipos, desalineacion con contratos backend, o cualquier otro aspecto que pueda mejorarse en
+  futuras iteraciones.
 tasks:
   - task_id: MVP-E1
     priority: P0
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       define the frontend consumption contract for the backend MVP surface that exists today,
       without promising non-implemented behavior.
     dependency: MVP-A1, MVP-B1
-    target:
+    target: >-
       Frontend-facing backend contract document listing available routes, auth expectations, and
       explicit out-of-scope assumptions.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/evidence/ED-20260329-mvp-backend-operability-roadmap-reset.md
+    status_reason: The need is defined, but no frontend-facing MVP contract artifact exists yet.
+    last_verified: '2026-03-31'
   - task_id: F-01
     priority: P0
     status: queued
-    objective:
+    objective: >-
       clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify
       secondary controls into a contextual menu.
     dependency: none
-    target:
+    target: >-
       Shell navigation is icon-only with tooltips. No persistent sidebar text labels. TopBar
       secondary controls are collapsed into a single contextual menu. Canvas area gains visible
       vertical space.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason:
+      Shell cleanup is still a planned lane-E slice with no implementation evidence in this pass.
+    last_verified: '2026-03-31'
   - task_id: F-02
     priority: P0
     status: queued
-    objective:
+    objective: >-
       implement a typed API client covering the existing health endpoints (healthz, readyz, version,
       db/ready).
     dependency: none
-    target:
+    target: >-
       app/services/platform-client.ts with typed request/response shapes and error handling. No mock
       fallback in this client — it talks to real backend only.
-
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason: Typed platform client remains planned but unstarted.
+    last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: queued
+    status: blocked
     objective: wire real backend health state into the top bar and a global degraded/offline banner.
     dependency: F-02
-    target:
+    target: >-
       TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
       offline states with retry and backoff. No mock connectivity state anywhere in the shell.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason: Real backend health wiring remains planned but unstarted.
+    last_verified: '2026-03-31'
   - task_id: F-04
     priority: P1
     status: queued
-    objective:
+    objective: >-
       introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do
       not consume mock data directly.
     dependency: none
-    target:
+    target: >-
       Feature flag documented. Mock data isolated to app/data/. Views consume app/services/* and
       typed view-models. Both modes runnable without code changes.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason: The mock-vs-api split remains planned but unstarted.
+    last_verified: '2026-03-31'
   - task_id: F-05
     priority: P1
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore,
       graphStore, runStore, statusStore).
     dependency: F-04
-    target:
+    target: >-
       Each store has a single declared responsibility. Cross-store reads are explicit. No store
       reads mock data directly.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason: Store decomposition remains planned but unstarted.
+    last_verified: '2026-03-31'
   - task_id: F-06
     priority: P1
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       introduce TanStack Query as the data-fetching layer and define query/mutation patterns for
       health, plan, and run domains.
     dependency: F-05
-    target:
+    target: >-
       TanStack Query installed and configured. Health queries wired. Invalidation strategy
       documented per domain. Views use useQuery/useMutation — no ad-hoc fetch calls.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason: TanStack Query adoption remains planned but unstarted.
+    last_verified: '2026-03-31'
   - task_id: F-07
     priority: P2
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend
       is ready before backend endpoints land.
     dependency: F-06
-    target:
+    target: >-
       app/types/plan.ts and app/types/run.ts define request/response shapes for POST /plans/preview,
       POST /runs, GET /runs/:id, GET /runs, GET /runs/:id/events. Reviewed against backend contract
       owners.
-
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: Typed preview/start contracts remain planned but unstarted.
+    last_verified: '2026-03-31'
   - task_id: F-08
     priority: P2
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       integrate the Plan → Run core flow from canvas selection through to run start using real API
       when available, with a typed adapter for mock when not.
     dependency: F-07
-    target:
+    target: >-
       Canvas selection triggers Plan Preview. Confirmed plan triggers Run Start. Navigation to
       RunsView is automatic. Error and permission states (401/403/409/5xx) are handled with
       actionable messages.
-
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+    status_reason: The Plan -> Run core flow is still blocked on backend route delivery.
+    last_verified: '2026-03-31'
   - task_id: F-09
     priority: P2
-    status: queued
+    status: blocked
     objective:
       wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
     dependency: F-08
-    target:
+    target: >-
       RunsView shows real run list. RunView shows real run detail. Status updates via polling or SSE
       when available. Empty states, loading, and error states are implemented.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: RunsView real-data wiring is still blocked on backend route delivery.
+    last_verified: '2026-03-31'
   - task_id: F-10
     priority: P2
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
       Console with real log output.
     dependency: F-09
-    target:
+    target: >-
       Console shows ordered, real-time event stream during an active run. Timeline is consistent
       across reconnects. Log entries have timestamp, step, and severity.
-
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: Real event timeline wiring is still blocked on backend route delivery.
+    last_verified: '2026-03-31'
   - task_id: F-11
     priority: P3
-    status: queued
-    objective:
+    status: blocked
+    objective: >-
       wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and
       Admin views progressively via feature flags.
     dependency: F-10
-    target:
+    target: >-
       ArtifactsView and DiffView work on real data. Level-C views (Lineage, Cost, Plugins, Admin)
       are hidden by default and activatable by role or flag. No mock data in any active view.
-
-dependency_notes: |
-  - `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
-  - F-01, F-02, F-04 are independent and can start in parallel.
-  - F-03 depends on F-02.
-  - F-05 depends on F-04.
-  - F-06 depends on F-05.
-  - F-07 depends on F-06.
-  - F-08 depends on F-07 and is blocked until backend delivers POST /plans/preview and POST /runs.
-  - F-09 depends on F-08 and is blocked until backend delivers GET /runs and GET /runs/:id.
-  - F-10 depends on F-09 and is blocked until backend delivers GET /runs/:id/events.
-  - F-11 depends on F-10 and requires artifact and lineage endpoints from backend.
-  - F-08 through F-11 coordinate with Lane C (admission) and Lane D (scale/GTM) for API surface readiness.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: Artifacts, diff, and level-C feature-flag rollout remain backlog work.
+    last_verified: '2026-03-31'
+dependency_notes:
+  - >-
+    `MVP-E1` remains blocked on the acceptance of `MVP-A1` and `MVP-B1` so the frontend does not
+    overclaim backend behavior.
+  - '`F-01`, `F-02`, and `F-04` remain the first independent frontend execution slices.'
+  - '`F-08` through `F-11` remain blocked by backend endpoint delivery and must stay
+    contracts-first.'
+  - >-
+    No lane-E task in this pass has accepted implementation evidence yet; the lane is a verified
+    backlog rather than an active build stream.
+verification_summary:
+  status_model: evidence-backed lane registry
+  done_rule: done only with accepted evidence or equivalent verifiable closure
+  verified_on: '2026-03-31'
+  total_tasks: 12
+  total_effort_points: 62
+  completed_weighted_points: 0
+  lane_progress_pct: 0
+  notes: >-
+    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
+    coordination-only effort.

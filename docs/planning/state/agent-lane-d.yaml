@@ -2,66 +2,116 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-29
+last_reviewed: '2026-03-31'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
   - snapshot correctness is preserved
   - GTM work is separated from code execution
-header_markdown: |
-  Eres Dana, lider de escala y GTM readiness. Tu foco es sostenibilidad operativa y riesgos residuales explicitamente gestionados.
+header_markdown: >
+  Eres Dana, lider de escala y GTM readiness. Tu foco es sostenibilidad operativa y riesgos
+  residuales explicitamente gestionados.
+
 
   ## Principios obligatorios
 
+
   - Escala con limites: retencion, costos y crecimiento acotados
+
   - Correctitud de snapshot y storage por encima de throughput bruto
+
   - Riesgo explicito: lo diferido debe tener dueno y razon no-bloqueante
+
   - GTM desacoplado de cambios runtime de alto riesgo
+
   - Priorizar capacidad operativa antes de optimizacion prematura
+
 
   ## Forma de trabajo
 
+
   - Convertir riesgos en backlog ejecutable y medible
+
   - Definir criterios de cierre por capacidad (no solo actividad)
+
   - Mantener separacion entre roadmap comercial y hardening tecnico
+
 
   ## Restricciones
 
+
   - No introducir complejidad de escala sin evidencia de cuello real
+
   - No mezclar tareas P3 de negocio con bloqueantes del MVP
+
   - No cerrar riesgos sin evidencia de mitigacion verificable
 tasks:
   - task_id: MVP-D1
     priority: P0
-    status: in_progress
-    objective:
+    status: review
+    objective: >-
       define the residual-risk baseline explicitly accepted after MVP backend operability reset,
       including what is deferred and why it does not block MVP.
     dependency: MVP-A1, MVP-B1
-    target:
+    target: >-
       Provisional residual-risk baseline published with explicit deferred items, lane ownership, and
       non-blocking rationale for MVP control-plane operation; final lock pending MVP-A1 and MVP-B1
       evidence.
+    complexity: M
+    effort_points: 5
+    progress_pct: 85
+    evidence_refs:
+      - docs/planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md
+      - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
+      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+    status_reason: >-
+      Residual-risk ownership is documented, but final closure remains dependency-gated on MVP-A1/B1
+      acceptance.
+    last_verified: '2026-03-31'
   - task_id: run event log retention + TTL
     priority: P1
-    status: in_progress
+    status: done
     objective: bound storage growth and automate archival.
     dependency: none
     target: Retention and archival automation.
+    complexity: L
+    effort_points: 8
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260329-run-event-retention-closeout.md
+      - docs/evidence/ED-20260330-retention-archive-object-store-hardening.md
+      - docs/planning/reviews/20260329-run-event-retention-ttl-kickoff-review.md
+    status_reason:
+      Retention runtime wiring and hardening are closed by closeout plus accepted evidence.
+    last_verified: '2026-03-31'
   - task_id: G5-PR2
     priority: P1
     status: done
     objective: add deferred deletion and restore flow for archived events.
     dependency: none
     target: Restore + grace delete worker.
+    complexity: L
+    effort_points: 8
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md
+    status_reason: Deferred deletion and restore flow are closed with a dedicated closeout.
+    last_verified: '2026-03-31'
   - task_id: S15
     priority: P1
     status: done
-    objective:
+    objective: >-
       add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression
       under concurrency.
     dependency: none
     target: persistWithClient upsert guard.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s15-run-snapshot-cas-guard-closeout.md
+    status_reason: CAS guard closure is backed by planning closeout and existing adapter tests.
+    last_verified: '2026-03-31'
   - task_id: S15-F1
     priority: P1
     status: done
@@ -69,72 +119,171 @@ tasks:
       surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
     dependency: S15
     target: Return or emit stale-write conflict result.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s15f1-stale-snapshot-discard-closeout.md
+    status_reason: The stale-snapshot discard outcome is closed with a dedicated closeout and tests.
+    last_verified: '2026-03-31'
   - task_id: S14
     priority: P1
     status: done
     objective: preserve gateway evaluation context across `continueAsNew` segments.
     dependency: none
     target: Workflow state handoff hardening.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260324-s14-gateway-context-across-continue-as-new-closeout.md
+    status_reason: >-
+      Continue-as-new gateway context preservation is closed with code, tests, and closeout
+      evidence.
+    last_verified: '2026-03-31'
   - task_id: cost attribution model
     priority: P2
-    status: queued
+    status: blocked
     objective: support billing and finance reporting.
-    dependency: S05, S02, retention
+    dependency: S05, S02, run event log retention + TTL
     target: Usage accounting and finance visibility.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+    status_reason: >-
+      The design remains deferred until payload versioning and retention prerequisites are fully
+      closed.
+    last_verified: '2026-03-31'
   - task_id: run_events partitioning
     priority: P2
     status: queued
     objective: reduce storage and write-path pressure.
     dependency: none
     target: Partitioned event log storage.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: Partitioning remains planned scale work with no implementation evidence.
+    last_verified: '2026-03-31'
   - task_id: read replica query path
     priority: P2
-    status: queued
+    status: blocked
     objective: offload read traffic from primary.
     dependency: run_events partitioning
     target: Read scaling path.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: Read-replica routing remains backlog work after partitioning.
+    last_verified: '2026-03-31'
   - task_id: projector event-driven invalidation
     priority: P2
-    status: queued
+    status: blocked
     objective: remove polling bottlenecks.
     dependency: read-your-writes contract
     target: Event-driven projection cache invalidation.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason:
+      The queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
+    last_verified: '2026-03-31'
   - task_id: Temporal -> API backpressure
     priority: P2
-    status: queued
+    status: blocked
     objective: protect admission under saturation.
     dependency: projector event-driven invalidation
     target: Backpressure propagation.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: Backpressure propagation remains planned admission hardening work.
+    last_verified: '2026-03-31'
   - task_id: first enterprise pilot
     priority: P3
-    status: queued
+    status: blocked
     objective: validate product-market fit.
-    dependency: SLOs and RBAC
+    dependency: read-your-writes contract, RBAC at operation level, MVP-D1
     target: First customer validation.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: Explicit GTM backlog item; no execution evidence exists yet.
+    last_verified: '2026-03-31'
   - task_id: billing integration
     priority: P3
-    status: queued
+    status: blocked
     objective: turn usage into invoicing.
     dependency: first enterprise pilot
     target: Revenue plumbing.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md
+    status_reason: Deferred GTM/finance integration with no implementation evidence yet.
+    last_verified: '2026-03-31'
   - task_id: compliance documentation pack
     priority: P3
-    status: queued
+    status: blocked
     objective: prepare regulated customer onboarding.
     dependency: first enterprise pilot
     target: Compliance-ready onboarding pack.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: Deferred GTM/compliance packaging with no implementation evidence yet.
+    last_verified: '2026-03-31'
   - task_id: acquisition positioning deck
     priority: P3
-    status: queued
+    status: blocked
     objective: support GTM narrative and exit positioning.
     dependency: first enterprise pilot
     target: Market positioning collateral.
-dependency_notes: |
-  - `MVP-D1` depends on `MVP-A1` and `MVP-B1` so residual risks are tied to validated MVP scope.
-  - `G5-PR2` depends on the archival prerequisite chain already tracked in the workboard.
-  - `S15-F1` depends on `S15`.
-  - `cost attribution model` depends on `S05`, `S02`, and retention.
-  - `read replica query path` depends on `run_events partitioning`.
-  - `projector event-driven invalidation` depends on `read-your-writes contract`.
-  - `Temporal -> API backpressure` depends on the projector lane.
-  - `first enterprise pilot` depends on SLOs and RBAC.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: Deferred GTM collateral with no implementation evidence yet.
+    last_verified: '2026-03-31'
+dependency_notes:
+  - '`MVP-D1` remains provisional until `MVP-A1` and `MVP-B1` are accepted.'
+  - >-
+    `run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence
+    from 2026-03-30.
+  - '`G5-PR2`, `S15`, `S15-F1`, and `S14` are closed with code-backed closeouts.'
+  - '`cost attribution model` remains blocked on `S05` and on retention being fully operationalized.'
+  - >-
+    `projector event-driven invalidation` stays blocked on the read-your-writes contract even though
+    the staleness surface is now caller-visible.
+  - >-
+    `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM
+    backlog rather than implementation work.
+verification_summary:
+  status_model: evidence-backed lane registry
+  done_rule: done only with accepted evidence or equivalent verifiable closure
+  verified_on: '2026-03-31'
+  total_tasks: 15
+  total_effort_points: 84
+  completed_weighted_points: 29.25
+  lane_progress_pct: 35
+  notes: >-
+    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
+    coordination-only effort.
