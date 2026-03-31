@@ -2,7 +2,7 @@
 title: Agent Lane A - Contracts And State-Store Boundary
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-26
+last_reviewed: 2026-03-31
 planning_type: status
 ---
 
@@ -30,43 +30,64 @@ Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, he
 
 # Agent Lane A - Contracts And State-Store Boundary
 
-Unassigned lane for parallel work. Use this file when assigning Agent A.
+Generated from the verified lane registry `agent-lane-a.yaml`. Use this file when assigning Agent A.
 
 ## Goal
 
 Close the state-store boundary and the smallest contract cleanup slice around it.
 
+## Verification Summary
+
+- Status model: `evidence-backed lane registry`
+- Done rule: `done only with accepted evidence or equivalent verifiable closure`
+- Verified on: `2026-03-31`
+- Total tasks: `26`
+- Total effort points: `102`
+- Completed weighted points: `50.26`
+- Lane progress: `49%`
+- Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
+
 ## Tasks
 
-> Source of truth: `agent-lane-a.yaml`. Edit the YAML and run `pnpm docs:sync`.
+> Verified registry source: `agent-lane-a.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [x] `P0` `MVP-A1`: inventory the current backend MVP contractual surface (routes, invariants, and explicit boundaries) without adding new runtime behavior.
-- [x] `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
-- [x] `P0` `S02`: split IRunStateStore into write/read/maintenance roles.
-- [x] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
-- [x] `P1` `S19`: isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated query port.
-- [ ] `P2` `S19-F1`: remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid O(N)-per-row behavior at high run concurrency.
-- [ ] `P2` `S18-F1`: harden the explicit state-store role bundle into a root-owned boundary and prevent convenience rewiring drift.
-- [x] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
-- [x] `P1` `S13`: remove duplicate estimateRunRef declaration.
-- [x] `P1` `RC-A5`: replace silent markResolved catch with warning/metric telemetry so intent-resolution failures are observable.
-- [x] `P1` `RC-E3`: replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError> return type to eliminate the Divergent Change smell.
-- [ ] `P1` `DHM`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
-- [x] `P1` `plan-version-reset`: reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before go-live.
+- [ ] `P0` `MVP-A1` `review` `M` `5pt` `90%`: inventory the current backend MVP contractual surface (routes, invariants, and explicit boundaries) without adding new runtime behavior.
+- [x] `P0` `RC-A6` `done` `S` `3pt` `100%`: align dead-letter signatures with tenant-scoped concrete APIs.
+- [x] `P0` `S02` `done` `L` `8pt` `100%`: split IRunStateStore into write/read/maintenance roles.
+- [x] `P0` `S18` `done` `M` `5pt` `100%`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
+- [x] `P1` `S19` `done` `M` `3pt` `100%`: isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated query port.
+- [ ] `P2` `S19-F1` `in_progress` `L` `2pt` `70%`: remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid O(N)-per-row behavior at high run concurrency.
+- [x] `P2` `S19-F1-A` `done` `M` `3pt` `100%` parent:`S19-F1`: replace the correlated stale-snapshot polling query with a run_event_heads-backed path.
+- [x] `P2` `S19-F1-B` `done` `M` `3pt` `100%` parent:`S19-F1`: add snapshot_work_queue push-based projector discovery and queue claim wiring.
+- [ ] `P2` `S19-F1-C` `queued` `M` `5pt` `0%` parent:`S19-F1`: close the remaining performance proof and claim-semantics risk for the snapshot work queue path.
+- [ ] `P2` `S18-F1` `queued` `M` `1pt` `0%`: harden the explicit state-store role bundle into a root-owned boundary and prevent convenience rewiring drift.
+- [ ] `P2` `S18-F1-A` `queued` `S` `2pt` `0%` parent:`S18-F1`: lock the explicit role bundle behind a stricter root-owned boundary.
+- [ ] `P2` `S18-F1-B` `queued` `S` `2pt` `0%` parent:`S18-F1`: add regression guards against convenience rewiring of state-store roles.
+- [ ] `P2` `S18-F1-C` `queued` `M` `3pt` `0%` parent:`S18-F1`: close the bundle contract shape with explicit export semantics and negative-path tests.
+- [x] `P1` `schema-migration-rollback` `done` `M` `5pt` `100%`: make storage changes recoverable after S02.
+- [x] `P1` `S13` `done` `S` `2pt` `100%`: remove duplicate estimateRunRef declaration.
+- [x] `P1` `RC-A5` `done` `M` `3pt` `100%`: replace silent markResolved catch with warning/metric telemetry so intent-resolution failures are observable.
+- [x] `P1` `RC-E3` `done` `M` `3pt` `100%`: replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError> return type to eliminate the Divergent Change smell.
+- [ ] `P1` `DHM` `in_progress` `L` `2pt` `18%`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
+- [x] `P1` `DHM-WS5-A` `done` `M` `3pt` `100%` parent:`DHM`: modularize the first WS5 engine fixture slice around intent-log tests using shared builders.
+- [ ] `P1` `DHM-WS5-B` `queued` `M` `5pt` `0%` parent:`DHM`: finish the remaining WS5 helper-heavy engine test fixture modularization.
+- [ ] `P1` `DHM-WS1` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS1 DDD modularization slice after WS5 fixture extraction is complete.
+- [ ] `P1` `DHM-WS3` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS3 modularization slice for the next bounded DDD seam.
+- [ ] `P1` `DHM-WS4` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS4 modularization slice after WS3.
+- [ ] `P1` `DHM-WS2` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS2 modularization slice after WS4.
+- [ ] `P1` `DHM-WS6` `queued` `M` `5pt` `0%` parent:`DHM`: close the final WS6 modularization stream after the preceding workstreams land.
+- [x] `P1` `plan-version-reset` `done` `S` `3pt` `100%`: reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before go-live.
 
 ## Dependencies
 
-- `MVP-A1` is the baseline-first task for roadmap reset and should run before any new deep-dive slice.
-- `S02` depends on `RC-A6`.
-- `S18` depends on `S02`.
-- `S19` depends on `S18`.
-- `S19-F1` depends on `S19`.
-- `S18-F1` depends on `S18`.
-- `Schema migration rollback` depends on `S02`.
-- `S13` is independent and can run in parallel.
-- `RC-E3` was closed and integrated to mainline via PR #639.
-- `DHM` starts with WS5; follow WS1, WS3, WS4, WS2, WS6 dependency order.
-- `plan-version-reset` is independent and can run in parallel.
+- `MVP-A1` remains the contractual baseline artifact but is still provisional until the proposal is accepted.
+- `S02` depends on `RC-A6` and is now code-grounded by the split role contracts plus composition-root wiring.
+- `S18` and `S19` are verified as closed slices; `S19-F1` is now decomposed into phase-level subtasks.
+- `S19-F1-A` and `S19-F1-B` are delivered; `S19-F1-C` remains the benchmark and residual-risk closeout slice.
+- `S18-F1` is decomposed into boundary hardening, anti-rewiring guards, and export/negative-path contract closure.
+- `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete adapter rollback path.
+- `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization work is schedulable.
+- `plan-version-reset` is closed and remains independent.
 
 ## Expected Outcome
 

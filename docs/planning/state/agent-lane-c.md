@@ -2,7 +2,7 @@
 title: Agent Lane C - Runtime Safety And Admission
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-26
+last_reviewed: 2026-03-31
 planning_type: status
 ---
 
@@ -30,42 +30,51 @@ Eres Charie, ingeniero de runtime safety y operabilidad. Trabajas para que el si
 
 # Agent Lane C - Runtime Safety And Admission
 
-Unassigned lane for parallel work. Use this file when assigning Agent C.
+Generated from the verified lane registry `agent-lane-c.yaml`. Use this file when assigning Agent C.
 
 ## Goal
 
 Harden runtime behavior, admission checks, and caller-visible freshness.
 
+## Verification Summary
+
+- Status model: `evidence-backed lane registry`
+- Done rule: `done only with accepted evidence or equivalent verifiable closure`
+- Verified on: `2026-03-31`
+- Total tasks: `15`
+- Total effort points: `54`
+- Completed weighted points: `38.5`
+- Lane progress: `71%`
+- Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
+
 ## Tasks
 
-> Source of truth: `agent-lane-c.yaml`. Edit the YAML and run `pnpm docs:sync`.
+> Verified registry source: `agent-lane-c.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-C1`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
-- [x] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
-- [x] `P1` `S16`: enforce governed planVersion validation at start-run admission to reject unsupported or stale plan references.
-- [x] `P0` `RC-D2`: make the outbox claim timeout configurable.
-- [x] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
-- [x] `P1` `RC-D1`: surface reconciler degradation in API health.
-- [x] `P1` `RC-D1A`: add health compatibility and watchdog integration tests.
-- [x] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
-- [x] `P1` `snapshot staleness in API`: expose freshness to callers.
-- [x] `P2` `read-your-writes contract`: set a measurable staleness SLO.
-- [x] `P2` `granular RBAC`: split CANCEL and PAUSE privileges.
-- [ ] `P3` `RC-C1`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
-- [ ] `P2` `RC-C2`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
-- [x] `P1` `RC-E1`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
-- [x] `P1` `RC-E2`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
+- [ ] `P0` `MVP-C1` `review` `M` `5pt` `90%`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
+- [x] `P0` `S09` `done` `S` `3pt` `100%`: decide retry ownership across planner, engine, and adapters.
+- [x] `P1` `S16` `done` `M` `5pt` `100%`: enforce governed planVersion validation at start-run admission to reject unsupported or stale plan references.
+- [x] `P0` `RC-D2` `done` `S` `3pt` `100%`: make the outbox claim timeout configurable.
+- [x] `P0` `RC-D3` `done` `S` `2pt` `100%`: normalize Temporal not-found error code comparison.
+- [x] `P1` `RC-D1` `done` `M` `3pt` `100%`: surface reconciler degradation in API health.
+- [x] `P1` `RC-D1A` `done` `M` `3pt` `100%`: add health compatibility and watchdog integration tests.
+- [x] `P1` `RBAC at operation level` `done` `M` `5pt` `100%`: enforce tenant-aware start/signal/cancel rules.
+- [x] `P1` `snapshot staleness in API` `done` `M` `5pt` `100%`: expose freshness to callers.
+- [x] `P2` `read-your-writes contract` `done` `M` `5pt` `100%`: set a measurable staleness SLO.
+- [x] `P2` `granular RBAC` `done` `M` `5pt` `100%`: split CANCEL and PAUSE privileges.
+- [ ] `P3` `RC-C1` `queued` `S` `2pt` `0%`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
+- [ ] `P2` `RC-C2` `queued` `S` `3pt` `0%`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
+- [x] `P1` `RC-E1` `done` `S` `3pt` `100%`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
+- [x] `P1` `RC-E2` `done` `S` `2pt` `100%`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
 
 ## Dependencies
 
-- `MVP-C1` depends on `MVP-A1` and `MVP-B1` so the runbook reflects verified capabilities only.
-- `RC-D1A` depends on `RC-D1`.
-- `RBAC at operation level` is unblocked after `S09`.
-- Route-level RBAC deny-path tests are always-on; live-DB protected runtime integration is executed in release-candidate/nightly profiles when env posture is present.
-- `Read-your-writes contract` depends on `snapshot staleness in API`.
-- `RC-C1` depends on `RBAC at operation level`.
-- `RC-C2` is independent and may run in parallel with runtime hardening items.
-- `RC-E1` and `RC-E2` depend on S16 merge.
+- `MVP-C1` is accepted as a runbook artifact but remains in review until the MVP-A1/B1 dependency chain is closed.
+- `S09` is closed via accepted ADR-0040.
+- `S16` is verified from runtime code and tests despite older review surfaces that still showed it open.
+- `RC-D1` and `RC-D1A` are code-grounded by health route and watchdog coverage.
+- `read-your-writes contract` is now unblocked by the accepted snapshot staleness caller surface.
+- `RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.
 
 ## Expected Outcome
 

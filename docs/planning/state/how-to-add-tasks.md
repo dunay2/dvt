@@ -2,16 +2,24 @@
 title: How to Add Tasks to an Agent Lane
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-27
+last_reviewed: 2026-03-31
 planning_type: guide
 ---
 
 # How to Add Tasks to an Agent Lane
 
 Tasks live in the `agent-lane-*.yaml` files. The workboard and open-task-route are
-generated views — never edit them directly.
+generated views and must never be edited directly.
 
-## Step 1 — Pick the right lane
+The lane YAML is the verified planning registry, but task closure is evidence-based:
+
+- `done` means the task has accepted evidence or equivalent verifiable closure.
+- `review` means implementation or documentation exists, but final closure still
+  depends on unresolved validation, acceptance, or dependency lock.
+- `progress_pct` tracks quantity of work completed, even when status is not
+  `done`.
+
+## Step 1 - Pick the right lane
 
 | Lane | File                | Scope                                                 |
 | ---- | ------------------- | ----------------------------------------------------- |
@@ -19,47 +27,129 @@ generated views — never edit them directly.
 | B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
 | C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
 | D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
-| E    | `agent-lane-e.yaml` | Frontend and UI — shell, API integration, core flow   |
+| E    | `agent-lane-e.yaml` | Frontend and UI - shell, API integration, core flow   |
 
-## Step 2 — Add the task entry
+## Step 2 - Add or update the task entry
 
 Open the lane file and append to the `tasks` list:
 
 ```yaml
-- task_id: S21 # unique ID, follow existing convention
-  priority: P1 # P0 critical · P1 high · P2 normal · P3 low
-  status: queued # queued | in_progress | review | done | blocked
-  objective: one sentence describing what must be done
-  dependency: S18 # task_id it depends on, or "none"
-  target: concrete deliverable or outcome
+- task_id: S21
+  priority: P1
+  status: in_progress
+  objective: implement the governed slice
+  dependency: S18
+  target: concrete deliverable or acceptance criterion
+  complexity: M
+  effort_points: 5
+  progress_pct: 40
+  evidence_refs:
+    - docs/evidence/ED-20260331-s21-example.md
+    - docs/planning/closeouts/20260331-s21-closeout.md
+  status_reason: implementation started; evidence and final validation still open
+  last_verified: 2026-03-31
 ```
 
-## Step 3 — Regenerate the views
+If the task is a large slice, split it into flat subtasks and link them to the
+parent:
+
+```yaml
+- task_id: S21-A
+  parent_task: S21
+  priority: P1
+  status: queued
+  objective: split the first executable sub-slice
+  dependency: S18
+  target: bounded outcome for the first sub-slice
+  complexity: S
+  effort_points: 2
+  progress_pct: 0
+  evidence_refs: []
+  status_reason: planned slice; execution not started
+  last_verified: 2026-03-31
+```
+
+## Step 3 - Maintain the lane verification summary
+
+Each lane carries a `verification_summary` block that captures the current
+evidence-backed state of the lane:
+
+```yaml
+verification_summary:
+  status_model: evidence-backed lane registry
+  done_rule: done only with accepted evidence or equivalent verifiable closure
+  verified_on: 2026-03-31
+  total_tasks: 12
+  total_effort_points: 55
+  completed_weighted_points: 31.4
+  lane_progress_pct: 57
+  notes: Weighted progress uses effort_points
+```
+
+Use this formula:
+
+```text
+lane_progress_pct = round(sum(effort_points * progress_pct/100) / sum(effort_points) * 100)
+```
+
+`completed_weighted_points` should reflect weighted progress, not just the count
+of tasks with status `done`.
+
+## Step 4 - Regenerate the views
 
 ```bash
+pnpm docs:planning:lanes:generate
 pnpm docs:workboard:generate
 ```
 
-Or just do a `git pull` — the `post-merge` hook runs it automatically when
-any `agent-lane-*.yaml` changed.
+If you added, removed, or renamed documentation files under `docs/`, also run:
+
+```bash
+pnpm docs:sync
+```
 
 ## Field reference
 
-| Field        | Required | Values                                           |
-| ------------ | -------- | ------------------------------------------------ |
-| `task_id`    | yes      | Short unique ID (`S21`, `RC-F3`, `G5-PR3`)       |
-| `priority`   | yes      | `P0` `P1` `P2` `P3`                              |
-| `status`     | yes      | `queued` `in_progress` `review` `done` `blocked` |
-| `objective`  | yes      | One sentence, what to do                         |
-| `dependency` | yes      | Task ID, comma-separated IDs, or `none`          |
-| `target`     | yes      | Concrete deliverable / acceptance criterion      |
+| Field           | Required | Values / Rule                                              |
+| --------------- | -------- | ---------------------------------------------------------- |
+| `task_id`       | yes      | Short unique ID (`S21`, `RC-F3`, `G5-PR3`)                 |
+| `parent_task`   | no       | Parent task ID for flat subtasks                           |
+| `priority`      | yes      | `P0` `P1` `P2` `P3`                                        |
+| `status`        | yes      | `queued` `in_progress` `review` `done` `blocked`           |
+| `objective`     | yes      | One sentence, what to do                                   |
+| `dependency`    | yes      | Task ID, comma-separated IDs, or `none`                    |
+| `target`        | yes      | Concrete deliverable / acceptance criterion                |
+| `complexity`    | yes      | `S` `M` `L`                                                |
+| `effort_points` | yes      | Fibonacci points: `1` `2` `3` `5` `8` `13`                 |
+| `progress_pct`  | yes      | Integer `0..100`                                           |
+| `evidence_refs` | yes      | List of repo paths, PRs, commits, or other verifiable refs |
+| `status_reason` | yes      | Short explanation for the current effective status         |
+| `last_verified` | yes      | `YYYY-MM-DD` of the last effective review                  |
 
 ## Status lifecycle
 
-```
-queued → in_progress → review → done
-                              ↘ blocked (waiting on external dependency)
+```text
+queued -> in_progress -> review -> done
+                       \-> blocked
 ```
 
-Update `status` in the YAML as the task progresses. The workboard view reflects
-it automatically on the next generation.
+Use status based on effective state, not on intent:
+
+- `queued`: not started yet.
+- `in_progress`: active execution with partial evidence.
+- `review`: work is largely present, but closure still depends on acceptance,
+  final validation, or dependency resolution.
+- `done`: accepted evidence or equivalent verifiable closure is present.
+- `blocked`: cannot proceed because an external dependency is unresolved.
+
+## Verification rule
+
+Before changing a task to `done`, confirm at least one of these is true:
+
+- an accepted evidence document exists under `docs/evidence/`
+- a closeout or review document explicitly records the task as closed
+- a merged PR or commit provides equivalent verifiable closure and the repo
+  state still matches that claim
+
+If that standard is not met, keep the task in `review` or `in_progress` and
+record the gap in `status_reason`.
