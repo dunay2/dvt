@@ -1,12 +1,9 @@
-export type StartRunParseResult<T, TCode extends string> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly code: TCode };
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
-export function parseStartRunBodyRecord(
-  body: unknown
-): StartRunParseResult<Record<string, unknown>, 'INVALID_BODY'> {
+export function parseStartRunBodyRecord(body: unknown): RouteParseResult<Record<string, unknown>> {
   if (!isPlainRecord(body)) {
-    return { ok: false, code: 'INVALID_BODY' };
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
   return { ok: true, value: body };

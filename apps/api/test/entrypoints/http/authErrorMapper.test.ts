@@ -1,7 +1,9 @@
 import {
+  AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
+  RunNotFoundError,
   SignalNotImplementedError,
 } from '@dvt/engine';
 import { describe, it, expect } from 'vitest';
@@ -9,25 +11,34 @@ import { describe, it, expect } from 'vitest';
 import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
-  START_RUN_PLAN_REJECTION_CODE,
 } from '../../../src/application/ports/startRunContract.js';
 import {
   mapRuntimeDomainError,
   mapStartRunEngineError,
   mapStartRunFacadeResult,
-} from '../../../src/entrypoints/http/authErrorMapper.js';
+} from '../../../src/entrypoints/http/httpErrorMapper.js';
 
 describe('mapStartRunFacadeResult', () => {
   it('unauthenticated -> 401', () => {
     const result = mapStartRunFacadeResult({ kind: 'unauthenticated', code: 'MISSING_TOKEN' });
     expect(result.status).toBe(401);
-    expect(result.body).toEqual({ error: 'UNAUTHORIZED', code: 'MISSING_TOKEN' });
+    expect(result.body).toEqual({
+      error: {
+        type: 'unauthorized',
+        reason: 'missing_token',
+      },
+    });
   });
 
   it('unauthorized -> 403', () => {
     const result = mapStartRunFacadeResult({ kind: 'unauthorized', reason: 'TENANT_NOT_GRANTED' });
     expect(result.status).toBe(403);
-    expect(result.body).toEqual({ error: 'FORBIDDEN', code: 'TENANT_NOT_GRANTED' });
+    expect(result.body).toEqual({
+      error: {
+        type: 'forbidden',
+        reason: 'tenant_not_granted',
+      },
+    });
   });
 
   it('accepted -> 202 with runId', () => {
@@ -66,8 +77,10 @@ describe('mapStartRunFacadeResult', () => {
     expect(result.status).toBe(429);
     expect(result.headers).toEqual({ 'retry-after': '30' });
     expect(result.body).toEqual({
-      error: 'TOO_MANY_REQUESTS',
-      code: 'TENANT_BACKPRESSURE',
+      error: {
+        type: 'rate_limited',
+        reason: 'tenant_backpressure',
+      },
     });
   });
 
@@ -81,25 +94,44 @@ describe('mapStartRunFacadeResult', () => {
     expect(result.status).toBe(503);
     expect(result.headers).toEqual({ 'retry-after': '45' });
     expect(result.body).toEqual({
-      error: 'SERVICE_UNAVAILABLE',
-      code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
+      error: {
+        type: 'service_unavailable',
+        reason: 'backpressure_snapshot_unavailable',
+      },
     });
   });
 
-  it('plan_rejected -> 422 with structured rejection payload', () => {
+  it.each([
+    {
+      code: 'MISSING_CAPABILITY' as const,
+      expectedReason: 'missing_capability',
+      reason: 'Missing adapter capability: workflow.pause',
+      cause: 'workflow.pause',
+    },
+    {
+      code: 'REJECTED' as const,
+      expectedReason: 'plan_rejected',
+      reason: 'Adapter-specific rejection',
+      cause: 'adapter',
+    },
+  ])('plan_rejected preserves stable reason for $code', (input) => {
     const result = mapStartRunFacadeResult({
       kind: 'plan_rejected',
       accepted: false,
-      code: 'MISSING_CAPABILITY',
-      reason: 'Missing adapter capability: workflow.pause',
-      cause: 'workflow.pause',
+      code: input.code,
+      reason: input.reason,
+      cause: input.cause,
     });
     expect(result.status).toBe(422);
     expect(result.body).toEqual({
-      error: 'PLAN_REJECTED',
-      code: 'MISSING_CAPABILITY',
-      reason: 'Missing adapter capability: workflow.pause',
-      cause: 'workflow.pause',
+      error: {
+        type: 'unprocessable',
+        reason: input.expectedReason,
+        details: {
+          message: input.reason,
+          cause: input.cause,
+        },
+      },
     });
   });
 });
@@ -112,8 +144,11 @@ describe('mapStartRunEngineError', () => {
     });
     expect(result.status).toBe(422);
     expect(result.body).toEqual({
-      error: 'ADAPTER_NOT_CONFIGURED',
-      adapter: 'temporal',
+      error: {
+        type: 'unprocessable',
+        reason: 'adapter_not_configured',
+        details: { adapter: 'temporal' },
+      },
     });
   });
 
@@ -125,10 +160,14 @@ describe('mapStartRunEngineError', () => {
     });
     expect(result.status).toBe(422);
     expect(result.body).toEqual({
-      error: 'PLAN_REJECTED',
-      code: START_RUN_PLAN_REJECTION_CODE.rejected,
-      reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
-      cause: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          message: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+          cause: 'plan_ref_required',
+        },
+      },
     });
   });
 
@@ -140,25 +179,60 @@ describe('mapStartRunEngineError', () => {
     });
     expect(result.status).toBe(422);
     expect(result.body).toEqual({
-      error: 'PLAN_REJECTED',
-      code: START_RUN_PLAN_REJECTION_CODE.unsupportedPlanVersion,
-      reason: 'Unsupported plan version: 2.7',
-      supportedVersions: ['1.0'],
+      error: {
+        type: 'unprocessable',
+        reason: 'unsupported_plan_version',
+        details: {
+          message: 'Unsupported plan version: 2.7',
+          supportedVersions: ['1.0'],
+        },
+      },
     });
   });
 });
 
 describe('mapRuntimeDomainError', () => {
-  it('maps run metadata not found to 404', () => {
-    const result = mapRuntimeDomainError(new RunMetadataNotFoundError('run-1'));
-    expect(result).toEqual({ status: 404, body: { error: 'NOT_FOUND', code: 'RUN_NOT_FOUND' } });
+  it.each([
+    ['maps run metadata not found to 404', RunMetadataNotFoundError, 'run-1'],
+    ['maps typed run not found errors to 404', RunNotFoundError, 'run-2'],
+  ])('%s', (_desc, ErrorClass, runId) => {
+    const result = mapRuntimeDomainError(new ErrorClass(runId));
+    expect(result).toEqual({
+      status: 404,
+      body: {
+        error: {
+          type: 'not_found',
+          reason: 'run_not_found',
+          details: { runId },
+        },
+      },
+    });
   });
 
   it('maps unsupported phase-2 signals to 422', () => {
     const result = mapRuntimeDomainError(new SignalNotImplementedError('RETRY_RUN'));
     expect(result).toEqual({
       status: 422,
-      body: { error: 'UNPROCESSABLE_ENTITY', code: 'SIGNAL_NOT_IMPLEMENTED' },
+      body: {
+        error: {
+          type: 'unprocessable',
+          reason: 'signal_not_implemented',
+        },
+      },
+    });
+  });
+
+  it('maps adapter registration errors to 422', () => {
+    const result = mapRuntimeDomainError(new AdapterNotRegisteredError('temporal'));
+    expect(result).toEqual({
+      status: 422,
+      body: {
+        error: {
+          type: 'unprocessable',
+          reason: 'adapter_not_configured',
+          details: { adapter: 'temporal' },
+        },
+      },
     });
   });
 
@@ -166,15 +240,33 @@ describe('mapRuntimeDomainError', () => {
     const result = mapRuntimeDomainError(new RunAlreadyExistsError('run-dup'));
     expect(result).toEqual({
       status: 409,
-      body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' },
+      body: {
+        error: {
+          type: 'conflict',
+          reason: 'run_already_exists',
+          details: { runId: 'run-dup' },
+        },
+      },
     });
+  });
+
+  it('does not classify arbitrary code-only errors as run conflicts', () => {
+    const result = mapRuntimeDomainError(
+      Object.assign(new Error('intent conflict'), { code: 'INTENT_ACTIVE_CONFLICT' })
+    );
+    expect(result).toBeNull();
   });
 
   it('maps outbox rate limit errors to 429', () => {
     const result = mapRuntimeDomainError(new OutboxRateLimitExceededError('tenant-a'));
     expect(result).toEqual({
       status: 429,
-      body: { error: 'TOO_MANY_REQUESTS', code: 'OUTBOX_RATE_LIMIT_EXCEEDED' },
+      body: {
+        error: {
+          type: 'rate_limited',
+          reason: 'outbox_rate_limit_exceeded',
+        },
+      },
     });
   });
 });

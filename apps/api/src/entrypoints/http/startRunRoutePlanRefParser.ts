@@ -1,15 +1,12 @@
 import type { StartRunPlanRef } from '../../application/ports/startRunCommandContract.js';
 
-import {
-  asNonEmptyTrimmedStringOrUndefined,
-  type StartRunParseResult,
-} from './startRunRouteBodyValidation.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
+import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
 
-export function parseStartRunPlanRef(
-  raw: unknown
-): StartRunParseResult<StartRunPlanRef, 'INVALID_PLAN_REF'> {
+export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPlanRef> {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
-    return { ok: false, code: 'INVALID_PLAN_REF' };
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanRef, { target: 'planRef' });
   }
 
   const record = raw as Record<string, unknown>;
@@ -26,5 +23,5 @@ export function parseStartRunPlanRef(
     };
   }
 
-  return { ok: false, code: 'INVALID_PLAN_REF' };
+  return badRequestResult(HTTP_ERROR_REASON.invalidPlanRef, { target: 'planRef' });
 }

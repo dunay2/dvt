@@ -15,7 +15,7 @@ Generated automatically from repository code on 2026-03-31.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 554   |
+| Total source files           | 556   |
 | Total test files             | 198   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
@@ -24,7 +24,7 @@ Generated automatically from repository code on 2026-03-31.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 115       | 50         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 117       | 50         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 19         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |

@@ -4,13 +4,26 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { buildApp } from '../src/app.js';
 import * as pgPool from '../src/db/pool.js';
-import { SIGNAL_RUN_PARSE_ERROR_CODE } from '../src/entrypoints/http/signalRunRouteParser.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
 const adapterPostgres = await import('@dvt/adapter-postgres');
 const { PostgresPlanStore, PostgresStartRunIntentStore, PostgresStateStoreAdapter } =
   adapterPostgres;
+
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
+  return {
+    error: {
+      type,
+      reason,
+      ...(target === undefined ? {} : { target }),
+    },
+  };
+}
 
 describe('buildApp', () => {
   it('wires observability and health endpoint works', async () => {
@@ -432,10 +445,9 @@ describe('buildApp', () => {
       });
 
       expect(response.statusCode).toBe(400);
-      expect(response.json()).toEqual({
-        error: 'BAD_REQUEST',
-        code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE,
-      });
+      expect(response.json()).toEqual(
+        httpError('bad_request', 'invalid_signal_type', 'signalType')
+      );
       await app.close();
     } finally {
       getPgPoolSpy.mockRestore();

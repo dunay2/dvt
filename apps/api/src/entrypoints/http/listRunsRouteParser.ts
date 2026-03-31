@@ -1,12 +1,8 @@
 import type { RequestedScope } from '../../domain/auth/types.js';
 
-import {
-  LIST_RUNS_ACTION,
-  LIST_RUNS_LIMIT,
-  LIST_RUNS_PARSE_ERROR_CODE,
-  LIST_RUNS_PARSE_ERROR_RESPONSE,
-  type ListRunsParseErrorCode,
-} from './listRunsRouteParser.constants.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { LIST_RUNS_ACTION, LIST_RUNS_LIMIT } from './listRunsRouteParser.constants.js';
+import { badRequestResult, forbiddenResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   parseIntWithDefault,
   parseOptionalEnvironmentId,
@@ -23,28 +19,7 @@ export interface ParsedListRunsRequest {
   };
 }
 
-type ParsedListRunsResult =
-  | { readonly ok: true; readonly value: ParsedListRunsRequest }
-  | {
-      readonly ok: false;
-      readonly status: 400 | 403;
-      readonly body: {
-        readonly error:
-          | typeof LIST_RUNS_PARSE_ERROR_RESPONSE.BAD_REQUEST
-          | typeof LIST_RUNS_PARSE_ERROR_RESPONSE.FORBIDDEN;
-        readonly code: ListRunsParseErrorCode;
-      };
-    };
-
-type ListRunsBadRequestErrorCode =
-  | typeof LIST_RUNS_PARSE_ERROR_CODE.INVALID_TENANT_ID
-  | typeof LIST_RUNS_PARSE_ERROR_CODE.INVALID_PROJECT_ID
-  | typeof LIST_RUNS_PARSE_ERROR_CODE.INVALID_ENVIRONMENT_ID
-  | typeof LIST_RUNS_PARSE_ERROR_CODE.UNSUPPORTED_CURSOR
-  | typeof LIST_RUNS_PARSE_ERROR_CODE.INVALID_LIMIT
-  | typeof LIST_RUNS_PARSE_ERROR_CODE.LIMIT_OUT_OF_RANGE;
-
-type ListRunsForbiddenErrorCode = typeof LIST_RUNS_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE;
+type ParsedListRunsResult = RouteParseResult<ParsedListRunsRequest>;
 
 export function parseListRunsRequest(input: {
   readonly tenantId: string | undefined;
@@ -55,32 +30,32 @@ export function parseListRunsRequest(input: {
 }): ParsedListRunsResult {
   const tenant = parseRequiredTenantId(input.tenantId);
   if (tenant.kind === 'missing') {
-    return forbidden(LIST_RUNS_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE);
+    return forbiddenResult(HTTP_ERROR_REASON.missingTenantScope, { target: 'tenantId' });
   }
   if (tenant.kind === 'invalid') {
-    return badRequest(LIST_RUNS_PARSE_ERROR_CODE.INVALID_TENANT_ID);
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
   }
 
   const project = parseOptionalProjectId(input.projectId);
   if (project.kind === 'invalid') {
-    return badRequest(LIST_RUNS_PARSE_ERROR_CODE.INVALID_PROJECT_ID);
+    return badRequestResult(HTTP_ERROR_REASON.invalidProjectId, { target: 'projectId' });
   }
 
   const environment = parseOptionalEnvironmentId(input.environmentId);
   if (environment.kind === 'invalid') {
-    return badRequest(LIST_RUNS_PARSE_ERROR_CODE.INVALID_ENVIRONMENT_ID);
+    return badRequestResult(HTTP_ERROR_REASON.invalidEnvironmentId, { target: 'environmentId' });
   }
 
   if (input.cursor !== undefined) {
-    return badRequest(LIST_RUNS_PARSE_ERROR_CODE.UNSUPPORTED_CURSOR);
+    return badRequestResult(HTTP_ERROR_REASON.unsupportedCursor, { target: 'cursor' });
   }
 
   const limit = parseIntWithDefault(input.limit, LIST_RUNS_LIMIT.DEFAULT);
   if (limit === null) {
-    return badRequest(LIST_RUNS_PARSE_ERROR_CODE.INVALID_LIMIT);
+    return badRequestResult(HTTP_ERROR_REASON.invalidLimit, { target: 'limit' });
   }
   if (limit <= 0 || limit > LIST_RUNS_LIMIT.MAX) {
-    return badRequest(LIST_RUNS_PARSE_ERROR_CODE.LIMIT_OUT_OF_RANGE);
+    return badRequestResult(HTTP_ERROR_REASON.limitOutOfRange, { target: 'limit' });
   }
 
   return {
@@ -94,21 +69,5 @@ export function parseListRunsRequest(input: {
       },
       query: { limit },
     },
-  };
-}
-
-function badRequest(code: ListRunsBadRequestErrorCode): ParsedListRunsResult {
-  return {
-    ok: false,
-    status: 400,
-    body: { error: LIST_RUNS_PARSE_ERROR_RESPONSE.BAD_REQUEST, code },
-  };
-}
-
-function forbidden(code: ListRunsForbiddenErrorCode): ParsedListRunsResult {
-  return {
-    ok: false,
-    status: 403,
-    body: { error: LIST_RUNS_PARSE_ERROR_RESPONSE.FORBIDDEN, code },
   };
 }

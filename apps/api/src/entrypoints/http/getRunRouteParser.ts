@@ -1,11 +1,8 @@
 import type { RequestedScope } from '../../domain/auth/types.js';
 
-import {
-  GET_RUN_ACTION,
-  GET_RUN_PARSE_ERROR_CODE,
-  GET_RUN_PARSE_ERROR_RESPONSE,
-  type GetRunParseErrorCode,
-} from './getRunRouteParser.constants.js';
+import { GET_RUN_ACTION } from './getRunRouteParser.constants.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, forbiddenResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   normalizeRequiredString,
   parseBooleanQuery,
@@ -22,25 +19,7 @@ export interface ParsedGetRunRequest {
   };
 }
 
-type ParsedGetRunResult =
-  | { readonly ok: true; readonly value: ParsedGetRunRequest }
-  | {
-      readonly ok: false;
-      readonly status: 400 | 403;
-      readonly body: {
-        readonly error:
-          | typeof GET_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST
-          | typeof GET_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN;
-        readonly code: GetRunParseErrorCode;
-      };
-    };
-
-type GetRunBadRequestCode =
-  | typeof GET_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID
-  | typeof GET_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID
-  | typeof GET_RUN_PARSE_ERROR_CODE.INVALID_ENRICHED_FLAG;
-
-type GetRunForbiddenCode = typeof GET_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE;
+type ParsedGetRunResult = RouteParseResult<ParsedGetRunRequest>;
 
 export function parseGetRunRequest(input: {
   readonly runId: string | undefined;
@@ -49,20 +28,20 @@ export function parseGetRunRequest(input: {
 }): ParsedGetRunResult {
   const runId = normalizeRequiredString(input.runId);
   if (!runId) {
-    return badRequest(GET_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID);
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
 
   const tenant = parseRequiredTenantId(input.tenantId);
   if (tenant.kind === 'missing') {
-    return forbidden(GET_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE);
+    return forbiddenResult(HTTP_ERROR_REASON.missingTenantScope, { target: 'tenantId' });
   }
   if (tenant.kind === 'invalid') {
-    return badRequest(GET_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID);
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
   }
 
   const enriched = parseBooleanQuery(input.enriched);
   if (!enriched.ok) {
-    return badRequest(GET_RUN_PARSE_ERROR_CODE.INVALID_ENRICHED_FLAG);
+    return badRequestResult(HTTP_ERROR_REASON.invalidEnrichedFlag, { target: 'enriched' });
   }
 
   return {
@@ -77,21 +56,5 @@ export function parseGetRunRequest(input: {
         action: GET_RUN_ACTION,
       },
     },
-  };
-}
-
-function badRequest(code: GetRunBadRequestCode): ParsedGetRunResult {
-  return {
-    ok: false,
-    status: 400,
-    body: { error: GET_RUN_PARSE_ERROR_RESPONSE.BAD_REQUEST, code },
-  };
-}
-
-function forbidden(code: GetRunForbiddenCode): ParsedGetRunResult {
-  return {
-    ok: false,
-    status: 403,
-    body: { error: GET_RUN_PARSE_ERROR_RESPONSE.FORBIDDEN, code },
   };
 }
