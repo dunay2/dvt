@@ -80,6 +80,7 @@ Concept anchors for this page:
 - [20260328 Runtime Command RBAC Review](reviews/20260328-runtime-command-rbac-review.md)
 - [20260329 - Run Event Retention - Fowler Hard QA Review](reviews/20260329-run-event-retention-fowler-hard-review.md)
 - [20260329 Run Event Retention TTL Kickoff Review](reviews/20260329-run-event-retention-ttl-kickoff-review.md)
+- [20260330 Snapshot Staleness PR-671 Code Review](reviews/20260330-snapshot-staleness-pr671-code-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [CI Performance Review And Action Plan](reviews/20260330-ci-performance-review-and-action-plan.md)
 - [CI, Prepush & PR Process — Observations and Improvement Log](reviews/20260330-ci-prepush-pr-process-observations.md)
