@@ -185,6 +185,10 @@ Rules:
 
 ### 8.1 WP-01A Composition root
 
+Detailed implementation spec:
+
+- [Frontend Workbench WP-01A Composition Root Spec](frontend-workbench-wp01a-composition-root-spec.md)
+
 Deliverables:
 
 - new `WorkbenchScreen` component
