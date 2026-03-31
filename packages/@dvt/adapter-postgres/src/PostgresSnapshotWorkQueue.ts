@@ -10,6 +10,7 @@ const DEFAULT_CLAIM_TIMEOUT_MS = 300_000;
 const INVALID_BATCH_SIZE_ERROR_CODE = 'INVALID_SNAPSHOT_WORK_BATCH_SIZE';
 const INVALID_RETRY_DELAY_ERROR_CODE = 'INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS';
 const INVALID_CLAIM_TOKEN_ERROR_CODE = 'INVALID_SNAPSHOT_WORK_CLAIM_TOKEN';
+const CLAIM_NOT_OWNED_ERROR_CODE = 'SNAPSHOT_WORK_CLAIM_NOT_OWNED';
 
 export class PostgresSnapshotWorkQueue {
   constructor(
@@ -41,10 +42,16 @@ export class PostgresSnapshotWorkQueue {
 
   async completeSnapshotWork(tenantId: string, runId: string, claimToken: string): Promise<void> {
     const normalizedClaimToken = normalizeClaimToken(claimToken);
-    await this.withClient((client) =>
-      client.query(
+    const result = await this.withClient((client) =>
+      client.query<{ deleted: boolean; released: boolean; present: boolean }>(
         `
-          WITH deleted AS (
+          WITH present AS (
+            SELECT 1
+            FROM ${quoteIdentifier(this.schema)}.snapshot_work_queue q
+            WHERE q.tenant_id = $1
+              AND q.run_id = $2
+          ),
+          deleted AS (
             DELETE FROM ${quoteIdentifier(this.schema)}.snapshot_work_queue q
             USING ${quoteIdentifier(this.schema)}.run_snapshots s
             WHERE q.tenant_id = $1
@@ -53,19 +60,37 @@ export class PostgresSnapshotWorkQueue {
               AND q.latest_run_seq <= COALESCE(s.last_run_seq, 0)
               AND ${claimTokenSql('q.claimed_at')} = $3
             RETURNING q.run_id, q.tenant_id
+          ),
+          released AS (
+            UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue q
+            SET claimed_at = NULL,
+                next_attempt_at = NULL,
+                last_error = NULL
+            WHERE q.tenant_id = $1
+              AND q.run_id = $2
+              AND NOT EXISTS (SELECT 1 FROM deleted)
+              AND ${claimTokenSql('q.claimed_at')} = $3
+            RETURNING q.run_id, q.tenant_id
           )
-          UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue q
-          SET claimed_at = NULL,
-              next_attempt_at = NULL,
-              last_error = NULL
-          WHERE q.tenant_id = $1
-            AND q.run_id = $2
-            AND NOT EXISTS (SELECT 1 FROM deleted)
-            AND ${claimTokenSql('q.claimed_at')} = $3
+          SELECT
+            EXISTS(SELECT 1 FROM deleted) AS deleted,
+            EXISTS(SELECT 1 FROM released) AS released,
+            EXISTS(SELECT 1 FROM present) AS present
         `,
         [tenantId, runId, normalizedClaimToken]
       )
     );
+    const status = result.rows[0];
+    if (!status) {
+      throw new Error(`${CLAIM_NOT_OWNED_ERROR_CODE}: ${tenantId}/${runId}`);
+    }
+    const present = status.present ?? (status.deleted || status.released);
+    if (!present) {
+      return;
+    }
+    if (!status.deleted && !status.released) {
+      throw new Error(`${CLAIM_NOT_OWNED_ERROR_CODE}: ${tenantId}/${runId}`);
+    }
   }
 
   async failSnapshotWork(
@@ -78,7 +103,7 @@ export class PostgresSnapshotWorkQueue {
     const boundedRetryDelayMs = normalizeRetryDelay(retryDelayMs);
     const boundedErrorMessage = normalizeErrorMessage(errorMessage);
     const normalizedClaimToken = normalizeClaimToken(claimToken);
-    await this.withClient((client) =>
+    const result = await this.withClient((client) =>
       client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue
@@ -93,6 +118,9 @@ export class PostgresSnapshotWorkQueue {
         [tenantId, runId, boundedRetryDelayMs, boundedErrorMessage, normalizedClaimToken]
       )
     );
+    if (result.rowCount === 0) {
+      throw new Error(`${CLAIM_NOT_OWNED_ERROR_CODE}: ${tenantId}/${runId}`);
+    }
   }
 }
 

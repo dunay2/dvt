@@ -6,6 +6,12 @@ import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
 class RecordingPoolClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
   public releaseCalls = 0;
+  constructor(
+    private readonly options: {
+      completeResult?: { deleted: boolean; released: boolean; present?: boolean };
+      failRowCount?: number;
+    } = {}
+  ) {}
 
   async query(sql: string, params?: unknown[]): Promise<{ rows: unknown[]; rowCount: number }> {
     this.queries.push({ sql, params });
@@ -19,13 +25,37 @@ class RecordingPoolClient {
       return { rows: [], rowCount: 0 };
     }
 
-    if (statement.includes('snapshot_work_queue') && statement.includes('RETURNING q.run_id')) {
+    if (
+      statement.includes('snapshot_work_queue') &&
+      statement.includes('RETURNING q.run_id') &&
+      statement.includes('FOR UPDATE SKIP LOCKED')
+    ) {
       return {
         rows: [
           { run_id: 'run-1', tenant_id: 'tenant-1', claim_token: '2026-03-12T00:00:00.000000Z' },
         ],
         rowCount: 1,
       };
+    }
+
+    if (statement.includes('deleted AS (') && statement.includes('snapshot_work_queue q')) {
+      return {
+        rows: [
+          this.options.completeResult ?? {
+            deleted: true,
+            released: false,
+            present: true,
+          },
+        ],
+        rowCount: 1,
+      };
+    }
+
+    if (
+      statement.includes('attempts = attempts + 1') &&
+      statement.includes('snapshot_work_queue')
+    ) {
+      return { rows: [], rowCount: this.options.failRowCount ?? 1 };
     }
 
     return {
@@ -234,7 +264,8 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     );
     expect(completeQuery).toBeDefined();
     expect(completeQuery?.params).toEqual(['tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z']);
-    expect(completeQuery?.sql).toContain('WITH deleted AS (');
+    expect(completeQuery?.sql).toContain('WITH present AS (');
+    expect(completeQuery?.sql).toContain('deleted AS (');
     expect(completeQuery?.sql).toContain('SET claimed_at = NULL');
     expect(completeQuery?.sql).toContain('next_attempt_at = NULL');
     expect(completeQuery?.sql).toContain('last_error = NULL');
@@ -335,6 +366,52 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     await expect(
       adapter.failSnapshotWork('tenant-1', 'run-1', 1000, 'boom', '   ')
     ).rejects.toThrow('INVALID_SNAPSHOT_WORK_CLAIM_TOKEN');
+  });
+
+  it('rejects completeSnapshotWork when claim token no longer owns the row', async () => {
+    const client = new RecordingPoolClient({
+      completeResult: { deleted: false, released: false, present: true },
+    });
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    await expect(
+      adapter.completeSnapshotWork('tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z')
+    ).rejects.toThrow('SNAPSHOT_WORK_CLAIM_NOT_OWNED');
+  });
+
+  it('treats completeSnapshotWork as idempotent when queue row is already gone', async () => {
+    const client = new RecordingPoolClient({
+      completeResult: { deleted: false, released: false, present: false },
+    });
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    await expect(
+      adapter.completeSnapshotWork('tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z')
+    ).resolves.toBeUndefined();
+  });
+
+  it('rejects failSnapshotWork when claim token no longer owns the row', async () => {
+    const client = new RecordingPoolClient({ failRowCount: 0 });
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    await expect(
+      adapter.failSnapshotWork('tenant-1', 'run-1', 1000, 'boom', '2026-03-12T00:00:00.000000Z')
+    ).rejects.toThrow('SNAPSHOT_WORK_CLAIM_NOT_OWNED');
   });
 
   it('rejects invalid outbox claim timeout values', () => {

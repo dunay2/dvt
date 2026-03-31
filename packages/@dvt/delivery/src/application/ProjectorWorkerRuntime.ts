@@ -43,6 +43,7 @@ const DEFAULT_OPTIONS = {
 } as const;
 const INVALID_BATCH_SIZE = 'INVALID_BATCH_SIZE';
 const INVALID_FALLBACK_POLL_EVERY_TICKS = 'INVALID_FALLBACK_POLL_EVERY_TICKS';
+const CLAIM_NOT_OWNED_ERROR_CODE = 'SNAPSHOT_WORK_CLAIM_NOT_OWNED';
 
 export class ProjectorWorkerRuntime {
   private readonly batchSize: number;
@@ -161,7 +162,7 @@ export class ProjectorWorkerRuntime {
           const stale = await this.stateStore.isSnapshotStale(tenantId, runId);
           if (!stale) {
             if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
-              await this.stateStore.completeSnapshotWork(tenantId, runId, queueClaimToken!);
+              await this.completeClaimedWork(tenantId, runId, queueClaimToken!);
             }
             continue;
           }
@@ -169,24 +170,36 @@ export class ProjectorWorkerRuntime {
         lag += 1;
         await this.stateStore.rebuildSnapshot(tenantId, runId);
         if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
-          await this.stateStore.completeSnapshotWork(tenantId, runId, queueClaimToken!);
+          await this.completeClaimedWork(tenantId, runId, queueClaimToken!);
         }
         processed++;
       } catch (err) {
+        if (isClaimNotOwnedError(err)) {
+          this.logClaimOwnershipWarning(
+            tenantId,
+            runId,
+            err,
+            'projector worker: claim ownership lost'
+          );
+          continue;
+        }
         if (claimedFromQueue && this.stateStore.failSnapshotWork) {
           try {
-            await this.stateStore.failSnapshotWork(
-              tenantId,
-              runId,
-              this.errorBackoffMs,
-              toErrorLike(err).message,
-              queueClaimToken!
-            );
+            await this.failClaimedWork(tenantId, runId, queueClaimToken!, toErrorLike(err).message);
           } catch (releaseErr) {
-            this.logger.error(
-              { err: toErrorLike(releaseErr), runId, tenantId },
-              'projector worker: failSnapshotWork failed'
-            );
+            if (isClaimNotOwnedError(releaseErr)) {
+              this.logClaimOwnershipWarning(
+                tenantId,
+                runId,
+                releaseErr,
+                'projector worker: failSnapshotWork ownership lost'
+              );
+            } else {
+              this.logger.error(
+                { err: toErrorLike(releaseErr), runId, tenantId },
+                'projector worker: failSnapshotWork failed'
+              );
+            }
           }
         }
         this.logger.error(
@@ -326,6 +339,62 @@ export class ProjectorWorkerRuntime {
       }
     }
   }
+
+  private async completeClaimedWork(
+    tenantId: string,
+    runId: string,
+    claimToken: string
+  ): Promise<void> {
+    if (!this.stateStore.completeSnapshotWork) {
+      return;
+    }
+    try {
+      await this.stateStore.completeSnapshotWork(tenantId, runId, claimToken);
+    } catch (err) {
+      if (isClaimNotOwnedError(err)) {
+        this.logClaimOwnershipWarning(
+          tenantId,
+          runId,
+          err,
+          'projector worker: completeSnapshotWork ownership lost'
+        );
+        return;
+      }
+      throw err;
+    }
+  }
+
+  private async failClaimedWork(
+    tenantId: string,
+    runId: string,
+    claimToken: string,
+    errorMessage: string
+  ): Promise<void> {
+    if (!this.stateStore.failSnapshotWork) {
+      return;
+    }
+    await this.stateStore.failSnapshotWork(
+      tenantId,
+      runId,
+      this.errorBackoffMs,
+      errorMessage,
+      claimToken
+    );
+  }
+
+  private logClaimOwnershipWarning(
+    tenantId: string,
+    runId: string,
+    err: unknown,
+    message: string
+  ): void {
+    const payload = { err: toErrorLike(err), runId, tenantId };
+    if (this.logger.warn) {
+      this.logger.warn(payload, message);
+      return;
+    }
+    this.logger.info(payload, message);
+  }
 }
 
 function isAbortError(error: unknown): boolean {
@@ -351,4 +420,8 @@ function normalizeBatchSize(value: number): number {
     throw new Error(`${INVALID_BATCH_SIZE}: ${value}`);
   }
   return value;
+}
+
+function isClaimNotOwnedError(error: unknown): boolean {
+  return toErrorLike(error).message.includes(CLAIM_NOT_OWNED_ERROR_CODE);
 }
