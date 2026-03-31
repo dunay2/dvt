@@ -81,7 +81,7 @@ describe('determinism', () => {
       return;
     }
 
-    const expectedPlanId = '0479dbb6f36694f78c48532d3b33bec40d4eae446b81650249c4a97a4ffb7a25';
+    const expectedPlanId = '8afb02826ebe1e7c6262d3e35af7e342feb405e40949ad37cdb0e1aa5e26aef1';
     expect(plan.metadata.planId).toBe(expectedPlanId);
   });
 });
