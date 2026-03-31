@@ -163,17 +163,57 @@ Usage rules already declared in the ADR index:
 
 ### Root scripts and hooks
 
-| Source                                                                        | Role                    | What it enforces                                                                                                                          |
-| ----------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [package.json](../../../package.json)                                         | `command registry`      | Root commands for lint, type-check, tests, contracts, docs sync, docs quality, determinism, golden validation, and ADR-0000 traceability. |
-| [package.json `precommit`](../../../package.json)                             | `hook command`          | `lint-staged` plus determinism lint run before commit when hooks execute normally.                                                        |
-| [package.json `verify:prepush`](../../../package.json)                        | `pre-push gate`         | Contracts compile, root type-check, and changed-file checks.                                                                              |
-| [scripts/check-changed.cjs](../../../scripts/check-changed.cjs)               | `changed-file gate`     | ESLint and Prettier checks on changed files.                                                                                              |
-| [scripts/validate-rfc2119.cjs](../../../scripts/validate-rfc2119.cjs)         | `contract quality gate` | Validates RFC 2119 keyword usage in contract docs.                                                                                        |
-| [scripts/docs-quality-check.cjs](../../../scripts/docs-quality-check.cjs)     | `docs quality gate`     | Docs quality policy enforcement.                                                                                                          |
-| [scripts/docs-doctor.cjs](../../../scripts/docs-doctor.cjs)                   | `docs hygiene gate`     | Duplicate, legacy path, and stale metadata checks.                                                                                        |
-| [scripts/docs-canonical-check.cjs](../../../scripts/docs-canonical-check.cjs) | `canonical path gate`   | Canonical docs path and legacy segment validation.                                                                                        |
-| [scripts/sync-docs.cjs](../../../scripts/sync-docs.cjs)                       | `docs generator`        | Rebuilds generated indexes and docs navigation surfaces.                                                                                  |
+- [package.json](../../../package.json)
+  Role: `command registry`
+  Enforces: root commands for lint, type-check, tests, contracts, docs sync,
+  docs quality, determinism, golden validation, and ADR-0000 traceability.
+- [package.json `precommit`](../../../package.json)
+  Role: `hook command`
+  Enforces: `lint-staged` plus determinism lint before commit when hooks run
+  normally.
+- [package.json `verify:prepush`](../../../package.json)
+  Role: `pre-push gate`
+  Enforces: root type-check, planning workboard drift check, changed-markdown
+  validation, and changed-file checks.
+- [package.json `docs:pr:fast`](../../../package.json)
+  Role: `local docs preflight`
+  Enforces: local fast-path docs PR validation before push or PR creation.
+- [package.json `docs:pr:full`](../../../package.json)
+  Role: `local docs preflight`
+  Enforces: local full-path docs PR validation before push or PR creation.
+- [package.json `docs:pr:create`](../../../package.json)
+  Role: `deterministic docs PR wrapper`
+  Enforces: one-command local validation plus `git push` and `gh pr create`
+  for docs PRs.
+- [scripts/check-changed.cjs](../../../scripts/check-changed.cjs)
+  Role: `changed-file gate`
+  Enforces: ESLint and Prettier checks on changed files.
+- [scripts/docs-pr-create.cjs](../../../scripts/docs-pr-create.cjs)
+  Role: `deterministic docs PR wrapper`
+  Enforces: ordered local docs validation, PR title/body validation, and the
+  push/PR creation sequence.
+- [scripts/docs-pr-local.cjs](../../../scripts/docs-pr-local.cjs)
+  Role: `local docs PR orchestrator`
+  Enforces: ordered local execution of fast/full docs PR checks and optional
+  PR-title validation.
+- [scripts/lint-markdown-changed.cjs](../../../scripts/lint-markdown-changed.cjs)
+  Role: `markdown diff gate`
+  Enforces: markdownlint-cli2 on changed Markdown files only.
+- [scripts/validate-rfc2119.cjs](../../../scripts/validate-rfc2119.cjs)
+  Role: `contract quality gate`
+  Enforces: RFC 2119 keyword usage validation in contract docs.
+- [scripts/docs-quality-check.cjs](../../../scripts/docs-quality-check.cjs)
+  Role: `docs quality gate`
+  Enforces: docs quality policy.
+- [scripts/docs-doctor.cjs](../../../scripts/docs-doctor.cjs)
+  Role: `docs hygiene gate`
+  Enforces: duplicate, legacy path, and stale metadata checks.
+- [scripts/docs-canonical-check.cjs](../../../scripts/docs-canonical-check.cjs)
+  Role: `canonical path gate`
+  Enforces: canonical docs path and legacy segment validation.
+- [scripts/sync-docs.cjs](../../../scripts/sync-docs.cjs)
+  Role: `docs generator`
+  Enforces: regeneration of indexes and docs navigation surfaces.
 
 Additional enforcement surface:
 
@@ -183,12 +223,25 @@ Additional enforcement surface:
 
 ### GitHub workflows
 
-| Source                                                                                  | Role                      | Main enforced rules                                                                                                                                                                                                                  |
-| --------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [.github/workflows/ci.yml](../../../.github/workflows/ci.yml)                           | `CI - Code Quality`       | Detect affected workspaces, run changed-file lint and format checks, run affected build and type-check jobs, optionally run ADR-0000 traceability, lint markdown.                                                                    |
-| [.github/workflows/pr-quality-gate.yml](../../../.github/workflows/pr-quality-gate.yml) | `PR Quality Gate`         | ARC policy evaluation, docs sync and docs quality checks, canonical docs checks, generated status checks, optional workspace type-check, PR title validation, PR body minimum length, PR size warning, Temporal integration routing. |
-| [.github/workflows/test.yml](../../../.github/workflows/test.yml)                       | `Test Suite`              | Affected package tests, full suite on non-PR runs, determinism tests, replay checks, optional coverage.                                                                                                                              |
-| [.github/workflows/contracts.yml](../../../.github/workflows/contracts.yml)             | `Contracts & Determinism` | Schema compilation, determinism scan, contract compile, no-`any` check in contracts, golden fixture validation, hash comparison.                                                                                                     |
+- [.github/workflows/ci.yml](../../../.github/workflows/ci.yml)
+  Role: `CI - Code Quality`
+  Enforces: affected-workspace detection, changed-file lint and format checks,
+  affected build and type-check jobs, optional ADR-0000 traceability, and
+  changed-markdown lint on PRs.
+- [.github/workflows/pr-quality-gate.yml](../../../.github/workflows/pr-quality-gate.yml)
+  Role: `PR Quality Gate`
+  Enforces: ARC policy evaluation, docs sync and workboard drift checks, docs
+  quality checks, canonical docs checks, generated status checks, optional
+  workspace type-check, PR title validation, PR body minimum length, PR size
+  warning, and Temporal integration routing.
+- [.github/workflows/test.yml](../../../.github/workflows/test.yml)
+  Role: `Test Suite`
+  Enforces: affected package tests, full suite on non-PR runs, determinism
+  tests, replay checks, and optional coverage.
+- [.github/workflows/contracts.yml](../../../.github/workflows/contracts.yml)
+  Role: `Contracts & Determinism`
+  Enforces: schema compilation, determinism scan, contract compile, no-`any`
+  check in contracts, golden fixture validation, and hash comparison.
 
 ## Status, Risk, Evidence, And Planning Surfaces
 

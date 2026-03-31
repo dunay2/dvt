@@ -92,8 +92,13 @@ Relevant code and fixtures:
 | ----------------------------------------- | ---------------------------- | ------------------------------------ |
 | Docs sync                                 | `pnpm docs:sync`             | [`package.json`](../../package.json) |
 | Docs sync drift check                     | `pnpm docs:sync:check`       | [`package.json`](../../package.json) |
+| Planning workboard drift check            | `pnpm docs:workboard:check`  | [`package.json`](../../package.json) |
+| Local docs PR fast preflight              | `pnpm docs:pr:fast`          | [`package.json`](../../package.json) |
+| Local docs PR full preflight              | `pnpm docs:pr:full`          | [`package.json`](../../package.json) |
+| Deterministic docs PR wrapper             | `pnpm docs:pr:create`        | [`package.json`](../../package.json) |
 | Docs quality policy check                 | `pnpm docs:quality:check`    | [`package.json`](../../package.json) |
 | Docs doctor                               | `pnpm docs:doctor`           | [`package.json`](../../package.json) |
+| Changed Markdown lint                     | `pnpm lint:md:changed`       | [`package.json`](../../package.json) |
 | Markdown location policy                  | `pnpm docs:gov:locations`    | [`package.json`](../../package.json) |
 | Canonical path/link check                 | `pnpm docs:canonical:check`  | [`package.json`](../../package.json) |
 | Generated code-state drift check          | `pnpm docs:status:check`     | [`package.json`](../../package.json) |
@@ -105,20 +110,33 @@ Generated documentation sources:
 - code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
 
+Local docs PR preflight usage:
+
+- `pnpm docs:pr:fast`
+- `pnpm docs:pr:full`
+- `pnpm docs:pr:full -- --title "docs(docs): Your PR title"`
+- `pnpm docs:pr:create -- --title "docs(docs): Subject" --body-file .github/PR_BODY.md --dry-run`
+
 Command semantics:
 
 - `pnpm docs:ci` is the local-friendly docs validation flow. It regenerates derived docs surfaces first and then validates the resulting worktree.
-- `pnpm docs:sync:check`, `pnpm docs:status:check`, and `pnpm docs:capability:check` are strict drift gates. They compare generated outputs against `HEAD` and are intended for explicit cleanliness enforcement.
+- `pnpm docs:sync:check`, `pnpm docs:workboard:check`, `pnpm docs:status:check`, and `pnpm docs:capability:check` are strict drift gates. They compare generated outputs against `HEAD` and are intended for explicit cleanliness enforcement.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 
 ## GitHub Workflow Coverage
 
-| Workflow                | Main capability                                                                           | Source                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| CI - Code Quality       | affected workspace matrix, changed-file lint/format, markdown lint                        | [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                           |
-| Test Suite              | package tests, affected test routing, coverage, determinism/replay tests                  | [`.github/workflows/test.yml`](../../.github/workflows/test.yml)                       |
-| Contracts & Determinism | schema validation, determinism scan, contract compile, golden validation, hash comparison | [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)             |
-| PR Quality Gate         | docs gates, type-check fast-fail, PR metadata checks, Temporal integration                | [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) |
+- `CI - Code Quality`: affected workspace matrix, changed-file lint/format,
+  changed-only markdown lint on PRs.
+  Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
+- `Test Suite`: package tests, affected test routing, coverage,
+  determinism/replay tests.
+  Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
+- `Contracts & Determinism`: schema validation, determinism scan, contract
+  compile, golden validation, hash comparison.
+  Source: [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
+- `PR Quality Gate`: docs sync/workboard drift, docs gates, type-check
+  fast-fail, PR metadata checks, Temporal integration.
+  Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 
 ## Shared CI Scope Logic
 

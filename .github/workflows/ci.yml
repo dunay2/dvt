@@ -223,5 +223,10 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Lint Markdown files
+      - name: Lint changed Markdown files (PR)
+        if: github.event_name == 'pull_request'
+        run: pnpm lint:md:changed
+
+      - name: Lint all Markdown files (push/manual)
+        if: github.event_name != 'pull_request'
         run: pnpm lint:md
