@@ -1,239 +1,199 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ApiClient } from '../../../app/services/api/createApiClient';
 import {
   createHttpPlatformHealthClient,
   PlatformHealthInfrastructureError,
 } from './httpPlatformHealthClient';
-
-function createApiClientStub(
-  requestRaw: ApiClient['requestRaw'],
-  baseUrl = 'http://localhost:3000'
-): ApiClient {
-  return {
-    baseUrl,
-    requestRaw,
-    getJson: vi.fn(),
-    postJson: vi.fn(),
-  };
-}
+import {
+  createApiClientStub,
+  createDbReadyDto,
+  createHealthzDto,
+  createReadyzDto,
+  createVersionDto,
+  jsonResponse,
+  textResponse,
+} from '../testing/platformHealthHttpHarness';
 
 function mockEndpointResponse(endpoint: string): Response {
-  if (endpoint === '/healthz') {
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        status: 'healthy',
-        components: {
-          intentReconciler: {
-            status: 'healthy',
-          },
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+  switch (endpoint) {
+    case '/healthz':
+      return jsonResponse(createHealthzDto());
+    case '/readyz':
+      return jsonResponse(createReadyzDto());
+    case '/version':
+      return jsonResponse(createVersionDto());
+    case '/db/ready':
+      return jsonResponse(createDbReadyDto());
+    default:
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
   }
-  if (endpoint === '/readyz') {
-    return new Response(JSON.stringify({ ok: true, status: 'ready' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  if (endpoint === '/version') {
-    return new Response(JSON.stringify({ name: 'dvt-api', version: '1.2.3' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  if (endpoint === '/db/ready') {
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  throw new Error(`Unexpected endpoint: ${endpoint}`);
 }
 
 describe('createHttpPlatformHealthClient', () => {
-  it('loads a full healthy snapshot from the backend endpoints', async () => {
-    const requestRaw = vi.fn<ApiClient['requestRaw']>(async (endpoint) => {
-      return mockEndpointResponse(endpoint);
+  describe('transport contract', () => {
+    it('uses GET requests with session headers for every probe', async () => {
+      const requestRaw = vi.fn(
+        async (endpoint: string, init?: { method?: string; includeSessionHeaders?: boolean }) => {
+          expect(init).toEqual({
+            method: 'GET',
+            includeSessionHeaders: true,
+          });
+
+          return mockEndpointResponse(endpoint);
+        }
+      );
+
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+
+      await client.loadSnapshot();
+
+      expect(requestRaw).toHaveBeenNthCalledWith(1, '/healthz', {
+        method: 'GET',
+        includeSessionHeaders: true,
+      });
+      expect(requestRaw).toHaveBeenNthCalledWith(2, '/readyz', {
+        method: 'GET',
+        includeSessionHeaders: true,
+      });
+      expect(requestRaw).toHaveBeenNthCalledWith(3, '/version', {
+        method: 'GET',
+        includeSessionHeaders: true,
+      });
+      expect(requestRaw).toHaveBeenNthCalledWith(4, '/db/ready', {
+        method: 'GET',
+        includeSessionHeaders: true,
+      });
     });
-
-    const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
-    const snapshot = await client.loadSnapshot();
-
-    expect(snapshot.apiBaseUrl).toBe('http://localhost:3000');
-    expect(snapshot.healthz.data.status).toBe('healthy');
-    expect(snapshot.readyz.availability).toBe('available');
-    expect(snapshot.readyz.data?.status).toBe('ready');
-    expect(snapshot.version.data?.version).toBe('1.2.3');
-    expect(snapshot.dbReady.data?.ok).toBe(true);
   });
 
-  it('fails when the required /healthz endpoint returns a server error', async () => {
-    const requestRaw = vi.fn<ApiClient['requestRaw']>(async (endpoint) => {
-      if (endpoint === '/healthz') {
-        return new Response(JSON.stringify({ error: 'boom' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
+  describe('loadSnapshot', () => {
+    it('loads a full healthy snapshot from the backend endpoints', async () => {
+      const requestRaw = vi.fn(async (endpoint: string) => mockEndpointResponse(endpoint));
 
-      return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+      const snapshot = await client.loadSnapshot();
+
+      expect(snapshot.apiBaseUrl).toBe('http://localhost:3000');
+      expect(snapshot.healthz.data.status).toBe('healthy');
+      expect(snapshot.readyz.availability).toBe('available');
+      expect(snapshot.readyz.data?.status).toBe('ready');
+      expect(snapshot.version.data?.version).toBe('1.2.3');
+      expect(snapshot.dbReady.data?.ok).toBe(true);
     });
 
-    const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+    it('fails when the required /healthz endpoint returns a server error', async () => {
+      const requestRaw = vi.fn(async (endpoint: string) => {
+        if (endpoint === '/healthz') {
+          return jsonResponse({ error: 'boom' }, 500);
+        }
 
-    await expect(client.loadSnapshot()).rejects.toMatchObject({
-      name: 'PlatformHealthInfrastructureError',
-      endpoint: '/healthz',
-      kind: 'http',
-      statusCode: 500,
-    } satisfies Partial<PlatformHealthInfrastructureError>);
-  });
+        return jsonResponse({});
+      });
 
-  it('fails when the required /healthz endpoint returns invalid JSON', async () => {
-    const requestRaw = vi.fn<ApiClient['requestRaw']>(async (endpoint) => {
-      if (endpoint === '/healthz') {
-        return new Response('not-json', {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' },
-        });
-      }
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
 
-      return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+      await expect(client.loadSnapshot()).rejects.toMatchObject({
+        name: 'PlatformHealthInfrastructureError',
+        endpoint: '/healthz',
+        kind: 'http',
+        statusCode: 500,
+      } satisfies Partial<PlatformHealthInfrastructureError>);
     });
 
-    const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+    it('fails when the required /healthz endpoint returns invalid JSON', async () => {
+      const requestRaw = vi.fn(async (endpoint: string) => {
+        if (endpoint === '/healthz') {
+          return textResponse('not-json');
+        }
 
-    await expect(client.loadSnapshot()).rejects.toMatchObject({
-      name: 'PlatformHealthInfrastructureError',
-      endpoint: '/healthz',
-      kind: 'invalid_json',
-      statusCode: 200,
-    } satisfies Partial<PlatformHealthInfrastructureError>);
-  });
+        return jsonResponse({});
+      });
 
-  it('treats optional endpoints returning 404 as not enabled', async () => {
-    const requestRaw = vi.fn<ApiClient['requestRaw']>(async (endpoint) => {
-      if (endpoint === '/healthz') {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            status: 'healthy',
-            components: {
-              intentReconciler: {
-                status: 'healthy',
-              },
-            },
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
 
-      return new Response('', { status: 404 });
+      await expect(client.loadSnapshot()).rejects.toMatchObject({
+        name: 'PlatformHealthInfrastructureError',
+        endpoint: '/healthz',
+        kind: 'invalid_json',
+        statusCode: 200,
+      } satisfies Partial<PlatformHealthInfrastructureError>);
     });
 
-    const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
-    const snapshot = await client.loadSnapshot();
+    it('treats optional endpoints returning 404 as not enabled', async () => {
+      const requestRaw = vi.fn(async (endpoint: string) => {
+        if (endpoint === '/healthz') {
+          return jsonResponse(createHealthzDto());
+        }
 
-    expect(snapshot.readyz.availability).toBe('not_enabled');
-    expect(snapshot.version.availability).toBe('not_enabled');
-    expect(snapshot.dbReady.availability).toBe('not_enabled');
-  });
+        return new Response('', { status: 404 });
+      });
 
-  it('captures optional endpoint failures without failing the full snapshot', async () => {
-    const requestRaw = vi.fn<ApiClient['requestRaw']>(async (endpoint) => {
-      if (endpoint === '/healthz') {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            status: 'healthy',
-            components: {
-              intentReconciler: {
-                status: 'healthy',
-              },
-            },
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+      const snapshot = await client.loadSnapshot();
 
-      if (endpoint === '/readyz') {
-        throw new Error('socket hang up');
-      }
+      expect(snapshot.readyz.availability).toBe('not_enabled');
+      expect(snapshot.version.availability).toBe('not_enabled');
+      expect(snapshot.dbReady.availability).toBe('not_enabled');
+    });
 
-      if (endpoint === '/version') {
-        return new Response(JSON.stringify({ name: 'dvt-api', version: '1.2.3' }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
+    it('captures optional endpoint failures without failing the full snapshot', async () => {
+      const requestRaw = vi.fn(async (endpoint: string) => {
+        if (endpoint === '/healthz') {
+          return jsonResponse(createHealthzDto());
+        }
 
-      return new Response(JSON.stringify({ ok: false, reason: 'database offline' }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
+        if (endpoint === '/readyz') {
+          throw new Error('socket hang up');
+        }
+
+        if (endpoint === '/version') {
+          return jsonResponse(createVersionDto());
+        }
+
+        return jsonResponse(createDbReadyDto({ ok: false, reason: 'database offline' }), 503);
+      });
+
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+      const snapshot = await client.loadSnapshot();
+
+      expect(snapshot.readyz.error).toMatchObject({
+        kind: 'network',
+      });
+      expect(snapshot.version.data?.version).toBe('1.2.3');
+      expect(snapshot.dbReady.data).toEqual({
+        ok: false,
+        reason: 'database offline',
+      });
+      expect(snapshot.dbReady.error).toMatchObject({
+        kind: 'http',
+        statusCode: 503,
+        message: '/db/ready returned HTTP 503',
       });
     });
 
-    const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
-    const snapshot = await client.loadSnapshot();
+    it('preserves status code when an optional endpoint returns invalid JSON', async () => {
+      const requestRaw = vi.fn(async (endpoint: string) => {
+        if (endpoint === '/healthz') {
+          return jsonResponse(createHealthzDto());
+        }
 
-    expect(snapshot.readyz.error).toMatchObject({
-      kind: 'network',
-    });
-    expect(snapshot.version.data?.version).toBe('1.2.3');
-    expect(snapshot.dbReady.data).toEqual({
-      ok: false,
-      reason: 'database offline',
-    });
-    expect(snapshot.dbReady.error).toMatchObject({
-      kind: 'http',
-      statusCode: 503,
-      message: '/db/ready returned HTTP 503',
-    });
-  });
+        if (endpoint === '/version') {
+          return textResponse('not-json');
+        }
 
-  it('preserves status code when an optional endpoint returns invalid JSON', async () => {
-    const requestRaw = vi.fn<ApiClient['requestRaw']>(async (endpoint) => {
-      if (endpoint === '/healthz') {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            status: 'healthy',
-            components: {
-              intentReconciler: {
-                status: 'healthy',
-              },
-            },
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-
-      if (endpoint === '/version') {
-        return new Response('not-json', {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' },
-        });
-      }
-
-      return new Response(JSON.stringify({ ok: true, status: 'ready' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        return jsonResponse(createReadyzDto());
       });
-    });
 
-    const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
-    const snapshot = await client.loadSnapshot();
+      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+      const snapshot = await client.loadSnapshot();
 
-    expect(snapshot.version.statusCode).toBe(200);
-    expect(snapshot.version.data).toBeNull();
-    expect(snapshot.version.error).toMatchObject({
-      kind: 'invalid_json',
-      statusCode: 200,
-      message: '/version returned a non-JSON response',
+      expect(snapshot.version.statusCode).toBe(200);
+      expect(snapshot.version.data).toBeNull();
+      expect(snapshot.version.error).toMatchObject({
+        kind: 'invalid_json',
+        statusCode: 200,
+        message: '/version returned a non-JSON response',
+      });
     });
   });
 });

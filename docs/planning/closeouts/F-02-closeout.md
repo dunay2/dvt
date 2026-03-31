@@ -20,6 +20,7 @@ author: AI (Codex)
 | File or path                                                                                    | Change                                                                                                                      | Why                                                                                                         |
 | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `apps/web/src/capabilities/platform-health/**`                                                  | New capability module with `contracts`, `domain`, `application`, `infrastructure`, and `presentation` layers                | Replaces the legacy ad hoc service/query split with a Fowler-style capability boundary                      |
+| `apps/web/src/capabilities/platform-health/testing/**`                                          | Added shared fixtures and HTTP harness helpers for domain, application, presentation, and infrastructure tests              | Removes repeated ad hoc snapshots/responses and makes the capability test seams explicit                    |
 | `apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.ts`          | Optional probes now preserve HTTP status on infrastructure failures and surface non-OK HTTP responses as typed probe errors | Restores operational diagnostics and keeps degraded states inspectable instead of collapsing to `n/a`       |
 | `apps/web/src/capabilities/platform-health/index.ts`                                            | Barrel no longer re-exports infrastructure internals                                                                        | Keeps the public capability boundary narrow and prevents downstream coupling to adapter details             |
 | `apps/web/src/app/Root.tsx`                                                                     | Root shell now consumes `usePlatformHealthSnapshotQuery` and `selectPlatformConnectionState` from the capability            | The shell depends on a stable frontend domain API instead of a query helper with leaked transport semantics |
@@ -34,6 +35,7 @@ author: AI (Codex)
 - Backend DTOs are isolated under `contracts/`.
 - Frontend projection types live under `domain/`.
 - HTTP and endpoint-availability semantics live under `infrastructure/`.
+- Shared test fixtures and harness utilities live under `testing/`.
 - TanStack Query is now a thin presentation wrapper over the capability API.
 
 ## Docs synced
@@ -50,7 +52,7 @@ author: AI (Codex)
 | Command                                  | Result                                                                              |
 | ---------------------------------------- | ----------------------------------------------------------------------------------- |
 | `pnpm --filter @dvt/web typecheck`       | PASS                                                                                |
-| `pnpm --filter @dvt/web exec vitest run` | PASS - 6 files, 20 tests                                                            |
+| `pnpm --filter @dvt/web exec vitest run` | PASS - 8 files, 28 tests                                                            |
 | `pnpm docs:planning:lanes:generate`      | PASS                                                                                |
 | `pnpm docs:workboard:generate`           | PASS                                                                                |
 | `pnpm docs:status:generate`              | PASS                                                                                |
