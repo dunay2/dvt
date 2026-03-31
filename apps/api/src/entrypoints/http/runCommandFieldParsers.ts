@@ -77,7 +77,7 @@ export function parseOptionalReason(raw: unknown): string | undefined {
 
 export function badRequest<TCode extends string>(
   code: TCode
-): ParsedRunCommandError & {
+): ParsedRunCommandError<TCode> & {
   readonly body: {
     readonly error: typeof RUN_COMMAND_PARSE_ERROR_RESPONSE.BAD_REQUEST;
     readonly code: TCode;
@@ -95,7 +95,7 @@ export function badRequest<TCode extends string>(
 
 export function forbidden<TCode extends string>(
   code: TCode
-): ParsedRunCommandError & {
+): ParsedRunCommandError<TCode> & {
   readonly body: {
     readonly error: typeof RUN_COMMAND_PARSE_ERROR_RESPONSE.FORBIDDEN;
     readonly code: TCode;

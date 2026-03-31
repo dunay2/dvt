@@ -36,6 +36,26 @@ describe('runCommandFieldParsers', () => {
       expect(result).toEqual({ ok: true, value: { value: 'tenant-a' } });
     });
 
+    it('supports custom open-set tenant parse error codes', () => {
+      const customCodes = {
+        MISSING_TENANT_SCOPE: 'TENANT_SCOPE_MISSING_CUSTOM',
+        INVALID_TENANT_ID: 'TENANT_ID_BAD_CUSTOM',
+      } as const;
+
+      expect(parseTenantId({}, customCodes)).toEqual({
+        ok: false,
+        error: 'TENANT_SCOPE_MISSING_CUSTOM',
+      });
+      expect(parseTenantId({ tenantId: '   ' }, customCodes)).toEqual({
+        ok: false,
+        error: 'TENANT_ID_BAD_CUSTOM',
+      });
+      expect(parseTenantId({ tenantId: 123 }, customCodes)).toEqual({
+        ok: false,
+        error: 'TENANT_ID_BAD_CUSTOM',
+      });
+    });
+
     it('returns missing_tenant_scope when tenantId is absent', () => {
       const result = parseTenantId({});
       expect(result).toEqual({ ok: false, error: 'MISSING_TENANT_SCOPE' });
