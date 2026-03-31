@@ -23,6 +23,22 @@ describe('parseCancelRunRequest', () => {
       customCodes
     );
 
+    const invalidRunId = parseCancelRunRequest(
+      {
+        runId: '   ',
+        body: { tenantId: 'tenant-a' },
+      },
+      customCodes
+    );
+
+    const invalidBody = parseCancelRunRequest(
+      {
+        runId: 'run-1',
+        body: 'not-an-object',
+      },
+      customCodes
+    );
+
     const invalidTenant = parseCancelRunRequest(
       {
         runId: 'run-1',
@@ -35,6 +51,16 @@ describe('parseCancelRunRequest', () => {
       ok: false,
       status: 403,
       body: { error: 'FORBIDDEN', code: 'TENANT_SCOPE_MISSING_CUSTOM' },
+    });
+    expect(invalidRunId).toEqual({
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'RUN_ID_BAD_CUSTOM' },
+    });
+    expect(invalidBody).toEqual({
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'BODY_BAD_CUSTOM' },
     });
     expect(invalidTenant).toEqual({
       ok: false,
