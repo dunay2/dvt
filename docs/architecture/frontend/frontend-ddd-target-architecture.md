@@ -29,6 +29,7 @@ instead of parallel authority.
 - [Selection Context Model Specification](./workspace/selection-context-model-specification.md)
 - [Workspace Tab Model Specification](./workspace/workspace-tab-model-specification.md)
 - [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
+- [Frontend ACL Ownership Map](./frontend-acl-ownership-map.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)
@@ -158,6 +159,7 @@ WorkbenchMode]
         ExecutionACL[Execution ACL]
         ArtifactACL[Artifact ACL]
         ScmACL[SCM ACL]
+        LineageACL[Lineage ACL]
         TelemetryACL[Telemetry ACL]
     end
 
@@ -166,9 +168,9 @@ WorkbenchMode]
     Runs --> ExecutionACL
     Artifacts --> ArtifactACL
     Git --> ScmACL
+    Lineage --> LineageACL
     Observability --> TelemetryACL
     Graph --> PlannerACL
-    Lineage --> ArtifactACL
 ```
 
 ## 9. Communication rules
@@ -195,6 +197,9 @@ Forbidden pattern:
 
 Each capability context must translate backend contracts into frontend domain
 models before they become part of the UI domain.
+
+Canonical owner:
+[Frontend ACL Ownership Map](./frontend-acl-ownership-map.md)
 
 ### 9.3 Runtime overlays are read models
 
@@ -316,6 +321,7 @@ refine.
 - [Selection Context Model Specification](./workspace/selection-context-model-specification.md)
 - [Workspace Tab Model Specification](./workspace/workspace-tab-model-specification.md)
 - [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
+- [Frontend ACL Ownership Map](./frontend-acl-ownership-map.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)

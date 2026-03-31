@@ -154,7 +154,7 @@ frontend's native language.
 
 **Required outputs**
 
-- ACL map for Planning, Runs, Artifacts, Git, and Observability
+- ACL map for Planning, Runs, Artifacts, Git, Lineage, and Observability
 - capability docs updated to refer to translated frontend models
 - documented query and command boundaries for major capabilities
 

@@ -52,7 +52,7 @@ the coverage map. Its role is narrower:
 | ID    | Workstream                            | Status    | Priority | Criticality | Effort       | Suggested staffing             | Complexity | Depends on   | Primary outputs                                                               |
 | ----- | ------------------------------------- | --------- | -------- | ----------- | ------------ | ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------------- |
 | WS-01 | Shared-kernel contracts               | Delivered | P0       | Critical    | Medium       | 1 author + 1 reviewer          | Medium     | None         | canonical specs for `SelectionContext`, `WorkspaceTab`, and `WorkspaceLayout` |
-| WS-02 | ACL ownership map per capability      | Planned   | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01        | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
+| WS-02 | ACL ownership map per capability      | Delivered | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01        | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
 | WS-03 | Frontend state ownership strategy     | Planned   | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01        | canonical state policy, migration rules, anti-pattern list                    |
 | WS-04 | Current reality matrix per capability | Planned   | P2       | High        | Small-Medium | 1 author                       | Medium     | WS-02, WS-03 | target-vs-current matrix, backend dependency posture, validation baseline     |
 | WS-05 | Frontend architectural guardrails     | Planned   | P3       | High        | Medium-Large | 1 author + 1 maintainer        | High       | WS-02, WS-03 | enforceable rule set, check candidates, adoption sequence                     |
@@ -87,6 +87,11 @@ No capability document needs to redefine or locally improvise these contracts.
 Objective:
 Make the anti-corruption boundaries explicit for each bounded context that talks
 to backend contracts or external provider-shaped data.
+
+Status:
+Delivered in this slice by publishing:
+
+- [Frontend ACL Ownership Map](../frontend-acl-ownership-map.md)
 
 Required outputs:
 
@@ -177,16 +182,15 @@ gantt
 
 ## 8. Recommended Immediate Next Move
 
-Start with WS-02 and WS-03 in parallel:
+Start with WS-03:
 
-1. publish the ACL ownership matrix for Planning, Runs, Artifacts, Git,
-   Lineage, and Observability
-2. publish the frontend-wide state ownership policy for server state,
+1. publish the frontend-wide state ownership policy for server state,
    coordination state, and feature-local transient state
-3. keep both slices aligned to the shared-kernel contracts already published
+2. ratify the persistence rule for session state versus runtime truth
+3. use the published ACL map as the seam inventory for future guardrails
 
-Those two slices are now the shortest path to implementation-ready frontend
-architecture without reopening the shared-kernel semantics already closed.
+That is now the shortest path to implementation-ready frontend architecture
+without reopening already-closed shared-kernel or ACL semantics.
 
 ## 9. Relation To Fowler-Aligned Sources
 

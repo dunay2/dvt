@@ -30,6 +30,7 @@ It has four jobs:
 - [Frontend Architecture](../index.md)
 - [Frontend DDD Target Architecture](../frontend-ddd-target-architecture.md)
 - [Frontend Architecture Execution Plan](../frontend-architecture-execution-plan.md)
+- [Frontend ACL Ownership Map](../frontend-acl-ownership-map.md)
 - [Workspace Domain Specification](../workspace/workspace-domain-specification.md)
 - [Workspace Session Model Specification](../workspace/session/workspace-session-model-specification.md)
 - [Selection Context Model Specification](../workspace/selection-context-model-specification.md)
@@ -57,7 +58,6 @@ What is still not closed:
 
 - final canonical role of several capability docs
 - exact state ownership strategy at implementation level
-- ACL ownership map per capability
 - publication hygiene and frontend-specific guardrails
 
 The main gap is no longer "missing architecture". The main gap is "decision
@@ -77,7 +77,7 @@ closure and canonical consistency".
 | Workspace session concept                                 | Covered           | [Workspace Session Model Specification](../workspace/session/workspace-session-model-specification.md)                                                                                                                                                                               | The model now ratifies the `moduleId` versus `workbenchMode` split and removes single-field ambiguity.   |
 | Shared-kernel contracts                                   | Covered           | [Selection Context Model Specification](../workspace/selection-context-model-specification.md), [Workspace Tab Model Specification](../workspace/workspace-tab-model-specification.md), [Workspace Layout Model Specification](../workspace/workspace-layout-model-specification.md) | The shared kernel now has dedicated canonical contracts instead of remaining implied inside larger docs. |
 | Capability-level architecture docs                        | Covered           | capability docs under `docs/architecture/frontend/`                                                                                                                                                                                                                                  | All major capability areas have architecture coverage.                                                   |
-| ACL direction and DTO translation principle               | Partially covered | [Frontend DDD Target Architecture](../frontend-ddd-target-architecture.md)                                                                                                                                                                                                           | The rule exists, but the per-capability ACL ownership map is still missing.                              |
+| ACL direction and DTO translation principle               | Covered           | [Frontend ACL Ownership Map](../frontend-acl-ownership-map.md)                                                                                                                                                                                                                       | The corpus now declares query ports, command ports, gateway ports, and mapper ownership per capability.  |
 | Query versus command separation                           | Covered           | [Frontend DDD Target Architecture](../frontend-ddd-target-architecture.md), [Runs](../runs/dvt-runs-frontend-architecture.md), [Planning](../planning/frontend-planning-capability-architecture.md)                                                                                  | The principle is explicit, but implementation contracts are not fully normalized.                        |
 | Architecture execution order                              | Covered           | [Frontend Architecture Execution Plan](../frontend-architecture-execution-plan.md)                                                                                                                                                                                                   | Phases and decision gates are explicit.                                                                  |
 | Refactor execution order for code                         | Covered           | [Frontend Architecture Review and Critical Action Plan](frontend-architecture-review-and-critical-action-plan.md)                                                                                                                                                                    | The code-level sequence is explicit and incremental.                                                     |
@@ -91,7 +91,6 @@ closure and canonical consistency".
 | ID        | Decision still open                            | Why it matters                                                                       | Recommended closure                                                                                                                                                       |
 | --------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FD-DEC-01 | Canonical role taxonomy for every frontend doc | Without it, companion specs and exploratory notes still compete for authority.       | Add one explicit role system: `canonical`, `companion`, `review`, `reference-only`. Reflect it in frontmatter and in the frontend index.                                  |
-| FD-DEC-04 | ACL ownership map per capability               | The corpus says ACLs must exist, but not who owns which mapper/adapter boundary.     | Create one matrix for Planning, Runs, Artifacts, Git, Lineage, and Observability: query ports, command ports, DTO mappers, and external gateways.                         |
 | FD-DEC-05 | Frontend state ownership strategy              | Without a closed rule, store growth and duplicated state will continue.              | Default to TanStack Query for server state, bounded workspace stores for coordination state, and feature-local transient state for editing and view-specific interaction. |
 | FD-DEC-06 | Persistence policy for run and plan context    | The review allows `runs.store.ts` or React Query cache, which leaves room for drift. | Default to non-authoritative runtime data in query caches. Persist only explicit workspace session state, not runtime truth.                                              |
 | FD-DEC-07 | Module/plugin extension contract               | The shell/module seam exists, but the project still needs one stable contract.       | Standardize `WorkspaceModuleContract` and require module-specific adapters to satisfy it without caller special cases.                                                    |
@@ -224,9 +223,7 @@ This especially applies to:
 ```mermaid
 flowchart LR
     D1[FD-DEC-01
-Role taxonomy] --> D4[FD-DEC-04
-ACL map]
-    D4 --> D5
+Role taxonomy] --> D5
     D5[FD-DEC-05
 State ownership] --> D6[FD-DEC-10
 Architecture guardrails]
@@ -277,7 +274,8 @@ entry is authored by someone else, that is stated explicitly.
 
 The next serious documentation slices should be:
 
-1. close FD-DEC-04 by publishing the frontend ACL map
+1. close FD-DEC-01 by publishing a full canonical role taxonomy for the
+   frontend corpus
 2. close FD-DEC-05 and FD-DEC-06 by publishing the state ownership strategy
 3. close FD-DEC-09 by normalizing metadata, language, and encoding
 4. close FD-DEC-10 by defining enforceable frontend architectural guardrails
