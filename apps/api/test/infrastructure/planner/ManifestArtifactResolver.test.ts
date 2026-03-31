@@ -2,14 +2,11 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, URL } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { ManifestArtifactResolutionError } from '../../../src/application/errors/ManifestArtifactResolutionError.js';
-import {
-  ManifestArtifactResolver,
-} from '../../../src/infrastructure/planner/ManifestArtifactResolver.js';
+import { ManifestArtifactResolver } from '../../../src/infrastructure/planner/ManifestArtifactResolver.js';
 
 const FIXTURE_URL = new URL('../../fixtures/planner/basic-manifest.json', import.meta.url);
 const FIXTURE_BYTES = readFileSync(FIXTURE_URL);

@@ -11,10 +11,11 @@
  * Requires a live PostgreSQL instance. Skips cleanly when DVT_PG_URL or
  * DATABASE_URL is absent.
  */
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import process from 'node:process';
+import { URL } from 'node:url';
 
 import { exportJWK, generateKeyPair, SignJWT, type JWK } from 'jose';
 import { Client } from 'pg';
@@ -32,7 +33,10 @@ const ENVIRONMENT_ID = 'env-api-it';
 const PRINCIPAL_ID = 'principal-api-it';
 const ISSUER = 'https://issuer.integration.example/';
 const AUDIENCE = 'dvt-api';
-const PLANNER_MANIFEST_FIXTURE_URL = new URL('../fixtures/planner/basic-manifest.json', import.meta.url);
+const PLANNER_MANIFEST_FIXTURE_URL = new URL(
+  '../fixtures/planner/basic-manifest.json',
+  import.meta.url
+);
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/integration-plan.json',
   sha256: 'integration-sha-256',

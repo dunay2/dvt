@@ -26,17 +26,13 @@ const MANIFEST_ARTIFACT_RESOLUTION_REASON: Record<ManifestArtifactResolutionErro
 };
 
 const MANIFEST_ARTIFACT_REJECTION_CAUSE: Record<ManifestArtifactResolutionErrorKind, string> = {
-  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.unsupportedScheme]:
-    'manifest_ref_unsupported_scheme',
-  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.invalidArtifactLocator]:
-    'manifest_ref_invalid_locator',
+  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.unsupportedScheme]: 'manifest_ref_unsupported_scheme',
+  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.invalidArtifactLocator]: 'manifest_ref_invalid_locator',
   [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.fileSchemeProhibited]:
     'manifest_ref_file_scheme_prohibited',
   [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.artifactNotFound]: 'manifest_ref_not_found',
-  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.integrityMismatch]:
-    'manifest_ref_integrity_mismatch',
-  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.invalidManifestPayload]:
-    'manifest_ref_invalid_payload',
+  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.integrityMismatch]: 'manifest_ref_integrity_mismatch',
+  [MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.invalidManifestPayload]: 'manifest_ref_invalid_payload',
 };
 
 export class ManifestArtifactResolutionError extends Error {

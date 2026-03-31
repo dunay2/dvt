@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
@@ -26,7 +27,10 @@ import { describe, it, expect } from 'vitest';
 
 import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
 
-const PLANNER_MANIFEST_FIXTURE_URL = new URL('../fixtures/planner/basic-manifest.json', import.meta.url);
+const PLANNER_MANIFEST_FIXTURE_URL = new URL(
+  '../fixtures/planner/basic-manifest.json',
+  import.meta.url
+);
 
 function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
   return {
