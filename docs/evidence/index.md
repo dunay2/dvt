@@ -18,6 +18,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260319 Planner Slice4 Artifact Boundary Extraction](ED-20260319-planner-slice4-artifact-boundary-extraction.md)
 - [ED 20260319 Ts Esm Monorepo Migration](ED-20260319-ts-esm-monorepo-migration.md)
 - [ED 20260330 Planner Manifest Ref Cache](ED-20260330-planner-manifest-ref-cache.md)
+- [ED 20260330 S19f1 Phase1 Phase2 Snapshot Work Queue](ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md)
 - [ED 20260330 Snapshot Staleness Api Surface](ED-20260330-snapshot-staleness-api-surface.md)
 - [ED 20260330 Staleness Followup Code Quality](ED-20260330-staleness-followup-code-quality.md)
 - [ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout](ED-20260312-g6-golden-schema-closeout.md)

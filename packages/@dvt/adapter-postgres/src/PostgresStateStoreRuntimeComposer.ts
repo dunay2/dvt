@@ -19,6 +19,7 @@ import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 import { PostgresRunStateCoordinator } from './PostgresRunStateCoordinator.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { PostgresSnapshotStalenessQuery } from './PostgresSnapshotStalenessQuery.js';
+import { PostgresSnapshotWorkQueue } from './PostgresSnapshotWorkQueue.js';
 import type { PostgresStateStoreRuntimeConfig } from './PostgresStateStoreRuntimeConfig.js';
 import type { RunEventWriteRepository, RunEventReadRepository } from './RunEventWriteRepository.js';
 import { normalizeSchema } from './sqlUtils.js';
@@ -33,6 +34,7 @@ export interface PostgresStateStoreRuntimeServices {
   readonly snapshotStore: PostgresRunSnapshotStore;
   readonly runStateCoordinator: PostgresRunStateCoordinator;
   readonly snapshotStalenessQuery: PostgresSnapshotStalenessQuery;
+  readonly snapshotWorkQueue: PostgresSnapshotWorkQueue;
   readonly lineageOutboxStore: PostgresLineageOutboxStore;
 }
 
@@ -90,6 +92,9 @@ export function composePostgresStateStoreRuntime(
   const snapshotStalenessQuery = new PostgresSnapshotStalenessQuery(schema, (fn) =>
     clientSession.withClient(fn)
   );
+  const snapshotWorkQueue = new PostgresSnapshotWorkQueue(schema, (fn) =>
+    clientSession.withClient(fn)
+  );
   const lineageOutboxStore = new PostgresLineageOutboxStore(
     schema,
     now,
@@ -112,6 +117,7 @@ export function composePostgresStateStoreRuntime(
     snapshotStore,
     runStateCoordinator,
     snapshotStalenessQuery,
+    snapshotWorkQueue,
     lineageOutboxStore,
   };
 }
