@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
 import { parseCancelRunRequest } from '../../../src/entrypoints/http/cancelRunRouteParser.js';
+import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
 import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 
 describe('parseCancelRunRequest', () => {

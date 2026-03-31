@@ -2,13 +2,13 @@
 
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 
+import { extractBearerToken } from './extractBearerToken.js';
+import { sendHttpResponse } from './httpErrorContract.js';
 import {
   mapRouteParseIssue,
   mapStartRunEngineError,
   mapStartRunFacadeResult,
 } from './httpErrorMapper.js';
-import { sendHttpResponse } from './httpErrorContract.js';
-import { extractBearerToken } from './extractBearerToken.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
 
 export async function startRunRoute(

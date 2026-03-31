@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 import {
   parseSignalRunRequest,
   SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-  SIGNAL_COMMAND_ACTION,
 } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 
 describe('parseSignalRunRequest', () => {
