@@ -41,6 +41,14 @@ function safeReadJson(absPath) {
   }
 }
 
+function isSourceCodeFile(name) {
+  return /\.(ts|tsx|js|jsx|json)$/.test(name);
+}
+
+function isColocatedTestFile(name) {
+  return /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(name);
+}
+
 function markdownTable(headers, rows) {
   const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => String(r[i]).length)));
   const row = (cells) => `| ${cells.map((c, i) => String(c).padEnd(widths[i], ' ')).join(' | ')} |`;
@@ -78,12 +86,20 @@ function collectWorkspaceStats(dir) {
   const pkg = safeReadJson(pkgPath) || {};
   const scripts = pkg.scripts || {};
 
-  const srcFiles = fs.existsSync(path.join(dir, 'src'))
-    ? walk(path.join(dir, 'src'), (_, name) => /\.(ts|tsx|js|jsx|json)$/.test(name))
+  const srcDir = path.join(dir, 'src');
+  const testDir = path.join(dir, 'test');
+  const srcFiles = fs.existsSync(srcDir)
+    ? walk(srcDir, (_, name) => isSourceCodeFile(name) && !isColocatedTestFile(name))
     : [];
-  const testFiles = fs.existsSync(path.join(dir, 'test'))
-    ? walk(path.join(dir, 'test'), (_, name) => /\.(ts|tsx|js|jsx)$/.test(name))
+  const colocatedTestFiles = fs.existsSync(srcDir)
+    ? walk(srcDir, (_, name) => isColocatedTestFile(name))
     : [];
+  const testFiles = [
+    ...(fs.existsSync(testDir)
+      ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/.test(name))
+      : []),
+    ...colocatedTestFiles,
+  ];
 
   const exportedSymbols = (() => {
     const indexTs = path.join(dir, 'src', 'index.ts');

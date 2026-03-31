@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { createElement } from 'react';
+import { act, createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PlatformHealthCapabilityApi } from '../application/platformHealthCapability';
@@ -11,6 +11,8 @@ import {
   usePlatformHealthSnapshotQuery,
 } from './usePlatformHealthSnapshotQuery';
 import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQueryHarness';
+
+type PlatformHealthSnapshot = ReturnType<typeof createPlatformHealthSnapshot>;
 
 describe('createPlatformHealthSnapshotQueryOptions', () => {
   it('builds stable query options around the injected capability', async () => {
@@ -60,14 +62,13 @@ describe('usePlatformHealthSnapshotQuery', () => {
 
   it('supports custom advancement when the query resolves asynchronously', async () => {
     const snapshot = createPlatformHealthSnapshot();
-    let releaseSnapshot: (() => void) | undefined;
+    let resolveSnapshotPromise: ((value: PlatformHealthSnapshot) => void) | undefined;
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const snapshotPromise = new Promise<PlatformHealthSnapshot>((resolve) => {
+      resolveSnapshotPromise = resolve;
+    });
     const capability: PlatformHealthCapabilityApi = {
-      loadSnapshot: vi.fn().mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            releaseSnapshot = () => resolve(snapshot);
-          })
-      ),
+      loadSnapshot: vi.fn().mockImplementation(() => snapshotPromise),
     };
     let observedState: ReturnType<typeof usePlatformHealthSnapshotQuery> | undefined;
 
@@ -79,10 +80,18 @@ describe('usePlatformHealthSnapshotQuery', () => {
     const mounted = await withTestQueryClient(createElement(Probe));
 
     try {
+      await waitForReactQuery(() => observedState?.status === 'pending', {
+        description: 'platform health pending state',
+        intervalMs: 1,
+        timeoutMs: 500,
+      });
+
+      await act(async () => {
+        resolveSnapshotPromise?.(snapshot);
+        await snapshotPromise;
+      });
+
       await waitForReactQuery(() => observedState?.status === 'success', {
-        advance: () => {
-          releaseSnapshot?.();
-        },
         description: 'platform health controlled success state',
         intervalMs: 1,
         timeoutMs: 500,
@@ -91,8 +100,12 @@ describe('usePlatformHealthSnapshotQuery', () => {
       expect(observedState?.data).toEqual(snapshot);
       expect(observedState?.isSuccess).toBe(true);
       expect(capability.loadSnapshot).toHaveBeenCalledTimes(1);
+      expect(
+        consoleError.mock.calls.some(([message]) => String(message).includes('not wrapped in act'))
+      ).toBe(false);
     } finally {
       await mounted.cleanup();
+      consoleError.mockRestore();
     }
   });
 });

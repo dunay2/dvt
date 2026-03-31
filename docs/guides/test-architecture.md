@@ -115,6 +115,20 @@ Shared frontend test support should stay narrow. Preferred exports:
 - `withTestQueryClient(...)`
 - small async wait helpers
 
+Shared frontend support must also follow two stability rules:
+
+- wait helpers should separate observation from scheduler-driving; use a proven
+  wait primitive for real-time polling and keep custom `tick` hooks only for
+  explicit scheduler-controlled tests
+- side effects that release or drive async work belong in the test body inside
+  `act(...)`, not in a shared wait helper API
+- any helper that mutates process-global React test state such as
+  `IS_REACT_ACT_ENVIRONMENT` must use lease-style or ref-counted restoration so
+  overlapping mounts do not restore global state too early
+- shared React Query harnesses should integrate TanStack Query notification
+  dispatch with `act(...)` at the harness boundary instead of making each test
+  paper over observer notification timing individually
+
 Do not place capability-specific DTO or snapshot builders in shared frontend
 support.
 
