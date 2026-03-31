@@ -29,16 +29,6 @@
  * @see IArtifactResolver — the port used to resolve manifestRef payloads
  * @see Planner — the pure domain planner this facade delegates to
  */
-import type {
-  DbtManifestRef,
-  ExecutionPlanV2,
-  IPlanner,
-  PlannerGraphSourceV1,
-  PlannerBuildResultV2,
-  PlannerInputEnvelopeV2 as ContractEnvelope,
-  PlannerInputEnvelopeV2SchemaT,
-  PlannerSelection,
-} from '@dvt/contracts';
 import {
   ContractValidationError,
   parsePlannerGraphSourceV1,
@@ -51,6 +41,14 @@ import type { PlannerInputEnvelopeV2 as DomainEnvelope } from '../domain/types.j
 import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
 
 import { derivePlannerGraphSourceFromManifest } from './derivePlannerGraphSourceFromManifest.js';
+type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
+type ExecutionPlanV2 = import('@dvt/contracts').ExecutionPlanV2;
+type IPlanner = import('@dvt/contracts').IPlanner;
+type PlannerBuildResultV2 = import('@dvt/contracts').PlannerBuildResultV2;
+type PlannerGraphSourceV1 = import('@dvt/contracts').PlannerGraphSourceV1;
+type ContractEnvelope = import('@dvt/contracts').PlannerInputEnvelopeV2;
+type PlannerInputEnvelopeV2SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV2SchemaT;
+type PlannerSelection = import('@dvt/contracts').PlannerSelection;
 
 // ── Options ─────────────────────────────────────────────────────────────────
 
