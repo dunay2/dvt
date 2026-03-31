@@ -6,6 +6,7 @@ import {
   TemporalClientManager,
   loadTemporalAdapterConfig,
   mapTemporalStatusToRunStatus,
+  toRunStatusSnapshotFromWorkflowState,
   toRunStatusSnapshot,
   toTemporalRunRef,
   toTemporalTaskQueue,
@@ -124,6 +125,24 @@ describe('adapter-temporal foundation', () => {
       runId: 'run-1',
       status: 'RUNNING',
       message: 'ok',
+    });
+
+    expect(
+      toRunStatusSnapshotFromWorkflowState({
+        runId: 'run-1',
+        state: {
+          status: 'CANCELLED',
+          paused: false,
+          cancelled: true,
+          cancelReason: 'user request',
+          currentStepIndex: 2,
+          continuedAsNewCount: 0,
+        },
+      })
+    ).toEqual({
+      runId: 'run-1',
+      status: 'CANCELLED',
+      message: 'user request',
     });
   });
 
@@ -287,8 +306,6 @@ describe('adapter-temporal foundation', () => {
           ensureConnected: vi.fn(async () => undefined),
         } as never,
         config: cfg,
-        stateStore: { listEvents: vi.fn(async () => []) },
-        projector: { rebuild: vi.fn() },
       }),
       config: cfg,
       observability,

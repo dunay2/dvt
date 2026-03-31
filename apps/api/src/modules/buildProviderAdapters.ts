@@ -51,8 +51,6 @@ export async function buildProviderAdapters(
     const temporalAdapter = new TemporalAdapter({
       clientManager,
       config: temporalConfig,
-      stateStore: deps.stateStore as never,
-      projector: deps.projector as never,
     });
     adapters.set('temporal', temporalAdapter);
     closers.push(() => clientManager.close());
