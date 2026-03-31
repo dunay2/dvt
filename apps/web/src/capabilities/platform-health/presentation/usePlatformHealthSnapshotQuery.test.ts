@@ -1,3 +1,6 @@
+// @vitest-environment jsdom
+
+import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PlatformHealthCapabilityApi } from '../application/platformHealthCapability';
@@ -5,7 +8,9 @@ import { createPlatformHealthSnapshot } from '../testing/platformHealthFixtures'
 import {
   createPlatformHealthSnapshotQueryOptions,
   platformHealthQueryKey,
+  usePlatformHealthSnapshotQuery,
 } from './usePlatformHealthSnapshotQuery';
+import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQueryHarness';
 
 describe('createPlatformHealthSnapshotQueryOptions', () => {
   it('builds stable query options around the injected capability', async () => {
@@ -22,5 +27,32 @@ describe('createPlatformHealthSnapshotQueryOptions', () => {
     expect(options.retry).toBe(1);
     await expect(options.queryFn()).resolves.toEqual(snapshot);
     expect(capability.loadSnapshot).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('usePlatformHealthSnapshotQuery', () => {
+  it('resolves the injected capability inside a QueryClient boundary', async () => {
+    const snapshot = createPlatformHealthSnapshot();
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(snapshot),
+    };
+    let observedState: ReturnType<typeof usePlatformHealthSnapshotQuery> | undefined;
+
+    function Probe(): null {
+      observedState = usePlatformHealthSnapshotQuery(capability);
+      return null;
+    }
+
+    const mounted = await withTestQueryClient(createElement(Probe));
+
+    try {
+      await waitForReactQuery(() => observedState?.status === 'success');
+
+      expect(observedState?.data).toEqual(snapshot);
+      expect(observedState?.isSuccess).toBe(true);
+      expect(capability.loadSnapshot).toHaveBeenCalledTimes(1);
+    } finally {
+      await mounted.cleanup();
+    }
   });
 });

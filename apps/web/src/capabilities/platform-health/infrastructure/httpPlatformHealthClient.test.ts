@@ -5,6 +5,7 @@ import {
   PlatformHealthInfrastructureError,
 } from './httpPlatformHealthClient';
 import {
+  createApiRequestRecorder,
   createApiClientStub,
   createDbReadyDto,
   createHealthzDto,
@@ -32,37 +33,24 @@ function mockEndpointResponse(endpoint: string): Response {
 describe('createHttpPlatformHealthClient', () => {
   describe('transport contract', () => {
     it('uses GET requests with session headers for every probe', async () => {
-      const requestRaw = vi.fn(
-        async (endpoint: string, init?: { method?: string; includeSessionHeaders?: boolean }) => {
-          expect(init).toEqual({
-            method: 'GET',
-            includeSessionHeaders: true,
-          });
+      const recorder = createApiRequestRecorder((endpoint) => mockEndpointResponse(endpoint));
 
-          return mockEndpointResponse(endpoint);
-        }
-      );
-
-      const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
+      const client = createHttpPlatformHealthClient(createApiClientStub(recorder.requestRaw));
 
       await client.loadSnapshot();
 
-      expect(requestRaw).toHaveBeenNthCalledWith(1, '/healthz', {
-        method: 'GET',
-        includeSessionHeaders: true,
-      });
-      expect(requestRaw).toHaveBeenNthCalledWith(2, '/readyz', {
-        method: 'GET',
-        includeSessionHeaders: true,
-      });
-      expect(requestRaw).toHaveBeenNthCalledWith(3, '/version', {
-        method: 'GET',
-        includeSessionHeaders: true,
-      });
-      expect(requestRaw).toHaveBeenNthCalledWith(4, '/db/ready', {
-        method: 'GET',
-        includeSessionHeaders: true,
-      });
+      expect(recorder.requests).toHaveLength(4);
+      expect(recorder.requests.map((entry) => entry.endpoint).sort()).toEqual([
+        '/db/ready',
+        '/healthz',
+        '/readyz',
+        '/version',
+      ]);
+      expect(
+        recorder.requests.every(
+          (entry) => entry.init?.method === 'GET' && entry.init?.includeSessionHeaders === true
+        )
+      ).toBe(true);
     });
   });
 

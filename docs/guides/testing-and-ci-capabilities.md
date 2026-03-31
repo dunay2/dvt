@@ -16,6 +16,10 @@ canonical command and source file for each one.
 - Map each capability to the workflow or script that enforces it in CI.
 - Reduce ambiguity when extending quality gates or adding new workspaces.
 
+See also:
+
+- [`test-architecture.md`](test-architecture.md) for repository rules on test taxonomy, harnesses, fixtures, and promotion to shared utilities.
+
 ## Root Commands
 
 | Capability                     | Command                          | Source                                                         |

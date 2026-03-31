@@ -1,4 +1,4 @@
-import type { ApiClient } from '../../../app/services/api/createApiClient';
+import type { ApiClient, ApiRequestInit } from '../../../app/services/api/createApiClient';
 import type {
   DbReadyDto,
   HealthzDto,
@@ -29,11 +29,7 @@ export function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-export function textResponse(
-  body: string,
-  status = 200,
-  contentType = 'text/plain'
-): Response {
+export function textResponse(body: string, status = 200, contentType = 'text/plain'): Response {
   return new Response(body, {
     status,
     headers: { 'Content-Type': contentType },
@@ -71,5 +67,27 @@ export function createDbReadyDto(overrides: Partial<DbReadyDto> = {}): DbReadyDt
     ok: true,
     reason: undefined,
     ...overrides,
+  };
+}
+
+export type RecordedApiRequest = {
+  endpoint: string;
+  init: ApiRequestInit | undefined;
+};
+
+export function createApiRequestRecorder(
+  respond: (endpoint: string, init?: ApiRequestInit) => Response | Promise<Response>
+): {
+  requestRaw: ApiClient['requestRaw'];
+  requests: RecordedApiRequest[];
+} {
+  const requests: RecordedApiRequest[] = [];
+
+  return {
+    requestRaw: async (endpoint, init) => {
+      requests.push({ endpoint, init });
+      return respond(endpoint, init);
+    },
+    requests,
   };
 }
