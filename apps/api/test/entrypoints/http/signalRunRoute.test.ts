@@ -1,16 +1,32 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { signalRunRoute } from '../../../src/entrypoints/http/signalRunRoute.js';
-import {
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-} from '../../../src/entrypoints/http/signalRunRouteParser.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
-function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
+function createReply(): {
+  code: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
+  header: ReturnType<typeof vi.fn>;
+} {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
+    header: vi.fn().mockReturnThis(),
+  };
+}
+
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
+  return {
+    error: {
+      type,
+      reason,
+      ...(target === undefined ? {} : { target }),
+    },
   };
 }
 
@@ -140,10 +156,7 @@ describe('signalRunRoute', () => {
       'req-1c'
     );
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'FORBIDDEN',
-      code: 'ACTION_NOT_GRANTED',
-    });
+    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'action_not_granted'));
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
@@ -174,10 +187,7 @@ describe('signalRunRoute', () => {
       'req-1d'
     );
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'FORBIDDEN',
-      code: 'ACTION_NOT_GRANTED',
-    });
+    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'action_not_granted'));
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
@@ -197,10 +207,9 @@ describe('signalRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE,
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_signal_type', 'signalType')
+    );
   });
 
   it('returns 400 for CANCEL when compatibility policy disables it', async () => {
@@ -220,10 +229,9 @@ describe('signalRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE,
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_signal_type', 'signalType')
+    );
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
@@ -243,10 +251,9 @@ describe('signalRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'FORBIDDEN',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE,
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('forbidden', 'missing_tenant_scope', 'tenantId')
+    );
   });
 
   it('returns 400 when tenantId is present but invalid', async () => {
@@ -265,10 +272,9 @@ describe('signalRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID,
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_tenant_id', 'tenantId')
+    );
   });
 
   it('returns 400 when tenantId has invalid type', async () => {
@@ -287,10 +293,9 @@ describe('signalRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID,
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_tenant_id', 'tenantId')
+    );
   });
 
   it('returns 400 when body is not an object', async () => {
@@ -304,10 +309,7 @@ describe('signalRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY,
-    });
+    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_body'));
   });
 
   it('treats blank bearer token as missing token', async () => {
@@ -331,6 +333,6 @@ describe('signalRunRoute', () => {
 
     expect(deps.authenticator.authenticateBearerToken).toHaveBeenCalledWith(undefined);
     expect(reply.code).toHaveBeenCalledWith(401);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'UNAUTHORIZED', code: 'AUTH_REQUIRED' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('unauthorized', 'auth_required'));
   });
 });

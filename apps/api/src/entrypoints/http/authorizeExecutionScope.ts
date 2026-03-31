@@ -2,11 +2,8 @@
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
 
-import {
-  mapAuthenticationFailure,
-  mapAuthorizationFailure,
-  type HttpResponseModel,
-} from './authErrorMapper.js';
+import type { HttpResponseModel } from './httpErrorContract.js';
+import { mapAuthenticationFailure, mapAuthorizationFailure } from './httpErrorMapper.js';
 
 export async function authorizeExecutionScope<TAction extends AuthorizationAction>(deps: {
   readonly authenticator: IAuthenticator;

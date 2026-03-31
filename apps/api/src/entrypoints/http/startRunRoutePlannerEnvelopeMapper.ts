@@ -2,7 +2,8 @@ import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
 
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 
-import type { StartRunParseResult } from './startRunRouteBodyValidation.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 type PlannerCommandFields = {
   -readonly [K in
@@ -18,7 +19,7 @@ type PlannerCommandFields = {
 export function parseStartRunPlannerEnvelope(
   record: Record<string, unknown>,
   selection: ReadonlyArray<string>
-): StartRunParseResult<
+): RouteParseResult<
   Pick<
     StartRunCommand,
     | 'graphSource'
@@ -28,8 +29,7 @@ export function parseStartRunPlannerEnvelope(
     | 'policies'
     | 'environment'
     | 'observability'
-  >,
-  'INVALID_PLAN_SOURCE'
+  >
 > {
   try {
     const parsed = parsePlannerInputEnvelopeV2({
@@ -48,7 +48,7 @@ export function parseStartRunPlannerEnvelope(
       value: toPlannerCommandFields(parsed),
     };
   } catch {
-    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 }
 

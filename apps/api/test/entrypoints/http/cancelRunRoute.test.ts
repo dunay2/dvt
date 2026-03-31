@@ -1,16 +1,32 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { cancelRunRoute } from '../../../src/entrypoints/http/cancelRunRoute.js';
-import {
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-} from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
-function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
+function createReply(): {
+  code: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
+  header: ReturnType<typeof vi.fn>;
+} {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
+    header: vi.fn().mockReturnThis(),
+  };
+}
+
+function httpError(
+  type: string,
+  reason: string,
+  target?: string
+): { error: { type: string; reason: string; target?: string } } {
+  return {
+    error: {
+      type,
+      reason,
+      ...(target === undefined ? {} : { target }),
+    },
   };
 }
 
@@ -100,10 +116,9 @@ describe('cancelRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'FORBIDDEN',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE,
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('forbidden', 'missing_tenant_scope', 'tenantId')
+    );
   });
 
   it('returns 400 when body is not an object', async () => {
@@ -117,10 +132,7 @@ describe('cancelRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY,
-    });
+    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_body'));
   });
 
   it('returns 401 when authentication fails', async () => {
@@ -143,10 +155,7 @@ describe('cancelRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(401);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'UNAUTHORIZED',
-      code: 'MISSING_TOKEN',
-    });
+    expect(reply.send).toHaveBeenCalledWith(httpError('unauthorized', 'missing_token'));
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
@@ -155,7 +164,7 @@ describe('cancelRunRoute', () => {
     const deps = createDeps();
     deps.authorizer.authorize.mockResolvedValueOnce({
       ok: false,
-      reason: 'TENANT_ACCESS_DENIED',
+      reason: 'ACTION_NOT_GRANTED',
     });
     const reply = createReply();
 
@@ -171,10 +180,7 @@ describe('cancelRunRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'FORBIDDEN',
-      code: 'TENANT_ACCESS_DENIED',
-    });
+    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'action_not_granted'));
     expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 });

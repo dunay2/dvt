@@ -4,10 +4,11 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { IGetRunStatusUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
-import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { parseGetRunRequest } from './getRunRouteParser.js';
+import { sendHttpResponse } from './httpErrorContract.js';
+import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
 
 export async function getRunRoute(
   request: FastifyRequest<{
@@ -27,7 +28,7 @@ export async function getRunRoute(
     enriched: request.query.enriched,
   });
   if (!parsed.ok) {
-    reply.code(parsed.status).send(parsed.body);
+    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
     return;
   }
 
@@ -39,7 +40,7 @@ export async function getRunRoute(
     requestedScope: parsed.value.requestedScope,
   });
   if (!auth.ok) {
-    reply.code(auth.response.status).send(auth.response.body);
+    sendHttpResponse(reply, auth.response);
     return;
   }
 
@@ -49,7 +50,7 @@ export async function getRunRoute(
   } catch (error) {
     const mapped = mapRuntimeDomainError(error);
     if (mapped) {
-      reply.code(mapped.status).send(mapped.body);
+      sendHttpResponse(reply, mapped);
       return;
     }
 

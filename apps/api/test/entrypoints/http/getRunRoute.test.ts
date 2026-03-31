@@ -1,28 +1,51 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { getRunRoute } from '../../../src/entrypoints/http/getRunRoute.js';
 
 type RouteReply = {
   code: ReturnType<typeof vi.fn>;
   send: ReturnType<typeof vi.fn>;
+  header: ReturnType<typeof vi.fn>;
+};
+
+const DEFAULT_RESULT: {
+  runId: string;
+  tenantId: string;
+  status: string;
+  enriched: boolean;
+  snapshotStaleness: string;
+} = {
+  runId: 'run-1',
+  tenantId: 'tenant-a',
+  status: 'RUNNING',
+  enriched: false,
+  snapshotStaleness: 'FRESH',
 };
 
 function createReply(): RouteReply {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
+    header: vi.fn().mockReturnThis(),
   };
 }
 
-function createDeps(
-  result = {
-    runId: 'run-1',
-    tenantId: 'tenant-a',
-    status: 'RUNNING',
-    enriched: false,
-    snapshotStaleness: 'FRESH',
-  }
-): {
+function httpError(
+  type: string,
+  reason: string,
+  extra?: { target?: string; details?: Record<string, unknown> }
+): { error: { type: string; reason: string; target?: string; details?: Record<string, unknown> } } {
+  return {
+    error: {
+      type,
+      reason,
+      ...(extra?.target === undefined ? {} : { target: extra.target }),
+      ...(extra?.details === undefined ? {} : { details: extra.details }),
+    },
+  };
+}
+
+function createDeps(result = DEFAULT_RESULT): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
@@ -125,7 +148,9 @@ describe('getRunRoute', () => {
 
     expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_RUN_ID' });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_run_id', { target: 'runId' })
+    );
   });
 
   it('returns 403 when tenantId is missing', async () => {
@@ -140,7 +165,9 @@ describe('getRunRoute', () => {
 
     expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'FORBIDDEN', code: 'MISSING_TENANT_SCOPE' });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('forbidden', 'missing_tenant_scope', { target: 'tenantId' })
+    );
   });
 
   it('returns 400 when tenantId is present but invalid', async () => {
@@ -160,7 +187,9 @@ describe('getRunRoute', () => {
 
     expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_TENANT_ID' });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_tenant_id', { target: 'tenantId' })
+    );
   });
 
   it('returns 400 when enriched query value is invalid', async () => {
@@ -180,9 +209,8 @@ describe('getRunRoute', () => {
 
     expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: 'BAD_REQUEST',
-      code: 'INVALID_ENRICHED_FLAG',
-    });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'invalid_enriched_flag', { target: 'enriched' })
+    );
   });
 });

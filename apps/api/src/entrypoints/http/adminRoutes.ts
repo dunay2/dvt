@@ -1,7 +1,7 @@
 /**
  * @file apps/api/src/entrypoints/http/adminRoutes.ts
- * @baseline ADR-0004: Event Sourcing Strategy — snapshot is derived from event replay
- * @baseline ADR-0031: Adapter Tenant Isolation Strategy — tenantId required for all operations
+ * @baseline ADR-0004: Event Sourcing Strategy â€” snapshot is derived from event replay
+ * @baseline ADR-0031: Adapter Tenant Isolation Strategy â€” tenantId required for all operations
  *
  * Admin routes for operational repair tasks.
  * These routes are disabled by default (DVT_ADMIN_ROUTES_ENABLED=false).
@@ -10,6 +10,11 @@
  */
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import type { FastifyInstance } from 'fastify';
+
+import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
+import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestIssue } from './routeParseIssue.js';
 
 export function registerAdminRoutes(
   app: FastifyInstance,
@@ -23,33 +28,77 @@ export function registerAdminRoutes(
    *
    * Body: { tenantId: string }
    * Response 200: { runId, status, lastSeq (implied) }
-   * Response 400: { error: "BAD_REQUEST", code: "MISSING_TENANT_ID" }
-   * Response 404: { error: "RUN_NOT_FOUND" }
-   * Response 500: { error: "INTERNAL_ERROR" }
+   * Response 400: { error: { type: "bad_request", reason: "invalid_body|missing_tenant_id|invalid_tenant_id" } }
+   * Response 404: { error: { type: "not_found", reason: "run_not_found" } }
+   * Response 500: { error: { type: "internal_server_error", reason: "internal_error" } }
    */
-  app.post<{ Params: { runId: string }; Body: { tenantId?: string } }>(
+  app.post<{ Params: { runId: string }; Body: unknown }>(
     '/admin/runs/:runId/rebuild-snapshot',
     async (request, reply) => {
       const { runId } = request.params;
-      const tenantId = request.body?.tenantId;
-
-      if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
-        reply.code(400).send({ error: 'BAD_REQUEST', code: 'MISSING_TENANT_ID' });
+      const tenantIdResult = parseTenantIdFromAdminBody(request.body);
+      if (!tenantIdResult.ok) {
+        sendHttpResponse(reply, mapRouteParseIssue(tenantIdResult.issue));
         return;
       }
 
+      const tenantId = tenantIdResult.value;
+
       try {
-        const snapshot = await stateStore.rebuildSnapshot(tenantId.trim(), runId);
+        const snapshot = await stateStore.rebuildSnapshot(tenantId, runId);
         reply.code(200).send({ runId, status: snapshot.status });
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (message.startsWith('RUN_NOT_FOUND')) {
-          reply.code(404).send({ error: 'RUN_NOT_FOUND', runId });
+        const mapped = mapRuntimeDomainError(err);
+        if (mapped !== null) {
+          sendHttpResponse(reply, mapped);
           return;
         }
+
         request.log.error({ err, runId, tenantId }, 'rebuild-snapshot failed');
-        reply.code(500).send({ error: 'INTERNAL_ERROR' });
+        sendHttpResponse(
+          reply,
+          createHttpErrorResponse({
+            type: HTTP_ERROR_TYPE.internalServerError,
+            reason: HTTP_ERROR_REASON.internalError,
+          })
+        );
       }
     }
   );
+}
+
+function parseTenantIdFromAdminBody(
+  body: unknown
+):
+  | { readonly ok: true; readonly value: string }
+  | { readonly ok: false; readonly issue: ReturnType<typeof badRequestIssue> } {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return { ok: false, issue: badRequestIssue(HTTP_ERROR_REASON.invalidBody) };
+  }
+
+  const record = body as Record<string, unknown>;
+
+  if (!Object.hasOwn(record, 'tenantId') || record.tenantId === undefined) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.missingTenantId, { target: 'tenantId' }),
+    };
+  }
+
+  if (typeof record.tenantId !== 'string') {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }),
+    };
+  }
+
+  const tenantId = record.tenantId.trim();
+  if (tenantId.length === 0) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }),
+    };
+  }
+
+  return { ok: true, value: tenantId };
 }
