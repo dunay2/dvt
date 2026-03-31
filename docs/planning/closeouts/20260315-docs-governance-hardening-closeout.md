@@ -68,7 +68,7 @@ the canonical paths are the only ones referenced.
 | [docs/planning/status/pending-intent-resolution-provider-verification.md](../closeouts/20260315-docs-governance-hardening-closeout.md) | Add explicit status note for intent reconciliation bug                              | Track unresolved ADR-0030 risk                            |
 | [docs/planning/reviews/20260305-review.md](../closeouts/20260315-docs-governance-hardening-closeout.md)                                | Normalize filename                                                                  | Satisfy filename policy                                   |
 | [docs/planning/reviews/20260314-review.md](../closeouts/20260315-docs-governance-hardening-closeout.md)                                | Normalize filename                                                                  | Satisfy filename policy                                   |
-| [mkdocs.yml](../../../mkdocs.yml)                                                                                                      | Point the How-To nav to `ai-work-protocol.md`                                       | Keep docs site aligned with the canonical guide path      |
+| [zensical.yml](../../../zensical.yml)                                                                                                  | Point the How-To docs entry to `ai-work-protocol.md`                                | Keep docs site aligned with the canonical guide path      |
 
 ## Libraries evaluated
 

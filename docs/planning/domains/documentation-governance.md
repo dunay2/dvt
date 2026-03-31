@@ -19,16 +19,13 @@ gates.
 
 ## Active Proposal Set
 
-- [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md)
+- [Documentation Restructuring Diagnostic and Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](../proposals/documentation-usability-change-plan-20260308.md)
-- [Repository Governance Proposal Set 2026-03-17](../proposals/repository-governance-proposal-set-20260317.md)
-- [CI Workflow Deduplication Plan](../proposals/ci-workflow-deduplication-plan-20260307.md)
+- [Repository Governance Proposal Set 2026-03-17](../archive/proposals/repository-governance-proposal-set-20260317.md)
+- [CI Improvement Plan](../proposals/ci-improvement-plan-20260327.md)
 
 ## Relevant Reviews And Closeouts
 
-- [20260316 Components Top-Level Triage Review](../reviews/20260316-components-top-level-triage-review.md)
-- [20260316 Components Subtree Triage Review](../reviews/20260316-components-subtree-triage-review.md)
-- [20260316 Architecture Diff Triage Review](../reviews/20260316-architecture-diff-triage-review.md)
 - [20260316 Docs Governance Tooling Closeout](../closeouts/20260316-docs-governance-tooling-closeout.md)
 - [20260320 Planning Archive Sweep Closeout](../closeouts/20260320-planning-archive-sweep-closeout.md)
 

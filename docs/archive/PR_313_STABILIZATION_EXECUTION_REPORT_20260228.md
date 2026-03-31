@@ -46,7 +46,7 @@ Documento marco de rollback asociado:
 - `.github/workflows/golden-paths.yml`
 - `.github/workflows/test.yml`
 - `.github/workflows/pr-quality-gate.yml`
-- `.github/workflows/mkdocs-deploy.yml`
+- `.github/workflows/docs-deploy.yml`
 - `.github/workflows/release.yml`
 
 ### Inputs temporales (gates opcionales)
@@ -65,7 +65,7 @@ Documento marco de rollback asociado:
 - `pr-quality-gate.yml`
   - `run_typecheck_gate`
   - `run_temporal_integration`
-- `mkdocs-deploy.yml`
+- `docs-deploy.yml`
   - `run_pages_deploy`
 
 ### Ajustes funcionales destacados
