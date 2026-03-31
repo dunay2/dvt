@@ -152,6 +152,21 @@ describe('isPlatformReady', () => {
     expect(isPlatformReady(dbSnapshot)).toBe(false);
   });
 
+  it('returns false when /db/ready has a transport or protocol failure', () => {
+    const snapshot = createPlatformHealthSnapshot({
+      dbReady: createDbReadyProbe({
+        data: null,
+        error: createPlatformEndpointFailure({
+          kind: 'network',
+          message: '/db/ready failed to respond',
+          statusCode: null,
+        }),
+      }),
+    });
+
+    expect(isPlatformReady(snapshot)).toBe(false);
+  });
+
   it('treats optional disabled probes as ready when healthz remains healthy', () => {
     const snapshot = createPlatformHealthSnapshot({
       readyz: createReadyzProbe({

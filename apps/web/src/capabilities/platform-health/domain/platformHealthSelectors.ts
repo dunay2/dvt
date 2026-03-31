@@ -36,7 +36,8 @@ export function isPlatformReady(snapshot: PlatformHealthSnapshot | undefined): b
   const isReadyOk =
     snapshot.readyz.availability !== 'available' || snapshot.readyz.data?.ok === true;
   const isDbOk =
-    snapshot.dbReady.availability !== 'available' || snapshot.dbReady.data?.ok !== false;
+    snapshot.dbReady.availability !== 'available' ||
+    (snapshot.dbReady.error === null && snapshot.dbReady.data?.ok === true);
 
   return isHealthHealthy && isReadyOk && isDbOk;
 }
