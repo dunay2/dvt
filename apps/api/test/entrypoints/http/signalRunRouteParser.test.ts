@@ -4,77 +4,9 @@ import {
   parseSignalRunRequest,
   SIGNAL_ROUTE_COMPATIBILITY_POLICY,
   SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
 } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 
 describe('parseSignalRunRequest', () => {
-  it('supports custom open-set parse error codes', () => {
-    const customCodes = {
-      INVALID_RUN_ID: 'RUN_ID_BAD_CUSTOM',
-      INVALID_BODY: 'BODY_BAD_CUSTOM',
-      INVALID_SIGNAL_TYPE: 'SIGNAL_TYPE_BAD_CUSTOM',
-      MISSING_TENANT_SCOPE: 'TENANT_SCOPE_MISSING_CUSTOM',
-      INVALID_TENANT_ID: 'TENANT_ID_BAD_CUSTOM',
-    } as const;
-
-    const missingTenant = parseSignalRunRequest(
-      {
-        runId: 'run-1',
-        body: { signalType: 'CANCEL' },
-        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-      },
-      customCodes
-    );
-
-    const invalidRunId = parseSignalRunRequest(
-      {
-        runId: '   ',
-        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
-        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-      },
-      customCodes
-    );
-
-    const invalidBody = parseSignalRunRequest(
-      {
-        runId: 'run-1',
-        body: 'not-an-object',
-        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-      },
-      customCodes
-    );
-
-    const invalidSignal = parseSignalRunRequest(
-      {
-        runId: 'run-1',
-        body: { tenantId: 'tenant-a', signalType: 'FAST_FORWARD' },
-        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-      },
-      customCodes
-    );
-
-    expect(missingTenant).toEqual({
-      ok: false,
-      status: 403,
-      body: { error: 'FORBIDDEN', code: 'TENANT_SCOPE_MISSING_CUSTOM' },
-    });
-    expect(invalidRunId).toEqual({
-      ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'RUN_ID_BAD_CUSTOM' },
-    });
-    expect(invalidBody).toEqual({
-      ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'BODY_BAD_CUSTOM' },
-    });
-    expect(invalidSignal).toEqual({
-      ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'SIGNAL_TYPE_BAD_CUSTOM' },
-    });
-  });
-
   it('rejects CANCEL signal when compatibility policy disables it', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
@@ -84,8 +16,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_signal_type',
+        target: 'signalType',
+      },
     });
   });
 
@@ -143,12 +78,15 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 403,
-      body: { error: 'FORBIDDEN', code: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE },
+      issue: {
+        type: 'forbidden',
+        reason: 'missing_tenant_scope',
+        target: 'tenantId',
+      },
     });
   });
 
-  it('rejects an invalid tenant id payload as bad request', () => {
+  it('rejects an invalid tenant id payload as bad_request', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: '   ', signalType: 'CANCEL' },
@@ -157,12 +95,15 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_tenant_id',
+        target: 'tenantId',
+      },
     });
   });
 
-  it('rejects tenantId with invalid type as bad request', () => {
+  it('rejects tenantId with invalid type as bad_request', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
       body: { tenantId: 123, signalType: 'CANCEL' },
@@ -171,8 +112,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_tenant_id',
+        target: 'tenantId',
+      },
     });
   });
 
@@ -185,8 +129,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_id',
+        target: 'runId',
+      },
     });
   });
 
@@ -199,8 +146,10 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_body',
+      },
     });
   });
 
@@ -213,8 +162,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_signal_type',
+        target: 'signalType',
+      },
     });
   });
 });

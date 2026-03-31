@@ -1,9 +1,14 @@
-﻿import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 
-import { mapStartRunEngineError, mapStartRunFacadeResult } from './authErrorMapper.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { sendHttpResponse } from './httpErrorContract.js';
+import {
+  mapRouteParseIssue,
+  mapStartRunEngineError,
+  mapStartRunFacadeResult,
+} from './httpErrorMapper.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
 
 export async function startRunRoute(
@@ -13,7 +18,7 @@ export async function startRunRoute(
 ): Promise<void> {
   const parsed = parseStartRunBody(request.body);
   if (!parsed.ok) {
-    reply.code(parsed.status).send(parsed.body);
+    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
     return;
   }
 
@@ -27,10 +32,5 @@ export async function startRunRoute(
   const mapped = facadeResult.ok
     ? mapStartRunFacadeResult(facadeResult.value)
     : mapStartRunEngineError(facadeResult.error);
-  if (mapped.headers) {
-    for (const [name, value] of Object.entries(mapped.headers)) {
-      reply.header(name, value);
-    }
-  }
-  reply.code(mapped.status).send(mapped.body);
+  sendHttpResponse(reply, mapped);
 }

@@ -1,12 +1,7 @@
 import type { RequestedScope } from '../../domain/auth/types.js';
 
-import {
-  GET_RUN_EVENTS_ACTION,
-  GET_RUN_EVENTS_LIMIT,
-  GET_RUN_EVENTS_PARSE_ERROR_CODE,
-  GET_RUN_EVENTS_PARSE_ERROR_RESPONSE,
-  type GetRunEventsParseErrorCode,
-} from './getRunEventsRouteParser.constants.js';
+import { GET_RUN_EVENTS_ACTION, GET_RUN_EVENTS_LIMIT } from './getRunEventsRouteParser.constants.js';
+import { badRequestResult, forbiddenResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   normalizeRequiredString,
   parseOptionalInt,
@@ -24,27 +19,7 @@ export interface ParsedGetRunEventsRequest {
   };
 }
 
-type ParsedGetRunEventsResult =
-  | { readonly ok: true; readonly value: ParsedGetRunEventsRequest }
-  | {
-      readonly ok: false;
-      readonly status: 400 | 403;
-      readonly body: {
-        readonly error:
-          | typeof GET_RUN_EVENTS_PARSE_ERROR_RESPONSE.BAD_REQUEST
-          | typeof GET_RUN_EVENTS_PARSE_ERROR_RESPONSE.FORBIDDEN;
-        readonly code: GetRunEventsParseErrorCode;
-      };
-    };
-
-type GetRunEventsBadRequestCode =
-  | typeof GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_RUN_ID
-  | typeof GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_TENANT_ID
-  | typeof GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_AFTER_SEQ
-  | typeof GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_LIMIT
-  | typeof GET_RUN_EVENTS_PARSE_ERROR_CODE.LIMIT_OUT_OF_RANGE;
-
-type GetRunEventsForbiddenCode = typeof GET_RUN_EVENTS_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE;
+type ParsedGetRunEventsResult = RouteParseResult<ParsedGetRunEventsRequest>;
 
 export function parseGetRunEventsRequest(input: {
   readonly runId: string | undefined;
@@ -54,28 +29,28 @@ export function parseGetRunEventsRequest(input: {
 }): ParsedGetRunEventsResult {
   const runId = normalizeRequiredString(input.runId);
   if (!runId) {
-    return badRequest(GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_RUN_ID);
+    return badRequestResult('invalid_run_id', { target: 'runId' });
   }
 
   const tenant = parseRequiredTenantId(input.tenantId);
   if (tenant.kind === 'missing') {
-    return forbidden(GET_RUN_EVENTS_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE);
+    return forbiddenResult('missing_tenant_scope', { target: 'tenantId' });
   }
   if (tenant.kind === 'invalid') {
-    return badRequest(GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_TENANT_ID);
+    return badRequestResult('invalid_tenant_id', { target: 'tenantId' });
   }
 
   const afterSeq = parseOptionalInt(input.afterSeq);
   if (afterSeq === null) {
-    return badRequest(GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_AFTER_SEQ);
+    return badRequestResult('invalid_after_seq', { target: 'afterSeq' });
   }
 
   const limit = parseOptionalInt(input.limit);
   if (limit === null) {
-    return badRequest(GET_RUN_EVENTS_PARSE_ERROR_CODE.INVALID_LIMIT);
+    return badRequestResult('invalid_limit', { target: 'limit' });
   }
   if (limit !== undefined && (limit <= 0 || limit > GET_RUN_EVENTS_LIMIT.MAX)) {
-    return badRequest(GET_RUN_EVENTS_PARSE_ERROR_CODE.LIMIT_OUT_OF_RANGE);
+    return badRequestResult('limit_out_of_range', { target: 'limit' });
   }
 
   return {
@@ -83,29 +58,13 @@ export function parseGetRunEventsRequest(input: {
     value: {
       useCaseInput: {
         runId,
-        ...(afterSeq !== undefined ? { afterSeq } : {}),
-        ...(limit !== undefined ? { limit } : {}),
+        ...(afterSeq === undefined ? {} : { afterSeq }),
+        ...(limit === undefined ? {} : { limit }),
       },
       requestedScope: {
         tenantId: tenant.value,
         action: GET_RUN_EVENTS_ACTION,
       },
     },
-  };
-}
-
-function badRequest(code: GetRunEventsBadRequestCode): ParsedGetRunEventsResult {
-  return {
-    ok: false,
-    status: 400,
-    body: { error: GET_RUN_EVENTS_PARSE_ERROR_RESPONSE.BAD_REQUEST, code },
-  };
-}
-
-function forbidden(code: GetRunEventsForbiddenCode): ParsedGetRunEventsResult {
-  return {
-    ok: false,
-    status: 403,
-    body: { error: GET_RUN_EVENTS_PARSE_ERROR_RESPONSE.FORBIDDEN, code },
   };
 }

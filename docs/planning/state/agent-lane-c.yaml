@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-29
+last_reviewed: 2026-03-31
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -113,13 +113,17 @@ tasks:
     dependency: none
     target: Refine operation-level authorization split.
   - task_id: RC-C1
-    priority: P3
-    status: queued
+    priority: P1
+    status: done
     objective:
-      make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing
-      does not depend on a closed parse-code set.
-    dependency: RBAC at operation level
-    target: Generic ParsedRunCommandError helper signatures validated by dedicated unit tests.
+      normalize caller-visible HTTP error contracts across apps/api and separate semantic validation
+      outcomes from transport serialization, including typed maintenance-boundary not-found handling
+      and removal of remaining parser legacy.
+    dependency: none
+    target:
+      Canonical HttpErrorEnvelope contract + unified HTTP mapper + parser/route migration + typed
+      `rebuildSnapshot` not-found boundary + negative regressions validated by package, arch,
+      integration, and prepush baselines.
   - task_id: RC-C2
     priority: P2
     status: queued
@@ -150,6 +154,7 @@ dependency_notes: |
   - `RBAC at operation level` is unblocked after `S09`.
   - Route-level RBAC deny-path tests are always-on; live-DB protected runtime integration is executed in release-candidate/nightly profiles when env posture is present.
   - `Read-your-writes contract` depends on `snapshot staleness in API`.
-  - `RC-C1` depends on `RBAC at operation level`.
+  - `RC-C1` was reopened on 2026-03-31 to eliminate remaining parser and maintenance-boundary
+    legacy before returning to `done`.
   - `RC-C2` is independent and may run in parallel with runtime hardening items.
   - `RC-E1` and `RC-E2` depend on S16 merge.

@@ -1,74 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseCancelRunRequest } from '../../../src/entrypoints/http/cancelRunRouteParser.js';
-import {
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-} from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 
 describe('parseCancelRunRequest', () => {
-  it('supports custom open-set parse error codes', () => {
-    const customCodes = {
-      INVALID_RUN_ID: 'RUN_ID_BAD_CUSTOM',
-      INVALID_BODY: 'BODY_BAD_CUSTOM',
-      MISSING_TENANT_SCOPE: 'TENANT_SCOPE_MISSING_CUSTOM',
-      INVALID_TENANT_ID: 'TENANT_ID_BAD_CUSTOM',
-    } as const;
-
-    const missingTenant = parseCancelRunRequest(
-      {
-        runId: 'run-1',
-        body: {},
-      },
-      customCodes
-    );
-
-    const invalidRunId = parseCancelRunRequest(
-      {
-        runId: '   ',
-        body: { tenantId: 'tenant-a' },
-      },
-      customCodes
-    );
-
-    const invalidBody = parseCancelRunRequest(
-      {
-        runId: 'run-1',
-        body: 'not-an-object',
-      },
-      customCodes
-    );
-
-    const invalidTenant = parseCancelRunRequest(
-      {
-        runId: 'run-1',
-        body: { tenantId: '   ' },
-      },
-      customCodes
-    );
-
-    expect(missingTenant).toEqual({
-      ok: false,
-      status: 403,
-      body: { error: 'FORBIDDEN', code: 'TENANT_SCOPE_MISSING_CUSTOM' },
-    });
-    expect(invalidRunId).toEqual({
-      ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'RUN_ID_BAD_CUSTOM' },
-    });
-    expect(invalidBody).toEqual({
-      ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'BODY_BAD_CUSTOM' },
-    });
-    expect(invalidTenant).toEqual({
-      ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'TENANT_ID_BAD_CUSTOM' },
-    });
-  });
-
   it('maps cancel request to run:cancel action and CANCEL signal', () => {
     const parsed = parseCancelRunRequest({
       runId: ' run-1 ',
@@ -112,7 +47,7 @@ describe('parseCancelRunRequest', () => {
     });
   });
 
-  it('rejects missing tenant scope', () => {
+  it('rejects missing tenant scope as forbidden', () => {
     const parsed = parseCancelRunRequest({
       runId: 'run-1',
       body: {},
@@ -120,12 +55,15 @@ describe('parseCancelRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 403,
-      body: { error: 'FORBIDDEN', code: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE },
+      issue: {
+        type: 'forbidden',
+        reason: 'missing_tenant_scope',
+        target: 'tenantId',
+      },
     });
   });
 
-  it('rejects invalid tenant id', () => {
+  it('rejects invalid tenant id as bad_request', () => {
     const parsed = parseCancelRunRequest({
       runId: 'run-1',
       body: { tenantId: '   ' },
@@ -133,8 +71,11 @@ describe('parseCancelRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_tenant_id',
+        target: 'tenantId',
+      },
     });
   });
 
@@ -146,8 +87,11 @@ describe('parseCancelRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_id',
+        target: 'runId',
+      },
     });
   });
 });

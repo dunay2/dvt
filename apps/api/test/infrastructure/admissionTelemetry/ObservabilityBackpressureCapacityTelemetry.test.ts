@@ -45,18 +45,18 @@ function makeObservabilitySpy(): ObservabilitySpy {
   return { observability, gaugeCalls };
 }
 
-describe('ObservabilityBackpressureCapacityTelemetry', () => {
-  function setupAndRecordSnapshot(snapshot: {
-    pendingEventsCount: number;
-    outboxOldestAgeMs: number;
-    source: 'live' | 'cache' | 'fallback';
-  }): { gaugeCalls: GaugeCall[] } {
-    const { observability, gaugeCalls } = makeObservabilitySpy();
-    const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
-    telemetry.recordSnapshot(snapshot);
-    return { gaugeCalls };
-  }
+function setupAndRecordSnapshot(snapshot: {
+  pendingEventsCount: number;
+  outboxOldestAgeMs: number;
+  source: 'live' | 'cache' | 'fallback';
+}): { gaugeCalls: GaugeCall[] } {
+  const { observability, gaugeCalls } = makeObservabilitySpy();
+  const telemetry = new ObservabilityBackpressureCapacityTelemetry({ observability });
+  telemetry.recordSnapshot(snapshot);
+  return { gaugeCalls };
+}
 
+describe('ObservabilityBackpressureCapacityTelemetry', () => {
   it('sets pending_events gauge with value from snapshot', () => {
     const { gaugeCalls } = setupAndRecordSnapshot({
       pendingEventsCount: 42,

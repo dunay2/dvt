@@ -22,6 +22,21 @@ function errorResult<T>(error: T): { readonly ok: false; readonly error: T } {
   return { ok: false, error };
 }
 
+function httpError(
+  type: string,
+  reason: string,
+  extra?: { target?: string; details?: Record<string, unknown> }
+) {
+  return {
+    error: {
+      type,
+      reason,
+      ...(extra?.target === undefined ? {} : { target: extra.target }),
+      ...(extra?.details === undefined ? {} : { details: extra.details }),
+    },
+  };
+}
+
 function createReply(): {
   statusCode: number;
   payload: unknown;
@@ -50,6 +65,35 @@ function createReply(): {
 }
 
 describe('startRunRoute', () => {
+  it('returns 400 when tenantId is missing', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-missing-tenant',
+        headers: {},
+        body: {
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'missing_tenant_id', { target: 'tenantId' })
+    );
+  });
+
   it('returns 400 on malformed tenantId', async () => {
     const reply = createReply();
 
@@ -75,7 +119,9 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_TENANT_ID' });
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_tenant_id', { target: 'tenantId' })
+    );
   });
 
   it('returns 400 when body is missing', async () => {
@@ -98,7 +144,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_BODY' });
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_body'));
   });
 
   it('returns 400 on non-string selection items', async () => {
@@ -126,7 +172,9 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_selection', { target: 'selection' })
+    );
   });
 
   it('accepts empty selection', async () => {
@@ -199,7 +247,9 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_selection', { target: 'selection' })
+    );
   });
 
   it('returns 400 on blank runId', async () => {
@@ -230,7 +280,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_RUN_ID' });
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_run_id', { target: 'runId' }));
   });
 
   it('returns 400 on blank planRef fields', async () => {
@@ -264,7 +314,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_PLAN_REF' });
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }));
   });
 
   it('returns 400 on invalid planRef shape', async () => {
@@ -295,7 +345,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_PLAN_REF' });
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }));
   });
 
   it('passes normalized command and requested scope', async () => {
@@ -367,10 +417,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(401);
-    expect(reply.payload).toEqual({
-      error: 'UNAUTHORIZED',
-      code: 'MISSING_TOKEN',
-    });
+    expect(reply.payload).toEqual(httpError('unauthorized', 'missing_token'));
   });
 
   it('returns 403 when facade returns ok=true unauthorized', async () => {
@@ -401,10 +448,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(403);
-    expect(reply.payload).toEqual({
-      error: 'FORBIDDEN',
-      code: 'TENANT_NOT_GRANTED',
-    });
+    expect(reply.payload).toEqual(httpError('forbidden', 'tenant_not_granted'));
   });
 
   it('returns 422 when engine reports adapter_not_registered', async () => {
@@ -435,10 +479,9 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(422);
-    expect(reply.payload).toEqual({
-      error: 'ADAPTER_NOT_CONFIGURED',
-      adapter: 'temporal',
-    });
+    expect(reply.payload).toEqual(
+      httpError('unprocessable', 'adapter_not_configured', { details: { adapter: 'temporal' } })
+    );
   });
 
   it('returns 422 plan_rejected when engine reports command_invalid', async () => {
@@ -473,12 +516,14 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(422);
-    expect(reply.payload).toEqual({
-      error: 'PLAN_REJECTED',
-      code: 'REJECTED',
-      reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
-      cause: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
-    });
+    expect(reply.payload).toEqual(
+      httpError('unprocessable', 'plan_rejected', {
+        details: {
+          message: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
+          cause: 'plan_ref_required',
+        },
+      })
+    );
   });
 
   it('returns 422 plan_rejected when engine reports unsupported_plan_version', async () => {
@@ -513,12 +558,58 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(422);
-    expect(reply.payload).toEqual({
-      error: 'PLAN_REJECTED',
-      code: 'UNSUPPORTED_PLAN_VERSION',
-      reason: 'Unsupported plan version: 2.7',
-      supportedVersions: ['1.0'],
-    });
+    expect(reply.payload).toEqual(
+      httpError('unprocessable', 'unsupported_plan_version', {
+        details: {
+          message: 'Unsupported plan version: 2.7',
+          supportedVersions: ['1.0'],
+        },
+      })
+    );
+  });
+
+  it('returns 422 missing_capability when facade rejects a plan for adapter capabilities', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return okResult({
+          kind: 'plan_rejected' as const,
+          accepted: false,
+          code: 'MISSING_CAPABILITY' as const,
+          reason: 'Missing adapter capability: workflow.pause',
+          cause: 'workflow.pause',
+        });
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-plan-missing-capability',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-plan-missing-capability',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual(
+      httpError('unprocessable', 'missing_capability', {
+        details: {
+          message: 'Missing adapter capability: workflow.pause',
+          cause: 'workflow.pause',
+        },
+      })
+    );
   });
 
   it('accepts planner-backed starts with a typed graph source', async () => {
@@ -597,10 +688,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({
-      error: 'BAD_REQUEST',
-      code: 'CONFLICTING_PLAN_INPUTS',
-    });
+    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
   it('returns 400 when manifestRef and planRef are both supplied', async () => {
@@ -635,10 +723,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({
-      error: 'BAD_REQUEST',
-      code: 'CONFLICTING_PLAN_INPUTS',
-    });
+    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
   it('returns 400 when nodes and planRef are both supplied', async () => {
@@ -670,10 +755,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({
-      error: 'BAD_REQUEST',
-      code: 'CONFLICTING_PLAN_INPUTS',
-    });
+    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
   it('returns 400 when manifest and planRef are both supplied', async () => {
@@ -705,10 +787,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({
-      error: 'BAD_REQUEST',
-      code: 'CONFLICTING_PLAN_INPUTS',
-    });
+    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
   it('accepts lowercase bearer scheme', async () => {
@@ -871,10 +950,7 @@ describe('startRunRoute', () => {
 
     expect(reply.statusCode).toBe(429);
     expect(reply.headers).toEqual({ 'retry-after': '30' });
-    expect(reply.payload).toEqual({
-      error: 'TOO_MANY_REQUESTS',
-      code: 'TENANT_BACKPRESSURE',
-    });
+    expect(reply.payload).toEqual(httpError('rate_limited', 'tenant_backpressure'));
   });
 
   it('returns 503 with Retry-After for system backpressure', async () => {
@@ -911,9 +987,6 @@ describe('startRunRoute', () => {
 
     expect(reply.statusCode).toBe(503);
     expect(reply.headers).toEqual({ 'retry-after': '45' });
-    expect(reply.payload).toEqual({
-      error: 'SERVICE_UNAVAILABLE',
-      code: 'SYSTEM_BACKPRESSURE',
-    });
+    expect(reply.payload).toEqual(httpError('service_unavailable', 'system_backpressure'));
   });
 });

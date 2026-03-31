@@ -8,6 +8,7 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { RunNotFoundError } from '@dvt/engine';
 import { applyRunEvent } from '@dvt/run-domain';
 import {
   buildArchivedTerminalSnapshot,
@@ -181,8 +182,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
     const row = result.rows[0];
     if (
-      !row ||
-      row.archive_unit_key === null ||
+      row?.archive_unit_key == null ||
       row.event_checksum_sha256 === null ||
       row.archived_at === null
     ) {
@@ -225,7 +225,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         [tenantId, runId]
       );
       if (!metaResult.rows[0]) {
-        throw new Error(`RUN_NOT_FOUND: ${runId}`);
+        throw new RunNotFoundError(runId);
       }
 
       // Acquire per-run advisory lock to prevent concurrent snapshot mutations.
@@ -366,7 +366,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       [tenantId, runId]
     );
     if (!metaResult.rows[0]) {
-      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
   }
 }

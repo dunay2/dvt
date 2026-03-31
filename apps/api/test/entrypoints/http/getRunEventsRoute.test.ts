@@ -1,11 +1,26 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { getRunEventsRoute } from '../../../src/entrypoints/http/getRunEventsRoute.js';
 
-function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
+function createReply(): {
+  code: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
+  header: ReturnType<typeof vi.fn>;
+} {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
+    header: vi.fn().mockReturnThis(),
+  };
+}
+
+function httpError(type: string, reason: string, target?: string) {
+  return {
+    error: {
+      type,
+      reason,
+      ...(target === undefined ? {} : { target }),
+    },
   };
 }
 
@@ -83,7 +98,7 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_RUN_ID' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_run_id', 'runId'));
   });
 
   it('returns 403 when tenantId is missing', async () => {
@@ -97,7 +112,7 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'FORBIDDEN', code: 'MISSING_TENANT_SCOPE' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'missing_tenant_scope', 'tenantId'));
   });
 
   it('returns 400 when tenantId is present but invalid', async () => {
@@ -116,7 +131,7 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_TENANT_ID' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_tenant_id', 'tenantId'));
   });
 
   it('returns 400 when afterSeq is not numeric', async () => {
@@ -135,6 +150,6 @@ describe('getRunEventsRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_AFTER_SEQ' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_after_seq', 'afterSeq'));
   });
 });

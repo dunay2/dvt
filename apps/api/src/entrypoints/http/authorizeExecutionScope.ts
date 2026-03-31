@@ -5,8 +5,8 @@ import type { AuthorizationAction, RequestedScope } from '../../domain/auth/type
 import {
   mapAuthenticationFailure,
   mapAuthorizationFailure,
-  type HttpResponseModel,
-} from './authErrorMapper.js';
+} from './httpErrorMapper.js';
+import type { HttpResponseModel } from './httpErrorContract.js';
 
 export async function authorizeExecutionScope<TAction extends AuthorizationAction>(deps: {
   readonly authenticator: IAuthenticator;

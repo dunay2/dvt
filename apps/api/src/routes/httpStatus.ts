@@ -8,6 +8,7 @@ export const HTTP_STATUS_CODE = Object.freeze({
   conflict: 409,
   unprocessableEntity: 422,
   tooManyRequests: 429,
+  internalServerError: 500,
   serviceUnavailable: 503,
 } as const);
 

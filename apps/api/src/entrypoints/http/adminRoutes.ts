@@ -1,7 +1,7 @@
 /**
  * @file apps/api/src/entrypoints/http/adminRoutes.ts
- * @baseline ADR-0004: Event Sourcing Strategy — snapshot is derived from event replay
- * @baseline ADR-0031: Adapter Tenant Isolation Strategy — tenantId required for all operations
+ * @baseline ADR-0004: Event Sourcing Strategy â€” snapshot is derived from event replay
+ * @baseline ADR-0031: Adapter Tenant Isolation Strategy â€” tenantId required for all operations
  *
  * Admin routes for operational repair tasks.
  * These routes are disabled by default (DVT_ADMIN_ROUTES_ENABLED=false).
@@ -10,6 +10,10 @@
  */
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import type { FastifyInstance } from 'fastify';
+
+import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
+import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { badRequestIssue } from './routeParseIssue.js';
 
 export function registerAdminRoutes(
   app: FastifyInstance,
@@ -23,9 +27,9 @@ export function registerAdminRoutes(
    *
    * Body: { tenantId: string }
    * Response 200: { runId, status, lastSeq (implied) }
-   * Response 400: { error: "BAD_REQUEST", code: "MISSING_TENANT_ID" }
-   * Response 404: { error: "RUN_NOT_FOUND" }
-   * Response 500: { error: "INTERNAL_ERROR" }
+   * Response 400: { error: { type: "bad_request", reason: "missing_tenant_id" } }
+   * Response 404: { error: { type: "not_found", reason: "run_not_found" } }
+   * Response 500: { error: { type: "internal_server_error", reason: "internal_error" } }
    */
   app.post<{ Params: { runId: string }; Body: { tenantId?: string } }>(
     '/admin/runs/:runId/rebuild-snapshot',
@@ -34,7 +38,9 @@ export function registerAdminRoutes(
       const tenantId = request.body?.tenantId;
 
       if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
-        reply.code(400).send({ error: 'BAD_REQUEST', code: 'MISSING_TENANT_ID' });
+        sendHttpResponse(reply, mapRouteParseIssue(badRequestIssue('missing_tenant_id', {
+          target: 'tenantId',
+        })));
         return;
       }
 
@@ -42,13 +48,20 @@ export function registerAdminRoutes(
         const snapshot = await stateStore.rebuildSnapshot(tenantId.trim(), runId);
         reply.code(200).send({ runId, status: snapshot.status });
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (message.startsWith('RUN_NOT_FOUND')) {
-          reply.code(404).send({ error: 'RUN_NOT_FOUND', runId });
+        const mapped = mapRuntimeDomainError(err);
+        if (mapped !== null) {
+          sendHttpResponse(reply, mapped);
           return;
         }
+
         request.log.error({ err, runId, tenantId }, 'rebuild-snapshot failed');
-        reply.code(500).send({ error: 'INTERNAL_ERROR' });
+        sendHttpResponse(
+          reply,
+          createHttpErrorResponse({
+            type: HTTP_ERROR_TYPE.internalServerError,
+            reason: 'internal_error',
+          })
+        );
       }
     }
   );

@@ -72,7 +72,7 @@ Root cause: extraction happened incrementally (route split, shared executor, par
 
 ### DDD
 
-- Domain/application errors are surfaced and mapped at boundary (`authErrorMapper`).
+- Domain/application errors are surfaced and mapped at boundary (`httpErrorMapper`).
 - HTTP layer does not implement business rules.
 
 ### CQRS

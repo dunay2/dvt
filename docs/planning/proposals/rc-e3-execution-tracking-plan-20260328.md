@@ -59,7 +59,7 @@ Out of scope:
 mapEngineErrorToFacade(startRun.error)` with `return startRun` (pass the
    `{ok: false, error}` through), and delete the `mapEngineErrorToFacade` local
    function entirely.
-4. In `authErrorMapper.ts`: add `mapStartRunEngineError(error:
+4. In `httpErrorMapper.ts`: add `mapStartRunEngineError(error:
 StartRunEngineError): HttpResponseModel` covering all three engine error
    kinds: `adapterNotRegistered` → 422 `ADAPTER_NOT_CONFIGURED`,
    `commandInvalid` → 422 `PLAN_REJECTED`, `unsupportedPlanVersion` → 422
@@ -72,7 +72,7 @@ StartRunEngineError): HttpResponseModel` covering all three engine error
    cases (`adapter_not_registered`, `unsupported_plan_version`,
    `command_invalid`) to assert `{ok: false, error: ...}` passthrough instead of
    the current facade-absorbed facade result kinds.
-7. In `authErrorMapper.test.ts`: add test coverage for `mapStartRunEngineError`
+7. In `httpErrorMapper.test.ts`: add test coverage for `mapStartRunEngineError`
    for all three engine error kinds.
 8. In `startRunRoute.test.ts`: add test cases for `{ok: false, error:
 StartRunEngineError}` facade result and verify correct HTTP outputs.
@@ -85,7 +85,7 @@ sequenceDiagram
     participant Route as startRunRoute
     participant Facade as StartRunAuthorizedFacade
     participant UseCase as EngineStartRunUseCase
-    participant Mapper as authErrorMapper
+    participant Mapper as httpErrorMapper
 
     Route->>Facade: execute(input)
     Facade->>UseCase: execute(command, context)
@@ -124,11 +124,11 @@ flowchart LR
 - [ ] `mapEngineErrorToFacade` local function deleted from
       `startRunAuthorizedFacade.ts`.
 - [ ] `mapStartRunEngineError(error: StartRunEngineError): HttpResponseModel`
-      exists in `authErrorMapper.ts` and covers all three error kinds.
+      exists in `httpErrorMapper.ts` and covers all three error kinds.
 - [ ] `startRunRoute.ts` branches on `ok` before calling mapper.
 - [ ] `startRunAuthorizedFacade.test.ts` engine-error cases assert
       `{ok: false, error}` passthrough (not facade-absorbed result kinds).
-- [ ] `authErrorMapper.test.ts` has coverage for all three
+- [ ] `httpErrorMapper.test.ts` has coverage for all three
       `mapStartRunEngineError` branches.
 - [ ] `startRunRoute.test.ts` has coverage for `ok: false` facade result shape.
 - [ ] `pnpm --filter dvt-api typecheck` passes.
@@ -159,7 +159,7 @@ pnpm verify:prepush
   with lane C per `agent-lane-a.yaml` dependency notes.
 - Risk of response drift is mitigated by route-level tests and mapper tests.
 - Risk of hidden catch-all behavior is mitigated by explicit result branching.
-- `mapRuntimeDomainError` in `authErrorMapper.ts` handles `intentActiveConflict`
+- `mapRuntimeDomainError` in `httpErrorMapper.ts` handles `intentActiveConflict`
   as a throw-based path, but this is only used by non-start-run routes and is
   already handled in `engineStartRunUseCase.ts` as a typed `duplicate` result —
   no change needed here; out of scope for RC-E3.

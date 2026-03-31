@@ -3,10 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { executeAuthorizedRunCommandRoute } from '../../../src/entrypoints/http/runCommandRouteExecutor.js';
 
-function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
+function createReply(): {
+  code: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
+  header: ReturnType<typeof vi.fn>;
+} {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
+    header: vi.fn().mockReturnThis(),
   };
 }
 
@@ -14,6 +19,21 @@ function createRequest(): { id: string; headers: Record<string, string> } {
   return {
     id: 'req-1',
     headers: {},
+  };
+}
+
+function httpError(
+  type: string,
+  reason: string,
+  extra?: { target?: string; details?: Record<string, unknown> }
+) {
+  return {
+    error: {
+      type,
+      reason,
+      ...(extra?.target === undefined ? {} : { target: extra.target }),
+      ...(extra?.details === undefined ? {} : { details: extra.details }),
+    },
   };
 }
 
@@ -82,12 +102,14 @@ describe('executeAuthorizedRunCommandRoute', () => {
 
     await executeAuthorizedRunCommandRoute(request as never, reply as never, deps as never, {
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' },
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_body',
+      },
     });
 
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_BODY' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('bad_request', 'invalid_body'));
     expect(deps.authenticator.authenticateBearerToken).not.toHaveBeenCalled();
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
     expect(deps.execute).not.toHaveBeenCalled();
@@ -110,7 +132,7 @@ describe('executeAuthorizedRunCommandRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(401);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'UNAUTHORIZED', code: 'AUTH_REQUIRED' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('unauthorized', 'auth_required'));
     expect(deps.execute).not.toHaveBeenCalled();
   });
 
@@ -131,7 +153,7 @@ describe('executeAuthorizedRunCommandRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'FORBIDDEN', code: 'ACTION_NOT_GRANTED' });
+    expect(reply.send).toHaveBeenCalledWith(httpError('forbidden', 'action_not_granted'));
     expect(deps.execute).not.toHaveBeenCalled();
   });
 
@@ -149,7 +171,9 @@ describe('executeAuthorizedRunCommandRoute', () => {
     );
 
     expect(reply.code).toHaveBeenCalledWith(404);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'NOT_FOUND', code: 'RUN_NOT_FOUND' });
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('not_found', 'run_not_found', { details: { runId: 'run-1' } })
+    );
   });
 
   it('rethrows unknown runtime errors', async () => {

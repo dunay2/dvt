@@ -55,6 +55,21 @@ type JwksServerHandle = {
 type StoredEnv = Record<string, string | undefined>;
 type SigningKey = Awaited<ReturnType<typeof generateKeyPair>>['privateKey'];
 
+function httpError(
+  type: string,
+  reason: string,
+  extra?: { target?: string; details?: Record<string, unknown> }
+) {
+  return {
+    error: {
+      type,
+      reason,
+      ...(extra?.target === undefined ? {} : { target: extra.target }),
+      ...(extra?.details === undefined ? {} : { details: extra.details }),
+    },
+  };
+}
+
 describeIfPg('protected runtime integration', () => {
   let app: Awaited<ReturnType<typeof buildApp>>['app'] | undefined;
   let adminClient: Client | undefined;
@@ -292,10 +307,7 @@ describeIfPg('protected runtime integration', () => {
     });
 
     expect(response.statusCode).toBe(403);
-    expect(response.json()).toEqual({
-      error: 'FORBIDDEN',
-      code: 'TOKEN_ASSERTION_CONFLICT',
-    });
+    expect(response.json()).toEqual(httpError('forbidden', 'token_assertion_conflict'));
   });
 
   it('rejects /runs/:runId/cancel when principal lacks run:cancel permission', async () => {
@@ -330,10 +342,7 @@ describeIfPg('protected runtime integration', () => {
       });
 
       expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual({
-        error: 'FORBIDDEN',
-        code: 'ACTION_NOT_GRANTED',
-      });
+      expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
     } finally {
       await upsertPrincipalGrant(adminClient!, {
         schema: SCHEMA,
@@ -379,10 +388,7 @@ describeIfPg('protected runtime integration', () => {
       });
 
       expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual({
-        error: 'FORBIDDEN',
-        code: 'ACTION_NOT_GRANTED',
-      });
+      expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
     } finally {
       await upsertPrincipalGrant(adminClient!, {
         schema: SCHEMA,
@@ -429,10 +435,7 @@ describeIfPg('protected runtime integration', () => {
       });
 
       expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual({
-        error: 'FORBIDDEN',
-        code: 'ACTION_NOT_GRANTED',
-      });
+      expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
     } finally {
       await upsertPrincipalGrant(adminClient!, {
         schema: SCHEMA,

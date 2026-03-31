@@ -1,14 +1,29 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
 import { parseStartRunBodyRecord } from '../../../src/entrypoints/http/startRunRouteBodyValidation.js';
 import { parseStartRunPlannerEnvelope } from '../../../src/entrypoints/http/startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from '../../../src/entrypoints/http/startRunRoutePlanRefParser.js';
 import { parseStartRunScope } from '../../../src/entrypoints/http/startRunRouteScopeParser.js';
 
+const VALID_PLAN_REF = {
+  uri: 'https://plans.example.com/p.json',
+  sha256: 'abc123',
+  schemaVersion: '1.0.0',
+  planId: 'p1',
+  planVersion: '1.0',
+};
+
 describe('startRunRoute parser helpers', () => {
   it('validates body object shape', () => {
-    expect(parseStartRunBodyRecord(undefined)).toEqual({ ok: false, code: 'INVALID_BODY' });
-    expect(parseStartRunBodyRecord([])).toEqual({ ok: false, code: 'INVALID_BODY' });
+    expect(parseStartRunBodyRecord(undefined)).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_body' },
+    });
+    expect(parseStartRunBodyRecord([])).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_body' },
+    });
     expect(parseStartRunBodyRecord({ a: 1 })).toEqual({ ok: true, value: { a: 1 } });
   });
 
@@ -25,14 +40,34 @@ describe('startRunRoute parser helpers', () => {
     expect(parsed.value.tenantId.value).toBe('t1');
     expect(parsed.value.projectId.value).toBe('p1');
     expect(parsed.value.environmentId.value).toBe('e1');
+  });
 
-    expect(
-      parseStartRunScope({
-        tenantId: '   ',
-        projectId: 'p1',
-        environmentId: 'e1',
-      })
-    ).toEqual({ ok: false, code: 'INVALID_TENANT_ID' });
+  it.each([
+    [
+      'missing tenant',
+      { projectId: 'p1', environmentId: 'e1' },
+      { type: 'bad_request', reason: 'missing_tenant_id', target: 'tenantId' },
+    ],
+    [
+      'invalid tenant',
+      { tenantId: '   ', projectId: 'p1', environmentId: 'e1' },
+      { type: 'bad_request', reason: 'invalid_tenant_id', target: 'tenantId' },
+    ],
+    [
+      'missing project',
+      { tenantId: 't1', environmentId: 'e1' },
+      { type: 'bad_request', reason: 'missing_project_id', target: 'projectId' },
+    ],
+    [
+      'missing environment',
+      { tenantId: 't1', projectId: 'p1' },
+      { type: 'bad_request', reason: 'missing_environment_id', target: 'environmentId' },
+    ],
+  ])('returns semantic issue for %s', (_desc, input, issue) => {
+    expect(parseStartRunScope(input)).toEqual({
+      ok: false,
+      issue,
+    });
   });
 
   it('parses planRef and normalizes trimmed strings', () => {
@@ -55,7 +90,10 @@ describe('startRunRoute parser helpers', () => {
       },
     });
 
-    expect(parseStartRunPlanRef({})).toEqual({ ok: false, code: 'INVALID_PLAN_REF' });
+    expect(parseStartRunPlanRef({})).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
+    });
   });
 
   it('maps planner envelope fields and rejects invalid planner source', () => {
@@ -81,7 +119,45 @@ describe('startRunRoute parser helpers', () => {
 
     expect(parseStartRunPlannerEnvelope({ graphSource: { kind: 'bad' } }, ['model_a'])).toEqual({
       ok: false,
-      code: 'INVALID_PLAN_SOURCE',
+      issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+  });
+
+  it('rejects conflicting plan inputs before planner parsing', () => {
+    expect(
+      parseStartRunBody({
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: ['model_a'],
+        runId: 'run-1',
+        targetAdapter: 'mock',
+        planRef: VALID_PLAN_REF,
+        graphSource: {
+          kind: 'normalized-graph-v1',
+          nodes: [],
+        },
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'conflicting_plan_inputs' },
+    });
+  });
+
+  it('preserves target metadata for invalid plan ref at parser boundary', () => {
+    expect(
+      parseStartRunBody({
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: ['model_a'],
+        runId: 'run-1',
+        targetAdapter: 'mock',
+        planRef: { uri: 'https://plans.example.com/p.json' },
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
     });
   });
 });

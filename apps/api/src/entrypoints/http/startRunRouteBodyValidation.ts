@@ -1,12 +1,10 @@
-export type StartRunParseResult<T, TCode extends string> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly code: TCode };
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 export function parseStartRunBodyRecord(
   body: unknown
-): StartRunParseResult<Record<string, unknown>, 'INVALID_BODY'> {
+): RouteParseResult<Record<string, unknown>> {
   if (!isPlainRecord(body)) {
-    return { ok: false, code: 'INVALID_BODY' };
+    return badRequestResult('invalid_body');
   }
 
   return { ok: true, value: body };

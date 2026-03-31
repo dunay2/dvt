@@ -1,6 +1,7 @@
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
-import { asStringOrUndefined, type StartRunParseResult } from './startRunRouteBodyValidation.js';
+import { asStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 export type ParsedStartRunScope = {
   readonly tenantId: TenantId;
@@ -10,14 +11,30 @@ export type ParsedStartRunScope = {
 
 export function parseStartRunScope(
   record: Record<string, unknown>
-): StartRunParseResult<ParsedStartRunScope, string> {
-  const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
-  const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
-  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
+): RouteParseResult<ParsedStartRunScope> {
+  const tenantIdRaw = asStringOrUndefined(record.tenantId);
+  if (tenantIdRaw === undefined) {
+    return badRequestResult('missing_tenant_id', { target: 'tenantId' });
+  }
+  const tenantId = TenantId.parse(tenantIdRaw);
 
-  if (!tenantId.ok) return { ok: false, code: tenantId.code };
-  if (!projectId.ok) return { ok: false, code: projectId.code };
-  if (!environmentId.ok) return { ok: false, code: environmentId.code };
+  const projectIdRaw = asStringOrUndefined(record.projectId);
+  if (projectIdRaw === undefined) {
+    return badRequestResult('missing_project_id', { target: 'projectId' });
+  }
+  const projectId = ProjectId.parse(projectIdRaw);
+
+  const environmentIdRaw = asStringOrUndefined(record.environmentId);
+  if (environmentIdRaw === undefined) {
+    return badRequestResult('missing_environment_id', { target: 'environmentId' });
+  }
+  const environmentId = EnvironmentId.parse(environmentIdRaw);
+
+  if (!tenantId.ok) return badRequestResult('invalid_tenant_id', { target: 'tenantId' });
+  if (!projectId.ok) return badRequestResult('invalid_project_id', { target: 'projectId' });
+  if (!environmentId.ok) {
+    return badRequestResult('invalid_environment_id', { target: 'environmentId' });
+  }
 
   return {
     ok: true,
