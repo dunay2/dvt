@@ -180,7 +180,7 @@ function main() {
     return;
   }
 
-  runCommand('git', ['push']);
+  runCommand('git', ['push', '-u', 'origin', 'HEAD']);
   runCommand('gh', ghArgs);
 }
 
