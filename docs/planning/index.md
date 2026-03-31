@@ -89,6 +89,7 @@ Concept anchors for this page:
 - [MVP-B1 Claim-To-Evidence Traceability Matrix](reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md)
 - [MVP-D1 Residual Risk Baseline Review](reviews/20260330-mvp-d1-residual-risk-baseline-review.md)
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](reviews/20260315-postgres-state-store-adapter-refactor-review.md)
+- [Principal Architecture Deep Review - DVT (2026-03-31)](reviews/20260331-principal-architecture-deep-review.md)
 - [Principal Architecture Review - DVT+](reviews/20260316-principal-architecture-review.md)
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](reviews/20260315-postgres-start-run-intent-store-qa-review.md)
 - [RC-A2 Architectural Review Hard Mode](reviews/20260322-rc-a2-architectural-review-hard-mode.md)

@@ -43,6 +43,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [MVP-B1 Claim-To-Evidence Traceability Matrix](20260330-mvp-b1-claim-evidence-traceability-matrix.md)
 - [MVP-D1 Residual Risk Baseline Review](20260330-mvp-d1-residual-risk-baseline-review.md)
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](20260315-postgres-state-store-adapter-refactor-review.md)
+- [Principal Architecture Deep Review - DVT (2026-03-31)](20260331-principal-architecture-deep-review.md)
 - [Principal Architecture Review - DVT+](20260316-principal-architecture-review.md)
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](20260315-postgres-start-run-intent-store-qa-review.md)
 - [RC-A2 Architectural Review Hard Mode](20260322-rc-a2-architectural-review-hard-mode.md)
