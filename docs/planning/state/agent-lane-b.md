@@ -43,15 +43,15 @@ Stabilize event payload versioning and lineage wiring.
 - Verified on: `2026-03-31`
 - Total tasks: `11`
 - Total effort points: `47`
-- Completed weighted points: `42.85`
-- Lane progress: `91%`
+- Completed weighted points: `43.6`
+- Lane progress: `93%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
 > Verified registry source: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-B1` `review` `M` `5pt` `85%`: build a claim-to-evidence traceability matrix for backend MVP operability assertions (capability, proof source, and executable validation command).
+- [x] `P0` `MVP-B1` `done` `M` `5pt` `100%`: build a claim-to-evidence traceability matrix for backend MVP operability assertions (capability, proof source, and executable validation command).
 - [ ] `P0` `S05` `review` `L` `8pt` `70%`: S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level write-boundary schema gating.
 - [x] `P0` `S05-F1` `done` `M` `5pt` `100%`: add per-eventType payload-content schema validation at write boundary.
 - [x] `P1` `RC-B1` `done` `M` `3pt` `100%`: decouple lineage worker from adapter internals.
@@ -65,7 +65,7 @@ Stabilize event payload versioning and lineage wiring.
 
 ## Dependencies
 
-- `MVP-B1` remains in review until `MVP-A1` is accepted, because the traceability matrix must inherit the final contractual scope.
+- `MVP-B1` is now closed because the traceability matrix still matches the reviewed `MVP-A1` contractual scope and command baseline.
 - `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review until envelope-level payloadVersion closure is accepted.
 - `RC-B1` and `RC-B2` are verified against mainline code and proposal artifacts.
 - `RC-B5` and `RC-B5-F2` are closed with accepted evidence.

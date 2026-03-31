@@ -11,22 +11,16 @@
  *   - Provenance fields: plannerVersion, plannerGitSha, generatedAt are optional and structurally inert.
  *   - Step metadata passthrough: extra step fields are rejected by the mock adapter narrowing rule.
  */
-import type { EngineRunRef, PlanRef } from '@dvt/contracts';
+import type { PlanRef } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
-import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -62,7 +56,10 @@ function makeCtx(runId: string): {
   };
 }
 
-function createEngine(plan: ExecutionPlan): { engine: WorkflowEngine; planRef: PlanRef } {
+function createEngine(plan: ExecutionPlan): {
+  engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
+  planRef: PlanRef;
+} {
   const uri = `https://plans.example.com/${plan.metadata.planId}.json`;
   const planRef = makePlanRef(uri, plan);
   const store = new InMemoryTxStore();
@@ -74,20 +71,11 @@ function createEngine(plan: ExecutionPlan): { engine: WorkflowEngine; planRef: P
     planFetcher: { fetch: async () => plan },
   });
 
-  const engine = new WorkflowEngine({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-
+  const { engine } = createWorkflowEngineFixture({
+    stateStore: store,
     projector,
-    idempotency: new IdempotencyKeyBuilder(),
-    clock: new SequenceClock('2026-02-23T00:00:00.000Z'),
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
-    adapters: new Map<EngineRunRef['provider'], typeof mock>([['mock', mock]]),
+    adapters: makeProviderMap(mock),
   });
 
   return { engine, planRef };

@@ -2,7 +2,7 @@
 title: MVP-B1 Claim-To-Evidence Traceability Matrix
 status: Review
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-30
+last_reviewed: 2026-03-31
 planning_type: review
 ---
 
@@ -60,9 +60,19 @@ pnpm verify:prepush
 
 ## Constraints
 
-- This matrix is `MVP-B1` delivery evidence but remains provisional until
-  dependency `MVP-A1` (canonical MVP contractual inventory) is accepted.
-- `MVP-A1` source doc is currently `Proposed`; therefore `MVP-B1` cannot be
-  marked `done` yet, only `review` with provisional closure evidence.
-- If `MVP-A1` changes claim boundaries, this matrix must be updated in the same
-  PR that changes those claims.
+- `MVP-A1` is now locked by the reviewed proposal
+  `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`
+  plus accepted evidence
+  `docs/evidence/ED-20260331-mvp-a1-backend-contractual-inventory.md`.
+- This matrix now inherits the stable `MVP-A1` claim boundary and no longer
+  carries provisional closure language.
+- If `MVP-A1` changes claim boundaries in the future, this matrix must be
+  updated in the same PR that changes those claims.
+
+## Closure Confirmation (2026-03-31)
+
+- Every roadmap `IN` claim still maps to concrete code evidence, test evidence,
+  and an executable command.
+- No mismatch was introduced by the final `MVP-A1` route and invariant freeze.
+- `MVP-B1` can therefore be marked `done` as equivalent verifiable closure for
+  the MVP claim-to-proof baseline.

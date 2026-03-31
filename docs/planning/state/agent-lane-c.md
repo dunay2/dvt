@@ -43,15 +43,15 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - Verified on: `2026-03-31`
 - Total tasks: `15`
 - Total effort points: `54`
-- Completed weighted points: `38.5`
-- Lane progress: `71%`
+- Completed weighted points: `39`
+- Lane progress: `72%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
 > Verified registry source: `agent-lane-c.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-C1` `review` `M` `5pt` `90%`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
+- [x] `P0` `MVP-C1` `done` `M` `5pt` `100%`: produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap, diagnose, daily operate) without adding feature depth.
 - [x] `P0` `S09` `done` `S` `3pt` `100%`: decide retry ownership across planner, engine, and adapters.
 - [x] `P1` `S16` `done` `M` `5pt` `100%`: enforce governed planVersion validation at start-run admission to reject unsupported or stale plan references.
 - [x] `P0` `RC-D2` `done` `S` `3pt` `100%`: make the outbox claim timeout configurable.
@@ -69,7 +69,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 
 ## Dependencies
 
-- `MVP-C1` is accepted as a runbook artifact but remains in review until the MVP-A1/B1 dependency chain is closed.
+- `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open dependency on `MVP-A1` or `MVP-B1`.
 - `S09` is closed via accepted ADR-0040.
 - `S16` is verified from runtime code and tests despite older review surfaces that still showed it open.
 - `RC-D1` and `RC-D1A` are code-grounded by health route and watchdog coverage.

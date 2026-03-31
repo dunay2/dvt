@@ -43,15 +43,15 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - Verified on: `2026-03-31`
 - Total tasks: `26`
 - Total effort points: `102`
-- Completed weighted points: `50.26`
-- Lane progress: `49%`
+- Completed weighted points: `55.66`
+- Lane progress: `55%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
 > Verified registry source: `agent-lane-a.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-A1` `review` `M` `5pt` `90%`: inventory the current backend MVP contractual surface (routes, invariants, and explicit boundaries) without adding new runtime behavior.
+- [x] `P0` `MVP-A1` `done` `M` `5pt` `100%`: inventory the current backend MVP contractual surface (routes, invariants, and explicit boundaries) without adding new runtime behavior.
 - [x] `P0` `RC-A6` `done` `S` `3pt` `100%`: align dead-letter signatures with tenant-scoped concrete APIs.
 - [x] `P0` `S02` `done` `L` `8pt` `100%`: split IRunStateStore into write/read/maintenance roles.
 - [x] `P0` `S18` `done` `M` `5pt` `100%`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
@@ -68,9 +68,9 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - [x] `P1` `S13` `done` `S` `2pt` `100%`: remove duplicate estimateRunRef declaration.
 - [x] `P1` `RC-A5` `done` `M` `3pt` `100%`: replace silent markResolved catch with warning/metric telemetry so intent-resolution failures are observable.
 - [x] `P1` `RC-E3` `done` `M` `3pt` `100%`: replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError> return type to eliminate the Divergent Change smell.
-- [ ] `P1` `DHM` `in_progress` `L` `2pt` `18%`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
+- [ ] `P1` `DHM` `in_progress` `L` `2pt` `36%`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
 - [x] `P1` `DHM-WS5-A` `done` `M` `3pt` `100%` parent:`DHM`: modularize the first WS5 engine fixture slice around intent-log tests using shared builders.
-- [ ] `P1` `DHM-WS5-B` `queued` `M` `5pt` `0%` parent:`DHM`: finish the remaining WS5 helper-heavy engine test fixture modularization.
+- [x] `P1` `DHM-WS5-B` `done` `M` `5pt` `100%` parent:`DHM`: finish the remaining WS5 helper-heavy engine test fixture modularization.
 - [ ] `P1` `DHM-WS1` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS1 DDD modularization slice after WS5 fixture extraction is complete.
 - [ ] `P1` `DHM-WS3` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS3 modularization slice for the next bounded DDD seam.
 - [ ] `P1` `DHM-WS4` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS4 modularization slice after WS3.
@@ -80,13 +80,14 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 
 ## Dependencies
 
-- `MVP-A1` remains the contractual baseline artifact but is still provisional until the proposal is accepted.
+- `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the accepted evidence artifact dated 2026-03-31.
 - `S02` depends on `RC-A6` and is now code-grounded by the split role contracts plus composition-root wiring.
 - `S18` and `S19` are verified as closed slices; `S19-F1` is now decomposed into phase-level subtasks.
 - `S19-F1-A` and `S19-F1-B` are delivered; `S19-F1-C` remains the benchmark and residual-risk closeout slice.
 - `S18-F1` is decomposed into boundary hardening, anti-rewiring guards, and export/negative-path contract closure.
 - `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete adapter rollback path.
 - `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization work is schedulable.
+- `DHM-WS5-B` is now closed; `DHM-WS1` is the next modularization slice in sequence.
 - `plan-version-reset` is closed and remains independent.
 
 ## Expected Outcome

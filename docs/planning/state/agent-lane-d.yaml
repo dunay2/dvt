@@ -48,25 +48,25 @@ header_markdown: >
 tasks:
   - task_id: MVP-D1
     priority: P0
-    status: review
+    status: done
     objective: >-
       define the residual-risk baseline explicitly accepted after MVP backend operability reset,
       including what is deferred and why it does not block MVP.
     dependency: MVP-A1, MVP-B1
     target: >-
-      Provisional residual-risk baseline published with explicit deferred items, lane ownership, and
-      non-blocking rationale for MVP control-plane operation; final lock pending MVP-A1 and MVP-B1
-      evidence.
+      Residual-risk baseline published with explicit deferred items, lane ownership, and
+      non-blocking rationale for MVP control-plane operation, while the underlying risk register
+      remains open for post-acceptance stability monitoring.
     complexity: M
     effort_points: 5
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason: >-
-      Residual-risk ownership is documented, but final closure remains dependency-gated on MVP-A1/B1
-      acceptance.
+      Residual-risk ownership is documented and the only remaining dependency-gated blocker
+      (`MVP-A1`/`MVP-B1` acceptance) is now resolved.
     last_verified: '2026-03-31'
   - task_id: run event log retention + TTL
     priority: P1
@@ -264,7 +264,9 @@ tasks:
     status_reason: Deferred GTM collateral with no implementation evidence yet.
     last_verified: '2026-03-31'
 dependency_notes:
-  - '`MVP-D1` remains provisional until `MVP-A1` and `MVP-B1` are accepted.'
+  - >-
+    `MVP-D1` is now closed as the explicit residual-risk baseline for MVP backend operability, but
+    the underlying scope-drift risk entry remains open.
   - >-
     `run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence
     from 2026-03-30.
@@ -282,8 +284,8 @@ verification_summary:
   verified_on: '2026-03-31'
   total_tasks: 15
   total_effort_points: 84
-  completed_weighted_points: 29.25
-  lane_progress_pct: 35
+  completed_weighted_points: 30
+  lane_progress_pct: 36
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

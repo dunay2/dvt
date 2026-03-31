@@ -141,7 +141,7 @@ header_markdown: >
 tasks:
   - task_id: MVP-E1
     priority: P0
-    status: blocked
+    status: queued
     objective: >-
       define the frontend consumption contract for the backend MVP surface that exists today,
       without promising non-implemented behavior.
@@ -155,7 +155,9 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/evidence/ED-20260329-mvp-backend-operability-roadmap-reset.md
-    status_reason: The need is defined, but no frontend-facing MVP contract artifact exists yet.
+    status_reason: >-
+      The backend MVP baseline is now stable enough for frontend contract work, but no
+      frontend-facing artifact has been started yet.
     last_verified: '2026-03-31'
   - task_id: F-01
     priority: P0
@@ -361,8 +363,8 @@ tasks:
     last_verified: '2026-03-31'
 dependency_notes:
   - >-
-    `MVP-E1` remains blocked on the acceptance of `MVP-A1` and `MVP-B1` so the frontend does not
-    overclaim backend behavior.
+    `MVP-E1` is now unblocked by the closed `MVP-A1`/`MVP-B1` backend baseline and remains queued
+    until the frontend contract artifact is written.
   - '`F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.'
   - '`F-08` through `F-11` remain blocked by backend endpoint delivery and must stay
     contracts-first.'
