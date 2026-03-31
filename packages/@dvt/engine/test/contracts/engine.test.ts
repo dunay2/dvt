@@ -21,15 +21,12 @@ import type {
 } from '../../src/contracts/types.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
-import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
 
 import { InMemoryPlanFetcher, utf8 } from './helpers.js';
 
@@ -90,7 +87,7 @@ function makeCtx(runId: string): RunContext {
 // helpers moved to module scope
 
 function setupEngineWithMock(plan: ExecutionPlan): {
-  engine: WorkflowEngine;
+  engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   planRef: PlanRef;
   store: InMemoryTxStore;
 } {
@@ -107,26 +104,19 @@ function setupEngineWithMock(plan: ExecutionPlan): {
     projector,
     planFetcher: { fetch: async () => plan },
   });
-  const engine = new WorkflowEngine({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-
+  const { engine } = createWorkflowEngineFixture({
+    stateStore: store,
     projector,
     idempotency,
     clock,
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
-    adapters: new Map([['mock', mock]]),
+    adapters: makeProviderMap(mock),
   });
   return { engine, planRef, store };
 }
 
 async function submitPlanAndGetSnapshot(
-  engine: WorkflowEngine,
+  engine: ReturnType<typeof createWorkflowEngineFixture>['engine'],
   planRef: PlanRef,
   runId: string
 ): Promise<import('../../src/contracts/engine/index.js').RunStatusSnapshot> {
@@ -162,20 +152,13 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planFetcher: { fetch: async () => plan },
     });
 
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
+    const { engine } = createWorkflowEngineFixture({
+      stateStore: store,
       projector,
       idempotency,
       clock,
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
-      adapters: new Map([['mock', mock]]),
+      adapters: makeProviderMap(mock),
     });
 
     const runRef = await engine.startRun(planRef, makeCtx('run-2'));
@@ -261,20 +244,13 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const idempotency = new IdempotencyKeyBuilder();
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
+    const { engine } = createWorkflowEngineFixture({
+      stateStore: store,
       projector,
       idempotency,
       clock,
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
-      adapters: new Map([['conductor', adapter]]),
+      adapters: makeProviderMap(adapter),
     });
 
     const baseCtx: RunContext = {

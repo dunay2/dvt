@@ -26,7 +26,8 @@ non-MVP commitments while core operability remains the primary delivery need.
 
 ## Mitigation
 
-1. Keep `MVP-A1` and `MVP-B1` as gate tasks for inventory and traceability.
+1. Keep `MVP-A1` inventory and `MVP-B1` traceability matrix synchronized with
+   roadmap, runbook, and lane state.
 2. Require updates to `domain-status-board` and lane YAML in the same PR when
    MVP claims change.
 3. Track frontend expectation alignment through `MVP-E1` before enabling new UI
@@ -34,7 +35,7 @@ non-MVP commitments while core operability remains the primary delivery need.
 4. Keep `MVP-D1` residual-risk baseline explicit and synchronized:
    [20260330-mvp-d1-residual-risk-baseline-review](../../planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md).
 
-## Residual Baseline Snapshot (2026-03-30)
+## Residual Baseline Snapshot (2026-03-31)
 
 Accepted as non-blocking for MVP backend operability baseline:
 
@@ -50,7 +51,9 @@ Lane ownership for deferred items:
 - Lane D: lifecycle depth, scale path, cost/billing, pilot/compliance tracks.
 - Lane C/D: admission/backpressure maturity.
 
-This snapshot is provisional until `MVP-A1` and `MVP-B1` are accepted.
+`MVP-A1` and `MVP-B1` are now closed, so this snapshot is no longer
+provisional. The risk remains open until the stability criteria below are met
+across subsequent planning cycles.
 
 ## Exit criteria
 

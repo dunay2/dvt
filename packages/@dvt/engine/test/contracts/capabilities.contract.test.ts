@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { EngineRunRef, PlanRef } from '@dvt/contracts';
+import type { PlanRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
@@ -24,16 +24,10 @@ import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdap
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import { ENGINE_ERROR_MESSAGE_KEY } from '../../src/contracts/errors.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
-import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -87,27 +81,21 @@ function makeCtx(runId: string): {
   };
 }
 
-function createEngine(adapter?: IProviderAdapter): { engine: WorkflowEngine; mock: MockAdapter } {
+function createEngine(adapter?: IProviderAdapter): {
+  engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
+  mock: MockAdapter;
+} {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
 
   const mock = new MockAdapter({ stateStore: store, projector });
   const effective = adapter ?? mock;
 
-  const engine = new WorkflowEngine({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-
+  const { engine } = createWorkflowEngineFixture({
+    stateStore: store,
     projector,
-    idempotency: new IdempotencyKeyBuilder(),
-    clock: new SequenceClock('2026-02-23T00:00:00.000Z'),
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
-    adapters: new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', effective]]),
+    adapters: makeProviderMap(effective),
   });
 
   return { engine, mock };

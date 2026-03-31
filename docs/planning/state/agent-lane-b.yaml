@@ -48,25 +48,24 @@ header_markdown: >
 tasks:
   - task_id: MVP-B1
     priority: P0
-    status: review
+    status: done
     objective: >-
       build a claim-to-evidence traceability matrix for backend MVP operability assertions
       (capability, proof source, and executable validation command).
     dependency: MVP-A1
     target: >-
       Every MVP claim in roadmap/docs maps to concrete code/test evidence and a command in the
-      acceptance baseline (provisional closeout tracked in
-      `docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md` pending MVP-A1
-      acceptance).
+      acceptance baseline, aligned to the closed `MVP-A1` inventory.
     complexity: M
     effort_points: 5
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason:
-      The matrix is materially complete, but final closure still depends on MVP-A1 acceptance.
+      The matrix remains aligned with the final `MVP-A1` inventory and now provides equivalent
+      verifiable closure for the MVP claim-to-evidence baseline.
     last_verified: '2026-03-31'
   - task_id: S05
     priority: P0
@@ -235,8 +234,8 @@ tasks:
     last_verified: '2026-03-31'
 dependency_notes:
   - >-
-    `MVP-B1` remains in review until `MVP-A1` is accepted, because the traceability matrix must
-    inherit the final contractual scope.
+    `MVP-B1` is now closed because the traceability matrix still matches the reviewed `MVP-A1`
+    contractual scope and command baseline.
   - >-
     `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review
     until envelope-level payloadVersion closure is accepted.
@@ -252,8 +251,8 @@ verification_summary:
   verified_on: '2026-03-31'
   total_tasks: 11
   total_effort_points: 47
-  completed_weighted_points: 42.85
-  lane_progress_pct: 91
+  completed_weighted_points: 43.6
+  lane_progress_pct: 93
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

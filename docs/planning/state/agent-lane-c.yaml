@@ -48,7 +48,7 @@ header_markdown: >
 tasks:
   - task_id: MVP-C1
     priority: P0
-    status: review
+    status: done
     objective: >-
       produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
       diagnose, daily operate) without adding feature depth.
@@ -56,17 +56,17 @@ tasks:
     target: >-
       Operator-ready runbook for current runtime routes, auth scope handling, health/readiness
       diagnosis, fallback boundaries, and baseline validation commands
-      (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`); final done status remains
-      aligned with `MVP-A1` and `MVP-B1` dependency closure.
+      (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`).
     complexity: M
     effort_points: 5
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/ED-20260329-mvp-c1-backend-control-plane-runbook.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason:
-      The runbook is accepted, but lane closure still depends on MVP-A1 and MVP-B1 finalization.
+      The runbook already had accepted evidence, and the final `MVP-A1`/`MVP-B1` dependency chain is
+      now closed.
     last_verified: '2026-03-31'
   - task_id: S09
     priority: P0
@@ -320,8 +320,8 @@ tasks:
     last_verified: '2026-03-31'
 dependency_notes:
   - >-
-    `MVP-C1` is accepted as a runbook artifact but remains in review until the MVP-A1/B1 dependency
-    chain is closed.
+    `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
+    dependency on `MVP-A1` or `MVP-B1`.
   - '`S09` is closed via accepted ADR-0040.'
   - >-
     `S16` is verified from runtime code and tests despite older review surfaces that still showed it
@@ -338,8 +338,8 @@ verification_summary:
   verified_on: '2026-03-31'
   total_tasks: 15
   total_effort_points: 54
-  completed_weighted_points: 38.5
-  lane_progress_pct: 71
+  completed_weighted_points: 39
+  lane_progress_pct: 72
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

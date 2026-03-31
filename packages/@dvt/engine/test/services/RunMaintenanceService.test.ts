@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import {
   RUN_MAINTENANCE_MESSAGE,
   RUN_MAINTENANCE_METRIC,
@@ -15,6 +11,7 @@ import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
+import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type IObservability = import('@dvt/observability').IObservability;
@@ -65,7 +62,7 @@ function makeTemporalAdapter(): IProviderAdapter {
 }
 
 function createFixture(observability: IObservability = createNoopObservability()): {
-  engine: WorkflowEngine;
+  engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   service: RunMaintenanceService;
   store: InMemoryTxStore;
   intentStore: InMemoryStartRunIntentStore;
@@ -77,25 +74,15 @@ function createFixture(observability: IObservability = createNoopObservability()
   const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
   const authorizer = new AllowAllAuthorizer();
   const idempotency = new IdempotencyKeyBuilder();
-
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-    ['temporal', makeTemporalAdapter()],
-  ]);
-
-  const engine = new WorkflowEngine({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-
-    projector: new SnapshotProjector(),
-    idempotency,
-    clock,
-    policy: new RunAccessPolicy({
-      authorizer,
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
+  const adapters = makeProviderMap(makeTemporalAdapter());
+  const { engine } = createWorkflowEngineFixture({
+    stateStore: store,
     intentStore,
+    clock,
+    authorizer,
     observability,
     adapters,
+    idempotency,
   });
 
   const service = new RunMaintenanceService({
@@ -142,10 +129,7 @@ function createFixtureWithIntentStore(
   const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
   const authorizer = new AllowAllAuthorizer();
   const idempotency = new IdempotencyKeyBuilder();
-
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-    ['temporal', makeTemporalAdapter()],
-  ]);
+  const adapters = makeProviderMap(makeTemporalAdapter());
 
   const service = new RunMaintenanceService({
     stateStoreRead: store,
@@ -383,9 +367,7 @@ function createFixtureWith(adapter: IProviderAdapter): {
   const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
   const authorizer = new AllowAllAuthorizer();
   const idempotency = new IdempotencyKeyBuilder();
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-    [adapter.provider, adapter],
-  ]);
+  const adapters = makeProviderMap(adapter);
 
   const service = new RunMaintenanceService({
     stateStoreRead: store,

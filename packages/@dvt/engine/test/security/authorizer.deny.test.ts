@@ -3,16 +3,10 @@ import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AuthorizationError } from '../../src/security/AuthorizationError.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
-import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { SequenceClock } from '../../src/utils/clock.js';
+import { createWorkflowEngineFixture } from '../helpers/workflowEngine.fixture.js';
 
 class DenyAuthorizer {
   async assertTenantAccess(): Promise<void> {
@@ -73,21 +67,11 @@ class CountingAdapter implements IProviderAdapter {
 function makeEngine(
   authorizer: IAuthorizer,
   adapter: IProviderAdapter
-): { engine: WorkflowEngine; store: InMemoryTxStore } {
-  const store = new InMemoryTxStore();
-  const engine = new WorkflowEngine({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-    projector: new SnapshotProjector(),
-    idempotency: new IdempotencyKeyBuilder(),
-    clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-    policy: new RunAccessPolicy({
-      authorizer,
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore: new InMemoryStartRunIntentStore(),
+): { engine: ReturnType<typeof createWorkflowEngineFixture>['engine']; store: InMemoryTxStore } {
+  const { engine, store } = createWorkflowEngineFixture({
+    authorizer,
+    adapter,
     observability: createNoopObservability(),
-    adapters: new Map([[adapter.provider, adapter]]),
   });
   return { engine, store };
 }

@@ -105,7 +105,7 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 
 > Verified registry source: `agent-lane-e.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-E1` `blocked` `M` `5pt` `0%`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
+- [ ] `P0` `MVP-E1` `queued` `M` `5pt` `0%`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
 - [ ] `P0` `F-01` `queued` `M` `5pt` `0%`: clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
 - [x] `P0` `F-02` `done` `S` `3pt` `100%`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
 - [ ] `P0` `F-03` `in_progress` `M` `5pt` `35%`: wire real backend health state into the top bar and a global degraded/offline banner.
@@ -120,7 +120,7 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 
 ## Dependencies
 
-- `MVP-E1` remains blocked on the acceptance of `MVP-A1` and `MVP-B1` so the frontend does not overclaim backend behavior.
+- `MVP-E1` is now unblocked by the closed `MVP-A1`/`MVP-B1` backend baseline and remains queued until the frontend contract artifact is written.
 - `F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.
 - `F-08` through `F-11` remain blocked by backend endpoint delivery and must stay contracts-first.
 - `F-02` now has accepted implementation evidence and establishes the first capability-module pattern for Lane E; `F-03` is partially advanced but not yet complete.
