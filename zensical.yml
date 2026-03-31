@@ -1,0 +1,26 @@
+site_name: DVT Documentation
+site_description: Canonical documentation structure (baseline)
+repo_url: https://github.com/dunay2/dvt
+docs_dir: docs
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+# Zensical-native navigation mode. The repo no longer keeps a legacy explicit nav.
+nav: []
+
+extra:
+  language: en

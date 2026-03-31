@@ -144,12 +144,12 @@ function main() {
     }
   }
 
-  const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
-  if (fs.existsSync(mkdocsPath)) {
-    const mkdocsRaw = fs.readFileSync(mkdocsPath, 'utf8');
+  const zensicalConfigPath = path.join(repoRoot, 'zensical.yml');
+  if (fs.existsSync(zensicalConfigPath)) {
+    const zensicalConfigRaw = fs.readFileSync(zensicalConfigPath, 'utf8');
     for (const target of forbiddenMkdocsNavTargets) {
-      if (mkdocsRaw.includes(target)) {
-        failures.push(`mkdocs.yml -> must not expose legacy compatibility target ${target} in the main nav.`);
+      if (zensicalConfigRaw.includes(target)) {
+        failures.push(`zensical.yml -> must not expose legacy compatibility target ${target} in the docs config.`);
       }
     }
   }

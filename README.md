@@ -15,7 +15,7 @@ planning, execution, observability, and traceability tooling.
 **New to the project?** Set up the development environment:
 
 ```bash
-# Install dependencies (pnpm 9+ required)
+# Install dependencies (pnpm 10+ required)
 pnpm install
 
 # Build all packages
@@ -50,7 +50,7 @@ migrations), Vitest (testing).
   [System Delivery Status](docs/architecture/system-delivery-status.md),
   [Planning](docs/planning/index.md),
   [Roadmap Of Record](docs/planning/roadmap/index.md),
-  [Gap Execution Plans](docs/planning/gaps/GAP_EXECUTION_PLANS.md)
+  [Planning Gaps](docs/planning/gaps/index.md)
 - **Operate and review risk**:
   [Runbooks](docs/runbooks/index.md),
   [Risk Register](docs/risk-register/index.md),
@@ -65,8 +65,8 @@ about runtime behavior, adapter semantics, or execution invariants.
 The engine remains documented as modular, versioned contracts:
 
 - **Normative contracts**:
-  [IWorkflowEngine](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md),
-  [ExecutionSemantics](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
+  [IWorkflowEngine](docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md),
+  [ExecutionSemantics](docs/architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md)
 - **Adapter specs**:
   [Temporal](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md),
   [Conductor](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md)
@@ -83,7 +83,7 @@ The engine remains documented as modular, versioned contracts:
 - New contributor: [docs/index.md](docs/index.md) ->
   [docs/concepts/index.md](docs/concepts/index.md)
 - SDK implementer:
-  [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) ->
+  [IWorkflowEngine.v2.0.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md) ->
   [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md)
 - Plan author: [docs/concepts/glossary.md](docs/concepts/glossary.md) ->
   [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)
@@ -98,8 +98,8 @@ The engine remains documented as modular, versioned contracts:
 
 ### Prerequisites
 
-- Node.js 18+ or 20+
-- pnpm 9+
+- Node.js 20+
+- pnpm 10+
 
 **Pre-commit validation** (automated via Git hooks):
 
@@ -219,9 +219,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 Use [docs/planning/roadmap/index.md](docs/planning/roadmap/index.md),
 [docs/planning/index.md](docs/planning/index.md), and
+[docs/planning/gaps/index.md](docs/planning/gaps/index.md) as planning entry
+points, and
 [docs/architecture/system-delivery-status.md](docs/architecture/system-delivery-status.md)
-as the current documentation entry points for active work and implementation
-state.
+as the current status entry point for implementation truth.
 
 ## License
 

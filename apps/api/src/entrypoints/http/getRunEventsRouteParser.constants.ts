@@ -2,23 +2,6 @@ export const GET_RUN_EVENTS_LIMIT = {
   MAX: 500,
 } as const;
 
-export const GET_RUN_EVENTS_PARSE_ERROR_CODE = {
-  INVALID_RUN_ID: 'INVALID_RUN_ID',
-  MISSING_TENANT_SCOPE: 'MISSING_TENANT_SCOPE',
-  INVALID_TENANT_ID: 'INVALID_TENANT_ID',
-  INVALID_AFTER_SEQ: 'INVALID_AFTER_SEQ',
-  INVALID_LIMIT: 'INVALID_LIMIT',
-  LIMIT_OUT_OF_RANGE: 'LIMIT_OUT_OF_RANGE',
-} as const;
-
-export type GetRunEventsParseErrorCode =
-  (typeof GET_RUN_EVENTS_PARSE_ERROR_CODE)[keyof typeof GET_RUN_EVENTS_PARSE_ERROR_CODE];
-
-export const GET_RUN_EVENTS_PARSE_ERROR_RESPONSE = {
-  BAD_REQUEST: 'BAD_REQUEST',
-  FORBIDDEN: 'FORBIDDEN',
-} as const;
-
 export const GET_RUN_EVENTS_ACTION = {
   kind: 'query',
   name: 'run:logs:view',

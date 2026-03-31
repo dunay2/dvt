@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseCancelRunRequest } from '../../../src/entrypoints/http/cancelRunRouteParser.js';
-import {
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
-} from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
+import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 
 describe('parseCancelRunRequest', () => {
   it('maps cancel request to run:cancel action and CANCEL signal', () => {
@@ -58,8 +56,11 @@ describe('parseCancelRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 403,
-      body: { error: 'FORBIDDEN', code: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE },
+      issue: {
+        type: 'forbidden',
+        reason: HTTP_ERROR_REASON.missingTenantScope,
+        target: 'tenantId',
+      },
     });
   });
 
@@ -71,8 +72,11 @@ describe('parseCancelRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidTenantId,
+        target: 'tenantId',
+      },
     });
   });
 
@@ -84,8 +88,11 @@ describe('parseCancelRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidRunId,
+        target: 'runId',
+      },
     });
   });
 });

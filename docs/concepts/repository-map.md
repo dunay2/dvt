@@ -41,7 +41,7 @@ Concept anchors for this page:
 
 | Workspace           | Responsibility                                                                  | Primary documentation entry point                                                                                                                      | Coverage       |
 | ------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| `dvt-api`           | HTTP entrypoint, auth boundary, background runtime wiring                       | [G8 Real Auth Final Spec](../planning/gaps/G8-REAL-AUTH-FINAL-SPEC.md), [System Delivery Status](../architecture/system-delivery-status.md)            | `canonical`    |
+| `dvt-api`           | HTTP entrypoint, auth boundary, background runtime wiring                       | [G8 Real Auth Final Spec](../planning/archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md), [System Delivery Status](../architecture/system-delivery-status.md)    | `canonical`    |
 | `dvt-outbox-worker` | Delivery composition root, active/passive ownership host, operational endpoints | [ADR-0034](../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md), [System Delivery Status](../architecture/system-delivery-status.md) | `canonical`    |
 | `@dvt/web`          | UI shell, graph canvas, run monitoring, client routing                          | [Frontend Architecture](../architecture/frontend/index.md), [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md) | `linked-local` |
 

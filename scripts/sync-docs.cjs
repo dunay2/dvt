@@ -8,8 +8,6 @@ const docsRoot = path.join(repoRoot, 'docs');
 
 const docsIndex = path.join(docsRoot, 'index.md');
 const docsIndexUpper = path.join(docsRoot, 'INDEX.md');
-const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
-
 const adrDir = path.join(docsRoot, 'adr');
 const adrLandingPath = path.join(adrDir, 'index.md');
 
@@ -148,35 +146,6 @@ function ensureCanonicalDocsHome() {
   }
 
   console.log('[docs:sync] docs/index.md is canonical.');
-}
-
-function ensureMkdocsHomeIndex() {
-  const source = readIfExists(mkdocsPath);
-  if (source === null) {
-    throw new Error('Missing mkdocs.yml');
-  }
-
-  const lines = source.split(/\r?\n/);
-  let changed = false;
-
-  for (let i = 0; i < lines.length; i += 1) {
-    if (lines[i].trim().startsWith('- Home:')) {
-      const indent = lines[i].match(/^\s*/)[0];
-      const target = `${indent}- Home: index.md`;
-      if (lines[i] !== target) {
-        lines[i] = target;
-        changed = true;
-      }
-      break;
-    }
-  }
-
-  if (changed) {
-    fs.writeFileSync(mkdocsPath, `${lines.join('\n')}\n`, 'utf8');
-    console.log('[docs:sync] Normalized mkdocs Home nav to "index.md".');
-  } else {
-    console.log('[docs:sync] mkdocs Home nav already normalized.');
-  }
 }
 
 function adrSortKey(fileName) {
@@ -521,8 +490,8 @@ function generatePlanningIndexes() {
     '  planning order',
     '- [System Delivery Status](../architecture/system-delivery-status.md) for',
     '  what is currently true in implementation',
-    '- [Gap Execution Plans](gaps/GAP_EXECUTION_PLANS.md) for active execution',
-    '  gaps and closure posture',
+    '- [Planning Gaps](gaps/index.md) for current gap posture and archived gap',
+    '  references',
     '- [Planning Status](status/index.md) for generated or curated status',
     '  artifacts',
     '',
@@ -1068,7 +1037,6 @@ function generateSectionIndexes() {
 
 function main() {
   ensureCanonicalDocsHome();
-  ensureMkdocsHomeIndex();
   normalizePlanningDocs();
   generateAdrLanding();
   generatePlanningIndexes();

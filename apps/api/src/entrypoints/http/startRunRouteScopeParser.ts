@@ -1,6 +1,8 @@
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
-import { asStringOrUndefined, type StartRunParseResult } from './startRunRouteBodyValidation.js';
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
+import { asStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 export type ParsedStartRunScope = {
   readonly tenantId: TenantId;
@@ -10,14 +12,32 @@ export type ParsedStartRunScope = {
 
 export function parseStartRunScope(
   record: Record<string, unknown>
-): StartRunParseResult<ParsedStartRunScope, string> {
-  const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
-  const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
-  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
+): RouteParseResult<ParsedStartRunScope> {
+  const tenantIdRaw = asStringOrUndefined(record.tenantId);
+  if (tenantIdRaw === undefined) {
+    return badRequestResult(HTTP_ERROR_REASON.missingTenantId, { target: 'tenantId' });
+  }
+  const tenantId = TenantId.parse(tenantIdRaw);
 
-  if (!tenantId.ok) return { ok: false, code: tenantId.code };
-  if (!projectId.ok) return { ok: false, code: projectId.code };
-  if (!environmentId.ok) return { ok: false, code: environmentId.code };
+  const projectIdRaw = asStringOrUndefined(record.projectId);
+  if (projectIdRaw === undefined) {
+    return badRequestResult(HTTP_ERROR_REASON.missingProjectId, { target: 'projectId' });
+  }
+  const projectId = ProjectId.parse(projectIdRaw);
+
+  const environmentIdRaw = asStringOrUndefined(record.environmentId);
+  if (environmentIdRaw === undefined) {
+    return badRequestResult(HTTP_ERROR_REASON.missingEnvironmentId, { target: 'environmentId' });
+  }
+  const environmentId = EnvironmentId.parse(environmentIdRaw);
+
+  if (!tenantId.ok)
+    return badRequestResult(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' });
+  if (!projectId.ok)
+    return badRequestResult(HTTP_ERROR_REASON.invalidProjectId, { target: 'projectId' });
+  if (!environmentId.ok) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidEnvironmentId, { target: 'environmentId' });
+  }
 
   return {
     ok: true,

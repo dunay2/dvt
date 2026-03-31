@@ -268,6 +268,68 @@ describe('GetRunStatusUseCase', () => {
     );
   });
 
+  it('does not emit staleness telemetry when engine status lookup fails and query is not wired', async () => {
+    const engine = {
+      async getRunStatus() {
+        throw new Error('engine unavailable');
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const telemetry = {
+      recordSnapshotStalenessResult: vi.fn(),
+      recordSnapshotStalenessFallback: vi.fn(),
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      undefined,
+      telemetry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).rejects.toThrow(/engine unavailable/);
+
+    expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
+    expect(telemetry.recordSnapshotStalenessResult).not.toHaveBeenCalled();
+  });
+
+  it('does not emit staleness telemetry when engine status lookup fails and staleness query resolves', async () => {
+    const engine = {
+      async getRunStatus() {
+        throw new Error('engine unavailable');
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const telemetry = {
+      recordSnapshotStalenessResult: vi.fn(),
+      recordSnapshotStalenessFallback: vi.fn(),
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      telemetry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).rejects.toThrow(/engine unavailable/);
+
+    expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
+    expect(telemetry.recordSnapshotStalenessResult).not.toHaveBeenCalled();
+  });
+
   it('uses the enriched path when requested', async () => {
     const engine = {
       async getRunStatus() {

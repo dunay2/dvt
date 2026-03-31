@@ -4,9 +4,10 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { IListRunsUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
-import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { sendHttpResponse } from './httpErrorContract.js';
+import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
 import { parseListRunsRequest } from './listRunsRouteParser.js';
 
 export async function listRunsRoute(
@@ -34,7 +35,7 @@ export async function listRunsRoute(
     cursor: request.query.cursor,
   });
   if (!parsed.ok) {
-    reply.code(parsed.status).send(parsed.body);
+    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
     return;
   }
 

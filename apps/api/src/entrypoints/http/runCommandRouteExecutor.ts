@@ -8,10 +8,11 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import type { TenantId } from '../../domain/auth/types.js';
 import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
-import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import type { ParsedRunCommandError } from './runCommandFieldParsers.js';
+import { sendHttpResponse } from './httpErrorContract.js';
+import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import type { RouteParseResult } from './routeParseIssue.js';
 import type { RunCommandActionName } from './runCommandRoute.constants.js';
 
 type ParsedCommandRequest<TCommand> = {
@@ -22,15 +23,9 @@ type ParsedCommandRequest<TCommand> = {
   };
 };
 
-type ParsedCommandResult<TCommand, TParseCode extends string> =
-  | { readonly ok: true; readonly value: ParsedCommandRequest<TCommand> }
-  | ParsedRunCommandError<TParseCode>;
+type ParsedCommandResult<TCommand> = RouteParseResult<ParsedCommandRequest<TCommand>>;
 
-export async function executeAuthorizedRunCommandRoute<
-  TCommand,
-  TResult,
-  TParseCode extends string,
->(
+export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
   request: FastifyRequest,
   reply: FastifyReply,
   deps: {
@@ -38,10 +33,10 @@ export async function executeAuthorizedRunCommandRoute<
     authorizer: AuthorizeCommandScopeService;
     execute: (command: TCommand, context: AuthorizedCommandExecutionContext) => Promise<TResult>;
   },
-  parsed: ParsedCommandResult<TCommand, TParseCode>
+  parsed: ParsedCommandResult<TCommand>
 ): Promise<void> {
   if (!parsed.ok) {
-    reply.code(parsed.status).send(parsed.body);
+    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
     return;
   }
 
@@ -56,7 +51,7 @@ export async function executeAuthorizedRunCommandRoute<
     },
   });
   if (!auth.ok) {
-    reply.code(auth.response.status).send(auth.response.body);
+    sendHttpResponse(reply, auth.response);
     return;
   }
 
@@ -66,7 +61,7 @@ export async function executeAuthorizedRunCommandRoute<
   } catch (error) {
     const mapped = mapRuntimeDomainError(error);
     if (mapped) {
-      reply.code(mapped.status).send(mapped.body);
+      sendHttpResponse(reply, mapped);
       return;
     }
 

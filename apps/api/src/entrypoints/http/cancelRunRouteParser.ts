@@ -1,18 +1,14 @@
 import type { TenantId } from '../../domain/auth/types.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import {
-  badRequest,
-  forbidden,
   isBodyObject,
   normalizeRunId,
   parseOptionalReason,
   parseTenantId,
 } from './runCommandFieldParsers.js';
-import {
-  RUN_COMMAND_ACTION,
-  RUN_COMMAND_PARSE_ERROR_CODE,
-  type RunCommandParseErrorCode,
-} from './runCommandRoute.constants.js';
+import { RUN_COMMAND_ACTION } from './runCommandRoute.constants.js';
 
 const CANCEL_SIGNAL_TYPE = 'CANCEL' as const;
 
@@ -28,16 +24,7 @@ export interface ParsedCancelRunRequest {
   };
 }
 
-type ParsedCancelRunResult =
-  | { readonly ok: true; readonly value: ParsedCancelRunRequest }
-  | {
-      readonly ok: false;
-      readonly status: 400 | 403;
-      readonly body: {
-        readonly error: 'BAD_REQUEST' | 'FORBIDDEN';
-        readonly code: RunCommandParseErrorCode;
-      };
-    };
+type ParsedCancelRunResult = RouteParseResult<ParsedCancelRunRequest>;
 
 export function parseCancelRunRequest(input: {
   readonly runId: string | undefined;
@@ -45,18 +32,16 @@ export function parseCancelRunRequest(input: {
 }): ParsedCancelRunResult {
   const runId = normalizeRunId(input.runId);
   if (!runId) {
-    return badRequest(RUN_COMMAND_PARSE_ERROR_CODE.INVALID_RUN_ID);
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
 
   if (!isBodyObject(input.body)) {
-    return badRequest(RUN_COMMAND_PARSE_ERROR_CODE.INVALID_BODY);
+    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
   const tenantIdResult = parseTenantId(input.body);
   if (!tenantIdResult.ok) {
-    return tenantIdResult.error === RUN_COMMAND_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE
-      ? forbidden(tenantIdResult.error)
-      : badRequest(tenantIdResult.error);
+    return tenantIdResult;
   }
 
   const reason = parseOptionalReason(input.body.reason);

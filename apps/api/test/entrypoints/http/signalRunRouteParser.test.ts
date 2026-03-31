@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
+import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.constants.js';
 import {
   parseSignalRunRequest,
   SIGNAL_ROUTE_COMPATIBILITY_POLICY,
-  SIGNAL_COMMAND_ACTION,
-  SIGNAL_RUN_PARSE_ERROR_CODE,
 } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 
 describe('parseSignalRunRequest', () => {
@@ -17,8 +17,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidSignalType,
+        target: 'signalType',
+      },
     });
   });
 
@@ -76,8 +79,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 403,
-      body: { error: 'FORBIDDEN', code: SIGNAL_RUN_PARSE_ERROR_CODE.MISSING_TENANT_SCOPE },
+      issue: {
+        type: 'forbidden',
+        reason: HTTP_ERROR_REASON.missingTenantScope,
+        target: 'tenantId',
+      },
     });
   });
 
@@ -90,8 +96,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidTenantId,
+        target: 'tenantId',
+      },
     });
   });
 
@@ -104,8 +113,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_TENANT_ID },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidTenantId,
+        target: 'tenantId',
+      },
     });
   });
 
@@ -118,8 +130,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_RUN_ID },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidRunId,
+        target: 'runId',
+      },
     });
   });
 
@@ -132,8 +147,10 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_BODY },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidBody,
+      },
     });
   });
 
@@ -146,8 +163,11 @@ describe('parseSignalRunRequest', () => {
 
     expect(parsed).toEqual({
       ok: false,
-      status: 400,
-      body: { error: 'BAD_REQUEST', code: SIGNAL_RUN_PARSE_ERROR_CODE.INVALID_SIGNAL_TYPE },
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.invalidSignalType,
+        target: 'signalType',
+      },
     });
   });
 });

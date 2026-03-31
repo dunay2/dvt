@@ -266,6 +266,12 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 | ---------------------------- | ------------------------------------------------------------------ | -------------------- | ---------- |
 | [c4-engine.md](c4-engine.md) | C4 context, container and component views for the engine subsystem | Logical architecture | 2026-03-05 |
 
+## Reviews And Gap Analyses
+
+| Document                                                                                      | Purpose                                   | Scope                 | Updated    |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------------- | ---------- |
+| [Engine Class Review And Gap Analysis 2026-03-31](engine-class-review-and-gaps-2026-03-31.md) | Consolidated engine review and priorities | Architecture analysis | 2026-03-31 |
+
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"
 
 -> [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Sections 2.2-2.4)

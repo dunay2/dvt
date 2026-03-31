@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.4.4](https://github.com/dunay2/dvt/compare/v5.4.3...v5.4.4) (2026-03-31)
+
+
+### Bug Fixes
+
+* **api:** Decouple run-command parser error plumbing and add negative tests ([#699](https://github.com/dunay2/dvt/issues/699)) ([132202c](https://github.com/dunay2/dvt/commit/132202cf49b8766a555b96206d2dc3efd1033063))
+
+## [5.4.3](https://github.com/dunay2/dvt/compare/v5.4.2...v5.4.3) (2026-03-31)
+
+
+### Bug Fixes
+
+* **api:** Delay staleness telemetry until status lookup succeeds ([#702](https://github.com/dunay2/dvt/issues/702)) ([9ade772](https://github.com/dunay2/dvt/commit/9ade77247ce0ad17ab6260cd4108c3928ab46568))
+
 ## [5.4.2](https://github.com/dunay2/dvt/compare/v5.4.1...v5.4.2) (2026-03-31)
 
 

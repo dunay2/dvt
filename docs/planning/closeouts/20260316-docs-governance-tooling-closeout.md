@@ -59,7 +59,7 @@ the new tooling surfaces.
 
 ### Rejected alternatives
 
-- Pull in the root's unrelated `mkdocs.yml` changes.
+- Pull in the root's unrelated `zensical.yml` changes.
 - Revert the docs location policy from `docs/CONTRIBUTING.md`.
 - Downgrade or replace existing docs gates just to make the new tooling fit.
 

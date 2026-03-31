@@ -12,9 +12,9 @@ code_refs:
   - docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json
   - docs/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json
   - docs/contracts/shared/CompiledCodeRef.v1.schema.json
-  - docs/planning/gaps/g6/index.md
-  - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
-  - docs/planning/gaps/GAP_EXECUTION_PLANS.md
+  - docs/planning/archive/gaps/g6/index.md
+  - docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+  - docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md
   - docs/planning/status/canonical-doc-code-matrix.md
 contracts_touched:
   - id: OpenLineage SQL Job Facet
@@ -36,14 +36,14 @@ evidence:
   docs:
     - docs/contracts/traceability/index.md
     - docs/contracts/traceability/facets/openlineage/index.md
-    - docs/planning/gaps/g6/index.md
-    - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+    - docs/planning/archive/gaps/g6/index.md
+    - docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
     - docs/planning/status/canonical-doc-code-matrix.md
   code:
     - packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts
     - packages/@dvt/traceability-service/src/lineage/types.ts
 planning_refs:
-  - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+  - docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
   - docs/contracts/traceability/index.md
 rollout:
   required: false
@@ -59,7 +59,7 @@ compatibility:
 
 ## What changed
 
-- Added a canonical MkDocs-visible contract home for emitted lineage facets in
+- Added a canonical Zensical-visible contract home for emitted lineage facets in
   [Traceability Contracts](../contracts/traceability/index.md).
 - Vendored the pinned OpenLineage SQL job facet schema version used by the
   package as a repo-local artifact.
@@ -71,7 +71,7 @@ compatibility:
   contract artifact so the schema remains offline-compilable without losing the
   shared contract linkage.
 - Added a provenance page for the vendored SQL facet so source URL, artifact
-  identity, and update policy are reviewable from MkDocs.
+  identity, and update policy are reviewable from Zensical.
 - Reconnected `G6` planning and status docs so the canonical emitted facet
   source is no longer only the planning gap text.
 - Updated the roadmap wording so `G6` now traces to contract-artifact work, not
@@ -83,7 +83,7 @@ compatibility:
 
 - repo-local versioned contract artifacts exist for both emitted facets
 - shared-kernel `CompiledCodeRef` anchoring is now explicit and reusable
-- the canonical home of those artifacts is documented and navigable from MkDocs
+- the canonical home of those artifacts is documented and navigable from Zensical
 - planning and status docs now point back to that canonical contract home
 - vendored OpenLineage provenance is documented for offline audit and review
 
@@ -109,7 +109,7 @@ Result:
 - all commands passed locally
 - `docs:quality:check` emitted the existing non-blocking language warning for
   `docs/planning/DVTplus_Roadmap.md`
-- MkDocs navigation now exposes the new traceability contract page and `G6`
+- Zensical navigation now exposes the new traceability contract page and `G6`
   planning hub through the docs index structure
 
 ## Architectural notes

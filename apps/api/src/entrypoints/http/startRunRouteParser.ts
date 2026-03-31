@@ -4,10 +4,11 @@ import {
 } from '../../application/ports/startRunCommandContract.js';
 import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
+import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import {
   asNonEmptyTrimmedStringOrUndefined,
   parseStartRunBodyRecord,
-  type StartRunParseResult,
 } from './startRunRouteBodyValidation.js';
 import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
@@ -20,32 +21,22 @@ type ParsedStartRunRequest = {
   };
 };
 
-type ParseStartRunRequestResult =
-  | { readonly ok: true; readonly value: ParsedStartRunRequest }
-  | { readonly ok: false; readonly status: 400; readonly body: Readonly<Record<string, unknown>> };
-
-type ParseStartRunFieldResult<T> = StartRunParseResult<T, string>;
-
-type ParseStartRunBadRequestResult = Extract<ParseStartRunRequestResult, { readonly ok: false }>;
-
-function badRequest(code: string): ParseStartRunBadRequestResult {
-  return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code } };
-}
+type ParseStartRunRequestResult = RouteParseResult<ParsedStartRunRequest>;
 
 export function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
   const bodyRecord = parseStartRunBodyRecord(body);
   if (!bodyRecord.ok) {
-    return badRequest(bodyRecord.code);
+    return bodyRecord;
   }
 
   const scope = parseStartRunScope(bodyRecord.value);
   if (!scope.ok) {
-    return badRequest(scope.code);
+    return scope;
   }
 
   const command = parseStartRunCommand(bodyRecord.value);
   if (!command.ok) {
-    return badRequest(command.code);
+    return command;
   }
 
   return {
@@ -94,30 +85,81 @@ function parseTargetAdapter(
   return { ok: false };
 }
 
-function parseStartRunCommand(
-  record: Record<string, unknown>
-): ParseStartRunFieldResult<StartRunCommand> {
-  const selection = parseSelection(record.selection);
-  if (!selection.ok) return { ok: false, code: 'INVALID_SELECTION' };
+function parseStartRunCommand(record: Record<string, unknown>): RouteParseResult<StartRunCommand> {
+  const selectionResult = validateSelection(record);
+  if (!selectionResult.ok) return selectionResult.error;
+  const runIdResult = validateRunId(record);
+  if (!runIdResult.ok) return runIdResult.error;
+  const targetAdapterResult = validateTargetAdapter(record);
+  if (!targetAdapterResult.ok) return targetAdapterResult.error;
+  const planSourceResult = validatePlanSource(record);
+  if (!planSourceResult.ok) return planSourceResult.error;
 
-  const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
-  if (runId === undefined) {
-    return { ok: false, code: 'INVALID_RUN_ID' };
-  }
-
-  const targetAdapter = parseTargetAdapter(record.targetAdapter);
-  if (!targetAdapter.ok) return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
-
-  const plannerSourceCount = countPlannerSources(record);
-  const hasPlanRef = record.planRef !== undefined;
-  const sourceCheck = validatePlannerSourceSelection(hasPlanRef, plannerSourceCount);
-  if (!sourceCheck.ok) return { ok: false, code: sourceCheck.code };
+  const { selection } = selectionResult;
+  const { runId } = runIdResult;
+  const { targetAdapter } = targetAdapterResult;
+  const { hasPlanRef } = planSourceResult;
 
   if (hasPlanRef) {
-    return buildPlanRefCommand(record.planRef, runId, targetAdapter.value, selection.value);
+    return buildPlanRefCommand(record.planRef, runId, targetAdapter, selection);
   }
+  return buildPlannerBackedCommand(record, runId, targetAdapter, selection);
+}
 
-  return buildPlannerBackedCommand(record, runId, targetAdapter.value, selection.value);
+function validateSelection(
+  record: Record<string, unknown>
+):
+  | { ok: true; selection: ReadonlyArray<string> }
+  | { ok: false; error: RouteParseResult<StartRunCommand> } {
+  const selection = parseSelection(record.selection);
+  if (!selection.ok)
+    return {
+      ok: false,
+      error: badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' }),
+    };
+  return { ok: true, selection: selection.value };
+}
+
+function validateRunId(
+  record: Record<string, unknown>
+): { ok: true; runId: string } | { ok: false; error: RouteParseResult<StartRunCommand> } {
+  const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
+  if (runId === undefined) {
+    return {
+      ok: false,
+      error: badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' }),
+    };
+  }
+  return { ok: true, runId };
+}
+
+function validateTargetAdapter(
+  record: Record<string, unknown>
+):
+  | { ok: true; targetAdapter: StartRunCommand['targetAdapter'] }
+  | { ok: false; error: RouteParseResult<StartRunCommand> } {
+  const targetAdapter = parseTargetAdapter(record.targetAdapter);
+  if (!targetAdapter.ok) {
+    return {
+      ok: false,
+      error: badRequestResult(HTTP_ERROR_REASON.invalidTargetAdapter, { target: 'targetAdapter' }),
+    };
+  }
+  return { ok: true, targetAdapter: targetAdapter.value };
+}
+
+function validatePlanSource(
+  record: Record<string, unknown>
+): { ok: true; hasPlanRef: boolean } | { ok: false; error: RouteParseResult<StartRunCommand> } {
+  const plannerSourceCount = countPlannerSources(record);
+  const hasPlanRef = record.planRef !== undefined;
+  if (hasPlanRef && plannerSourceCount > 0) {
+    return { ok: false, error: badRequestResult(HTTP_ERROR_REASON.conflictingPlanInputs) };
+  }
+  if (!hasPlanRef && plannerSourceCount !== 1) {
+    return { ok: false, error: badRequestResult(HTTP_ERROR_REASON.invalidPlanSource) };
+  }
+  return { ok: true, hasPlanRef };
 }
 
 function countPlannerSources(record: Record<string, unknown>): number {
@@ -126,29 +168,15 @@ function countPlannerSources(record: Record<string, unknown>): number {
   ).length;
 }
 
-function validatePlannerSourceSelection(
-  hasPlanRef: boolean,
-  plannerSourceCount: number
-): { readonly ok: true } | { readonly ok: false; readonly code: string } {
-  if (hasPlanRef && plannerSourceCount > 0) {
-    return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
-  }
-  if (!hasPlanRef && plannerSourceCount !== 1) {
-    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
-  }
-
-  return { ok: true };
-}
-
 function buildPlanRefCommand(
   rawPlanRef: unknown,
   runId: string,
   targetAdapter: StartRunCommand['targetAdapter'],
   selection: ReadonlyArray<string>
-): ParseStartRunFieldResult<StartRunCommand> {
+): RouteParseResult<StartRunCommand> {
   const planRef = parseStartRunPlanRef(rawPlanRef);
   if (!planRef.ok) {
-    return { ok: false, code: planRef.code };
+    return planRef;
   }
 
   return {
@@ -167,10 +195,10 @@ function buildPlannerBackedCommand(
   runId: string,
   targetAdapter: StartRunCommand['targetAdapter'],
   selection: ReadonlyArray<string>
-): ParseStartRunFieldResult<StartRunCommand> {
+): RouteParseResult<StartRunCommand> {
   const plannerInput = parseStartRunPlannerEnvelope(record, selection);
   if (!plannerInput.ok) {
-    return { ok: false, code: plannerInput.code };
+    return plannerInput;
   }
 
   return {

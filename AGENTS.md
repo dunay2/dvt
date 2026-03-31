@@ -300,7 +300,7 @@ Whenever any file under `docs/` is added, removed, or renamed, the documentation
 pnpm docs:sync
 ```
 
-and commit the result before pushing. This updates all `docs/*/index.md` files and `mkdocs.yml`. This is **not** automatic — it does not run on pre-commit. The agent is responsible for running it manually whenever docs structure changes.
+and commit the result before pushing. This updates all `docs/*/index.md` files and the governed docs navigation surfaces. This is **not** automatic — it does not run on pre-commit. The agent is responsible for running it manually whenever docs structure changes.
 
 ## Planning State Rule
 

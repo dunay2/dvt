@@ -15,9 +15,9 @@ This document is part of the repository governance proposal set.
 - Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
 - Role in set: diagnostic precursor
 - Follow-on proposals:
-  - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md) translates this diagnostic into an operating model
+  - [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md) translates this diagnostic into an operating model
   - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines technical package/build policy for monorepo convergence
-  - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md) defines enforcement and CI consolidation work
+  - [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md) defines enforcement and CI consolidation work
 
 > Consolidated from the answers gathered during this planning cycle. The first part closes the operating decisions. The second part turns those decisions into an executable roadmap.
 
@@ -53,7 +53,7 @@ Question: What is the exact rule for `site/`?
 
 Consolidated response:
 
-- `site/` is generated output from MkDocs.
+- `site/` is generated output from Zensical.
 - It must not be edited manually.
 - It must be regenerated from the documentation sources.
 - Publication should come from CI, not from manual work on `site/`.
@@ -419,7 +419,7 @@ This is the next sensible working set for the backlog. Each row should produce a
 
 | Step  | Task | What to do literally                                                                                                      | Base command                                           | Exit criterion                                                                       | Status      |
 | ----- | ---- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ | ----------- |
-| O1-01 | T09  | Walk `docs/`, `mkdocs.yml`, and `index.md` files to list docs that are not linked or navigated.                           | `pnpm docs:sync` plus assisted manual review           | No orphan docs remain in the current tree.                                           | Done        |
+| O1-01 | T09  | Walk `docs/`, `zensical.yml`, and `index.md` files to list docs that are not linked or navigated.                         | `pnpm docs:sync` plus assisted manual review           | No orphan docs remain in the current tree.                                           | Done        |
 | O1-02 | T10  | Review internal markdown links and navigation references that still point to broken or removed aliases.                   | `pnpm docs:canonical:check` plus manual review         | Direct-path scan reports `0` missing markdown targets in `docs/`.                    | Done        |
 | O1-03 | T11  | Review repeated titles and repeated content, starting with `docs/planning/`.                                              | `pnpm docs:doctor` plus manual reading                 | A table `repeated doc -> canonical doc` exists.                                      | Done        |
 | O1-04 | T18  | Compare auto-generated `index.md` files with real folders to detect missing or extra entries.                             | `pnpm docs:sync`                                       | Relevant generated indexes are in sync with the current tree.                        | Done        |
@@ -558,7 +558,7 @@ These can run at the same time:
 
 ## Language Queue
 
-The operational matrix for `T17` lives in [`docs/SPANISH_TEXTS.md`](../../SPANISH_TEXTS.md).
+The operational matrix for `T17` lives in [`docs/SPANISH_TEXTS.md`](../../../SPANISH_TEXTS.md).
 
 That file no longer exists as a generic translation note. It now acts as a work queue with four valid outcomes per document:
 

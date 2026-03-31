@@ -17,6 +17,10 @@ Active execution work is tracked in the
 
 All G6 documents are in [archive/gaps/g6/](../archive/gaps/g6/).
 
+## Active tactical gap registers
+
+- [Runtime Architecture Gap Register 2026-03-31](runtime-architecture-gap-register-20260331.md)
+
 ## Concept anchors
 
 - [Glossary](../../concepts/glossary.md) for `gap`, `status`, `roadmap`,

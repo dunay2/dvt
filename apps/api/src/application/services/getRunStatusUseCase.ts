@@ -13,6 +13,13 @@ import type {
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 
+type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
+
+interface SnapshotStalenessResolution {
+  value: RunSnapshotStaleness;
+  fallbackReason?: SnapshotStalenessFallbackReason;
+}
+
 export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
@@ -34,17 +41,24 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     }
 
     const runRef = runMetadataToEngineRunRef(metadata);
-    const [snapshot, snapshotStaleness] = await Promise.all([
-      query.enriched ? this.engine.enrichRunStatus(runRef) : this.engine.getRunStatus(runRef),
-      this.resolveSnapshotStaleness(metadata.tenantId, metadata.runId),
-    ]);
+    const snapshotPromise = query.enriched
+      ? this.engine.enrichRunStatus(runRef)
+      : this.engine.getRunStatus(runRef);
+    const snapshotStalenessPromise = this.resolveSnapshotStaleness(
+      metadata.tenantId,
+      metadata.runId
+    );
+
+    const snapshot = await snapshotPromise;
+    const snapshotStaleness = await snapshotStalenessPromise;
+    this.recordSnapshotStalenessTelemetry(snapshotStaleness, metadata.tenantId, metadata.runId);
 
     return {
       runId: snapshot.runId,
       tenantId: context.scope.tenantId.value,
       status: snapshot.status,
       enriched: query.enriched,
-      snapshotStaleness,
+      snapshotStaleness: snapshotStaleness.value,
       ...(snapshot.substatus !== undefined ? { substatus: snapshot.substatus } : {}),
       ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
       ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
@@ -56,28 +70,47 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   private async resolveSnapshotStaleness(
     tenantId: string,
     runId: string
-  ): Promise<RunSnapshotStaleness> {
+  ): Promise<SnapshotStalenessResolution> {
     if (!this.stalenessReader) {
-      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_not_wired', tenantId, runId);
-      this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
-      return 'UNKNOWN';
+      return {
+        value: 'UNKNOWN',
+        fallbackReason: 'query_not_wired',
+      };
     }
 
     try {
       const isStale = await this.stalenessReader.isSnapshotStale(tenantId, runId);
       if (isStale === null) {
-        this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
-        this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
-        return 'UNKNOWN';
+        return {
+          value: 'UNKNOWN',
+          fallbackReason: 'query_failed',
+        };
       }
 
-      const result = isStale ? 'STALE' : 'FRESH';
-      this.stalenessTelemetry?.recordSnapshotStalenessResult(result, tenantId, runId);
-      return result;
+      return {
+        value: isStale ? 'STALE' : 'FRESH',
+      };
     } catch {
-      this.stalenessTelemetry?.recordSnapshotStalenessFallback('query_failed', tenantId, runId);
-      this.stalenessTelemetry?.recordSnapshotStalenessResult('UNKNOWN', tenantId, runId);
-      return 'UNKNOWN';
+      return {
+        value: 'UNKNOWN',
+        fallbackReason: 'query_failed',
+      };
     }
+  }
+
+  private recordSnapshotStalenessTelemetry(
+    resolution: SnapshotStalenessResolution,
+    tenantId: string,
+    runId: string
+  ): void {
+    if (resolution.fallbackReason) {
+      this.stalenessTelemetry?.recordSnapshotStalenessFallback(
+        resolution.fallbackReason,
+        tenantId,
+        runId
+      );
+    }
+
+    this.stalenessTelemetry?.recordSnapshotStalenessResult(resolution.value, tenantId, runId);
   }
 }
