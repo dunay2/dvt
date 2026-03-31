@@ -8,10 +8,7 @@ import {
   parseOptionalReason,
   parseTenantId,
 } from './runCommandFieldParsers.js';
-import {
-  RUN_COMMAND_ACTION,
-  RUN_COMMAND_PARSE_ERROR_CODE,
-} from './runCommandRoute.constants.js';
+import { RUN_COMMAND_ACTION, RUN_COMMAND_PARSE_ERROR_CODE } from './runCommandRoute.constants.js';
 
 const CANCEL_SIGNAL_TYPE = 'CANCEL' as const;
 
@@ -59,7 +56,8 @@ type ParsedCancelRunResult<TCode extends string = CancelRunDefaultParseErrorCode
 export function parseCancelRunRequest<
   TInvalidRunId extends string = (typeof RUN_COMMAND_PARSE_ERROR_CODE)['INVALID_RUN_ID'],
   TInvalidBody extends string = (typeof RUN_COMMAND_PARSE_ERROR_CODE)['INVALID_BODY'],
-  TMissingTenantScope extends string = (typeof RUN_COMMAND_PARSE_ERROR_CODE)['MISSING_TENANT_SCOPE'],
+  TMissingTenantScope extends string =
+    (typeof RUN_COMMAND_PARSE_ERROR_CODE)['MISSING_TENANT_SCOPE'],
   TInvalidTenantId extends string = (typeof RUN_COMMAND_PARSE_ERROR_CODE)['INVALID_TENANT_ID'],
 >(
   input: {
@@ -72,9 +70,7 @@ export function parseCancelRunRequest<
     TMissingTenantScope,
     TInvalidTenantId
   >
-): ParsedCancelRunResult<
-  TInvalidRunId | TInvalidBody | TMissingTenantScope | TInvalidTenantId
-> {
+): ParsedCancelRunResult<TInvalidRunId | TInvalidBody | TMissingTenantScope | TInvalidTenantId> {
   const resolvedCodes =
     codes ??
     (RUN_COMMAND_PARSE_ERROR_CODE as unknown as CancelRunParseErrorCodes<

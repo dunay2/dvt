@@ -5,10 +5,7 @@ import {
   RUN_COMMAND_PARSE_ERROR_RESPONSE,
 } from './runCommandRoute.constants.js';
 
-type TenantParseErrorCodes<
-  TMissingTenantScope extends string,
-  TInvalidTenantId extends string,
-> = {
+type TenantParseErrorCodes<TMissingTenantScope extends string, TInvalidTenantId extends string> = {
   readonly MISSING_TENANT_SCOPE: TMissingTenantScope;
   readonly INVALID_TENANT_ID: TInvalidTenantId;
 };
