@@ -99,6 +99,10 @@ jobs:
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:sync:check
 
+      - name: Validate planning workboard outputs
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:workboard:check
+
       - name: Validate docs quality policy (English/no duplicate indexes)
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:quality:check
@@ -114,6 +118,10 @@ jobs:
       - name: Enforce canonical docs paths and links
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:canonical:check
+
+      - name: Lint changed Markdown files
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm lint:md:changed
 
       - name: Validate generated code-state status doc
         if: >-
