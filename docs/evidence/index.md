@@ -20,6 +20,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260330 Planner Manifest Ref Cache](ED-20260330-planner-manifest-ref-cache.md)
 - [ED 20260330 Snapshot Staleness Api Surface](ED-20260330-snapshot-staleness-api-surface.md)
 - [ED 20260330 Staleness Followup Code Quality](ED-20260330-staleness-followup-code-quality.md)
+- [ED 20260331 Api Parse Error Coupling Inventory](ED-20260331-api-parse-error-coupling-inventory.md)
 - [ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout](ED-20260312-g6-golden-schema-closeout.md)
 - [ED-20260312 — G8 Arch Tests and Engine Wiring Closeout](ED-20260312-g8-arch-tests-engine-wiring.md)
 - [ED-20260314 - G9 Step Type Registry Closeout](ED-20260314-g9-step-type-registry-closeout.md)
