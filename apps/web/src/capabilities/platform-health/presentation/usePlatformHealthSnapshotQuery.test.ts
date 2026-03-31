@@ -46,7 +46,47 @@ describe('usePlatformHealthSnapshotQuery', () => {
     const mounted = await withTestQueryClient(createElement(Probe));
 
     try {
-      await waitForReactQuery(() => observedState?.status === 'success');
+      await waitForReactQuery(() => observedState?.status === 'success', {
+        description: 'platform health success state',
+      });
+
+      expect(observedState?.data).toEqual(snapshot);
+      expect(observedState?.isSuccess).toBe(true);
+      expect(capability.loadSnapshot).toHaveBeenCalledTimes(1);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('supports custom advancement when the query resolves asynchronously', async () => {
+    const snapshot = createPlatformHealthSnapshot();
+    let releaseSnapshot: (() => void) | undefined;
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            releaseSnapshot = () => resolve(snapshot);
+          })
+      ),
+    };
+    let observedState: ReturnType<typeof usePlatformHealthSnapshotQuery> | undefined;
+
+    function Probe(): null {
+      observedState = usePlatformHealthSnapshotQuery(capability);
+      return null;
+    }
+
+    const mounted = await withTestQueryClient(createElement(Probe));
+
+    try {
+      await waitForReactQuery(() => observedState?.status === 'success', {
+        advance: () => {
+          releaseSnapshot?.();
+        },
+        description: 'platform health controlled success state',
+        intervalMs: 1,
+        timeoutMs: 500,
+      });
 
       expect(observedState?.data).toEqual(snapshot);
       expect(observedState?.isSuccess).toBe(true);

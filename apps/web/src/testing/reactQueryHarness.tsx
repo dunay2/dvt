@@ -1,3 +1,4 @@
+import { waitFor } from '@testing-library/dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -8,6 +9,13 @@ type MountedQueryUi = {
   queryClient: QueryClient;
   render(nextNode: ReactNode): Promise<void>;
 };
+
+export type WaitForReactQueryOptions = Readonly<{
+  advance?: () => Promise<void> | void;
+  description?: string;
+  intervalMs?: number;
+  timeoutMs?: number;
+}>;
 
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({
@@ -59,22 +67,37 @@ export async function withTestQueryClient(
   };
 }
 
-export async function waitForReactQuery(
-  predicate: () => boolean,
-  timeoutMs = 1_000
-): Promise<void> {
-  const timeoutAt = Date.now() + timeoutMs;
+async function settleReactQueryTurn(advance?: WaitForReactQueryOptions['advance']): Promise<void> {
+  await Promise.resolve();
 
-  while (Date.now() < timeoutAt) {
-    if (predicate()) {
-      return;
-    }
-
-    await act(async () => {
-      await Promise.resolve();
-      await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
-    });
+  if (advance) {
+    await advance();
+    await Promise.resolve();
+    return;
   }
 
-  throw new Error(`Timed out waiting for React Query state after ${timeoutMs}ms`);
+  await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
+}
+
+export async function waitForReactQuery(
+  predicate: () => boolean,
+  {
+    advance,
+    description = 'React Query state',
+    intervalMs = 20,
+    timeoutMs = 5_000,
+  }: WaitForReactQueryOptions = {}
+): Promise<void> {
+  await waitFor(
+    async () => {
+      await act(async () => {
+        await settleReactQueryTurn(advance);
+      });
+
+      if (!predicate()) {
+        throw new Error(`Waiting for ${description}`);
+      }
+    },
+    { timeout: timeoutMs, interval: intervalMs }
+  );
 }
