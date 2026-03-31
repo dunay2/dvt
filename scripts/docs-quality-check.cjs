@@ -22,21 +22,19 @@ const spanishHints = [
   ' para ',
   ' con ',
 ];
-const requiredConceptLinkFiles = [
+const requiredCanonicalFiles = [
   'docs/architecture/system-delivery-status.md',
   'docs/planning/index.md',
   'docs/planning/roadmap/index.md',
   'docs/planning/gaps/index.md',
-  'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
-  'docs/planning/gaps/g6/index.md',
-  'docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md',
+  'docs/planning/archive/gaps/g6/index.md',
+  'docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md',
   'docs/concepts/repository-map.md',
   'docs/planning/status/canonical-doc-code-matrix.md',
 ];
 const explicitOwnerFiles = [
   'docs/planning/index.md',
   'docs/planning/gaps/index.md',
-  'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
 ];
 const forbiddenMkdocsNavTargets = [
   'planning/DVTplus_Roadmap.md',
@@ -116,9 +114,12 @@ function main() {
     }
   }
 
-  for (const relativePath of requiredConceptLinkFiles) {
+  for (const relativePath of requiredCanonicalFiles) {
     const absPath = path.join(repoRoot, ...relativePath.split('/'));
-    if (!fs.existsSync(absPath)) continue;
+    if (!fs.existsSync(absPath)) {
+      failures.push(`${relativePath} -> required canonical surface is missing.`);
+      continue;
+    }
     const raw = fs.readFileSync(absPath, 'utf8').toLowerCase();
     const glossaryTargets = relativePath.startsWith('docs/concepts/')
       ? ['glossary.md', './glossary.md', 'concepts/glossary.md']

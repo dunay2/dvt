@@ -285,6 +285,11 @@ function inferPlanningType(fileNameLower) {
   return 'reference';
 }
 
+function shouldIncludePlanningDoc(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  return normalized !== 'superseded' && normalized !== 'archived';
+}
+
 function shouldSkipPlanningDocName(name) {
   return (
     /^index\.md$/i.test(name) ||
@@ -396,6 +401,9 @@ function collectPlanningDocs() {
       const abs = path.join(root.dir, name);
       const content = fs.readFileSync(abs, 'utf8');
       const parsed = splitFrontmatter(content);
+      if (!shouldIncludePlanningDoc(parsed.frontmatter.status)) {
+        continue;
+      }
       const title =
         parsed.frontmatter.title || extractFirstHeading(parsed.body) || humanizeName(name);
       const type =
@@ -1045,9 +1053,20 @@ function main() {
   console.log('[docs:sync] Completed.');
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(`[docs:sync] ERROR: ${error.message}`);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error(`[docs:sync] ERROR: ${error.message}`);
+    process.exit(1);
+  }
 }
+
+module.exports = {
+  collectPlanningDocs,
+  generatePlanningIndexes,
+  inferPlanningType,
+  main,
+  shouldIncludePlanningDoc,
+  splitFrontmatter,
+};

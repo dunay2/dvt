@@ -200,7 +200,7 @@ Additional enforcement surface:
 | [docs/planning/status/generated-spec-traceability.md](generated-spec-traceability.md)       | `generated status`     | Generated spec traceability report.                                   |
 | [docs/planning/status/release-please-continuous.md](release-please-continuous.md)           | `status`               | Release process status.                                               |
 | [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md) | `status`               | Current truth by layer, gap posture, and reading order.               |
-| [docs/planning/gaps/GAP_EXECUTION_PLANS.md](../gaps/GAP_EXECUTION_PLANS.md)                 | `planning gap control` | Active gap execution posture and closure criteria.                    |
+| [docs/planning/gaps/index.md](../gaps/index.md)                                             | `planning gap control` | Active gap execution posture and closure criteria.                    |
 | [docs/risk-register/index.md](../../risk-register/index.md)                                 | `risk`                 | Open risks that still require mitigation or acceptance.               |
 | [docs/evidence/index.md](../../evidence/index.md)                                           | `evidence`             | Validation proof for closed or hardened work.                         |
 | [docs/runbooks/index.md](../../runbooks/index.md)                                           | `operations`           | Runtime procedures, incident response, and worker operation guidance. |

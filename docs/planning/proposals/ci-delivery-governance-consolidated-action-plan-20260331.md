@@ -196,11 +196,10 @@ Why this matters:
 Some governance paths still tolerate missing canonical files or stale references
 without hard failure:
 
-- `docs-quality-check` includes `docs/planning/gaps/GAP_EXECUTION_PLANS.md` in
-  required lists, but skips checks when that file is absent.
-- active governance inventories still carry references to
-  `docs/planning/gaps/GAP_EXECUTION_PLANS.md` even though current active gap
-  posture moved to `docs/planning/gaps/index.md` and archived gap docs.
+- `docs-quality-check` now fails closed when a required canonical surface is
+  missing, instead of silently skipping it.
+- active governance inventories now point to `docs/planning/gaps/index.md` as
+  the current gap hub, with archived gap docs retained separately.
 
 Why this matters:
 
