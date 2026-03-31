@@ -97,8 +97,8 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - Verified on: `2026-03-31`
 - Total tasks: `12`
 - Total effort points: `62`
-- Completed weighted points: `0`
-- Lane progress: `0%`
+- Completed weighted points: `4.75`
+- Lane progress: `8%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -106,24 +106,24 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 > Verified registry source: `agent-lane-e.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
 - [ ] `P0` `MVP-E1` `blocked` `M` `5pt` `0%`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
-- [ ] `P0` `F-01` `queued` `M` `5pt` `0%`: clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
-- [ ] `P0` `F-02` `queued` `S` `3pt` `0%`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
-- [ ] `P0` `F-03` `blocked` `M` `5pt` `0%`: wire real backend health state into the top bar and a global degraded/offline banner.
+- [ ] `P0` `F-01` `queued` `M` `5pt` `0%`: clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
+- [x] `P0` `F-02` `done` `S` `3pt` `100%`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
+- [ ] `P0` `F-03` `in_progress` `M` `5pt` `35%`: wire real backend health state into the top bar and a global degraded/offline banner.
 - [ ] `P1` `F-04` `queued` `M` `5pt` `0%`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
 - [ ] `P1` `F-05` `blocked` `M` `5pt` `0%`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
 - [ ] `P1` `F-06` `blocked` `M` `5pt` `0%`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.
 - [ ] `P2` `F-07` `blocked` `M` `3pt` `0%`: define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend is ready before backend endpoints land.
-- [ ] `P2` `F-08` `blocked` `L` `8pt` `0%`: integrate the Plan → Run core flow from canvas selection through to run start using real API when available, with a typed adapter for mock when not.
-- [ ] `P2` `F-09` `blocked` `M` `5pt` `0%`: wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
+- [ ] `P2` `F-08` `blocked` `L` `8pt` `0%`: integrate the Plan -> Run core flow from canvas selection through to run start using real API when available, with a typed adapter for mock when not.
+- [ ] `P2` `F-09` `blocked` `M` `5pt` `0%`: wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
 - [ ] `P2` `F-10` `blocked` `M` `5pt` `0%`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
 - [ ] `P3` `F-11` `blocked` `L` `8pt` `0%`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
 
 ## Dependencies
 
 - `MVP-E1` remains blocked on the acceptance of `MVP-A1` and `MVP-B1` so the frontend does not overclaim backend behavior.
-- `F-01`, `F-02`, and `F-04` remain the first independent frontend execution slices.
+- `F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.
 - `F-08` through `F-11` remain blocked by backend endpoint delivery and must stay contracts-first.
-- No lane-E task in this pass has accepted implementation evidence yet; the lane is a verified backlog rather than an active build stream.
+- `F-02` now has accepted implementation evidence and establishes the first capability-module pattern for Lane E; `F-03` is partially advanced but not yet complete.
 
 ## Expected Outcome
 
@@ -131,5 +131,5 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - real backend health state is always visible
 - mock and API modes are explicitly separated
 - store responsibilities are decomposed by domain
-- core flow (Plan → Run → Monitor) works with real data
+- core flow (Plan -> Run -> Monitor) works with real data
 - secondary views activate progressively via feature flags

@@ -11,7 +11,7 @@ expected_outcome:
   - real backend health state is always visible
   - mock and API modes are explicitly separated
   - store responsibilities are decomposed by domain
-  - core flow (Plan → Run → Monitor) works with real data
+  - core flow (Plan -> Run -> Monitor) works with real data
   - secondary views activate progressively via feature flags
 header_markdown: >
   Eres Eva, una ingeniero frontend experta en React, TypeScript y sistemas de diseno, y te
@@ -161,7 +161,7 @@ tasks:
     priority: P0
     status: queued
     objective: >-
-      clean up the shell — remove redundant sidebar headers, keep nav icon-only with tooltips, unify
+      clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify
       secondary controls into a contextual menu.
     dependency: none
     target: >-
@@ -179,25 +179,30 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: F-02
     priority: P0
-    status: queued
+    status: done
     objective: >-
       implement a typed API client covering the existing health endpoints (healthz, readyz, version,
       db/ready).
     dependency: none
     target: >-
-      app/services/platform-client.ts with typed request/response shapes and error handling. No mock
-      fallback in this client — it talks to real backend only.
+      apps/web/src/capabilities/platform-health/** provides the canonical frontend capability
+      boundary for platform health, with DTO contracts, frontend projection models, infrastructure
+      adapters, application facade, and query wrapper. No mock fallback in this capability - it
+      talks to the real backend only.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason: Typed platform client remains planned but unstarted.
+      - docs/architecture/frontend/planning/frontend-planning-capability-architecture.md
+      - docs/planning/closeouts/F-02-closeout.md
+    status_reason: >-
+      Platform health now ships as a dedicated frontend capability with explicit DTO, domain,
+      adapter, and query layers, and the legacy service/query path has been removed.
     last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: blocked
+    status: in_progress
     objective: wire real backend health state into the top bar and a global degraded/offline banner.
     dependency: F-02
     target: >-
@@ -205,11 +210,13 @@ tasks:
       offline states with retry and backoff. No mock connectivity state anywhere in the shell.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason: Real backend health wiring remains planned but unstarted.
+      - docs/planning/closeouts/F-02-closeout.md
+    status_reason: >-
+      TopAppBar and Admin now consume the real platform-health capability, but the persistent
+      degraded/offline banner and retry UX are still missing.
     last_verified: '2026-03-31'
   - task_id: F-04
     priority: P1
@@ -256,7 +263,7 @@ tasks:
     dependency: F-05
     target: >-
       TanStack Query installed and configured. Health queries wired. Invalidation strategy
-      documented per domain. Views use useQuery/useMutation — no ad-hoc fetch calls.
+      documented per domain. Views use useQuery/useMutation - no ad-hoc fetch calls.
     complexity: M
     effort_points: 5
     progress_pct: 0
@@ -287,7 +294,7 @@ tasks:
     priority: P2
     status: blocked
     objective: >-
-      integrate the Plan → Run core flow from canvas selection through to run start using real API
+      integrate the Plan -> Run core flow from canvas selection through to run start using real API
       when available, with a typed adapter for mock when not.
     dependency: F-07
     target: >-
@@ -306,7 +313,7 @@ tasks:
     priority: P2
     status: blocked
     objective:
-      wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
+      wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
     dependency: F-08
     target: >-
       RunsView shows real run list. RunView shows real run detail. Status updates via polling or SSE
@@ -356,20 +363,20 @@ dependency_notes:
   - >-
     `MVP-E1` remains blocked on the acceptance of `MVP-A1` and `MVP-B1` so the frontend does not
     overclaim backend behavior.
-  - '`F-01`, `F-02`, and `F-04` remain the first independent frontend execution slices.'
+  - '`F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.'
   - '`F-08` through `F-11` remain blocked by backend endpoint delivery and must stay
     contracts-first.'
   - >-
-    No lane-E task in this pass has accepted implementation evidence yet; the lane is a verified
-    backlog rather than an active build stream.
+    `F-02` now has accepted implementation evidence and establishes the first capability-module
+    pattern for Lane E; `F-03` is partially advanced but not yet complete.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-03-31'
   total_tasks: 12
   total_effort_points: 62
-  completed_weighted_points: 0
-  lane_progress_pct: 0
+  completed_weighted_points: 4.75
+  lane_progress_pct: 8
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

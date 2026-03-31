@@ -1,14 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type { PlatformConnectionState } from '../../capabilities/platform-health';
 
-import { DbtNode, Run, ExecutionPlan } from '../types/dbt';
+import { Run, ExecutionPlan } from '../types/dbt';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from './sessionStore';
-
-interface ConnectionStatus {
-  rest: 'ok' | 'degraded' | 'offline';
-  liveEvents: 'connected' | 'polling' | 'disconnected';
-}
 
 type CanvasPosition = {
   x: number;
@@ -61,7 +57,7 @@ interface AppState {
   activeTabId: string | null;
 
   // Connection status
-  connectionStatus: ConnectionStatus;
+  connectionStatus: PlatformConnectionState;
 
   // Current execution plan & run
   currentPlan: ExecutionPlan | null;
@@ -100,7 +96,7 @@ interface AppState {
   addTab: (tab: { id: string; type: TabType; label: string; data?: any }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
-  setConnectionStatus: (status: Partial<ConnectionStatus>) => void;
+  setConnectionStatus: (status: Partial<PlatformConnectionState>) => void;
   setCurrentPlan: (plan: ExecutionPlan | null) => void;
   setCurrentRun: (run: Run | null) => void;
   setInspectorNode: (nodeId: string | null) => void;
@@ -181,10 +177,15 @@ export const useAppStore = create<AppState>()(
       toggleInspectorPanel: () =>
         set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible })),
       toggleConsolePanel: () =>
-        set((state) => ({
-          consolePanelVisible: !state.consolePanelVisible,
-          consolePanelHeight: !state.consolePanelVisible ? 160 : 0,
-        })),
+        set((state) => {
+          const isConsolePanelVisible = state.consolePanelVisible;
+          const nextConsolePanelVisible = !isConsolePanelVisible;
+
+          return {
+            consolePanelVisible: nextConsolePanelVisible,
+            consolePanelHeight: nextConsolePanelVisible ? 160 : 0,
+          };
+        }),
       setGridSize: (size: number) => set({ gridSize: size }),
       setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
       toggleImpactOverlay: () =>
