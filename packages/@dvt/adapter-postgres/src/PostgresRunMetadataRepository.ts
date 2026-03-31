@@ -6,6 +6,7 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { RunNotFoundError, TenantAccessDeniedError } from '@dvt/engine';
 import type { PoolClient } from 'pg';
 
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
@@ -163,7 +164,7 @@ export class PostgresRunMetadataRepository {
     );
     const existingTenantId = existing.rows[0]?.tenant_id;
     if (existingTenantId && existingTenantId !== meta.tenantId) {
-      throw new Error(`TENANT_SCOPE_VIOLATION: ${meta.runId}`);
+      throw new TenantAccessDeniedError(meta.tenantId);
     }
 
     await client.query(
@@ -225,7 +226,7 @@ export class PostgresRunMetadataRepository {
     );
     const tenantId = result.rows[0]?.tenant_id;
     if (!tenantId) {
-      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
     return tenantId;
   }
@@ -334,7 +335,7 @@ export class PostgresRunMetadataRepository {
       )
     );
     if (!result.rowCount) {
-      throw new Error(`RUN_NOT_FOUND_OR_FORBIDDEN: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
   }
 
@@ -371,7 +372,7 @@ export class PostgresRunMetadataRepository {
 
       const row = result.rows[0];
       if (!row) {
-        throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
+        throw new RunNotFoundError(sourceRunId);
       }
 
       return {

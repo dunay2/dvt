@@ -59,8 +59,8 @@ last_reviewed: 2026-03-31
     mitigation: repository-wide search before finalizing and explicit closeout
     note if discovered
   - risk: reopened scope accidentally expands into unrelated adapter internals
-    mitigation: limit typed not-found lifting to the maintenance boundary and
-    document remaining metadata-repository legacy as out of scope
+    mitigation: keep the slice focused on typed not-found and authorization
+    boundaries with direct adapter tests
 - Out-of-scope items:
   success payload redesign, unrelated metadata-repository string errors outside
   the `rebuildSnapshot`/HTTP boundary, frontend compatibility layer by default
@@ -123,6 +123,10 @@ last_reviewed: 2026-03-31
   `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts` and enforcing them
   in `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts` with
   `RunNotFoundError`.
+- Removed the remaining run-metadata stringly boundary in
+  `packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts` by
+  replacing `RUN_NOT_FOUND*` and `TENANT_SCOPE_VIOLATION` throws with typed
+  engine errors.
 - Moved `adminRoutes.ts` to the shared runtime mapper and removed the legacy
   `RUN_NOT_FOUND` message-text parsing path.
 - Updated unit, route, app, and integration-facing tests to assert the new
@@ -136,6 +140,8 @@ last_reviewed: 2026-03-31
     returns for conflicting plan inputs and invalid plan refs
   - `PostgresRunSnapshotStore.test.ts` asserts typed not-found behavior for
     missing or cross-tenant rebuild paths
+  - `PostgresRunMetadataRepository.test.ts` and `smoke.test.ts` assert typed
+    `RunNotFoundError` / `TenantAccessDeniedError` behavior on metadata paths
 - Added evidence/risk artifacts for the reopened boundary hardening slice.
 
 ## Validation
@@ -175,7 +181,5 @@ last_reviewed: 2026-03-31
 - No compatibility shim for the legacy `{ error, code }` payload was retained by
   default.
 - No stubs, placeholders, or fake success paths were introduced.
-- Existing unrelated stringly errors in
-  `packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts` remain
-  outside this slice; they were not introduced by this work and are documented
-  as residual, out-of-scope adapter legacy rather than hidden debt.
+- No residual stringly `RUN_NOT_FOUND*` or `TENANT_SCOPE_VIOLATION` boundaries
+  remain in the corrected HTTP and run-metadata paths.

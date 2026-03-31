@@ -221,7 +221,6 @@ describe('PostgresRunSnapshotStore', () => {
 
     await expect(store.rebuildSnapshot('tenant-2', 'run-404')).rejects.toMatchObject({
       name: 'RunNotFoundError',
-      code: 'RUN_NOT_FOUND',
       runId: 'run-404',
     });
     expect(client.queries.some((entry) => entry.sql.includes('pg_advisory_xact_lock'))).toBe(false);

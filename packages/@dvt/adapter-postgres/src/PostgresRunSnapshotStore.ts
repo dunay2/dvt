@@ -209,8 +209,8 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
   }
 
   /**
-   * ADR-0004 §2.2 — Full event replay from runSeq=1, overwrites the materialized snapshot.
-   * ADR-0031 — Tenant isolation verified before replay; throws RUN_NOT_FOUND on mismatch.
+   * ADR-0004 section 2.2 - Full event replay from runSeq=1 overwrites the materialized snapshot.
+   * ADR-0031 - Tenant isolation is verified before replay; mismatches raise RunNotFoundError.
    */
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
     return this.withTransaction(async (client) => {
@@ -231,7 +231,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       // Acquire per-run advisory lock to prevent concurrent snapshot mutations.
       await this.acquireRunLock(client, runId);
 
-      // ADR-0004 §2.2: replay MUST use runSeq ASC.
+      // ADR-0004 section 2.2: replay MUST use runSeq ASC.
       const eventsResult = await client.query<EventPayloadRow>(
         `
           SELECT payload

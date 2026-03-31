@@ -28,8 +28,8 @@ evidence:
 ## Summary
 
 This evidence note records the reopened `RC-C1` hardening pass that removed the
-remaining active HTTP-boundary legacy and lifted `rebuildSnapshot` not-found
-handling to a typed maintenance-boundary contract.
+remaining active HTTP-boundary legacy and lifted adapter-side run metadata and
+snapshot not-found handling to typed boundary contracts.
 
 ## What changed
 
@@ -41,6 +41,9 @@ handling to a typed maintenance-boundary contract.
 - `IRunStateStoreMaintenance.rebuildSnapshot` now documents a typed
   `RUN_NOT_FOUND` contract and the Postgres snapshot-store implementation
   enforces it with `RunNotFoundError`.
+- `PostgresRunMetadataRepository` now emits typed `RunNotFoundError` and
+  `TenantAccessDeniedError` values instead of stringly `RUN_NOT_FOUND*` or
+  `TENANT_SCOPE_VIOLATION` exceptions.
 
 ## Negative coverage added
 
@@ -50,12 +53,5 @@ handling to a typed maintenance-boundary contract.
   `httpErrorMapper.test.ts`.
 - Start-run parser helper regressions now lock semantic issues for conflicting
   plan inputs and invalid plan refs.
-- Snapshot rebuild tests now assert typed not-found behavior for missing and
-  cross-tenant cases.
-
-## Residual scope note
-
-Unrelated stringly errors still exist in
-`packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts`. They are
-not on the corrected `rebuildSnapshot` maintenance boundary and were left out of
-this slice to avoid mixing distinct invariants under `RC-C1`.
+- Snapshot rebuild and run-metadata tests now assert typed not-found behavior
+  for missing and cross-tenant cases.
