@@ -106,11 +106,21 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - [ ] `P2` `F-09`: wire RunsView to real GET /runs and GET /runs/:id data — list, detail, and status polling.
 - [ ] `P2` `F-10`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
 - [ ] `P3` `F-11`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
+- [ ] `P0` `WP-01A`: create `WorkbenchScreen` as the `/canvas` composition root and reduce `Canvas.tsx` to a thin route entry.
+- [ ] `P0` `WP-01B`: replace the current shell chrome with `WorkbenchHeader` and `WorkbenchNavRail` components with stable responsibilities.
+- [ ] `P0` `WP-01C`: introduce `WorkbenchPanelsLayout` to own focus-mode and resizable panel composition.
+- [ ] `P1` `WP-01D`: create `CanvasWorkspace` and `WorkbenchCommandBar` backed by a mapped `WorkbenchScreenModel` instead of broad prop drilling.
+- [ ] `P1` `WP-01E`: productize `ExplorerPanel`, `InspectorSurface`, and `InspectorTabHost` while preserving plugin contracts.
+- [ ] `P0` `WP-01F`: add component-level tests and regression coverage around the new workbench product surface.
 
 ## Dependencies
 
 - `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
 - F-01, F-02, F-04 are independent and can start in parallel.
+- `WP-01A`, `WP-01B`, and `WP-01C` are the canonical workbench composition sequence for the
+- saved workbench-core product plan.
+- `F-01` remains a shell-cleanup task and must not be treated as the replacement for `WP-01`.
+- Any residual shell polish after `WP-01B` and `WP-01C` can be evaluated against `F-01` later.
 - F-03 depends on F-02.
 - F-05 depends on F-04.
 - F-06 depends on F-05.

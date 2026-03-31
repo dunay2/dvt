@@ -44,6 +44,7 @@ gap between visual breadth and production-backed behavior.
 - the canonical frontend state ownership and persistence policy;
 - the canonical current-reality matrix for target-versus-current drift;
 - the canonical frontend architecture guardrails for drift prevention;
+- the saved product componentization plan for the workbench core;
 - the intended Canvas -> Plan -> Run -> Monitor interaction path;
 - the current backend boundary the UI is allowed to rely on;
 - the coverage map of what is already architecturally decided and what remains open;
@@ -65,17 +66,18 @@ gap between visual breadth and production-backed behavior.
 8. [Frontend State Ownership And Persistence Policy](frontend-state-ownership-and-persistence-policy.md)
 9. [Frontend Current Reality Matrix](review/frontend-current-reality-matrix.md)
 10. [Frontend Architecture Guardrails](frontend-architecture-guardrails.md)
-11. [App Shell](appshell/app-shell.md)
-12. [Workspace Domain Specification](workspace/workspace-domain-specification.md)
-13. [Workspace Session Model Specification](workspace/session/workspace-session-model-specification.md)
-14. [Selection Context Model Specification](workspace/selection-context-model-specification.md)
-15. [Workspace Tab Model Specification](workspace/workspace-tab-model-specification.md)
-16. [Workspace Layout Model Specification](workspace/workspace-layout-model-specification.md)
-17. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace/workspace-orchestration.md)
-18. [Workflow / Graph Workbench - Surfaces and Operating Modes](views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
-19. [Frontend Architecture - Planning Capability](planning/frontend-planning-capability-architecture.md)
-20. [Runs Frontend Architecture](runs/dvt-runs-frontend-architecture.md)
-21. [Frontend Architecture Review and Critical Action Plan](review/frontend-architecture-review-and-critical-action-plan.md)
+11. [Frontend Workbench Core Product Componentization Plan](review/frontend-workbench-core-product-componentization-plan.md)
+12. [App Shell](appshell/app-shell.md)
+13. [Workspace Domain Specification](workspace/workspace-domain-specification.md)
+14. [Workspace Session Model Specification](workspace/session/workspace-session-model-specification.md)
+15. [Selection Context Model Specification](workspace/selection-context-model-specification.md)
+16. [Workspace Tab Model Specification](workspace/workspace-tab-model-specification.md)
+17. [Workspace Layout Model Specification](workspace/workspace-layout-model-specification.md)
+18. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace/workspace-orchestration.md)
+19. [Workflow / Graph Workbench - Surfaces and Operating Modes](views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
+20. [Frontend Architecture - Planning Capability](planning/frontend-planning-capability-architecture.md)
+21. [Runs Frontend Architecture](runs/dvt-runs-frontend-architecture.md)
+22. [Frontend Architecture Review and Critical Action Plan](review/frontend-architecture-review-and-critical-action-plan.md)
 
 ## Current Reality Reading
 

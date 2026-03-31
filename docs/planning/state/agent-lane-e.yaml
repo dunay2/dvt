@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: 2026-03-29
+last_reviewed: 2026-03-31
 goal:
   Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
   contracts.
@@ -220,10 +220,71 @@ tasks:
     target:
       ArtifactsView and DiffView work on real data. Level-C views (Lineage, Cost, Plugins, Admin)
       are hidden by default and activatable by role or flag. No mock data in any active view.
+  - task_id: WP-01A
+    priority: P0
+    status: queued
+    objective: >-
+      create `WorkbenchScreen` as the `/canvas` composition root and reduce `Canvas.tsx` to a thin
+      route entry.
+    dependency: none
+    target: >-
+      `/canvas` renders through `WorkbenchScreen` and `Canvas.tsx` stops orchestrating the whole
+      surface directly.
+  - task_id: WP-01B
+    priority: P0
+    status: queued
+    objective: >-
+      replace the current shell chrome with `WorkbenchHeader` and `WorkbenchNavRail` components with
+      stable responsibilities.
+    dependency: WP-01A
+    target: >-
+      header and nav responsibilities are explicit and route/navigation behavior is preserved.
+  - task_id: WP-01C
+    priority: P0
+    status: queued
+    objective: >-
+      introduce `WorkbenchPanelsLayout` to own focus-mode and resizable panel composition.
+    dependency: WP-01A
+    target: >-
+      layout logic moves behind one product component and panel rules stop being spread across
+      shell/view files.
+  - task_id: WP-01D
+    priority: P1
+    status: queued
+    objective: >-
+      create `CanvasWorkspace` and `WorkbenchCommandBar` backed by a mapped `WorkbenchScreenModel`
+      instead of broad prop drilling.
+    dependency: WP-01A, WP-01C
+    target: >-
+      the center workbench surface reads as one module and command actions remain wired for
+      plan/run/layout/overlay behavior.
+  - task_id: WP-01E
+    priority: P1
+    status: queued
+    objective: >-
+      productize `ExplorerPanel`, `InspectorSurface`, and `InspectorTabHost` while preserving plugin
+      contracts.
+    dependency: WP-01C, WP-01D
+    target: >-
+      explorer and inspector become explicit product surfaces and plugin tabs still render through
+      existing registry contracts.
+  - task_id: WP-01F
+    priority: P0
+    status: queued
+    objective: >-
+      add component-level tests and regression coverage around the new workbench product surface.
+    dependency: WP-01B, WP-01C, WP-01D, WP-01E
+    target: >-
+      the new shell and workbench components have focused coverage and no route/plugin regression is
+      introduced.
 
 dependency_notes: |
   - `MVP-E1` depends on `MVP-A1` and `MVP-B1` so frontend assumptions map to verified backend truth.
   - F-01, F-02, F-04 are independent and can start in parallel.
+  - `WP-01A`, `WP-01B`, and `WP-01C` are the canonical workbench composition sequence for the
+    saved workbench-core product plan.
+  - `F-01` remains a shell-cleanup task and must not be treated as the replacement for `WP-01`.
+  - Any residual shell polish after `WP-01B` and `WP-01C` can be evaluated against `F-01` later.
   - F-03 depends on F-02.
   - F-05 depends on F-04.
   - F-06 depends on F-05.
