@@ -16,6 +16,9 @@
 # Ensure you're on the correct branch
 git checkout <your-partition-branch>
 
+# Preferred deterministic docs PR path
+pnpm docs:pr:create -- --title "docs(docs): Subject" --body-file .github/PR_BODY.md
+
 # Create PR
 gh pr create \
   --title "refactor: partition WORKFLOW_ENGINE.md + separate storage/engine adapters" \
