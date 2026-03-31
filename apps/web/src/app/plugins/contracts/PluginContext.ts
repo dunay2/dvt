@@ -1,5 +1,5 @@
 import type { ApiClient } from '../../services/api/createApiClient';
-import type { ConnectionStatus } from '../../queries/usePlatformHealthQuery';
+import type { PlatformConnectionState } from '../../../capabilities/platform-health';
 import type { RunContext } from '../../types/engine';
 import type { LocalizableString, PluginCapabilityId, RegisteredPlugin } from './PluginManifest';
 
@@ -55,7 +55,7 @@ export interface PluginContext {
 
   /** Platform health state */
   platform: {
-    connectionStatus: ConnectionStatus;
+    connectionStatus: PlatformConnectionState;
     isReady: boolean;
   };
 

@@ -1,12 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Outlet } from 'react-router';
+import {
+  selectPlatformConnectionState,
+  usePlatformHealthSnapshotQuery,
+} from '../capabilities/platform-health';
 
 import Console from './components/Console';
 import LeftNavigation from './components/LeftNavigation';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
-import { deriveConnectionStatus, usePlatformHealthQuery } from './queries/usePlatformHealthQuery';
 import { useAppStore } from './stores/appStore';
 import '@xyflow/react/dist/style.css';
 
@@ -19,23 +22,31 @@ const queryClient = new QueryClient({
   },
 });
 
+function getPlatformHealthErrorMessage(
+  platformHealth: ReturnType<typeof usePlatformHealthSnapshotQuery>
+): string | null {
+  if (!platformHealth.isError) {
+    return null;
+  }
+
+  return platformHealth.error instanceof Error
+    ? platformHealth.error.message
+    : 'Unknown platform health query error';
+}
+
 function RootShell() {
   const { focusMode, consolePanelHeight, consolePanelVisible, setConnectionStatus } = useAppStore();
-  const platformHealth = usePlatformHealthQuery();
+  const platformHealth = usePlatformHealthSnapshotQuery();
 
   useEffect(() => {
     if (platformHealth.isPending && !platformHealth.data && !platformHealth.isError) {
       return;
     }
 
-    setConnectionStatus(deriveConnectionStatus(platformHealth.data, platformHealth.isError));
+    setConnectionStatus(selectPlatformConnectionState(platformHealth.data, platformHealth.isError));
   }, [platformHealth.data, platformHealth.isError, platformHealth.isPending, setConnectionStatus]);
 
-  const errorMessage = platformHealth.isError
-    ? platformHealth.error instanceof Error
-      ? platformHealth.error.message
-      : 'Unknown platform health query error'
-    : null;
+  const errorMessage = getPlatformHealthErrorMessage(platformHealth);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">

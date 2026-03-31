@@ -14,6 +14,12 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import {
+  selectPlatformConnectionState,
+  type PlatformConnectionState,
+  type PlatformHealthSnapshot,
+  usePlatformHealthSnapshotQuery,
+} from '../../capabilities/platform-health';
 
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -31,11 +37,61 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
 import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
-import { deriveConnectionStatus, usePlatformHealthQuery } from '../queries/usePlatformHealthQuery';
 import { resolveDataSource } from '../services/config/dataSource';
 import { createWorkspaceService } from '../services/workspace/workspaceService';
 
 const workspaceService = createWorkspaceService(resolveDataSource());
+
+function getBackendStatusLabel(restStatus: PlatformConnectionState['rest']): string {
+  switch (restStatus) {
+    case 'ok':
+      return 'Online';
+    case 'degraded':
+      return 'Degraded';
+    default:
+      return 'Offline';
+  }
+}
+
+function getReadyzSummary(snapshot: PlatformHealthSnapshot | undefined): string {
+  const readyzData = snapshot?.readyz.data;
+
+  if (readyzData && 'reasonCode' in readyzData) {
+    return readyzData.reasonCode;
+  }
+
+  return 'readyz endpoint healthy';
+}
+
+function getCapabilitiesEmptyState(isLoading: boolean, hasError: boolean): string {
+  if (isLoading) {
+    return 'Loading capabilities...';
+  }
+
+  if (hasError) {
+    return 'Capabilities endpoint unavailable.';
+  }
+
+  return 'No capability data.';
+}
+
+function filterAuditEntries<TEntry extends { user: string; action: string; resource: string }>(
+  auditLog: readonly TEntry[],
+  searchQuery: string
+): TEntry[] {
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return [...auditLog];
+  }
+
+  return auditLog.filter(
+    (entry) =>
+      entry.user.toLowerCase().includes(normalizedQuery) ||
+      entry.action.toLowerCase().includes(normalizedQuery) ||
+      entry.resource.toLowerCase().includes(normalizedQuery)
+  );
+}
 
 function StatusBadge({
   ok,
@@ -54,7 +110,7 @@ function StatusBadge({
 
 export default function AdminView() {
   const [searchQuery, setSearchQuery] = useState('');
-  const platformHealth = usePlatformHealthQuery();
+  const platformHealth = usePlatformHealthSnapshotQuery();
   const capabilities = useCapabilitiesQuery();
   const rolesQuery = useQuery({
     queryKey: ['workspace', 'roles'],
@@ -66,16 +122,11 @@ export default function AdminView() {
   });
   const roles = rolesQuery.data ?? [];
   const auditLog = auditQuery.data ?? [];
-  const connectionStatus = deriveConnectionStatus(platformHealth.data, platformHealth.isError);
-
-  const filteredAuditLog = searchQuery
-    ? auditLog.filter(
-        (entry) =>
-          entry.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          entry.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          entry.resource.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : auditLog;
+  const connectionStatus = selectPlatformConnectionState(
+    platformHealth.data,
+    platformHealth.isError
+  );
+  const filteredAuditLog = filterAuditEntries(auditLog, searchQuery);
 
   return (
     <div className="flex h-full flex-col bg-slate-950">
@@ -119,11 +170,7 @@ export default function AdminView() {
                         Backend status
                       </div>
                       <div className="mt-2 text-lg font-semibold">
-                        {connectionStatus.rest === 'ok'
-                          ? 'Online'
-                          : connectionStatus.rest === 'degraded'
-                            ? 'Degraded'
-                            : 'Offline'}
+                        {getBackendStatusLabel(connectionStatus.rest)}
                       </div>
                     </div>
                     <Activity
@@ -169,10 +216,7 @@ export default function AdminView() {
                     <Link2 className="size-5 text-violet-400" />
                   </div>
                   <div className="mt-4 text-sm text-slate-400">
-                    {platformHealth.data?.readyz.data &&
-                    'reasonCode' in platformHealth.data.readyz.data
-                      ? platformHealth.data.readyz.data.reasonCode
-                      : 'readyz endpoint healthy'}
+                    {getReadyzSummary(platformHealth.data)}
                   </div>
                 </Card>
 
@@ -235,8 +279,8 @@ export default function AdminView() {
                         />
                       </div>
                       <div className="text-xs text-slate-400">
-                        {platformHealth.data?.readyz.available
-                          ? (platformHealth.data?.readyz.error ?? 'endpoint responded')
+                        {platformHealth.data?.readyz.availability === 'available'
+                          ? (platformHealth.data?.readyz.error?.message ?? 'endpoint responded')
                           : 'endpoint not enabled'}
                       </div>
                       <div className="mt-2 text-[11px] text-slate-500">
@@ -249,14 +293,14 @@ export default function AdminView() {
                       <div className="mb-2 flex items-center justify-between">
                         <span className="text-sm font-medium">/version</span>
                         <StatusBadge
-                          ok={platformHealth.data?.version.available === true}
+                          ok={platformHealth.data?.version.availability === 'available'}
                           label={platformHealth.data?.version.statusCode?.toString() ?? 'n/a'}
                         />
                       </div>
                       <div className="font-mono text-xs text-slate-400">
                         {platformHealth.data?.version.data
                           ? `${platformHealth.data.version.data.name}@${platformHealth.data.version.data.version}`
-                          : (platformHealth.data?.version.error ?? 'endpoint not enabled')}
+                          : (platformHealth.data?.version.error?.message ?? 'endpoint not enabled')}
                       </div>
                       <div className="mt-2 text-[11px] text-slate-500">
                         HTTP {platformHealth.data?.version.statusCode ?? 'n/a'} -{' '}
@@ -274,7 +318,7 @@ export default function AdminView() {
                       </div>
                       <div className="text-xs text-slate-400">
                         {platformHealth.data?.dbReady.data?.reason ??
-                          platformHealth.data?.dbReady.error ??
+                          platformHealth.data?.dbReady.error?.message ??
                           'endpoint not enabled'}
                       </div>
                       <div className="mt-2 text-[11px] text-slate-500">
@@ -360,11 +404,10 @@ export default function AdminView() {
                           ))
                         ) : (
                           <div className="text-sm text-slate-400">
-                            {capabilities.isLoading
-                              ? 'Loading capabilities...'
-                              : capabilities.error
-                                ? 'Capabilities endpoint unavailable.'
-                                : 'No capability data.'}
+                            {getCapabilitiesEmptyState(
+                              capabilities.isLoading,
+                              Boolean(capabilities.error)
+                            )}
                           </div>
                         )}
                       </div>
@@ -419,7 +462,7 @@ export default function AdminView() {
                         <span className="text-xs">
                           {perm
                             .replace('can', '')
-                            .replace(/([A-Z])/g, ' $1')
+                            .replaceAll(/([A-Z])/g, ' $1')
                             .trim()}
                         </span>
                       </div>
