@@ -75,5 +75,4 @@ describe('runCommandFieldParsers', () => {
       expect(parseOptionalReason(undefined)).toBeUndefined();
     });
   });
-
 });
