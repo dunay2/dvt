@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
@@ -22,6 +23,10 @@ import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/
 import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
+
+import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
+
+const PLANNER_MANIFEST_FIXTURE_URL = new URL('../fixtures/planner/basic-manifest.json', import.meta.url);
 
 function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
   return {
@@ -177,6 +182,29 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
+  it('PlannerFacade resolves manifestRef through the real API artifact resolver', async () => {
+    const planner = new PlannerFacade({
+      resolver: new ManifestArtifactResolver({ nodeEnv: 'test' }),
+    });
+    const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
+
+    const { plan } = await planner.buildPlan({
+      manifestRef: {
+        uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+        sha256: sha256Hex(bytes),
+      },
+      selection: {
+        selectedNodeIds: ['model.analytics.order_items'],
+        includeUpstream: true,
+      },
+    });
+
+    expect(plan.steps.map((step) => step.stepId)).toEqual([
+      'model.analytics.orders',
+      'model.analytics.order_items',
+    ]);
+  });
+
   it('full lifecycle with 3-step DAG', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({

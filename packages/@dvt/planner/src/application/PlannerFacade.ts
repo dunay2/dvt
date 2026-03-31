@@ -41,16 +41,16 @@ import type {
 } from '@dvt/contracts';
 import {
   ContractValidationError,
-  PLANNER_GRAPH_SOURCE_KIND,
   parsePlannerGraphSourceV1,
   parsePlannerInputEnvelopeV2,
 } from '@dvt/contracts';
 
 import { PlannerError, PlannerErrorCode } from '../domain/errors.js';
-import { DeriveNodesCommand, ManifestGraphDeriver } from '../domain/manifest.js';
 import { Planner, type PlannerOptions } from '../domain/Planner.js';
 import type { PlannerInputEnvelopeV2 as DomainEnvelope } from '../domain/types.js';
 import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
+
+import { derivePlannerGraphSourceFromManifest } from './derivePlannerGraphSourceFromManifest.js';
 
 // ── Options ─────────────────────────────────────────────────────────────────
 
@@ -211,10 +211,7 @@ export class PlannerFacade implements IPlanner {
   }
 
   private graphSourceFromManifest(manifest: Record<string, unknown>): PlannerGraphSourceV1 {
-    return {
-      kind: PLANNER_GRAPH_SOURCE_KIND,
-      nodes: new ManifestGraphDeriver().execute(new DeriveNodesCommand(manifest)),
-    };
+    return derivePlannerGraphSourceFromManifest(manifest);
   }
 
   private normalizeManifestRefCacheSize(input: number | undefined): number {

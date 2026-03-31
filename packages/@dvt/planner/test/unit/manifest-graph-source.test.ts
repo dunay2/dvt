@@ -1,0 +1,54 @@
+import { describe, expect, it } from 'vitest';
+
+import { derivePlannerGraphSourceFromManifest, PlannerErrorCode } from '../../src/index.js';
+
+const BASE_MANIFEST = {
+  nodes: {
+    'model.analytics.orders': {
+      resource_type: 'model',
+      depends_on: { nodes: [] },
+    },
+    'test.analytics.orders_not_null': {
+      resource_type: 'test',
+      depends_on: { nodes: ['model.analytics.orders'] },
+    },
+  },
+};
+
+describe('derivePlannerGraphSourceFromManifest', () => {
+  it('derives a typed graph source from a dbt manifest payload', () => {
+    expect(derivePlannerGraphSourceFromManifest(BASE_MANIFEST)).toEqual({
+      kind: 'normalized-graph-v1',
+      nodes: [
+        {
+          nodeId: 'model.analytics.orders',
+          resourceType: 'model',
+          dependsOn: [],
+        },
+        {
+          nodeId: 'test.analytics.orders_not_null',
+          resourceType: 'test',
+          dependsOn: ['model.analytics.orders'],
+        },
+      ],
+    });
+  });
+
+  it('preserves current invalid-input semantics for unsupported manifests', () => {
+    expectInvalidInput(
+      () => derivePlannerGraphSourceFromManifest({ nodes: {} }),
+      'manifest.nodes does not contain supported dbt resources'
+    );
+  });
+});
+
+function expectInvalidInput(fn: () => unknown, messageFragment: string): void {
+  try {
+    fn();
+    throw new Error('expected derivePlannerGraphSourceFromManifest to reject');
+  } catch (error: unknown) {
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error & { code?: string }).code).toBe(PlannerErrorCode.INVALID_INPUT);
+    expect((error as Error).message).toContain(messageFragment);
+  }
+}

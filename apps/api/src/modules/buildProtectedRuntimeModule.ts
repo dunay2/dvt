@@ -30,6 +30,7 @@ import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/Fi
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
+import { ManifestArtifactResolver } from '../infrastructure/planner/ManifestArtifactResolver.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
@@ -200,7 +201,9 @@ export async function buildProtectedRuntimeModule(
       mode: env.DVT_START_RUN_BACKPRESSURE_MODE,
       retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
       delegate: new PlannerBackedStartRunUseCase({
-        planner: new PlannerFacade(),
+        planner: new PlannerFacade({
+          resolver: new ManifestArtifactResolver({ nodeEnv: env.NODE_ENV }),
+        }),
         planStore,
         validator: new StoredPlanExecutabilityValidator({
           fetcher: planStore,

@@ -15,7 +15,11 @@ code_refs:
   - apps/api/src/app.ts
   - apps/api/src/application/services/notImplementedStartRunUseCase.ts
 evidence:
-  tests: []
+  tests:
+    - pnpm --filter @dvt/engine test
+    - pnpm --filter @dvt/adapter-temporal test
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter dvt-api typecheck
   docs:
     - docs/architecture/reference-architecture.md
     - docs/planning/execution-model/dvt-execution-model.md

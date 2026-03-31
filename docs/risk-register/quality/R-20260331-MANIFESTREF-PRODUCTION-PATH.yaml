@@ -1,0 +1,25 @@
+id: R-20260331-MANIFESTREF-PRODUCTION-PATH
+title: manifestRef runtime composition could regress back to documented-but-unwired behavior
+status: Closed
+date: 2026-03-31
+owners:
+  - packages/@dvt/planner
+  - apps/api
+severity: High
+probability: Low
+context: >
+  The planner public contract already declared manifestRef as the canonical production graph source,
+  but apps/api still instantiated PlannerFacade without a concrete artifact resolver and did not
+  translate predictable resolution failures into the existing plan_rejected result.
+risk: >
+  A future change could remove or bypass resolver composition, causing canonical manifestRef input
+  to fail again as INVALID_INPUT or opaque 500s despite remaining documented as the production path.
+mitigations:
+  - PlannerFacade now shares one canonical manifest-to-graph derivation helper across manifest and
+    manifestRef paths.
+  - apps/api composes PlannerFacade with a concrete ManifestArtifactResolver in the protected
+    runtime module.
+  - PlannerBackedStartRunUseCase maps predictable resolver failures to plan_rejected with stable
+    cause tokens.
+  - Unit and integration tests cover helper export, resolver behavior, use-case mapping, and real
+    manifestRef planner/runtime paths.

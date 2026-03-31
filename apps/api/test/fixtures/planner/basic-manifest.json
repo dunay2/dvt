@@ -1,0 +1,22 @@
+{
+  "nodes": {
+    "model.analytics.orders": {
+      "resource_type": "model",
+      "depends_on": {
+        "nodes": []
+      }
+    },
+    "model.analytics.order_items": {
+      "resource_type": "model",
+      "depends_on": {
+        "nodes": ["model.analytics.orders"]
+      }
+    },
+    "test.analytics.orders_not_null": {
+      "resource_type": "test",
+      "depends_on": {
+        "nodes": ["model.analytics.orders"]
+      }
+    }
+  }
+}
