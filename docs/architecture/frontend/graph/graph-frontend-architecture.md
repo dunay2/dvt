@@ -1,4 +1,12 @@
-# Graph — Frontend Architecture
+---
+title: Graph - Frontend Architecture
+status: Draft
+owner: frontend-architecture
+last_reviewed: 2026-03-31
+planning_type: architecture
+---
+
+# Graph - Frontend Architecture
 
 ## 1. Purpose
 

@@ -1,10 +1,9 @@
 ---
 title: Frontend Observability Architecture
-subtitle: Execution Metrics and Workflow Monitoring for DVT+
-document_type: architecture
-status: draft
+status: Review
 owner: frontend-architecture
-last_updated: 2026-03-30
+last_reviewed: 2026-03-31
+planning_type: architecture
 language: es
 ---
 

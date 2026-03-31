@@ -23,11 +23,11 @@ The App Shell should remain thin, stable, and mostly insensitive to the internal
 The App Shell must solve these concerns:
 
 - Provide the persistent frame of the application.
-- Coordinate global navigation and top-level mode switching.
+- Coordinate global navigation and shell-level module switching.
 - Bootstrap shared runtime services.
 - Host shared UI infrastructure such as panels, overlays, notifications, dialogs, and command surfaces.
 - Isolate feature modules behind explicit boundaries.
-- Preserve layout and interaction consistency across modes.
+- Preserve layout and interaction consistency across mounted modules.
 - Support future extensibility without turning into a god component.
 
 ---
@@ -110,7 +110,9 @@ No hidden coupling through ad hoc imports or direct state mutation.
 
 ## 5.4 Persistent UI consistency
 
-Global areas such as header, navigation, status bar, command palette, and notifications should behave consistently regardless of the active mode.
+Global areas such as header, navigation, status bar, command palette, and
+notifications should behave consistently regardless of the active mounted
+module.
 
 ## 5.5 Progressive loading
 
@@ -154,7 +156,7 @@ The shell composes the persistent frame:
 
 The shell chooses which workspace is active and mounts it into the workspace host region.
 
-Typical hosted modes:
+Typical hosted modules:
 
 - ETL mode
 - dbt mode
@@ -168,10 +170,10 @@ Typical hosted modes:
 The shell owns navigation concerns such as:
 
 - current route
-- active mode
+- active moduleId
 - selected workspace context
 - restoration of last open context if required
-- cross-mode navigation transitions
+- cross-module navigation transitions
 
 ## 6.5 Provide cross-cutting interaction surfaces
 
@@ -215,7 +217,7 @@ Defines the persistent visual frame and slots.
 
 ### Navigation Controller
 
-Resolves active route, mode, and navigation state.
+Resolves active route, mounted module, and navigation state.
 
 ### Workspace Host
 
@@ -260,7 +262,7 @@ Suggested responsibilities:
 | `AppProviders`       | Bootstraps global providers                                |
 | `AppShell`           | Composes the persistent frame                              |
 | `ShellHeader`        | Global header, commands, title, environment, quick actions |
-| `ShellSidebar`       | Primary navigation and mode switching                      |
+| `ShellSidebar`       | Primary navigation and module switching                    |
 | `ShellWorkspaceHost` | Main rendering slot for active module                      |
 | `ShellContextPanel`  | Optional contextual side information                       |
 | `ShellStatusBar`     | Status, sync, environment, telemetry summary               |
@@ -285,7 +287,7 @@ Valid shell-owned state:
 
 - active navigation item
 - sidebar collapsed/expanded
-- active top-level mode
+- active moduleId
 - layout density
 - currently opened global overlay
 - active theme
@@ -302,7 +304,7 @@ Valid shell-owned state:
 
 ---
 
-## 10. Routing and mode resolution
+## 10. Routing and module resolution
 
 The App Shell should act as the stable frame around routing, not as a place where routing rules are mixed with feature internals.
 
@@ -318,7 +320,7 @@ sequenceDiagram
 
     U->>R: Navigate to route
     R->>S: Route state update
-    S->>M: Resolve active mode/module
+    S->>M: Resolve active module
     M-->>S: Module descriptor
     S->>W: Mount workspace in host slot
     W-->>S: Expose shell metadata/actions if needed
@@ -326,7 +328,7 @@ sequenceDiagram
 
 A module descriptor may contain:
 
-- mode identifier
+- module identifier
 - lazy loader
 - permissions requirement
 - optional shell configuration overrides
@@ -354,7 +356,10 @@ export interface WorkspaceModuleContract {
 }
 ```
 
-This avoids hardcoding mode behavior directly into the shell.
+The shell owns `moduleId`, but not `workbenchMode`. Workbench interaction policy
+belongs to the mounted workbench and its workspace session.
+
+This avoids hardcoding module behavior directly into the shell.
 
 Recommended contract areas:
 
@@ -494,7 +499,7 @@ sequenceDiagram
     A->>P: Initialize providers
     P->>S: Render shell
     S->>R: Resolve route
-    R-->>S: Active mode = dbt
+    R-->>S: Active moduleId = dbt
     S->>W: Lazy load dbt workspace
     W-->>S: Workspace mounted
     S-->>U: Stable frame + active module visible

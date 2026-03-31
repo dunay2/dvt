@@ -1,9 +1,9 @@
 ---
 title: Git Mode Architecture
-document_type: architecture_note
-status: draft
-owner: frontend
-last_updated: 2026-03-30
+status: Draft
+owner: frontend-architecture
+last_reviewed: 2026-03-31
+planning_type: architecture
 ---
 
 # Git Mode Architecture

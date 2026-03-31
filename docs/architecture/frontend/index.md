@@ -2,7 +2,7 @@
 title: Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-31
 ---
 
 # Frontend Architecture
@@ -34,18 +34,49 @@ gap between visual breadth and production-backed behavior.
 ## What This Section Covers
 
 - shell structure and routing;
+- the target DDD architecture for the frontend;
 - the intended Canvas -> Plan -> Run -> Monitor interaction path;
 - the current backend boundary the UI is allowed to rely on;
+- the coverage map of what is already architecturally decided and what remains open;
+- the execution-oriented work plan for the next five architecture-deepening actions;
+- documentation quality and architectural remediation priorities;
+- phased frontend architecture execution order;
 - where local frontend docs live;
 - which commands verify the client surface today.
 
 ## Canonical Reading Order
 
+1. [Frontend Documentation Quality Review And Remediation Plan](review/frontend-documentation-quality-review-and-remediation-plan.md)
+2. [DVT+ Frontend Architecture Introduction](dvt-frontend-architecture-introduction.md)
+3. [Frontend DDD Target Architecture](frontend-ddd-target-architecture.md)
+4. [Frontend Architecture Execution Plan](frontend-architecture-execution-plan.md)
+5. [Frontend Coverage Map And Open Decision Register](review/frontend-coverage-map-and-open-decision-register.md)
+6. [Frontend Architecture Deepening Work Plan](review/frontend-architecture-deepening-work-plan.md)
+7. [App Shell](appshell/app-shell.md)
+8. [Workspace Domain Specification](workspace/workspace-domain-specification.md)
+9. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace/workspace-orchestration.md)
+10. [Workflow / Graph Workbench - Surfaces and Operating Modes](views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
+11. [Frontend Architecture - Planning Capability](planning/frontend-planning-capability-architecture.md)
+12. [Runs Frontend Architecture](runs/dvt-runs-frontend-architecture.md)
+13. [Frontend Architecture Review and Critical Action Plan](review/frontend-architecture-review-and-critical-action-plan.md)
+
+## Current Reality Reading
+
+When the question is "what exists in code today", read these before assuming
+the target architecture is implemented:
+
 1. [apps/web/README.md](../../../apps/web/README.md)
 2. [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
 3. [apps/web/DOCUMENTATION_INDEX.md](../../../apps/web/DOCUMENTATION_INDEX.md)
 4. [System Delivery Status](../system-delivery-status.md)
-5. [G8 Real Auth Final Spec](../../planning/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
+
+## Reference-Only Notes
+
+These files are still useful context, but they should not be treated as the
+canonical frontend baseline:
+
+- `docs/architecture/frontend/dvt_frontend_architecture_blueprint.md`
+- `docs/architecture/frontend/astproposal.md`
 
 ## Primary Code Anchors
 
@@ -95,8 +126,9 @@ doc must not be the only place where the topic is discoverable.
 
 - No frontend test suite exists yet.
 - Mock-data paths still shape the main UX.
-- The docs are now reachable, but the product boundary is still ahead of the
-  implementation in several views.
+- Several frontend architecture docs still need metadata and editorial
+  normalization.
+- The product boundary is still ahead of the implementation in several views.
 
 If this page becomes stale, frontend documentation becomes misleading again very
 quickly because local docs in `apps/web/` are richer than the published surface.

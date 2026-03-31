@@ -51,6 +51,8 @@ Concept anchors for this page:
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
+- [Frontend Canonicity And Hygiene Improvement Plan](proposals/frontend-canonicity-hygiene-improvement-plan-20260331.md)
+- [Frontend Canonicity And Hygiene Task Board](proposals/frontend-canonicity-hygiene-task-board-20260331.md)
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
 - [MVP Backend Operability Baseline Roadmap](proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [MVP-A1 Backend Contractual Inventory](proposals/mvp-a1-backend-contractual-inventory-20260329.md)

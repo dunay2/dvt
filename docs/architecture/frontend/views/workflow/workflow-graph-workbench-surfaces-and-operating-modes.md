@@ -1,8 +1,9 @@
 ---
-title: Workflow / Graph Workbench — Surfaces and Operating Modes
+title: Workflow / Graph Workbench - Surfaces and Operating Modes
 status: Draft
-owner: front-architecture
-last_reviewed: 2026-03-30
+owner: frontend-architecture
+last_reviewed: 2026-03-31
+planning_type: architecture
 tags:
   - frontend
   - architecture
@@ -11,7 +12,7 @@ tags:
   - graph
 ---
 
-# Workflow / Graph Workbench — Surfaces and Operating Modes
+# Workflow / Graph Workbench - Surfaces and Operating Modes
 
 ## 1. Purpose
 
@@ -65,7 +66,8 @@ A session contains at least:
 - selection and focus state
 - viewport state
 - open panels and layout state
-- active mode
+- active moduleId
+- active workbenchMode
 - validation state
 - optional runtime overlays
 - optional git/diff overlays
@@ -414,7 +416,8 @@ To support the workbench correctly, frontend state should be separated into clea
 
 - active workflow id
 - open tabs
-- active mode
+- active moduleId
+- active workbenchMode
 - layout / dock state
 - active revision / compare target
 
@@ -503,7 +506,7 @@ sequenceDiagram
     W-->>U: update canvas, inspector and problems panel
 
     U->>W: Switch to Lineage mode
-    W->>S: set mode=lineage
+    W->>S: set workbenchMode=lineage
     W->>G: request dependency-focused projection
     G-->>W: lineage subgraph
     W-->>U: render lineage overlays and adjusted surfaces
@@ -612,7 +615,7 @@ Why this slice:
 
 The correct mental model is not:
 
-> “a canvas with some side panels”
+> â€œa canvas with some side panelsâ€
 
 The correct mental model is:
 

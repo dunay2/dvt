@@ -1,17 +1,19 @@
-# DVT+ Frontend Architecture Blueprint (Expanded)
-
-## Raven Plan / DVT UI Architecture — Detailed Version
-
 ---
-
 title: Frontend Architecture Blueprint (Expanded)
-status: Draft
+status: Archived
 owner: frontend-architecture
-last_reviewed: 2026-03-29
-
+last_reviewed: 2026-03-31
+planning_type: architecture
+document_type: reference-note
 ---
 
-# 1. Context
+# Frontend Architecture Blueprint (Expanded)
+
+## Raven Plan / DVT UI Architecture - Detailed Version (Historical Sketch)
+
+This document is retained as a historical reference note. The canonical frontend baseline is defined by `frontend-ddd-target-architecture.md`, `frontend-architecture-execution-plan.md`, and `index.md` in this directory.
+
+## 1. Context
 
 This document defines the **frontend architecture baseline** for DVT+ (Raven Plan).
 
@@ -33,7 +35,7 @@ It extends the previous blueprint with:
 ## 2.1 Separation of Concerns
 
 ```
-UI ≠ Server State ≠ Graph State ≠ Editor State
+UI â‰  Server State â‰  Graph State â‰  Editor State
 ```
 
 ## 2.2 Product Philosophy
@@ -244,7 +246,7 @@ Everything is versioned in Git.
 ## 8.2 Flow
 
 ```
-DSL → Graph → Plan → Export
+DSL â†’ Graph â†’ Plan â†’ Export
 ```
 
 ---
@@ -321,32 +323,32 @@ Backend must provide:
 
 # 11. Timeline (Updated)
 
-## Phase 1 — Foundation
+## Phase 1 â€” Foundation
 
 - Setup project
 - Shell
 
-## Phase 2 — Core UI
+## Phase 2 â€” Core UI
 
 - Runs
 - Navigation
 
-## Phase 3 — Graph
+## Phase 3 â€” Graph
 
 - React Flow
 - GraphDocument
 
-## Phase 4 — Events
+## Phase 4 â€” Events
 
 - Log system
 
-## Phase 5 — DSL
+## Phase 5 â€” DSL
 
 - Editor
 - Parser
 - Preview
 
-## Phase 6 — Advanced
+## Phase 6 â€” Advanced
 
 - Plan Inspector
 - Observability

@@ -78,7 +78,8 @@ A workspace session may include:
 - current project context
 - current environment context
 - active branch context
-- active workspace mode
+- active shell-level module identity
+- active workbench interaction mode where applicable
 - open tabs
 - active tab
 - current layout state
@@ -112,7 +113,8 @@ The workspace owns layout composition across the workbench, including concerns s
 - docking behavior
 - pinned surfaces
 - layout presets
-- mode-driven composition changes
+- module-driven composition changes
+- workbench-mode-driven composition changes
 
 This allows layout behavior to remain product-aware and not merely component-local.
 
@@ -132,9 +134,10 @@ Examples of selectable entities include:
 
 The workspace should provide a stable, workbench-level representation of what is selected and from where that context originated.
 
-### 5.5 Active workspace mode
+### 5.5 Shell-level module selection
 
-The workspace owns the active mode of the workbench, such as:
+The workspace session owns the active shell-level module identity for the
+current work surface:
 
 - design
 - dbt
@@ -143,9 +146,26 @@ The workspace owns the active mode of the workbench, such as:
 - git
 - run-analysis
 
-Mode is a workbench concern because it affects layout, commands, visibility, and the relevance of certain views.
+This is the product perspective mounted by the shell. It selects which
+workspace family is active.
 
-### 5.6 Cross-feature orchestration
+### 5.6 Workbench interaction mode
+
+When the active module exposes a graph workbench, the workspace also owns the
+active interaction mode inside that workbench, such as:
+
+- edit
+- navigate
+- validate
+- lineage
+- observe
+- review
+- domain
+
+This is distinct from shell-level module identity. It affects commands,
+permissions, overlays, and surface emphasis within the active workbench.
+
+### 5.7 Cross-feature orchestration
 
 The workspace coordinates interactions that span multiple frontend capabilities.
 
@@ -154,7 +174,8 @@ Examples include:
 - selecting a graph node and synchronizing inspector, artifacts, and run context
 - opening a run and synchronizing logs, step focus, and graph overlays
 - opening a git diff and correlating changed files with graph entities
-- switching mode and recomposing the active surface set
+- switching module and recomposing the active surface set
+- switching workbench mode inside the active module
 
 This orchestration should be owned by the workspace rather than by any single feature module.
 
@@ -216,9 +237,13 @@ Represents the arrangement and visibility of panels and work surfaces.
 
 Represents the currently selected entity and the origin of that selection within the workbench.
 
-### 8.5 Workspace Mode
+### 8.5 ModuleId
 
-Represents the active operational perspective of the workbench and determines relevant UI composition and actions.
+Represents the shell-level mounted product module.
+
+### 8.6 WorkbenchMode
+
+Represents the active interaction policy inside a mounted workbench.
 
 ---
 
@@ -230,7 +255,8 @@ classDiagram
       +workspaceId: WorkspaceId
       +projectRef: ProjectRef
       +environmentRef: EnvironmentRef
-      +mode: WorkspaceMode
+      +moduleId: ModuleId
+      +workbenchMode: WorkbenchMode?
       +activeTabId: TabId
       +layout: WorkspaceLayout
       +selection: SelectionContext
@@ -263,7 +289,16 @@ classDiagram
     WorkspaceSession --> SelectionContext
 ```
 
-This diagram is conceptual. It defines the center of the domain without locking the final code-level representation too early.
+This diagram is conceptual. It defines the center of the domain without locking
+the final code-level representation too early.
+
+Important terminology decision:
+
+- `moduleId` is the shell-level module identity
+- `workbenchMode` is the interaction policy inside a mounted workbench
+
+They are related, but they are not synonyms and must not collapse into one
+field.
 
 ---
 
@@ -302,7 +337,8 @@ Owns:
 - docking state
 - layout presets
 - responsive layout constraints
-- mode-aware composition rules
+- module-aware composition rules
+- workbench-mode-aware composition rules
 
 ### 10.4 Context Management
 
@@ -322,7 +358,8 @@ Owns higher-level use cases such as:
 - open entity in tab
 - reveal entity in inspector
 - synchronize related panels
-- switch mode
+- switch module
+- switch workbench mode
 - restore prior working context after navigation
 - coordinate multi-feature reactions to user actions
 
@@ -360,7 +397,16 @@ The workspace domain coordinates them.
 The following contracts are indicative and intentionally strict. They are not the final implementation, but they express the intended domain shape.
 
 ```ts
-export type WorkspaceMode = 'design' | 'dbt' | 'etl' | 'observer' | 'git' | 'run-analysis';
+export type ModuleId = 'design' | 'dbt' | 'etl' | 'observer' | 'git' | 'run-analysis';
+
+export type WorkbenchMode =
+  | 'edit'
+  | 'navigate'
+  | 'validate'
+  | 'lineage'
+  | 'observe'
+  | 'review'
+  | 'domain';
 
 export type WorkspaceTabKind = 'graph' | 'artifact' | 'run' | 'git-diff' | 'lineage' | 'observer';
 
@@ -368,7 +414,8 @@ export interface WorkspaceSession {
   readonly workspaceId: string;
   readonly projectId: string;
   readonly environmentId: string | null;
-  readonly mode: WorkspaceMode;
+  readonly moduleId: ModuleId;
+  readonly workbenchMode: WorkbenchMode | null;
   readonly activeTabId: string | null;
   readonly tabs: readonly WorkspaceTab[];
   readonly layout: WorkspaceLayout;
@@ -397,7 +444,11 @@ export interface SelectionContext {
 }
 ```
 
-This contract is deliberately conservative. It gives the domain a clear initial shape without prematurely over-designing every reference type.
+`workbenchMode` is nullable because not every mounted module exposes a graph
+workbench.
+
+This contract is deliberately conservative. It gives the domain a clear initial
+shape without prematurely over-designing every reference type.
 
 ---
 
@@ -417,7 +468,8 @@ src/
     application/
       open-tab/
       activate-tab/
-      change-mode/
+      switch-module/
+      switch-workbench-mode/
       update-selection/
       restore-session/
     infrastructure/
@@ -501,7 +553,10 @@ Mitigation:
 
 ## 16. Conclusion
 
-The `Workspace Domain` should be treated as the frontend coordination domain that owns working context, tabbed surfaces, shared selection, mode-aware composition, and panel orchestration across the DVT+ workbench.
+The `Workspace Domain` should be treated as the frontend coordination domain
+that owns working context, tabbed surfaces, shared selection, shell-level
+module identity, workbench interaction mode, mode-aware composition, and panel
+orchestration across the DVT+ workbench.
 
 It is therefore not an implementation detail and not a visual wrapper. It is a foundational part of the frontend architecture.
 
