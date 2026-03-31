@@ -108,6 +108,8 @@ Evidence:
 - `useCanvasController()` remains the orchestration hook in `WP-01A`.
 - `CanvasShell` remains the existing workbench body in `WP-01A`.
 - `SourceImportWizard` remains inside `CanvasShell` for this slice.
+- `TopAppBar` and `LeftNavigation` remain in `Root.tsx` for `WP-01A` only; they
+  are explicit extraction candidates for `WP-01B`.
 
 ## Target Composition Root
 
@@ -151,7 +153,7 @@ Evidence:
   - keeps `QueryClientProvider`
   - keeps platform health wiring and connection-status side effect
   - keeps `TopAppBar`, `LeftNavigation`, console drawer, and `<Outlet />`
-  - does not gain workbench-specific composition logic
+  - does not gain new workbench-specific composition logic in `WP-01A`
 - `Canvas.tsx`
   - keeps `ReactFlowProvider`
   - renders `WorkbenchScreen`

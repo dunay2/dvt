@@ -73,7 +73,7 @@ The frontend is a workbench-oriented domain surface with:
 
 | Context       | Kind         | Owns                                                                                                    | Must not own                                         |
 | ------------- | ------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| App Shell     | Composition  | global frame, routing shell, providers, workspace host, overlays                                        | feature behavior, workspace semantics                |
+| App Shell     | Composition  | global frame, routing shell, providers, outer workspace host, global overlays                           | feature behavior, workspace semantics                |
 | Workspace     | Coordination | session, tabs, layout, module selection, workbench mode, selection context, cross-feature orchestration | graph semantics, run semantics, git semantics        |
 | Graph         | Capability   | canonical graph UI model, graph commands, graph selectors, canvas projection                            | workspace coordination, run authority                |
 | Planning      | Capability   | plan inspection views, plan diff projections, planning workflows in UI                                  | planner backend semantics, execution lifecycle       |
@@ -83,6 +83,15 @@ The frontend is a workbench-oriented domain surface with:
 | Git           | Capability   | repository review projections, diff workflows, commit preparation UI, policy hints                      | repository authority, workspace session authority    |
 | Lineage       | Capability   | dependency exploration, impact projections, traceability views                                          | graph editing authority, workspace session authority |
 | Observability | Capability   | operational read models, metric projections, user-facing diagnostics                                    | telemetry authority, run authority                   |
+
+Clarification:
+
+- App Shell owns the outer application frame and route boundary.
+- Route-local workbench shell chrome such as `WorkbenchLayout`,
+  `WorkbenchHeader`, and `WorkbenchNavRail` may exist inside that outer shell
+  when a mounted workbench route needs its own product surface.
+- This does not transfer global provider ownership from App Shell to the
+  workbench.
 
 ## 6. Shared kernel
 

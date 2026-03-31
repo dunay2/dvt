@@ -152,6 +152,14 @@ The shell composes the persistent frame:
 - bottom status/log area if globally applicable
 - overlays and dialogs layer
 
+Important clarification:
+
+- the App Shell owns the **outer** frame of the application
+- route-local product shells may still exist inside that frame when a mounted
+  workspace needs its own chrome
+- a nested `WorkbenchLayout` for workbench routes does not replace the App
+  Shell; it is hosted by it
+
 ## 6.3 Host feature workspaces
 
 The shell chooses which workspace is active and mounts it into the workspace host region.
@@ -268,6 +276,31 @@ Suggested responsibilities:
 | `ShellStatusBar`     | Status, sync, environment, telemetry summary               |
 | `ShellOverlayRoot`   | Modals, toasts, command palette, drawers                   |
 | `ModeRouter`         | Resolves active workspace module                           |
+
+---
+
+## 8.1 Nested shell layering
+
+Some product surfaces need a route-local shell inside the global shell. The
+workbench is the main frontend example.
+
+```mermaid
+flowchart TD
+    A[AppProviders] --> B[AppShell]
+    B --> C[ShellWorkspaceHost]
+    C --> D[WorkbenchLayout]
+    D --> E[WorkbenchHeader]
+    D --> F[WorkbenchNavRail]
+    D --> G[WorkbenchOutlet]
+    G --> H[Canvas or other workbench route]
+```
+
+This means:
+
+- `AppShell` still owns the outer application frame
+- `WorkbenchLayout` owns route-local chrome for opted-in workbench routes
+- nested shell layers are allowed when they keep responsibilities clearer,
+  thinner, and easier to extend
 
 ---
 

@@ -89,9 +89,10 @@ Out of scope for this slice:
 
 ```mermaid
 flowchart LR
-    AppRoute["/canvas route"] --> WorkbenchScreen["WorkbenchScreen"]
-    WorkbenchScreen --> ShellHeader["WorkbenchHeader"]
-    WorkbenchScreen --> NavRail["WorkbenchNavRail"]
+    AppRoute["/canvas route"] --> Layout["WorkbenchLayout"]
+    Layout --> ShellHeader["WorkbenchHeader"]
+    Layout --> NavRail["WorkbenchNavRail"]
+    Layout --> WorkbenchScreen["WorkbenchScreen"]
     WorkbenchScreen --> PanelsLayout["WorkbenchPanelsLayout"]
 
     PanelsLayout --> Explorer["ExplorerPanel"]
@@ -202,14 +203,25 @@ Implementation constraints:
 
 ### 8.2 WP-01B Header and navigation
 
+Detailed implementation spec:
+
+- [Frontend Workbench WP-01B Shell Layout Spec](frontend-workbench-wp01b-shell-layout-spec.md)
+
 Deliverables:
 
+- `WorkbenchLayout`
 - `WorkbenchHeader`
 - `WorkbenchNavRail`
+- explicit split between outer app shell and workbench shell
 - explicit split between shell controls and route navigation
+- route boundary that becomes the entry point for extending the pattern in
+  later refactor slices
 
 Implementation constraints:
 
+- `WP-01B` uses a nested layout route, not Root-level route conditionals
+- `WP-01B` migrates `/canvas` first and leaves later route adoption to follow-up
+  refactors
 - `WorkbenchHeader` must not learn graph semantics
 - `WorkbenchNavRail` must stay route-and-plugin-view only
 
