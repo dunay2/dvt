@@ -49,13 +49,13 @@ the coverage map. Its role is narrower:
 
 ## 4. Workstream Summary
 
-| ID    | Workstream                            | Priority | Criticality | Effort       | Suggested staffing             | Complexity | Depends on   | Primary outputs                                                               |
-| ----- | ------------------------------------- | -------- | ----------- | ------------ | ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------------- |
-| WS-01 | Shared-kernel contracts               | P0       | Critical    | Medium       | 1 author + 1 reviewer          | Medium     | None         | canonical specs for `SelectionContext`, `WorkspaceTab`, and `WorkspaceLayout` |
-| WS-02 | ACL ownership map per capability      | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01        | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
-| WS-03 | Frontend state ownership strategy     | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01        | canonical state policy, migration rules, anti-pattern list                    |
-| WS-04 | Current reality matrix per capability | P2       | High        | Small-Medium | 1 author                       | Medium     | WS-02, WS-03 | target-vs-current matrix, backend dependency posture, validation baseline     |
-| WS-05 | Frontend architectural guardrails     | P3       | High        | Medium-Large | 1 author + 1 maintainer        | High       | WS-02, WS-03 | enforceable rule set, check candidates, adoption sequence                     |
+| ID    | Workstream                            | Status    | Priority | Criticality | Effort       | Suggested staffing             | Complexity | Depends on   | Primary outputs                                                               |
+| ----- | ------------------------------------- | --------- | -------- | ----------- | ------------ | ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------------- |
+| WS-01 | Shared-kernel contracts               | Delivered | P0       | Critical    | Medium       | 1 author + 1 reviewer          | Medium     | None         | canonical specs for `SelectionContext`, `WorkspaceTab`, and `WorkspaceLayout` |
+| WS-02 | ACL ownership map per capability      | Planned   | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01        | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
+| WS-03 | Frontend state ownership strategy     | Planned   | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01        | canonical state policy, migration rules, anti-pattern list                    |
+| WS-04 | Current reality matrix per capability | Planned   | P2       | High        | Small-Medium | 1 author                       | Medium     | WS-02, WS-03 | target-vs-current matrix, backend dependency posture, validation baseline     |
+| WS-05 | Frontend architectural guardrails     | Planned   | P3       | High        | Medium-Large | 1 author + 1 maintainer        | High       | WS-02, WS-03 | enforceable rule set, check candidates, adoption sequence                     |
 
 ## 5. Recommended Execution Order
 
@@ -64,6 +64,13 @@ the coverage map. Its role is narrower:
 Objective:
 Stabilize the shared semantic layer before any broader capability-level
 normalization.
+
+Status:
+Delivered in this slice by publishing:
+
+- [Selection Context Model Specification](../workspace/selection-context-model-specification.md)
+- [Workspace Tab Model Specification](../workspace/workspace-tab-model-specification.md)
+- [Workspace Layout Model Specification](../workspace/workspace-layout-model-specification.md)
 
 Required outputs:
 
@@ -170,14 +177,16 @@ gantt
 
 ## 8. Recommended Immediate Next Move
 
-Start with WS-01 and keep the scope narrow:
+Start with WS-02 and WS-03 in parallel:
 
-1. publish the three shared-kernel model specs
-2. link them from the DDD target architecture and workspace domain documents
-3. ratify the allowed field set and invariants for each model
+1. publish the ACL ownership matrix for Planning, Runs, Artifacts, Git,
+   Lineage, and Observability
+2. publish the frontend-wide state ownership policy for server state,
+   coordination state, and feature-local transient state
+3. keep both slices aligned to the shared-kernel contracts already published
 
-That is the smallest closure slice that unlocks the rest of the program without
-reopening already-settled architectural boundaries.
+Those two slices are now the shortest path to implementation-ready frontend
+architecture without reopening the shared-kernel semantics already closed.
 
 ## 9. Relation To Fowler-Aligned Sources
 

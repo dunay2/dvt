@@ -26,6 +26,9 @@ instead of parallel authority.
 - [App Shell](./appshell/app-shell.md)
 - [Workspace Domain Specification](./workspace/workspace-domain-specification.md)
 - [Workspace Session Model Specification](./workspace/session/workspace-session-model-specification.md)
+- [Selection Context Model Specification](./workspace/selection-context-model-specification.md)
+- [Workspace Tab Model Specification](./workspace/workspace-tab-model-specification.md)
+- [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)
@@ -77,13 +80,13 @@ without directly importing each other's private models.
 The shared kernel should stay small and stable. It contains only concepts that
 must be understood consistently across contexts:
 
-- `EntityRef`
-- `SelectionContext`
-- `WorkspaceTab`
-- `WorkspaceLayout`
+- `EntityRef` and `ContextOrigin` in
+  [Selection Context Model Specification](./workspace/selection-context-model-specification.md)
+- [SelectionContext](./workspace/selection-context-model-specification.md)
+- [WorkspaceTab](./workspace/workspace-tab-model-specification.md)
+- [WorkspaceLayout](./workspace/workspace-layout-model-specification.md)
 - `ModuleId`
 - `WorkbenchMode`
-- `ContextOrigin`
 
 Rule: if a type is only meaningful inside one capability context, it does not
 belong in the shared kernel.
@@ -310,6 +313,9 @@ refine.
 - [DVT+ Frontend Architecture Introduction](./dvt-frontend-architecture-introduction.md)
 - [App Shell](./appshell/app-shell.md)
 - [Workspace Domain Specification](./workspace/workspace-domain-specification.md)
+- [Selection Context Model Specification](./workspace/selection-context-model-specification.md)
+- [Workspace Tab Model Specification](./workspace/workspace-tab-model-specification.md)
+- [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)

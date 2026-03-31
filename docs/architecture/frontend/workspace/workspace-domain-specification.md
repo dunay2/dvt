@@ -2,7 +2,7 @@
 title: Workspace Domain Specification
 status: Draft
 owner: frontend-architecture
-last_reviewed: 2026-03-30
+last_reviewed: 2026-03-31
 planning_type: architecture
 ---
 
@@ -229,13 +229,22 @@ Represents the active workbench state for a user in a given project and environm
 
 Represents a typed work surface instance. A tab is not merely a title; it has identity, kind, payload reference, lifecycle, and possibly dirty or pinned state.
 
+Canonical contract:
+[Workspace Tab Model Specification](workspace-tab-model-specification.md)
+
 ### 8.3 Workspace Layout
 
 Represents the arrangement and visibility of panels and work surfaces.
 
+Canonical contract:
+[Workspace Layout Model Specification](workspace-layout-model-specification.md)
+
 ### 8.4 Selection Context
 
 Represents the currently selected entity and the origin of that selection within the workbench.
+
+Canonical contract:
+[Selection Context Model Specification](selection-context-model-specification.md)
 
 ### 8.5 ModuleId
 
@@ -275,13 +284,14 @@ classDiagram
       +leftSidebarVisible: boolean
       +rightInspectorVisible: boolean
       +bottomPanelVisible: boolean
-      +panelArrangement: string
+      +panelArrangement: WorkspaceLayoutArrangement
+      +panelSizes: WorkspacePanelSizes
     }
 
     class SelectionContext {
-      +entityType: string
+      +entityType: SelectionEntityType
       +entityId: string
-      +source: string
+      +source: ContextOrigin
     }
 
     WorkspaceSession --> WorkspaceTab
@@ -397,6 +407,11 @@ The workspace domain coordinates them.
 The following contracts are indicative and intentionally strict. They are not the final implementation, but they express the intended domain shape.
 
 ```ts
+// See dedicated shared-kernel model specs for field-level authority:
+// - selection-context-model-specification.md
+// - workspace-tab-model-specification.md
+// - workspace-layout-model-specification.md
+
 export type ModuleId = 'design' | 'dbt' | 'etl' | 'observer' | 'git' | 'run-analysis';
 
 export type WorkbenchMode =
@@ -409,6 +424,23 @@ export type WorkbenchMode =
   | 'domain';
 
 export type WorkspaceTabKind = 'graph' | 'artifact' | 'run' | 'git-diff' | 'lineage' | 'observer';
+
+export type WorkspaceLayoutArrangement =
+  | 'graph-focus'
+  | 'analysis'
+  | 'review'
+  | 'observe'
+  | 'single-surface';
+
+export type SelectionEntityType =
+  | 'node'
+  | 'edge'
+  | 'run'
+  | 'artifact'
+  | 'git-file'
+  | 'lineage-entity';
+
+export type ContextOrigin = 'graph' | 'runs' | 'artifacts' | 'git' | 'lineage' | 'inspector';
 
 export interface WorkspaceSession {
   readonly workspaceId: string;
@@ -432,15 +464,21 @@ export interface WorkspaceTab {
 }
 
 export interface WorkspaceLayout {
+  readonly panelArrangement: WorkspaceLayoutArrangement;
   readonly leftSidebarVisible: boolean;
   readonly rightInspectorVisible: boolean;
   readonly bottomPanelVisible: boolean;
+  readonly panelSizes: {
+    readonly leftSidebarWidth: number | null;
+    readonly rightInspectorWidth: number | null;
+    readonly bottomPanelHeight: number | null;
+  };
 }
 
 export interface SelectionContext {
-  readonly entityType: string;
+  readonly entityType: SelectionEntityType;
   readonly entityId: string;
-  readonly source: 'graph' | 'runs' | 'artifacts' | 'git' | 'lineage';
+  readonly source: ContextOrigin;
 }
 ```
 
@@ -564,14 +602,15 @@ If the workspace domain is designed correctly, the rest of the frontend can evol
 
 ---
 
-## 17. Recommended follow-up documents
+## 17. Companion documents
 
-This document should be followed by more detailed specifications for:
+This document is refined by the following companion specifications:
 
-1. `workspace-session-model.md`
-2. `workspace-tab-model.md`
-3. `selection-context-model.md`
-4. `workspace-layout-model.md`
-5. `workspace-orchestration.md`
+1. [Workspace Session Model Specification](session/workspace-session-model-specification.md)
+2. [Workspace Tab Model Specification](workspace-tab-model-specification.md)
+3. [Selection Context Model Specification](selection-context-model-specification.md)
+4. [Workspace Layout Model Specification](workspace-layout-model-specification.md)
+5. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace-orchestration.md)
 
-These documents should refine the domain without breaking the principles established here.
+These documents refine the domain without changing the architectural
+boundaries established here.

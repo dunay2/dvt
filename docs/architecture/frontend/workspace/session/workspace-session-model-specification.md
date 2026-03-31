@@ -242,13 +242,14 @@ classDiagram
       +leftSidebarVisible: boolean
       +rightInspectorVisible: boolean
       +bottomPanelVisible: boolean
-      +panelArrangement: string
+      +panelArrangement: WorkspaceLayoutArrangement
+      +panelSizes: WorkspacePanelSizes
     }
 
     class SelectionContext {
-      +entityType: string
+      +entityType: SelectionEntityType
       +entityId: string
-      +source: string
+      +source: ContextOrigin
     }
 
     WorkspaceSession --> WorkspaceTab
@@ -472,6 +473,11 @@ unit of active work context.
 The following interface expresses the current intended direction.
 
 ```ts
+// Field-level authority for these shared-kernel models lives in:
+// - ../selection-context-model-specification.md
+// - ../workspace-tab-model-specification.md
+// - ../workspace-layout-model-specification.md
+
 export interface WorkspaceSession {
   readonly workspaceId: string;
   readonly projectId: string;
@@ -596,11 +602,12 @@ orchestration can be built.
 
 ---
 
-## 18. Recommended next document
+## 18. Companion documents
 
-The next useful refinement is:
+The following documents now define the shared-kernel models used by
+`WorkspaceSession`:
 
-- `workspace-tab-model.md`
-
-That document should define typed work surface instances, tab identity, payload
-references, deduplication rules, and tab lifecycle.
+- [Selection Context Model Specification](../selection-context-model-specification.md)
+- [Workspace Tab Model Specification](../workspace-tab-model-specification.md)
+- [Workspace Layout Model Specification](../workspace-layout-model-specification.md)
+- [Workspace Orchestration - Cross-Feature Coordination Mechanism](../workspace-orchestration.md)

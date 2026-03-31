@@ -127,11 +127,7 @@ primitive. The workspace action functions are the named, typed "events".
 ```ts
 // apps/web/src/app/stores/selection.store.ts
 
-export interface SelectionContext {
-  readonly entityType: 'node' | 'edge' | 'run' | 'artifact' | 'git-file' | 'lineage-entity';
-  readonly entityId: string;
-  readonly source: 'graph' | 'runs' | 'artifacts' | 'git' | 'lineage' | 'inspector';
-}
+import type { SelectionContext } from '../types/selection-context';
 
 interface SelectionState {
   selection: SelectionContext | null;
@@ -507,9 +503,12 @@ requires changing more than one module at a time.
 
 - `workspace-domain-specification.md §10.5` - Workspace Orchestration sub-domain definition
 - `workspace-domain-specification.md §11` - cross-feature interaction sequence diagram (intent)
-- `workspace-session-model-specification.md §14` - `WorkspaceSession` contract
-- `views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md §9` - state model for workbench surfaces
-- `review/frontend-architecture-review-and-critical-action-plan.md §3.10` - gap that this document resolves
+- `session/workspace-session-model-specification.md §14` - `WorkspaceSession` contract
+- `selection-context-model-specification.md` - canonical `SelectionContext` contract
+- `workspace-tab-model-specification.md` - canonical `WorkspaceTab` contract
+- `workspace-layout-model-specification.md` - canonical `WorkspaceLayout` contract
+- `../views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md §9` - state model for workbench surfaces
+- `../review/frontend-architecture-review-and-critical-action-plan.md §3.10` - gap that this document resolves
 - `apps/web/src/app/stores/appStore.ts` - current `selectedNodes` and `inspectorNodeId` (to be migrated)
 - `apps/web/src/app/stores/selection.store.ts` - target implementation (to be created)
 - `apps/web/src/app/workspace/workspace.actions.ts` - target implementation (to be created)

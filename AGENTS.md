@@ -43,6 +43,128 @@ The agent MUST NOT:
 - present partial wiring, placeholders, or fake implementations as complete
   work
 
+## Architecture Attribution Rule
+
+When the agent describes a design as `SOLID`, `DDD`, `hexagonal`, or
+`Fowler-aligned`, it MUST distinguish between:
+
+- design goals or quality criteria
+- primary documentary evidence
+
+The agent MUST treat `SOLID` as a design-quality shorthand for concerns such as:
+
+- single responsibility
+- extensibility without repeated modification of stable code
+- substitutable contracts
+- interface segregation
+- dependency inversion
+
+The agent MUST NOT attribute `SOLID` to Martin Fowler or present it as a
+Fowler taxonomy.
+
+If the primary evidence comes from Martin Fowler sources, the agent MUST say so
+explicitly and use wording equivalent to:
+
+- `SOLID-compatible design, evidenced by Fowler patterns/articles`
+- `Architecture aligned with SOLID goals, with primary evidence grounded in Fowler`
+
+When citing Fowler as evidence, the agent MUST:
+
+- cite the exact Fowler article, pattern, or book page when available
+- distinguish direct source support from repository-local policy
+- avoid implying that a frontend-specific contract or term was authored by
+  Fowler when it is a local design derived from his patterns
+
+For architectural concepts and contracts, the agent MUST use Fowler as the
+primary architectural reference when a real, materially applicable Fowler
+source exists.
+
+The agent MUST NOT skip an applicable Fowler source in favor of a more
+convenient, looser, or tool-specific citation.
+
+Only when no real and materially applicable Fowler source exists MAY the agent
+use a non-Fowler primary reference.
+
+In that case, the alternative reference MUST be:
+
+- real and publicly verifiable
+- auditable through an official page, API reference, product documentation, or
+  canonical book/author site
+- from a mature, production-proven system, platform, or framework
+- directly relevant to the exact mechanism or boundary being justified
+
+For any non-Fowler primary reference, the agent MUST state explicitly:
+
+1. that no materially applicable Fowler source was found for that exact concept
+2. why the chosen source is authoritative
+3. whether it is exact precedent or compatible precedent
+
+The agent MUST NOT use the following as canonical architectural evidence when a
+stronger primary source is expected:
+
+- generic blog posts
+- forum threads
+- issue comments
+- marketing pages
+- AI-generated summaries
+- secondary paraphrases of Fowler
+
+## Canonical Contract Evidence Rule
+
+For canonical architecture contracts, architectural inference is not permitted
+as evidence.
+
+When the agent defines or justifies a canonical contract such as a frontend
+shared-kernel model, port, boundary, or orchestration seam, it MUST use one of
+these evidence modes explicitly:
+
+- exact precedent
+- compatible precedent
+- local canonical policy
+
+Required meaning:
+
+- `exact precedent`: the same or materially equivalent concept is documented in
+  a primary source of recognized architectural or platform authority
+- `compatible precedent`: the exact contract name is local, but the pattern is
+  directly supported by a reputable primary source and the compatibility is
+  explained precisely
+- `local canonical policy`: the repository is making a deliberate policy choice
+  that extends documented precedents; this must be labeled as local policy, not
+  as source-authored fact
+
+The agent MUST NOT justify canonical contracts in canonical documents with
+wording such as:
+
+- `architectural inference`
+- `reasonable inference from Fowler`
+- `implied by the literature`
+
+Those phrases MAY appear only when explicitly rejecting insufficient evidence
+in review commentary or governance rules. They MUST NOT be used as positive
+support and MUST NOT be "repaired" afterward by adding citations.
+
+For canonical contracts, the agent MUST prefer primary sources of proven
+prestige such as:
+
+- Martin Fowler articles, catalog entries, or canonical book pages when
+  materially applicable
+- official platform or API documentation
+- accepted ADRs in this repository
+- canonical architecture books or author sites
+- official framework documentation for the exact mechanism being adopted
+
+For `exact precedent`, the citation MUST resolve to the specific API type,
+mechanism, section, or page that documents the materially equivalent concept. A
+broad landing page or top-level index is not sufficient unless that page is
+itself the authoritative section.
+
+For each canonical contract the agent documents, it MUST make explicit:
+
+1. the cited source
+2. whether the source is exact precedent or compatible precedent
+3. which parts are repository-local policy
+
 ## Operational Playbooks
 
 Use these as procedural complements to this file. They do not override rules in
@@ -329,3 +451,10 @@ The mandatory first document is:
 
 That inventory is the entry point for the current governance map of this
 repository.
+
+## MCP AVAILABILITY
+
+If needed use
+
+- Context7
+- markitdown
