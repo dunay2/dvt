@@ -101,7 +101,14 @@
       "Bash(pnpm --filter web exec tsc --noEmit)",
       "Bash(grep -r \"RunStatusSnapshot\\\\|runStatusByNode\" c:/dvt/apps/web/src/app --include=*.ts --include=*.tsx -l)",
       "Bash(grep -v \"^$\")",
-      "Bash(pnpm commit:*)"
+      "Bash(pnpm commit:*)",
+      "Bash(pnpm type-check:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(pnpm verify:prepush)",
+      "Bash(pnpm pr:validate-title \"refactor\\(adapters\\): Staleness query improvements and pr-title validation tooling\")",
+      "Bash(GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs)",
+      "Bash(find /f/segundodvt/dvt/apps/web -path */test/* -o -name *.test.ts -o -name *.test.tsx)",
+      "Bash(wc -l /f/segundodvt/dvt/apps/web/src/app/**/*.ts /f/segundodvt/dvt/apps/web/src/app/**/*.tsx)"
     ]
   }
 }
