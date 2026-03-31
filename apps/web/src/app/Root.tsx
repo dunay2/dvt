@@ -22,7 +22,9 @@ const queryClient = new QueryClient({
   },
 });
 
-function getPlatformHealthErrorMessage(platformHealth: ReturnType<typeof usePlatformHealthSnapshotQuery>): string | null {
+function getPlatformHealthErrorMessage(
+  platformHealth: ReturnType<typeof usePlatformHealthSnapshotQuery>
+): string | null {
   if (!platformHealth.isError) {
     return null;
   }

@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiClient } from '../../../app/services/api/createApiClient';
-import { createHttpPlatformHealthClient, PlatformHealthInfrastructureError } from './httpPlatformHealthClient';
+import {
+  createHttpPlatformHealthClient,
+  PlatformHealthInfrastructureError,
+} from './httpPlatformHealthClient';
 
 function createApiClientStub(
   requestRaw: ApiClient['requestRaw'],

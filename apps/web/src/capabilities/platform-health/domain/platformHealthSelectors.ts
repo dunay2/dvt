@@ -9,9 +9,14 @@ export function selectPlatformConnectionState(
   }
 
   const isHealthDegraded = snapshot.healthz.data.status === 'degraded';
-  const isReadyDegraded = snapshot.readyz.availability === 'available' && snapshot.readyz.data?.ok === false;
-  const isDbDegraded = snapshot.dbReady.availability === 'available' && snapshot.dbReady.data?.ok === false;
-  const hasProbeFailure = snapshot.readyz.error !== null || snapshot.version.error !== null || snapshot.dbReady.error !== null;
+  const isReadyDegraded =
+    snapshot.readyz.availability === 'available' && snapshot.readyz.data?.ok === false;
+  const isDbDegraded =
+    snapshot.dbReady.availability === 'available' && snapshot.dbReady.data?.ok === false;
+  const hasProbeFailure =
+    snapshot.readyz.error !== null ||
+    snapshot.version.error !== null ||
+    snapshot.dbReady.error !== null;
 
   const shouldDegrade = isHealthDegraded || isReadyDegraded || isDbDegraded || hasProbeFailure;
 
@@ -28,8 +33,10 @@ export function isPlatformReady(snapshot: PlatformHealthSnapshot | undefined): b
   }
 
   const isHealthHealthy = snapshot.healthz.data.status === 'healthy';
-  const isReadyOk = snapshot.readyz.availability !== 'available' || snapshot.readyz.data?.ok === true;
-  const isDbOk = snapshot.dbReady.availability !== 'available' || snapshot.dbReady.data?.ok !== false;
+  const isReadyOk =
+    snapshot.readyz.availability !== 'available' || snapshot.readyz.data?.ok === true;
+  const isDbOk =
+    snapshot.dbReady.availability !== 'available' || snapshot.dbReady.data?.ok !== false;
 
   return isHealthHealthy && isReadyOk && isDbOk;
 }

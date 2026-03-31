@@ -1,7 +1,16 @@
 import type { ApiClient } from '../../../app/services/api/createApiClient';
-import { ApiError, createApiClient, resolveApiBaseUrl } from '../../../app/services/api/createApiClient';
+import {
+  ApiError,
+  createApiClient,
+  resolveApiBaseUrl,
+} from '../../../app/services/api/createApiClient';
 import { resolveDataSource } from '../../../app/services/config/dataSource';
-import type { DbReadyDto, HealthzDto, ReadyzDto, VersionDto } from '../contracts/platformHealthDtos';
+import type {
+  DbReadyDto,
+  HealthzDto,
+  ReadyzDto,
+  VersionDto,
+} from '../contracts/platformHealthDtos';
 import type {
   OptionalEndpointProbe,
   PlatformDatabaseReadiness,
@@ -116,7 +125,6 @@ function mapDbReadyDto(dto: DbReadyDto): PlatformDatabaseReadiness {
     reason: dto.reason ?? null,
   };
 }
-
 
 function handleRequestError(error: unknown, endpoint: string): never {
   throw new PlatformHealthInfrastructureError({

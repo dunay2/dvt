@@ -1,8 +1,5 @@
 export { createPlatformHealthCapability } from './application/platformHealthCapability';
-export {
-  isPlatformReady,
-  selectPlatformConnectionState,
-} from './domain/platformHealthSelectors';
+export { isPlatformReady, selectPlatformConnectionState } from './domain/platformHealthSelectors';
 export type {
   OptionalEndpointProbe,
   PlatformConnectionState,

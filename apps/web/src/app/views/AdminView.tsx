@@ -63,10 +63,7 @@ function getReadyzSummary(snapshot: PlatformHealthSnapshot | undefined): string 
   return 'readyz endpoint healthy';
 }
 
-function getCapabilitiesEmptyState(
-  isLoading: boolean,
-  hasError: boolean
-): string {
+function getCapabilitiesEmptyState(isLoading: boolean, hasError: boolean): string {
   if (isLoading) {
     return 'Loading capabilities...';
   }
@@ -125,7 +122,10 @@ export default function AdminView() {
   });
   const roles = rolesQuery.data ?? [];
   const auditLog = auditQuery.data ?? [];
-  const connectionStatus = selectPlatformConnectionState(platformHealth.data, platformHealth.isError);
+  const connectionStatus = selectPlatformConnectionState(
+    platformHealth.data,
+    platformHealth.isError
+  );
   const filteredAuditLog = filterAuditEntries(auditLog, searchQuery);
 
   return (
