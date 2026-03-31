@@ -54,13 +54,13 @@ What is already strong:
 - workspace as coordination domain
 - cross-feature orchestration mechanism
 - canonical state ownership and persistence policy
+- canonical current-reality matrix per capability
 - execution sequencing and refactor sequencing
 
 What is still not closed:
 
 - final canonical role of several capability docs
-- current reality versus target per capability
-- publication hygiene and frontend-specific guardrails
+- publication hygiene
 
 The main gap is no longer "missing architecture". The main gap is "decision
 closure and canonical consistency".
@@ -84,19 +84,17 @@ closure and canonical consistency".
 | Architecture execution order                              | Covered           | [Frontend Architecture Execution Plan](../frontend-architecture-execution-plan.md)                                                                                                                                                                                                   | Phases and decision gates are explicit.                                                                  |
 | Refactor execution order for code                         | Covered           | [Frontend Architecture Review and Critical Action Plan](frontend-architecture-review-and-critical-action-plan.md)                                                                                                                                                                    | The code-level sequence is explicit and incremental.                                                     |
 | Canonical/supporting/reference-only role taxonomy per doc | Partially covered | [Frontend Architecture](../index.md)                                                                                                                                                                                                                                                 | The index marks some reference-only notes, but not the full corpus with one role system.                 |
-| Current reality versus target per capability              | Partially covered | distributed                                                                                                                                                                                                                                                                          | The landing page states the difference, but not each capability doc.                                     |
+| Current reality versus target per capability              | Covered           | [Frontend Current Reality Matrix](frontend-current-reality-matrix.md)                                                                                                                                                                                                                | The frontend corpus now has one canonical target-versus-current matrix with repo-backed capability rows. |
 | Metadata and editorial hygiene                            | Open              | [Frontend Documentation Quality Review And Remediation Plan](frontend-documentation-quality-review-and-remediation-plan.md)                                                                                                                                                          | The problem is identified, but not yet closed.                                                           |
-| Frontend validation and architecture guardrails           | Open              | distributed                                                                                                                                                                                                                                                                          | The frontend still lacks a stable test and guardrail baseline.                                           |
+| Frontend validation and architecture guardrails           | Covered           | [Frontend Architecture Guardrails](../frontend-architecture-guardrails.md)                                                                                                                                                                                                           | The guardrail baseline is now canonical, with measured examples, candidate checks, and staged rollout.   |
 
 ## 5. Open Decision Register
 
-| ID        | Decision still open                            | Why it matters                                                                  | Recommended closure                                                                                                                       |
-| --------- | ---------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| FD-DEC-01 | Canonical role taxonomy for every frontend doc | Without it, companion specs and exploratory notes still compete for authority.  | Add one explicit role system: `canonical`, `companion`, `review`, `reference-only`. Reflect it in frontmatter and in the frontend index.  |
-| FD-DEC-07 | Module/plugin extension contract               | The shell/module seam exists, but the project still needs one stable contract.  | Standardize `WorkspaceModuleContract` and require module-specific adapters to satisfy it without caller special cases.                    |
-| FD-DEC-08 | Current reality matrix per capability          | Capability docs read as target-state specs while implementation remains uneven. | Add one compact current-reality matrix for Graph, Planning, Runs, Artifacts, Git, Lineage, Inspector, and Observability.                  |
-| FD-DEC-09 | Publication standard for the frontend corpus   | Mixed language, encoding drift, and metadata drift reduce trust.                | Canonical docs in English, UTF-8 clean text, normalized frontmatter, and explicit reclassification of reference-only notes.               |
-| FD-DEC-10 | Frontend-specific architectural guardrails     | Architecture will drift if rules remain prose only.                             | Add automated checks for direct DTO rendering, direct cross-feature store imports, and direct shared-store mutation from component files. |
+| ID        | Decision still open                            | Why it matters                                                                 | Recommended closure                                                                              |
+| --------- | ---------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| FD-DEC-01 | Canonical role taxonomy for every frontend doc | Without it, companion specs and exploratory notes still compete for authority. | Publish one explicit role taxonomy and reflect it in frontmatter and the frontend index.         |
+| FD-DEC-07 | Module/plugin extension contract               | The shell/module seam exists, but the project still needs one stable contract. | Standardize `WorkspaceModuleContract` and require stable module adapter conformance.             |
+| FD-DEC-09 | Publication standard for the frontend corpus   | Mixed language, encoding drift, and metadata drift reduce trust.               | Normalize English-only canonical docs, frontmatter, encoding, and reference-only classification. |
 
 ## 6. Recommended Solutions
 
@@ -222,19 +220,18 @@ Recently closed by canonical publication:
 
 - `FD-DEC-05` - [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
 - `FD-DEC-06` - [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+- `FD-DEC-08` - [Frontend Current Reality Matrix](frontend-current-reality-matrix.md)
+- `FD-DEC-10` - [Frontend Architecture Guardrails](../frontend-architecture-guardrails.md)
 
 ## 7. Decision Dependency Graph
 
 ```mermaid
 flowchart LR
     D1[FD-DEC-01
-Role taxonomy] --> D6[FD-DEC-10
-Architecture guardrails]
-    D1 --> D7[FD-DEC-09
+Role taxonomy] --> D7[FD-DEC-09
 Publication standard]
-    D7 --> D8[FD-DEC-08
-Current reality matrix]
-    D6 --> D8
+    D1 --> D5[FD-DEC-07
+Module or plugin contract]
 ```
 
 ## 8. Exact Fowler And Fowler Site Sources
@@ -281,10 +278,8 @@ The next serious documentation slices should be:
 1. close FD-DEC-01 by publishing a full canonical role taxonomy for the
    frontend corpus
 2. close FD-DEC-09 by normalizing metadata, language, and encoding
-3. close FD-DEC-10 by defining enforceable frontend architectural guardrails
-4. add a current-reality matrix per capability so target docs stop standing in
-   for implementation truth
+3. close FD-DEC-07 by standardizing the module or plugin extension contract
 
-If these four slices are closed, the frontend architecture stops behaving like a
-promising draft corpus and starts behaving like a governed architecture
+If these remaining slices are closed, the frontend architecture stops behaving
+like a promising draft corpus and starts behaving like a governed architecture
 baseline.

@@ -66,8 +66,14 @@ A correct frontend architecture must therefore preserve this rule:
 
 > **Frontend Planning explains and explores a plan. It does not decide or mutate the canonical plan semantics.**
 
-The UI may request projections, filters, overlays, local layouts, comparisons, and annotations.  
+The UI may request projections, filters, overlays, local layouts, comparisons,
+and annotations.  
 It must not become an alternative planner.
+
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Planning capability, not a claim that the
+full planning workbench already exists in code today.
 
 ---
 

@@ -26,7 +26,11 @@ Concept anchors for this page:
 - `apps/web` is a real UI codebase, not just a mock folder.
 - It is still only partially connected to backend reality.
 - Mock data still dominates large parts of the surface.
-- There are currently no automated tests under `apps/web`.
+- There are automated tests under `apps/web`, but coverage is still narrow and
+  uneven across capabilities.
+
+Current implementation posture now has one canonical source:
+[Frontend Current Reality Matrix](review/frontend-current-reality-matrix.md).
 
 That means the frontend exists, but its documentation must be explicit about the
 gap between visual breadth and production-backed behavior.
@@ -38,6 +42,8 @@ gap between visual breadth and production-backed behavior.
 - the canonical shared-kernel contracts for selection, tabs, and layout;
 - the canonical ACL ownership map across capability boundaries;
 - the canonical frontend state ownership and persistence policy;
+- the canonical current-reality matrix for target-versus-current drift;
+- the canonical frontend architecture guardrails for drift prevention;
 - the intended Canvas -> Plan -> Run -> Monitor interaction path;
 - the current backend boundary the UI is allowed to rely on;
 - the coverage map of what is already architecturally decided and what remains open;
@@ -57,27 +63,30 @@ gap between visual breadth and production-backed behavior.
 6. [Frontend Architecture Deepening Work Plan](review/frontend-architecture-deepening-work-plan.md)
 7. [Frontend ACL Ownership Map](frontend-acl-ownership-map.md)
 8. [Frontend State Ownership And Persistence Policy](frontend-state-ownership-and-persistence-policy.md)
-9. [App Shell](appshell/app-shell.md)
-10. [Workspace Domain Specification](workspace/workspace-domain-specification.md)
-11. [Workspace Session Model Specification](workspace/session/workspace-session-model-specification.md)
-12. [Selection Context Model Specification](workspace/selection-context-model-specification.md)
-13. [Workspace Tab Model Specification](workspace/workspace-tab-model-specification.md)
-14. [Workspace Layout Model Specification](workspace/workspace-layout-model-specification.md)
-15. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace/workspace-orchestration.md)
-16. [Workflow / Graph Workbench - Surfaces and Operating Modes](views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
-17. [Frontend Architecture - Planning Capability](planning/frontend-planning-capability-architecture.md)
-18. [Runs Frontend Architecture](runs/dvt-runs-frontend-architecture.md)
-19. [Frontend Architecture Review and Critical Action Plan](review/frontend-architecture-review-and-critical-action-plan.md)
+9. [Frontend Current Reality Matrix](review/frontend-current-reality-matrix.md)
+10. [Frontend Architecture Guardrails](frontend-architecture-guardrails.md)
+11. [App Shell](appshell/app-shell.md)
+12. [Workspace Domain Specification](workspace/workspace-domain-specification.md)
+13. [Workspace Session Model Specification](workspace/session/workspace-session-model-specification.md)
+14. [Selection Context Model Specification](workspace/selection-context-model-specification.md)
+15. [Workspace Tab Model Specification](workspace/workspace-tab-model-specification.md)
+16. [Workspace Layout Model Specification](workspace/workspace-layout-model-specification.md)
+17. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace/workspace-orchestration.md)
+18. [Workflow / Graph Workbench - Surfaces and Operating Modes](views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
+19. [Frontend Architecture - Planning Capability](planning/frontend-planning-capability-architecture.md)
+20. [Runs Frontend Architecture](runs/dvt-runs-frontend-architecture.md)
+21. [Frontend Architecture Review and Critical Action Plan](review/frontend-architecture-review-and-critical-action-plan.md)
 
 ## Current Reality Reading
 
 When the question is "what exists in code today", read these before assuming
 the target architecture is implemented:
 
-1. [apps/web/README.md](../../../apps/web/README.md)
-2. [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
-3. [apps/web/DOCUMENTATION_INDEX.md](../../../apps/web/DOCUMENTATION_INDEX.md)
-4. [System Delivery Status](../system-delivery-status.md)
+1. [Frontend Current Reality Matrix](review/frontend-current-reality-matrix.md)
+2. [apps/web/README.md](../../../apps/web/README.md)
+3. [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
+4. [apps/web/DOCUMENTATION_INDEX.md](../../../apps/web/DOCUMENTATION_INDEX.md)
+5. [System Delivery Status](../system-delivery-status.md)
 
 ## Reference-Only Notes
 
@@ -133,8 +142,11 @@ doc must not be the only place where the topic is discoverable.
 
 ## Open Gaps
 
-- No frontend test suite exists yet.
+- Frontend tests exist, but there is still no broad capability-level coverage
+  baseline.
 - Mock-data paths still shape the main UX.
+- Guardrail policy now exists, but the staged ESLint rollout and allow-list
+  burn-down still have to be implemented in code/config.
 - Several frontend architecture docs still need metadata and editorial
   normalization.
 - The product boundary is still ahead of the implementation in several views.

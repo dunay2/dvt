@@ -27,6 +27,11 @@ Its responsibility is to expose the **selected object** in the workspace and pro
 The Inspector is not the source of truth for execution and it must not contain orchestration logic.  
 It is a **projection and command surface** over selected domain entities.
 
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Inspector capability, not current
+implementation completeness.
+
 ---
 
 ## 2. Architectural intent

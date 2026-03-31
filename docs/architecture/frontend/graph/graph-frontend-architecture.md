@@ -19,7 +19,13 @@ The **Graph** is the canonical visual and operational representation of the work
 - support selection, navigation, filtering, and inspection,
 - decouple visual composition from domain and runtime concerns.
 
-The Graph is not the execution engine. It is the **frontend structural model** used to represent, edit, inspect, and reason about workflow topology.
+The Graph is not the execution engine. It is the **frontend structural model**
+used to represent, edit, inspect, and reason about workflow topology.
+
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Graph capability, not implementation
+completeness in `apps/web` today.
 
 ---
 

@@ -50,13 +50,13 @@ the coverage map. Its role is narrower:
 
 ## 4. Workstream Summary
 
-| ID    | Workstream                            | Status    | Priority | Criticality | Effort       | Suggested staffing             | Complexity | Depends on   | Primary outputs                                                               |
-| ----- | ------------------------------------- | --------- | -------- | ----------- | ------------ | ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------------- |
-| WS-01 | Shared-kernel contracts               | Delivered | P0       | Critical    | Medium       | 1 author + 1 reviewer          | Medium     | None         | canonical specs for `SelectionContext`, `WorkspaceTab`, and `WorkspaceLayout` |
-| WS-02 | ACL ownership map per capability      | Delivered | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01        | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
-| WS-03 | Frontend state ownership strategy     | Delivered | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01        | canonical state policy, migration rules, anti-pattern list                    |
-| WS-04 | Current reality matrix per capability | Planned   | P2       | High        | Small-Medium | 1 author                       | Medium     | WS-02, WS-03 | target-vs-current matrix, backend dependency posture, validation baseline     |
-| WS-05 | Frontend architectural guardrails     | Planned   | P3       | High        | Medium-Large | 1 author + 1 maintainer        | High       | WS-02, WS-03 | enforceable rule set, check candidates, adoption sequence                     |
+| ID    | Workstream                            | Status    | Priority | Criticality | Effort       | Suggested staffing             | Complexity | Depends on          | Primary outputs                                                               |
+| ----- | ------------------------------------- | --------- | -------- | ----------- | ------------ | ------------------------------ | ---------- | ------------------- | ----------------------------------------------------------------------------- |
+| WS-01 | Shared-kernel contracts               | Delivered | P0       | Critical    | Medium       | 1 author + 1 reviewer          | Medium     | None                | canonical specs for `SelectionContext`, `WorkspaceTab`, and `WorkspaceLayout` |
+| WS-02 | ACL ownership map per capability      | Delivered | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01               | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
+| WS-03 | Frontend state ownership strategy     | Delivered | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01               | canonical state policy, migration rules, anti-pattern list                    |
+| WS-04 | Current reality matrix per capability | Delivered | P2       | High        | Small-Medium | 1 author                       | Medium     | WS-02, WS-03        | target-vs-current matrix, backend dependency posture, validation baseline     |
+| WS-05 | Frontend architectural guardrails     | Delivered | P3       | High        | Medium-Large | 1 author + 1 maintainer        | High       | WS-02, WS-03, WS-04 | guardrail policy, examples, check candidates, rollout                         |
 
 ## 5. Recommended Execution Order
 
@@ -131,6 +131,11 @@ Objective:
 Separate target architecture from shipped reality so the corpus remains honest
 and operationally useful.
 
+Status:
+Delivered in this slice by publishing:
+
+- [Frontend Current Reality Matrix](frontend-current-reality-matrix.md)
+
 Required outputs:
 
 - one compact current-reality matrix for Graph, Planning, Runs, Artifacts, Git,
@@ -146,6 +151,11 @@ equals implementation completeness.
 
 Objective:
 Turn the closed architecture rules into enforceable checks.
+
+Status:
+Delivered in this slice by publishing:
+
+- [Frontend Architecture Guardrails](../frontend-architecture-guardrails.md)
 
 Required outputs:
 
@@ -165,6 +175,7 @@ flowchart LR
     W1 --> W3[WS-03 State ownership strategy]
     W2 --> W4[WS-04 Current reality matrix]
     W3 --> W4
+    W4 --> W5[WS-05 Architectural guardrails]
     W2 --> W5[WS-05 Architectural guardrails]
     W3 --> W5
 ```
@@ -188,18 +199,19 @@ gantt
 
 ## 8. Recommended Immediate Next Move
 
-Start with WS-04:
+Start with FD-DEC-01:
 
-1. use the published frontend-wide state ownership policy for server state,
-   coordination state, and feature-local transient state as the canonical
-   baseline for current-reality assessment
-2. document the target-versus-current posture of each capability with that
-   state policy already fixed
-3. use the published ACL map and state policy as the seam inventory for future
-   guardrails
+1. use the published ACL map, state policy, and current-reality matrix as the
+   canonical baseline for classifying every frontend document as `canonical`,
+   `companion`, `review`, or `reference-only`
+2. reflect that taxonomy in the frontend index and frontmatter, so authority is
+   visible without guesswork
+3. keep WS-05 implementation rollout incremental, but do not reopen guardrail
+   semantics while taxonomy closure is still pending
 
-That is now the shortest path to implementation-ready frontend architecture
-without reopening already-closed shared-kernel or ACL semantics.
+That is now the shortest path to a fully governed frontend corpus without
+reopening already-closed shared-kernel, ACL, state, current-reality, or
+guardrail semantics.
 
 ## 9. Relation To Fowler-Aligned Sources
 

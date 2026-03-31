@@ -9,6 +9,11 @@ language: es
 
 # Arquitectura de Front Observability
 
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Observability capability, not a claim that the
+full target observability model already exists in `apps/web`.
+
 ## DVT+ — Observabilidad de ejecución de workflows
 
 ## 1. Propósito

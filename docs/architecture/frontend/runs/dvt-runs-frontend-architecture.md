@@ -20,7 +20,13 @@ Its purpose is to let the user:
 - navigate from a run to its related plan, workflow, artifacts, logs, and events,
 - perform only explicit allowed actions such as cancel, retry, resume, or open diagnostics.
 
-The Runs frontend is a **read-heavy operational workbench**, not an execution engine.
+The Runs frontend is a **read-heavy operational workbench**, not an execution
+engine.
+
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Runs capability, not current implementation
+completeness.
 
 ## 2. Design principle
 

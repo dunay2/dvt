@@ -29,6 +29,7 @@ Primary inputs:
 - [DVT+ Frontend Architecture Introduction](./dvt-frontend-architecture-introduction.md)
 - [Workspace Domain Specification](./workspace/workspace-domain-specification.md)
 - [Frontend State Ownership And Persistence Policy](./frontend-state-ownership-and-persistence-policy.md)
+- [Frontend Architecture Guardrails](./frontend-architecture-guardrails.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Frontend Architecture Review and Critical Action Plan](./review/frontend-architecture-review-and-critical-action-plan.md)
 
@@ -48,6 +49,7 @@ The target outcome is a frontend that is:
 - decomposed by explicit frontend bounded contexts
 - coordinated through a workspace shared kernel
 - translated from backend contracts through ACLs
+- protected by staged guardrails that block new architectural drift
 - implementable in small shippable slices
 
 ## 4. Execution principles
@@ -176,6 +178,7 @@ Bridge architecture and code refactoring without letting one replace the other.
 - one list of decision gates before deep feature work
 - one canonical state ownership and persistence policy for browser-resident
   state
+- one canonical guardrail policy for staged frontend enforcement
 
 **Fitness function**
 
@@ -293,6 +296,7 @@ After this baseline, the next serious frontend slices should be:
 - [DVT+ Frontend Architecture Introduction](./dvt-frontend-architecture-introduction.md)
 - [Workspace Domain Specification](./workspace/workspace-domain-specification.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
+- [Frontend Architecture Guardrails](./frontend-architecture-guardrails.md)
 - [Frontend Architecture Review and Critical Action Plan](./review/frontend-architecture-review-and-critical-action-plan.md)
 - Fowler, _Refactoring: Improving the Design of Existing Code_ (2nd ed.)
 - Fowler, _Patterns of Enterprise Application Architecture_

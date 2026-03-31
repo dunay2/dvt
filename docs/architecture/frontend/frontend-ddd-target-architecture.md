@@ -17,6 +17,11 @@ Its job is to provide one canonical domain map so the capability documents
 under `docs/architecture/frontend/` behave like companion specifications
 instead of parallel authority.
 
+Current implementation posture is tracked separately in
+[Frontend Current Reality Matrix](./review/frontend-current-reality-matrix.md).
+This document defines the target bounded-context model, not a claim that every
+target capability already exists in code at that maturity level.
+
 ## 2. Governing sources
 
 - [DVT Domain Language](../../concepts/domain-language.md)
@@ -31,6 +36,8 @@ instead of parallel authority.
 - [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
 - [Frontend ACL Ownership Map](./frontend-acl-ownership-map.md)
 - [Frontend State Ownership And Persistence Policy](./frontend-state-ownership-and-persistence-policy.md)
+- [Frontend Architecture Guardrails](./frontend-architecture-guardrails.md)
+- [Frontend Current Reality Matrix](./review/frontend-current-reality-matrix.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)
@@ -60,6 +67,7 @@ The frontend is a workbench-oriented domain surface with:
 - explicit anti-corruption layers to backend contracts
 - one canonical state ownership and persistence policy for browser-resident
   state
+- one canonical guardrail policy for preventing frontend architecture drift
 
 ## 5. Bounded contexts and roles
 
@@ -231,6 +239,18 @@ The frontend must keep these boundaries explicit:
 - browser persistence is limited to explicit session/workbench state, never to
   live runtime truth
 
+### 9.6 Guardrails are explicit
+
+Canonical owner:
+[Frontend Architecture Guardrails](./frontend-architecture-guardrails.md)
+
+The frontend must keep these enforcement intentions explicit:
+
+- raw mock or transport payloads stop before direct component rendering
+- cross-feature coordination does not happen through legacy store barrels
+- shared-workbench mutation moves behind bounded action hooks
+- no new authority is added to global stores outside the state policy
+
 ## 10. Domain sequences
 
 ### 10.1 Node selection across the workbench
@@ -340,6 +360,7 @@ refine.
 - [Workspace Tab Model Specification](./workspace/workspace-tab-model-specification.md)
 - [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
 - [Frontend ACL Ownership Map](./frontend-acl-ownership-map.md)
+- [Frontend Architecture Guardrails](./frontend-architecture-guardrails.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)

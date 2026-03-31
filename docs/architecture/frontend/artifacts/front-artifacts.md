@@ -10,9 +10,17 @@ category: frontend-architecture
 
 ## 1. Purpose
 
-This document defines the main frontend artifacts for DVT+, their role, ownership boundaries, and the target direction for the product UI.
+This document defines the main frontend artifacts for DVT+, their role,
+ownership boundaries, and the target direction for the product UI.
 
-The purpose is not to describe implementation details file by file, but to establish a stable architectural view of the frontend as a set of explicit artifacts with clear responsibilities.
+The purpose is not to describe implementation details file by file, but to
+establish a stable architectural view of the frontend as a set of explicit
+artifacts with clear responsibilities.
+
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines target artifact boundaries, not a claim that every
+artifact capability already exists in code today.
 
 ---
 

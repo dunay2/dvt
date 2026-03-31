@@ -21,7 +21,13 @@ Its purpose is not limited to showing repository status. It must provide a contr
 - coordinating project state with generated artifacts and execution-related metadata.
 
 Within DVT+, Git Mode is part of the **product control plane** of the frontend.  
-It should behave as a governed editing and review environment, not as a generic code editor clone.
+It should behave as a governed editing and review environment, not as a generic
+code editor clone.
+
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Git capability, not current implementation
+completeness.
 
 ---
 

@@ -19,7 +19,13 @@ Its purpose is not merely visual. In DVT+, lineage is a **read model for traceab
 - linking execution evidence to structural relationships,
 - enabling audit, debugging, and change analysis.
 
-Lineage is therefore a product capability with architectural weight, not a decorative graph.
+Lineage is therefore a product capability with architectural weight, not a
+decorative graph.
+
+Current implementation posture is tracked in
+[Frontend Current Reality Matrix](../review/frontend-current-reality-matrix.md).
+This document defines the target Lineage capability, not a claim that the full
+lineage model is already implemented in code today.
 
 ---
 
