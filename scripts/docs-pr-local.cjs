@@ -3,7 +3,12 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 function resolveCommand(command) {
-  if (process.platform === 'win32' && !command.endsWith('.cmd') && !command.endsWith('.exe')) {
+  if (
+    process.platform === 'win32' &&
+    ['pnpm', 'npm', 'npx'].includes(command) &&
+    !command.endsWith('.cmd') &&
+    !command.endsWith('.exe')
+  ) {
     return `${command}.cmd`;
   }
   return command;
