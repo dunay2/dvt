@@ -106,7 +106,7 @@ describe('withTestQueryClient', () => {
     const baselineChildren = document.body.childElementCount;
     globalObject.IS_REACT_ACT_ENVIRONMENT = false;
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const onError = (event: ErrorEvent) => {
+    const onError = (event: ErrorEvent): void => {
       if (event.error instanceof Error && event.error.message === 'boom') {
         event.preventDefault();
       }
