@@ -16,16 +16,16 @@ validated in CI.
 
 ## Canonical Anchors
 
-- [Glossary](../../../concepts/glossary.md) for `traceability`,
+- [Glossary](../../../../concepts/glossary.md) for `traceability`,
   `schema pin`, `canonical spec`, `verification tuple`, and `golden fixture`
-- [Domain Language](../../../concepts/domain-language.md) for the distinction
+- [Domain Language](../../../../concepts/domain-language.md) for the distinction
   between planning docs, status docs, and normative contract artifacts
 - [G6 hub](index.md) for planning navigation
-- [Traceability Contracts](../../../contracts/traceability/index.md) for the
+- [Traceability Contracts](../../../../contracts/traceability/index.md) for the
   normative emitted facet artifacts
-- [Canonical Doc Code Matrix](../../status/canonical-doc-code-matrix.md) for
+- [Canonical Doc Code Matrix](../../../status/canonical-doc-code-matrix.md) for
   the curated doc -> code -> test -> command mapping
-- [System Delivery Status](../../../architecture/system-delivery-status.md) for
+- [System Delivery Status](../../../../architecture/system-delivery-status.md) for
   the cross-system implementation snapshot
 
 ## Baseline After `#405` And `#408`
@@ -66,7 +66,7 @@ Those concerns remain in `G10`.
 
 The canonical normative home for emitted lineage facets is:
 
-- [Traceability Contracts](../../../contracts/traceability/index.md)
+- [Traceability Contracts](../../../../contracts/traceability/index.md)
 
 Artifact split:
 
@@ -79,7 +79,7 @@ Artifact split:
 
 Rationale:
 
-- the contracts become navigable from MkDocs
+- the contracts become navigable from Zensical
 - the emitted facet surface is no longer governed only by prose planning docs
 - later validation lanes can use stable repo-local artifacts without network
 
@@ -101,7 +101,7 @@ Acceptance:
 ### Slice 4 - Offline schema validation
 
 Validate emitted facet payloads against the local artifacts in
-[Traceability Contracts](../../../contracts/traceability/index.md).
+[Traceability Contracts](../../../../contracts/traceability/index.md).
 
 Acceptance:
 
@@ -129,8 +129,8 @@ Equivalent commands are acceptable, but `G6` closure must keep:
 Closeout docs must update at least:
 
 - [Gap Execution Plans](../GAP_EXECUTION_PLANS.md)
-- [Canonical Doc Code Matrix](../../status/canonical-doc-code-matrix.md)
-- [System Delivery Status](../../../architecture/system-delivery-status.md)
+- [Canonical Doc Code Matrix](../../../status/canonical-doc-code-matrix.md)
+- [System Delivery Status](../../../../architecture/system-delivery-status.md)
 - one evidence doc or residual risk record, depending on closeout state
 
 ## Definition Of Done

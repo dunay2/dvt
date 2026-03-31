@@ -21,8 +21,8 @@ This document is part of the repository governance proposal set.
 - Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
 - Role in set: repository technical policy
 - Complementary proposals:
-  - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md) defines enforcement and orchestration strategy
-  - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md) defines documentation governance and discoverability
+  - [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md) defines enforcement and orchestration strategy
+  - [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md) defines documentation governance and discoverability
   - [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md) defines execution order for follow-up technical slices
 
 ## Purpose

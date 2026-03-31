@@ -16,8 +16,8 @@ This document is part of the repository governance proposal set.
 - Role in set: execution roadmap
 - Complementary proposals:
   - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines target repository package policy
-  - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md) defines how enforcement and CI orchestration should converge
-  - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md) defines how documentation and traceability around these slices should stay discoverable
+  - [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md) defines how enforcement and CI orchestration should converge
+  - [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md) defines how documentation and traceability around these slices should stay discoverable
 
 This proposal groups the main post-Phase-1 architectural follow-ups into one
 execution roadmap. It is planning material only: no slice below is implied to
@@ -195,7 +195,7 @@ by the lineage path.
   **`IAuthorizationPolicy` port extraction** (F1 in the audit). This is orthogonal
   to S02 and S03 and can start immediately. It is the recommended prerequisite for
   S03, as it removes authorization from `WorkflowEngine` before the use-case
-  extraction. See [ADR-0039](../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md).
+  extraction. See [ADR-0039](../../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md).
 - Recommended execution order for the next wave: **`IAuthorizationPolicy`** → **S02** → **S03**.
 
 ## Non-Goals

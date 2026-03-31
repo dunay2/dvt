@@ -27,7 +27,7 @@ Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de esta
 - `.github/workflows/golden-paths.yml`
 - `.github/workflows/test.yml`
 - `.github/workflows/pr-quality-gate.yml`
-- `.github/workflows/mkdocs-deploy.yml`
+- `.github/workflows/docs-deploy.yml`
 - `.github/workflows/release.yml`
 
 ### Gates opcionales introducidos
@@ -53,7 +53,7 @@ Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de esta
   - `run_temporal_integration`
   - Checks de PR (tÃ­tulo, tamaÃ±o, labels, descripciÃ³n) condicionados a evento `pull_request`.
 
-- En `.github/workflows/mkdocs-deploy.yml`
+- En `.github/workflows/docs-deploy.yml`
   - `run_pages_deploy`
 
 ## Riesgos conocidos antes de volver a automÃ¡tico
@@ -70,7 +70,7 @@ Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de esta
 4. **ValidaciÃ³n de fixtures golden**
    - Falta `tenantId` en `EngineRunRef` en varios JSON de planes.
 
-5. **Deploy de MkDocs a gh-pages**
+5. **Deploy de Zensical a gh-pages**
    - El token por defecto no tiene permisos de push en ciertos contextos.
 
 ## Estrategia de reversiÃ³n recomendada
@@ -94,7 +94,7 @@ Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de esta
    - `contracts.yml`
    - `test.yml`
    - `release.yml`
-   - `mkdocs-deploy.yml` (cuando permisos/pages estÃ©n validados)
+   - `docs-deploy.yml` (cuando permisos/pages estÃ©n validados)
 
 3. Reponer `schedule` en `golden-paths.yml` solo cuando golden fixtures estÃ©n limpios.
 

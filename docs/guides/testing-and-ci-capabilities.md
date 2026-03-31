@@ -84,22 +84,28 @@ Relevant code and fixtures:
 
 ## Documentation Quality Gates
 
-| Capability                          | Command                      | Source                               |
-| ----------------------------------- | ---------------------------- | ------------------------------------ |
-| Docs sync                           | `pnpm docs:sync`             | [`package.json`](../../package.json) |
-| Docs sync drift check               | `pnpm docs:sync:check`       | [`package.json`](../../package.json) |
-| Docs quality policy check           | `pnpm docs:quality:check`    | [`package.json`](../../package.json) |
-| Docs doctor                         | `pnpm docs:doctor`           | [`package.json`](../../package.json) |
-| Markdown location policy            | `pnpm docs:gov:locations`    | [`package.json`](../../package.json) |
-| Canonical path/link check           | `pnpm docs:canonical:check`  | [`package.json`](../../package.json) |
-| Generated code-state check          | `pnpm docs:status:check`     | [`package.json`](../../package.json) |
-| Generated capability coverage check | `pnpm docs:capability:check` | [`package.json`](../../package.json) |
-| Aggregate docs CI gate              | `pnpm docs:ci`               | [`package.json`](../../package.json) |
+| Capability                                | Command                      | Source                               |
+| ----------------------------------------- | ---------------------------- | ------------------------------------ |
+| Docs sync                                 | `pnpm docs:sync`             | [`package.json`](../../package.json) |
+| Docs sync drift check                     | `pnpm docs:sync:check`       | [`package.json`](../../package.json) |
+| Docs quality policy check                 | `pnpm docs:quality:check`    | [`package.json`](../../package.json) |
+| Docs doctor                               | `pnpm docs:doctor`           | [`package.json`](../../package.json) |
+| Markdown location policy                  | `pnpm docs:gov:locations`    | [`package.json`](../../package.json) |
+| Canonical path/link check                 | `pnpm docs:canonical:check`  | [`package.json`](../../package.json) |
+| Generated code-state drift check          | `pnpm docs:status:check`     | [`package.json`](../../package.json) |
+| Generated capability coverage drift check | `pnpm docs:capability:check` | [`package.json`](../../package.json) |
+| Local docs regenerate-and-validate flow   | `pnpm docs:ci`               | [`package.json`](../../package.json) |
 
 Generated documentation sources:
 
 - code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
+
+Command semantics:
+
+- `pnpm docs:ci` is the local-friendly docs validation flow. It regenerates derived docs surfaces first and then validates the resulting worktree.
+- `pnpm docs:sync:check`, `pnpm docs:status:check`, and `pnpm docs:capability:check` are strict drift gates. They compare generated outputs against `HEAD` and are intended for explicit cleanliness enforcement.
+- GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 
 ## GitHub Workflow Coverage
 

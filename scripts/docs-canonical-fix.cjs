@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
-const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
+const zensicalConfigPath = path.join(repoRoot, 'zensical.yml');
 
 const replacements = [
   // URL-encoded and plain variants
@@ -51,7 +51,7 @@ function main() {
     if (writeIfChanged(filePath)) changed += 1;
   }
 
-  if (fs.existsSync(mkdocsPath) && writeIfChanged(mkdocsPath)) {
+  if (fs.existsSync(zensicalConfigPath) && writeIfChanged(zensicalConfigPath)) {
     changed += 1;
   }
 

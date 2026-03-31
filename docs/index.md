@@ -35,7 +35,7 @@ specifically about execution invariants or adapters.
 - [Engine Architecture](architecture/engine/index.md)
 - [Roadmap Of Record](planning/roadmap/index.md)
 - [Planning Control Tower](planning/state/planning-control-tower.md)
-- [Gap Execution Plans](planning/gaps/GAP_EXECUTION_PLANS.md)
+- [Planning Gaps](planning/gaps/index.md)
 - [Current Delivery Status](architecture/system-delivery-status.md)
 - [Planning Status](planning/status/index.md)
 - [Evidence](evidence/index.md)
@@ -65,7 +65,7 @@ specifically about execution invariants or adapters.
 1. [Runbooks](runbooks/index.md)
 2. [Current Delivery Status](architecture/system-delivery-status.md)
 3. [Risk Register](risk-register/index.md)
-4. [Gap Execution Plans](planning/gaps/GAP_EXECUTION_PLANS.md)
+4. [Planning Gaps](planning/gaps/index.md)
 5. [Planning Status](planning/status/index.md)
 
 ## Transitional Notes

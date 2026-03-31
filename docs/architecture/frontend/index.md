@@ -45,7 +45,7 @@ gap between visual breadth and production-backed behavior.
 2. [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
 3. [apps/web/DOCUMENTATION_INDEX.md](../../../apps/web/DOCUMENTATION_INDEX.md)
 4. [System Delivery Status](../system-delivery-status.md)
-5. [G8 Real Auth Final Spec](../../planning/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
+5. [G8 Real Auth Final Spec](../../planning/archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
 
 ## Primary Code Anchors
 

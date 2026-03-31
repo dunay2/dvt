@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
-const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
+const zensicalConfigPath = path.join(repoRoot, 'zensical.yml');
 
 const FORBIDDEN_SEGMENTS = ['dvt execution model'];
 
@@ -71,13 +71,13 @@ function main() {
     }
   }
 
-  // 3) Forbid legacy path references in mkdocs.yml nav
-  if (fs.existsSync(mkdocsPath)) {
-    const mkdocs = fs.readFileSync(mkdocsPath, 'utf8');
-    const normalizedMkdocs = normalizeForMatch(mkdocs);
+  // 3) Forbid legacy path references in the docs config
+  if (fs.existsSync(zensicalConfigPath)) {
+    const zensicalConfig = fs.readFileSync(zensicalConfigPath, 'utf8');
+    const normalizedZensicalConfig = normalizeForMatch(zensicalConfig);
     for (const segment of FORBIDDEN_SEGMENTS) {
-      if (normalizedMkdocs.includes(segment)) {
-        errors.push(`mkdocs.yml -> contains forbidden legacy segment "${segment}".`);
+      if (normalizedZensicalConfig.includes(segment)) {
+        errors.push(`zensical.yml -> contains forbidden legacy segment "${segment}".`);
       }
     }
   }

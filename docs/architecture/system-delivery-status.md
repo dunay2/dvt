@@ -25,7 +25,7 @@ Use this page together with:
   for the curated topic -> doc -> code -> test -> command mapping
 - [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md)
   for the quantified planner-specific baseline and component scorecard
-- [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) for the
+- [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md) for the
   active gap-by-gap delivery posture
 - [Generated Code State](../planning/status/generated-code-state.md) for the
   current workspace and test inventory
@@ -59,12 +59,12 @@ Minimum tuple for this document:
 
 | Area                       | Current posture    | What is true now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Primary status source                                                                                                                                                             |
 | -------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entry layer                | Partial            | `apps/api` ships the protected runtime command/query surface (`POST /runs/start`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, `POST /runs/:runId/signal`) with OIDC auth, tenant policy, package-level route coverage, a dedicated `pnpm --filter dvt-api test:integration` lane executed against local Docker PostgreSQL on 2026-03-20, and start-run backpressure acquisition now wrapped by low-TTL cache, circuit-breaker, and persisted last-known-good fallback logic; web still has no automated tests | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                      |
+| Entry layer                | Partial            | `apps/api` ships the protected runtime command/query surface (`POST /runs/start`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, `POST /runs/:runId/signal`) with OIDC auth, tenant policy, package-level route coverage, a dedicated `pnpm --filter dvt-api test:integration` lane executed against local Docker PostgreSQL on 2026-03-20, and start-run backpressure acquisition now wrapped by low-TTL cache, circuit-breaker, and persisted last-known-good fallback logic; web still has no automated tests | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                              |
 | Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; quantified planner baseline is linked (`71%` overall) and the typed graph-source boundary is now real, but lifecycle, productization, and broader product hardening remain open                                                                                                                                                                                                                                                                                  | [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven                                                                                                                                                                                                                                                                                                                                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                                                                    |
-| Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open                                                                                                                                                                                                                                                                                                                                  | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                                                                    |
+| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven                                                                                                                                                                                                                                                                                                                                     | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md)                                                                                                            |
+| Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open                                                                                                                                                                                                                                                                                                                                  | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md)                                                                                                            |
 | Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                                                                                                                                                                                                                                                                                                                                                  | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                                                      |
-| Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns remain Phase 2 under G10                                                                                                                                                                                                                                                                                                                            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                      |
+| Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns remain Phase 2 under G10                                                                                                                                                                                                                                                                                                                            | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                              |
 
 ## Area Status
 
@@ -140,7 +140,7 @@ Minimum tuple for this document:
 | G10 | `outbox_lineage` worker plus fail-open DLQ   | Closed        |
 
 For closure criteria, evidence, and exact verification commands, use
-[Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md).
+[Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md).
 
 ## Phase 2 Slice Debt
 
@@ -158,11 +158,11 @@ For closure criteria, evidence, and exact verification commands, use
 | S08   | Plan Storage ADR + PostgresPlanStore | Open (blocked by S09)     |
 | S11   | ILineageSink.jobFacets Tighten       | Open (blocked by S07)     |
 
-See [Phase 2 Architectural Debt Roadmap](../planning/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
+See [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
 
 ## Reading Order
 
-1. [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)
+1. [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md)
 2. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 3. [Generated Code State](../planning/status/generated-code-state.md)
 4. Topic-specific specs under [Reference](index.md)
@@ -235,7 +235,7 @@ classDiagram
 
 ### RunMetadata Field Relationships
 
-See [G7-AI-EXECUTION-TRACKER.md](../planning/gaps/G7-AI-EXECUTION-TRACKER.md):
+See [G7-AI-EXECUTION-TRACKER.md](../planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md):
 
 ```mermaid
 classDiagram
@@ -250,7 +250,7 @@ classDiagram
 
 ### Reconciliation Flow
 
-See [G7-AI-EXECUTION-TRACKER.md](../planning/gaps/G7-AI-EXECUTION-TRACKER.md):
+See [G7-AI-EXECUTION-TRACKER.md](../planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md):
 
 ```mermaid
 sequenceDiagram
