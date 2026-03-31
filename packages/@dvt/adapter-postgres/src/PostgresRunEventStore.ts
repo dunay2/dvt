@@ -128,6 +128,13 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
         withSeq.runSeq,
         withSeq.persistedAt
       );
+      await this.storage.upsertSnapshotWorkItem(
+        executor,
+        runId,
+        withSeq.tenantId,
+        withSeq.runSeq,
+        withSeq.persistedAt
+      );
       result.appended.push(withSeq);
       result.setLastAppendedRunSeq(withSeq.runSeq);
       return true;

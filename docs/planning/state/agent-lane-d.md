@@ -2,7 +2,7 @@
 title: Agent Lane D - Scale And Go-To-Market
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-26
+last_reviewed: 2026-03-31
 planning_type: status
 ---
 
@@ -30,42 +30,51 @@ Eres Dana, lider de escala y GTM readiness. Tu foco es sostenibilidad operativa 
 
 # Agent Lane D - Scale And Go-To-Market
 
-Unassigned lane for parallel work. Use this file when assigning Agent D.
+Generated from the verified lane registry `agent-lane-d.yaml`. Use this file when assigning Agent D.
 
 ## Goal
 
 Prepare the system for scale and for the first enterprise customer.
 
+## Verification Summary
+
+- Status model: `evidence-backed lane registry`
+- Done rule: `done only with accepted evidence or equivalent verifiable closure`
+- Verified on: `2026-03-31`
+- Total tasks: `15`
+- Total effort points: `84`
+- Completed weighted points: `29.25`
+- Lane progress: `35%`
+- Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
+
 ## Tasks
 
-> Source of truth: `agent-lane-d.yaml`. Edit the YAML and run `pnpm docs:sync`.
+> Verified registry source: `agent-lane-d.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-D1`: define the residual-risk baseline explicitly accepted after MVP backend operability reset, including what is deferred and why it does not block MVP.
-- [ ] `P1` `run event log retention + TTL`: bound storage growth and automate archival.
-- [x] `P1` `G5-PR2`: add deferred deletion and restore flow for archived events.
-- [x] `P1` `S15`: add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression under concurrency.
-- [x] `P1` `S15-F1`: surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
-- [x] `P1` `S14`: preserve gateway evaluation context across `continueAsNew` segments.
-- [ ] `P2` `cost attribution model`: support billing and finance reporting.
-- [ ] `P2` `run_events partitioning`: reduce storage and write-path pressure.
-- [ ] `P2` `read replica query path`: offload read traffic from primary.
-- [ ] `P2` `projector event-driven invalidation`: remove polling bottlenecks.
-- [ ] `P2` `Temporal -> API backpressure`: protect admission under saturation.
-- [ ] `P3` `first enterprise pilot`: validate product-market fit.
-- [ ] `P3` `billing integration`: turn usage into invoicing.
-- [ ] `P3` `compliance documentation pack`: prepare regulated customer onboarding.
-- [ ] `P3` `acquisition positioning deck`: support GTM narrative and exit positioning.
+- [ ] `P0` `MVP-D1` `review` `M` `5pt` `85%`: define the residual-risk baseline explicitly accepted after MVP backend operability reset, including what is deferred and why it does not block MVP.
+- [x] `P1` `run event log retention + TTL` `done` `L` `8pt` `100%`: bound storage growth and automate archival.
+- [x] `P1` `G5-PR2` `done` `L` `8pt` `100%`: add deferred deletion and restore flow for archived events.
+- [x] `P1` `S15` `done` `M` `3pt` `100%`: add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression under concurrency.
+- [x] `P1` `S15-F1` `done` `M` `3pt` `100%`: surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
+- [x] `P1` `S14` `done` `M` `3pt` `100%`: preserve gateway evaluation context across `continueAsNew` segments.
+- [ ] `P2` `cost attribution model` `blocked` `L` `8pt` `0%`: support billing and finance reporting.
+- [ ] `P2` `run_events partitioning` `queued` `L` `8pt` `0%`: reduce storage and write-path pressure.
+- [ ] `P2` `read replica query path` `blocked` `M` `5pt` `0%`: offload read traffic from primary.
+- [ ] `P2` `projector event-driven invalidation` `blocked` `M` `5pt` `0%`: remove polling bottlenecks.
+- [ ] `P2` `Temporal -> API backpressure` `blocked` `M` `5pt` `0%`: protect admission under saturation.
+- [ ] `P3` `first enterprise pilot` `blocked` `L` `8pt` `0%`: validate product-market fit.
+- [ ] `P3` `billing integration` `blocked` `M` `5pt` `0%`: turn usage into invoicing.
+- [ ] `P3` `compliance documentation pack` `blocked` `M` `5pt` `0%`: prepare regulated customer onboarding.
+- [ ] `P3` `acquisition positioning deck` `blocked` `M` `5pt` `0%`: support GTM narrative and exit positioning.
 
 ## Dependencies
 
-- `MVP-D1` depends on `MVP-A1` and `MVP-B1` so residual risks are tied to validated MVP scope.
-- `G5-PR2` depends on the archival prerequisite chain already tracked in the workboard.
-- `S15-F1` depends on `S15`.
-- `cost attribution model` depends on `S05`, `S02`, and retention.
-- `read replica query path` depends on `run_events partitioning`.
-- `projector event-driven invalidation` depends on `read-your-writes contract`.
-- `Temporal -> API backpressure` depends on the projector lane.
-- `first enterprise pilot` depends on SLOs and RBAC.
+- `MVP-D1` remains provisional until `MVP-A1` and `MVP-B1` are accepted.
+- `run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence from 2026-03-30.
+- `G5-PR2`, `S15`, `S15-F1`, and `S14` are closed with code-backed closeouts.
+- `cost attribution model` remains blocked on `S05` and on retention being fully operationalized.
+- `projector event-driven invalidation` stays blocked on the read-your-writes contract even though the staleness surface is now caller-visible.
+- `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM backlog rather than implementation work.
 
 ## Expected Outcome
 

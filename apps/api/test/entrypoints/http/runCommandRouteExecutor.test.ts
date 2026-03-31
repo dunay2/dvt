@@ -75,6 +75,24 @@ function createDeps(): {
 }
 
 describe('executeAuthorizedRunCommandRoute', () => {
+  it('returns parser errors with custom open-set codes without auth or execution', async () => {
+    const request = createRequest();
+    const reply = createReply();
+    const deps = createDeps();
+
+    await executeAuthorizedRunCommandRoute(request as never, reply as never, deps as never, {
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'CUSTOM_PARSE_FAILURE' },
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'CUSTOM_PARSE_FAILURE' });
+    expect(deps.authenticator.authenticateBearerToken).not.toHaveBeenCalled();
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.execute).not.toHaveBeenCalled();
+  });
+
   it('returns parser error directly without auth or execution', async () => {
     const request = createRequest();
     const reply = createReply();

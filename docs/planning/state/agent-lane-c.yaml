@@ -2,102 +2,206 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-29
+last_reviewed: '2026-03-31'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
   - claim semantics are safe under concurrency
   - API consumers can reason about freshness
-header_markdown: |
-  Eres Charie, ingeniero de runtime safety y operabilidad. Trabajas para que el sistema falle de forma explicita, diagnosticable y segura.
+header_markdown: >
+  Eres Charie, ingeniero de runtime safety y operabilidad. Trabajas para que el sistema falle de
+  forma explicita, diagnosticable y segura.
+
 
   ## Principios obligatorios
 
+
   - Fail fast con contexto: errores claros y accionables
+
   - Operabilidad MVP primero: bootstrap, diagnose, daily operate
+
   - Admission y auth antes de profundidad funcional
+
   - Freshness visible al caller: sin suposiciones implicitas
+
   - Concurrencia segura: leases, idempotencia, invariantes estables
+
 
   ## Forma de trabajo
 
+
   - Definir contrato operativo minimo por endpoint critico
+
   - Agregar cobertura negativa para paths de error reales
+
   - Validar que estado/health expongan degradacion real
+
 
   ## Restricciones
 
+
   - No esconder degradacion bajo "ok" superficial
+
   - No mezclar concerns de seguridad con concerns de UI
+
   - No introducir retries ambiguos sin ownership definido
 tasks:
   - task_id: MVP-C1
     priority: P0
     status: review
-    objective:
+    objective: >-
       produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
       diagnose, daily operate) without adding feature depth.
     dependency: MVP-A1, MVP-B1
-    target:
+    target: >-
       Operator-ready runbook for current runtime routes, auth scope handling, health/readiness
       diagnosis, fallback boundaries, and baseline validation commands
       (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`); final done status remains
       aligned with `MVP-A1` and `MVP-B1` dependency closure.
+    complexity: M
+    effort_points: 5
+    progress_pct: 90
+    evidence_refs:
+      - docs/evidence/ED-20260329-mvp-c1-backend-control-plane-runbook.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+    status_reason:
+      The runbook is accepted, but lane closure still depends on MVP-A1 and MVP-B1 finalization.
+    last_verified: '2026-03-31'
   - task_id: S09
     priority: P0
     status: done
     objective: decide retry ownership across planner, engine, and adapters.
     dependency: none
     target: Lock ADR-0040 and the runtime ownership baseline.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+    status_reason: Accepted ADR-0040 is the canonical closure artifact for retry ownership.
+    last_verified: '2026-03-31'
   - task_id: S16
     priority: P1
     status: done
-    objective:
+    objective: >-
       enforce governed planVersion validation at start-run admission to reject unsupported or stale
       plan references.
     dependency: none
-    target:
+    target: >-
       Start-run preconditions use typed UnsupportedPlanVersionError with registry-backed supported
       versions and explicit contract coverage.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts
+      - packages/@dvt/engine/test/gaps/PlanVersionPolicy.test.ts
+      - apps/api/test/application/services/engineStartRunUseCase.test.ts
+    status_reason: >-
+      The planVersion guard is present in runtime code with typed errors and tests, which provides
+      equivalent verified closure for this pass.
+    last_verified: '2026-03-31'
   - task_id: RC-D2
     priority: P0
     status: done
     objective: make the outbox claim timeout configurable.
     dependency: none
     target: Deployment-tunable claim lease.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/archive/proposals/rc-d2-claim-timeout-contract-20260323.md
+      - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts
+      - packages/@dvt/adapter-postgres/test/smoke.test.ts
+    status_reason: >-
+      Configurable claim timeout is implemented and exercised in code; the archived proposal only
+      keeps an explicitness follow-up.
+    last_verified: '2026-03-31'
   - task_id: RC-D3
     priority: P0
     status: done
     objective: normalize Temporal not-found error code comparison.
     dependency: none
     target: Merge review and lock normalized not-found guard.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts
+      - packages/@dvt/adapter-temporal/test/temporalErrorPolicy.test.ts
+      - packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
+    status_reason:
+      Temporal not-found normalization is codified and exhaustively tested at the adapter boundary.
+    last_verified: '2026-03-31'
   - task_id: RC-D1
     priority: P1
     status: done
     objective: surface reconciler degradation in API health.
     dependency: none
     target: Validate and merge health degradation signaling.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - >-
+        docs/risk-register/quality/R-20260322-api-health-reconciler-runtime-degradation-visibility.md
+      - apps/api/src/routes/health.ts
+      - apps/api/test/app.test.ts
+    status_reason: >-
+      Health degradation signaling exists in the API route and tests; the risk register captures the
+      quality posture around the slice.
+    last_verified: '2026-03-31'
   - task_id: RC-D1A
     priority: P1
     status: done
     objective: add health compatibility and watchdog integration tests.
     dependency: RC-D1
     target: Compat policy + timer wiring integration coverage.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - >-
+        docs/planning/archive/proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md
+      - apps/api/src/server.ts
+      - apps/api/test/server.test.ts
+    status_reason: >-
+      Watchdog and compatibility coverage are present in code and the archived proposal documents
+      the intended closure target.
+    last_verified: '2026-03-31'
   - task_id: RBAC at operation level
     priority: P1
     status: done
     objective: enforce tenant-aware start/signal/cancel rules.
     dependency: none
-    target:
+    target: >-
       Operation-level authorization boundaries are explicit and validated with negative integration
       coverage plus always-on route-level unit coverage for action-specific denials (`run:cancel` vs
       `run:signal`).
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260329-lane-c-rbac-operation-level-closeout.md
+    status_reason: Accepted evidence closes the operation-level authorization boundary.
+    last_verified: '2026-03-31'
   - task_id: snapshot staleness in API
     priority: P1
     status: done
     objective: expose freshness to callers.
     dependency: none
     target: Caller-visible staleness surface.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260330-snapshot-staleness-api-surface.md
+    status_reason:
+      Accepted evidence closes the caller-visible staleness surface and fallback telemetry.
+    last_verified: '2026-03-31'
   - task_id: read-your-writes contract
     priority: P2
     status: done
@@ -106,50 +210,124 @@ tasks:
     target:
       SLO-backed freshness contract defined for `GET /runs/:runId` with measurable staleness outcome
       telemetry and operator alert thresholds.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/runbooks/read-your-writes-freshness-slo-20260330.md
+      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.md
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+    status_reason: >-
+      The freshness SLO contract is documented with measurable telemetry outcomes and backed by API
+      status-path coverage.
+    last_verified: '2026-03-31'
   - task_id: granular RBAC
     priority: P2
-    status: queued
+    status: done
     objective: split CANCEL and PAUSE privileges.
     dependency: none
-    target: Refine operation-level authorization split.
+    target:
+      CANCEL authorization is enforced through `run:cancel`, while PAUSE/RESUME remain under
+      `run:signal`, with explicit parser and integration-deny coverage for both paths.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - apps/api/src/entrypoints/http/runCommandFieldParsers.ts
+      - apps/api/test/entrypoints/http/runCommandFieldParsers.test.ts
+      - apps/api/test/entrypoints/http/runCommandRouteExecutor.test.ts
+    status_reason: >-
+      CANCEL and PAUSE/RESUME authorization are now explicitly split between cancel and signal
+      scopes with parser and route-level deny coverage.
+    last_verified: '2026-03-31'
   - task_id: RC-C1
     priority: P3
     status: queued
-    objective:
+    objective: >-
       make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing
       does not depend on a closed parse-code set.
     dependency: RBAC at operation level
     target: Generic ParsedRunCommandError helper signatures validated by dedicated unit tests.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: The parser-generic follow-up remains unstarted.
+    last_verified: '2026-03-31'
   - task_id: RC-C2
     priority: P2
     status: queued
-    objective:
+    objective: >-
       institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure
       log-first triage) and track measurable round reduction.
     dependency: none
     target: Apply the Lane C efficiency playbook in three consecutive PR cycles.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
+    status_reason:
+      The efficiency playbook exists, but the three-cycle institutionalization task has not started.
+    last_verified: '2026-03-31'
   - task_id: RC-E1
     priority: P1
     status: done
-    objective:
+    objective: >-
       harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and
       dangerous schemes (data:, javascript:, mailto:).
-    dependency: S16 merge
+    dependency: S16
     target: SSRF/CIDR hardening + dedicated unit tests.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/engine/src/security/hostRiskClassifier.ts
+      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
+      - packages/@dvt/engine/src/contracts/PlanRef.ts
+    status_reason: >-
+      The host-risk classifier and security tests provide equivalent verified closure for the
+      SSRF/CIDR hardening slice.
+    last_verified: '2026-03-31'
   - task_id: RC-E2
     priority: P1
     status: done
-    objective:
+    objective: >-
       move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent
       plan-URI information leakage to unauthorized callers.
-    dependency: S16 merge
+    dependency: S16
     target: Precondition order hardening.
-dependency_notes: |
-  - `MVP-C1` depends on `MVP-A1` and `MVP-B1` so the runbook reflects verified capabilities only.
-  - `RC-D1A` depends on `RC-D1`.
-  - `RBAC at operation level` is unblocked after `S09`.
-  - Route-level RBAC deny-path tests are always-on; live-DB protected runtime integration is executed in release-candidate/nightly profiles when env posture is present.
-  - `Read-your-writes contract` depends on `snapshot staleness in API`.
-  - `RC-C1` depends on `RBAC at operation level`.
-  - `RC-C2` is independent and may run in parallel with runtime hardening items.
-  - `RC-E1` and `RC-E2` depend on S16 merge.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+      - packages/@dvt/engine/test/services/StartRunCoordinator.test.ts
+      - apps/api/src/application/services/engineStartRunUseCase.ts
+    status_reason: >-
+      Tenant access is asserted before plan-ref validation in code and the ordering is exercised by
+      tests.
+    last_verified: '2026-03-31'
+dependency_notes:
+  - >-
+    `MVP-C1` is accepted as a runbook artifact but remains in review until the MVP-A1/B1 dependency
+    chain is closed.
+  - '`S09` is closed via accepted ADR-0040.'
+  - >-
+    `S16` is verified from runtime code and tests despite older review surfaces that still showed it
+    open.
+  - '`RC-D1` and `RC-D1A` are code-grounded by health route and watchdog coverage.'
+  - '`read-your-writes contract` is now unblocked by the accepted snapshot staleness caller surface.'
+  - '`RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.'
+verification_summary:
+  status_model: evidence-backed lane registry
+  done_rule: done only with accepted evidence or equivalent verifiable closure
+  verified_on: '2026-03-31'
+  total_tasks: 15
+  total_effort_points: 54
+  completed_weighted_points: 38.5
+  lane_progress_pct: 71
+  notes: >-
+    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
+    coordination-only effort.

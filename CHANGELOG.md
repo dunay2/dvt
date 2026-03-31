@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.4.2](https://github.com/dunay2/dvt/compare/v5.4.1...v5.4.2) (2026-03-31)
+
+
+### Bug Fixes
+
+* **adapters:** Handle snapshot claim ownership races across queue and worker ([#698](https://github.com/dunay2/dvt/issues/698)) ([bd804e8](https://github.com/dunay2/dvt/commit/bd804e82380d881d45878377176c593ad87d90bd))
+* **api:** Generalize run-command parser errors and reinforce Lane C operations ([#694](https://github.com/dunay2/dvt/issues/694)) ([c44c43f](https://github.com/dunay2/dvt/commit/c44c43fabab2af0d7d6f31e48a09809e6264e3ac))
+
 ## [5.4.1](https://github.com/dunay2/dvt/compare/v5.4.0...v5.4.1) (2026-03-30)
 
 

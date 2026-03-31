@@ -2,128 +2,258 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-29
+last_reviewed: '2026-03-31'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
   - lineage ownership is explicit
   - failures are observable and replayable
-header_markdown: |
-  Eres Berta, ingeniera de eventos y trazabilidad. Tu prioridad es integridad del envelope, versionado y evidencia reproducible.
+header_markdown: >
+  Eres Berta, ingeniera de eventos y trazabilidad. Tu prioridad es integridad del envelope,
+  versionado y evidencia reproducible.
+
 
   ## Principios obligatorios
 
+
   - Event boundary estricto: envelope y payload con reglas claras
+
   - payloadVersion obligatorio: sin version no hay contrato estable
+
   - Observabilidad util: errores accionables, no ruido
+
   - Reproducibilidad: cada claim debe tener evidencia y comando
+
   - Idempotencia y orden: invariantes primero
+
 
   ## Forma de trabajo
 
+
   - Especificar contrato y esquema por eventType
+
   - Cubrir happy path y negativos en write-boundary
+
   - Cerrar trazabilidad doc -> test -> comando
+
 
   ## Restricciones
 
+
   - No `Record<string, unknown>` sin validacion cuando aplique
+
   - No acoplar worker a internals de adapter
+
   - No aceptar asserts sin evidencia ejecutable
 tasks:
   - task_id: MVP-B1
     priority: P0
     status: review
-    objective:
+    objective: >-
       build a claim-to-evidence traceability matrix for backend MVP operability assertions
       (capability, proof source, and executable validation command).
     dependency: MVP-A1
-    target:
+    target: >-
       Every MVP claim in roadmap/docs maps to concrete code/test evidence and a command in the
       acceptance baseline (provisional closeout tracked in
       `docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md` pending MVP-A1
       acceptance).
+    complexity: M
+    effort_points: 5
+    progress_pct: 85
+    evidence_refs:
+      - docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md
+      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
+    status_reason:
+      The matrix is materially complete, but final closure still depends on MVP-A1 acceptance.
+    last_verified: '2026-03-31'
   - task_id: S05
     priority: P0
     status: review
-    objective:
-      'S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level
-      write-boundary schema gating.'
+    objective: >-
+      S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level
+      write-boundary schema gating.
     dependency: none
-    target: Merge PR #623 and lock envelope boundary behavior.
+    target: Merge PR
+    complexity: L
+    effort_points: 8
+    progress_pct: 70
+    evidence_refs:
+      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/20260324-dvt-architectural-review.md
+    status_reason: >-
+      Payload-content validation landed, but the full envelope-level payloadVersion closure is still
+      not accepted.
+    last_verified: '2026-03-31'
   - task_id: S05-F1
     priority: P0
     status: done
     objective: add per-eventType payload-content schema validation at write boundary.
     dependency: S05
     target: Add payload schema map and AJV/runtime validation per eventType.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260328-lineage-outbox-retry-scheduling.md
+    status_reason:
+      Accepted evidence explicitly records the per-eventType payload-content validation slice.
+    last_verified: '2026-03-31'
   - task_id: RC-B1
     priority: P1
     status: done
     objective: decouple lineage worker from adapter internals.
     dependency: none
     target: Wire lineage outbox dependency directly in the composition root.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/reviews/20260322-dvt-code-grounded-corrective-task-list-review.md
+      - apps/lineage-worker/src/server.ts
+      - docs/planning/strategic-product-roadmap-20260324.md
+    status_reason: >-
+      The lineage worker no longer needs adapter-internal reach-through and the mainline code
+      matches the corrective review target.
+    last_verified: '2026-03-31'
   - task_id: RC-B2
     priority: P1
     status: done
     objective: replace lineage noop resolver with a real resolver.
     dependency: RC-B1
     target: SQL job facets enabled in production.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/archive/proposals/rc-b2-lineage-compiled-code-resolver-rollout-20260322.md
+      - apps/lineage-worker/src/compiledCodeResolver.ts
+      - apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts
+    status_reason:
+      The rollout proposal is marked closed and the resolver wiring exists in code and tests.
+    last_verified: '2026-03-31'
   - task_id: RC-B5
     priority: P1
     status: done
-    objective:
+    objective: >-
       add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and
       harden DLQ.
     dependency: none
     target: Retry pacing and DLQ hardening merged in mainline (0ac73b7).
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260328-lineage-outbox-retry-scheduling.md
+    status_reason: Accepted evidence closes retry scheduling and DLQ pacing hardening.
+    last_verified: '2026-03-31'
   - task_id: RC-B5-F2
     priority: P1
     status: done
-    objective:
+    objective: >-
       add real-Postgres integration tests for lineage claim-timeout and stale-claimer race
       semantics.
     dependency: RC-B5
-    target:
+    target: >-
       Real-Postgres integration coverage validates claim-timeout boundaries and stale-claimer
       interactions in lineage outbox claim fencing.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md
+    status_reason:
+      Accepted evidence closes the real-Postgres claim-timeout and stale-claimer race coverage.
+    last_verified: '2026-03-31'
   - task_id: DLQ alerting + automated replay
     priority: P1
-    status: queued
+    status: done
     objective: surface and reduce lineage backlogs.
-    dependency: RC-B5
+    dependency: S05, RC-B5
     target: Alerting and replay for lineage failures.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260330-lineage-dlq-alerting-auto-replay.md
+    status_reason: >-
+      Accepted evidence closes DLQ lag alerting and bounded dead-letter replay, with an explicit
+      note about an unrelated pre-existing worker-suite failure.
+    last_verified: '2026-03-31'
   - task_id: manifest S3 fetch cache
     priority: P2
-    status: queued
+    status: done
     objective: reduce planner egress and build latency.
     dependency: none
     target: Cache manifest fetches.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260330-planner-manifest-ref-cache.md
+    status_reason: Accepted evidence closes the repeated manifestRef fetch cache slice.
+    last_verified: '2026-03-31'
   - task_id: ADP-LINT-ORDER-01
     priority: P2
     status: review
-    objective:
+    objective: >-
       upgrade eslint import-order toolchain and remove workaround-only inline type alias patterns in
       adapter-postgres.
     dependency: none
     target: Stable autofix behavior with idiomatic import type usage restored.
+    complexity: S
+    effort_points: 2
+    progress_pct: 80
+    evidence_refs:
+      - docs/evidence/ED-20260328-adapter-runtime-sonar-closeout.md
+      - packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
+    status_reason: >-
+      The core Sonar slice is closed, but the review still tracks the import-order tooling hardening
+      as follow-up review work.
+    last_verified: '2026-03-31'
   - task_id: RC-F2
     priority: P2
     status: review
-    objective:
+    objective: >-
       externalize adapter-postgres CI path patterns to
       tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and
       pr-quality-gate.yml; add path-matcher unit tests.
     dependency: none
     target: Single source of truth for adapter scope detection plus path-matcher tests.
-dependency_notes: |
-  - `MVP-B1` depends on `MVP-A1` to avoid traceability drift from an unstable capability inventory.
-  - `S05` is explicitly tracked as `S05-part-1` (envelope boundary closure).
-  - `S05-F1` is closed after runtime boundary validation in contracts, adapter-postgres, and engine focused suites, plus negative write-boundary coverage.
-  - `RC-B1` and `RC-B2` are closed in mainline.
-  - `RC-B5` is complete; `RC-B5-F2` tracks the remaining integration-depth gap.
-  - `RC-B5` remains a prerequisite to DLQ alerting plus automated replay.
-  - `ADP-LINT-ORDER-01` moved to `review`: inline type-import aliases were replaced with idiomatic `import type` and a CI regression guard was added in `tools/ci`.
-  - `RC-F2` is independent and CI-only with no runtime risk.
-  - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary further.
-  - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
+    complexity: S
+    effort_points: 3
+    progress_pct: 80
+    evidence_refs:
+      - tools/ci/policy/adapter-postgres-relevance.json
+      - tools/ci/test/path-matcher.test.mjs
+      - .github/workflows/test.yml
+      - .github/workflows/pr-quality-gate.yml
+    status_reason: >-
+      The shared policy and tests exist in code, but this pass did not find a dedicated accepted
+      closeout artifact for final closure.
+    last_verified: '2026-03-31'
+dependency_notes:
+  - >-
+    `MVP-B1` remains in review until `MVP-A1` is accepted, because the traceability matrix must
+    inherit the final contractual scope.
+  - >-
+    `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review
+    until envelope-level payloadVersion closure is accepted.
+  - '`RC-B1` and `RC-B2` are verified against mainline code and proposal artifacts.'
+  - '`RC-B5` and `RC-B5-F2` are closed with accepted evidence.'
+  - >-
+    `DLQ alerting + automated replay` and `manifest S3 fetch cache` are now verified as delivered
+    via accepted evidence dated 2026-03-30.
+  - '`ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.'
+verification_summary:
+  status_model: evidence-backed lane registry
+  done_rule: done only with accepted evidence or equivalent verifiable closure
+  verified_on: '2026-03-31'
+  total_tasks: 11
+  total_effort_points: 47
+  completed_weighted_points: 42.85
+  lane_progress_pct: 91
+  notes: >-
+    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
+    coordination-only effort.

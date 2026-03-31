@@ -37,6 +37,12 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
     runSeq: number;
     updatedAt: string;
   }> = [];
+  public readonly queuedSnapshotWork: Array<{
+    runId: RunId;
+    tenantId: string;
+    runSeq: number;
+    enqueuedAt: string;
+  }> = [];
 
   async acquireRunLock(_executor: SqlCommandExecutor, _runId: RunId): Promise<void> {
     // no-op for append policy tests
@@ -68,6 +74,16 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
     updatedAt: string
   ): Promise<void> {
     this.upsertedHeads.push({ runId, tenantId, runSeq, updatedAt });
+  }
+
+  async upsertSnapshotWorkItem(
+    _executor: SqlCommandExecutor,
+    runId: RunId,
+    tenantId: string,
+    runSeq: number,
+    enqueuedAt: string
+  ): Promise<void> {
+    this.queuedSnapshotWork.push({ runId, tenantId, runSeq, enqueuedAt });
   }
 
   async selectExistingEvent(
@@ -290,6 +306,20 @@ describe('PostgresRunEventStore append invariants', () => {
         tenantId: TEST_TENANT_ID,
         runSeq: 2,
         updatedAt: TEST_NOW_ISO,
+      },
+    ]);
+    expect(storage.queuedSnapshotWork).toEqual([
+      {
+        runId: TEST_RUN_ID,
+        tenantId: TEST_TENANT_ID,
+        runSeq: 1,
+        enqueuedAt: TEST_NOW_ISO,
+      },
+      {
+        runId: TEST_RUN_ID,
+        tenantId: TEST_TENANT_ID,
+        runSeq: 2,
+        enqueuedAt: TEST_NOW_ISO,
       },
     ]);
   });

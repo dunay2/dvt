@@ -51,6 +51,22 @@ describe('runCommandFieldParsers', () => {
         error: 'INVALID_TENANT_ID',
       });
     });
+
+    it('supports custom tenant parse error codes', () => {
+      const customCodes = {
+        MISSING_TENANT_SCOPE: 'TENANT_SCOPE_MISSING_CUSTOM',
+        INVALID_TENANT_ID: 'TENANT_ID_INVALID_CUSTOM',
+      } as const;
+
+      expect(parseTenantId({}, customCodes)).toEqual({
+        ok: false,
+        error: 'TENANT_SCOPE_MISSING_CUSTOM',
+      });
+      expect(parseTenantId({ tenantId: 123 }, customCodes)).toEqual({
+        ok: false,
+        error: 'TENANT_ID_INVALID_CUSTOM',
+      });
+    });
   });
 
   describe('parseOptionalReason', () => {
@@ -81,6 +97,25 @@ describe('runCommandFieldParsers', () => {
         body: {
           error: 'FORBIDDEN',
           code: 'MISSING_TENANT_SCOPE',
+        },
+      });
+    });
+
+    it('supports open parse-code sets for shared parser plumbing', () => {
+      expect(badRequest('CUSTOM_BAD_REQUEST_CODE')).toEqual({
+        ok: false,
+        status: 400,
+        body: {
+          error: 'BAD_REQUEST',
+          code: 'CUSTOM_BAD_REQUEST_CODE',
+        },
+      });
+      expect(forbidden('CUSTOM_FORBIDDEN_CODE')).toEqual({
+        ok: false,
+        status: 403,
+        body: {
+          error: 'FORBIDDEN',
+          code: 'CUSTOM_FORBIDDEN_CODE',
         },
       });
     });
