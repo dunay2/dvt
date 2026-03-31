@@ -241,19 +241,28 @@ tasks:
       scopes with parser and route-level deny coverage.
     last_verified: '2026-03-31'
   - task_id: RC-C1
-    priority: P3
-    status: queued
+    priority: P1
+    status: done
     objective: >-
-      make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing
-      does not depend on a closed parse-code set.
-    dependency: RBAC at operation level
-    target: Generic ParsedRunCommandError helper signatures validated by dedicated unit tests.
-    complexity: S
-    effort_points: 2
-    progress_pct: 0
+      normalize caller-visible HTTP error contracts across apps/api and separate semantic validation
+      outcomes from transport serialization, including typed maintenance-boundary not-found handling
+      and removal of remaining parser legacy.
+    dependency: none
+    target: >-
+      Canonical HttpErrorEnvelope contract + unified HTTP mapper + parser/route migration + typed
+      `rebuildSnapshot` not-found boundary + negative regressions validated by package, arch,
+      integration, and prepush baselines.
+    complexity: L
+    effort_points: 8
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
-    status_reason: The parser-generic follow-up remains unstarted.
+      - docs/planning/proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md
+      - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
+      - docs/evidence/ED-20260331-rc-c1-boundary-legacy-hardening.md
+      - docs/risk-register/quality/R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml
+    status_reason: >-
+      The HTTP error boundary is normalized in apps/api and the remaining `rebuildSnapshot`/parser
+      legacy is closed with typed errors, docs, and validation evidence.
     last_verified: '2026-03-31'
   - task_id: RC-C2
     priority: P2
@@ -319,6 +328,9 @@ dependency_notes:
     open.
   - '`RC-D1` and `RC-D1A` are code-grounded by health route and watchdog coverage.'
   - '`read-your-writes contract` is now unblocked by the accepted snapshot staleness caller surface.'
+  - >-
+    `RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed
+    `rebuildSnapshot` not-found maintenance boundary.
   - '`RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.'
 verification_summary:
   status_model: evidence-backed lane registry
