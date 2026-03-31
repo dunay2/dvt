@@ -15,6 +15,10 @@ code_refs:
   - apps/api/src/entrypoints/http/getRunEventsRouteParser.ts
   - apps/api/src/entrypoints/http/listRunsRouteParser.ts
 evidence:
+  tests:
+    - pnpm --filter dvt-api test -- runCommandFieldParsers
+    - pnpm --filter dvt-api test -- cancelRunRouteParser
+    - pnpm --filter dvt-api test -- signalRunRouteParser
   analysis:
     - rg --line-number "type .*ParseErrorCode|const .*PARSE_ERROR_CODE|function badRequest\\(|function forbidden\\(|parseTenantId\\(" apps/api/src/entrypoints/http
     - rg -l "type .*ParseErrorCode|const .*PARSE_ERROR_CODE|function badRequest\\(|function forbidden\\(|parseTenantId\\(" apps/api/src/entrypoints/http
