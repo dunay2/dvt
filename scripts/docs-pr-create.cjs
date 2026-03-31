@@ -28,7 +28,7 @@ function repoScriptPath(relativePath) {
 
 function shouldSpawnDirectly(command) {
   const resolved = resolveCommand(command);
-  return path.isAbsolute(resolved) || resolved.endsWith('.exe');
+  return path.isAbsolute(resolved) || !resolved.endsWith('.cmd');
 }
 
 function parseArgs(argv) {
