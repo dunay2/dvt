@@ -82,6 +82,9 @@ describe('modules', () => {
       } as never,
       {
         stateStore: {
+          async getRunMetadataByRunId() {
+            return null;
+          },
           async listEvents() {
             return [];
           },

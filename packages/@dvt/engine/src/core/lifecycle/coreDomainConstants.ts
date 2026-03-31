@@ -50,7 +50,6 @@ export type TraceableAdapter = (typeof TRACEABLE_ADAPTERS)[number];
 export const SIGNAL_TO_EVENT_TYPE: Partial<Record<SignalRequest['type'], EventType>> = {
   PAUSE: 'RunPaused',
   RESUME: 'RunResumed',
-  CANCEL: 'RunCancelRequested',
 };
 
 export const NOT_IMPLEMENTED_SIGNAL_TYPES: ReadonlySet<SignalRequest['type']> = new Set([

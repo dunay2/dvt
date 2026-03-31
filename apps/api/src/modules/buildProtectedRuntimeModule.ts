@@ -147,6 +147,7 @@ export async function buildProtectedRuntimeModule(
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
+    stateStoreWrite: stateStoreRoles.write,
     projector,
     observability,
     planFetcher: executablePlanResolver,

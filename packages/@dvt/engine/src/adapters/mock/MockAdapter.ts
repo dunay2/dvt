@@ -18,18 +18,19 @@ import {
   type SignalRequest,
 } from '@dvt/contracts';
 
+import { RunMetadataNotFoundError } from '../../contracts/errors.js';
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
+import { buildRunEvents } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
-import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
-import type { IClock } from '../../utils/clock.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../../ports/IRunStateStore.js';
+import { SequenceClock, type IClock } from '../../utils/clock.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
 export interface MockAdapterDeps {
   stateStore: IRunStateStoreRead;
-  /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
+  stateStoreWrite: IRunStateStoreWrite;
   clock?: IClock;
-  /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
   idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
   planFetcher?: {
@@ -49,8 +50,13 @@ const MOCK_CAPABILITIES = [
 
 export class MockAdapter implements IProviderAdapter {
   readonly provider = 'mock' as const;
+  private readonly clock: Pick<IClock, 'nowIsoUtc'>;
+  private readonly idempotency: IdempotencyKeyBuilder;
 
-  constructor(private readonly deps: MockAdapterDeps) {}
+  constructor(private readonly deps: MockAdapterDeps) {
+    this.clock = deps.clock ?? new SequenceClock();
+    this.idempotency = deps.idempotency ?? new IdempotencyKeyBuilder();
+  }
 
   estimateRunRef(ctx: ResolvedRunContext): EngineRunRef {
     return {
@@ -92,8 +98,8 @@ export class MockAdapter implements IProviderAdapter {
     return runRef;
   }
 
-  async cancelRun(_runRef: EngineRunRef): Promise<void> {
-    // For mock, cancellation is cooperative; engine emits RunCancelled.
+  async cancelRun(runRef: EngineRunRef): Promise<void> {
+    await this.appendCancelLifecycle(runRef);
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
@@ -101,12 +107,42 @@ export class MockAdapter implements IProviderAdapter {
     return this.deps.projector.rebuild(runRef.runId, events);
   }
 
-  async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {
-    // For mock, signals are interpreted by engine (pause/resume/cancel events).
+  async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
+    if (request.type === 'CANCEL') {
+      await this.appendCancelLifecycle(runRef);
+    }
   }
 
   capabilities(): readonly string[] {
     return MOCK_CAPABILITIES;
+  }
+
+  private async appendCancelLifecycle(runRef: EngineRunRef): Promise<void> {
+    const meta = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    if (!meta) {
+      throw new RunMetadataNotFoundError(runRef.runId);
+    }
+
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(
+      runRef.runId,
+      buildRunEvents([
+        {
+          idempotency: this.idempotency,
+          clock: this.clock,
+          meta,
+          eventType: 'RunCancelRequested',
+        },
+        {
+          idempotency: this.idempotency,
+          clock: this.clock,
+          meta,
+          eventType: 'RunCancelled',
+        },
+      ]).map((event) => ({
+        ...event,
+        payloadVersion: 1,
+      }))
+    );
   }
 }
 

@@ -1,5 +1,5 @@
 import type { EngineRunRef, RunStatusSnapshot } from '@dvt/contracts';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -135,5 +135,73 @@ describe('WorkflowEngineCoreService', () => {
     });
     const ref = await bootstrapRun(store, 'core-enrich-err-1');
     await expect(core.enrichStatus(ref)).rejects.toThrow(/provider unavailable/);
+  });
+
+  it('cancel delegates to adapter without appending RunCancelRequested', async () => {
+    const cancelRun = vi.fn(async () => {});
+    const { core, store } = makeCore({
+      adapterOverrides: {
+        cancelRun,
+      },
+    });
+    const ref = await bootstrapRun(store, 'core-cancel-1');
+
+    await core.cancel(ref);
+
+    expect(cancelRun).toHaveBeenCalledTimes(1);
+    expect(cancelRun).toHaveBeenCalledWith(ref);
+    expect((await store.listEvents('t', 'core-cancel-1')).map((event) => event.eventType)).toEqual([
+      'RunQueued',
+    ]);
+  });
+
+  it('signal(CANCEL) delegates to adapter without appending RunCancelRequested', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = makeCore({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    const ref = await bootstrapRun(store, 'core-signal-cancel-1');
+
+    await core.signal(ref, {
+      signalId: 'sig-cancel-1',
+      type: 'CANCEL',
+      reason: 'operator-request',
+    });
+
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(signal).toHaveBeenCalledWith(ref, {
+      signalId: 'sig-cancel-1',
+      type: 'CANCEL',
+      reason: 'operator-request',
+    });
+    expect(
+      (await store.listEvents('t', 'core-signal-cancel-1')).map((event) => event.eventType)
+    ).toEqual(['RunQueued']);
+  });
+
+  it('signal(PAUSE) then signal(RESUME) still append engine-owned lifecycle events', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = makeCore({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    const ref = await bootstrapRun(store, 'core-signal-pause-resume-1');
+
+    await core.signal(ref, {
+      signalId: 'sig-pause-1',
+      type: 'PAUSE',
+    });
+    await core.signal(ref, {
+      signalId: 'sig-resume-1',
+      type: 'RESUME',
+    });
+
+    expect(signal).toHaveBeenCalledTimes(2);
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-resume-1')).map((event) => event.eventType)
+    ).toEqual(['RunQueued', 'RunPaused', 'RunResumed']);
   });
 });
