@@ -8,6 +8,7 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { RunNotFoundError } from '@dvt/engine';
 import { applyRunEvent } from '@dvt/run-domain';
 import {
   buildArchivedTerminalSnapshot,
@@ -181,8 +182,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
     const row = result.rows[0];
     if (
-      !row ||
-      row.archive_unit_key === null ||
+      row?.archive_unit_key == null ||
       row.event_checksum_sha256 === null ||
       row.archived_at === null
     ) {
@@ -209,8 +209,8 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
   }
 
   /**
-   * ADR-0004 §2.2 — Full event replay from runSeq=1, overwrites the materialized snapshot.
-   * ADR-0031 — Tenant isolation verified before replay; throws RUN_NOT_FOUND on mismatch.
+   * ADR-0004 section 2.2 - Full event replay from runSeq=1 overwrites the materialized snapshot.
+   * ADR-0031 - Tenant isolation is verified before replay; mismatches raise RunNotFoundError.
    */
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
     return this.withTransaction(async (client) => {
@@ -225,13 +225,13 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         [tenantId, runId]
       );
       if (!metaResult.rows[0]) {
-        throw new Error(`RUN_NOT_FOUND: ${runId}`);
+        throw new RunNotFoundError(runId);
       }
 
       // Acquire per-run advisory lock to prevent concurrent snapshot mutations.
       await this.acquireRunLock(client, runId);
 
-      // ADR-0004 §2.2: replay MUST use runSeq ASC.
+      // ADR-0004 section 2.2: replay MUST use runSeq ASC.
       const eventsResult = await client.query<EventPayloadRow>(
         `
           SELECT payload
@@ -366,7 +366,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       [tenantId, runId]
     );
     if (!metaResult.rows[0]) {
-      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
   }
 }

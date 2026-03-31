@@ -23,6 +23,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260330 Staleness Followup Code Quality](ED-20260330-staleness-followup-code-quality.md)
 - [ED 20260331 Api Parse Error Coupling Inventory](ED-20260331-api-parse-error-coupling-inventory.md)
 - [ED 20260331 Planner Determinism Hash Pin](ED-20260331-planner-determinism-hash-pin.md)
+- [ED 20260331 Rc C1 Boundary Legacy Hardening](ED-20260331-rc-c1-boundary-legacy-hardening.md)
 - [ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout](ED-20260312-g6-golden-schema-closeout.md)
 - [ED-20260312 — G8 Arch Tests and Engine Wiring Closeout](ED-20260312-g8-arch-tests-engine-wiring.md)
 - [ED-20260314 - G9 Step Type Registry Closeout](ED-20260314-g9-step-type-registry-closeout.md)

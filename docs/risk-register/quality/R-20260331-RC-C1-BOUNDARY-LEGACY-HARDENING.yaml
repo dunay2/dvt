@@ -1,0 +1,21 @@
+id: R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING
+title: RC-C1 boundary hardening could regress if typed not-found errors drift back to string parsing
+status: Closed
+date: 2026-03-31
+owners:
+  - apps/api
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  RC-C1 now hardens caller-visible HTTP error serialization plus the adapter run-metadata and
+  snapshot not-found boundaries with typed errors.
+risk: >
+  A future change could reintroduce string-parsed not-found semantics across the HTTP or adapter
+  maintenance boundaries and silently weaken the canonical error contract.
+mitigations:
+  - httpErrorMapper now depends on typed runtime errors instead of parsing exception text.
+  - adminRoutes rebuild-snapshot uses typed RunNotFoundError through the maintenance boundary.
+  - PostgresRunMetadataRepository now emits typed RunNotFoundError and TenantAccessDeniedError.
+  - Negative regressions assert that legacy RUN_NOT_FOUND message strings no longer yield HTTP 404.
+  - Adapter and route tests lock the boundary against regressions.

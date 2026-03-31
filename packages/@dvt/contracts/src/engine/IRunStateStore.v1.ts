@@ -222,9 +222,12 @@ export interface IRunStateStoreMaintenance {
    * consume events ordered by runSeq ASC.
    * ADR-0031: tenant isolation enforced - throws when the run does not belong
    * to the given tenantId.
+   * Implementations MUST throw a typed not-found error with stable `code`
+   * `RUN_NOT_FOUND`; callers MUST NOT infer semantics by parsing `message`
+   * text.
    *
-   * @throws Error with message `RUN_NOT_FOUND: <runId>` when the run does not
-   *   exist or belongs to a different tenant.
+   * @throws RunNotFoundError-compatible error when the run does not exist or
+   *   belongs to a different tenant.
    */
   rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot>;
 }

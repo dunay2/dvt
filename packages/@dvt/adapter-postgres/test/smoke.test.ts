@@ -17,6 +17,7 @@
  */
 import { createHash } from 'node:crypto';
 
+import { RunNotFoundError } from '@dvt/engine';
 import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
 
@@ -1081,7 +1082,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
           providerWorkflowId: 'wf-cross',
           providerRunId: 'pr-cross',
         })
-      ).rejects.toThrow('RUN_NOT_FOUND_OR_FORBIDDEN');
+      ).rejects.toBeInstanceOf(RunNotFoundError);
 
       await adapter.saveProviderRef('tenant-a', rid('run-provider-scope'), {
         providerWorkflowId: 'wf-ok',

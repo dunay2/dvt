@@ -726,11 +726,21 @@ function generateContractSubIndexes() {
     status: 'Active',
     owner: 'docs',
   });
+  const sharedDocRows = scanSectionEntries('contracts/shared');
+  const sharedDocLines = renderBulletList(sharedDocRows);
   const sharedLines = [
     renderFrontmatter(sharedMeta),
     '# Shared Contracts',
     '',
     'Cross-cutting types and shared validation contracts.',
+    ...(sharedDocLines.length === 0
+      ? []
+      : [
+          '',
+          '## Repository-local documents',
+          '',
+          ...sharedDocLines,
+        ]),
     '',
     '## Normative Sources (`@dvt/contracts`)',
     '',

@@ -1,3 +1,4 @@
+import { RunNotFoundError, TenantAccessDeniedError } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import { PostgresRunMetadataRepository } from '../src/PostgresRunMetadataRepository.js';
@@ -18,6 +19,19 @@ class RecordingClient {
     }
 
     return { rows: [] };
+  }
+}
+
+class MissingRunClient extends RecordingClient {
+  override async query(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ rows: Array<{ tenant_id?: string }> }> {
+    if (sql.includes('WHERE run_id = $1') && !sql.includes('FOR UPDATE')) {
+      return { rows: [] };
+    }
+
+    return super.query(sql, params);
   }
 }
 
@@ -58,11 +72,20 @@ describe('PostgresRunMetadataRepository upsertWithClient', () => {
     const client = new RecordingClient('tenant-b');
     const repo = new PostgresRunMetadataRepository('dvt', async (fn) => fn(client as never));
 
-    await expect(repo.upsertWithClient(client as never, makeMeta())).rejects.toThrow(
-      /TENANT_SCOPE_VIOLATION: run-a/
+    await expect(repo.upsertWithClient(client as never, makeMeta())).rejects.toBeInstanceOf(
+      TenantAccessDeniedError
     );
 
     expect(client.queries).toHaveLength(2);
     expect(client.queries[1]?.sql).toContain('FOR UPDATE');
+  });
+
+  it('resolveTenantWithClient throws RunNotFoundError when the run is missing', async () => {
+    const client = new MissingRunClient();
+    const repo = new PostgresRunMetadataRepository('dvt', async (fn) => fn(client as never));
+
+    await expect(
+      repo.resolveTenantWithClient(client as never, 'run-missing')
+    ).rejects.toBeInstanceOf(RunNotFoundError);
   });
 });

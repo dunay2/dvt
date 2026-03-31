@@ -62,7 +62,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [x] `P1` `snapshot staleness in API` `done` `M` `5pt` `100%`: expose freshness to callers.
 - [x] `P2` `read-your-writes contract` `done` `M` `5pt` `100%`: set a measurable staleness SLO.
 - [x] `P2` `granular RBAC` `done` `M` `5pt` `100%`: split CANCEL and PAUSE privileges.
-- [ ] `P3` `RC-C1` `queued` `S` `2pt` `0%`: make runCommandFieldParsers error helpers fully generic so shared executor/parser plumbing does not depend on a closed parse-code set.
+- [x] `P1` `RC-C1` `done` `L` `8pt` `100%`: normalize caller-visible HTTP error contracts across apps/api and separate semantic validation outcomes from transport serialization, including typed maintenance-boundary not-found handling and removal of remaining parser legacy.
 - [ ] `P2` `RC-C2` `queued` `S` `3pt` `0%`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
 - [x] `P1` `RC-E1` `done` `S` `3pt` `100%`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
 - [x] `P1` `RC-E2` `done` `S` `2pt` `100%`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
@@ -74,6 +74,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - `S16` is verified from runtime code and tests despite older review surfaces that still showed it open.
 - `RC-D1` and `RC-D1A` are code-grounded by health route and watchdog coverage.
 - `read-your-writes contract` is now unblocked by the accepted snapshot staleness caller surface.
+- `RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed `rebuildSnapshot` not-found maintenance boundary.
 - `RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.
 
 ## Expected Outcome

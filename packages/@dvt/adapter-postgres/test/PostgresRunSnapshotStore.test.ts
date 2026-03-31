@@ -1,4 +1,5 @@
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
+import { RunNotFoundError } from '@dvt/engine';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { buildArchivedTerminalSnapshot, buildPinnedTerminalSnapshot } from '@dvt/state-store';
 import { describe, expect, it } from 'vitest';
@@ -39,65 +40,93 @@ class SnapshotUpsertClient {
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<QueryResult<T>> {
     this.queries.push({ sql, params });
 
-    if (sql.includes('FROM "dvt".run_metadata')) {
-      return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
+    return (
+      this.handleRunMetadataQuery<T>(sql) ??
+      this.handleSnapshotUpsert<T>(sql, params) ??
+      this.handleSnapshotSeqQuery<T>(sql) ??
+      this.handlePinnedSnapshotQuery<T>(sql) ?? { rows: [] as T[], rowCount: 0 }
+    );
+  }
+
+  private handleRunMetadataQuery<T>(sql: string): QueryResult<T> | undefined {
+    if (!sql.includes('FROM "dvt".run_metadata')) {
+      return undefined;
     }
 
-    if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
-      const [, snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
-        params ?? [];
-      const incomingSeq = Number(lastRunSeq);
-      const hasCasGuard = sql.includes('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
-      const shouldUpdate = !hasCasGuard || this.state.lastRunSeq <= incomingSeq;
+    return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
+  }
 
-      if (shouldUpdate) {
-        this.state.snapshot = JSON.parse(snapshotJson as string) as WorkflowSnapshot;
-        this.state.lastRunSeq = incomingSeq;
-        if (archiveUnitKey !== undefined) {
-          this.state.archiveUnitKey = (archiveUnitKey as string | null | undefined) ?? null;
-        }
-        if (eventChecksumSha256 !== undefined) {
-          this.state.eventChecksumSha256 =
-            (eventChecksumSha256 as string | null | undefined) ?? null;
-        }
-        if (archivedAt !== undefined) {
-          this.state.archivedAt = (archivedAt as string | null | undefined) ?? null;
-        }
-      }
-
-      return { rows: [] as T[], rowCount: shouldUpdate ? 1 : 0 };
+  private handleSnapshotUpsert<T>(sql: string, params?: unknown[]): QueryResult<T> | undefined {
+    if (!sql.includes('INSERT INTO "dvt".run_snapshots')) {
+      return undefined;
     }
 
-    if (sql.includes('SELECT s.last_run_seq') && sql.includes('FROM "dvt".run_snapshots s')) {
-      return {
-        rows: [{ last_run_seq: this.state.lastRunSeq }] as T[],
-        rowCount: 1,
-      };
+    const [, snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
+      params ?? [];
+    const incomingSeq = Number(lastRunSeq);
+    const hasCasGuard = sql.includes('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
+    const shouldUpdate = !hasCasGuard || this.state.lastRunSeq <= incomingSeq;
+
+    if (shouldUpdate) {
+      this.state.snapshot = JSON.parse(snapshotJson as string) as WorkflowSnapshot;
+      this.state.lastRunSeq = incomingSeq;
+      this.updateArchiveMetadata(archiveUnitKey, eventChecksumSha256, archivedAt);
     }
 
+    return { rows: [] as T[], rowCount: shouldUpdate ? 1 : 0 };
+  }
+
+  private handleSnapshotSeqQuery<T>(sql: string): QueryResult<T> | undefined {
+    if (!(sql.includes('SELECT s.last_run_seq') && sql.includes('FROM "dvt".run_snapshots s'))) {
+      return undefined;
+    }
+
+    return {
+      rows: [{ last_run_seq: this.state.lastRunSeq }] as T[],
+      rowCount: 1,
+    };
+  }
+
+  private handlePinnedSnapshotQuery<T>(sql: string): QueryResult<T> | undefined {
     if (
-      sql.includes('FROM "dvt".run_snapshots s') &&
-      sql.includes('s.archive_unit_key IS NOT NULL')
+      !sql.includes('FROM "dvt".run_snapshots s') ||
+      !sql.includes('s.archive_unit_key IS NOT NULL')
     ) {
-      if (this.state.archiveUnitKey === null) {
-        return { rows: [] as T[], rowCount: 0 };
-      }
-
-      return {
-        rows: [
-          {
-            snapshot: this.state.snapshot,
-            last_run_seq: this.state.lastRunSeq,
-            archive_unit_key: this.state.archiveUnitKey,
-            event_checksum_sha256: this.state.eventChecksumSha256,
-            archived_at: this.state.archivedAt,
-          },
-        ] as T[],
-        rowCount: 1,
-      };
+      return undefined;
     }
 
-    return { rows: [] as T[], rowCount: 0 };
+    if (this.state.archiveUnitKey === null) {
+      return { rows: [] as T[], rowCount: 0 };
+    }
+
+    return {
+      rows: [
+        {
+          snapshot: this.state.snapshot,
+          last_run_seq: this.state.lastRunSeq,
+          archive_unit_key: this.state.archiveUnitKey,
+          event_checksum_sha256: this.state.eventChecksumSha256,
+          archived_at: this.state.archivedAt,
+        },
+      ] as T[],
+      rowCount: 1,
+    };
+  }
+
+  private updateArchiveMetadata(
+    archiveUnitKey: unknown,
+    eventChecksumSha256: unknown,
+    archivedAt: unknown
+  ): void {
+    if (archiveUnitKey !== undefined) {
+      this.state.archiveUnitKey = (archiveUnitKey as string | null | undefined) ?? null;
+    }
+    if (eventChecksumSha256 !== undefined) {
+      this.state.eventChecksumSha256 = (eventChecksumSha256 as string | null | undefined) ?? null;
+    }
+    if (archivedAt !== undefined) {
+      this.state.archivedAt = (archivedAt as string | null | undefined) ?? null;
+    }
   }
 
   get currentState(): SnapshotState {
@@ -169,6 +198,32 @@ describe('PostgresRunSnapshotStore', () => {
     expect(
       client.queries.some((entry) => entry.sql.includes('INSERT INTO "dvt".run_snapshots'))
     ).toBe(false);
+  });
+
+  it('throws a typed run not found error when rebuildSnapshot misses tenant ownership', async () => {
+    const client = new ScriptedClient(async <T>(sql: string) => {
+      if (sql.includes('FROM "dvt".run_metadata')) {
+        return { rows: [] as T[], rowCount: 0 };
+      }
+
+      if (sql.includes('pg_advisory_xact_lock')) {
+        throw new Error('lock should not be acquired after tenant mismatch');
+      }
+
+      return { rows: [] as T[], rowCount: 0 };
+    });
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-15T00:00:02.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+
+    await expect(store.rebuildSnapshot('tenant-2', 'run-404')).rejects.toMatchObject({
+      name: 'RunNotFoundError',
+      runId: 'run-404',
+    });
+    expect(client.queries.some((entry) => entry.sql.includes('pg_advisory_xact_lock'))).toBe(false);
   });
 
   it('pins terminal snapshots into run_snapshots with archive metadata', async () => {
@@ -382,7 +437,7 @@ describe('PostgresRunSnapshotStore', () => {
       }),
     });
 
-    await expect(store.pinTerminalSnapshot(archived)).rejects.toThrow(/RUN_NOT_FOUND: run-1/);
+    await expect(store.pinTerminalSnapshot(archived)).rejects.toBeInstanceOf(RunNotFoundError);
     expect(
       client.queries.some((entry) => entry.sql.includes('INSERT INTO "dvt".run_snapshots'))
     ).toBe(false);

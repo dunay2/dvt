@@ -9,6 +9,10 @@ last_reviewed: 2026-02-25
 
 Cross-cutting types and shared validation contracts.
 
+## Repository-local documents
+
+- [HttpErrorEnvelope v1](HttpErrorEnvelope.v1.md)
+
 ## Normative Sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`
