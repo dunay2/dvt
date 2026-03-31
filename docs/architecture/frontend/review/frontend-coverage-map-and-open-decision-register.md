@@ -31,6 +31,7 @@ It has four jobs:
 - [Frontend DDD Target Architecture](../frontend-ddd-target-architecture.md)
 - [Frontend Architecture Execution Plan](../frontend-architecture-execution-plan.md)
 - [Frontend ACL Ownership Map](../frontend-acl-ownership-map.md)
+- [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
 - [Workspace Domain Specification](../workspace/workspace-domain-specification.md)
 - [Workspace Session Model Specification](../workspace/session/workspace-session-model-specification.md)
 - [Selection Context Model Specification](../workspace/selection-context-model-specification.md)
@@ -52,12 +53,13 @@ What is already strong:
 - target DDD context map
 - workspace as coordination domain
 - cross-feature orchestration mechanism
+- canonical state ownership and persistence policy
 - execution sequencing and refactor sequencing
 
 What is still not closed:
 
 - final canonical role of several capability docs
-- exact state ownership strategy at implementation level
+- current reality versus target per capability
 - publication hygiene and frontend-specific guardrails
 
 The main gap is no longer "missing architecture". The main gap is "decision
@@ -88,15 +90,13 @@ closure and canonical consistency".
 
 ## 5. Open Decision Register
 
-| ID        | Decision still open                            | Why it matters                                                                       | Recommended closure                                                                                                                                                       |
-| --------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FD-DEC-01 | Canonical role taxonomy for every frontend doc | Without it, companion specs and exploratory notes still compete for authority.       | Add one explicit role system: `canonical`, `companion`, `review`, `reference-only`. Reflect it in frontmatter and in the frontend index.                                  |
-| FD-DEC-05 | Frontend state ownership strategy              | Without a closed rule, store growth and duplicated state will continue.              | Default to TanStack Query for server state, bounded workspace stores for coordination state, and feature-local transient state for editing and view-specific interaction. |
-| FD-DEC-06 | Persistence policy for run and plan context    | The review allows `runs.store.ts` or React Query cache, which leaves room for drift. | Default to non-authoritative runtime data in query caches. Persist only explicit workspace session state, not runtime truth.                                              |
-| FD-DEC-07 | Module/plugin extension contract               | The shell/module seam exists, but the project still needs one stable contract.       | Standardize `WorkspaceModuleContract` and require module-specific adapters to satisfy it without caller special cases.                                                    |
-| FD-DEC-08 | Current reality matrix per capability          | Capability docs read as target-state specs while implementation remains uneven.      | Add one compact current-reality matrix for Graph, Planning, Runs, Artifacts, Git, Lineage, Inspector, and Observability.                                                  |
-| FD-DEC-09 | Publication standard for the frontend corpus   | Mixed language, encoding drift, and metadata drift reduce trust.                     | Canonical docs in English, UTF-8 clean text, normalized frontmatter, and explicit reclassification of reference-only notes.                                               |
-| FD-DEC-10 | Frontend-specific architectural guardrails     | Architecture will drift if rules remain prose only.                                  | Add automated checks for direct DTO rendering, direct cross-feature store imports, and direct shared-store mutation from component files.                                 |
+| ID        | Decision still open                            | Why it matters                                                                  | Recommended closure                                                                                                                       |
+| --------- | ---------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| FD-DEC-01 | Canonical role taxonomy for every frontend doc | Without it, companion specs and exploratory notes still compete for authority.  | Add one explicit role system: `canonical`, `companion`, `review`, `reference-only`. Reflect it in frontmatter and in the frontend index.  |
+| FD-DEC-07 | Module/plugin extension contract               | The shell/module seam exists, but the project still needs one stable contract.  | Standardize `WorkspaceModuleContract` and require module-specific adapters to satisfy it without caller special cases.                    |
+| FD-DEC-08 | Current reality matrix per capability          | Capability docs read as target-state specs while implementation remains uneven. | Add one compact current-reality matrix for Graph, Planning, Runs, Artifacts, Git, Lineage, Inspector, and Observability.                  |
+| FD-DEC-09 | Publication standard for the frontend corpus   | Mixed language, encoding drift, and metadata drift reduce trust.                | Canonical docs in English, UTF-8 clean text, normalized frontmatter, and explicit reclassification of reference-only notes.               |
+| FD-DEC-10 | Frontend-specific architectural guardrails     | Architecture will drift if rules remain prose only.                             | Add automated checks for direct DTO rendering, direct cross-feature store imports, and direct shared-store mutation from component files. |
 
 ## 6. Recommended Solutions
 
@@ -218,19 +218,23 @@ This especially applies to:
 - ACL mapper introduction
 - capability doc normalization
 
+Recently closed by canonical publication:
+
+- `FD-DEC-05` - [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+- `FD-DEC-06` - [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+
 ## 7. Decision Dependency Graph
 
 ```mermaid
 flowchart LR
     D1[FD-DEC-01
-Role taxonomy] --> D5
-    D5[FD-DEC-05
-State ownership] --> D6[FD-DEC-10
+Role taxonomy] --> D6[FD-DEC-10
 Architecture guardrails]
     D1 --> D7[FD-DEC-09
 Publication standard]
     D7 --> D8[FD-DEC-08
 Current reality matrix]
+    D6 --> D8
 ```
 
 ## 8. Exact Fowler And Fowler Site Sources
@@ -276,12 +280,11 @@ The next serious documentation slices should be:
 
 1. close FD-DEC-01 by publishing a full canonical role taxonomy for the
    frontend corpus
-2. close FD-DEC-05 and FD-DEC-06 by publishing the state ownership strategy
-3. close FD-DEC-09 by normalizing metadata, language, and encoding
-4. close FD-DEC-10 by defining enforceable frontend architectural guardrails
-5. add a current-reality matrix per capability so target docs stop standing in
+2. close FD-DEC-09 by normalizing metadata, language, and encoding
+3. close FD-DEC-10 by defining enforceable frontend architectural guardrails
+4. add a current-reality matrix per capability so target docs stop standing in
    for implementation truth
 
-If these five slices are closed, the frontend architecture stops behaving like a
+If these four slices are closed, the frontend architecture stops behaving like a
 promising draft corpus and starts behaving like a governed architecture
 baseline.

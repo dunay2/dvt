@@ -30,6 +30,7 @@ the coverage map. Its role is narrower:
 - [Frontend Architecture](../index.md)
 - [Frontend DDD Target Architecture](../frontend-ddd-target-architecture.md)
 - [Frontend Architecture Execution Plan](../frontend-architecture-execution-plan.md)
+- [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
 - [Frontend Coverage Map And Open Decision Register](frontend-coverage-map-and-open-decision-register.md)
 - [Workspace Domain Specification](../workspace/workspace-domain-specification.md)
 - [Workspace Session Model Specification](../workspace/session/workspace-session-model-specification.md)
@@ -53,7 +54,7 @@ the coverage map. Its role is narrower:
 | ----- | ------------------------------------- | --------- | -------- | ----------- | ------------ | ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------------- |
 | WS-01 | Shared-kernel contracts               | Delivered | P0       | Critical    | Medium       | 1 author + 1 reviewer          | Medium     | None         | canonical specs for `SelectionContext`, `WorkspaceTab`, and `WorkspaceLayout` |
 | WS-02 | ACL ownership map per capability      | Delivered | P1       | Critical    | Medium-Large | 1 author + 1 domain reviewer   | High       | WS-01        | capability ACL matrix, mapper ownership rules, port-to-adapter map            |
-| WS-03 | Frontend state ownership strategy     | Planned   | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01        | canonical state policy, migration rules, anti-pattern list                    |
+| WS-03 | Frontend state ownership strategy     | Delivered | P1       | High        | Medium       | 1 author + 1 frontend reviewer | High       | WS-01        | canonical state policy, migration rules, anti-pattern list                    |
 | WS-04 | Current reality matrix per capability | Planned   | P2       | High        | Small-Medium | 1 author                       | Medium     | WS-02, WS-03 | target-vs-current matrix, backend dependency posture, validation baseline     |
 | WS-05 | Frontend architectural guardrails     | Planned   | P3       | High        | Medium-Large | 1 author + 1 maintainer        | High       | WS-02, WS-03 | enforceable rule set, check candidates, adoption sequence                     |
 
@@ -108,6 +109,11 @@ inference.
 Objective:
 Close the ambiguity between server state, coordination state, and local
 interaction state.
+
+Status:
+Delivered in this slice by publishing:
+
+- [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
 
 Required outputs:
 
@@ -182,12 +188,15 @@ gantt
 
 ## 8. Recommended Immediate Next Move
 
-Start with WS-03:
+Start with WS-04:
 
-1. publish the frontend-wide state ownership policy for server state,
-   coordination state, and feature-local transient state
-2. ratify the persistence rule for session state versus runtime truth
-3. use the published ACL map as the seam inventory for future guardrails
+1. use the published frontend-wide state ownership policy for server state,
+   coordination state, and feature-local transient state as the canonical
+   baseline for current-reality assessment
+2. document the target-versus-current posture of each capability with that
+   state policy already fixed
+3. use the published ACL map and state policy as the seam inventory for future
+   guardrails
 
 That is now the shortest path to implementation-ready frontend architecture
 without reopening already-closed shared-kernel or ACL semantics.

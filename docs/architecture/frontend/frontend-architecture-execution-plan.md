@@ -28,6 +28,7 @@ Primary inputs:
 - [Frontend DDD Target Architecture](./frontend-ddd-target-architecture.md)
 - [DVT+ Frontend Architecture Introduction](./dvt-frontend-architecture-introduction.md)
 - [Workspace Domain Specification](./workspace/workspace-domain-specification.md)
+- [Frontend State Ownership And Persistence Policy](./frontend-state-ownership-and-persistence-policy.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Frontend Architecture Review and Critical Action Plan](./review/frontend-architecture-review-and-critical-action-plan.md)
 
@@ -173,6 +174,8 @@ Bridge architecture and code refactoring without letting one replace the other.
 
 - explicit dependency map between architecture phases and refactoring tasks
 - one list of decision gates before deep feature work
+- one canonical state ownership and persistence policy for browser-resident
+  state
 
 **Fitness function**
 

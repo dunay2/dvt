@@ -619,6 +619,17 @@ Estado de interacción:
 
 No mezclar ambos.
 
+Fuente canÃ³nica:
+[Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+
+Regla canÃ³nica adicional:
+
+- usar Workspace stores para coordination state compartido entre capacidades
+- mantener filtros, expansiones y toggles como UI state local
+- no persistir snapshots, mÃ©tricas, logs, eventos ni salud sistÃ©mica como
+  verdad operativa en browser storage
+- permitir persistencia solo para estado explÃ­cito de sesiÃ³n/workbench
+
 ---
 
 ## 16. Diseño de vistas

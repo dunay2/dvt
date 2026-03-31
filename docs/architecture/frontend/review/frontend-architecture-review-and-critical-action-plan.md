@@ -40,6 +40,7 @@ concrete move** at each point in the sequence.
 ### Target architecture
 
 - `docs/architecture/frontend/appshell/app-shell.md`
+- `docs/architecture/frontend/frontend-state-ownership-and-persistence-policy.md`
 - `docs/architecture/frontend/workspace/session/workspace-session-model-specification.md`
 - `docs/architecture/frontend/workspace/workspace-domain-specification.md`
 - `docs/architecture/frontend/views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md`
@@ -195,8 +196,9 @@ the global shell store. This couples the shell frame lifecycle to the run execut
 lifecycle. A run error could pollute shell state; a shell reset could clear run context.
 
 **Named refactoring:** _Move Method / Move Field_ — `currentPlan` and `currentRun` move
-into a dedicated `runs.store.ts` or React Query cache. The shell reads a projection (e.g.,
-`runStatus`) through a well-defined selector, not raw run internals.
+out of the shell store and into a query-backed Runs read boundary. The shell reads a
+projection (e.g., `runStatus`) through a well-defined selector or query hook, not raw
+run internals and not browser-persisted runtime truth.
 
 ---
 
@@ -337,7 +339,7 @@ The characterization tests are not deleted after the refactor; they become regre
 | Workspace identity | `sessionStore.ts`                    | `sessionStore.ts` + `appStore.ts` (duplicate) | High     |
 | Shell layout       | `shell.store.ts` (new)               | `appStore.ts`                                 | High     |
 | Tabs               | `sessionStore.ts`                    | `appStore.ts` + `index.ts`                    | Critical |
-| Run/plan context   | `runs.store.ts` or React Query       | `appStore.ts`                                 | High     |
+| Run/plan context   | query-backed Runs read boundary      | `appStore.ts`                                 | High     |
 | Canvas selection   | `canvas.store.ts` (new)              | `appStore.ts`                                 | Medium   |
 | Modals             | `modal.store.ts` (new) or `index.ts` | `index.ts`                                    | Low      |
 
@@ -563,7 +565,7 @@ CT-2 (tab shape) and CT-4 (`buildRunContext`) are green. `pnpm tsc --noEmit` pas
 
 ---
 
-### RF-07 — Extract Class: `runs.store.ts` from `appStore.ts`
+### RF-07 — Extract query-backed Runs state boundary from `appStore.ts`
 
 **Mechanic:** _Extract Class_ (Fowler §7.5), _Feature Envy_ correction
 **Seam:** S1
@@ -571,26 +573,24 @@ CT-2 (tab shape) and CT-4 (`buildRunContext`) are green. `pnpm tsc --noEmit` pas
 
 **Steps:**
 
-1. Create `apps/web/src/app/stores/runs.store.ts` with:
-   ```ts
-   interface RunsState {
-     currentPlan: Plan | null;
-     currentRun: Run | null;
-     setCurrentPlan: (plan: Plan | null) => void;
-     setCurrentRun: (run: Run | null) => void;
-   }
-   ```
+1. Create a query-backed Runs read boundary such as `runs.queries.ts` or an
+   equivalent capability query module for `currentPlan` and `currentRun`
+   projections.
 2. Move `currentPlan` and `currentRun` out of `appStore.ts`.
 3. Update all consumers that read plan/run state from `appStore` to read from
-   `useRunsStore`.
-4. Decide: should `currentPlan`/`currentRun` persist to `localStorage`? If yes, add
-   persistence to `runs.store.ts`; remove from `appStore.ts` persistence config.
-5. `pnpm --filter web test` passes. CT-3 is updated to target `useRunsStore`.
+   the Runs query layer or a bounded Runs-local selector.
+4. Remove browser persistence of `currentPlan` and `currentRun` from the shell
+   store. Runtime truth must remain query-backed and non-authoritative in local
+   browser persistence.
+5. `pnpm --filter web test` passes. CT-3 is updated to target the query-backed
+   Runs boundary instead of shell persistence.
 
 **Fitness function:** `appStore.ts` contains no references to `currentPlan` or
-`currentRun`. `pnpm tsc --noEmit` passes.
+`currentRun`. Runs truth is query-backed rather than shell-persisted.
+`pnpm tsc --noEmit` passes.
 
-**Rollback:** Move fields back to `appStore.ts`; delete `runs.store.ts`.
+**Rollback:** Move fields back to `appStore.ts`; remove the extracted Runs
+query boundary.
 
 ---
 
@@ -647,7 +647,7 @@ Architecture_) — new stores grow while legacy store shrinks to zero consumers
 After RF-05 through RF-07 are complete, `stores/index.ts` holds:
 
 - `useLegacyAppStore` — identity fields now in `sessionStore`, tabs in `sessionStore`,
-  shell in `shell.store`, run in `runs.store`
+  shell in `shell.store`, run truth in the Runs query boundary
 - `useCanvasStore` — canvas state (not yet extracted; scope below)
 - `useTabsStore` — tabs now owned by `sessionStore`
 - `useModalStore` — 6 modal states
@@ -756,7 +756,7 @@ RF-01 (characterization tests)
   ├─► RF-02 (rename collision)
   │     └─► RF-03 (move identity fields)
   │           └─► RF-05 (extract shell.store)
-  │                 └─► RF-07 (extract runs.store)
+  │                 └─► RF-07 (extract query-backed Runs boundary)
   │                       └─► RF-09 (drain index.ts)
   │
   ├─► RF-04 (WorkspaceTab type)
@@ -786,7 +786,7 @@ identifies the visible condition after each RF task is done.
 | RF-04 | `WorkspaceTab` type exists. `data?: any` eliminated.                         |
 | RF-05 | `shell.store.ts` exists. Shell layout state moved. `appStore` shorter.       |
 | RF-06 | `sessionStore` owns tabs, mode, layout. Complete `WorkspaceSession` visible. |
-| RF-07 | `runs.store.ts` exists. Plan/run no longer in shell store.                   |
+| RF-07 | Runs query boundary exists. Plan/run no longer in shell store.               |
 | RF-08 | `Root.tsx` is 20 lines. `AppShell.tsx` is the explicit frame.                |
 | RF-09 | `stores/index.ts` exports only canvas/modal pending their cleanup.           |
 | RF-10 | All three plugins satisfy typed contract. Shell boundary is explicit.        |
@@ -795,14 +795,19 @@ identifies the visible condition after each RF task is done.
 
 ## 11. Risks and mitigations
 
-| Risk                                                 | Fowler's name           | Mitigation                                                                                            |
-| ---------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| Consumers break when moving fields                   | Shotgun Surgery         | Write characterization tests first (RF-01). Move one field group at a time.                           |
-| `sessionStore` becomes new god store                 | Large Class (displaced) | RF-06 must follow strict scope: only session concerns. Shell → `shell.store`. Runs → `runs.store`.    |
-| `index.ts` never gets drained                        | Lava Flow (Cunningham)  | RF-09 is a named task with a fitness function. Block new imports from `index.ts` via lint rule.       |
-| `WorkspaceModuleContract` over-designed              | Speculative Generality  | Contract includes only what the three existing plugins already provide. No future plugin assumptions. |
-| Canvas extraction breaks `@xyflow/react` integration | Divergent Change        | Canvas extraction is not scheduled in this plan. Defer until Phase 3 is complete.                     |
-| App regresses visually between steps                 | —                       | CT-7 (Root renders) provides a smoke gate. Add a Playwright smoke test before RF-05.                  |
+- `Consumers break when moving fields` (`Shotgun Surgery`):
+  write characterization tests first and move one field group at a time.
+- `sessionStore becomes new god store` (`Large Class`, displaced):
+  RF-06 keeps session concerns only. Shell state goes to `shell.store`; Runs
+  truth goes to the query boundary.
+- `index.ts never gets drained` (`Lava Flow`, Cunningham):
+  RF-09 remains a named task with a fitness function and new imports from
+  `index.ts` should be blocked.
+- `WorkspaceModuleContract over-designed` (`Speculative Generality`):
+  the contract includes only what the existing plugins already provide.
+- `Canvas extraction breaks @xyflow/react integration` (`Divergent Change`):
+  defer canvas extraction until Phase 3 is complete.
+  | App regresses visually between steps | — | CT-7 (Root renders) provides a smoke gate. Add a Playwright smoke test before RF-05. |
 
 ---
 
@@ -850,7 +855,7 @@ Sprint B — Store boundary isolation
   RF-03: Move identity fields                  ← after RF-02
   RF-05: Extract shell.store.ts                ← after RF-03
   RF-06: Complete sessionStore                 ← after RF-04 and RF-05
-  RF-07: Extract runs.store.ts                 ← after RF-05
+  RF-07: Extract query-backed Runs boundary    ← after RF-05
 
 Sprint C — Legacy drain and shell formalization
   RF-08: Extract AppProviders + AppShell       ← after RF-01 (independent)

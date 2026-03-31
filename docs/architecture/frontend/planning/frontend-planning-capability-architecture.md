@@ -293,27 +293,38 @@ apps/web/src/capabilities/planning/
 
 Planning requires multiple state categories. Mixing them into one store will rot quickly.
 
+Canonical owner:
+[Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+
 ## 9.1 State categories
 
-| State type                  | Owner                    | Notes                                                             |
-| --------------------------- | ------------------------ | ----------------------------------------------------------------- |
-| Server state                | Query layer              | Plan payloads, projections, diff results, validation results      |
-| Session state               | Capability session store | Current plan session, compared plans, active view mode            |
-| UI state                    | Local/store              | panel open state, zoom, selected overlays, expanded sections      |
-| Derived state               | Selectors                | critical path highlighting, dependency chains, filtered subgraphs |
-| URL state                   | URL adapter              | selected node, view mode, compare target, overlay                 |
-| Ephemeral interaction state | Component-local          | drag state, hover state, temporary selections                     |
+- `Server state`: owned by TanStack Query and used for plan payloads,
+  projections, diff results, and validation results.
+- `Workspace coordination state`: owned by the Workspace shared kernel and
+  used for shared selection, active tab handoff, and cross-capability
+  navigation.
+- `Planning-local state`: owned by local React state or a bounded Planning
+  store and used for overlays, zoom, compare inputs, and expanded sections.
+- `Derived state`: owned by selectors and used for critical-path highlighting,
+  dependency chains, and filtered subgraphs.
+- `URL state`: owned by a URL adapter or explicit tab payload and used for
+  selected node, view mode, compare target, and overlay identity.
+- `Ephemeral interaction state`: owned by component-local state and used for
+  drag state, hover state, and temporary selections.
 
 ## 9.2 Store split
 
 Recommended split:
 
 - **TanStack Query** for server state
-- **Zustand** for Planning session and UI state
+- **Workspace shared kernel** for cross-capability coordination state
+- **React local state or bounded Planning-local store** for filters, overlays,
+  compare workflows, and other transient interaction state
 - pure selectors for derived projections
-- URL adapter for durable navigation state
+- URL adapter or explicit workspace tab payload for durable navigation state
 
-Do not place fetched server payloads as canonical data inside a generic global UI store.
+Do not place fetched server payloads as canonical data inside a generic global
+UI store. Do not persist canonical plan truth to browser storage.
 
 ---
 

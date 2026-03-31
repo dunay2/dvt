@@ -179,6 +179,25 @@ Examples include:
 
 This orchestration should be owned by the workspace rather than by any single feature module.
 
+### 5.8 Coordination-state ownership
+
+The workspace owns coordination state and explicit restorable workbench state.
+
+Canonical owner:
+[Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+
+That includes:
+
+- shared selection and active work context
+- active tabs and active tab identity
+- layout composition and panel visibility
+- active shell-level module identity
+- active workbench interaction mode
+- explicit restoration metadata for the current workbench session
+
+It does not include query-backed runtime truth such as run snapshots, plan
+payloads, observability metrics, or provider-enriched status payloads.
+
 ---
 
 ## 6. Non-responsibilities
@@ -193,6 +212,9 @@ It should not own:
 - git diff computation
 - lineage computation
 - backend transport logic for individual feature domains
+- remote query caches for plan, run, artifact, lineage, or observability
+  payloads
+- persisted runtime truth copied from backend read models
 
 These belong to their corresponding feature domains.
 
@@ -325,6 +347,7 @@ Owns:
 - session restoration
 - preservation of active work context
 - rehydration from persisted state where applicable
+- explicit session/workbench persistence only, never runtime truth persistence
 
 ### 10.2 Tab Management
 
@@ -611,6 +634,7 @@ This document is refined by the following companion specifications:
 3. [Selection Context Model Specification](selection-context-model-specification.md)
 4. [Workspace Layout Model Specification](workspace-layout-model-specification.md)
 5. [Workspace Orchestration - Cross-Feature Coordination Mechanism](workspace-orchestration.md)
+6. [Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
 
 These documents refine the domain without changing the architectural
 boundaries established here.

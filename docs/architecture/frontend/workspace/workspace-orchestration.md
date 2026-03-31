@@ -118,6 +118,17 @@ Every `create()` in Zustand is already a reactive bus:
 No additional infrastructure is needed. The "event bus" is the existing Zustand
 primitive. The workspace action functions are the named, typed "events".
 
+State ownership note:
+
+- shared workspace stores are coordination state only
+- run snapshots, plan payloads, artifact payloads, and observability payloads
+  stay in capability-owned query caches
+- browser persistence is limited to explicit workspace/session state, never to
+  runtime truth
+
+Canonical owner:
+[Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+
 ---
 
 ## 5. Component model
@@ -458,7 +469,8 @@ apps/web/src/app/
     selection.store.ts         <- SelectionContext source of truth
     session.store.ts           <- WorkspaceSession (tabs, moduleId, workbenchMode, identity)
     shell.store.ts             <- shell layout (panels, nav)
-    runs.store.ts              <- currentPlan, currentRun (or React Query)
+    runs.queries.ts            <- query-backed run or plan truth, never workspace persistence
+    runs.ui.store.ts           <- optional bounded Runs-local UI state only
 ```
 
 Feature modules read from `stores/selection.store.ts` and call from
@@ -512,3 +524,4 @@ requires changing more than one module at a time.
 - `apps/web/src/app/stores/appStore.ts` - current `selectedNodes` and `inspectorNodeId` (to be migrated)
 - `apps/web/src/app/stores/selection.store.ts` - target implementation (to be created)
 - `apps/web/src/app/workspace/workspace.actions.ts` - target implementation (to be created)
+- `../frontend-state-ownership-and-persistence-policy.md` - canonical state ownership and persistence rules

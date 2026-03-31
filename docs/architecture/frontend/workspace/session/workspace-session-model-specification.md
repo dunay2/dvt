@@ -166,6 +166,14 @@ after:
 This does not imply that every detail must always be persisted, but the session
 model must support restoration as a domain concern.
 
+Canonical state policy:
+[Frontend State Ownership And Persistence Policy](../../frontend-state-ownership-and-persistence-policy.md)
+
+Only explicit session/workbench state is eligible for persistence or
+rehydration through this model. Runtime truth such as run status, plan
+payloads, observability metrics, and provider-enriched payloads belongs to
+capability query layers, not to `WorkspaceSession`.
+
 ---
 
 ## 6. Non-responsibilities
@@ -528,6 +536,9 @@ internals.
 The session should remain reasonably serializable so restoration remains
 possible.
 
+Serialization here means explicit workbench/session state only. It does not
+authorize persisting backend-derived runtime truth inside the session model.
+
 ### 15.4 Keep mutation explicit
 
 Session mutations should occur through clear application use cases rather than
@@ -611,3 +622,4 @@ The following documents now define the shared-kernel models used by
 - [Workspace Tab Model Specification](../workspace-tab-model-specification.md)
 - [Workspace Layout Model Specification](../workspace-layout-model-specification.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](../workspace-orchestration.md)
+- [Frontend State Ownership And Persistence Policy](../../frontend-state-ownership-and-persistence-policy.md)

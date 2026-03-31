@@ -243,6 +243,9 @@ Diagnostics should answer:
 
 The UI should model transport/loading states separately from domain run states.
 
+Canonical owner:
+[Frontend State Ownership And Persistence Policy](../frontend-state-ownership-and-persistence-policy.md)
+
 ### 7.1 Transport/UI state
 
 ```mermaid
@@ -274,6 +277,17 @@ stateDiagram-v2
 ```
 
 The frontend must treat this as a **rendered projection**, not as a local source of truth.
+
+### 7.3 Canonical ownership note
+
+- run snapshots, run detail payloads, diagnostics, and event pages remain
+  query-backed server state
+- shared selection, active tab, and workbench context belong to Workspace
+  coordination state
+- action-button loading state, expanded panes, and local filters may live in
+  React state or a bounded Runs-local UI store
+- run truth, provider-enriched status, and diagnostics must not persist to
+  browser storage as authoritative state
 
 ## 8. Data flow
 
@@ -492,6 +506,9 @@ Aligned with the current direction of the product:
 - **Mapper layer** between DTO and VM
 - **URL-driven tabs and filters**
 - **Strict TypeScript without `any`**
+
+Browser persistence, when used, is limited to explicit workspace/session state
+outside the Runs runtime truth model.
 
 ## 19. Quality risks
 

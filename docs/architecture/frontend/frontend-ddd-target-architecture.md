@@ -30,6 +30,7 @@ instead of parallel authority.
 - [Workspace Tab Model Specification](./workspace/workspace-tab-model-specification.md)
 - [Workspace Layout Model Specification](./workspace/workspace-layout-model-specification.md)
 - [Frontend ACL Ownership Map](./frontend-acl-ownership-map.md)
+- [Frontend State Ownership And Persistence Policy](./frontend-state-ownership-and-persistence-policy.md)
 - [Workspace Orchestration - Cross-Feature Coordination Mechanism](./workspace/workspace-orchestration.md)
 - [Workflow / Graph Workbench - Surfaces and Operating Modes](./views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)
@@ -57,6 +58,8 @@ The frontend is a workbench-oriented domain surface with:
 - multiple capability contexts
 - one shared kernel for cross-surface interaction
 - explicit anti-corruption layers to backend contracts
+- one canonical state ownership and persistence policy for browser-resident
+  state
 
 ## 5. Bounded contexts and roles
 
@@ -212,6 +215,21 @@ The frontend may share a coordination kernel, but it should still separate:
 
 - state-changing user intents
 - read-model projections
+
+### 9.5 State ownership and persistence are explicit
+
+Canonical owner:
+[Frontend State Ownership And Persistence Policy](./frontend-state-ownership-and-persistence-policy.md)
+
+The frontend must keep these boundaries explicit:
+
+- server state and runtime truth stay in capability-owned query layers behind
+  ACLs
+- Workspace owns coordination state and explicit workbench session state
+- feature-local transient interaction stays inside the owning capability unless
+  another bounded context must react
+- browser persistence is limited to explicit session/workbench state, never to
+  live runtime truth
 
 ## 10. Domain sequences
 
