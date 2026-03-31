@@ -39,7 +39,7 @@ tooling no longer reads, rewrites, or validates a legacy config surface.
   - `scripts/docs-quality-check.cjs`
 - docs deployment workflow:
   - `.github/workflows/docs-deploy.yml`
-  - removed `.github/workflows/mkdocs-deploy.yml`
+  - removed the legacy docs deploy workflow
 - active and historical docs rewritten to the single-config model, including
   docs governance, archive references, evidence, and status pages
 
@@ -87,6 +87,6 @@ tooling no longer reads, rewrites, or validates a legacy config surface.
 
 - No compatibility shim, alias config, or inherited fallback file was left in
   place.
-- `mkdocs.yml` was removed entirely.
+- The legacy secondary docs config file was removed entirely.
 - No quality rules, docs gates, or hooks were disabled or bypassed.
 - No placeholder implementation or fake runtime path was added.
