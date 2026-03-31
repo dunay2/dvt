@@ -8,6 +8,45 @@ import {
 } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 
 describe('parseSignalRunRequest', () => {
+  it('supports custom open-set parse error codes', () => {
+    const customCodes = {
+      INVALID_RUN_ID: 'RUN_ID_BAD_CUSTOM',
+      INVALID_BODY: 'BODY_BAD_CUSTOM',
+      INVALID_SIGNAL_TYPE: 'SIGNAL_TYPE_BAD_CUSTOM',
+      MISSING_TENANT_SCOPE: 'TENANT_SCOPE_MISSING_CUSTOM',
+      INVALID_TENANT_ID: 'TENANT_ID_BAD_CUSTOM',
+    } as const;
+
+    const missingTenant = parseSignalRunRequest(
+      {
+        runId: 'run-1',
+        body: { signalType: 'CANCEL' },
+        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      },
+      customCodes
+    );
+
+    const invalidSignal = parseSignalRunRequest(
+      {
+        runId: 'run-1',
+        body: { tenantId: 'tenant-a', signalType: 'FAST_FORWARD' },
+        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      },
+      customCodes
+    );
+
+    expect(missingTenant).toEqual({
+      ok: false,
+      status: 403,
+      body: { error: 'FORBIDDEN', code: 'TENANT_SCOPE_MISSING_CUSTOM' },
+    });
+    expect(invalidSignal).toEqual({
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'SIGNAL_TYPE_BAD_CUSTOM' },
+    });
+  });
+
   it('rejects CANCEL signal when compatibility policy disables it', () => {
     const parsed = parseSignalRunRequest({
       runId: 'run-1',
