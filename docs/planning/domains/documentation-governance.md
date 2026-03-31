@@ -22,7 +22,7 @@ gates.
 - [Documentation Restructuring Diagnostic and Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](../proposals/documentation-usability-change-plan-20260308.md)
 - [Repository Governance Proposal Set 2026-03-17](../archive/proposals/repository-governance-proposal-set-20260317.md)
-- [CI Improvement Plan](../proposals/ci-improvement-plan-20260327.md)
+- [CI Delivery Governance Consolidated Action Plan](../proposals/ci-delivery-governance-consolidated-action-plan-20260331.md)
 
 ## Relevant Reviews And Closeouts
 
