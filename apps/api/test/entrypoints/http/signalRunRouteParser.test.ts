@@ -26,6 +26,24 @@ describe('parseSignalRunRequest', () => {
       customCodes
     );
 
+    const invalidRunId = parseSignalRunRequest(
+      {
+        runId: '   ',
+        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
+        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      },
+      customCodes
+    );
+
+    const invalidBody = parseSignalRunRequest(
+      {
+        runId: 'run-1',
+        body: 'not-an-object',
+        compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+      },
+      customCodes
+    );
+
     const invalidSignal = parseSignalRunRequest(
       {
         runId: 'run-1',
@@ -39,6 +57,16 @@ describe('parseSignalRunRequest', () => {
       ok: false,
       status: 403,
       body: { error: 'FORBIDDEN', code: 'TENANT_SCOPE_MISSING_CUSTOM' },
+    });
+    expect(invalidRunId).toEqual({
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'RUN_ID_BAD_CUSTOM' },
+    });
+    expect(invalidBody).toEqual({
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'BODY_BAD_CUSTOM' },
     });
     expect(invalidSignal).toEqual({
       ok: false,

@@ -50,6 +50,10 @@ describe('runCommandFieldParsers', () => {
         ok: false,
         error: 'TENANT_ID_BAD_CUSTOM',
       });
+      expect(parseTenantId({ tenantId: 123 }, customCodes)).toEqual({
+        ok: false,
+        error: 'TENANT_ID_BAD_CUSTOM',
+      });
     });
 
     it('returns missing_tenant_scope when tenantId is absent', () => {
