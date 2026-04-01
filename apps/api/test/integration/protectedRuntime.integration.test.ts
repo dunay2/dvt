@@ -224,7 +224,11 @@ describeIfPg('protected runtime integration', () => {
       headers: { authorization: `Bearer ${token}` },
     });
     expect(eventsResponse.statusCode).toBe(200);
-    expect(eventTypes(eventsResponse.json())).toEqual(['RunQueued', 'RunCancelRequested']);
+    expect(eventTypes(eventsResponse.json())).toEqual([
+      'RunQueued',
+      'RunCancelRequested',
+      'RunCancelled',
+    ]);
   });
 
   it('persists and validates a planner-backed run before execution starts', async () => {

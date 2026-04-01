@@ -1,0 +1,25 @@
+---
+id: R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT
+title: Cancel lifecycle ownership can regress to mixed engine/runtime emission
+status: Closed
+date: 2026-04-01
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Cancellation ownership moved to runtime/workflow boundaries so event logs retain deterministic
+  ordering of RunCancelRequested before RunCancelled.
+risk: >
+  A future refactor could reintroduce engine-side RunCancelRequested emission or optionalize mock
+  cancellation write dependencies, causing ordering violations, status drift, and latent runtime
+  faults.
+mitigations:
+  - WorkflowEngineCoreService no longer appends RunCancelRequested for cancel dispatch.
+  - MockAdapter requires stateStoreWrite and appends ordered cancel lifecycle events.
+  - API runtime wiring passes required stateStoreWrite and runtime clock to MockAdapter.
+  - Temporal cancellation path is aligned to workflow-owned cancel-signal handling.
+  - Regression tests cover cancellation ordering and maintenance behavior under the new model.
+---

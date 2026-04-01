@@ -82,10 +82,23 @@ describe('modules', () => {
       } as never,
       {
         stateStore: {
+          async getRunMetadataByRunId() {
+            return null;
+          },
           async listEvents() {
             return [];
           },
         },
+        stateStoreWrite: {
+          async appendAndEnqueueTx() {
+            return {
+              appended: [],
+              deduped: [],
+              lastSeq: 0,
+            };
+          },
+        },
+        clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
         projector: {
           rebuild() {
             return {};

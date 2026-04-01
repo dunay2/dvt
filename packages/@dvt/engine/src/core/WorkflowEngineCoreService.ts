@@ -23,7 +23,6 @@ import {
 import {
   buildMetricTags,
   buildTraceContext,
-  emitRunEvent,
   emitSignalDerivedRunEvent,
   getAdapterOrThrow,
   normalizeEngineRunRef,
@@ -82,13 +81,6 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
               this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
               CORE_TIMEOUT_OPERATION.adapterCancelRun
             );
-            await emitRunEvent({
-              stateStoreWrite: this.deps.stateStoreWrite,
-              idempotency: this.deps.idempotency,
-              clock: this.deps.clock,
-              meta,
-              eventType: 'RunCancelRequested',
-            });
             this.deps.observability.metrics
               .counter(CORE_METRIC.cancelRequestedTotal, metricTags)
               .add(1);

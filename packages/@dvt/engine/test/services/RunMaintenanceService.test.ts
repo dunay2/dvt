@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { buildRunEvents } from '../../src/core/lifecycle/coreRuntime.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import {
   RUN_MAINTENANCE_MESSAGE,
@@ -437,8 +438,20 @@ async function makeCancellingRun(
     },
   ]);
 
-  // Cancel — emits RunCancelRequested, sets cancelling = true
-  await fixture.engine.cancelRun(runRef);
+  // Append cancel intent event to build RUNNING + cancelling snapshot state.
+  const meta = await fixture.store.getRunMetadataByRunId(tenantId, runId);
+  if (!meta) throw new Error(`Expected metadata for run ${runId}`);
+  await fixture.store.appendAndEnqueueTx(
+    runId,
+    buildRunEvents([
+      {
+        idempotency: fixture.idempotency,
+        clock: fixture.clock,
+        meta,
+        eventType: 'RunCancelRequested',
+      },
+    ])
+  );
 
   return runRef;
 }

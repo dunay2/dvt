@@ -77,6 +77,8 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
 
   const mockAdapter = new MockAdapter({
     stateStore: store,
+    stateStoreWrite: store,
+    clock,
     projector,
     planFetcher: { fetch: async () => enginePlan },
   });
@@ -288,8 +290,11 @@ describe('planner -> engine contract', () => {
     const enginePlan: ExecutionPlan = parseExecutionPlan(plan);
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
+    const clock = new SequenceClock('2026-03-01T00:00:00.000Z');
     const mock = new MockAdapter({
       stateStore: store,
+      stateStoreWrite: store,
+      clock,
       projector,
       planFetcher: { fetch: async () => enginePlan },
     });
