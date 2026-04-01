@@ -17,7 +17,9 @@ export function evaluateStartRunPlanSource(
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
-  return hasPlanRef ? { ok: true, value: { kind: 'planRef' } } : { ok: true, value: { kind: 'plannerBacked' } };
+  return hasPlanRef
+    ? { ok: true, value: { kind: 'planRef' } }
+    : { ok: true, value: { kind: 'plannerBacked' } };
 }
 
 function countPlannerSources(record: Record<string, unknown>): number {
