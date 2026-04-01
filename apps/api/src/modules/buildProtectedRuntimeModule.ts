@@ -38,9 +38,7 @@ import type { ProtectedRuntimeModule } from './types.js';
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
-  const errors = results.flatMap((result) =>
-    result.status === 'rejected' ? [result.reason] : []
-  );
+  const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
   if (errors.length > 0) {
     throw new AggregateError(errors, 'Failed to close protected runtime cleanly');
   }
