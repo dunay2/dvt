@@ -855,7 +855,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkPlan(250);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
@@ -882,8 +881,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow, // ✅ usa env.client
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       try {
@@ -913,7 +910,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkLinearThreeStepPlan();
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
@@ -947,8 +943,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow,
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       try {
@@ -983,7 +977,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
@@ -1009,8 +1002,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow,
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       try {
@@ -1087,8 +1078,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow,
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       try {
@@ -1162,8 +1151,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow,
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       try {
@@ -1248,8 +1235,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow,
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       try {
@@ -1289,7 +1274,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkPlan(40);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
@@ -1315,8 +1299,6 @@ describe('temporal integration (time-skipping)', () => {
       const adapter = new TemporalAdapter({
         workflowClient: env.client.workflow,
         config: temporalConfig,
-        stateStore: store,
-        projector,
       });
 
       const worker1 = mkWorker();

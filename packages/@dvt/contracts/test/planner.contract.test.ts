@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type ExecutionPlan,
   PLANNER_GRAPH_SOURCE_KIND,
   type PlannerBuildResultV2,
   type PlannerInputEnvelopeV2,
 } from '../src/contracts/planner/ExecutionPlan.v2.js';
 import { type IPlanner } from '../src/contracts/planner/IExecutionPlanner.v2.js';
+import type { ExecutionPlan as EngineVisibleExecutionPlan } from '../src/engine/IRunStateStore.v1.js';
 import { CURRENT_EXECUTION_PLAN_VERSION } from '../src/index.js';
 import {
-  ExecutionPlanV2Schema,
+  ExecutionPlanSchema,
   PlannerBuildResultV2Schema,
   PlannerInputEnvelopeV2Schema,
   type PlannerInputEnvelopeV2SchemaT,
@@ -68,14 +70,26 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(result.success).toBe(false);
   });
 
-  it('valida schema de ExecutionPlanV2 versionado', () => {
-    const plan = ExecutionPlanV2Schema.parse(VALID_EXECUTION_PLAN_V2_FIXTURE);
+  it('valida schema del ExecutionPlan canónico versionado', () => {
+    const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V2_FIXTURE);
     expect(plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
+    expect(plan.metadata.schemaVersion).toBe('v1.2');
+    expect(plan.metadata.contractVersion).toBe('1.0.0');
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
     expect(plan.steps.map((s) => s.stepId)).toEqual([
       'model.analytics.customers',
       'model.analytics.orders',
     ]);
+  });
+
+  it('mantiene una sola identidad pública entre planner y engine', () => {
+    const plannerPlan = VALID_EXECUTION_PLAN_V2_FIXTURE satisfies ExecutionPlan;
+    const engineVisible: EngineVisibleExecutionPlan = plannerPlan;
+
+    expect(engineVisible.metadata.planId).toBe(VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId);
+    expect(engineVisible.metadata.createdAtIso).toBe(
+      VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.createdAtIso
+    );
   });
 
   it('valida schema de PlannerBuildResultV2 con canonicalPlanJson', () => {

@@ -2,6 +2,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { StartRunAdmissionGuard } from '@dvt/delivery';
+import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import type { FastifyInstance } from 'fastify';
@@ -11,7 +12,6 @@ import { AuthorizeCommandScopeService } from '../application/services/authorizeC
 import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
-import { bridgePlannerBuildToExecutablePlan } from '../application/services/plannerExecutionPlanBridge.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 import { StoredExecutablePlanResolver } from '../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
@@ -94,7 +94,7 @@ export async function buildProtectedRuntimeModule(
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
     toExecutablePlan: (buildResult) => {
-      const plan = bridgePlannerBuildToExecutablePlan(buildResult);
+      const plan: ExecutionPlan = buildResult.plan;
       return {
         schemaVersion: plan.metadata.schemaVersion,
         text: JSON.stringify(plan),

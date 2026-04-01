@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { StoredPlanExecutabilityValidator } from '../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
 const PLAN_REF = {
-  uri: 'dvt-plan://postgres/plan-1',
+  uri: 'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   sha256: 'abc123',
   schemaVersion: 'v1.2',
-  planId: 'plan-1',
+  planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   planVersion: '1.0',
 };
 
@@ -24,7 +24,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'OK',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
     });
   });
@@ -43,7 +43,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'MISSING_CAPABILITY',
       degradable: false,
@@ -85,7 +85,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'REJECTED',
       degradable: false,
@@ -97,7 +97,11 @@ describe('StoredPlanExecutabilityValidator', () => {
   it('rejects when the persisted executable plan metadata no longer matches the ref', async () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
-        fetchForValidation: vi.fn(async () => executablePlanBytes({ planVersion: '9.9' })),
+        fetchForValidation: vi.fn(async () =>
+          executablePlanBytes({
+            planId: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+          })
+        ),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
     });
@@ -106,11 +110,11 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'REJECTED',
       degradable: false,
-      reason: 'PLAN_REF_MISMATCH: planVersion',
+      reason: 'PLAN_REF_MISMATCH: planId',
       cause: 'plan_ref',
     });
   });
@@ -129,7 +133,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'REJECTED',
       degradable: false,
@@ -150,10 +154,13 @@ function executablePlanBytes(
   return Buffer.from(
     JSON.stringify({
       metadata: {
-        planId: overrides?.planId ?? 'plan-1',
+        planId:
+          overrides?.planId ?? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         planVersion: overrides?.planVersion ?? '1.0',
         schemaVersion: overrides?.schemaVersion ?? 'v1.2',
         contractVersion: '1.0.0',
+        inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        createdAtIso: '2026-03-01T00:00:00.000Z',
         ...(overrides?.requiresCapabilities === undefined
           ? {}
           : { requiresCapabilities: overrides.requiresCapabilities }),

@@ -22,7 +22,7 @@ import {
 } from '@dvt/engine';
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
-import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
 
 import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
@@ -32,7 +32,10 @@ const PLANNER_MANIFEST_FIXTURE_URL = new URL(
   import.meta.url
 );
 
-function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
+function plannerOutputToEnginePlan(plannerPlan: {
+  metadata: { planId: string; planVersion: string; inputHashSha256: string };
+  steps: ExecutionPlan['steps'];
+}): ExecutionPlan {
   return {
     metadata: {
       planId: plannerPlan.metadata.planId,
@@ -347,7 +350,7 @@ describe('planner -> engine contract', () => {
     expect(runRef.provider).toBe('mock');
   });
 
-  it('bridge preserves planner planId and step order', async () => {
+  it('canonical plan preserves planner planId and step order without a bridge', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
       nodes: [
@@ -358,7 +361,7 @@ describe('planner -> engine contract', () => {
       selection: { selectedNodeIds: ['z'], includeUpstream: true },
     });
 
-    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    const enginePlan: ExecutionPlan = plannerPlan;
 
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
     expect(enginePlan.steps.length).toBe(plannerPlan.steps.length);
@@ -369,7 +372,7 @@ describe('planner -> engine contract', () => {
     }
   });
 
-  it('planner output still documents current schema drift against engine metadata', async () => {
+  it('planner output already satisfies the engine-visible canonical metadata', async () => {
     const planner = new PlannerFacade();
     const { plan } = await planner.buildPlan({
       nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],

@@ -28,11 +28,19 @@ function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
   cancel: ReturnType<typeof vi.fn>;
   signal: ReturnType<typeof vi.fn>;
   describe: ReturnType<typeof vi.fn>;
+  query: ReturnType<typeof vi.fn>;
 } {
   return {
     cancel: vi.fn(async () => undefined),
     signal: vi.fn(async () => undefined),
     describe: vi.fn(describeImpl),
+    query: vi.fn(async () => ({
+      status: 'RUNNING',
+      paused: false,
+      cancelled: false,
+      currentStepIndex: 0,
+      continuedAsNewCount: 0,
+    })),
   };
 }
 
@@ -58,8 +66,6 @@ function makeAdapter(
   const adapter = new TemporalAdapter({
     workflowClient,
     config: BASE_CONFIG,
-    stateStore: { listEvents: vi.fn(async () => []) },
-    projector: { rebuild: vi.fn() },
   });
 
   return { adapter, workflowClient };
@@ -317,8 +323,6 @@ describe('TemporalAdapter.lookupRunRef', () => {
     const timeoutAdapter = new TemporalAdapter({
       workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle), withAbortSignal },
       config: { ...BASE_CONFIG, requestTimeoutMs: 20 },
-      stateStore: { listEvents: vi.fn(async () => []) },
-      projector: { rebuild: vi.fn() },
     });
 
     await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
@@ -332,12 +336,58 @@ describe('TemporalAdapter.lookupRunRef', () => {
     const timeoutAdapter = new TemporalAdapter({
       workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle) },
       config: { ...BASE_CONFIG, requestTimeoutMs: 20 },
-      stateStore: { listEvents: vi.fn(async () => []) },
-      projector: { rebuild: vi.fn() },
     });
 
     await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
       'lookupRunRef.describe timed out after 20ms'
     );
+  });
+
+  it('returns provider-native workflow query status without reading persisted projection', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({}));
+    handle.query.mockResolvedValueOnce({
+      status: 'PAUSED',
+      paused: true,
+      cancelled: false,
+      currentStepIndex: 4,
+      continuedAsNewCount: 1,
+    });
+    const { adapter, workflowClient } = makeAdapter(() => handle);
+
+    const status = await adapter.getRunStatus({
+      provider: 'temporal',
+      tenantId: 'tenant1',
+      namespace: 'dvt-test',
+      workflowId: 'run-abc',
+      runId: 'run-abc',
+      taskQueue: 'q-main-tenant1',
+    });
+
+    expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
+    expect(handle.query).toHaveBeenCalledWith('status');
+    expect(status).toEqual({
+      runId: 'run-abc',
+      status: 'PAUSED',
+    });
+  });
+
+  it('fails cleanly when the workflow handle does not support query()', async () => {
+    const handle = {
+      cancel: vi.fn(async () => undefined),
+      signal: vi.fn(async () => undefined),
+      describe: vi.fn(async () => ({})),
+    };
+    const { adapter } = makeAdapter(() => handle as never);
+
+    await expect(
+      adapter.getRunStatus({
+        provider: 'temporal',
+        tenantId: 'tenant1',
+        namespace: 'dvt-test',
+        workflowId: 'run-abc',
+        runId: 'run-abc',
+        taskQueue: 'q-main-tenant1',
+      })
+    ).rejects.toThrow('TEMPORAL_WORKFLOW_QUERY_NOT_SUPPORTED');
   });
 });

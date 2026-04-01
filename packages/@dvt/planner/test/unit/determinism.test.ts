@@ -50,7 +50,7 @@ describe('determinism', () => {
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it('canonicalPlanJson does NOT contain planId or createdAtIso', async () => {
+  it('canonicalPlanJson does NOT contain planId, createdAtIso, schemaVersion, or contractVersion', async () => {
     const planner = new Planner();
     const { canonicalPlanJson } = await planner.buildPlan({
       nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
@@ -62,6 +62,8 @@ describe('determinism', () => {
     expect(meta).toBeDefined();
     expect(meta?.['planId']).toBeUndefined();
     expect(meta?.['createdAtIso']).toBeUndefined();
+    expect(meta?.['schemaVersion']).toBeUndefined();
+    expect(meta?.['contractVersion']).toBeUndefined();
   });
 
   it('fixed vector produces expected planId', async () => {

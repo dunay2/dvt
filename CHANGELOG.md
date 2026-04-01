@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.4.5](https://github.com/dunay2/dvt/compare/v5.4.4...v5.4.5) (2026-04-01)
+
+
+### Bug Fixes
+
+* **adapters:** Remove stringly run metadata errors ([#712](https://github.com/dunay2/dvt/issues/712)) ([91341f1](https://github.com/dunay2/dvt/commit/91341f130d01238a48769cd052ed9608b4a2098b))
+* **temporal:** Remove projection dependencies from TemporalAdapter getRunStatus ([#718](https://github.com/dunay2/dvt/issues/718)) ([e479f2a](https://github.com/dunay2/dvt/commit/e479f2a186c2ad934d9ce3f4c88b1e6ca009ad84))
+
 ## [5.4.4](https://github.com/dunay2/dvt/compare/v5.4.3...v5.4.4) (2026-03-31)
 
 

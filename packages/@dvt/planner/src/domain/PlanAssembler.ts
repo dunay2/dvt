@@ -8,7 +8,11 @@
  *  SRP: sole responsibility — hash inputs, assemble the immutable ExecutionPlanV2,
  *       attach observability layers. Knows nothing about graph topology or node selection.
  */
-import { CURRENT_EXECUTION_PLAN_VERSION } from '@dvt/contracts';
+import {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+  CURRENT_EXECUTION_PLAN_VERSION,
+} from '@dvt/contracts';
 
 import { sha256CanonicalJson } from './hashing.js';
 import { throwLimitExceeded } from './limits.js';
@@ -79,7 +83,13 @@ export class PlanAssembler {
   ): ExecutionPlanV2 {
     const planBase: ExecutionPlanV2 = {
       ...planCore,
-      metadata: { ...planCore.metadata, planId, createdAtIso: new Date().toISOString() },
+      metadata: {
+        ...planCore.metadata,
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+        planId,
+        createdAtIso: new Date().toISOString(),
+      },
     };
 
     const plan: ExecutionPlanV2 =

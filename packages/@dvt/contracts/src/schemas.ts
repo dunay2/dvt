@@ -16,7 +16,15 @@
  */
 import { z } from 'zod';
 
-import type { ExecutionPlanV2, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
+import type {
+  ExecutionPlan,
+  ExecutionPlanV2,
+  PlanCore,
+} from './contracts/planner/ExecutionPlan.v2.js';
+import {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+} from './contracts/planner/ExecutionPlan.v2.js';
 import { PlannerPolicyClassSetSchema } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 import {
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -431,6 +439,14 @@ export const ExecutionStepV2Schema = z
     kind: z.string().min(1),
     dependsOn: z.array(z.string().min(1)),
     stepTypeConfig: z.record(z.string(), z.unknown()).optional(),
+    type: z.enum(['task', 'gateway']).optional(),
+    gateway: z
+      .object({
+        dslVersion: z.literal('1.0'),
+        expression: z.string().min(1),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 
@@ -457,9 +473,16 @@ const CurrentExecutionPlanV2Schema = CurrentPlanCoreSchema.extend({
   metadata: z
     .object({
       planVersion: z.literal(CURRENT_EXECUTION_PLAN_VERSION),
+      schemaVersion: z.literal(CURRENT_EXECUTION_PLAN_SCHEMA_VERSION),
+      contractVersion: z.literal(CURRENT_EXECUTION_PLAN_CONTRACT_VERSION),
       inputHashSha256: HexSha256Schema,
       planId: HexSha256Schema,
       createdAtIso: z.string().min(1),
+      plannerVersion: z.string().min(1).optional(),
+      plannerGitSha: z.string().length(40).optional(),
+      requiresCapabilities: z.array(z.string().min(1)).optional(),
+      fallbackBehavior: z.enum(['reject', 'emulate', 'degrade']).optional(),
+      targetAdapter: z.enum(['temporal', 'conductor', 'any', 'mock']).optional(),
     })
     .strict(),
   observability: ExecutionPlanObservabilitySchema,
@@ -475,6 +498,7 @@ export const EXECUTION_PLAN_VERSIONED_SCHEMAS = {
 
 export const PlanCoreSchema = CurrentPlanCoreSchema as z.ZodType<PlanCore>;
 
+export const ExecutionPlanSchema = CurrentExecutionPlanV2Schema as z.ZodType<ExecutionPlan>;
 export const ExecutionPlanV2Schema = CurrentExecutionPlanV2Schema as z.ZodType<ExecutionPlanV2>;
 
 export const PlannerInputEnvelopeV2Schema = z
@@ -541,6 +565,7 @@ export type PlannerGraphSourceV1SchemaT = z.infer<typeof PlannerGraphSourceV1Sch
 export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
 export type ExecutionStepV2SchemaT = z.infer<typeof ExecutionStepV2Schema>;
 export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;
+export type ExecutionPlanSchemaT = z.infer<typeof ExecutionPlanSchema>;
 export type ExecutionPlanV2SchemaT = z.infer<typeof ExecutionPlanV2Schema>;
 export type PlannerInputEnvelopeV2SchemaT = z.infer<typeof PlannerInputEnvelopeV2Schema>;
 export type PlannerBuildResultV2SchemaT = z.infer<typeof PlannerBuildResultV2Schema>;
