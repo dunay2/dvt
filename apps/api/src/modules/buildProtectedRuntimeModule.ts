@@ -151,11 +151,12 @@ export async function buildProtectedRuntimeModule(
   const executablePlanResolver = new StoredExecutablePlanResolver({
     fetcher: planStore,
   });
+  const systemClock = { nowIsoUtc: () => new Date().toISOString() };
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
     stateStoreWrite: stateStoreRoles.write,
-    clock: { nowIsoUtc },
+    clock: systemClock,
     projector,
     observability,
     planFetcher: executablePlanResolver,
@@ -177,7 +178,7 @@ export async function buildProtectedRuntimeModule(
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc: () => new Date().toISOString() },
+      clock: systemClock,
       observability,
     },
   });
