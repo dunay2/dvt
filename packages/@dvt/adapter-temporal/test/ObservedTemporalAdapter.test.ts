@@ -17,11 +17,19 @@ function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
   cancel: ReturnType<typeof vi.fn>;
   signal: ReturnType<typeof vi.fn>;
   describe: ReturnType<typeof vi.fn>;
+  query: ReturnType<typeof vi.fn>;
 } {
   return {
     cancel: vi.fn(async () => undefined),
     signal: vi.fn(async () => undefined),
     describe: vi.fn(describeImpl),
+    query: vi.fn(async () => ({
+      status: 'RUNNING',
+      paused: false,
+      cancelled: false,
+      currentStepIndex: 0,
+      continuedAsNewCount: 0,
+    })),
   };
 }
 
@@ -47,8 +55,6 @@ function makeObservedLookupAdapter(
     adapter: new TemporalAdapter({
       workflowClient,
       config: BASE_CONFIG,
-      stateStore: { listEvents: vi.fn(async () => []) },
-      projector: { rebuild: vi.fn() },
     }),
     config: BASE_CONFIG,
     observability,
@@ -127,8 +133,6 @@ describe('ObservedTemporalAdapter', () => {
           ensureConnected: vi.fn(async () => undefined),
         } as never,
         config: BASE_CONFIG,
-        stateStore: { listEvents: vi.fn(async () => []) },
-        projector: { rebuild: vi.fn() },
       }),
       config: BASE_CONFIG,
       observability,

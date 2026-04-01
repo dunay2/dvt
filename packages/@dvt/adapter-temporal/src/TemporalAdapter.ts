@@ -4,7 +4,7 @@
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log - lookupRunRef for PENDING intent reconciliation
  * @decision Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives
- * @decision Section 5 - Status reconstruction uses persisted events + projector for deterministic snapshots
+ * @decision Section 5 - Status queries use the workflow statusQuery and return provider-native live status
  * @decision ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans
  * @consequence Temporal provider operations remain deterministic and aligned with engine lifecycle semantics
  * @version 1.2.0
@@ -28,11 +28,18 @@ import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
 import { isWorkflowNotFound } from './temporalErrorPolicy.js';
 import { withAbortSignalTimeout, withTimeoutMs } from './temporalObservability.js';
-import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
+import {
+  toRunStatusSnapshotFromWorkflowState,
+  toTemporalRunRef,
+  toTemporalTaskQueue,
+  toTemporalWorkflowId,
+} from './WorkflowMapper.js';
+import type { WorkflowState } from './workflows/RunPlanWorkflow.js';
 
 interface WorkflowHandleLike {
   cancel(): Promise<unknown>;
   signal(signalName: string, ...args: unknown[]): Promise<void>;
+  query?<TResult>(queryName: string, ...args: unknown[]): Promise<TResult>;
   /**
    * Fetches the workflow execution description from the Temporal server.
    * Throws a WorkflowNotFoundError (name === 'WorkflowNotFoundError') when the
@@ -53,20 +60,10 @@ interface WorkflowClientLike {
   getHandle(workflowId: string): WorkflowHandleLike;
 }
 
-interface IRunStateStoreReadLike {
-  listEvents(tenantId: string, runId: string): Promise<unknown[]>;
-}
-
-interface SnapshotProjectorLike {
-  rebuild(runId: string, events: unknown[]): RunStatusSnapshot;
-}
-
 export interface TemporalAdapterDeps {
   clientManager?: TemporalClientManager;
   workflowClient?: WorkflowClientLike;
   config: TemporalAdapterConfig;
-  stateStore: IRunStateStoreReadLike;
-  projector: SnapshotProjectorLike;
 }
 
 /** Capabilities declared by the Temporal adapter. Must stay in sync with adapters.capabilities.json. */
@@ -139,12 +136,18 @@ export class TemporalAdapter implements IProviderAdapter {
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
     const validatedRunRef = parseEngineRunRef(runRef);
-    // Operational authority is persisted projection, not workflow query state.
-    const events = await this.deps.stateStore.listEvents(
-      validatedRunRef.tenantId,
-      validatedRunRef.runId
-    );
-    return this.deps.projector.rebuild(validatedRunRef.runId, events);
+    const workflowClient = await this.getClient();
+    const workflow = workflowClient.getHandle(validatedRunRef.workflowId);
+
+    if (typeof workflow.query !== 'function') {
+      throw new Error('TEMPORAL_WORKFLOW_QUERY_NOT_SUPPORTED');
+    }
+
+    const state = await workflow.query<WorkflowState>('status');
+    return toRunStatusSnapshotFromWorkflowState({
+      runId: validatedRunRef.runId,
+      state,
+    });
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {

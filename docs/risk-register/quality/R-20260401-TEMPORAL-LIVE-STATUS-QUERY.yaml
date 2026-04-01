@@ -1,0 +1,23 @@
+---
+id: R-20260401-TEMPORAL-LIVE-STATUS-QUERY
+title: Temporal live status query could drift away from engine enrichment assumptions
+status: Closed
+date: 2026-04-01
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  The Temporal adapter now reads live workflow status directly from the provider query path instead
+  of rebuilding snapshot state from persisted events and a local projector.
+risk: >
+  A future change could reintroduce projection logic into the adapter or widen the adapter status
+  payload beyond provider-native enrichment fields, causing authority drift between the engine
+  snapshot path and the provider status path.
+mitigations:
+  - TemporalAdapterDeps no longer accept state-store or projector dependencies.
+  - TemporalAdapter.getRunStatus now queries the workflow status API directly.
+  - WorkflowMapper exposes a dedicated provider-state to RunStatusSnapshot mapper.
+  - Temporal adapter tests lock both live status reads and unsupported-query behaviour.
+  - API wiring keeps projector/state-store dependencies only for MockAdapter.
