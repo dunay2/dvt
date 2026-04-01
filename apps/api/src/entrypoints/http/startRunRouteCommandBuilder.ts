@@ -9,7 +9,9 @@ import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
 
-export function parseStartRunCommand(record: Record<string, unknown>): RouteParseResult<StartRunCommand> {
+export function parseStartRunCommand(
+  record: Record<string, unknown>
+): RouteParseResult<StartRunCommand> {
   const selection = parseStartRunSelection(record.selection);
   if (!selection.ok) {
     return selection;
