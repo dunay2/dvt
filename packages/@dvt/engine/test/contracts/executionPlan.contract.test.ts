@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
 import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
 
@@ -63,9 +64,11 @@ function createEngine(plan: ExecutionPlan): {
   const planRef = makePlanRef(uri, plan);
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
 
   const mock = new MockAdapter({
     stateStore: store,
+    clock,
     projector,
     planFetcher: { fetch: async () => plan },
   });

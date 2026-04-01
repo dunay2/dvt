@@ -7747,7 +7747,7 @@ snapshots:
   '@commitlint/config-validator@18.6.1':
     dependencies:
       '@commitlint/types': 18.6.1
-      ajv: 8.17.1
+      ajv: 8.18.0
 
   '@commitlint/ensure@18.6.1':
     dependencies:

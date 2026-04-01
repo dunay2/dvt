@@ -114,15 +114,13 @@ export class TemporalAdapter implements IProviderAdapter {
       ],
     });
 
-    const runId =
-      typeof started.firstExecutionRunId === 'string' && started.firstExecutionRunId.length > 0
-        ? started.firstExecutionRunId
-        : validatedCtx.runId;
-
     return toTemporalRunRef({
       tenantId: validatedCtx.tenantId,
       workflowId: started.workflowId,
-      runId,
+      // Keep EngineRunRef keyed to the canonical logical runId. Temporal's
+      // execution runId is provider-internal; event/state stores are indexed
+      // by the caller-stable ctx.runId.
+      runId: validatedCtx.runId,
       config: this.deps.config,
       taskQueue,
     });
@@ -131,7 +129,7 @@ export class TemporalAdapter implements IProviderAdapter {
   async cancelRun(runRef: EngineRunRef): Promise<void> {
     const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
-    await workflowClient.getHandle(validatedRunRef.workflowId).cancel();
+    await workflowClient.getHandle(validatedRunRef.workflowId).signal(WorkflowSignals.CANCEL);
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
@@ -164,9 +162,7 @@ export class TemporalAdapter implements IProviderAdapter {
         await workflow.signal(WorkflowSignals.RESUME);
         return;
       case 'CANCEL':
-        // Canonicalize cancellation on the provider-native cancel path so both
-        // cancelRun() and signal(CANCEL) follow the same execution semantics.
-        await workflow.cancel();
+        await workflow.signal(WorkflowSignals.CANCEL, validatedRequest.reason);
         return;
       case 'RETRY_STEP':
       case 'RETRY_RUN':
