@@ -36,6 +36,16 @@ import { buildProviderAdapters } from './buildProviderAdapters.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 
+async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
+  const results = await Promise.allSettled(closers.map((closer) => closer()));
+  const errors = results.flatMap((result) =>
+    result.status === 'rejected' ? [result.reason] : []
+  );
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'Failed to close protected runtime cleanly');
+  }
+}
+
 function requireDatabaseUrl(env: Env): string {
   if (!env.DATABASE_URL) {
     throw new Error('DATABASE_URL is required when OIDC-protected runtime routes are enabled');
@@ -223,11 +233,13 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      await closeAdapters();
-      await planStore.close();
-      await stateStore.close();
-      await intentStore.close();
-      await pool.end();
+      await closeAllClosers([
+        () => closeAdapters(),
+        () => planStore.close(),
+        () => stateStore.close(),
+        () => intentStore.close(),
+        () => pool.end(),
+      ]);
     },
   };
 }

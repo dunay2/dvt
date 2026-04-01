@@ -10,7 +10,7 @@ import {
   ADMISSION_TELEMETRY_METRICS,
 } from './admissionTelemetryMetrics.js';
 
-type DecisionInput = Parameters<AdmissionTelemetry['recordDecision']>[0];
+type DecisionInput = Parameters<AdmissionTelemetry['record']>[0];
 
 export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
   public constructor(
@@ -19,7 +19,7 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
     }
   ) {}
 
-  public async recordDecision(input: DecisionInput): Promise<void> {
+  public async record(input: DecisionInput): Promise<void> {
     try {
       this.deps.observability.metrics
         .counter(ADMISSION_TELEMETRY_METRICS.decisionTotal)

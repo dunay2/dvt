@@ -9,6 +9,16 @@ export interface BuildProviderAdaptersResult {
   close: () => Promise<void>;
 }
 
+async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
+  const results = await Promise.allSettled(closers.map((closer) => closer()));
+  const errors = results.flatMap((result) =>
+    result.status === 'rejected' ? [result.reason] : []
+  );
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'Failed to close provider adapters cleanly');
+  }
+}
+
 /**
  * Builds the provider adapter map based on environment configuration.
  *
@@ -59,7 +69,7 @@ export async function buildProviderAdapters(
   return {
     adapters,
     close: async () => {
-      for (const closer of closers) await closer();
+      await closeAllClosers(closers);
     },
   };
 }

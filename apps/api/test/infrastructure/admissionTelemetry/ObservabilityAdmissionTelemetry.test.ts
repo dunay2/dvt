@@ -33,7 +33,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
       } as unknown as IObservability,
     });
 
-    await telemetry.recordDecision({
+    await telemetry.record({
       requestId: 'req-1',
       tenantId: 'tenant-1',
       runId: 'run-1',
@@ -69,7 +69,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
       } as unknown as IObservability,
     });
 
-    await telemetry.recordDecision({
+    await telemetry.record({
       requestId: 'req-1',
       tenantId: 'tenant-1',
       runId: 'run-1',
@@ -112,7 +112,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
       } as unknown as IObservability,
     });
 
-    await telemetry.recordDecision({
+    await telemetry.record({
       requestId: 'req-1',
       tenantId: 'tenant-1',
       runId: 'run-1',
@@ -145,7 +145,7 @@ describe('ObservabilityAdmissionTelemetry', () => {
     });
 
     await expect(
-      telemetry.recordDecision({
+      telemetry.record({
         requestId: 'req-1',
         tenantId: 'tenant-1',
         runId: 'run-1',
