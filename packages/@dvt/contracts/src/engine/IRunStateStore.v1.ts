@@ -1,3 +1,4 @@
+import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v2.js';
 import type { IsoUtcString, PlanRef, Provider, RunStatus } from '../types/contracts.js';
 
 export type EventType =
@@ -239,30 +240,7 @@ export interface RunStateCommandPort {
   appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult>;
 }
 
-export interface ExecutionPlan {
-  metadata: {
-    planId: string;
-    planVersion: string;
-    schemaVersion: string;
-    contractVersion?: string;
-    inputHashSha256?: string;
-    requiresCapabilities?: string[];
-    fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
-    targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
-  };
-  steps: Array<
-    {
-      stepId: string;
-      kind?: string;
-      type?: 'task' | 'gateway';
-      gateway?: {
-        dslVersion: '1.0';
-        expression: string;
-      };
-      dependsOn?: string[];
-    } & Record<string, unknown>
-  >;
-}
+export type ExecutionPlan = CanonicalExecutionPlan;
 
 export interface IClock {
   nowIsoUtc(): IsoUtcString;

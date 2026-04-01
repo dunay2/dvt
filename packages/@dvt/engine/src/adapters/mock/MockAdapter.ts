@@ -7,12 +7,15 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type {
-  EngineRunRef,
-  PlanRef,
-  ResolvedRunContext,
-  RunStatusSnapshot,
-  SignalRequest,
+import {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+  CURRENT_EXECUTION_PLAN_VERSION,
+  type EngineRunRef,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunStatusSnapshot,
+  type SignalRequest,
 } from '@dvt/contracts';
 
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
@@ -35,7 +38,7 @@ export interface MockAdapterDeps {
 }
 
 /** Contract versions this adapter implementation can execute. */
-const SUPPORTED_CONTRACT_VERSIONS = ['1.0.0'] as const;
+const SUPPORTED_CONTRACT_VERSIONS = [CURRENT_EXECUTION_PLAN_CONTRACT_VERSION] as const;
 
 /** Capabilities declared by the mock adapter. Must stay in sync with adapters.capabilities.json. */
 const MOCK_CAPABILITIES = [
@@ -64,9 +67,11 @@ export class MockAdapter implements IProviderAdapter {
       : {
           metadata: {
             planId: planRef.planId,
-            planVersion: planRef.planVersion,
-            schemaVersion: planRef.schemaVersion,
-            contractVersion: '1.0.0',
+            planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+            schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+            contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+            inputHashSha256: planRef.sha256,
+            createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
           },
           steps: [],
         };
@@ -115,8 +120,8 @@ function validateMockPlanMetadata(metadata: ExecutionPlan['metadata']): void {
 
 function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   // Adapter narrowing rule: reject unrecognized fields.
-  // For mock we only allow: stepId, kind, dependsOn.
-  const allowed = new Set(['stepId', 'kind', 'dependsOn']);
+  // For mock we allow the governed canonical step fields only.
+  const allowed = new Set(['stepId', 'kind', 'dependsOn', 'stepTypeConfig', 'type', 'gateway']);
   for (const k of Object.keys(step)) {
     if (!allowed.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);

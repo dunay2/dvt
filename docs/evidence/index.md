@@ -1,4 +1,4 @@
----
+﻿---
 title: Evidence
 status: Active
 owner: docs
@@ -24,9 +24,10 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260331 Api Parse Error Coupling Inventory](ED-20260331-api-parse-error-coupling-inventory.md)
 - [ED 20260331 Planner Determinism Hash Pin](ED-20260331-planner-determinism-hash-pin.md)
 - [ED 20260331 Rc C1 Boundary Legacy Hardening](ED-20260331-rc-c1-boundary-legacy-hardening.md)
+- [ED 20260401 Execution Plan Canonical Identity Unification](ED-20260401-execution-plan-canonical-identity-unification.md)
 - [ED 20260401 Temporal Live Status Query](ED-20260401-temporal-live-status-query.md)
-- [ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout](ED-20260312-g6-golden-schema-closeout.md)
-- [ED-20260312 — G8 Arch Tests and Engine Wiring Closeout](ED-20260312-g8-arch-tests-engine-wiring.md)
+- [ED-20260312 â€” G6 Golden Fixtures and Schema Validation Closeout](ED-20260312-g6-golden-schema-closeout.md)
+- [ED-20260312 â€” G8 Arch Tests and Engine Wiring Closeout](ED-20260312-g8-arch-tests-engine-wiring.md)
 - [ED-20260314 - G9 Step Type Registry Closeout](ED-20260314-g9-step-type-registry-closeout.md)
 - [ED-20260315 - API Protected Runtime Module extraction](ED-20260315-api-modules-protected-runtime.md)
 - [ED-20260315 - G10 Closeout: outbox_lineage worker + fail-open DLQ](ED-20260315-g10-closeout.md)
@@ -34,7 +35,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260315 - PostgresStateStoreAdapter Phase 1 Items 5-7](ED-20260315-adapter-postgres-phase1-items5-7.md)
 - [ED-20260316 - G7 closeout](ED-20260316-g7-closeout.md)
 - [ED-20260316 - G7.3 provider run-id reconciliation](ED-20260316-g7-provider-ref-reconciliation.md)
-- [ED-20260318 — Stage 1.1 Planner Canonicalization: Boundary Contract Slices](ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md)
+- [ED-20260318 â€” Stage 1.1 Planner Canonicalization: Boundary Contract Slices](ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md)
 - [ED-20260320 - API runtime query integration](ED-20260320-api-runtime-query-integration.md)
 - [ED-20260320 - Planner R2 typed graph-source boundary](ED-20260320-planner-r2-typed-graph-source-boundary.md)
 - [ED-20260321 - Planner-backed startRun QA rationale and discoveries](ED-20260321-planner-start-run-qa-rationale.md)

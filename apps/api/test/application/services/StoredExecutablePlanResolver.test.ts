@@ -6,19 +6,21 @@ import { StoredExecutablePlanResolver } from '../../../src/application/services/
 
 const EXECUTABLE_PLAN_TEXT = JSON.stringify({
   metadata: {
-    planId: 'plan-1',
+    planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     planVersion: '1.0',
     schemaVersion: 'v1.2',
     contractVersion: '1.0.0',
+    inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    createdAtIso: '2026-03-01T00:00:00.000Z',
   },
   steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
 });
 
 const PLAN_REF = {
-  uri: 'dvt-plan://postgres/plan-1',
+  uri: 'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   sha256: createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex'),
   schemaVersion: 'v1.2',
-  planId: 'plan-1',
+  planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   planVersion: '1.0',
 };
 
@@ -33,10 +35,12 @@ describe('StoredExecutablePlanResolver', () => {
 
     expect(plan).toEqual({
       metadata: {
-        planId: 'plan-1',
+        planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
+        inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        createdAtIso: '2026-03-01T00:00:00.000Z',
       },
       steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
     });
@@ -55,10 +59,12 @@ describe('StoredExecutablePlanResolver', () => {
   it('rejects stored dvt-plan refs when persisted metadata does not match the ref', async () => {
     const mismatchedText = JSON.stringify({
       metadata: {
-        planId: 'plan-1',
-        planVersion: '9.9',
+        planId: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+        planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
+        inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        createdAtIso: '2026-03-01T00:00:00.000Z',
       },
       steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
     });
@@ -71,7 +77,7 @@ describe('StoredExecutablePlanResolver', () => {
       sha256: createHash('sha256').update(mismatchedText).digest('hex'),
     };
 
-    await expect(resolver.fetch(planRef)).rejects.toThrow('PLAN_REF_MISMATCH: planVersion');
+    await expect(resolver.fetch(planRef)).rejects.toThrow('PLAN_REF_MISMATCH: planId');
   });
 
   it('preserves legacy external planRef behavior for non-dvt-plan schemes', async () => {
@@ -88,10 +94,12 @@ describe('StoredExecutablePlanResolver', () => {
 
     expect(plan).toEqual({
       metadata: {
-        planId: 'plan-1',
+        planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
+        inputHashSha256: PLAN_REF.sha256,
+        createdAtIso: expect.any(String),
         requiresCapabilities: ['basic-execution'],
       },
       steps: [],

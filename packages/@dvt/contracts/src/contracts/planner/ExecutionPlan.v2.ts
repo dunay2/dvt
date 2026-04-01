@@ -85,7 +85,17 @@ export interface ExecutionStepV2 {
    * @see DbtStepTypeConfig — typed config for DBT_* kinds
    */
   stepTypeConfig?: Record<string, unknown>;
+  type?: 'task' | 'gateway';
+  gateway?: {
+    dslVersion: '1.0';
+    expression: string;
+  };
 }
+
+export type ExecutionStep = ExecutionStepV2;
+
+export const CURRENT_EXECUTION_PLAN_SCHEMA_VERSION = 'v1.2' as const;
+export const CURRENT_EXECUTION_PLAN_CONTRACT_VERSION = '1.0.0' as const;
 
 export type VersionedPlanCore<TVersion extends SupportedPlanVersion> = {
   metadata: {
@@ -102,8 +112,15 @@ export type PlanCore = {
 export type VersionedExecutionPlanV2<TVersion extends SupportedPlanVersion> =
   VersionedPlanCore<TVersion> & {
     metadata: VersionedPlanCore<TVersion>['metadata'] & {
+      schemaVersion: typeof CURRENT_EXECUTION_PLAN_SCHEMA_VERSION;
+      contractVersion: typeof CURRENT_EXECUTION_PLAN_CONTRACT_VERSION;
       planId: string;
       createdAtIso: string;
+      plannerVersion?: string;
+      plannerGitSha?: string;
+      requiresCapabilities?: readonly string[];
+      fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
+      targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
     };
     observability?: {
       tags?: Record<string, string>;
