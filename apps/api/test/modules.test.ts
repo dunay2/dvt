@@ -89,6 +89,10 @@ describe('modules', () => {
             return [];
           },
         },
+        stateStoreWrite: {
+          async appendAndEnqueueTx() {},
+        },
+        clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
         projector: {
           rebuild() {
             return {};

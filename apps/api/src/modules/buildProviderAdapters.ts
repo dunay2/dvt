@@ -2,6 +2,7 @@ import type { PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
   ExecutionPlan,
+  IClock,
   IProviderAdapter,
   IRunStateStoreRead,
   IRunStateStoreWrite,
@@ -26,7 +27,8 @@ export async function buildProviderAdapters(
   env: Env,
   deps: {
     stateStore: Pick<IRunStateStoreRead, 'getRunMetadataByRunId' | 'listEvents'>;
-    stateStoreWrite?: Pick<IRunStateStoreWrite, 'appendAndEnqueueTx'>;
+    stateStoreWrite: Pick<IRunStateStoreWrite, 'appendAndEnqueueTx'>;
+    clock: Pick<IClock, 'nowIsoUtc'>;
     projector: { rebuild(runId: string, events: unknown[]): unknown };
     observability: IObservability;
     planFetcher?: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
@@ -35,9 +37,8 @@ export async function buildProviderAdapters(
   const { MockAdapter } = await import('@dvt/engine/testing');
   const mockAdapter = new MockAdapter({
     stateStore: deps.stateStore as never,
-    ...(deps.stateStoreWrite !== undefined
-      ? { stateStoreWrite: deps.stateStoreWrite as never }
-      : {}),
+    stateStoreWrite: deps.stateStoreWrite as never,
+    clock: deps.clock as never,
     projector: deps.projector as never,
     ...(deps.planFetcher !== undefined ? { planFetcher: deps.planFetcher as never } : {}),
   });

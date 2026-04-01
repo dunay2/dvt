@@ -916,7 +916,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkLinearPlan(250);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
@@ -1043,7 +1042,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
@@ -1414,7 +1412,6 @@ describe('temporal integration (time-skipping)', () => {
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkLinearPlan(40);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 

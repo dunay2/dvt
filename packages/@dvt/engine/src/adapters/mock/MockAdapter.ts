@@ -24,13 +24,13 @@ import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { buildRunEvents } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../../ports/IRunStateStore.js';
-import { SequenceClock, type IClock } from '../../utils/clock.js';
+import type { IClock } from '../../utils/clock.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
 export interface MockAdapterDeps {
   stateStore: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
-  clock?: IClock;
+  clock: Pick<IClock, 'nowIsoUtc'>;
   idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
   planFetcher?: {
@@ -54,7 +54,7 @@ export class MockAdapter implements IProviderAdapter {
   private readonly idempotency: IdempotencyKeyBuilder;
 
   constructor(private readonly deps: MockAdapterDeps) {
-    this.clock = deps.clock ?? new SequenceClock();
+    this.clock = deps.clock;
     this.idempotency = deps.idempotency ?? new IdempotencyKeyBuilder();
   }
 

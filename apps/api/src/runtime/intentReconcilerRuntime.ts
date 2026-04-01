@@ -126,6 +126,7 @@ function resolveReconcilerAdapters(
         new MockAdapter({
           stateStore: stateStoreRead,
           stateStoreWrite,
+          clock: SYSTEM_CLOCK,
           projector: new SnapshotProjector(),
         })
       );
