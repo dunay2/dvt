@@ -11,8 +11,11 @@
  * Requires a live PostgreSQL instance. Skips cleanly when DVT_PG_URL or
  * DATABASE_URL is absent.
  */
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import process from 'node:process';
+import { URL } from 'node:url';
 
 import { exportJWK, generateKeyPair, SignJWT, type JWK } from 'jose';
 import { Client } from 'pg';
@@ -30,6 +33,10 @@ const ENVIRONMENT_ID = 'env-api-it';
 const PRINCIPAL_ID = 'principal-api-it';
 const ISSUER = 'https://issuer.integration.example/';
 const AUDIENCE = 'dvt-api';
+const PLANNER_MANIFEST_FIXTURE_URL = new URL(
+  '../fixtures/planner/basic-manifest.json',
+  import.meta.url
+);
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/integration-plan.json',
   sha256: 'integration-sha-256',
@@ -224,7 +231,11 @@ describeIfPg('protected runtime integration', () => {
       headers: { authorization: `Bearer ${token}` },
     });
     expect(eventsResponse.statusCode).toBe(200);
-    expect(eventTypes(eventsResponse.json())).toEqual(['RunQueued', 'RunCancelRequested']);
+    expect(eventTypes(eventsResponse.json())).toEqual([
+      'RunQueued',
+      'RunCancelRequested',
+      'RunCancelled',
+    ]);
   });
 
   it('persists and validates a planner-backed run before execution starts', async () => {
@@ -289,6 +300,89 @@ describeIfPg('protected runtime integration', () => {
         }),
       ]),
     });
+  });
+
+  it('accepts planner-backed startRun requests using manifestRef', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+    const manifestRef = makeManifestRef(PLANNER_MANIFEST_FIXTURE_URL);
+    const runId = 'api-integration-run-manifestref-1';
+
+    const startResponse = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.analytics.order_items'],
+        manifestRef,
+        runId,
+        targetAdapter: 'mock',
+      },
+    });
+    expect(startResponse.statusCode).toBe(202);
+    expect(startResponse.json()).toEqual({ runId, accepted: true });
+
+    const storedPlan = await adminClient!.query<{
+      plan_id: string;
+      plan_uri: string;
+      validation_state: string;
+    }>(
+      `SELECT plan_id, plan_uri, validation_state
+         FROM ${quoteIdentifier(SCHEMA)}.stored_plans
+         ORDER BY stored_at DESC
+         LIMIT 1`
+    );
+    expect(storedPlan.rows[0]).toMatchObject({
+      validation_state: 'VALID',
+    });
+    expect(storedPlan.rows[0]?.plan_uri).toMatch(/^dvt-plan:\/\/postgres\//);
+  });
+
+  it('returns 422 plan_rejected when manifestRef sha256 does not match content', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.analytics.order_items'],
+        manifestRef: {
+          uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+          sha256: '0'.repeat(64),
+        },
+        runId: 'api-integration-run-manifestref-bad-sha',
+        targetAdapter: 'mock',
+      },
+    });
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json()).toEqual(
+      httpError('unprocessable', 'plan_rejected', {
+        details: {
+          message: 'Manifest artifact integrity mismatch.',
+          cause: 'manifest_ref_integrity_mismatch',
+        },
+      })
+    );
   });
 
   it('rejects a token whose asserted tenant conflicts with the requested tenant scope', async () => {
@@ -600,4 +694,12 @@ async function closeServer(server: Server): Promise<void> {
       resolve();
     });
   });
+}
+
+function makeManifestRef(url: URL): { uri: string; sha256: string } {
+  const bytes = readFileSync(url);
+  return {
+    uri: url.href,
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+  };
 }

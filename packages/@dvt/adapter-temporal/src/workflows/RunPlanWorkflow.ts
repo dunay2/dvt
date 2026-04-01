@@ -126,8 +126,8 @@ export interface WorkflowState {
   status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   /** Dedicated pause flag: used by condition() predicate to avoid TypeScript CFA cast. */
   paused: boolean;
-  /** Dedicated cancel flag: used by condition() predicate to avoid TypeScript CFA cast. */
-  cancelled: boolean;
+  /** Dedicated cancel-request flag: used by condition() predicates at safe points. */
+  cancelRequested: boolean;
   cancelReason?: string;
   currentStepIndex: number;
   continuedAsNewCount: number;
@@ -140,7 +140,7 @@ export interface WorkflowState {
 
 export const pauseSignal = defineSignal('pause');
 export const resumeSignal = defineSignal('resume');
-export const cancelSignal = defineSignal<[string]>('cancel');
+export const cancelSignal = defineSignal<[string | undefined]>('cancel');
 export const statusQuery = defineQuery<WorkflowState>('status');
 
 // ---------------------------------------------------------------------------
@@ -260,6 +260,15 @@ async function resolveLayerLoopOutcome(args: {
   if (args.layerOutcome.kind === 'terminal') {
     return args.layerOutcome.result;
   }
+  const cancelled = await finalizeCancellationIfRequested({
+    state: args.state,
+    ctx: args.ctx,
+    planRef: args.planRef,
+    continuedAsNewCount: args.continuedAsNewCount,
+  });
+  if (cancelled) {
+    return cancelled;
+  }
   if (args.layerOutcome.kind === 'continue_as_new') {
     return continueAsNew<typeof runPlanWorkflow>(args.layerOutcome.nextInput);
   }
@@ -303,7 +312,7 @@ function createInitialWorkflowState(
   return {
     status: 'RUNNING',
     paused: false,
-    cancelled: false,
+    cancelRequested: false,
     currentStepIndex: 0,
     continuedAsNewCount,
     gatewayDecisions: gatewayDecisions ? { ...gatewayDecisions } : undefined,
@@ -323,10 +332,14 @@ function registerSignalHandlers(state: WorkflowState): void {
     state.status = 'RUNNING';
   });
 
-  setHandler(cancelSignal, (reason: string) => {
-    state.cancelled = true;
-    state.cancelReason = reason;
-    state.status = 'CANCELLED';
+  setHandler(cancelSignal, (reason: string | undefined) => {
+    if (state.status === 'COMPLETED' || state.status === 'FAILED' || state.status === 'CANCELLED') {
+      return;
+    }
+    state.cancelRequested = true;
+    if (reason !== undefined) {
+      state.cancelReason = reason;
+    }
   });
 
   setHandler(statusQuery, () => state);
@@ -406,11 +419,6 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     planRef: args.planRef,
   });
 
-  if (executableLayer.length === 0) {
-    args.runtime.processedLayersInCurrentExecution += 1;
-    return null;
-  }
-
   args.state.currentStepIndex = args.runtime.completedSteps;
 
   const terminalBeforeLayer = await handlePreLayerLifecycle({
@@ -420,6 +428,11 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     continuedAsNewCount: args.continuedAsNewCount,
   });
   if (terminalBeforeLayer) return { kind: 'terminal', result: terminalBeforeLayer };
+
+  if (executableLayer.length === 0) {
+    args.runtime.processedLayersInCurrentExecution += 1;
+    return null;
+  }
 
   await emitStepStartedForLayer(args.ctx, args.planRef, executableLayer);
 
@@ -440,6 +453,14 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     continuedAsNewCount: args.continuedAsNewCount,
   });
   if (terminalFromResults) return { kind: 'terminal', result: terminalFromResults };
+
+  const terminalAfterLayer = await finalizeCancellationIfRequested({
+    state: args.state,
+    ctx: args.ctx,
+    planRef: args.planRef,
+    continuedAsNewCount: args.continuedAsNewCount,
+  });
+  if (terminalAfterLayer) return { kind: 'terminal', result: terminalAfterLayer };
 
   args.runtime.processedLayersInCurrentExecution += 1;
   return maybeBuildContinueAsNewOutcome({
@@ -533,33 +554,44 @@ async function handlePreLayerLifecycle(args: {
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
 }): Promise<RunPlanWorkflowResult | null> {
-  if (args.state.cancelled) {
-    await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
-    args.state.status = 'CANCELLED';
-    return {
-      runId: args.ctx.runId,
-      status: 'CANCELLED',
-      continuedAsNewCount: args.continuedAsNewCount,
-    };
-  }
+  const cancelled = await finalizeCancellationIfRequested(args);
+  if (cancelled) return cancelled;
 
   if (!args.state.paused) return null;
 
   await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunPaused' });
-  await condition(() => !args.state.paused || args.state.cancelled);
+  await condition(() => !args.state.paused || args.state.cancelRequested);
 
-  if (args.state.cancelled) {
-    await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
-    args.state.status = 'CANCELLED';
-    return {
-      runId: args.ctx.runId,
-      status: 'CANCELLED',
-      continuedAsNewCount: args.continuedAsNewCount,
-    };
-  }
+  const cancelledWhilePaused = await finalizeCancellationIfRequested(args);
+  if (cancelledWhilePaused) return cancelledWhilePaused;
 
   await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunResumed' });
   return null;
+}
+
+async function finalizeCancellationIfRequested(args: {
+  state: WorkflowState;
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+  continuedAsNewCount: number;
+}): Promise<RunPlanWorkflowResult | null> {
+  if (!args.state.cancelRequested) {
+    return null;
+  }
+
+  await activities.emitEvent({
+    ctx: args.ctx,
+    planRef: args.planRef,
+    eventType: 'RunCancelRequested',
+  });
+  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
+  args.state.status = 'CANCELLED';
+  args.state.paused = false;
+  return {
+    runId: args.ctx.runId,
+    status: 'CANCELLED',
+    continuedAsNewCount: args.continuedAsNewCount,
+  };
 }
 
 async function emitStepStartedForLayer(

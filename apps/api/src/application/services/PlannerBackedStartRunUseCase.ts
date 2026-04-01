@@ -5,9 +5,17 @@ import type {
   PlannerInputEnvelopeV2,
 } from '@dvt/contracts';
 
+import {
+  formatManifestArtifactResolutionReason,
+  isManifestArtifactResolutionError,
+  mapManifestArtifactResolutionCause,
+} from '../errors/ManifestArtifactResolutionError.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { StartRunCommand } from '../ports/startRunCommandContract.js';
-import { START_RUN_RESULT_KIND } from '../ports/startRunResultContract.js';
+import {
+  START_RUN_PLAN_REJECTION_CODE,
+  START_RUN_RESULT_KIND,
+} from '../ports/startRunResultContract.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
@@ -30,7 +38,16 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       return this.deps.delegate.execute(command, context);
     }
 
-    const buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+    let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
+    try {
+      buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+    } catch (error) {
+      const rejection = mapManifestResolutionFailure(error);
+      if (rejection !== null) {
+        return rejection;
+      }
+      throw error;
+    }
     const planRef = await this.deps.planStore.storePlan(buildResult);
     const validation = await this.deps.validator.validatePlan(planRef, command.targetAdapter);
 
@@ -76,4 +93,21 @@ function isValidationError(
   validation: PlanValidationResult
 ): validation is Extract<PlanValidationResult, { readonly status: 'ERROR' }> {
   return validation.status === 'ERROR';
+}
+
+function mapManifestResolutionFailure(error: unknown): StartRunUseCaseResult | null {
+  if (!isManifestArtifactResolutionError(error)) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    value: {
+      kind: START_RUN_RESULT_KIND.planRejected,
+      accepted: false,
+      code: START_RUN_PLAN_REJECTION_CODE.rejected,
+      reason: formatManifestArtifactResolutionReason(error.kind, error.detail),
+      cause: mapManifestArtifactResolutionCause(error.kind),
+    },
+  };
 }

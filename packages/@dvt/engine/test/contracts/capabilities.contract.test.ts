@@ -87,8 +87,9 @@ function createEngine(adapter?: IProviderAdapter): {
 } {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
+  const clock = { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' };
 
-  const mock = new MockAdapter({ stateStore: store, projector });
+  const mock = new MockAdapter({ stateStore: store, projector, clock });
   const effective = adapter ?? mock;
 
   const { engine } = createWorkflowEngineFixture({
@@ -153,7 +154,8 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
   it('skips validation when adapter omits capabilities() (graceful degradation)', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const base = new MockAdapter({ stateStore: store, projector });
+    const clock = { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' };
+    const base = new MockAdapter({ stateStore: store, projector, clock });
     // Build an adapter that explicitly omits the capabilities() method.
     const noCapAdapter: IProviderAdapter = {
       provider: 'mock',
@@ -176,13 +178,21 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
 describe('adapter capabilities() declarations', () => {
   it('MockAdapter.capabilities() includes basic-execution', () => {
     const store = new InMemoryTxStore();
-    const mock = new MockAdapter({ stateStore: store, projector: new SnapshotProjector() });
+    const mock = new MockAdapter({
+      stateStore: store,
+      projector: new SnapshotProjector(),
+      clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
+    });
     expect(mock.capabilities()).toContain('basic-execution');
   });
 
   it('MockAdapter.capabilities() includes workflow.fan.parallel', () => {
     const store = new InMemoryTxStore();
-    const mock = new MockAdapter({ stateStore: store, projector: new SnapshotProjector() });
+    const mock = new MockAdapter({
+      stateStore: store,
+      projector: new SnapshotProjector(),
+      clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
+    });
     expect(mock.capabilities()).toContain('workflow.fan.parallel');
   });
 
@@ -212,7 +222,11 @@ describe('adapters.capabilities.json matrix drift gate', () => {
 
   it('mock adapter capabilities match the matrix', () => {
     const store = new InMemoryTxStore();
-    const mock = new MockAdapter({ stateStore: store, projector: new SnapshotProjector() });
+    const mock = new MockAdapter({
+      stateStore: store,
+      projector: new SnapshotProjector(),
+      clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
+    });
     const declared = [...mock.capabilities()].sort((a, b) => a.localeCompare(b));
     const matrix =
       loadMatrix()

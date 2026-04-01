@@ -121,15 +121,18 @@ export async function emitRunEvent(input: {
   eventType: EventType;
   payload?: Record<string, unknown>;
 }): Promise<void> {
-  await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [
-    buildRunEvent({
-      idempotency: input.idempotency,
-      clock: input.clock,
-      meta: input.meta,
-      eventType: input.eventType,
-      ...(input.payload === undefined ? {} : { payload: input.payload }),
-    }),
-  ]);
+  await input.stateStoreWrite.appendAndEnqueueTx(
+    input.meta.runId,
+    buildRunEvents([
+      {
+        idempotency: input.idempotency,
+        clock: input.clock,
+        meta: input.meta,
+        eventType: input.eventType,
+        ...(input.payload === undefined ? {} : { payload: input.payload }),
+      },
+    ])
+  );
 }
 
 export async function emitSignalDerivedRunEvent(input: {
@@ -164,6 +167,26 @@ export async function emitSignalDerivedRunEvent(input: {
     ),
   };
   await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [event]);
+}
+
+export function buildRunEvents(
+  inputs: Array<{
+    idempotency: IdempotencyKeyBuilder;
+    clock: { nowIsoUtc(): string };
+    meta: RunMetadata;
+    eventType: EventType;
+    payload?: Record<string, unknown>;
+  }>
+): RunEventInput[] {
+  return inputs.map((input) =>
+    buildRunEvent({
+      idempotency: input.idempotency,
+      clock: input.clock,
+      meta: input.meta,
+      eventType: input.eventType,
+      ...(input.payload === undefined ? {} : { payload: input.payload }),
+    })
+  );
 }
 
 function buildRunEvent(input: {
