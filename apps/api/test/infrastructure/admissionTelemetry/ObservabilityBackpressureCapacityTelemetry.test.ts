@@ -1,8 +1,8 @@
 import type { IGauge, IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ObservabilityBackpressureCapacityTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
+import { ObservabilityBackpressureCapacityTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 
 function createGaugeSpy() {
   const set = vi.fn<IGauge['set']>();

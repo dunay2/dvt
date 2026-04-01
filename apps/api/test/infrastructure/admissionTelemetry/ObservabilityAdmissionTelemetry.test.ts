@@ -1,8 +1,8 @@
 import type { ICounter, IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ObservabilityAdmissionTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
+import { ObservabilityAdmissionTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 
 function createCounterSpy() {
   const add = vi.fn<ICounter['add']>();

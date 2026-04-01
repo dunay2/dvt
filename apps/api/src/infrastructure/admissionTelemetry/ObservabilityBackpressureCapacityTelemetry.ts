@@ -1,6 +1,7 @@
 import type { IObservability } from '@dvt/observability';
 
 import type { IBackpressureCapacityTelemetry } from '../../application/ports/IBackpressureCapacityTelemetry.js';
+
 import { ADMISSION_TELEMETRY_METRICS } from './admissionTelemetryMetrics.js';
 
 export class ObservabilityBackpressureCapacityTelemetry implements IBackpressureCapacityTelemetry {
