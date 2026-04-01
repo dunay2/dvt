@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
 import { ObservabilityBackpressureCapacityTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 
-function createGaugeSpy() {
+function createGaugeSpy(): { set: ReturnType<typeof vi.fn>; gauge: ReturnType<typeof vi.fn> } {
   const set = vi.fn<IGauge['set']>();
   const gauge = vi.fn().mockReturnValue({ set });
   return { set, gauge };

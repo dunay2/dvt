@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ADMISSION_TELEMETRY_METRICS } from '../../../src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.js';
 import { ObservabilityAdmissionTelemetry } from '../../../src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 
-function createCounterSpy() {
+function createCounterSpy(): { add: ReturnType<typeof vi.fn>; counter: ReturnType<typeof vi.fn> } {
   const add = vi.fn<ICounter['add']>();
   const counter = vi.fn().mockReturnValue({ add });
   return { add, counter };

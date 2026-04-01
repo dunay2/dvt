@@ -27,7 +27,11 @@ function makeAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
   return overrides ? { ...base, ...overrides } : base;
 }
 
-function makeCore(input?: { adapterOverrides?: Partial<IProviderAdapter> }) {
+function makeCore(input?: { adapterOverrides?: Partial<IProviderAdapter> }): {
+  core: WorkflowEngineCoreService;
+  store: InMemoryTxStore;
+  adapter: IProviderAdapter;
+} {
   const store = new InMemoryTxStore();
   const adapter = makeAdapter(input?.adapterOverrides);
   const core = new WorkflowEngineCoreService({
