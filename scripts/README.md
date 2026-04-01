@@ -14,6 +14,8 @@ Standard repository hygiene script for branch triage and optional preflight chec
 - compare local branches against a base branch (`-BaseBranch`, default `main`)
 - report `ahead/behind`, `git cherry` superseded signal, and changed-file preview
 - optionally delete superseded local/remote branches (explicit flags + confirmation)
+- optionally run Lane C preflight chain (`pnpm verify:prepush`) and append JSONL evidence
+- optionally print CI log-first triage commands for failed checks
 
 **Usage examples:**
 
@@ -26,6 +28,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -RunSliceChecks
 
 # diagnostics + custom checks command
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -RunChecks -ChecksCommand "pnpm verify:prepush"
+
+# diagnostics + Lane C preflight + evidence log
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 `
+  -TargetBranches my-branch `
+  -RunLaneCPreflight `
+  -PreflightEvidenceFile docs/planning/status/lane-c-efficiency-preflight-cycles.jsonl
+
+# print CI log-first triage steps for current branch (optionally with PR number)
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -PrintCiLogFirstTriage -PullRequest 123
 
 # remove superseded local/remote branches non-interactively
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -DeleteLocalSuperseded -DeleteRemoteSuperseded -Yes

@@ -5,6 +5,10 @@ param(
   [switch]$RunSliceChecks,
   [switch]$RunChecks,
   [string]$ChecksCommand = '',
+  [switch]$RunLaneCPreflight,
+  [switch]$PrintCiLogFirstTriage,
+  [string]$PreflightEvidenceFile = '',
+  [string]$PullRequest = '',
   [switch]$DeleteLocalSuperseded,
   [switch]$DeleteRemoteSuperseded,
   [switch]$Yes
@@ -64,8 +68,8 @@ function Get-SupersededSignal {
     throw "Unable to compute cherry signal for '$Branch'."
   }
 
-  $plusCount = ($cherry | Where-Object { $_ -match '^\+' }).Count
-  $minusCount = ($cherry | Where-Object { $_ -match '^-' }).Count
+  $plusCount = @($cherry | Where-Object { $_ -match '^\+' }).Count
+  $minusCount = @($cherry | Where-Object { $_ -match '^-' }).Count
 
   [pscustomobject]@{
     PlusCount = [int]$plusCount
@@ -123,6 +127,47 @@ function Confirm-OrStop {
   if ($answer -ne 'yes') {
     throw 'Operation cancelled by user.'
   }
+}
+
+function Append-JsonLine {
+  param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [Parameter(Mandatory = $true)][object]$Payload
+  )
+
+  $resolvedPath = if ([System.IO.Path]::IsPathRooted($Path)) {
+    $Path
+  } else {
+    Join-Path (Get-Location) $Path
+  }
+
+  $parent = Split-Path -Parent $resolvedPath
+  if ($parent) {
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  }
+
+  Add-Content -LiteralPath $resolvedPath -Value ($Payload | ConvertTo-Json -Compress)
+}
+
+function Write-LaneCCiLogFirstTriage {
+  param(
+    [Parameter(Mandatory = $true)][string]$Branch,
+    [string]$PrNumber
+  )
+
+  Write-Host ''
+  Write-Host '=== Lane C CI log-first triage ==='
+  if (-not [string]::IsNullOrWhiteSpace($PrNumber)) {
+    Write-Host "1) Inspect PR checks first:"
+    Write-Host "   gh pr checks $PrNumber"
+    Write-Host ''
+  }
+  Write-Host '1) List latest runs for the branch and identify failures:'
+  Write-Host "   gh run list --branch $Branch --limit 5 --json databaseId,status,conclusion,workflowName,url"
+  Write-Host '2) Pull failed-step logs before rerunning anything:'
+  Write-Host '   gh run view <run-id> --log-failed'
+  Write-Host '3) Patch root cause; rerun failed jobs only:'
+  Write-Host '   gh run rerun <run-id> --failed'
 }
 
 Write-Host '=== Repo Hygiene (diagnostic-first) ==='
@@ -239,6 +284,41 @@ if ($RunChecks) {
   if ($LASTEXITCODE -ne 0) {
     throw 'Custom checks command failed.'
   }
+}
+
+if ($RunLaneCPreflight) {
+  Write-Host ''
+  Write-Host '=== Lane C preflight chain ==='
+  $preflightStart = Get-Date
+  $preflightRecord = [ordered]@{
+    timestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+    baseBranch = $BaseBranch
+    branch = $currentBranch
+    targetBranchesAnalyzed = @($report).Count
+    supersededCandidates = @($supersededBranches).Count
+    verifyPrepush = 'failed'
+    durationSeconds = 0
+  }
+
+  try {
+    Write-Host 'Running pnpm verify:prepush'
+    & pnpm verify:prepush
+    if ($LASTEXITCODE -ne 0) {
+      throw 'pnpm verify:prepush failed.'
+    }
+    $preflightRecord.verifyPrepush = 'passed'
+  } finally {
+    $preflightRecord.durationSeconds = [Math]::Round(((Get-Date) - $preflightStart).TotalSeconds, 1)
+    Write-Host "Lane C preflight summary: $($preflightRecord | ConvertTo-Json -Compress)"
+    if (-not [string]::IsNullOrWhiteSpace($PreflightEvidenceFile)) {
+      Append-JsonLine -Path $PreflightEvidenceFile -Payload $preflightRecord
+      Write-Host "Preflight evidence appended to: $PreflightEvidenceFile"
+    }
+  }
+}
+
+if ($PrintCiLogFirstTriage) {
+  Write-LaneCCiLogFirstTriage -Branch $currentBranch -PrNumber $PullRequest
 }
 
 Write-Host ''

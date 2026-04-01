@@ -292,7 +292,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: RC-C2
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure
       log-first triage) and track measurable round reduction.
@@ -300,12 +300,16 @@ tasks:
     target: Apply the Lane C efficiency playbook in three consecutive PR cycles.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 33
     evidence_refs:
       - docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
-    status_reason:
-      The efficiency playbook exists, but the three-cycle institutionalization task has not started.
-    last_verified: '2026-03-31'
+      - docs/planning/reviews/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md
+      - docs/planning/status/lane-c-efficiency-preflight-cycles.jsonl
+      - scripts/hygiene.ps1
+    status_reason: >-
+      The Lane C preflight chain is now wired in `hygiene.ps1` with log-first CI triage output and
+      cycle evidence logging; cycle 1 is recorded, cycles 2-3 remain open before closure.
+    last_verified: '2026-04-01'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -358,14 +362,17 @@ dependency_notes:
     `RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed
     `rebuildSnapshot` not-found maintenance boundary.
   - '`RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.'
+  - >-
+    `RC-C2` moved to in-progress with cycle-1 preflight evidence captured; completion still requires
+    two additional consecutive PR cycles under the same protocol.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
+  verified_on: '2026-04-01'
   total_tasks: 16
   total_effort_points: 59
-  completed_weighted_points: 43.5
-  lane_progress_pct: 74
+  completed_weighted_points: 44.5
+  lane_progress_pct: 75
   notes: >-
-    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
+    parent umbrella tasks with subtasks carry coordination-only effort.
