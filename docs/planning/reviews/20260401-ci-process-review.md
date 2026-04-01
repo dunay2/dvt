@@ -1,9 +1,19 @@
-﻿---
+---
+title: CI Process Review — DVT (2026-04-01)
+status: Draft
+owner: docs
+last_reviewed: 2026-04-01
+planning_type: review
+---
+
+---
+
 title: CI Process Review — DVT (2026-04-01)
 status: Active
 owner: CI / Delivery
 last_reviewed: 2026-04-01
 planning_type: review
+
 ---
 
 # CI Process Review — DVT (2026-04-01)

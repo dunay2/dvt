@@ -1,9 +1,19 @@
-﻿---
+---
+title: G4-PR4: Admission Control Operability â€” Implementation Plan
+status: Draft
+owner: docs
+last_reviewed: 2026-04-01
+planning_type: proposal
+---
+
+---
+
 title: G4-PR4 Operability & Metrics â€” Implementation Plan
 status: Ready to implement
 owner: Architecture / API
 last_reviewed: 2026-04-01
 planning_type: proposal
+
 ---
 
 # G4-PR4: Admission Control Operability â€” Implementation Plan
