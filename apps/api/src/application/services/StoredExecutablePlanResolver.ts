@@ -1,6 +1,12 @@
 import { createHash } from 'node:crypto';
 
-import type { IPlanFetcher as IStoredPlanFetcher, PlanRef } from '@dvt/contracts';
+import {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+  CURRENT_EXECUTION_PLAN_VERSION,
+  type IPlanFetcher as IStoredPlanFetcher,
+  type PlanRef,
+} from '@dvt/contracts';
 import type { ExecutionPlan } from '@dvt/engine';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
@@ -24,9 +30,11 @@ export class StoredExecutablePlanResolver {
     return {
       metadata: {
         planId: planRef.planId,
-        planVersion: planRef.planVersion,
-        schemaVersion: planRef.schemaVersion,
-        contractVersion: '1.0.0',
+        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+        inputHashSha256: planRef.sha256,
+        createdAtIso: new Date().toISOString(),
         ...(planRef.requiresCapabilities === undefined
           ? {}
           : { requiresCapabilities: planRef.requiresCapabilities }),

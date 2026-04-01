@@ -21,6 +21,8 @@ import {
   type DbtManifestRefSchemaT,
   EngineRunRefSchema,
   type EngineRunRefSchemaT,
+  ExecutionPlanSchema,
+  type ExecutionPlanSchemaT,
   ExecutionPlanV2Schema,
   type ExecutionPlanV2SchemaT,
   ExecutionStepV2Schema,
@@ -237,6 +239,10 @@ export function parsePlanCore(input: unknown): PlanCoreSchemaT {
 
 export function parseExecutionPlanV2(input: unknown): ExecutionPlanV2SchemaT {
   return parseWithSchema(ExecutionPlanV2Schema, input);
+}
+
+export function parseExecutionPlan(input: unknown): ExecutionPlanSchemaT {
+  return parseWithSchema(ExecutionPlanSchema, input);
 }
 
 export function parsePlannerInputEnvelopeV2(input: unknown): PlannerInputEnvelopeV2SchemaT {

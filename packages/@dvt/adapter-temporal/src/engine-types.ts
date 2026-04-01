@@ -12,6 +12,7 @@ export type {
   EventInput,
   EventType,
   ExecutionPlan,
+  ExecutionStep,
   IClock,
   IIdempotencyKeyBuilder,
   IPlanFetcher,
