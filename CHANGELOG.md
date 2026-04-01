@@ -617,4 +617,3 @@
 * **temporal:** Require explicit env injection for config loader ([#198](https://github.com/dunay2/dvt/issues/198)) ([567a835](https://github.com/dunay2/dvt/commit/567a835568c3866557f3d765a1f536ed7d5185bc))
 * **temporal:** Run existing tests for integration job ([2e16418](https://github.com/dunay2/dvt/commit/2e1641800b0633c689533d20f46df48789db937f))
 * **validation:** make formatZodPath robust for PropertyKey[] paths ([54bfeda](https://github.com/dunay2/dvt/commit/54bfeda334cc1f1f2f0250d1acc47ffbc11938d2))
-
