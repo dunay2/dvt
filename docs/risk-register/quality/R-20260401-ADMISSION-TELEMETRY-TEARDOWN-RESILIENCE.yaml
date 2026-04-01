@@ -1,0 +1,22 @@
+---
+id: R-20260401-ADMISSION-TELEMETRY-TEARDOWN-RESILIENCE
+title: Admission telemetry contract drift and partial shutdown leaks
+status: Closed
+date: 2026-04-01
+owners:
+  - apps/api
+  - packages/@dvt/engine
+severity: Medium
+probability: Medium
+context: >
+  The admission telemetry implementation had drifted from the application port contract and runtime
+  shutdown logic closed resources sequentially.
+risk: >
+  Contract drift would silently drop admission decision telemetry at runtime, while sequential
+  teardown could leak database/pool resources if an early closer failed.
+mitigations:
+  - ObservabilityAdmissionTelemetry now implements AdmissionTelemetry.record.
+  - Infrastructure tests assert record-based contract behavior.
+  - Protected runtime and provider adapters now execute all closers via Promise.allSettled before
+    throwing an AggregateError.
+  - Pre-push validation rerun after the fix to prove no gate regressions.

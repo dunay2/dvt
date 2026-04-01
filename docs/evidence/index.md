@@ -2,7 +2,7 @@
 title: Evidence
 status: Active
 owner: docs
-last_reviewed: 2026-03-07
+last_reviewed: 2026-04-01
 ---
 
 # Evidence
@@ -25,6 +25,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260331 Manifestref Production Path](ED-20260331-manifestref-production-path.md)
 - [ED 20260331 Planner Determinism Hash Pin](ED-20260331-planner-determinism-hash-pin.md)
 - [ED 20260331 Rc C1 Boundary Legacy Hardening](ED-20260331-rc-c1-boundary-legacy-hardening.md)
+- [ED 20260401 Admission Telemetry Contract And Runtime Teardown](ED-20260401-admission-telemetry-contract-and-runtime-teardown.md)
 - [ED 20260401 Cancel Lifecycle Workflow Owned Ordering](ED-20260401-cancel-lifecycle-workflow-owned-ordering.md)
 - [ED 20260401 Execution Plan Canonical Identity Unification](ED-20260401-execution-plan-canonical-identity-unification.md)
 - [ED 20260401 Temporal Live Status Query](ED-20260401-temporal-live-status-query.md)

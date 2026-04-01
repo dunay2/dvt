@@ -1,9 +1,16 @@
 import type { EngineRunRef, RunStatusSnapshot } from '@dvt/contracts';
+import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
+import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
+import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { createWorkflowEngineCoreFixture } from '../helpers/workflowEngine.fixture.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 
 function makeAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
   const base: IProviderAdapter = {
@@ -21,13 +28,26 @@ function makeAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
 }
 
 function makeCore(input?: { adapterOverrides?: Partial<IProviderAdapter> }): {
-  core: ReturnType<typeof createWorkflowEngineCoreFixture>['core'];
+  core: WorkflowEngineCoreService;
   store: InMemoryTxStore;
   adapter: IProviderAdapter;
 } {
+  const store = new InMemoryTxStore();
   const adapter = makeAdapter(input?.adapterOverrides);
-  const fixture = createWorkflowEngineCoreFixture({ adapter });
-  return { core: fixture.core, store: fixture.store, adapter: fixture.adapter };
+  const core = new WorkflowEngineCoreService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    projector: new SnapshotProjector(),
+    idempotency: new IdempotencyKeyBuilder(),
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
+    adapters: new Map([['temporal', adapter]]),
+    observability: createNoopObservability(),
+    clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
+  });
+  return { core, store, adapter };
 }
 
 async function bootstrapRun(store: InMemoryTxStore, runId: string): Promise<EngineRunRef> {
@@ -56,9 +76,9 @@ async function bootstrapRun(store: InMemoryTxStore, runId: string): Promise<Engi
         planVersion: '1.0',
         logicalAttemptId: 1,
         engineAttemptId: 1,
-        payloadVersion: 1,
         emittedAt: '2026-03-26T00:00:00.000Z',
         idempotencyKey: `${runId}:queued`,
+        payloadVersion: 1,
       },
     ],
   });

@@ -12,7 +12,7 @@ on:
         type: boolean
         default: false
       run_traceability_gate:
-        description: 'Run ADR-0000 traceability gate'
+        description: 'Run ADR-0000 traceability gate (deprecated: now runs automatically on push)'
         required: false
         type: boolean
         default: false
@@ -66,6 +66,8 @@ jobs:
               - 'packages/@dvt/adapter-temporal/**'
             cli:
               - 'packages/@dvt/cli/**'
+            planner:
+              - 'packages/@dvt/planner/**'
             docs_only:
               - 'docs/**'
               - 'AGENTS.md'
@@ -99,10 +101,11 @@ jobs:
             add_item "adapter-postgres" "@dvt/adapter-postgres"
             add_item "adapter-temporal" "@dvt/adapter-temporal"
             add_item "cli" "@dvt/cli"
+            add_item "planner" "@dvt/planner"
           else
             global='${{ steps.filter.outputs.global }}'
             docs_only='${{ steps.filter.outputs.docs_only }}'
-            any_workspace='${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.web == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.engine == 'true' || steps.filter.outputs.adapter_postgres == 'true' || steps.filter.outputs.adapter_temporal == 'true' || steps.filter.outputs.cli == 'true' }}'
+            any_workspace='${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.web == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.engine == 'true' || steps.filter.outputs.adapter_postgres == 'true' || steps.filter.outputs.adapter_temporal == 'true' || steps.filter.outputs.cli == 'true' || steps.filter.outputs.planner == 'true' }}'
 
             # Skip all workspace builds when only docs/agent/utility files changed
             if [[ "$global" != "true" && "$any_workspace" != "true" && "$docs_only" == "true" ]]; then
@@ -120,6 +123,7 @@ jobs:
               add_item "adapter-postgres" "@dvt/adapter-postgres"
               add_item "adapter-temporal" "@dvt/adapter-temporal"
               add_item "cli" "@dvt/cli"
+              add_item "planner" "@dvt/planner"
             else
               [[ '${{ steps.filter.outputs.api }}' == 'true' ]] && add_item "api" "dvt-api"
               [[ '${{ steps.filter.outputs.web }}' == 'true' ]] && add_item "web" "@dvt/web"
@@ -128,6 +132,7 @@ jobs:
               [[ '${{ steps.filter.outputs.adapter_postgres }}' == 'true' ]] && add_item "adapter-postgres" "@dvt/adapter-postgres"
               [[ '${{ steps.filter.outputs.adapter_temporal }}' == 'true' ]] && add_item "adapter-temporal" "@dvt/adapter-temporal"
               [[ '${{ steps.filter.outputs.cli }}' == 'true' ]] && add_item "cli" "@dvt/cli"
+              [[ '${{ steps.filter.outputs.planner }}' == 'true' ]] && add_item "planner" "@dvt/planner"
             fi
           fi
 
@@ -168,11 +173,7 @@ jobs:
         run: node scripts/check-changed.cjs
 
       - name: ADR-0000 traceability gate
-        if: >-
-          ${{
-            github.event_name == 'workflow_dispatch' &&
-            github.event.inputs.run_traceability_gate == 'true'
-          }}
+        if: github.event_name == 'push'
         run: pnpm traceability:adr0
 
   workspace-ci:

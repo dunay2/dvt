@@ -41,6 +41,8 @@ jobs:
               - 'packages/@dvt/cli/**'
             api:
               - 'apps/api/**'
+            planner:
+              - 'packages/@dvt/planner/**'
             root_config:
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -54,7 +56,7 @@ jobs:
           github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
           steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_temporal ==
           'true' || steps.changes.outputs.cli == 'true' || steps.changes.outputs.api == 'true' ||
-          steps.changes.outputs.root_config == 'true'
+          steps.changes.outputs.planner == 'true' || steps.changes.outputs.root_config == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
@@ -92,6 +94,12 @@ jobs:
           github.event_name == 'pull_request' && (steps.changes.outputs.api == 'true' ||
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:api
+
+      - name: Run planner tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.planner == 'true' ||
+          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.root_config == 'true')
+        run: pnpm test:planner
 
   detect-pg-scope:
     name: Detect adapter-postgres scope

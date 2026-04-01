@@ -37,6 +37,14 @@ import { buildProviderAdapters } from './buildProviderAdapters.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 
+async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
+  const results = await Promise.allSettled(closers.map((closer) => closer()));
+  const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'Failed to close protected runtime cleanly');
+  }
+}
+
 function requireDatabaseUrl(env: Env): string {
   if (!env.DATABASE_URL) {
     throw new Error('DATABASE_URL is required when OIDC-protected runtime routes are enabled');
@@ -54,13 +62,7 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
-  const pool = getPgPool({
-    connectionString: databaseUrl,
-    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
-    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
-  });
-  const nowIsoUtc = (): string => new Date().toISOString();
-  const nowDate = (): Date => new Date();
+  const pool = getPgPool(databaseUrl);
 
   const [adapterMod, engineMod] = await Promise.all([
     import('@dvt/adapter-postgres'),
@@ -75,7 +77,7 @@ export async function buildProtectedRuntimeModule(
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
   const stateStore = new PostgresStateStoreAdapter({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -83,7 +85,7 @@ export async function buildProtectedRuntimeModule(
   const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -114,7 +116,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: nowIsoUtc,
+    now: () => new Date().toISOString(),
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -128,15 +130,19 @@ export async function buildProtectedRuntimeModule(
     snapshotMaxAgeMs:
       env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
   });
-  const cachedBackpressureStore = new CachedBackpressureStore({
+  const backpressureStore = new CachedBackpressureStore({
     delegate: resilientBackpressureStore,
     ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
   });
+  const capacityTelemetry = new ObservabilityBackpressureCapacityTelemetry({
+    observability,
+  });
+  const instrumentedBackpressureStore = new MetricsEmittingBackpressureStore({
+    delegate: backpressureStore,
+    capacityTelemetry,
+  });
   const admissionGuard = new StartRunAdmissionGuard({
-    backpressureStore: new MetricsEmittingBackpressureStore({
-      delegate: cachedBackpressureStore,
-      capacityTelemetry: new ObservabilityBackpressureCapacityTelemetry({ observability }),
-    }),
+    backpressureStore: instrumentedBackpressureStore,
     policy: {
       maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
@@ -145,11 +151,12 @@ export async function buildProtectedRuntimeModule(
   const executablePlanResolver = new StoredExecutablePlanResolver({
     fetcher: planStore,
   });
+  const systemClock = { nowIsoUtc: () => new Date().toISOString() };
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
     stateStoreWrite: stateStoreRoles.write,
-    clock: { nowIsoUtc },
+    clock: systemClock,
     projector,
     observability,
     planFetcher: executablePlanResolver,
@@ -171,7 +178,7 @@ export async function buildProtectedRuntimeModule(
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc },
+      clock: systemClock,
       observability,
     },
   });
@@ -183,7 +190,7 @@ export async function buildProtectedRuntimeModule(
     accessRepo,
     policy,
     auditLogger,
-    nowDate
+    () => new Date()
   );
   const authenticator = new OidcAuthenticator(
     new JwksJwtVerifier({
@@ -230,23 +237,13 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      const results = await Promise.allSettled([
-        closeAdapters(),
-        planStore.close(),
-        stateStore.close(),
-        intentStore.close(),
+      await closeAllClosers([
+        () => closeAdapters(),
+        () => planStore.close(),
+        () => stateStore.close(),
+        () => intentStore.close(),
+        () => pool.end(),
       ]);
-      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
-      for (const { reason } of failures) {
-        app.log.error({ err: reason }, 'Teardown failure');
-      }
-      await pool.end();
-      if (failures.length > 0) {
-        throw new AggregateError(
-          failures.map((f) => f.reason),
-          `${failures.length} teardown failure(s)`
-        );
-      }
     },
   };
 }

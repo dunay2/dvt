@@ -107,6 +107,14 @@ module.exports = [
     },
   },
 
+  // Contracts package: escalate no-explicit-any to error (enforcement replaces bash grep in CI).
+  {
+    files: ['packages/@dvt/contracts/src/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
+
   // Project-specific parserOptions (kept) — optional, but harmless.
   {
     files: ['packages/@dvt/engine/src/**/*.ts', 'packages/@dvt/engine/vitest.config.ts'],
