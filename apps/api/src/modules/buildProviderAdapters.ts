@@ -35,7 +35,9 @@ export async function buildProviderAdapters(
   const { MockAdapter } = await import('@dvt/engine/testing');
   const mockAdapter = new MockAdapter({
     stateStore: deps.stateStore as never,
-    ...(deps.stateStoreWrite !== undefined ? { stateStoreWrite: deps.stateStoreWrite as never } : {}),
+    ...(deps.stateStoreWrite !== undefined
+      ? { stateStoreWrite: deps.stateStoreWrite as never }
+      : {}),
     projector: deps.projector as never,
     ...(deps.planFetcher !== undefined ? { planFetcher: deps.planFetcher as never } : {}),
   });
