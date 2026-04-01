@@ -32,6 +32,7 @@ export function parseStartRunCommand(
     return sourceDecision;
   }
 
+  // Policy decides command shape; builders only assemble validated branches.
   if (sourceDecision.value.kind === 'planRef') {
     return buildPlanRefStartRunCommand({
       rawPlanRef: record.planRef,
