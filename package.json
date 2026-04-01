@@ -39,8 +39,9 @@
     "test:adapter-temporal:integration": "pnpm --filter @dvt/adapter-temporal test:integration",
     "test:api": "pnpm --filter dvt-api test",
     "test:cli": "pnpm --filter @dvt/cli test",
-    "test:determinism": "pnpm --filter @dvt/engine test -- --grep determinism || true",
-    "test:replay": "pnpm --filter @dvt/engine test -- --grep replay || true",
+    "test:planner": "pnpm --filter @dvt/planner test",
+    "test:determinism": "pnpm --filter @dvt/engine test -- --testNamePattern determinism",
+    "test:replay": "pnpm --filter @dvt/engine test -- --testNamePattern replay",
     "test:coverage": "pnpm -r test -- --coverage",
     "test:coverage:engine": "pnpm --filter @dvt/engine test -- --coverage",
     "test:ci-tools": "node --test tools/ci/*.test.mjs",
@@ -107,6 +108,14 @@
     "specs/contracts/**/*.{md,json}": [
       "pnpm contracts:index:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
+    ],
+    "scripts/**/*.{cjs,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "tools/ci/**/*.{mjs,js}": [
+      "eslint --fix",
+      "prettier --write"
     ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"

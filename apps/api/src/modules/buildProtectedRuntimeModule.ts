@@ -18,8 +18,6 @@ import { StoredPlanExecutabilityValidator } from '../application/services/Stored
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
 import { getPgPool } from '../db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from '../domain/auth/policy.js';
-import { ObservabilityAdmissionTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
-import { ObservabilityBackpressureCapacityTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 import { StructuredAuditLogger } from '../infrastructure/audit/structuredAuditLogger.js';
 import { JwksJwtVerifier } from '../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../infrastructure/auth/oidcAuthenticator.js';
@@ -29,6 +27,8 @@ import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure
 import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
+import { ObservabilityAdmissionTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
+import { ObservabilityBackpressureCapacityTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import type { Env } from '../plugins/env.js';
 
@@ -53,13 +53,7 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
-  const pool = getPgPool({
-    connectionString: databaseUrl,
-    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
-    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
-  });
-  const nowIsoUtc = (): string => new Date().toISOString();
-  const nowDate = (): Date => new Date();
+  const pool = getPgPool(databaseUrl);
 
   const [adapterMod, engineMod] = await Promise.all([
     import('@dvt/adapter-postgres'),
@@ -74,7 +68,7 @@ export async function buildProtectedRuntimeModule(
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
   const stateStore = new PostgresStateStoreAdapter({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -82,7 +76,7 @@ export async function buildProtectedRuntimeModule(
   const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -113,7 +107,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: nowIsoUtc,
+    now: () => new Date().toISOString(),
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -127,15 +121,19 @@ export async function buildProtectedRuntimeModule(
     snapshotMaxAgeMs:
       env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
   });
-  const cachedBackpressureStore = new CachedBackpressureStore({
+  const backpressureStore = new CachedBackpressureStore({
     delegate: resilientBackpressureStore,
     ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
   });
+  const capacityTelemetry = new ObservabilityBackpressureCapacityTelemetry({
+    observability,
+  });
+  const instrumentedBackpressureStore = new MetricsEmittingBackpressureStore({
+    delegate: backpressureStore,
+    capacityTelemetry,
+  });
   const admissionGuard = new StartRunAdmissionGuard({
-    backpressureStore: new MetricsEmittingBackpressureStore({
-      delegate: cachedBackpressureStore,
-      capacityTelemetry: new ObservabilityBackpressureCapacityTelemetry({ observability }),
-    }),
+    backpressureStore: instrumentedBackpressureStore,
     policy: {
       maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
@@ -168,7 +166,7 @@ export async function buildProtectedRuntimeModule(
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc },
+      clock: { nowIsoUtc: () => new Date().toISOString() },
       observability,
     },
   });
@@ -180,7 +178,7 @@ export async function buildProtectedRuntimeModule(
     accessRepo,
     policy,
     auditLogger,
-    nowDate
+    () => new Date()
   );
   const authenticator = new OidcAuthenticator(
     new JwksJwtVerifier({
@@ -225,23 +223,11 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      const results = await Promise.allSettled([
-        closeAdapters(),
-        planStore.close(),
-        stateStore.close(),
-        intentStore.close(),
-      ]);
-      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
-      for (const { reason } of failures) {
-        app.log.error({ err: reason }, 'Teardown failure');
-      }
+      await closeAdapters();
+      await planStore.close();
+      await stateStore.close();
+      await intentStore.close();
       await pool.end();
-      if (failures.length > 0) {
-        throw new AggregateError(
-          failures.map((f) => f.reason),
-          `${failures.length} teardown failure(s)`
-        );
-      }
     },
   };
 }
