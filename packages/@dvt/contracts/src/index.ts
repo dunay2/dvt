@@ -23,7 +23,6 @@ export type {
   DbtManifestRef,
   ExecutionPlan,
   ExecutionStep,
-  ExecutionPlanV2,
   ExecutionStepV2,
   GraphNode,
   PlannerGraphSourceV1,
@@ -34,7 +33,7 @@ export type {
   PlannerInputEnvelopeV2,
   PlannerSelection,
   StepKind,
-  VersionedExecutionPlanV2,
+  VersionedExecutionPlan,
   VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v2.js';
 export {

@@ -13,15 +13,15 @@ export type SupportedPlanVersion = (typeof SUPPORTED_EXECUTION_PLAN_VERSIONS)[nu
 
 export interface ExecutionPlanVersionDescriptor {
   readonly status: 'current';
-  readonly family: 'ExecutionPlanV2';
+  readonly family: 'ExecutionPlan';
   readonly notes: string;
 }
 
 export const EXECUTION_PLAN_VERSION_REGISTRY = {
   '1.0': {
     status: 'current',
-    family: 'ExecutionPlanV2',
-    notes: 'Current planner-emitted version for the canonical ExecutionPlanV2 surface.',
+    family: 'ExecutionPlan',
+    notes: 'Current planner-emitted version for the canonical ExecutionPlan surface.',
   },
 } as const satisfies Record<SupportedPlanVersion, ExecutionPlanVersionDescriptor>;
 

@@ -42,7 +42,7 @@ import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
 
 import { derivePlannerGraphSourceFromManifest } from './derivePlannerGraphSourceFromManifest.js';
 type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
-type ExecutionPlanV2 = import('@dvt/contracts').ExecutionPlanV2;
+type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type IPlanner = import('@dvt/contracts').IPlanner;
 type PlannerBuildResultV2 = import('@dvt/contracts').PlannerBuildResultV2;
 type PlannerGraphSourceV1 = import('@dvt/contracts').PlannerGraphSourceV1;
@@ -165,8 +165,8 @@ export class PlannerFacade implements IPlanner {
 
   private toObservability(
     observability: NonNullable<PlannerInputEnvelopeV2SchemaT['observability']>
-  ): NonNullable<ExecutionPlanV2['observability']> {
-    const normalizedObservability: NonNullable<ExecutionPlanV2['observability']> = {};
+  ): NonNullable<ExecutionPlan['observability']> {
+    const normalizedObservability: NonNullable<ExecutionPlan['observability']> = {};
 
     for (const [key, value] of Object.entries(observability)) {
       if (key === 'tags' || key === 'extra' || value === undefined) continue;

@@ -109,7 +109,7 @@ export type PlanCore = {
   [TVersion in SupportedPlanVersion]: VersionedPlanCore<TVersion>;
 }[SupportedPlanVersion];
 
-export type VersionedExecutionPlanV2<TVersion extends SupportedPlanVersion> =
+export type VersionedExecutionPlan<TVersion extends SupportedPlanVersion> =
   VersionedPlanCore<TVersion> & {
     metadata: VersionedPlanCore<TVersion>['metadata'] & {
       schemaVersion: typeof CURRENT_EXECUTION_PLAN_SCHEMA_VERSION;
@@ -129,8 +129,8 @@ export type VersionedExecutionPlanV2<TVersion extends SupportedPlanVersion> =
     };
   };
 
-export type ExecutionPlanV2 = {
-  [TVersion in SupportedPlanVersion]: VersionedExecutionPlanV2<TVersion>;
+export type ExecutionPlan = {
+  [TVersion in SupportedPlanVersion]: VersionedExecutionPlan<TVersion>;
 }[SupportedPlanVersion];
 
 // ── Graph-source compatibility policy ────────────────────────────────────────
@@ -255,18 +255,17 @@ export interface PlannerInputEnvelopeV2 {
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
   environment?: PlannerEnvironmentContext;
-  observability?: ExecutionPlanV2['observability'];
+  observability?: ExecutionPlan['observability'];
   requestedBy?: string;
   requestId?: string;
   requestedAtIso?: string;
 }
 
 export interface PlannerBuildResultV2 {
-  plan: ExecutionPlanV2;
+  plan: ExecutionPlan;
   canonicalPlanJson: string;
 }
 
 /** Backward-compatible aliases for existing naming in consumers/docs. */
-export type ExecutionPlan = ExecutionPlanV2;
 export type PlannerInputEnvelope = PlannerInputEnvelopeV2;
 export type PlannerBuildResult = PlannerBuildResultV2;

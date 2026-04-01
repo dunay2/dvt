@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -26,6 +29,12 @@ import {
 } from './fixtures/planner-contract.fixtures';
 
 describe('contracts: planner normative contract (GAP-P0-02)', () => {
+  it('retira el alias público ExecutionPlan del barrel raíz', () => {
+    const rootIndex = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
+    expect(rootIndex).toMatch(/\bExecutionPlan,\s*/);
+    expect(rootIndex).not.toMatch(/\bExecutionPlanV2\b/);
+  });
+
   it('expone el contrato normativo IPlanner como forma canónica', async () => {
     const planner: IPlanner = {
       async buildPlan(input) {

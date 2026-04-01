@@ -16,11 +16,7 @@
  */
 import { z } from 'zod';
 
-import type {
-  ExecutionPlan,
-  ExecutionPlanV2,
-  PlanCore,
-} from './contracts/planner/ExecutionPlan.v2.js';
+import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -499,7 +495,6 @@ export const EXECUTION_PLAN_VERSIONED_SCHEMAS = {
 export const PlanCoreSchema = CurrentPlanCoreSchema as z.ZodType<PlanCore>;
 
 export const ExecutionPlanSchema = CurrentExecutionPlanV2Schema as z.ZodType<ExecutionPlan>;
-export const ExecutionPlanV2Schema = CurrentExecutionPlanV2Schema as z.ZodType<ExecutionPlanV2>;
 
 export const PlannerInputEnvelopeV2Schema = z
   .object({
@@ -535,7 +530,7 @@ export const PlannerInputEnvelopeV2Schema = z
 
 export const PlannerBuildResultV2Schema = z
   .object({
-    plan: ExecutionPlanV2Schema,
+    plan: ExecutionPlanSchema,
     canonicalPlanJson: z.string().min(1),
   })
   .strict();
@@ -566,6 +561,5 @@ export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
 export type ExecutionStepV2SchemaT = z.infer<typeof ExecutionStepV2Schema>;
 export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;
 export type ExecutionPlanSchemaT = z.infer<typeof ExecutionPlanSchema>;
-export type ExecutionPlanV2SchemaT = z.infer<typeof ExecutionPlanV2Schema>;
 export type PlannerInputEnvelopeV2SchemaT = z.infer<typeof PlannerInputEnvelopeV2Schema>;
 export type PlannerBuildResultV2SchemaT = z.infer<typeof PlannerBuildResultV2Schema>;

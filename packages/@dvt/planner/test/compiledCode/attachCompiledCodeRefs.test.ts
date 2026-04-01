@@ -6,13 +6,13 @@ import {
 import {
   CURRENT_EXECUTION_PLAN_VERSION,
   KNOWN_STEP_KINDS,
-  type ExecutionPlanV2,
+  type ExecutionPlan,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 const TENANT = 'test-tenant';
 
-function buildPlan(): ExecutionPlanV2 {
+function buildPlan(): ExecutionPlan {
   return {
     metadata: {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,

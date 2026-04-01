@@ -1,6 +1,6 @@
 import type {
   DbtManifestRef,
-  ExecutionPlanV2,
+  ExecutionPlan,
   GraphNode,
   PlannerEnvironmentContext,
   PlannerGraphSourceV1,
@@ -31,7 +31,7 @@ export interface StartRunCommand {
   readonly nodes?: ReadonlyArray<GraphNode>;
   readonly policies?: PlannerPolicyClassSet;
   readonly environment?: PlannerEnvironmentContext;
-  readonly observability?: ExecutionPlanV2['observability'];
+  readonly observability?: ExecutionPlan['observability'];
   readonly runId: string;
   readonly targetAdapter: StartRunTargetAdapter;
   readonly selection: ReadonlyArray<string>;

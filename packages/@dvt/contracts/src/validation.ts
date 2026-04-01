@@ -23,8 +23,6 @@ import {
   type EngineRunRefSchemaT,
   ExecutionPlanSchema,
   type ExecutionPlanSchemaT,
-  ExecutionPlanV2Schema,
-  type ExecutionPlanV2SchemaT,
   ExecutionStepV2Schema,
   type ExecutionStepV2SchemaT,
   GraphNodeSchema,
@@ -235,10 +233,6 @@ export function parseExecutionStepV2(input: unknown): ExecutionStepV2SchemaT {
 
 export function parsePlanCore(input: unknown): PlanCoreSchemaT {
   return parseWithSchema(PlanCoreSchema, input);
-}
-
-export function parseExecutionPlanV2(input: unknown): ExecutionPlanV2SchemaT {
-  return parseWithSchema(ExecutionPlanV2Schema, input);
 }
 
 export function parseExecutionPlan(input: unknown): ExecutionPlanSchemaT {

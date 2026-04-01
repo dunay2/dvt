@@ -23,7 +23,7 @@ export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 //
 export type {
   DbtManifestLike,
-  ExecutionPlanV2,
+  ExecutionPlan,
   ExecutionStepV2,
   GraphNode,
   IExecutionPlanner,
@@ -36,9 +36,6 @@ export type {
   ResolvedPolicies,
   StepKind,
 } from '@dvt/contracts';
-
-// Backward-compatible alias — deprecated, migrate to ExecutionPlanV2 from @dvt/contracts.
-export type { ExecutionPlanV2 as ExecutionPlan } from '@dvt/contracts';
 
 // ── Artifact concern — transitional compatibility bridge (Slice 4) ────────────
 //

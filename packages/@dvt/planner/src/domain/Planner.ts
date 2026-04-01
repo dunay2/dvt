@@ -3,7 +3,7 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → BuildPlanCommand (input VO) + Planner.execute()
- *   - QUERY side   → { plan: ExecutionPlanV2; canonicalPlanJson: string } (read model)
+ *   - QUERY side   → { plan: ExecutionPlan; canonicalPlanJson: string } (read model)
  *
  *  Delegated sub-responsibilities (SRP):
  *   - InputEnvelopeValidator → validates shape of the input envelope
@@ -33,7 +33,7 @@ import { binaryCompare } from './sorting.js';
 import { dbtStepFactory } from './stepFactory/dbtStepFactory.js';
 import type { StepFactory } from './stepFactory/StepFactory.js';
 import type {
-  ExecutionPlanV2,
+  ExecutionPlan,
   GraphNode,
   NormalizedPlannerInput,
   PlanCore,
@@ -97,9 +97,7 @@ export class Planner {
   }
 
   /** CQRS command handler entry point. */
-  execute(
-    command: BuildPlanCommand
-  ): Promise<{ plan: ExecutionPlanV2; canonicalPlanJson: string }> {
+  execute(command: BuildPlanCommand): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
     return this.buildPlan(command.input);
   }
 
@@ -109,7 +107,7 @@ export class Planner {
    */
   public async buildPlan(
     input: PlannerInputEnvelopeV2
-  ): Promise<{ plan: ExecutionPlanV2; canonicalPlanJson: string }> {
+  ): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
     const started = nowMs();
     try {
       this.checkAbort(started);
