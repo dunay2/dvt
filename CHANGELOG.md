@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.4.6](https://github.com/dunay2/dvt/compare/v5.4.5...v5.4.6) (2026-04-01)
+
+
+### Bug Fixes
+
+* **api:** Restore manifestRef as production planner path ([#719](https://github.com/dunay2/dvt/issues/719)) ([044a80c](https://github.com/dunay2/dvt/commit/044a80c94649c8d6b5c3538bbffe0fa80d3de34e))
+* **engine:** Downgrade ESLint to v9 ([#720](https://github.com/dunay2/dvt/issues/720)) ([2cd2ddd](https://github.com/dunay2/dvt/commit/2cd2ddd3536a1df0f149637809ea493de0c79ad9))
+
 ## [5.4.5](https://github.com/dunay2/dvt/compare/v5.4.4...v5.4.5) (2026-04-01)
 
 ### Bug Fixes
