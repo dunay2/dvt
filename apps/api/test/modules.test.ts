@@ -90,7 +90,13 @@ describe('modules', () => {
           },
         },
         stateStoreWrite: {
-          async appendAndEnqueueTx() {},
+          async appendAndEnqueueTx() {
+            return {
+              appended: [],
+              deduped: [],
+              lastSeq: 0,
+            };
+          },
         },
         clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
         projector: {
