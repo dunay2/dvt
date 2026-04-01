@@ -42,7 +42,7 @@ Generated automatically from repository code on 2026-04-01.
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/plan-verifier        | `packages/@dvt/plan-verifier`        | 5         | 2          | yes   | yes  | no        | 4                       |
-| @dvt/planner              | `packages/@dvt/planner`              | 23        | 17         | yes   | yes  | no        | 16                      |
+| @dvt/planner              | `packages/@dvt/planner`              | 23        | 17         | yes   | yes  | no        | 15                      |
 | @dvt/planner-contracts    | `packages/@dvt/planner-contracts`    | 0         | 0          | yes   | no   | no        | -                       |
 | @dvt/run-domain           | `packages/@dvt/run-domain`           | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/state-store          | `packages/@dvt/state-store`          | 15        | 12         | yes   | yes  | no        | 19                      |
