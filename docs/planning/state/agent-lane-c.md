@@ -41,10 +41,10 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
 - Verified on: `2026-03-31`
-- Total tasks: `15`
-- Total effort points: `54`
-- Completed weighted points: `39`
-- Lane progress: `72%`
+- Total tasks: `16`
+- Total effort points: `59`
+- Completed weighted points: `43.5`
+- Lane progress: `74%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -63,6 +63,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [x] `P2` `read-your-writes contract` `done` `M` `5pt` `100%`: set a measurable staleness SLO.
 - [x] `P2` `granular RBAC` `done` `M` `5pt` `100%`: split CANCEL and PAUSE privileges.
 - [x] `P1` `RC-C1` `done` `L` `8pt` `100%`: normalize caller-visible HTTP error contracts across apps/api and separate semantic validation outcomes from transport serialization, including typed maintenance-boundary not-found handling and removal of remaining parser legacy.
+- [x] `P1` `manifestRef production path` `done` `M` `5pt` `100%`: restore manifestRef as the real protected-runtime planner path by composing a concrete artifact resolver at the API boundary and mapping predictable resolution failures to the existing plan_rejected result.
 - [ ] `P2` `RC-C2` `queued` `S` `3pt` `0%`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
 - [x] `P1` `RC-E1` `done` `S` `3pt` `100%`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
 - [x] `P1` `RC-E2` `done` `S` `2pt` `100%`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.

@@ -29,28 +29,26 @@
  * @see IArtifactResolver — the port used to resolve manifestRef payloads
  * @see Planner — the pure domain planner this facade delegates to
  */
-import type {
-  DbtManifestRef,
-  ExecutionPlanV2,
-  IPlanner,
-  PlannerGraphSourceV1,
-  PlannerBuildResultV2,
-  PlannerInputEnvelopeV2 as ContractEnvelope,
-  PlannerInputEnvelopeV2SchemaT,
-  PlannerSelection,
-} from '@dvt/contracts';
 import {
   ContractValidationError,
-  PLANNER_GRAPH_SOURCE_KIND,
   parsePlannerGraphSourceV1,
   parsePlannerInputEnvelopeV2,
 } from '@dvt/contracts';
 
 import { PlannerError, PlannerErrorCode } from '../domain/errors.js';
-import { DeriveNodesCommand, ManifestGraphDeriver } from '../domain/manifest.js';
 import { Planner, type PlannerOptions } from '../domain/Planner.js';
 import type { PlannerInputEnvelopeV2 as DomainEnvelope } from '../domain/types.js';
 import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
+
+import { derivePlannerGraphSourceFromManifest } from './derivePlannerGraphSourceFromManifest.js';
+type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
+type ExecutionPlanV2 = import('@dvt/contracts').ExecutionPlanV2;
+type IPlanner = import('@dvt/contracts').IPlanner;
+type PlannerBuildResultV2 = import('@dvt/contracts').PlannerBuildResultV2;
+type PlannerGraphSourceV1 = import('@dvt/contracts').PlannerGraphSourceV1;
+type ContractEnvelope = import('@dvt/contracts').PlannerInputEnvelopeV2;
+type PlannerInputEnvelopeV2SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV2SchemaT;
+type PlannerSelection = import('@dvt/contracts').PlannerSelection;
 
 // ── Options ─────────────────────────────────────────────────────────────────
 
@@ -211,10 +209,7 @@ export class PlannerFacade implements IPlanner {
   }
 
   private graphSourceFromManifest(manifest: Record<string, unknown>): PlannerGraphSourceV1 {
-    return {
-      kind: PLANNER_GRAPH_SOURCE_KIND,
-      nodes: new ManifestGraphDeriver().execute(new DeriveNodesCommand(manifest)),
-    };
+    return derivePlannerGraphSourceFromManifest(manifest);
   }
 
   private normalizeManifestRefCacheSize(input: number | undefined): number {

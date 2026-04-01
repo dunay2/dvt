@@ -264,6 +264,32 @@ tasks:
       The HTTP error boundary is normalized in apps/api and the remaining `rebuildSnapshot`/parser
       legacy is closed with typed errors, docs, and validation evidence.
     last_verified: '2026-03-31'
+  - task_id: manifestRef production path
+    priority: P1
+    status: done
+    objective: >-
+      restore manifestRef as the real protected-runtime planner path by composing a concrete
+      artifact resolver at the API boundary and mapping predictable resolution failures to the
+      existing plan_rejected result.
+    dependency: none
+    target: >-
+      Protected runtime start-run accepts file-backed test/dev manifestRef and production s3://
+      manifestRef through a real resolver, with stable 422 rejection mapping for caller-fixable
+      artifact failures.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260331-s1-manifestref-production-path-closeout.md
+      - docs/evidence/ED-20260331-manifestref-production-path.md
+      - docs/risk-register/quality/R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml
+      - apps/api/test/integration/plannerEngineContract.test.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      The protected runtime now composes a real manifest artifact resolver, planner/API tests cover
+      the file and s3 paths, and predictable resolver failures map to plan_rejected with stable
+      cause tokens.
+    last_verified: '2026-03-31'
   - task_id: RC-C2
     priority: P2
     status: queued
@@ -336,10 +362,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-03-31'
-  total_tasks: 15
-  total_effort_points: 54
-  completed_weighted_points: 39
-  lane_progress_pct: 72
+  total_tasks: 16
+  total_effort_points: 59
+  completed_weighted_points: 43.5
+  lane_progress_pct: 74
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

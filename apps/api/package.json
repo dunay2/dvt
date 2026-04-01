@@ -17,6 +17,7 @@
     "test:arch": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
     "@dvt/adapter-postgres": "workspace:*",
     "@dvt/adapter-temporal": "workspace:*",
     "@dvt/contracts": "workspace:*",
@@ -24,6 +25,7 @@
     "@dvt/engine": "workspace:*",
     "@dvt/observability": "workspace:*",
     "@dvt/observability-otel": "workspace:*",
+    "@dvt/planner": "workspace:*",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.0",
     "@fastify/sensible": "^6.0.0",
@@ -34,7 +36,6 @@
     "zod": "^3.0.0"
   },
   "devDependencies": {
-    "@dvt/planner": "workspace:*",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.11.10",
     "dependency-cruiser": "^17.3.9",

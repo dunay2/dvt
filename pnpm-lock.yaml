@@ -112,6 +112,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.940.0
+        version: 3.1019.0
       '@dvt/adapter-postgres':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-postgres
@@ -133,6 +136,9 @@ importers:
       '@dvt/observability-otel':
         specifier: workspace:*
         version: link:../../packages/@dvt/observability-otel
+      '@dvt/planner':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/planner
       '@fastify/cors':
         specifier: ^11.2.0
         version: 11.2.0
@@ -158,9 +164,6 @@ importers:
         specifier: ^3.0.0
         version: 3.25.76
     devDependencies:
-      '@dvt/planner':
-        specifier: workspace:*
-        version: link:../../packages/@dvt/planner
       '@types/node':
         specifier: 25.5.0
         version: 25.5.0

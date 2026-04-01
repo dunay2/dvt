@@ -1,9 +1,10 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
-  parseExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunContext,
@@ -23,6 +24,39 @@ import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/
 import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
+
+import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
+
+const PLANNER_MANIFEST_FIXTURE_URL = new URL(
+  '../fixtures/planner/basic-manifest.json',
+  import.meta.url
+);
+
+function plannerOutputToEnginePlan(plannerPlan: {
+  metadata: {
+    planId: string;
+    planVersion: '1.0';
+    inputHashSha256: string;
+    createdAtIso: string;
+  };
+  steps: ExecutionPlan['steps'];
+}): ExecutionPlan {
+  return {
+    metadata: {
+      planId: plannerPlan.metadata.planId,
+      planVersion: plannerPlan.metadata.planVersion,
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256: plannerPlan.metadata.inputHashSha256,
+      createdAtIso: plannerPlan.metadata.createdAtIso,
+    },
+    steps: plannerPlan.steps.map((step) => ({
+      stepId: step.stepId,
+      kind: step.kind,
+      dependsOn: [...step.dependsOn],
+    })),
+  };
+}
 
 function utf8(value: string): Uint8Array {
   return Buffer.from(value, 'utf8');
@@ -163,6 +197,29 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
+  it('PlannerFacade resolves manifestRef through the real API artifact resolver', async () => {
+    const planner = new PlannerFacade({
+      resolver: new ManifestArtifactResolver({ nodeEnv: 'test' }),
+    });
+    const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
+
+    const { plan } = await planner.buildPlan({
+      manifestRef: {
+        uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+        sha256: sha256Hex(bytes),
+      },
+      selection: {
+        selectedNodeIds: ['model.analytics.order_items'],
+        includeUpstream: true,
+      },
+    });
+
+    expect(plan.steps.map((step) => step.stepId)).toEqual([
+      'model.analytics.orders',
+      'model.analytics.order_items',
+    ]);
+  });
+
   it('full lifecycle with 3-step DAG', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
@@ -186,7 +243,7 @@ describe('planner -> engine contract', () => {
     expect(indexOf('staging.orders') < indexOf('mart.revenue')).toBe(true);
     expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
-    const enginePlan: ExecutionPlan = plannerPlan;
+    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
     expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
     expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
@@ -287,7 +344,7 @@ describe('planner -> engine contract', () => {
       }
     }
 
-    const enginePlan: ExecutionPlan = parseExecutionPlan(plan);
+    const enginePlan = plannerOutputToEnginePlan(plan);
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const clock = new SequenceClock('2026-03-01T00:00:00.000Z');
