@@ -31,6 +31,14 @@ describe('modules', () => {
       authorizer: {} as never,
       engine: {} as never,
       adapters: new Map(),
+      startRunTargetAdapterRegistry: {
+        isSupported(_value: string): _value is 'mock' | 'temporal' {
+          return false;
+        },
+        listSupported(): ReadonlyArray<'mock' | 'temporal'> {
+          return [];
+        },
+      },
       stateStore: {
         read: {} as never,
         write: {} as never,
