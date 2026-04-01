@@ -105,7 +105,7 @@ export class ManifestArtifactResolver implements IArtifactResolver {
 
   private async readS3Artifact(uri: URL): Promise<Uint8Array> {
     const bucket = uri.hostname;
-    const key = uri.pathname.replace(/^\/+/, '');
+    const key = uri.pathname.slice(1);
 
     this.assertValidS3Locator(bucket, key);
 

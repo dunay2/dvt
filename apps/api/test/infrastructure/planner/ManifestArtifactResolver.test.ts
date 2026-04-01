@@ -91,6 +91,34 @@ describe('ManifestArtifactResolver', () => {
     });
   });
 
+  it('preserves a leading slash in S3 object keys', async () => {
+    const client = new FakeS3Client(async () => ({
+      Body: {
+        async transformToByteArray() {
+          return Uint8Array.from(FIXTURE_BYTES);
+        },
+      },
+    }));
+    const resolver = new ManifestArtifactResolver({
+      s3Client: client as never,
+      nodeEnv: 'production',
+    });
+
+    const result = await resolver.resolveGraphSource({
+      uri: 's3://planner-bucket//manifest.json',
+      sha256: FIXTURE_SHA256,
+    });
+
+    expect(result.kind).toBe('normalized-graph-v1');
+    expect(client.commands).toHaveLength(1);
+    expect(client.commands[0]).toMatchObject({
+      input: {
+        Bucket: 'planner-bucket',
+        Key: '/manifest.json',
+      },
+    });
+  });
+
   it.each([
     {
       uri: 's3:///manifest.json',
