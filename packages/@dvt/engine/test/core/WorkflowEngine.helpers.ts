@@ -1,25 +1,17 @@
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  RunEventInput,
-  EventType,
-} from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext, RunEventInput, EventType } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import type { IClock } from '../../src/utils/clock.js';
 import { SequenceClock } from '../../src/utils/clock.js';
+import {
+  createWorkflowEngineFixture,
+  makeProviderMap,
+  makeTemporalAdapter as makeSharedTemporalAdapter,
+} from '../helpers/workflowEngine.fixture.js';
 
 export function makePlanRef(): PlanRef {
   return {
@@ -42,30 +34,13 @@ export function makeContext(runId = 'r1'): RunContext {
 }
 
 export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-  const base: IProviderAdapter = {
-    provider: 'temporal',
-    async startRun(_planRef: PlanRef, ctx) {
-      return {
-        provider: 'temporal',
-        tenantId: ctx.tenantId,
-        namespace: 'default',
-        workflowId: `wf-${ctx.runId}`,
-        runId: ctx.runId,
-      } as EngineRunRef;
-    },
-    async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
-    },
-    async signal() {},
-  };
-  return overrides ? { ...base, ...overrides } : base;
+  return makeSharedTemporalAdapter(overrides);
 }
 
 export function makeAdapters(
   overrides?: Partial<IProviderAdapter>
 ): Map<EngineRunRef['provider'], IProviderAdapter> {
-  return new Map([['temporal', makeTemporalAdapter(overrides)]]);
+  return makeProviderMap(makeTemporalAdapter(overrides));
 }
 
 export function makeTrackingObservability(): {
@@ -137,31 +112,24 @@ export function createEngine(input?: {
   intentStore?: InMemoryStartRunIntentStore;
   observabilityFallbackThrottleMs?: number;
   clock?: IClock;
-}): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
-  const store = input?.stateStore ?? input?.stateStoreRead ?? new InMemoryTxStore();
-  const stateStoreRead = input?.stateStoreRead ?? store;
-  const stateStoreWrite = input?.stateStoreWrite ?? store;
-  const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
-
-  const engine = new WorkflowEngine({
-    stateStoreRead,
-    stateStoreWrite,
-
-    projector: new SnapshotProjector(),
-    idempotency: new IdempotencyKeyBuilder(),
-    clock: input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z'),
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore,
-    observability: input?.observability ?? createNoopObservability(),
-    adapters: input?.adapters ?? new Map(),
+}): {
+  engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+} {
+  const fixture = createWorkflowEngineFixture({
+    adapters: input?.adapters,
     requiredProviders: input?.requiredProviders,
+    observability: input?.observability ?? createNoopObservability(),
+    stateStore: input?.stateStore,
+    stateStoreRead: input?.stateStoreRead,
+    stateStoreWrite: input?.stateStoreWrite,
+    intentStore: input?.intentStore,
     observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
+    clock: input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z'),
   });
 
-  return { engine, store, intentStore };
+  return { engine: fixture.engine, store: fixture.store, intentStore: fixture.intentStore };
 }
 
 export function makeScriptedClock(values: string[]): IClock {

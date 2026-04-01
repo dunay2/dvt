@@ -50,25 +50,25 @@ header_markdown: >
 tasks:
   - task_id: MVP-A1
     priority: P0
-    status: review
+    status: done
     objective: >-
       inventory the current backend MVP contractual surface (routes, invariants, and explicit
       boundaries) without adding new runtime behavior.
     dependency: none
     target: >-
-      Canonical inventory aligned with real `apps/api` runtime surface and linked from the MVP
-      roadmap reset proposal
-      (`docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`).
+      Frozen MVP contractual inventory aligned with the real `apps/api` runtime surface and closed
+      via reviewed proposal plus accepted evidence.
     complexity: M
     effort_points: 5
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md
-      - docs/evidence/ED-20260329-mvp-backend-operability-roadmap-reset.md
+      - docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md
+      - docs/evidence/ED-20260331-mvp-a1-backend-contractual-inventory.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason: >-
-      Canonical inventory exists, but the governing artifact is still Proposed, so closure remains
-      provisional.
+      The backend MVP route surface, activation boundary, authorization matrix, and input/scope
+      invariants are now frozen against the real runtime and backed by accepted evidence.
     last_verified: '2026-03-31'
   - task_id: RC-A6
     priority: P0
@@ -364,13 +364,14 @@ tasks:
       WS1/WS3/WS4/WS2/WS6.
     complexity: L
     effort_points: 2
-    progress_pct: 18
+    progress_pct: 36
     evidence_refs:
       - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+      - docs/evidence/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
       - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
     status_reason: >-
-      The first WS5 fixture-modularization slice is accepted, but the remaining DDD modularization
-      workstreams are still open.
+      WS5 fixture modularization is now closed across the helper-heavy engine suites; the next
+      modularization workstream is WS1.
     last_verified: '2026-03-31'
   - task_id: DHM-WS5-A
     parent_task: DHM
@@ -392,17 +393,20 @@ tasks:
   - task_id: DHM-WS5-B
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: finish the remaining WS5 helper-heavy engine test fixture modularization.
     dependency: DHM-WS5-A
     target: Remaining WS5 tests use shared builders and stop duplicating inline engine construction.
     evidence_refs:
-      - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+      - docs/evidence/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
+      - docs/planning/closeouts/20260331-dhm-ws5-b-engine-test-fixture-modularization-closeout.md
       - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
-    status_reason: The remaining WS5 backlog is identified but still open.
+    status_reason: >-
+      Shared helper-backed engine fixtures now cover the remaining helper-heavy contract, security,
+      core-service, and maintenance suites without inline engine construction drift.
     last_verified: '2026-03-31'
   - task_id: DHM-WS1
     parent_task: DHM
@@ -492,8 +496,8 @@ tasks:
     last_verified: '2026-03-31'
 dependency_notes:
   - >-
-    `MVP-A1` remains the contractual baseline artifact but is still provisional until the proposal
-    is accepted.
+    `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
+    accepted evidence artifact dated 2026-03-31.
   - >-
     `S02` depends on `RC-A6` and is now code-grounded by the split role contracts plus
     composition-root wiring.
@@ -512,6 +516,8 @@ dependency_notes:
   - >-
     `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization
     work is schedulable.
+  - >-
+    `DHM-WS5-B` is now closed; `DHM-WS1` is the next modularization slice in sequence.
   - '`plan-version-reset` is closed and remains independent.'
 verification_summary:
   status_model: evidence-backed lane registry
@@ -519,8 +525,8 @@ verification_summary:
   verified_on: '2026-03-31'
   total_tasks: 26
   total_effort_points: 102
-  completed_weighted_points: 50.26
-  lane_progress_pct: 49
+  completed_weighted_points: 55.66
+  lane_progress_pct: 55
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

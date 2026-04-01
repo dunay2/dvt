@@ -2,7 +2,7 @@
 title: MVP-D1 Residual Risk Baseline Review
 status: Review
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-30
+last_reviewed: 2026-03-31
 planning_type: review
 ---
 
@@ -23,11 +23,13 @@ Aligned to [MVP Backend Operability Baseline Roadmap](../proposals/mvp-backend-o
 
 ## Constraints
 
-- `MVP-D1` depends on `MVP-A1` and `MVP-B1` for final claim-to-proof lock.
-- Until those dependencies are closed, this baseline is provisional and may only
-  tighten scope, never expand it.
+- `MVP-A1` and `MVP-B1` are now closed against the frozen backend MVP
+  inventory.
+- This review now serves as the locked residual-risk baseline for MVP backend
+  operability and may only tighten scope, never expand it without roadmap +
+  lane + risk-register updates in the same PR.
 
-## Accepted Residual Risks (Provisional)
+## Accepted Residual Risks
 
 1. Lifecycle depth beyond baseline operability remains deferred:
    retention completion, deferred deletion, restore automation.
@@ -57,11 +59,13 @@ Aligned to [MVP Backend Operability Baseline Roadmap](../proposals/mvp-backend-o
 3. If `MVP-A1` or `MVP-B1` finds mismatch between claims and evidence, this
    baseline must be revised before closure.
 
-## Exit To Close MVP-D1
+## Closure Confirmation (2026-03-31)
 
-Close `MVP-D1` only when all are true:
+All original `MVP-D1` closure conditions are now satisfied:
 
 1. `MVP-A1` inventory is accepted and stable.
-2. `MVP-B1` claim-to-evidence matrix is accepted and executable.
-3. Residual risk entry is synchronized with deferred ownership and blockers.
-4. Execution workboard reflects `done` with linked evidence.
+2. `MVP-B1` claim-to-evidence matrix is stable and executable.
+3. The residual risk entry is synchronized with deferred ownership and
+   blockers.
+4. Execution workboard can now reflect `done` while the risk register remains
+   open for longer-horizon drift monitoring.

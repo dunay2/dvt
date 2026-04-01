@@ -43,15 +43,15 @@ Prepare the system for scale and for the first enterprise customer.
 - Verified on: `2026-03-31`
 - Total tasks: `15`
 - Total effort points: `84`
-- Completed weighted points: `29.25`
-- Lane progress: `35%`
+- Completed weighted points: `30`
+- Lane progress: `36%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
 > Verified registry source: `agent-lane-d.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
-- [ ] `P0` `MVP-D1` `review` `M` `5pt` `85%`: define the residual-risk baseline explicitly accepted after MVP backend operability reset, including what is deferred and why it does not block MVP.
+- [x] `P0` `MVP-D1` `done` `M` `5pt` `100%`: define the residual-risk baseline explicitly accepted after MVP backend operability reset, including what is deferred and why it does not block MVP.
 - [x] `P1` `run event log retention + TTL` `done` `L` `8pt` `100%`: bound storage growth and automate archival.
 - [x] `P1` `G5-PR2` `done` `L` `8pt` `100%`: add deferred deletion and restore flow for archived events.
 - [x] `P1` `S15` `done` `M` `3pt` `100%`: add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression under concurrency.
@@ -69,7 +69,7 @@ Prepare the system for scale and for the first enterprise customer.
 
 ## Dependencies
 
-- `MVP-D1` remains provisional until `MVP-A1` and `MVP-B1` are accepted.
+- `MVP-D1` is now closed as the explicit residual-risk baseline for MVP backend operability, but the underlying scope-drift risk entry remains open.
 - `run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence from 2026-03-30.
 - `G5-PR2`, `S15`, `S15-F1`, and `S14` are closed with code-backed closeouts.
 - `cost attribution model` remains blocked on `S05` and on retention being fully operationalized.
