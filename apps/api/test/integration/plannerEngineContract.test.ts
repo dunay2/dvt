@@ -33,7 +33,12 @@ const PLANNER_MANIFEST_FIXTURE_URL = new URL(
 );
 
 function plannerOutputToEnginePlan(plannerPlan: {
-  metadata: { planId: string; planVersion: string; inputHashSha256: string };
+  metadata: {
+    planId: string;
+    planVersion: '1.0';
+    inputHashSha256: string;
+    createdAtIso: string;
+  };
   steps: ExecutionPlan['steps'];
 }): ExecutionPlan {
   return {
@@ -43,6 +48,7 @@ function plannerOutputToEnginePlan(plannerPlan: {
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
       inputHashSha256: plannerPlan.metadata.inputHashSha256,
+      createdAtIso: plannerPlan.metadata.createdAtIso,
     },
     steps: plannerPlan.steps.map((step) => ({
       stepId: step.stepId,
@@ -380,8 +386,8 @@ describe('planner -> engine contract', () => {
     });
 
     const metadata = plan.metadata as Record<string, unknown>;
-    expect(metadata['schemaVersion']).toBe(undefined);
-    expect(metadata['contractVersion']).toBe(undefined);
+    expect(metadata['schemaVersion']).toBe('v1.2');
+    expect(metadata['contractVersion']).toBe('1.0.0');
     expect(metadata['planId']).not.toBe(undefined);
     expect(metadata['planVersion']).not.toBe(undefined);
     expect(metadata['inputHashSha256']).not.toBe(undefined);
