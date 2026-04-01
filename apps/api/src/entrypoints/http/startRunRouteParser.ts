@@ -1,5 +1,7 @@
+import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
+import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import type { RouteParseResult } from './routeParseIssue.js';
 import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
@@ -15,7 +17,10 @@ type ParsedStartRunRequest = {
 
 type ParseStartRunRequestResult = RouteParseResult<ParsedStartRunRequest>;
 
-export function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
+export function parseStartRunBody(
+  body: unknown,
+  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+): ParseStartRunRequestResult {
   const bodyRecord = parseStartRunBodyRecord(body);
   if (!bodyRecord.ok) {
     return bodyRecord;
@@ -26,7 +31,7 @@ export function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
     return scope;
   }
 
-  const command = parseStartRunCommand(bodyRecord.value);
+  const command = parseStartRunCommand(bodyRecord.value, adapterRegistry);
   if (!command.ok) {
     return command;
   }

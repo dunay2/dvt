@@ -64,6 +64,17 @@ function createReply(): {
   };
 }
 
+function registryWith(...supported: Array<'mock' | 'temporal'>) {
+  return {
+    isSupported(value: string): value is 'mock' | 'temporal' {
+      return supported.includes(value as 'mock' | 'temporal');
+    },
+    listSupported() {
+      return [...supported];
+    },
+  };
+}
+
 describe('startRunRoute', () => {
   it('returns 400 when tenantId is missing', async () => {
     const reply = createReply();
@@ -485,6 +496,39 @@ describe('startRunRoute', () => {
     expect(reply.statusCode).toBe(422);
     expect(reply.payload).toEqual(
       httpError('unprocessable', 'adapter_not_configured', { details: { adapter: 'temporal' } })
+    );
+  });
+
+  it('returns 400 when target adapter is not available in runtime registry', async () => {
+    const reply = createReply();
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-adapter-unavailable',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-adapter-unavailable',
+          targetAdapter: 'temporal',
+        },
+      } as never,
+      reply as never,
+      facade as never,
+      registryWith('mock') as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_target_adapter', { target: 'targetAdapter' })
     );
   });
 

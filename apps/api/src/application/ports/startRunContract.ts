@@ -1,4 +1,7 @@
 export {
+  type IStartRunTargetAdapterRegistry,
+} from './IStartRunTargetAdapterRegistry.js';
+export {
   START_RUN_TARGET_ADAPTER,
   type StartRunTargetAdapter,
   type StartRunPlanRef,

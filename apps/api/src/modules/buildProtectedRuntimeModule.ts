@@ -13,6 +13,7 @@ import { BackpressureAwareStartRunUseCase } from '../application/services/Backpr
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
+import { createStartRunTargetAdapterRegistryFromValues } from '../application/services/startRunTargetAdapterRegistry.js';
 import { StoredExecutablePlanResolver } from '../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
@@ -161,6 +162,9 @@ export async function buildProtectedRuntimeModule(
     observability,
     planFetcher: executablePlanResolver,
   });
+  const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
+    adapters.keys()
+  );
 
   if (env.TEMPORAL_ADDRESS) {
     app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
@@ -229,6 +233,7 @@ export async function buildProtectedRuntimeModule(
     authorizer: commandAuthorizer,
     engine,
     adapters,
+    startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,
     migrate: async () => {
       await accessRepo.migrate();

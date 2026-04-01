@@ -31,6 +31,14 @@ describe('modules', () => {
       authorizer: {} as never,
       engine: {} as never,
       adapters: new Map(),
+      startRunTargetAdapterRegistry: {
+        isSupported() {
+          return false;
+        },
+        listSupported() {
+          return [];
+        },
+      },
       stateStore: {
         read: {} as never,
         write: {} as never,

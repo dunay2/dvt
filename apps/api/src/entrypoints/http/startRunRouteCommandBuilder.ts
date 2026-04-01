@@ -1,4 +1,6 @@
+import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
+import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
@@ -10,7 +12,8 @@ import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
 
 export function parseStartRunCommand(
-  record: Record<string, unknown>
+  record: Record<string, unknown>,
+  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
 ): RouteParseResult<StartRunCommand> {
   const selection = parseStartRunSelection(record.selection);
   if (!selection.ok) {
@@ -22,7 +25,7 @@ export function parseStartRunCommand(
     return runId;
   }
 
-  const targetAdapter = parseStartRunTargetAdapter(record.targetAdapter);
+  const targetAdapter = parseStartRunTargetAdapter(record.targetAdapter, adapterRegistry);
   if (!targetAdapter.ok) {
     return targetAdapter;
   }
