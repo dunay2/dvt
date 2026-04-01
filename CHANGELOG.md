@@ -2,7 +2,6 @@
 
 ## [5.4.6](https://github.com/dunay2/dvt/compare/v5.4.5...v5.4.6) (2026-04-01)
 
-
 ### Bug Fixes
 
 * **api:** Restore manifestRef as production planner path ([#719](https://github.com/dunay2/dvt/issues/719)) ([044a80c](https://github.com/dunay2/dvt/commit/044a80c94649c8d6b5c3538bbffe0fa80d3de34e))

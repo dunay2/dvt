@@ -68,10 +68,10 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - [x] `P1` `S13` `done` `S` `2pt` `100%`: remove duplicate estimateRunRef declaration.
 - [x] `P1` `RC-A5` `done` `M` `3pt` `100%`: replace silent markResolved catch with warning/metric telemetry so intent-resolution failures are observable.
 - [x] `P1` `RC-E3` `done` `M` `3pt` `100%`: replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError> return type to eliminate the Divergent Change smell.
-- [ ] `P1` `DHM` `in_progress` `L` `2pt` `36%`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
+- [ ] `P1` `DHM` `in_progress` `L` `2pt` `52%`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
 - [x] `P1` `DHM-WS5-A` `done` `M` `3pt` `100%` parent:`DHM`: modularize the first WS5 engine fixture slice around intent-log tests using shared builders.
 - [x] `P1` `DHM-WS5-B` `done` `M` `5pt` `100%` parent:`DHM`: finish the remaining WS5 helper-heavy engine test fixture modularization.
-- [ ] `P1` `DHM-WS1` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS1 DDD modularization slice after WS5 fixture extraction is complete.
+- [x] `P1` `DHM-WS1` `done` `L` `8pt` `100%` parent:`DHM`: execute the WS1 DDD modularization slice after WS5 fixture extraction is complete.
 - [ ] `P1` `DHM-WS3` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS3 modularization slice for the next bounded DDD seam.
 - [ ] `P1` `DHM-WS4` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS4 modularization slice after WS3.
 - [ ] `P1` `DHM-WS2` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS2 modularization slice after WS4.
@@ -87,7 +87,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - `S18-F1` is decomposed into boundary hardening, anti-rewiring guards, and export/negative-path contract closure.
 - `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete adapter rollback path.
 - `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization work is schedulable.
-- `DHM-WS5-B` is now closed; `DHM-WS1` is the next modularization slice in sequence.
+- `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in sequence.
 - `plan-version-reset` is closed and remains independent.
 
 ## Expected Outcome
