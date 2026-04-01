@@ -1,7 +1,7 @@
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
-import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
+import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
 import type { RouteParseResult } from './routeParseIssue.js';
 import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';

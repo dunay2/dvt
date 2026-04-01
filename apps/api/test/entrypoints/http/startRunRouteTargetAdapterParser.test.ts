@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { parseStartRunTargetAdapter } from '../../../src/entrypoints/http/startRunRouteTargetAdapterParser.js';
 
-function registryWith(...supported: Array<'mock' | 'temporal'>) {
+function registryWith(...supported: Array<'mock' | 'temporal'>): {
+  isSupported(value: string): value is 'mock' | 'temporal';
+  listSupported(): ReadonlyArray<'mock' | 'temporal'>;
+} {
   return {
     isSupported(value: string): value is 'mock' | 'temporal' {
       return supported.includes(value as 'mock' | 'temporal');
