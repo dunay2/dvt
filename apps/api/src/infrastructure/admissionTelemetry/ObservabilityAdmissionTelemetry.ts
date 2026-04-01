@@ -25,7 +25,7 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
         .counter(ADMISSION_TELEMETRY_METRICS.decisionTotal)
         .add(1, { mode: input.mode, decision: input.decision });
 
-      if (isRejectionDecision(input.decision) && input.code !== undefined) {
+      if (hasRejectionCode(input)) {
         this.deps.observability.metrics
           .counter(ADMISSION_TELEMETRY_METRICS.rejectionTotal)
           .add(1, { mode: input.mode, decision: input.decision, code: input.code });
@@ -37,11 +37,9 @@ export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
         runId: input.runId,
         mode: input.mode,
         decision: input.decision,
-        ...(input.code === undefined ? {} : { code: input.code }),
-        ...(input.retryAfterSeconds === undefined
-          ? {}
-          : { retryAfterSeconds: input.retryAfterSeconds }),
-        ...(input.duplicateOf === undefined ? {} : { duplicateOf: input.duplicateOf }),
+        ...(hasRejectionCode(input) ? { code: input.code } : {}),
+        ...(hasRetryAfterSeconds(input) ? { retryAfterSeconds: input.retryAfterSeconds } : {}),
+        ...(hasDuplicateOf(input) ? { duplicateOf: input.duplicateOf } : {}),
       };
 
       if (isWarningDecision(input.decision)) {
@@ -73,4 +71,22 @@ function isRejectionDecision(decision: DecisionInput['decision']): boolean {
 
 function isWarningDecision(decision: DecisionInput['decision']): boolean {
   return isRejectionDecision(decision);
+}
+
+function hasRejectionCode(
+  input: DecisionInput
+): input is DecisionInput & { readonly code: string } {
+  return 'code' in input;
+}
+
+function hasRetryAfterSeconds(
+  input: DecisionInput
+): input is DecisionInput & { readonly retryAfterSeconds: number } {
+  return 'retryAfterSeconds' in input;
+}
+
+function hasDuplicateOf(
+  input: DecisionInput
+): input is DecisionInput & { readonly duplicateOf: string } {
+  return 'duplicateOf' in input;
 }
