@@ -32,10 +32,10 @@ describe('modules', () => {
       engine: {} as never,
       adapters: new Map(),
       startRunTargetAdapterRegistry: {
-        isSupported() {
+        isSupported(_value: string): _value is 'mock' | 'temporal' {
           return false;
         },
-        listSupported() {
+        listSupported(): ReadonlyArray<'mock' | 'temporal'> {
           return [];
         },
       },
