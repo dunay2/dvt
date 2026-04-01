@@ -10,6 +10,7 @@
 import type { EngineRunRef, RunStatus, RunStatusSnapshot } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
+import type { WorkflowState } from './workflows/RunPlanWorkflow.js';
 
 type TemporalRuntimeStatus =
   | 'RUNNING'
@@ -76,5 +77,21 @@ export function toRunStatusSnapshot(args: {
     runId: args.runId,
     status: mapTemporalStatusToRunStatus(args.runtimeStatus),
     message: args.message,
+  };
+}
+
+export function toRunStatusSnapshotFromWorkflowState(args: {
+  runId: string;
+  state: WorkflowState;
+}): RunStatusSnapshot {
+  const message =
+    args.state.status === 'CANCELLED' && args.state.cancelReason
+      ? args.state.cancelReason
+      : undefined;
+
+  return {
+    runId: args.runId,
+    status: args.state.status,
+    ...(message === undefined ? {} : { message }),
   };
 }
