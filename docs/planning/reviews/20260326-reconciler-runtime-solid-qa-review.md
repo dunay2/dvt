@@ -2,7 +2,7 @@
 title: Reconciler Runtime SOLID QA Review
 status: Draft
 owner: API / Runtime / QA
-last_reviewed: 2026-03-26
+last_reviewed: 2026-04-02
 planning_type: review
 ---
 
@@ -172,6 +172,30 @@ Eliminar la funcion muerta y mantener el modulo sin exports huerfanos.
 
 Resuelto: `buildReadyzPayload` fue eliminado y no hay referencias activas.
 
+## Reconciliacion H0 - Baseline real del slice health
+
+Los items que reaparecieron en `LOCAL_EXECUTION_LOG_20260401.md` como trabajo
+abierto de health/readiness ya estaban entregados en codigo y no deben volver a
+entrar al backlog de implementacion.
+
+### Estado real verificado
+
+- `apps/api/src/routes/healthContractMapper.ts`
+  - ya existe como traductor explicito `runtime -> contrato`.
+- `apps/api/src/routes/healthPresenter.ts`
+  - ya es una fachada minima que solo reexporta el mapper.
+- `apps/api/src/runtime/reconcilerHealth.ts`
+  - ya modela `ReconcilerHealthState` como discriminated union; `reasonCode`
+    solo existe en `status: 'degraded'`.
+
+### Decision operativa
+
+1. No reabrir como implementacion los items "crear mapper", "crear DU" o
+   "limpiar presenter".
+2. Mantener ese trabajo como cerrado y usar `apps/api` tests como baseline de
+   validacion.
+3. Concentrar el trabajo abierto restante en `RC-G1` (ownership contractual).
+
 ## Prioridad 7 (Alta) - Abierto
 
 ### Hallazgo
@@ -187,7 +211,8 @@ en concentracion accidental en shared.
 - `docs/contracts/shared/index.md`
 - `packages/@dvt/contracts/src/contracts/planner/*`
 - `packages/@dvt/contracts/src/engine/*`
-- seguimiento operativo en `RC-G1` (workboard global)
+- `docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md`
+- seguimiento operativo en `docs/planning/state/agent-lane-a.yaml` como `RC-G1`
 
 ### Riesgo
 
@@ -202,9 +227,14 @@ y plan de migracion por slices bajo ADR-0041 Contract-First.
 
 ### Estado actual
 
-Pendiente (abierto en workboard global como `RC-G1`).
+Pendiente, pero ya reconciliado con la superficie canonica:
+
+- `RC-G1` vive en Lane A como tarea paraguas.
+- `RC-G1-A` congela la matriz de ownership.
+- `RC-G1-B`, `RC-G1-C` y `RC-G1-D` secuencian la migracion restante.
 
 ## Resumen Ejecutivo
 
 El runtime cierra los hallazgos priorizados de health/readiness y bootstrap con
-separacion modular, validacion defensiva y contrato independiente.
+separacion modular, validacion defensiva y contrato independiente. El trabajo
+abierto real queda reducido a la deuda de ownership contractual bajo `RC-G1`.
