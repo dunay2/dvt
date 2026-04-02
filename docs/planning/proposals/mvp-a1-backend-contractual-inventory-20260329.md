@@ -134,7 +134,7 @@ pnpm verify:prepush
 
 ## Acceptance Artifacts
 
-- `docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md`
+- `docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md`
 - `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`
 
 ## Traceability Link
@@ -143,5 +143,5 @@ This inventory is the Lane A `MVP-A1` artifact referenced by:
 
 - `docs/planning/state/agent-lane-a.yaml`
 - `docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md`
-- `docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md`
+- `docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md`
 - `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`

@@ -1,6 +1,6 @@
 ---
 title: 20260322 RC-A5 QA Hard Review
-status: Review
+status: Historical
 owner: QA / Architecture
 last_reviewed: 2026-03-22
 planning_type: review

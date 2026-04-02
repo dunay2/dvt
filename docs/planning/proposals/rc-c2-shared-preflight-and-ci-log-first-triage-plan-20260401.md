@@ -17,7 +17,7 @@ structured adoption log.
 References:
 
 - `docs/planning/state/agent-lane-c.yaml`
-- `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
 - `scripts/hygiene.ps1`
 - `docs/guides/testing-and-ci-capabilities.md`
 

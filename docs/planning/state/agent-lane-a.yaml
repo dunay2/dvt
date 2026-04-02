@@ -67,7 +67,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md
-      - docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md
+      - docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
       - docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason: >-
@@ -103,7 +103,7 @@ tasks:
     evidence_refs:
       - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
       - apps/api/src/modules/stateStoreRoles.ts
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: >-
       The state-store split is code-grounded and explicitly called closed in the principal
       architecture review.
@@ -140,7 +140,7 @@ tasks:
     evidence_refs:
       - packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts
       - packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: >-
       Maintenance-query ownership is now isolated behind a dedicated staleness query port and the
       review marks the slice as merged.
@@ -216,7 +216,7 @@ tasks:
       5000-concurrent-runs target.
     evidence_refs:
       - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: The remaining closure work is defined but not yet executed.
     last_verified: '2026-03-31'
   - task_id: S18-F1
@@ -311,7 +311,7 @@ tasks:
     effort_points: 2
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
       - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
     status_reason: >-
@@ -442,7 +442,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260322-rc-a5-qa-hard-review.md
+      - docs/planning/archive/reviews/architecture-and-governance/20260322-rc-a5-qa-hard-review.md
       - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
     status_reason: >-
       QA findings were explicitly resolved in the review artifact and the engine tests now cover the
@@ -534,8 +534,8 @@ tasks:
     dependency: DHM-WS5-B
     target: WS1 module boundaries are explicit and independently testable.
     evidence_refs:
-      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
-      - docs/planning/reviews/20260323-start-run-route-parser-qa-review.md
+      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+      - docs/planning/reviews/execution-runtime/20260323-start-run-route-parser-qa-review.md
       - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
       - docs/planning/closeouts/20260401-dhm-ws1-start-run-boundary-residual-hardening-closeout.md
     status_reason: >-
@@ -554,7 +554,7 @@ tasks:
     dependency: DHM-WS1
     target: WS3 responsibilities are isolated behind clearer ports and module seams.
     evidence_refs:
-      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
     status_reason: Sequenced backlog item; no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: DHM-WS4
@@ -568,7 +568,7 @@ tasks:
     dependency: DHM-WS3
     target: WS4 boundaries are extracted without widening composition-root leakage.
     evidence_refs:
-      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
     status_reason: Sequenced backlog item; no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: DHM-WS2
@@ -582,7 +582,7 @@ tasks:
     dependency: DHM-WS4
     target: WS2 responsibilities are pulled behind explicit DDD seams and testable adapters.
     evidence_refs:
-      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
     status_reason: Sequenced backlog item; no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: DHM-WS6
@@ -597,7 +597,7 @@ tasks:
     target:
       The remaining helper and module graph drift is retired with explicit architecture ownership.
     evidence_refs:
-      - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
+      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
     status_reason: Final modularization backlog item; no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: S08

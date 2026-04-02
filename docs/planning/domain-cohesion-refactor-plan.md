@@ -10,7 +10,7 @@ planning_type: proposal
 
 ## Source
 
-- Review of record: [20260314 Domain Cohesion Review](../reviews/20260314-domain-cohesion-review.md)
+- Review of record: [20260314 Domain Cohesion Review](reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
 
 ## Problem Summary
 

@@ -1,6 +1,6 @@
 ---
 title: RC-A2 Architectural Review Hard Mode
-status: Review
+status: Historical
 owner: Architecture
 last_reviewed: 2026-03-22
 planning_type: review

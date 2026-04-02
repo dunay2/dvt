@@ -31,7 +31,7 @@ plan-version compatibility.
 
 ## Relevant Reviews And Closeouts
 
-- [20260316 Principal Architecture Review](../reviews/20260316-principal-architecture-review.md)
+- [20260316 Principal Architecture Review](../archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md)
 - [20260320 Planner Assessment Roadmap Closeout](../closeouts/20260320-planner-assessment-roadmap-closeout.md)
 - [20260320 Planner R1 Doc Triage Closeout](../closeouts/20260320-planner-r1-doc-triage-closeout.md)
 - [20260320 Planner R2 Redefinition Closeout](../closeouts/20260320-planner-r2-redefinition-closeout.md)

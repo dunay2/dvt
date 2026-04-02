@@ -10,6 +10,20 @@ planning_type: review
 
 Normative naming rule for files under `docs/planning/reviews/`.
 
+## Domain Folder Rule
+
+Active reviews may be grouped under domain subdirectories inside
+`docs/planning/reviews/` when the grouping reflects the canonical planning
+domains or an operational review cluster.
+
+Examples:
+
+- `docs/planning/reviews/ci-and-delivery/20260401-ci-process-review.md`
+- `docs/planning/reviews/execution-runtime/20260326-s03-hard-qa-review.md`
+
+Historical reviews that are no longer the active entry point for a topic should
+move to `docs/planning/archive/reviews/` and keep the same filename pattern.
+
 ## Required File Pattern
 
 Every review filename MUST follow:

@@ -156,7 +156,7 @@ Expected impact:
 
 Declare this file as the Lane C efficiency playbook:
 
-- `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
 
 ## Level 2 (planning workflow, immediate)
 

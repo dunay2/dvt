@@ -18,8 +18,8 @@ Use this guide for implementation slices and PR-green recovery work.
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md`
-- `docs/planning/reviews/20260330-ci-prepush-pr-process-observations.md`
+- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
 
 ## Standard Flow
 
@@ -54,7 +54,7 @@ Then run `pnpm verify:prepush` again.
 
 When a cycle exposes repeated friction, capture synthesis in canonical review surface:
 
-- `docs/planning/reviews/20260402-rc-c2-operational-friction-intake-review.md`
+- `docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md`
 
 Use local logs only as input material (for example under `tmp/operational-logs/`).
 Do not publish local logs directly under canonical `docs/planning/status/`.

@@ -58,8 +58,8 @@ Those runtime concerns stay under `G10`.
 ## Planning Inputs Already In Repo
 
 - [ADR-0032 - compiledCodeRef ownership](../../../adr/ADR-0032-compiledcoderef-ownership.md)
-- [DVT+ Consolidated Architectural Review](../../reviews/20260305-dvt-architectural-review-consolidated.md)
-- [DVT+ Architectural Review Pass 2](../../reviews/20260304-dvt-architectural-review-pass-2.md)
+- [DVT+ Consolidated Architectural Review](../../archive/reviews/architecture-and-governance/20260305-dvt-architectural-review-consolidated.md)
+- [DVT+ Architectural Review Pass 2](../../archive/reviews/architecture-and-governance/20260304-dvt-architectural-review-pass-2.md)
 - [Gap Execution Plans - G6 section](../GAP_EXECUTION_PLANS.md#g6---openlineage-mapping-tests-ci--schema-pin)
 - [System Delivery Status - Observability and Traceability](../../../architecture/system-delivery-status.md#observability-and-traceability)
 

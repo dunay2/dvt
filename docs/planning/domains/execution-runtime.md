@@ -29,7 +29,7 @@ runtime hardening.
 
 ## Relevant Reviews And Closeouts
 
-- [20260322 DDD and Hexagonal Port Audit](../reviews/20260322-ddd-hexagonal-port-audit-review.md)
+- [20260322 DDD and Hexagonal Port Audit](../reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
 - [20260316 G7 Projector Worker Runtime Closeout](../closeouts/20260316-g7-projector-worker-runtime-closeout.md)
 - [20260316 G7 Provider Ref Reconciliation Closeout](../closeouts/20260316-g7-provider-ref-reconciliation-closeout.md)
 - [20260321 Gap 5 PR1 Export Verifier Closeout](../closeouts/20260321-gap-5-pr1-export-verifier-closeout.md)

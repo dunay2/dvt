@@ -14,8 +14,8 @@ This is the single active proposal for repository delivery-process hardening.
 It replaces the former audit prompt with an executable plan and absorbs the
 still-relevant work from prior CI/docs proposals and reviews, including:
 
-- [CI Performance Review And Action Plan](../reviews/20260330-ci-performance-review-and-action-plan.md)
-- [CI, Prepush & PR Process - Observations and Improvement Log](../reviews/20260330-ci-prepush-pr-process-observations.md)
+- [CI Performance Review And Action Plan](../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
+- [CI, Prepush & PR Process - Observations and Improvement Log](../reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
 
 This document does not reopen already-closed fixes. It carries forward only the
 residual gaps that are still visible in the repository wiring on 2026-03-31.

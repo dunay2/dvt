@@ -15,7 +15,7 @@ The repository had three simultaneous drift signals around the same topic:
 
 1. `packages/@dvt/engine/src/adapters/mock/MockAdapter.ts` contained a typo that
    blocked the `dvt-api` validation chain.
-2. `docs/planning/reviews/20260326-reconciler-runtime-solid-qa-review.md`
+2. `docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md`
    claimed `RC-G1` was open in the workboard, but no such tracker existed in
    Lane A.
 3. `LOCAL_EXECUTION_LOG_20260401.md` reintroduced already-closed
@@ -84,7 +84,7 @@ has been absorbed.
   - `packages/@dvt/engine/src/adapters/mock/MockAdapter.ts`
   - `docs/planning/state/agent-lane-a.yaml`
   - `docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md`
-  - `docs/planning/reviews/20260326-reconciler-runtime-solid-qa-review.md`
+  - `docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md`
   - `docs/planning/proposals/governance-startup-card-router-plan-20260402.md`
   - `docs/planning/status/governance-document-rule-inventory.md`
   - `docs/guides/ai-work-protocol.md`
@@ -132,7 +132,7 @@ has been absorbed.
 - Canonical planning sources:
   - `docs/planning/state/agent-lane-a.yaml`
   - `docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md`
-  - `docs/planning/reviews/20260326-reconciler-runtime-solid-qa-review.md`
+  - `docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md`
   - `docs/planning/proposals/governance-startup-card-router-plan-20260402.md`
 
 ## Real Work Performed

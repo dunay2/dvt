@@ -1,6 +1,6 @@
 ---
 title: 20260324 Dvt Architectural Review
-status: Draft
+status: Historical
 owner: docs
 last_reviewed: 2026-03-24
 planning_type: review

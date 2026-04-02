@@ -1,6 +1,6 @@
 ---
 title: DVT+ — Consolidated Architectural Review
-status: Draft
+status: Historical
 owner: docs
 last_reviewed: 2026-03-06
 planning_type: review

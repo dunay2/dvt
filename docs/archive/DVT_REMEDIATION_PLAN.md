@@ -25,8 +25,8 @@ That made it a poor active planning document and a poor canonical reference.
 - Active engine migration plan: [`../planning/engine-gap-to-target-migration-plan.md`](../planning/engine-gap-to-target-migration-plan.md)
 - Active delivery-status snapshot: [`../architecture/system-delivery-status.md`](../architecture/system-delivery-status.md)
 - Active architectural reviews:
-  - [`../planning/reviews/20260304-dvt-architectural-review-pass-2.md`](../planning/reviews/20260304-dvt-architectural-review-pass-2.md)
-  - [`../planning/reviews/20260305-dvt-architectural-review-consolidated.md`](../planning/reviews/20260305-dvt-architectural-review-consolidated.md)
+  - [`../planning/archive/reviews/architecture-and-governance/20260304-dvt-architectural-review-pass-2.md`](../planning/archive/reviews/architecture-and-governance/20260304-dvt-architectural-review-pass-2.md)
+  - [`../planning/archive/reviews/architecture-and-governance/20260305-dvt-architectural-review-consolidated.md`](../planning/archive/reviews/architecture-and-governance/20260305-dvt-architectural-review-consolidated.md)
 
 ## Archive Reason
 

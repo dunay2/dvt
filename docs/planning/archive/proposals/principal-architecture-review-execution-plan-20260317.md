@@ -13,7 +13,7 @@ work. It is a proposal-backed plan. It is not a competing roadmap of record.
 
 Primary source review:
 
-- [Principal Architecture Review - DVT+](../reviews/20260316-principal-architecture-review.md)
+- [Principal Architecture Review - DVT+](../reviews/architecture-and-governance/20260316-principal-architecture-review.md)
 
 Related proposal set:
 

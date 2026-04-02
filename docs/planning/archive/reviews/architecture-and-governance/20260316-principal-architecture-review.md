@@ -1,6 +1,6 @@
 ---
 title: Principal Architecture Review - DVT+
-status: Review
+status: Historical
 owner: Architecture
 last_reviewed: 2026-03-16
 planning_type: review
