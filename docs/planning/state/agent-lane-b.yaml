@@ -130,22 +130,24 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: S05
     priority: P0
-    status: review
+    status: done
     objective: >-
       S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level
       write-boundary schema gating.
     dependency: none
-    target: Merge PR
+    target: Envelope-level payloadVersion gating accepted in mainline write boundaries.
     complexity: L
     effort_points: 8
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
+      - docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md
+      - docs/risk-register/quality/R-20260402-S05-ENVELOPE-BOUNDARY-GATING.yaml
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md
     status_reason: >-
-      Payload-content validation landed, but the full envelope-level payloadVersion closure is still
-      not accepted.
-    last_verified: '2026-03-31'
+      Accepted ARC-2 evidence now closes the envelope-level payloadVersion gate in shared contracts,
+      engine write policy, and adapter-postgres coverage on mainline.
+    last_verified: '2026-04-02'
   - task_id: S05-F1
     priority: P0
     status: done
@@ -256,7 +258,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: ADP-LINT-ORDER-01
     priority: P2
-    status: review
+    status: done
     objective: >-
       upgrade eslint import-order toolchain and remove workaround-only inline type alias patterns in
       adapter-postgres.
@@ -264,17 +266,20 @@ tasks:
     target: Stable autofix behavior with idiomatic import type usage restored.
     complexity: S
     effort_points: 2
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md
       - packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
+      - packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts
+      - packages/@dvt/adapter-postgres/src/index.ts
     status_reason: >-
-      The core Sonar slice is closed, but the review still tracks the import-order tooling hardening
-      as follow-up review work.
-    last_verified: '2026-03-31'
+      The adapter-postgres public and runtime surfaces now use idiomatic import-type wiring without
+      the earlier workaround-only aliases, and the current eslint import-order baseline passes on
+      the tracked adapter file set.
+    last_verified: '2026-04-02'
   - task_id: RC-F2
     priority: P2
-    status: review
+    status: done
     objective: >-
       externalize adapter-postgres CI path patterns to
       tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and
@@ -283,16 +288,20 @@ tasks:
     target: Single source of truth for adapter scope detection plus path-matcher tests.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - tools/ci/policy/adapter-postgres-relevance.json
       - tools/ci/test/path-matcher.test.mjs
+      - tools/ci/test/adapter-postgres-policy.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - tools/ci/scope-config.mjs
       - .github/workflows/test.yml
       - .github/workflows/pr-quality-gate.yml
     status_reason: >-
-      The shared policy and tests exist in code, but this pass did not find a dedicated accepted
-      closeout artifact for final closure.
-    last_verified: '2026-03-31'
+      Mainline now uses the shared adapter-postgres relevance policy from both workflows and has
+      dedicated path-matcher, policy-generation, and workflow-parity tests to keep the wiring
+      aligned.
+    last_verified: '2026-04-02'
 dependency_notes:
   - >-
     `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
@@ -306,23 +315,22 @@ dependency_notes:
   - >-
     `MVP-B1` is now closed because the traceability matrix still matches the reviewed `MVP-A1`
     contractual scope and command baseline.
-  - >-
-    `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review
-    until envelope-level payloadVersion closure is accepted.
+  - '`S05` and `S05-F1` are both closed with accepted envelope-level and payload-level evidence.'
   - '`RC-B1` and `RC-B2` are verified against mainline code and proposal artifacts.'
   - '`RC-B5` and `RC-B5-F2` are closed with accepted evidence.'
   - >-
     `DLQ alerting + automated replay` and `manifest S3 fetch cache` are now verified as delivered
     via accepted evidence dated 2026-03-30.
-  - '`ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.'
+  - '`ADP-LINT-ORDER-01` and `RC-F2` are both closed against the current adapter and CI mainline
+    state.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-02'
   total_tasks: 14
   total_effort_points: 56
-  completed_weighted_points: 52.6
-  lane_progress_pct: 94
+  completed_weighted_points: 56
+  lane_progress_pct: 100
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
