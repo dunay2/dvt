@@ -1,6 +1,6 @@
 ---
 id: R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE
-title: Snapshot retry error capture and fallback polling cadence may alter operator expectations
+title: Documentary misalignment risk for snapshot ownership and fallback polling traceability
 status: Open
 date: 2026-04-02
 owners:
@@ -9,13 +9,13 @@ owners:
 severity: Medium
 probability: Medium
 context: >
-  The adapter now writes normalized failure text to snapshot retry rows and the projector runtime
-  throttles fallback stale-run polling while queue mode is enabled.
+  This PR carries ARC-2 documentary artifacts while the effective code delta against main is
+  documentary-only.
 risk: >
-  Operators and downstream tooling may observe different retry diagnostics and different timing of
-  fallback discovery compared with prior behavior.
+  Evidence and risk text can drift from actual merge content if they imply runtime changes that are
+  not present in the final diff.
 mitigations:
-  - Adapter tests verify retry delay guards and normalized error payload persistence.
-  - Delivery tests verify fallback polling cadence and restart-cycle behavior.
-  - Pre-push gate and package tests are executed before PR publication.
+  - Keep evidence wording explicitly documentary for this PR.
+  - Keep code refs aligned to reviewed scope without claiming new runtime behavior.
+  - Re-run pre-push gates before publishing updates.
 ---

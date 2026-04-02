@@ -1,5 +1,5 @@
 ---
-title: Snapshot retry error persistence and projector fallback polling hardening
+title: Documentary traceability for snapshot ownership and fallback polling posture
 status: Accepted
 date: 2026-04-02
 owners:
@@ -24,21 +24,18 @@ evidence:
 
 ## Summary
 
-This slice hardens snapshot retry semantics in the PostgreSQL adapter and
-reduces unnecessary fallback polling in the projector worker runtime.
+This PR is documentary. It records ARC-2 traceability and risk posture for
+snapshot-work ownership and projector fallback polling behavior that is already
+present in the effective `main` code path for this review cycle.
 
 ## What changed
 
-- `failSnapshotWork` now records normalized `last_error` text in
-  `snapshot_work_queue`, keeping retry failures observable.
-- Snapshot work completion query now avoids queue reset when a stale queue row
-  has already been logically superseded by snapshot state.
-- `ProjectorWorkerRuntime` now validates `batchSize` and
-  `fallbackPollEveryTicks` at construction.
-- Queue mode fallback polling is throttled by tick cadence instead of running
-  on every tick.
-- Delivery and adapter tests cover the new error payload behavior, retry delay
-  validation, and fallback polling cadence.
+- Added/updated governance evidence describing claim-ownership guard semantics
+  and fallback polling cadence expectations.
+- Added/updated risk register entry to track operator-observability and review
+  posture for this area.
+- No net functional behavior change is introduced by this PR's effective diff
+  against `main`.
 
 ## Validation
 
