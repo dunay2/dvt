@@ -50,6 +50,7 @@ Concept anchors for this page:
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
+- [DVT Production Readiness Review - Corrected Top 3 Gaps and Roadmap](proposals/dvt_production_readiness_corrected_review_and_roadmap.md)
 - [Evidence Information Architecture And Governance Plan](proposals/evidence-information-architecture-plan-20260402.md)
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
 - [G4-PR4: Admission Control Operability - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
@@ -60,11 +61,13 @@ Concept anchors for this page:
 - [RC-C1 HTTP Error Envelope Normalization Plan](proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)
 - [RC-C2 Shared Preflight And CI Log-First Triage Plan](proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
 - [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
+- [S08 plan record and plan store execution plan](proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
 
 ## Reviews
 
 - [Review Naming Policy](reviews/review-naming-policy.md)
 - [Review Status Board](reviews/review-status-board.md)
+- [S08 plan record and plan store gap review](reviews/20260402-s08-plan-record-plan-store-gap-review.md)
 
 ## Status
 
