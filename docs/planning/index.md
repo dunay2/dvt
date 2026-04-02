@@ -65,6 +65,7 @@ Concept anchors for this page:
 
 ## Reviews
 
+- [F03 shell health banner hard QA review](reviews/20260402-f03-shell-health-banner-hard-qa-review.md)
 - [Review Naming Policy](reviews/review-naming-policy.md)
 - [Review Status Board](reviews/review-status-board.md)
 - [S08 plan record and plan store gap review](reviews/20260402-s08-plan-record-plan-store-gap-review.md)

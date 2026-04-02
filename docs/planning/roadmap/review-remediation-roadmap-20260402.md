@@ -25,10 +25,33 @@ Primary outcomes:
 
 - unblock critical runtime orchestration and review-governance work
 - complete CI process hardening required for RC-C2 closure
+- correct the open `F-03` shell-health acceptance drift before it is treated as
+  closure-ready
 
 References:
 
 - [Sprint 2026-04A Board](../reviews/sprints/sprint-2026-04a/index.md)
+
+#### Phase 1 addendum: Frontend shell health remediation (`F-03`)
+
+This frontend slice stays in Sprint `2026-04A` because it is visible product
+surface work and the hard QA review exposed acceptance drift rather than a new
+future roadmap item.
+
+Execution slices:
+
+- `F-03-A`: move shell health projection back behind the `platform-health`
+  capability boundary and expose one derived shell model
+- `F-03-B`: restore real retry/backoff semantics for degraded/offline shell
+  health instead of a fixed polling countdown
+- `F-03-C`: remove the false initial `ok` connectivity state from shared shell
+  behavior before the first settled health check
+
+References:
+
+- [F03 shell health banner hard QA review](../reviews/20260402-f03-shell-health-banner-hard-qa-review.md)
+- [Agent Lane E](../state/agent-lane-e.md)
+- [Frontend Roadmap - Prototype To Operational UI](../proposals/frontend-roadmap-20260219.md)
 
 ### Phase 2: Contract and boundary hardening (Sprint 2026-04B)
 
