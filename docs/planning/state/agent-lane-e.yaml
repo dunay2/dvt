@@ -217,9 +217,11 @@ tasks:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/closeouts/F-02-closeout.md
       - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
     status_reason: >-
       The visible banner/top-bar slice now exists, but hard QA on 2026-04-02 confirmed unresolved
-      acceptance gaps in retry/backoff, pre-settle shell truth, and capability-boundary projection.
+      acceptance gaps in retry/backoff, pre-settle shell truth, capability-boundary projection, and
+      status-surface alignment.
     last_verified: '2026-04-02'
   - task_id: F-03-A
     parent_task: F-03
@@ -238,6 +240,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
       - docs/architecture/frontend/planning/frontend-planning-capability-architecture.md
     status_reason:
       Hard QA identified capability-boundary drift and split the remaining closure work into an
@@ -259,6 +262,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
       - docs/planning/closeouts/F-02-closeout.md
     status_reason:
       Hard QA confirmed that the current slice renders countdown copy but does not yet satisfy the
@@ -281,10 +285,51 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
       - docs/planning/proposals/frontend-roadmap-20260219.md
     status_reason:
       The top bar now hides the false positive, but the shared shell state is still initialized as
       `ok/connected` until the first query settles.
+    last_verified: '2026-04-02'
+  - task_id: F-03-D
+    parent_task: F-03
+    priority: P1
+    status: queued
+    objective: >-
+      contract shell status semantics to real observed signals and remove synthetic live-events
+      truth leakage from health surfaces.
+    dependency: F-03-A
+    target: >-
+      Shell health surfaces expose only validated runtime truth. Any live-events signal shown in
+      TopBar/Admin is backed by a real observer or removed/deferred.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-03` to align with lane-E "no mock connectivity state in
+      shell" rule.
+    last_verified: '2026-04-02'
+  - task_id: F-03-E
+    parent_task: F-03
+    priority: P1
+    status: queued
+    objective: >-
+      align active frontend status docs with shipped reality after F-03 hardening.
+    dependency: F-03-C
+    target: >-
+      Active status surfaces stop claiming no frontend tests and stop referencing superseded shell
+      health components as current truth.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/status/canonical-doc-code-matrix.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-08` so planning/status surfaces remain trustworthy.
     last_verified: '2026-04-02'
   - task_id: F-04
     priority: P1
@@ -433,7 +478,7 @@ dependency_notes:
     until the frontend contract artifact is written.
   - >-
     `F-03` remains the active shell-health slice, but the 2026-04-02 hard QA review split its
-    remaining closure work into `F-03-A`, `F-03-B`, and `F-03-C`.
+    remaining closure work into `F-03-A`, `F-03-B`, `F-03-C`, `F-03-D`, and `F-03-E`.
   - '`F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.'
   - '`F-08` through `F-11` remain blocked by backend endpoint delivery and must stay
     contracts-first.'
@@ -444,8 +489,8 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-02'
-  total_tasks: 15
-  total_effort_points: 66
+  total_tasks: 17
+  total_effort_points: 70
   completed_weighted_points: 3.9
   lane_progress_pct: 6
   notes: >-

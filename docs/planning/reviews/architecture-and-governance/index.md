@@ -14,3 +14,4 @@ planning_type: review
 - [20260323 SOLID DDD hexagonal CI and adapters review](20260323-solid-ddd-hexagonal-ci-and-adapters-review.md)
 - [20260326 DVT principal architectural review](20260326-dvt-principal-architectural-review.md)
 - [20260331 Principal architecture deep review](20260331-principal-architecture-deep-review.md)
+- [20260402 F-03 shell health Fowler hard review](20260402-f03-shell-health-fowler-hard-review.md)
