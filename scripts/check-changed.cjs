@@ -131,8 +131,8 @@ function runNodeCli(toolName, cliPath, args) {
 }
 
 function resolveDiffCommand() {
-  if (hasUpstream()) return 'git diff --name-only @{u}..HEAD';
   if (hasRef('origin/main')) return 'git diff --name-only origin/main..HEAD';
+  if (hasUpstream()) return 'git diff --name-only @{u}..HEAD';
   return 'git diff --name-only HEAD~1..HEAD';
 }
 

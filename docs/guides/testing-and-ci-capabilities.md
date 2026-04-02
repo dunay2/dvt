@@ -28,10 +28,21 @@ See also:
 | Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                           |
 | Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                           |
 | Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                           |
+| Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                           |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs) |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                           |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                           |
 | Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                           |
+
+## Operational Preflight Helpers
+
+| Capability                  | Command                                                                                                                | Source                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Repo hygiene diagnostics    | `powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main`                                      | [`scripts/hygiene.ps1`](../../scripts/hygiene.ps1) |
+| Shared PR preflight         | `powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight`                           | [`scripts/hygiene.ps1`](../../scripts/hygiene.ps1) |
+| Shared PR preflight + slice | `powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight -SliceCommand "<command>"` | [`scripts/hygiene.ps1`](../../scripts/hygiene.ps1) |
+| PR check summary            | `powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -PrCheckSummary`                                       | [`scripts/hygiene.ps1`](../../scripts/hygiene.ps1) |
+| First-red CI log extraction | `powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -LogFirstTriage`                                       | [`scripts/hygiene.ps1`](../../scripts/hygiene.ps1) |
 
 ## Package Test Commands
 
@@ -88,22 +99,23 @@ Relevant code and fixtures:
 
 ## Documentation Quality Gates
 
-| Capability                                | Command                      | Source                               |
-| ----------------------------------------- | ---------------------------- | ------------------------------------ |
-| Docs sync                                 | `pnpm docs:sync`             | [`package.json`](../../package.json) |
-| Docs sync drift check                     | `pnpm docs:sync:check`       | [`package.json`](../../package.json) |
-| Planning workboard drift check            | `pnpm docs:workboard:check`  | [`package.json`](../../package.json) |
-| Local docs PR fast preflight              | `pnpm docs:pr:fast`          | [`package.json`](../../package.json) |
-| Local docs PR full preflight              | `pnpm docs:pr:full`          | [`package.json`](../../package.json) |
-| Deterministic docs PR wrapper             | `pnpm docs:pr:create`        | [`package.json`](../../package.json) |
-| Docs quality policy check                 | `pnpm docs:quality:check`    | [`package.json`](../../package.json) |
-| Docs doctor                               | `pnpm docs:doctor`           | [`package.json`](../../package.json) |
-| Changed Markdown lint                     | `pnpm lint:md:changed`       | [`package.json`](../../package.json) |
-| Markdown location policy                  | `pnpm docs:gov:locations`    | [`package.json`](../../package.json) |
-| Canonical path/link check                 | `pnpm docs:canonical:check`  | [`package.json`](../../package.json) |
-| Generated code-state drift check          | `pnpm docs:status:check`     | [`package.json`](../../package.json) |
-| Generated capability coverage drift check | `pnpm docs:capability:check` | [`package.json`](../../package.json) |
-| Local docs regenerate-and-validate flow   | `pnpm docs:ci`               | [`package.json`](../../package.json) |
+| Capability                                | Command                                         | Source                                                                                       |
+| ----------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Docs sync                                 | `pnpm docs:sync`                                | [`package.json`](../../package.json)                                                         |
+| Docs sync drift check                     | `pnpm docs:sync:check`                          | [`package.json`](../../package.json)                                                         |
+| Planning workboard drift check            | `pnpm docs:workboard:check`                     | [`package.json`](../../package.json)                                                         |
+| Conditional workboard drift check         | `node scripts/docs-workboard-check-changed.cjs` | [`scripts/docs-workboard-check-changed.cjs`](../../scripts/docs-workboard-check-changed.cjs) |
+| Local docs PR fast preflight              | `pnpm docs:pr:fast`                             | [`package.json`](../../package.json)                                                         |
+| Local docs PR full preflight              | `pnpm docs:pr:full`                             | [`package.json`](../../package.json)                                                         |
+| Deterministic docs PR wrapper             | `pnpm docs:pr:create`                           | [`package.json`](../../package.json)                                                         |
+| Docs quality policy check                 | `pnpm docs:quality:check`                       | [`package.json`](../../package.json)                                                         |
+| Docs doctor                               | `pnpm docs:doctor`                              | [`package.json`](../../package.json)                                                         |
+| Changed Markdown lint                     | `pnpm lint:md:changed`                          | [`package.json`](../../package.json)                                                         |
+| Markdown location policy                  | `pnpm docs:gov:locations`                       | [`package.json`](../../package.json)                                                         |
+| Canonical path/link check                 | `pnpm docs:canonical:check`                     | [`package.json`](../../package.json)                                                         |
+| Generated code-state drift check          | `pnpm docs:status:check`                        | [`package.json`](../../package.json)                                                         |
+| Generated capability coverage drift check | `pnpm docs:capability:check`                    | [`package.json`](../../package.json)                                                         |
+| Local docs regenerate-and-validate flow   | `pnpm docs:ci`                                  | [`package.json`](../../package.json)                                                         |
 
 Generated documentation sources:
 
@@ -121,6 +133,7 @@ Command semantics:
 
 - `pnpm docs:ci` is the local-friendly docs validation flow. It regenerates derived docs surfaces first and then validates the resulting worktree.
 - `pnpm docs:sync:check`, `pnpm docs:workboard:check`, `pnpm docs:status:check`, and `pnpm docs:capability:check` are strict drift gates. They compare generated outputs against `HEAD` and are intended for explicit cleanliness enforcement.
+- `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 
 ## GitHub Workflow Coverage
@@ -160,6 +173,8 @@ These files are intended to become the canonical source of truth for:
   [`ADR-0001`](../adr/ADR-0001-temporal-integration-test-policy.md).
 - The GitHub workflows remain the authoritative merge gates even when the same command is runnable
   locally.
+- For local PR-green work, the canonical operator recipe is
+  [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md).
 - `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
   `DVT_PG_URL` is absent; when configured it exercises the real API protected
   runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.

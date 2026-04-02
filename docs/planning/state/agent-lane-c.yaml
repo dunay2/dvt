@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-03-31'
+last_reviewed: '2026-04-01'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -292,20 +292,31 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: RC-C2
     priority: P2
-    status: queued
+    status: review
     objective: >-
-      institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure
-      log-first triage) and track measurable round reduction.
+      institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
+      efficiency measurement for Lane C before scaling the workflow repo-wide.
     dependency: none
-    target: Apply the Lane C efficiency playbook in three consecutive PR cycles.
+    target: >-
+      Shared operator guide + `hygiene.ps1` preflight/triage modes + canonical YAML adoption log are
+      live, and final closure is gated on three consecutive Lane C PR cycles meeting the documented
+      20% round-reduction rule.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 67
     evidence_refs:
       - docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
+      - docs/planning/reviews/20260402-rc-c2-operational-friction-intake-review.md
+      - docs/guides/pr-preflight-and-ci-triage.md
+      - docs/planning/proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
+      - docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md
+      - docs/planning/status/ai-efficiency-adoption-log.yaml
+      - docs/planning/status/ai-efficiency-adoption-status.md
     status_reason:
-      The efficiency playbook exists, but the three-cycle institutionalization task has not started.
-    last_verified: '2026-03-31'
+      Shared tooling, guide, structured measurement, and a canonical friction review are shipped;
+      final closure still depends on three qualifying Lane C PR cycles logged against the new
+      workflow.
+    last_verified: '2026-04-01'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -361,11 +372,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
+  verified_on: '2026-04-01'
   total_tasks: 16
   total_effort_points: 59
-  completed_weighted_points: 43.5
-  lane_progress_pct: 74
+  completed_weighted_points: 45.5
+  lane_progress_pct: 77
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

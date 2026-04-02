@@ -14,6 +14,7 @@ procedure. Both must be respected — they are not alternatives.
 ## Canonical References
 
 - [AGENTS.md](../../AGENTS.md)
+- [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md)
 - [Engineering Playbook](../architecture/atlas/engineering/engineering_playbook.md)
 - [ADR-0000: Code Generation With Enforced Normative Traceability](../adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md)
 - [ADR-0004: Event Sourcing Strategy](../adr/ADR-0004-event-sourcing-strategy.md)
@@ -179,6 +180,11 @@ Before closing the work, verify all acceptance criteria:
 - [ ] documentation reflects the shipped behavior
 - [ ] **mandatory closeout file created** — this is the last step and the gate that
       makes the slice officially closed
+
+When the task is about preparing a PR or recovering from a red PR, use
+[PR Preflight And CI Triage](pr-preflight-and-ci-triage.md) as the canonical
+recipe for diagnostics, slice checks, `pnpm verify:prepush`, and first-red
+failed-job inspection.
 
 Canonical validation commands:
 
