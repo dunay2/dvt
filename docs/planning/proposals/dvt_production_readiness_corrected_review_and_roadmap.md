@@ -70,16 +70,17 @@ This is not a vanity score. It is only used to rank what should be attacked firs
 
 ### Why "observability" is not top-3 as a standalone item anymore
 
-Observability is still important, but the repo's own Phase 2 debt list names more concrete blockers first:
+Observability is still important, but the repo's own Phase 2 debt list names more concrete open slices first:
 
 - `S02 IRunStateStore Split`
 - `S03 StartRunCoordinator Extraction`
 - `S05 EventEnvelope.payloadVersion`
 - `S04 ProviderRefUpdated Event`
 - `S08 plan record and plan store model`
-- `ADR-0040 retry ownership baseline`
 
 Those are more direct production blockers than treating observability as a single generic bucket.
+
+`ADR-0040` is closed baseline context, not an open blocker.
 
 Observability is therefore included in this plan as a **cross-cutting enabling stream**, not as the main third-ranked blocker.
 
