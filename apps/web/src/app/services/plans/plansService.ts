@@ -1,6 +1,6 @@
 import {
-  parseExecutionPlanV2,
-  type ExecutionPlanV2 as ContractExecutionPlan,
+  parseExecutionPlan,
+  type ExecutionPlan as ContractExecutionPlan,
 } from '@dvt/contracts';
 
 import { mockExecutionPlan } from '../../data/mockDbtData';
@@ -54,10 +54,10 @@ function parseContractPlanPayload(payload: unknown): ContractExecutionPlan {
     'plan' in payload &&
     (payload as { plan?: unknown }).plan !== undefined
   ) {
-    return parseExecutionPlanV2((payload as { plan: unknown }).plan);
+    return parseExecutionPlan((payload as { plan: unknown }).plan);
   }
 
-  return parseExecutionPlanV2(payload);
+  return parseExecutionPlan(payload);
 }
 
 function mapContractPlanToUi(contractPlan: ContractExecutionPlan): ExecutionPlan {
@@ -77,7 +77,7 @@ function mapContractPlanToUi(contractPlan: ContractExecutionPlan): ExecutionPlan
     target,
     estimatedCost,
     capabilities: [],
-    steps: contractPlan.steps.map((step) => {
+    steps: contractPlan.steps.map((step: ContractExecutionPlan['steps'][number]) => {
       const config = (step.stepTypeConfig ?? {}) as Record<string, unknown>;
       const policyBag = (config.policies ?? config.policy ?? {}) as Record<string, unknown>;
       const rawNodes = config.nodeIds;
