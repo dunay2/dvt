@@ -47,4 +47,3 @@ describe('platformHealthStatus', () => {
     expect(getNextRetryDelayMs(120_000)).toBe(60_000);
   });
 });
-

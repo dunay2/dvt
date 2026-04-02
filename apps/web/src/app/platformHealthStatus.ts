@@ -39,7 +39,8 @@ export function getDegradedReason(snapshot: PlatformHealthSnapshot | undefined):
       : 'Database readiness failed.';
   }
 
-  const optionalProbeError = snapshot.readyz.error ?? snapshot.version.error ?? snapshot.dbReady.error;
+  const optionalProbeError =
+    snapshot.readyz.error ?? snapshot.version.error ?? snapshot.dbReady.error;
   if (optionalProbeError) {
     return optionalProbeError.message;
   }
@@ -66,4 +67,3 @@ export function getPlatformConnectionDetail(
 export function getNextRetryDelayMs(currentDelayMs: number): number {
   return Math.min(currentDelayMs * 2, MAX_RETRY_BACKOFF_MS);
 }
-

@@ -62,9 +62,7 @@ function HealthStatusBanner({
           <p className="truncate text-xs opacity-90">{detail}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs opacity-80">
-            Retry in {nextRetryInSeconds}s
-          </span>
+          <span className="text-xs opacity-80">Retry in {nextRetryInSeconds}s</span>
           <Button
             type="button"
             size="sm"
@@ -106,7 +104,10 @@ function RootShell() {
     setConnectionStatus(selectPlatformConnectionState(platformHealth.data, platformHealth.isError));
   }, [platformHealth.data, platformHealth.isError, platformHealth.isPending, setConnectionStatus]);
 
-  const connectionStatus = selectPlatformConnectionState(platformHealth.data, platformHealth.isError);
+  const connectionStatus = selectPlatformConnectionState(
+    platformHealth.data,
+    platformHealth.isError
+  );
   const errorMessage = getPlatformHealthErrorMessageFromQuery(
     platformHealth.isError,
     platformHealth.error
@@ -140,7 +141,13 @@ function RootShell() {
     }, retryDelayMs);
 
     return () => window.clearTimeout(timer);
-  }, [connectionStatus.rest, nextRetryAt, platformHealth.isFetching, platformHealth.refetch, retryDelayMs]);
+  }, [
+    connectionStatus.rest,
+    nextRetryAt,
+    platformHealth.isFetching,
+    platformHealth.refetch,
+    retryDelayMs,
+  ]);
 
   useEffect(() => {
     if (nextRetryAt === null || connectionStatus.rest === 'ok') {

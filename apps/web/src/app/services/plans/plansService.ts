@@ -1,7 +1,4 @@
-import {
-  parseExecutionPlan,
-  type ExecutionPlan as ContractExecutionPlan,
-} from '@dvt/contracts';
+import { parseExecutionPlan, type ExecutionPlan as ContractExecutionPlan } from '@dvt/contracts';
 
 import { mockExecutionPlan } from '../../data/mockDbtData';
 import { useSessionStore } from '../../stores/sessionStore';
