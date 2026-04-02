@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -48,9 +48,10 @@ function toIsoDateUTC() {
 }
 
 function splitFrontmatter(source) {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  const normalizedSource = source.charCodeAt(0) === 0xfeff ? source.slice(1) : source;
+  const match = normalizedSource.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) {
-    return { frontmatter: {}, body: source };
+    return { frontmatter: {}, body: normalizedSource };
   }
 
   const frontmatter = {};
@@ -62,7 +63,7 @@ function splitFrontmatter(source) {
     }
   }
 
-  return { frontmatter, body: source.slice(match[0].length) };
+  return { frontmatter, body: normalizedSource.slice(match[0].length) };
 }
 
 function frontmatterWithDefaults(currentContent, defaults) {
@@ -286,7 +287,9 @@ function inferPlanningType(fileNameLower) {
 }
 
 function shouldIncludePlanningDoc(status) {
-  const normalized = String(status || '').trim().toLowerCase();
+  const normalized = String(status || '')
+    .trim()
+    .toLowerCase();
   return normalized !== 'superseded' && normalized !== 'archived';
 }
 
@@ -735,12 +738,7 @@ function generateContractSubIndexes() {
     'Cross-cutting types and shared validation contracts.',
     ...(sharedDocLines.length === 0
       ? []
-      : [
-          '',
-          '## Repository-local documents',
-          '',
-          ...sharedDocLines,
-        ]),
+      : ['', '## Repository-local documents', '', ...sharedDocLines]),
     '',
     '## Normative Sources (`@dvt/contracts`)',
     '',

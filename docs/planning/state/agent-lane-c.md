@@ -45,7 +45,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - Total effort points: `59`
 - Completed weighted points: `45.5`
 - Lane progress: `77%`
-- Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
+- Notes: Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
