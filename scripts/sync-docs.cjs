@@ -701,6 +701,8 @@ function generateContractSubIndexes() {
     status: 'Active',
     owner: 'docs',
   });
+  const plannerDocRows = scanSectionEntries('contracts/planner');
+  const plannerDocLines = renderBulletList(plannerDocRows);
   const plannerLines = [
     renderFrontmatter(plannerMeta),
     '# Planner Contracts',
@@ -710,6 +712,9 @@ function generateContractSubIndexes() {
     '## Normative Sources (`@dvt/contracts`)',
     '',
     ...renderContractSourceList(plannerSrc),
+    ...(plannerDocLines.length === 0
+      ? []
+      : ['', '## Repository-local documents', '', ...plannerDocLines]),
     '',
     '## Related',
     '',

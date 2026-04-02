@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:contracts:planner:PlanExecutabilityRecord:v1.0.0",
+  "title": "PlanExecutabilityRecordV1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planId", "adapterId", "state"],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "adapterId": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "const": "PENDING" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planId", "adapterId", "state", "validatedAtIso"],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "adapterId": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "const": "VALID" },
+        "validatedAtIso": { "type": "string", "minLength": 1 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planId",
+        "adapterId",
+        "state",
+        "validatedAtIso",
+        "rejectionReport"
+      ],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "adapterId": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "const": "INVALID" },
+        "validatedAtIso": { "type": "string", "minLength": 1 },
+        "rejectionReport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "reason", "degradable"],
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "MISSING_CAPABILITY",
+                "POLICY_UNSUPPORTED",
+                "INVALID_STEP_KIND",
+                "UNSUPPORTED_PLAN_VERSION",
+                "REJECTED"
+              ]
+            },
+            "reason": { "type": "string", "minLength": 1 },
+            "degradable": { "type": "boolean" },
+            "cause": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  ]
+}

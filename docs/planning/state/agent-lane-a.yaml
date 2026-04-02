@@ -614,14 +614,94 @@ tasks:
       facade.
     complexity: L
     effort_points: 8
-    progress_pct: 25
+    progress_pct: 40
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
     status_reason: >-
-      The code-grounded S08 re-review is now captured in the repo and Lane A owns the execution
-      path, but contract, port, and adapter implementation work have not started yet.
+      ADR-0043 is now accepted and S08-2 contract hardening is implemented with schema-backed
+      records, parser invariants, tests, and contract docs. Artifacts-owned ports, Postgres
+      migration, and admission cutover remain open.
+    last_verified: '2026-04-02'
+  - task_id: S08-3
+    parent_task: S08
+    priority: P0
+    status: queued
+    objective: >-
+      introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel
+      behavior-port drift.
+    dependency: none
+    target: >-
+      `@dvt/artifacts` publishes `IPlanStoreWriter` and `IPlanStoreReader` and no new plan-storage
+      behavior port is introduced in `@dvt/contracts`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    status_reason: Planned execution slice; implementation has not started.
+    last_verified: '2026-04-02'
+  - task_id: S08-4
+    parent_task: S08
+    priority: P0
+    status: queued
+    objective: >-
+      evolve Postgres plan-store persistence to the three-part model while keeping compatibility
+      during migration.
+    dependency: S08-3
+    target: >-
+      Postgres persists plan records, executability records, and admission links with a
+      compatibility facade for existing callers.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    status_reason: Planned execution slice; implementation has not started.
+    last_verified: '2026-04-02'
+  - task_id: S08-5
+    parent_task: S08
+    priority: P0
+    status: queued
+    objective: >-
+      cut over planner-backed admission to require adapter-scoped executability and write explicit
+      admission links.
+    dependency: S08-4
+    target: >-
+      admission enforces adapter-scoped `VALID` executability and writes `PlanAdmissionLink`
+      relations in the new model.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    status_reason: Planned execution slice; implementation has not started.
+    last_verified: '2026-04-02'
+  - task_id: S08-6
+    parent_task: S08
+    priority: P1
+    status: queued
+    objective: >-
+      add supersession and archival lifecycle support without introducing speculative binding-state
+      lifecycle coupling.
+    dependency: S08-5
+    target: >-
+      supersession and archival transitions are explicit in persisted plan records and fully covered
+      by tests in the migrated runtime path.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    status_reason: Planned execution slice; implementation has not started.
     last_verified: '2026-04-02'
   - task_id: plan-version-reset
     priority: P1
@@ -671,15 +751,18 @@ dependency_notes:
     `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary
     workstream; the documentation truth-correction and ownership package are in progress while
     implementation slices remain queued behind that baseline.
+  - >-
+    `S08-3/4/5/6` are now explicit subtasks under `S08` with sequenced dependencies for ports,
+    Postgres migration, admission cutover, and supersession/archival closure.
   - '`plan-version-reset` is closed and remains independent.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-02'
-  total_tasks: 33
-  total_effort_points: 132
+  total_tasks: 37
+  total_effort_points: 140
   completed_weighted_points: 63.16
-  lane_progress_pct: 48
+  lane_progress_pct: 45
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
