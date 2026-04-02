@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const { execSync, spawnSync } = require('node:child_process');
 const path = require('node:path');
+const fs = require('node:fs');
 
 function parseChangedFiles(output) {
   return output
@@ -44,15 +45,16 @@ function resolveDiffCommand() {
   return 'git diff --name-only --diff-filter=ACMR HEAD~1..HEAD';
 }
 
-function resolveMarkdownlintCli() {
+function resolvePrettierCli() {
   const candidate = path.resolve(
     __dirname,
     '..',
     'node_modules',
-    'markdownlint-cli2',
-    'markdownlint-cli2-bin.mjs'
+    'prettier',
+    'bin',
+    'prettier.cjs'
   );
-  return require('node:fs').existsSync(candidate) ? candidate : null;
+  return fs.existsSync(candidate) ? candidate : null;
 }
 
 function listChangedMarkdownFiles() {
@@ -65,27 +67,19 @@ function listChangedMarkdownFiles() {
   }
 }
 
-const markdownlintCli = resolveMarkdownlintCli();
-if (!markdownlintCli) {
-  console.error('Unable to resolve markdownlint-cli2');
+const prettierCli = resolvePrettierCli();
+if (!prettierCli) {
+  console.error('Unable to resolve Prettier CLI');
   process.exit(1);
 }
 
 const changedMarkdownFiles = listChangedMarkdownFiles();
 if (changedMarkdownFiles.length === 0) {
-  console.log('No changed Markdown files detected. Skipping markdownlint.');
+  console.log('No changed Markdown files detected. Skipping Prettier write.');
   process.exit(0);
 }
 
-const args = [
-  markdownlintCli,
-  '--ignore-path',
-  '.markdownlintignore',
-  '--config',
-  '.markdownlint-cli2.jsonc',
-  ...changedMarkdownFiles,
-];
-
+const args = [prettierCli, '--write', '--end-of-line', 'auto', ...changedMarkdownFiles];
 const result = spawnSync(process.execPath, args, {
   cwd: path.resolve(__dirname, '..'),
   stdio: 'inherit',

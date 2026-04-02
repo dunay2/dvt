@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const { execSync, spawnSync } = require('node:child_process');
-const path = require('node:path');
 
 function parseChangedFiles(output) {
   return output
@@ -44,50 +43,31 @@ function resolveDiffCommand() {
   return 'git diff --name-only --diff-filter=ACMR HEAD~1..HEAD';
 }
 
-function resolveMarkdownlintCli() {
-  const candidate = path.resolve(
-    __dirname,
-    '..',
-    'node_modules',
-    'markdownlint-cli2',
-    'markdownlint-cli2-bin.mjs'
-  );
-  return require('node:fs').existsSync(candidate) ? candidate : null;
-}
-
-function listChangedMarkdownFiles() {
+function listChangedFiles() {
   try {
-    return parseChangedFiles(gitExec(resolveDiffCommand())).filter((filePath) =>
-      /(^README\.md$|\.md$)/i.test(filePath)
-    );
+    return parseChangedFiles(gitExec(resolveDiffCommand()));
   } catch {
     return [];
   }
 }
 
-const markdownlintCli = resolveMarkdownlintCli();
-if (!markdownlintCli) {
-  console.error('Unable to resolve markdownlint-cli2');
-  process.exit(1);
+function needsWorkboardCheck(changedFiles) {
+  return changedFiles.some(
+    (filePath) =>
+      filePath.startsWith('docs/planning/state/agent-lane-') && filePath.endsWith('.yaml')
+  );
 }
 
-const changedMarkdownFiles = listChangedMarkdownFiles();
-if (changedMarkdownFiles.length === 0) {
-  console.log('No changed Markdown files detected. Skipping markdownlint.');
+const changedFiles = listChangedFiles();
+if (!needsWorkboardCheck(changedFiles)) {
+  console.log(
+    '[docs:workboard:check:changed] No lane YAML changes detected. Skipping workboard drift check.'
+  );
   process.exit(0);
 }
 
-const args = [
-  markdownlintCli,
-  '--ignore-path',
-  '.markdownlintignore',
-  '--config',
-  '.markdownlint-cli2.jsonc',
-  ...changedMarkdownFiles,
-];
-
-const result = spawnSync(process.execPath, args, {
-  cwd: path.resolve(__dirname, '..'),
+const result = spawnSync('pnpm', ['docs:workboard:check'], {
+  shell: true,
   stdio: 'inherit',
 });
 

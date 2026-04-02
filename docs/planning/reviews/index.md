@@ -50,6 +50,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](20260315-postgres-start-run-intent-store-qa-review.md)
 - [RC-A2 Architectural Review Hard Mode](20260322-rc-a2-architectural-review-hard-mode.md)
 - [RC-A2 QA Hard Review](20260322-rc-a2-qa-hard-review.md)
+- [RC-C2 Operational Friction Intake Review](20260402-rc-c2-operational-friction-intake-review.md)
 - [Reconciler Runtime SOLID QA Review](20260326-reconciler-runtime-solid-qa-review.md)
 - [Review Naming Policy](review-naming-policy.md)
 - [Riesgos y mitigaciones - Retención y Archivado de Eventos](20260329-run-event-retention-risks-mitigations.md)

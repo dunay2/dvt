@@ -11,6 +11,7 @@ Current status snapshots and implementation tracking.
 
 ## Index
 
+- [AI Efficiency Adoption Status](ai-efficiency-adoption-status.md)
 - [Canonical Doc Code Matrix](canonical-doc-code-matrix.md)
 - [Generated Capability Coverage](generated-capability-coverage.md)
 - [Generated Code State](generated-code-state.md)

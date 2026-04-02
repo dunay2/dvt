@@ -56,6 +56,7 @@ Concept anchors for this page:
 - [MVP Backend Operability Baseline Roadmap](proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [MVP-A1 Backend Contractual Inventory](proposals/mvp-a1-backend-contractual-inventory-20260329.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)
+- [RC-C2 Shared Preflight And CI Log-First Triage Plan](proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
 - [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
 
 ## Reviews
@@ -99,6 +100,7 @@ Concept anchors for this page:
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](reviews/20260315-postgres-start-run-intent-store-qa-review.md)
 - [RC-A2 Architectural Review Hard Mode](reviews/20260322-rc-a2-architectural-review-hard-mode.md)
 - [RC-A2 QA Hard Review](reviews/20260322-rc-a2-qa-hard-review.md)
+- [RC-C2 Operational Friction Intake Review](reviews/20260402-rc-c2-operational-friction-intake-review.md)
 - [Reconciler Runtime SOLID QA Review](reviews/20260326-reconciler-runtime-solid-qa-review.md)
 - [Review Naming Policy](reviews/review-naming-policy.md)
 - [Riesgos y mitigaciones - Retención y Archivado de Eventos](reviews/20260329-run-event-retention-risks-mitigations.md)
@@ -107,6 +109,7 @@ Concept anchors for this page:
 
 ## Status
 
+- [AI Efficiency Adoption Status](status/ai-efficiency-adoption-status.md)
 - [Canonical Doc Code Matrix](status/canonical-doc-code-matrix.md)
 - [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)

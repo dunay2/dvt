@@ -1,339 +1,231 @@
-# Contract Testing Scripts
+# Script Utilities
 
-This directory contains scripts for validating contract tests and golden paths as part of the CI pipeline.
+This directory contains repository utilities for validation, documentation
+generation, contract governance, and operator preflight workflows.
 
-## Scripts
+## Operator and PR Workflow
 
 ### `hygiene.ps1`
 
-Standard repository hygiene script for branch triage and optional preflight checks.
+Canonical repo hygiene and PR-preflight entrypoint.
 
-**What it does (diagnostic-first):**
+What it does:
 
-- fetch/prune remotes (unless `-SkipFetch`)
-- compare local branches against a base branch (`-BaseBranch`, default `main`)
-- report `ahead/behind`, `git cherry` superseded signal, and changed-file preview
-- optionally delete superseded local/remote branches (explicit flags + confirmation)
+- fetches and prunes remotes unless `-SkipFetch` is set
+- reports branch ahead/behind state, `git cherry` supersession signal, and
+  changed-file previews
+- supports shared PR preflight with `-Preflight`
+- supports custom slice validation with `-SliceCommand`
+- summarizes PR checks with `-PrCheckSummary`
+- performs first-red CI log triage with `-LogFirstTriage`
+- retains the legacy `-RunSliceChecks` and `-RunChecks` modes
 
-**Usage examples:**
+Usage examples:
 
 ```powershell
 # diagnostics only
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main
 
-# diagnostics + default API runtime slice checks
-powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -RunSliceChecks
+# shared PR preflight for the affected scope
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight
 
-# diagnostics + custom checks command
-powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -RunChecks -ChecksCommand "pnpm verify:prepush"
+# shared PR preflight for a specific validation slice
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight -SliceCommand "pnpm test:ci-tools"
 
-# remove superseded local/remote branches non-interactively
+# summarize the current branch PR checks
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -PrCheckSummary
+
+# extract the first failing GitHub Actions job snippet for the current branch PR
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -LogFirstTriage
+
+# remove superseded branches explicitly
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -DeleteLocalSuperseded -DeleteRemoteSuperseded -Yes
 ```
 
-**Safety model:**
+Implementation notes:
 
-- default mode is non-destructive
-- deletion actions require explicit flags and interactive confirmation (or `-Yes`)
+- `-Preflight` runs the selected slice checks, then `pnpm fix:changed`, then
+  `pnpm verify:prepush`.
+- PR check classification and failed-job selection are backed by
+  `tools/ci/pr-check-triage.mjs`.
+- destructive cleanup remains opt-in.
 
-### `validate-contracts.cjs`
+## Changed-file Gates and Autofix
 
-Validates contract fixtures and core runtime envelopes used by the base-contract workstream.
+### `check-changed.cjs`
 
-Current checks include:
+Runs changed-file quality checks against the Git diff baseline. It is used by
+`pnpm verify:prepush`.
 
-- plan fixtures under `packages/@dvt/engine/test/contracts/plans/*.json`,
-- contract envelope parsers (`PlanRef`, `RunContext`, `SignalRequest`, `EngineRunRef`, `RunStatusSnapshot`, `CanonicalEngineEvent`, `RunSnapshot`, `ExecuteStepRequest`, `ExecuteStepResult`),
-- result artifact structure at `packages/@dvt/engine/test/contracts/results/golden-paths-run.json` (if present).
+Checks:
 
-**Usage:**
+- Prettier on changed `js/json/md/yml/yaml` files
+- ESLint on changed `ts/tsx/js/jsx` files
 
-```bash
-pnpm validate:contracts
-```
+Diff policy:
 
-**Status:** Functional for US-1.1 base-contract validation bundle.
+- prefers `origin/main..HEAD` when `origin/main` exists
+- falls back to the configured upstream or `HEAD~1..HEAD`
 
-### `run-golden-paths.cjs`
+### `lint-markdown-changed.cjs`
 
-Executes the 3 required golden paths from the roadmap of record and contract
-validation policy:
+Runs `markdownlint-cli2` only for changed Markdown files.
 
-1. **Hello-world plan**: 3 steps linear → completes in < 30s
-2. **Pause/resume plan**: pause after step 1 → resume → same final snapshot hash
-3. **Retry plan**: fail step 2 once → retry → same snapshot hash
+Diff policy:
 
-**Usage:**
+- prefers `origin/main...HEAD` when `origin/main` exists
+- falls back to the configured upstream or `HEAD~1..HEAD`
 
-```bash
-pnpm test:contracts:hashes
-```
+### `format-markdown-changed.cjs`
 
-**Environment Variables:**
+Runs Prettier `--write` only on changed Markdown files.
 
-- `DATABASE_URL`: PostgreSQL connection string (optional until issue #6)
-
-**Output:** Saves execution results to `packages/@dvt/engine/test/contracts/results/golden-paths-run.json`
-
-**Status:** Stub implementation until issue #10 (Golden Paths) provides actual implementations.
-
-### `compare-hashes.cjs`
-
-Compares current execution hashes against baseline in `.golden/hashes.json`.
-Fails if hashes mismatch (indicates non-determinism).
-
-**Usage:**
+Usage:
 
 ```bash
-pnpm test:contracts:hash-compare
+pnpm format:md:changed
 ```
 
-**Prerequisites:** Must run `pnpm test:contracts:hashes` first.
+### `fix-changed.cjs`
 
-**Status:** Functional - lenient for 'pending' hashes until implementations are complete.
+Applies changed-file autofixes before the verification gate.
 
-### `db-migrate.cjs`
+What it does:
 
-Runs database migrations for contract testing.
+- runs Prettier `--write` on changed supported text files
+- runs ESLint `--fix` on changed JavaScript and TypeScript files
+- skips missing files and empty changed-file sets cleanly
 
-**Usage:**
+Usage:
 
 ```bash
-pnpm db:migrate
+pnpm fix:changed
 ```
 
-**Environment Variables:**
+### `docs-workboard-check-changed.cjs`
 
-- `DATABASE_URL`: PostgreSQL connection string (required)
-- `DVT_PG_SCHEMA`: target schema (optional, defaults to `dvt`)
+Runs `pnpm docs:workboard:check` only when a changed file includes lane YAML
+under `docs/planning/state/agent-lane-*.yaml`.
 
-**Current behavior:**
+Usage:
 
-- Executes ordered SQL files from `packages/@dvt/adapter-postgres/migrations/*.sql`
-- Tracks applied versions in `<schema>.schema_migrations`
-- Replaces `__SCHEMA__` placeholders inside migration files
-
-**Status:** Functional (Issue #6 real PostgreSQL persistence enabled).
-
-### `outbox-worker-canary-evidence.ps1`
-
-Captures external canary evidence for the standalone outbox worker.
-
-**What it does:**
-
-- waits for `/readyz` to return `200` with `owner=true`
-- captures baseline and final `/metrics`
-- runs exactly one trigger via `-TriggerCommand` or `-PsqlDsn`
-- writes an evidence doc under `docs/evidence/ED-<date>-g5-canary-<env>.md`
-- captures a `kubectl` deployment snapshot only when `kubectl` and the current cluster context are reachable
-
-**Usage:**
-
-```powershell
-.\scripts\outbox-worker-canary-evidence.ps1 `
-  -EnvironmentName dev-canary `
-  -WorkerAdminUrl http://127.0.0.1:9464 `
-  -Namespace dvt `
-  -Deployment outbox-worker `
-  -ShardCount 1 `
-  -TriggerCommand "Write-Output 'replace with the real environment trigger command'"
+```bash
+node scripts/docs-workboard-check-changed.cjs
 ```
 
-**Fallback mode:**
+## CI Triage Helper
 
-- `-PsqlDsn` inserts one `RunQueued` outbox row directly when no environment-native trigger path exists.
-- `-TriggerCommand` is preferred when the environment already has a real write-side trigger available.
+### `../tools/ci/pr-check-triage.mjs`
+
+GitHub CLI-backed helper used by `hygiene.ps1` for PR status inspection.
+
+Capabilities:
+
+- normalize GitHub Actions and external status checks
+- classify checks into failed, pending, successful, skipped, and external
+- pick the first failing GitHub Actions check deterministically
+- fetch failed-job logs and extract a compact failure snippet
+
+Validation:
+
+```bash
+node --test tools/ci/pr-check-triage.test.mjs
+pnpm test:ci-tools
+```
+
+## Contract and Documentation Validators
 
 ### `validate-rfc2119.cjs`
 
-Scans contract markdown files under `docs/architecture/engine/contracts/**.md` and detects
-lowercase RFC 2119 normative keywords in prose (for example: `must`, `should`, `may`).
+Scans contract Markdown under `docs/architecture/engine/contracts/**` for
+lowercase RFC 2119 keywords in prose and reports deterministic findings.
 
-The script is intentionally warning-first and deterministic for CI logs.
-
-### `validate-executable-examples.cjs`
-
-Validates TypeScript examples embedded in contract markdown docs.
-
-**Scope:**
-
-- `docs/architecture/engine/contracts/**/*.md`
-- fenced code blocks tagged as `ts` / `typescript`
-
-**Usage:**
+Usage:
 
 ```bash
 pnpm contracts:rfc2119:validate
 ```
 
-**Modes:**
+### `validate-executable-examples.cjs`
 
-- Default warning mode: `pnpm contracts:rfc2119:validate`
-- Error mode (future strict gate): `RFC2119_MODE=error node scripts/validate-rfc2119.cjs`
+Validates TypeScript code fences embedded in contract Markdown docs.
 
-**Output:**
+Usage:
 
-- Per-file findings with `line:column`
-- Suggested uppercase replacement (`must` -> `MUST`)
-
-**Status:** Functional in warning mode (Issue #229).
+```bash
+pnpm contracts:examples:validate
+```
 
 ### `validate-glossary-usage.cjs`
 
-Validates terminology usage in contract markdown files against the canonical glossary:
-`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`.
+Validates canonical glossary usage in contract Markdown and reports prohibited
+synonyms with deterministic `file:line:column` output.
 
-**Checks:**
-
-- parses canonical terms (section 2),
-- parses prohibited synonyms (section 10),
-- reports prohibited synonym usage in contract markdown files with deterministic
-  `file:line:column` output.
-
-**Usage:**
+Usage:
 
 ```bash
 pnpm contracts:glossary:validate
 pnpm validate:glossary
 ```
 
-**Modes:**
-
-- Warning mode (non-blocking): `pnpm contracts:glossary:validate`
-- Error mode (blocking): `pnpm validate:glossary`
-
-**Status:** Functional in warning mode for CI (`contracts.yml`) and wired into
-`validate:contracts` bundle (Issue #226).
-
 ### `validate-references.cjs`
 
-Validates cross-contract markdown references under
-`docs/architecture/engine/contracts/**/*.md`.
+Validates cross-contract Markdown references, including local target existence
+and version-label alignment.
 
-**Checks:**
-
-- local link targets exist
-- label/file version alignment when both include explicit `vX[.Y[.Z]]`
-- deprecated-reference heuristics (warning phase)
-
-**Usage:**
+Usage:
 
 ```bash
 pnpm contracts:references:validate
 ```
 
-**Modes:**
-
-- Default warning mode: `pnpm contracts:references:validate`
-- Error mode (hardened phase): `REFS_MODE=error node scripts/validate-references.cjs`
-
-**Output:**
-
-- grouped findings by category
-- `file:line:column` location per finding
-
-**Status:** Functional in warning mode (Issue #228).
-
-### `validate-glossary-usage.cjs`
-
-Validates canonical glossary usage in contract markdown files using the prohibited-synonyms
-table from `GlossaryContract.v1.md`.
-
-**Checks:**
-
-- parse canonical terms and prohibited synonyms from glossary contract
-- detect prohibited synonym usage in prose
-- report canonical replacement recommendation
-
-**Usage:**
-
-```bash
-pnpm contracts:glossary:validate
-```
-
-**Modes:**
-
-- Default warning mode: `pnpm contracts:glossary:validate`
-- Error mode (hardened phase): `GLOSSARY_MODE=error node scripts/validate-glossary-usage.cjs`
-
-**Output:**
-
-- deterministic findings with `file:line:column`
-- prohibited term and suggested canonical term
-
-**Status:** Functional in warning mode (Issue #226).
-
 ### `validate-idempotency-vectors.cjs`
 
-Validates versioned RunEvents idempotency vectors by recomputing SHA-256 digests using
-canonical field order and delimiter rules.
+Validates RunEvents idempotency vectors by recomputing canonical SHA-256
+digests from the documented inputs.
 
-**Scope:**
-
-- `docs/architecture/engine/contracts/engine/*.idempotency_vectors.json`
-
-**Checks:**
-
-- required vector fields
-- canonical `RUN` token for run-level vectors
-- delimiter guard (`|`) in input fields
-- SHA-256 digest equality against expected vectors
-- formula version handling (`v1` and `v2.0.1`)
-
-**Usage:**
+Usage:
 
 ```bash
 pnpm contracts:idempotency:validate
 ```
 
-**Status:** Blocking validator for correctness (Issue #227).
+## Data and Runtime Utilities
 
-**Usage:**
+### `db-migrate.cjs`
+
+Runs ordered SQL migrations from
+`packages/@dvt/adapter-postgres/migrations/*.sql` and records applied versions
+in the target schema.
+
+Usage:
 
 ```bash
-pnpm contracts:examples:validate
+pnpm db:migrate
 ```
 
-**Behavior:**
+### `outbox-worker-canary-evidence.ps1`
 
-- Extracts code snippets from markdown fences
-- Attempts TypeScript parse/transpile validation with adaptive wrapping strategies
-- Fails with actionable diagnostics (`file`, `snippet index`, `line:column`, TS code)
+Captures canary evidence for the standalone outbox worker, including readiness,
+metrics, a single trigger path, and an evidence doc under `docs/evidence/`.
 
-**Status:** Functional for Issue #230 executable examples validation.
+## Common Repository Commands
 
-## CI Integration
+These scripts are typically exercised through package scripts in
+[`package.json`](../package.json):
 
-These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions workflow.
-
-**Workflow Jobs:**
-
-1. `contract-compile`: Validates types compile (`tsc --noEmit`)
-2. `contract-validate`: Validates golden JSON fixtures against schemas
-3. `contract-hashes`: Runs golden paths, compares snapshot hashes
-
-`contract-validate` also runs RFC 2119 scan in warning mode.
-
-`contract-validate` also runs cross-reference validation in warning mode.
-
-`contract-validate` also runs glossary usage validation in warning mode.
-
-`contract-validate` also runs idempotency vectors validation in blocking mode.
-
-**Required Checks:** All jobs must pass before merge to main branch.
-
-## Development Notes
-
-- **Blocked by issue #10**: Golden Paths examples must exist before full functionality
-- **Issue #6 implemented**: PostgresStateStoreAdapter now uses real SQL persistence + migration flow
-- **Blocked by issue #2**: TypeScript types needed for schema validation
-
-`db-migrate.cjs` is no longer in stub mode. Remaining stubs are limited to flows blocked by unresolved feature issues.
+- `pnpm verify:prepush`
+- `pnpm docs:sync`
+- `pnpm docs:workboard:generate`
+- `pnpm docs:quality:check`
+- `pnpm docs:doctor`
+- `pnpm docs:canonical:check`
+- `pnpm docs:gov:locations`
+- `pnpm test:ci-tools`
+- `pnpm fix:changed`
 
 ## References
 
-- [Roadmap Of Record](../docs/planning/roadmap/index.md) - canonical planning entry point
-- [Issue #17](https://github.com/dunay2/dvt/issues/17) - CI contract testing pipeline (this implementation)
-- [Issue #10](https://github.com/dunay2/dvt/issues/10) - Golden Paths examples (blocking)
-- [Issue #6](https://github.com/dunay2/dvt/issues/6) - PostgresStateStoreAdapter MVP (blocking)
-- [Issue #2](https://github.com/dunay2/dvt/issues/2) - TypeScript types (blocking)
+- [Testing and CI Capabilities](../docs/guides/testing-and-ci-capabilities.md)
+- [PR Preflight And CI Triage](../docs/guides/pr-preflight-and-ci-triage.md)
+- [AI Work Protocol](../docs/guides/ai-work-protocol.md)
