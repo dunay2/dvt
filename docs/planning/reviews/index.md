@@ -11,6 +11,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 
 ## Index
 
+- [F03 shell health banner hard QA review](20260402-f03-shell-health-banner-hard-qa-review.md)
 - [Review Naming Policy](review-naming-policy.md)
 - [Review Status Board](review-status-board.md)
 - [S08 plan record and plan store gap review](20260402-s08-plan-record-plan-store-gap-review.md)
