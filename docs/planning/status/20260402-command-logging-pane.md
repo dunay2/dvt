@@ -1,4 +1,4 @@
-﻿---
+---
 title: Command Logging Pane 2026-04-02
 status: Review
 owner: Docs / Delivery
@@ -6,7 +6,7 @@ last_reviewed: 2026-04-02
 planning_type: status
 ---
 
-# Fecha Logging pane
+# Command Logging Pane 2026-04-02
 
 ## Command Log
 
