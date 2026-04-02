@@ -299,7 +299,7 @@ Horizontal scale-out is blocked until PR-5 is complete.
 - [x] deployment docs forbid unsafe mixed ownership
 
 Closure evidence for the accepted `G5` scope is recorded in
-[ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md).
+[ED-20260312-g5-canary-local-docker](../../evidence/supporting/ED-20260312-g5-canary-local-docker.md).
 Downstream contract hardening and future delivery evolution remain tracked as
 separate follow-up work rather than open blockers for this gap.
 

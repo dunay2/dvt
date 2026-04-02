@@ -127,7 +127,7 @@ last_reviewed: 2026-03-31
     mismatch
 - Added ARC evidence and risk artifacts for this slice.
 - Repaired a pre-existing ARC evidence frontmatter issue in
-  `docs/evidence/ED-20260311-execution-core-assessment.md` so the full evidence
+  `docs/evidence/context/ED-20260311-execution-core-assessment.md` so the full evidence
   validator passes again.
 
 ## Validation

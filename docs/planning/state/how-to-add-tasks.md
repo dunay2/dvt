@@ -44,7 +44,7 @@ Open the lane file and append to the `tasks` list:
   effort_points: 5
   progress_pct: 40
   evidence_refs:
-    - docs/evidence/ED-20260331-s21-example.md
+    - docs/evidence/critical/ED-20260331-s21-example.md
     - docs/planning/closeouts/20260331-s21-closeout.md
   status_reason: implementation started; evidence and final validation still open
   last_verified: 2026-03-31

@@ -1,4 +1,4 @@
-import { KNOWN_STEP_KINDS, type ExecutionPlanV2 } from '@dvt/contracts';
+import { KNOWN_STEP_KINDS, type ExecutionPlan } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,7 +10,7 @@ import {
 
 const TENANT_ID = 'artifact-test-tenant';
 
-function buildPlan(): ExecutionPlanV2 {
+function buildPlan(): ExecutionPlan {
   return {
     metadata: {
       planVersion: '1.0',

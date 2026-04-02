@@ -11,7 +11,7 @@
  */
 
 import type {
-  ExecutionPlanV2,
+  ExecutionPlan,
   GraphNode,
   PlannerGraphSourceV1,
   PlannerPolicyClassSet,
@@ -21,7 +21,7 @@ import type {
 // Canonical types — re-exported from @dvt/contracts (single source of truth).
 export type {
   DbtManifestLike,
-  ExecutionPlanV2,
+  ExecutionPlan,
   ExecutionStepV2,
   GraphNode,
   PlanCore,
@@ -52,7 +52,7 @@ export interface PlannerInputEnvelopeV2 {
   nodes?: readonly GraphNode[];
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
-  observability?: ExecutionPlanV2['observability'];
+  observability?: ExecutionPlan['observability'];
   // Volatile orchestration metadata — excluded from inputHashSha256.
   requestedBy?: string;
   requestId?: string;

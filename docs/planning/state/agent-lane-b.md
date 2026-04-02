@@ -2,7 +2,7 @@
 title: Agent Lane B - Event Contract And Traceability
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-02
 planning_type: status
 ---
 
@@ -40,17 +40,20 @@ Stabilize event payload versioning and lineage wiring.
 
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
-- Verified on: `2026-03-31`
-- Total tasks: `11`
-- Total effort points: `47`
-- Completed weighted points: `43.6`
-- Lane progress: `93%`
+- Verified on: `2026-04-02`
+- Total tasks: `14`
+- Total effort points: `56`
+- Completed weighted points: `52.6`
+- Lane progress: `94%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
 > Verified registry source: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:planning:lanes:generate` plus `pnpm docs:workboard:generate`.
 
+- [x] `P2` `EVD-IA-03` `done` `S` `3pt` `100%`: execute the class-based evidence path migration and update references to the new folder topology.
+- [x] `P2` `EVD-IA-02` `done` `S` `3pt` `100%`: classify every current evidence artifact into the approved IA classes and publish the migration inventory baseline.
+- [x] `P2` `EVD-IA-01` `done` `S` `3pt` `100%`: define the governed information architecture for `docs/evidence/` without moving active evidence files in the first pass.
 - [x] `P0` `MVP-B1` `done` `M` `5pt` `100%`: build a claim-to-evidence traceability matrix for backend MVP operability assertions (capability, proof source, and executable validation command).
 - [ ] `P0` `S05` `review` `L` `8pt` `70%`: S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level write-boundary schema gating.
 - [x] `P0` `S05-F1` `done` `M` `5pt` `100%`: add per-eventType payload-content schema validation at write boundary.
@@ -65,6 +68,9 @@ Stabilize event payload versioning and lineage wiring.
 
 ## Dependencies
 
+- `EVD-IA-03` completes the structural move from metadata-only classification to class-aware evidence paths; phase 4 enforcement gates remain open follow-up work.
+- `EVD-IA-02` closes the phase-2 inventory baseline with explicit per-file classes and no folder moves; relocation and enforcement activation remain follow-up slices.
+- `EVD-IA-01` captures the target evidence-surface taxonomy and migration plan only; active file relocation and enforcement changes remain explicit follow-up work.
 - `MVP-B1` is now closed because the traceability matrix still matches the reviewed `MVP-A1` contractual scope and command baseline.
 - `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review until envelope-level payloadVersion closure is accepted.
 - `RC-B1` and `RC-B2` are verified against mainline code and proposal artifacts.

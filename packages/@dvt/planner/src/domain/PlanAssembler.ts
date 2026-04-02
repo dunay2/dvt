@@ -3,9 +3,9 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → AssemblePlanCommand (input VO)
- *   - QUERY side   → { plan: ExecutionPlanV2; canonicalPlanJson: string } (read model)
+ *   - QUERY side   → { plan: ExecutionPlan; canonicalPlanJson: string } (read model)
  *
- *  SRP: sole responsibility — hash inputs, assemble the immutable ExecutionPlanV2,
+ *  SRP: sole responsibility — hash inputs, assemble the immutable ExecutionPlan,
  *       attach observability layers. Knows nothing about graph topology or node selection.
  */
 import {
@@ -18,7 +18,7 @@ import { sha256CanonicalJson } from './hashing.js';
 import { throwLimitExceeded } from './limits.js';
 import type { PlannerMetrics } from './metrics.js';
 import type {
-  ExecutionPlanV2,
+  ExecutionPlan,
   NormalizedPlannerInput,
   PlanCore,
   PlannerInputEnvelopeV2,
@@ -41,7 +41,7 @@ export class PlanAssembler {
 
   async execute(
     command: AssemblePlanCommand
-  ): Promise<{ plan: ExecutionPlanV2; canonicalPlanJson: string }> {
+  ): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
     const inputHashSha256 = await this.computeInputHash(command.normalizedInput);
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
@@ -80,8 +80,8 @@ export class PlanAssembler {
     planCore: PlanCore,
     planId: string,
     input: NormalizedPlannerInput
-  ): ExecutionPlanV2 {
-    const planBase: ExecutionPlanV2 = {
+  ): ExecutionPlan {
+    const planBase: ExecutionPlan = {
       ...planCore,
       metadata: {
         ...planCore.metadata,
@@ -92,7 +92,7 @@ export class PlanAssembler {
       },
     };
 
-    const plan: ExecutionPlanV2 =
+    const plan: ExecutionPlan =
       input.observability === undefined
         ? planBase
         : { ...planBase, observability: input.observability };

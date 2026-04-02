@@ -154,7 +154,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
-      - docs/evidence/ED-20260329-mvp-backend-operability-roadmap-reset.md
+      - docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md
     status_reason: >-
       The backend MVP baseline is now stable enough for frontend contract work, but no
       frontend-facing artifact has been started yet.

@@ -49,7 +49,7 @@
 
 import type { PlanRefSchemaT } from '../../schemas.js';
 
-import type { ExecutionPlanV2, PlannerBuildResultV2 } from './ExecutionPlan.v2.js';
+import type { ExecutionPlan, PlannerBuildResultV2 } from './ExecutionPlan.v2.js';
 import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 
 // ── State type ─────────────────────────────────────────────────────────────────
@@ -145,6 +145,6 @@ export interface IPlanValidationLifecycleStore {
   getValidationRecord(planId: string): Promise<PlanValidationRecord | undefined>;
 }
 
-// Re-export ExecutionPlanV2 locally so callers of this file have access to it
+// Re-export ExecutionPlan locally so callers of this file have access to it
 // without a separate import when working with storePlan signatures.
-export type { ExecutionPlanV2, PlannerBuildResultV2 };
+export type { ExecutionPlan, PlannerBuildResultV2 };

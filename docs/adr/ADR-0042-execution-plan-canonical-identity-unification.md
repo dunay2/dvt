@@ -15,7 +15,7 @@ Accepted.
 
 The repository had drifted into three public `ExecutionPlan` shapes:
 
-- planner-side `ExecutionPlanV2` in `@dvt/contracts`
+- planner-side `ExecutionPlan` in `@dvt/contracts`
 - engine-visible `ExecutionPlan` declared in `IRunStateStore.v1.ts`
 - engine-local `ExecutionPlan` declared in `packages/@dvt/engine/src/contracts/executionPlan.ts`
 
@@ -46,10 +46,9 @@ types.
 contract.
 
 - The canonical exported symbol is now `ExecutionPlan`.
-- `ExecutionPlanV2` remains only as a deprecated compatibility alias during the
-  migration window.
-- Engine-visible and engine-local `ExecutionPlan` symbols must be aliases or
-  re-exports of that canonical contract, never independent interfaces.
+- The legacy `ExecutionPlanV2` alias is removed from public barrels.
+- Engine-visible and engine-local plan symbols must be aliases or re-exports of
+  that canonical contract, never independent interfaces.
 
 ### 2. Canonical metadata shape
 
@@ -99,8 +98,8 @@ public plan:
 - `ExecutionPlanSchema`
 - `parseExecutionPlan`
 
-`ExecutionPlanV2Schema` and `parseExecutionPlanV2` remain compatibility aliases
-to the same underlying schema and parser during migration.
+Legacy `ExecutionPlanSchema` and `parseExecutionPlan` aliases are removed from
+the public surface.
 
 ### 5. Canonical constants
 

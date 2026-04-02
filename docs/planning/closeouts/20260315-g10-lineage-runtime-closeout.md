@@ -62,7 +62,7 @@ and DLQ behavior and keeps lineage fail-open relative to domain delivery.
 | `packages/@dvt/delivery/test/LineageWorkerRuntime.test.ts`                                                                                          | Added runtime and observer coverage                                                 | Validate retry, dead-letter, fail-soft, and stop/start behavior  |
 | `packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts`                                                                             | Added HTTP sink implementation and export                                           | Provide a concrete OpenLineage publisher behind `ILineageSink`   |
 | `apps/lineage-worker/**`                                                                                                                            | Added standalone worker app, env parsing, and bootstrap server                      | Provide the composition root for operating the lineage runtime   |
-| `docs/evidence/ED-20260315-g10-closeout.md` and `docs/planning/gaps/G10-AI-EXECUTION-TRACKER.md`                                                    | Added evidence and tracker for `G10`                                                | Record runtime completion with explicit validation               |
+| `docs/evidence/critical/ED-20260315-g10-closeout.md` and `docs/planning/gaps/G10-AI-EXECUTION-TRACKER.md`                                           | Added evidence and tracker for `G10`                                                | Record runtime completion with explicit validation               |
 | `docs/planning/gaps/GAP_EXECUTION_PLANS.md`, `docs/architecture/system-delivery-status.md`, and `docs/planning/status/canonical-doc-code-matrix.md` | Synced active status docs                                                           | Keep canonical status surfaces aligned with the shipped slice    |
 
 ## Libraries evaluated
@@ -72,7 +72,7 @@ None evaluated - the runtime and queue boundary are repository-specific.
 ## Docs synced
 
 - [x] `docs/planning/closeouts/20260315-g10-lineage-runtime-closeout.md` -- think-first and final evidence for this slice
-- [x] `docs/evidence/ED-20260315-g10-closeout.md` -- implementation evidence aligned with shipped runtime
+- [x] `docs/evidence/critical/ED-20260315-g10-closeout.md` -- implementation evidence aligned with shipped runtime
 - [x] `docs/planning/gaps/G10-AI-EXECUTION-TRACKER.md` -- tracker reflects the shipped slice
 - [x] `docs/planning/gaps/GAP_EXECUTION_PLANS.md` -- `G10` status aligned
 - [x] `docs/architecture/system-delivery-status.md` -- current-state summary aligned

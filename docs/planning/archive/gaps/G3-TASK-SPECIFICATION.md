@@ -78,4 +78,4 @@ G3 is closed.
 ## References
 
 - Master gap plan: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+- Evidence: [`docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)

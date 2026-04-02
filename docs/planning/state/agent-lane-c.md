@@ -77,6 +77,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - `read-your-writes contract` is now unblocked by the accepted snapshot staleness caller surface.
 - `RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed `rebuildSnapshot` not-found maintenance boundary.
 - `RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.
+- `RC-C2` moved to in-progress with cycle-1 preflight evidence captured; completion still requires two additional consecutive PR cycles under the same protocol.
 
 ## Expected Outcome
 

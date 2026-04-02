@@ -9,6 +9,10 @@ param(
   [switch]$RunSliceChecks,
   [switch]$RunChecks,
   [string]$ChecksCommand = '',
+  [switch]$RunLaneCPreflight,
+  [switch]$PrintCiLogFirstTriage,
+  [string]$PreflightEvidenceFile = '',
+  [string]$PullRequest = '',
   [switch]$DeleteLocalSuperseded,
   [switch]$DeleteRemoteSuperseded,
   [switch]$Yes
@@ -463,6 +467,41 @@ if ($PrCheckSummary) {
 
 if ($LogFirstTriage) {
   Write-FirstRedTriage
+}
+
+if ($RunLaneCPreflight) {
+  Write-Host ''
+  Write-Host '=== Lane C preflight chain ==='
+  $preflightStart = Get-Date
+  $preflightRecord = [ordered]@{
+    timestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+    baseBranch = $BaseBranch
+    branch = $currentBranch
+    targetBranchesAnalyzed = @($report).Count
+    supersededCandidates = @($supersededBranches).Count
+    verifyPrepush = 'failed'
+    durationSeconds = 0
+  }
+
+  try {
+    Write-Host 'Running pnpm verify:prepush'
+    & pnpm verify:prepush
+    if ($LASTEXITCODE -ne 0) {
+      throw 'pnpm verify:prepush failed.'
+    }
+    $preflightRecord.verifyPrepush = 'passed'
+  } finally {
+    $preflightRecord.durationSeconds = [Math]::Round(((Get-Date) - $preflightStart).TotalSeconds, 1)
+    Write-Host "Lane C preflight summary: $($preflightRecord | ConvertTo-Json -Compress)"
+    if (-not [string]::IsNullOrWhiteSpace($PreflightEvidenceFile)) {
+      Append-JsonLine -Path $PreflightEvidenceFile -Payload $preflightRecord
+      Write-Host "Preflight evidence appended to: $PreflightEvidenceFile"
+    }
+  }
+}
+
+if ($PrintCiLogFirstTriage) {
+  Write-LaneCCiLogFirstTriage -Branch $currentBranch -PrNumber $PullRequest
 }
 
 Write-Host ''

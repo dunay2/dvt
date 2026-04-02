@@ -104,9 +104,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts),
   [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts)
 - Evidence:
-  [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md)
+  [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/critical/ED-20260304-temporal-lookup-run-ref.md)
   and
-  [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md)
+  [ED-20260308 - Temporal adapter operational close-out](../../evidence/critical/ED-20260308-temporal-operational-close-out.md)
 - Verification:
   `pnpm test:adapter-temporal`
   and
@@ -146,7 +146,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/engine/test/workers/IntentReconcilerWorker.test.ts](../../../packages/@dvt/engine/test/workers/IntentReconcilerWorker.test.ts)
 - Evidence:
-  [ED-20260304 - G3 intent store Postgres reconciler](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+  [ED-20260304 - G3 intent store Postgres reconciler](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)
 - Verification:
   `pnpm test:adapter-postgres`
   and
@@ -240,9 +240,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Evidence:
-  [ED-20260316 - G7 provider run-id reconciliation](../../evidence/ED-20260316-g7-provider-ref-reconciliation.md)
+  [ED-20260316 - G7 provider run-id reconciliation](../../evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md)
   and
-  [ED-20260316 - G7 closeout](../../evidence/ED-20260316-g7-closeout.md)
+  [ED-20260316 - G7 closeout](../../evidence/critical/ED-20260316-g7-closeout.md)
 - Verification:
   `pnpm --filter @dvt/contracts build`
   and
@@ -277,7 +277,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts](../../../packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts),
   [packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts](../../../packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts)
 - Evidence:
-  [ED-20260304 - compiledCodeRef ownership](../../evidence/ED-20260304-compiledcoderef-ownership.md)
+  [ED-20260304 - compiledCodeRef ownership](../../evidence/critical/ED-20260304-compiledcoderef-ownership.md)
 - Verification:
   `pnpm --filter @dvt/contracts test`
   and
@@ -318,7 +318,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/planner/test/unit/input-envelope-validator.test.ts](../../../packages/@dvt/planner/test/unit/input-envelope-validator.test.ts),
   [packages/@dvt/planner/test/unit/manifest-mvp.test.ts](../../../packages/@dvt/planner/test/unit/manifest-mvp.test.ts)
 - Evidence:
-  [ED-20260320 - Planner R2 typed graph-source boundary](../../evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md)
+  [ED-20260320 - Planner R2 typed graph-source boundary](../../evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md)
 - Verification:
   `pnpm --filter @dvt/contracts build`
   and
@@ -342,7 +342,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - G9 status: **Closed 2026-03-14**
 - Evidence:
-  [ED-20260314 - G9 Step Type Registry Closeout](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
+  [ED-20260314 - G9 Step Type Registry Closeout](../../evidence/critical/ED-20260314-g9-step-type-registry-closeout.md)
 - Primary code:
   [packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
   and
@@ -394,9 +394,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts](../../../packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts)
 - Evidence:
-  [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md)
+  [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/critical/ED-20260308-g6-us-g6-1-facet-contract-surface.md)
   and
-  [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
+  [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
 - Verification:
   `pnpm --filter @dvt/traceability-service test`
   and
@@ -443,7 +443,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts),
   [apps/api/test/integration/protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts)
 - Evidence:
-  [ED-20260320 - API runtime query integration](../../evidence/ED-20260320-api-runtime-query-integration.md)
+  [ED-20260320 - API runtime query integration](../../evidence/critical/ED-20260320-api-runtime-query-integration.md)
 - Risk:
   [R-20260308 API auth runtime integration coverage](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
 - Verification:
