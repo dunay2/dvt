@@ -188,6 +188,39 @@ describe('PostgresRunEventStore append invariants', () => {
     });
   });
 
+  it('throws typed stable error when payloadVersion is missing from the write envelope', async () => {
+    const { store, executor } = makeAppendStoreHarness();
+    const invalidSchemaEnvelope = {
+      ...makeEvent({ runId: TEST_RUN_ID, idempotencyKey: `${TEST_RUN_ID}:missing-version` }),
+    } as Record<string, unknown>;
+    delete invalidSchemaEnvelope['payloadVersion'];
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+        invalidSchemaEnvelope as unknown as EventInput,
+      ])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventSchemaError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_EVENT_SCHEMA,
+    });
+  });
+
+  it('throws typed stable error when runId is only whitespace', async () => {
+    const { store, executor } = makeAppendStoreHarness();
+    const invalidSchemaEnvelope = {
+      ...makeEvent({ runId: '   ', idempotencyKey: `${TEST_RUN_ID}:blank-run-id` }),
+    } as unknown as EventInput;
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [invalidSchemaEnvelope])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventSchemaError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_EVENT_SCHEMA,
+    });
+  });
+
   it('throws typed stable error when event runId mismatches target runId', async () => {
     const { store, executor } = makeAppendStoreHarness();
 

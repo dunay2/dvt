@@ -371,6 +371,29 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await expect(adapter.listEvents('t1', runId)).resolves.toHaveLength(1);
     }));
 
+  test('appendAndEnqueueTx: rejects envelopes that omit payloadVersion', () =>
+    withAdapter(async (adapter) => {
+      const runId = 'run-missing-payload-version';
+      await adapter.bootstrapRunTx(makeBootstrap(runId));
+      const invalidEnvelope = {
+        ...makeEvent({
+          runId,
+          eventType: 'RunStarted',
+          idempotencyKey: `${runId}:started`,
+        }),
+      } as Record<string, unknown>;
+      delete invalidEnvelope['payloadVersion'];
+
+      await expect(
+        adapter.appendAndEnqueueTx(rid(runId), [invalidEnvelope as unknown as EventInput])
+      ).rejects.toMatchObject({
+        name: 'InvalidRunEventSchemaError',
+        code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      });
+
+      await expect(adapter.listEvents('t1', runId)).resolves.toHaveLength(1);
+    }));
+
   test('appendAndEnqueueTx: does not consume runSeq slots for deduped entries within the same batch', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-idemp-batch'));

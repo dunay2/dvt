@@ -56,6 +56,12 @@ export const StepStatusSchema = z.enum(['PENDING', 'RUNNING', 'SUCCESS', 'FAILED
 export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL', 'RETRY_STEP', 'RETRY_RUN']);
 
 export const StepOutputStatusSchema = z.enum(['SUCCESS', 'FAILED', 'SKIPPED']);
+const NonBlankStringSchema = z
+  .string()
+  .min(1)
+  .refine((value) => value.trim().length > 0, {
+    message: 'String must contain at least one non-whitespace character',
+  });
 
 // ─── Core contract schemas ───────────────────────────────────────────────────
 
@@ -75,15 +81,15 @@ export const RunContextSchema = z
     tenantId: z.string().min(1),
     projectId: z.string().min(1),
     environmentId: z.string().min(1),
-    runId: z.string().min(1),
+    runId: NonBlankStringSchema,
     targetAdapter: ProviderSchema,
   })
   .strict();
 
 export const ResolvedRunContextSchema = RunContextSchema.extend({
   logicalAttemptId: z.number().int().positive(),
-  parentRunId: z.string().min(1).optional(),
-  originRunId: z.string().min(1).optional(),
+  parentRunId: NonBlankStringSchema.optional(),
+  originRunId: NonBlankStringSchema.optional(),
 }).strict();
 
 export const SignalRequestSchema = z.object({
@@ -95,7 +101,7 @@ export const SignalRequestSchema = z.object({
 });
 
 export const RunStatusSnapshotSchema = z.object({
-  runId: z.string().min(1),
+  runId: NonBlankStringSchema,
   status: RunStatusSchema,
   substatus: z
     .union([RunSubstatusSchema, z.string().regex(/^(temporal|conductor|mock)\/.+$/)])
@@ -113,7 +119,7 @@ const TemporalRunRefSchema = z.object({
   tenantId: z.string().min(1),
   namespace: z.string().min(1),
   workflowId: z.string().min(1),
-  runId: z.string().min(1),
+  runId: NonBlankStringSchema,
   taskQueue: z.string().optional(),
 });
 
@@ -121,7 +127,7 @@ const ConductorRunRefSchema = z.object({
   provider: z.literal('conductor'),
   tenantId: z.string().min(1),
   workflowId: z.string().min(1),
-  runId: z.string().min(1),
+  runId: NonBlankStringSchema,
   conductorUrl: z.string().min(1),
 });
 
@@ -129,7 +135,7 @@ const MockRunRefSchema = z.object({
   provider: z.literal('mock'),
   tenantId: z.string().min(1),
   workflowId: z.string().min(1),
-  runId: z.string().min(1),
+  runId: NonBlankStringSchema,
 });
 
 export const EngineRunRefSchema = z.discriminatedUnion('provider', [
@@ -204,7 +210,7 @@ const RunEventCommonSchema = z.object({
   eventId: z.string().min(1),
   eventType: z.string().min(1),
   emittedAt: z.string().min(1),
-  runId: z.string().min(1),
+  runId: NonBlankStringSchema,
   tenantId: z.string().min(1),
   projectId: z.string().min(1),
   environmentId: z.string().min(1),
@@ -366,7 +372,7 @@ export const StepSnapshotSchema = z.object({
 });
 
 export const RunSnapshotSchema = z.object({
-  runId: z.string().min(1),
+  runId: NonBlankStringSchema,
   status: z.string().min(1),
   lastEventSeq: z.number().int().nonnegative(),
   steps: z.array(StepSnapshotSchema),
