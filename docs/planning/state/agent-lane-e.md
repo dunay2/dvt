@@ -109,6 +109,11 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - [ ] `P0` `F-01` `queued` `M` `5pt` `0%`: clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
 - [x] `P0` `F-02` `done` `S` `3pt` `100%`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
 - [ ] `P0` `F-03` `in_progress` `M` `5pt` `35%`: wire real backend health state into the top bar and a global degraded/offline banner.
+- [ ] `P0` `F-03-A` `queued` `M` `3pt` `0%`: extract a dedicated shell-health presenter so Root consumes one explicit health view-model instead of recomputing and orchestrating policy inline.
+- [ ] `P0` `F-03-B` `queued` `M` `3pt` `0%`: normalize health retry cadence ownership so there is exactly one policy owner for polling, degraded/offline backoff, and manual retry reset.
+- [ ] `P0` `F-03-C` `queued` `M` `3pt` `0%`: add Root seam tests for pending, degraded, offline, recovery, and banner-topbar coherence.
+- [ ] `P1` `F-03-D` `queued` `S` `2pt` `0%`: contract shell status semantics to real observed signals and remove synthetic live-events truth leakage from health surfaces.
+- [ ] `P1` `F-03-E` `queued` `S` `2pt` `0%`: align active frontend status docs with shipped reality after F-03 hardening.
 - [ ] `P1` `F-04` `queued` `M` `5pt` `0%`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
 - [ ] `P1` `F-05` `blocked` `M` `5pt` `0%`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
 - [ ] `P1` `F-06` `blocked` `M` `5pt` `0%`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.

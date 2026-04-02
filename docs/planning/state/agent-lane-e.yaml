@@ -216,10 +216,108 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/closeouts/F-02-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
     status_reason: >-
-      TopAppBar and Admin now consume the real platform-health capability, but the persistent
-      degraded/offline banner and retry UX are still missing.
+      The shell now renders a real degraded/offline banner and consumes the platform-health
+      capability, but hard QA found pending-state truth drift, duplicated retry ownership, synthetic
+      live-event status leakage, and missing Root seam tests; F-03 remains in progress until the
+      shell-health presenter and cadence model are normalized.
     last_verified: '2026-03-31'
+  - task_id: F-03-A
+    priority: P0
+    status: queued
+    objective: >-
+      extract a dedicated shell-health presenter so Root consumes one explicit health view-model
+      instead of recomputing and orchestrating policy inline.
+    dependency: F-03
+    target: >-
+      Root no longer computes health state directly from query snapshot. A single shell-health
+      presenter exposes bootstrapping, ok/degraded/offline, detail, and banner visibility semantics.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-01` and `F03-HQA-05` to restore single-source shell
+      health ownership and reduce Root coupling.
+    last_verified: '2026-04-02'
+  - task_id: F-03-B
+    priority: P0
+    status: queued
+    objective: >-
+      normalize health retry cadence ownership so there is exactly one policy owner for polling,
+      degraded/offline backoff, and manual retry reset.
+    dependency: F-03-A
+    target: >-
+      Query refetch cadence and shell backoff are unified under one policy path with no duplicated
+      scheduler between query options and Root timers.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-02` to remove split retry logic and eliminate cadence
+      drift.
+    last_verified: '2026-04-02'
+  - task_id: F-03-C
+    priority: P0
+    status: queued
+    objective: >-
+      add Root seam tests for pending, degraded, offline, recovery, and banner-topbar coherence.
+    dependency: F-03-A
+    target: >-
+      A dedicated Root shell-health test suite guards bootstrapping semantics, retry behavior, and
+      consistency between top-bar and banner state.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-04`; current coverage stops below the critical shell
+      integration seam.
+    last_verified: '2026-04-02'
+  - task_id: F-03-D
+    priority: P1
+    status: queued
+    objective: >-
+      contract shell status semantics to real observed signals and remove synthetic live-events
+      truth leakage from health surfaces.
+    dependency: F-03-A
+    target: >-
+      Shell health surfaces expose only validated runtime truth. Any live-events signal shown in
+      TopBar/Admin is backed by a real observer or removed/deferred.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-03` to align with lane-E "no mock connectivity state in
+      shell" rule.
+    last_verified: '2026-04-02'
+  - task_id: F-03-E
+    priority: P1
+    status: queued
+    objective: >-
+      align active frontend status docs with shipped reality after F-03 hardening.
+    dependency: F-03-C
+    target: >-
+      Active status surfaces stop claiming no frontend tests and stop referencing superseded shell
+      health components as current truth.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/status/canonical-doc-code-matrix.md
+    status_reason: >-
+      Required by hard QA finding `F03-HQA-08` so planning/status surfaces remain trustworthy.
+    last_verified: '2026-04-02'
   - task_id: F-04
     priority: P1
     status: queued
