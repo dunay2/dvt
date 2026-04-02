@@ -1,4 +1,5 @@
 import { parseRunEventWrite } from '@dvt/contracts';
+import type { RunEventWriteSchemaT } from '@dvt/contracts';
 
 import { InvalidRunEventInputError, RunSequenceOverflowError } from '../contracts/errors.js';
 import type { RunEventInput, WorkflowSnapshot } from '../contracts/runEvents.js';
@@ -21,19 +22,7 @@ export function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnaps
 }
 
 export function assertRunEventInput(event: RunEventInput, index: number): void {
-  if (!event?.idempotencyKey) {
-    throw new InvalidRunEventInputError({
-      reason: 'missing_idempotency_key',
-      index,
-      runId: event?.runId,
-    });
-  }
-  if (!event?.runId) {
-    throw new InvalidRunEventInputError({ reason: 'missing_run_id', index });
-  }
-  if (event.runId.trim() === '') {
-    throw new InvalidRunEventInputError({ reason: 'empty_run_id', index, runId: event.runId });
-  }
+  const validated = parseRunEventEnvelope(event, index);
 
   const record = event as unknown as Record<string, unknown>;
   if (Object.hasOwn(record, 'runSeq')) {
@@ -47,17 +36,19 @@ export function assertRunEventInput(event: RunEventInput, index: number): void {
     throw new InvalidRunEventInputError({
       reason: 'persistedat_forbidden_in_write_input',
       index,
-      runId: event.runId,
+      runId: validated.runId,
     });
   }
+}
 
+function parseRunEventEnvelope(event: RunEventInput, index: number): RunEventWriteSchemaT {
   try {
-    parseRunEventWrite(event);
+    return parseRunEventWrite(event);
   } catch {
     throw new InvalidRunEventInputError({
       reason: 'schema_validation_failed',
       index,
-      runId: event.runId,
+      runId: event?.runId,
     });
   }
 }

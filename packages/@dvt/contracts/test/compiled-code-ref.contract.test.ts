@@ -106,6 +106,15 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     ).toThrow();
   });
 
+  it('rejects write envelopes that omit payloadVersion', () => {
+    const withoutPayloadVersion = {
+      ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
+    } as Record<string, unknown>;
+    delete withoutPayloadVersion['payloadVersion'];
+
+    expect(() => parseRunEventWrite(withoutPayloadVersion)).toThrow();
+  });
+
   it('rejects RunFailed payloads that do not expose a reason', () => {
     expect(() =>
       parseRunEventWrite({

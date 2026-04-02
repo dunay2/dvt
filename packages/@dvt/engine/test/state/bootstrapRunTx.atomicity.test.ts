@@ -39,6 +39,39 @@ function makeInvalidBootstrap(runId: string): RunBootstrapInput {
   };
 }
 
+function makeMissingPayloadVersionBootstrap(runId: string): RunBootstrapInput {
+  const invalidEvent = {
+    eventId: `${runId}:queued`,
+    eventType: 'RunQueued',
+    runId,
+    tenantId: 't1',
+    projectId: 'p1',
+    environmentId: 'dev',
+    planId: 'plan-minimal',
+    planVersion: '1.0',
+    logicalAttemptId: 1,
+    engineAttemptId: 1,
+    emittedAt: '2026-03-26T00:00:00.000Z',
+    idempotencyKey: `${runId}:queued`,
+  } as unknown as RunBootstrapInput['firstEvents'][number];
+
+  return {
+    metadata: {
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId,
+      planId: 'plan-minimal',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: `wf-${runId}`,
+      providerRunId: `pr-${runId}`,
+    },
+    firstEvents: [invalidEvent],
+  };
+}
+
 describe('bootstrapRunTx atomicity', () => {
   it('InMemoryTxStore does not persist metadata/events/snapshot when first event validation fails', async () => {
     const store = new InMemoryTxStore();
@@ -73,5 +106,30 @@ describe('bootstrapRunTx atomicity', () => {
     await expect(store.getRunMetadataByRunId('t1', runId)).resolves.toBeNull();
     await expect(store.listEvents('t1', runId)).resolves.toEqual([]);
     await expect(store.getSnapshot('t1', runId)).resolves.toBeNull();
+  });
+
+  it('rejects bootstrap events that omit payloadVersion before persisting any state', async () => {
+    const txStore = new InMemoryTxStore();
+    const runStateStore = new InMemoryRunStateStore();
+    const txRunId = 'run-missing-payload-version-tx';
+    const stateRunId = 'run-missing-payload-version-rs';
+
+    await expect(
+      txStore.bootstrapRunTx(makeMissingPayloadVersionBootstrap(txRunId))
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+    await expect(
+      runStateStore.bootstrapRunTx(makeMissingPayloadVersionBootstrap(stateRunId))
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+
+    await expect(txStore.getRunMetadataByRunId('t1', txRunId)).resolves.toBeNull();
+    await expect(txStore.listEvents('t1', txRunId)).resolves.toEqual([]);
+    await expect(runStateStore.getRunMetadataByRunId('t1', stateRunId)).resolves.toBeNull();
+    await expect(runStateStore.listEvents('t1', stateRunId)).resolves.toEqual([]);
   });
 });

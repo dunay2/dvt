@@ -1,0 +1,25 @@
+---
+id: R-20260402-S05-ENVELOPE-BOUNDARY-GATING
+title: Envelope boundary gating can drift if payloadVersion checks stay implicit
+status: Open
+date: 2026-04-02
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Medium
+context: >
+  S05 identified that run-event write boundaries must fail closed on the full envelope contract, not
+  only on per-event payload content. The schema already required payloadVersion, but part of the
+  engine write path still performed ad hoc checks before contract parsing and coverage did not
+  explicitly prove missing-payloadVersion rejection at both boundaries.
+risk: >
+  If future refactors keep payloadVersion gating implicit or only covered in one adapter,
+  unsupported or incomplete envelopes could reach write-path logic and reintroduce divergence
+  between contracts, engine memory stores, and Postgres persistence behavior.
+mitigations:
+  - parseRunEventWrite remains the canonical envelope gate in @dvt/contracts.
+  - Engine write policy now parses the envelope before write-specific field checks.
+  - Postgres append tests explicitly reject missing payloadVersion envelopes.
+  - Contract and engine tests now cover both unsupported and missing payloadVersion cases.
