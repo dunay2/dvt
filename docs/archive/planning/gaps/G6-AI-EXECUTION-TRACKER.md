@@ -166,7 +166,7 @@ Pre-implementation brief:
   - `packages/@dvt/traceability-service/package.json`
   - `docs/planning/gaps/GAP_EXECUTION_PLANS.md`
   - `docs/architecture/system-delivery-status.md`
-  - `docs/evidence/ED-20260312-g6-golden-schema-closeout.md` (new)
+  - `docs/evidence/critical/ED-20260312-g6-golden-schema-closeout.md` (new)
 
 ## Execution Log
 

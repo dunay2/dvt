@@ -19,6 +19,7 @@ Draft proposals and candidate changes. Non-normative.
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](../domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
+- [Evidence Information Architecture And Governance Plan](evidence-information-architecture-plan-20260402.md)
 - [Frontend Roadmap — Prototype To Operational UI](frontend-roadmap-20260219.md)
 - [G4-PR4: Admission Control Operability - Plan B](gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4: Admission Control Operability â€” Implementation Plan](gap4-backpressure-admission-pr4-plan-20260326.md)

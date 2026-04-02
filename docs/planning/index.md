@@ -50,6 +50,7 @@ Concept anchors for this page:
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
+- [Evidence Information Architecture And Governance Plan](proposals/evidence-information-architecture-plan-20260402.md)
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
 - [G4-PR4: Admission Control Operability - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4: Admission Control Operability â€” Implementation Plan](proposals/gap4-backpressure-admission-pr4-plan-20260326.md)
@@ -109,6 +110,8 @@ Concept anchors for this page:
 ## Status
 
 - [Canonical Doc Code Matrix](status/canonical-doc-code-matrix.md)
+- [Command Logging Pane 2026-04-02](status/20260402-command-logging-pane.md)
+- [Evidence Classification Inventory 20260402](status/evidence-classification-inventory-20260402.md)
 - [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)
 - [Generated Spec Traceability](status/generated-spec-traceability.md)

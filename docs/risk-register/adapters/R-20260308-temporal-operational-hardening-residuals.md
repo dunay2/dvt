@@ -51,7 +51,7 @@ operational telemetry during incidents.
 
 ## Evidence
 
-- `docs/evidence/ED-20260308-temporal-operational-close-out.md`
+- `docs/evidence/critical/ED-20260308-temporal-operational-close-out.md`
 - `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`
 - `packages/@dvt/adapter-temporal/src/TemporalClient.ts`
 - `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`

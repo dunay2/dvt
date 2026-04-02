@@ -11,7 +11,7 @@ planning_type: proposal
 Historical implemented proposal retained for reference. Active policy lives in
 [Package Module Build Policy v2](../../../planning/proposals/package-module-build-policy-v2-20260317.md),
 and closure evidence lives in
-[ED-20260319 - TS + ESM Monorepo Migration](../../../evidence/ED-20260319-ts-esm-monorepo-migration.md).
+[ED-20260319 - TS + ESM Monorepo Migration](../../../evidence/supporting/ED-20260319-ts-esm-monorepo-migration.md).
 
 ## Governing Sources
 

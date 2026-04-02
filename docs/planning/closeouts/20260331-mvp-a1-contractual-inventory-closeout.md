@@ -24,7 +24,7 @@ and synchronized the dependent MVP lane states.
 - added a code-grounded review at
   `docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md`
 - added accepted evidence at
-  `docs/evidence/ED-20260331-mvp-a1-backend-contractual-inventory.md`
+  `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`
 - updated `MVP-B1`, `MVP-C1`, and `MVP-D1` closure posture to reflect the now
   stable backend baseline
 - moved `MVP-E1` from `blocked` to `queued`

@@ -1,4 +1,4 @@
-﻿lane_id: A
+lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
@@ -64,7 +64,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md
       - docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md
-      - docs/evidence/ED-20260331-mvp-a1-backend-contractual-inventory.md
+      - docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason: >-
       The backend MVP route surface, activation boundary, authorization matrix, and input/scope
@@ -157,7 +157,7 @@ tasks:
     effort_points: 2
     progress_pct: 70
     evidence_refs:
-      - docs/evidence/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+      - docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
       - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
     status_reason: >-
       Phase 1 and 2 are delivered, but the original closure target still includes performance proof
@@ -177,7 +177,7 @@ tasks:
       The stale snapshot selector uses run_event_heads and avoids correlated MAX(run_seq) scans on
       the hot path.
     evidence_refs:
-      - docs/evidence/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+      - docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
     status_reason: Phase 1 is delivered and covered by the accepted evidence artifact.
     last_verified: '2026-03-31'
   - task_id: S19-F1-B
@@ -193,7 +193,7 @@ tasks:
       Projector runtime can claim queue-backed snapshot work and use polling only as bounded
       fallback coverage.
     evidence_refs:
-      - docs/evidence/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+      - docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
     status_reason: Phase 2 is delivered and covered by the accepted evidence artifact.
     last_verified: '2026-03-31'
   - task_id: S19-F1-C
@@ -366,8 +366,8 @@ tasks:
     effort_points: 2
     progress_pct: 36
     evidence_refs:
-      - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
-      - docs/evidence/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
+      - docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+      - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
       - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
     status_reason: >-
       WS5 fixture modularization is now closed across the helper-heavy engine suites; the next
@@ -387,7 +387,7 @@ tasks:
       Initial WS5 helper extraction is closed without semantic drift in WorkflowEngine intent-log
       coverage.
     evidence_refs:
-      - docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+      - docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
     status_reason: Accepted evidence covers the first WS5 fixture-modularization slice.
     last_verified: '2026-03-31'
   - task_id: DHM-WS5-B
@@ -401,7 +401,7 @@ tasks:
     dependency: DHM-WS5-A
     target: Remaining WS5 tests use shared builders and stop duplicating inline engine construction.
     evidence_refs:
-      - docs/evidence/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
+      - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
       - docs/planning/closeouts/20260331-dhm-ws5-b-engine-test-fixture-modularization-closeout.md
       - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
     status_reason: >-
@@ -491,7 +491,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260328-planner-version-reset-signal-policy-wiring.md
+      - docs/evidence/critical/ED-20260328-planner-version-reset-signal-policy-wiring.md
     status_reason: Accepted evidence proves the canonical planVersion reset and its runtime wiring.
     last_verified: '2026-03-31'
 dependency_notes:

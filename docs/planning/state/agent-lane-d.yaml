@@ -79,7 +79,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260329-run-event-retention-closeout.md
-      - docs/evidence/ED-20260330-retention-archive-object-store-hardening.md
+      - docs/evidence/critical/ED-20260330-retention-archive-object-store-hardening.md
       - docs/planning/reviews/20260329-run-event-retention-ttl-kickoff-review.md
     status_reason:
       Retention runtime wiring and hardening are closed by closeout plus accepted evidence.

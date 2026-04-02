@@ -117,5 +117,5 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 ## References
 
-- Evidence draft: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
+- Evidence draft: [`docs/evidence/critical/ED-20260304-compiledcoderef-ownership.md`](../../evidence/critical/ED-20260304-compiledcoderef-ownership.md)
 - ADR detail: [`docs/adr/ADR-0032-compiledcoderef-ownership.md`](../../adr/ADR-0032-compiledcoderef-ownership.md)

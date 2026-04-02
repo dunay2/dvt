@@ -98,7 +98,7 @@ drift between the implementation core and the published entry surface.
 - [docs/planning/status/canonical-doc-code-matrix.md](../status/canonical-doc-code-matrix.md):
   added a topic row and detail section for the planner typed graph-source
   boundary
-- [docs/evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md](../../evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md):
+- [docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md](../../evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md):
   added slice evidence
 - [docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md](20260320-planner-r2-typed-graph-source-boundary-closeout.md):
   added think-first analysis and validation record

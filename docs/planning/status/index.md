@@ -12,6 +12,8 @@ Current status snapshots and implementation tracking.
 ## Index
 
 - [Canonical Doc Code Matrix](canonical-doc-code-matrix.md)
+- [Command Logging Pane 2026-04-02](20260402-command-logging-pane.md)
+- [Evidence Classification Inventory 20260402](evidence-classification-inventory-20260402.md)
 - [Generated Capability Coverage](generated-capability-coverage.md)
 - [Generated Code State](generated-code-state.md)
 - [Generated Spec Traceability](generated-spec-traceability.md)

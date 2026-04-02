@@ -61,7 +61,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260329-mvp-c1-backend-control-plane-runbook.md
+      - docs/evidence/supporting/ED-20260329-mvp-c1-backend-control-plane-runbook.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason:
@@ -185,7 +185,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260329-lane-c-rbac-operation-level-closeout.md
+      - docs/evidence/critical/ED-20260329-lane-c-rbac-operation-level-closeout.md
     status_reason: Accepted evidence closes the operation-level authorization boundary.
     last_verified: '2026-03-31'
   - task_id: snapshot staleness in API
@@ -198,7 +198,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260330-snapshot-staleness-api-surface.md
+      - docs/evidence/critical/ED-20260330-snapshot-staleness-api-surface.md
     status_reason:
       Accepted evidence closes the caller-visible staleness surface and fallback telemetry.
     last_verified: '2026-03-31'
@@ -258,7 +258,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md
       - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
-      - docs/evidence/ED-20260331-rc-c1-boundary-legacy-hardening.md
+      - docs/evidence/critical/ED-20260331-rc-c1-boundary-legacy-hardening.md
       - docs/risk-register/quality/R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml
     status_reason: >-
       The HTTP error boundary is normalized in apps/api and the remaining `rebuildSnapshot`/parser
@@ -281,7 +281,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260331-s1-manifestref-production-path-closeout.md
-      - docs/evidence/ED-20260331-manifestref-production-path.md
+      - docs/evidence/critical/ED-20260331-manifestref-production-path.md
       - docs/risk-register/quality/R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml
       - apps/api/test/integration/plannerEngineContract.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts

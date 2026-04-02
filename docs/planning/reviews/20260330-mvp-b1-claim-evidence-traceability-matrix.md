@@ -63,7 +63,7 @@ pnpm verify:prepush
 - `MVP-A1` is now locked by the reviewed proposal
   `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`
   plus accepted evidence
-  `docs/evidence/ED-20260331-mvp-a1-backend-contractual-inventory.md`.
+  `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`.
 - This matrix now inherits the stable `MVP-A1` claim boundary and no longer
   carries provisional closure language.
 - If `MVP-A1` changes claim boundaries in the future, this matrix must be

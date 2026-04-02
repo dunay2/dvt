@@ -57,4 +57,4 @@ the repository can drift back into one of these states:
 - `packages/@dvt/contracts/test/validation.test.ts`
 - `packages/@dvt/planner/src/application/PlannerFacade.ts`
 - `packages/@dvt/planner/test/unit/planner-facade.test.ts`
-- `docs/evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md`
+- `docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md`

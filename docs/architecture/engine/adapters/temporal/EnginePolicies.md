@@ -201,7 +201,7 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Runtime closure verification command:
   `pnpm test:adapter-temporal` and `pnpm test:adapter-temporal:integration`
 - Evidence:
-  [ED-20260308 - Temporal adapter operational close-out](../../../../evidence/ED-20260308-temporal-operational-close-out.md)
+  [ED-20260308 - Temporal adapter operational close-out](../../../../evidence/critical/ED-20260308-temporal-operational-close-out.md)
 - Residual risk:
   [R-20260308 - Temporal runtime hardening residuals](../../../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
 - Test capability guide:

@@ -35,4 +35,4 @@ observe contradictory plan version truth.
 ## Evidence
 
 - `packages/@dvt/planner/docs/contracts/PlanCore.schema.json`
-- `docs/evidence/ED-20260328-planner-version-reset-signal-policy-wiring.md`
+- `docs/evidence/critical/ED-20260328-planner-version-reset-signal-policy-wiring.md`

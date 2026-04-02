@@ -75,7 +75,7 @@ protected runtime endpoint.
 - `apps/api/test/entrypoints/http/signalRunRoute.test.ts`
 - `apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts`
 - `apps/api/test/integration/protectedRuntime.integration.test.ts`
-- `docs/evidence/ED-20260320-api-runtime-query-integration.md`
+- `docs/evidence/critical/ED-20260320-api-runtime-query-integration.md`
 
 ## Closure
 
