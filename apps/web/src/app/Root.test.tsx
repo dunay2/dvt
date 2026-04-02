@@ -124,9 +124,12 @@ describe('RootShell platform health UX', () => {
     try {
       const view = within(mounted.container);
 
-      await waitForReactQuery(() => mounted.container.textContent?.includes('Backend degraded') === true, {
-        description: 'degraded shell banner',
-      });
+      await waitForReactQuery(
+        () => mounted.container.textContent?.includes('Backend degraded') === true,
+        {
+          description: 'degraded shell banner',
+        }
+      );
 
       expect(view.getByText('Intent reconciler degraded: runtime_unavailable.')).toBeTruthy();
       expect(view.getByRole('button', { name: /retry now/i })).toBeTruthy();
@@ -143,7 +146,8 @@ describe('RootShell platform health UX', () => {
 
     try {
       await waitForReactQuery(
-        () => mounted.queryClient.getQueryState(['platform-health', 'snapshot'])?.status === 'success',
+        () =>
+          mounted.queryClient.getQueryState(['platform-health', 'snapshot'])?.status === 'success',
         {
           description: 'healthy platform health query',
         }
@@ -181,27 +185,33 @@ describe('RootShell platform health UX', () => {
     try {
       const view = within(mounted.container);
 
-      await waitForReactQuery(() => mounted.container.textContent?.includes('Auto-refresh in 15s.') === true, {
-        description: 'initial auto-refresh countdown',
-        intervalMs: 1,
-        timeoutMs: 500,
-        tick: async () => {
-          await vi.advanceTimersByTimeAsync(1);
-        },
-      });
+      await waitForReactQuery(
+        () => mounted.container.textContent?.includes('Auto-refresh in 15s.') === true,
+        {
+          description: 'initial auto-refresh countdown',
+          intervalMs: 1,
+          timeoutMs: 500,
+          tick: async () => {
+            await vi.advanceTimersByTimeAsync(1);
+          },
+        }
+      );
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(5_000);
       });
 
-      await waitForReactQuery(() => mounted.container.textContent?.includes('Auto-refresh in 10s.') === true, {
-        description: 'updated auto-refresh countdown',
-        intervalMs: 1,
-        timeoutMs: 500,
-        tick: async () => {
-          await vi.advanceTimersByTimeAsync(1);
-        },
-      });
+      await waitForReactQuery(
+        () => mounted.container.textContent?.includes('Auto-refresh in 10s.') === true,
+        {
+          description: 'updated auto-refresh countdown',
+          intervalMs: 1,
+          timeoutMs: 500,
+          tick: async () => {
+            await vi.advanceTimersByTimeAsync(1);
+          },
+        }
+      );
 
       expect(view.getByText('Auto-refresh in 10s.')).toBeTruthy();
     } finally {

@@ -59,7 +59,10 @@ export default function ShellHealthBanner({
         : `Auto-refresh in ${formatRemainingSeconds(nextRefreshInMs)}.`;
 
   return (
-    <div className="border-b border-slate-800 bg-slate-950/95 px-4 py-3" data-testid="shell-health-banner">
+    <div
+      className="border-b border-slate-800 bg-slate-950/95 px-4 py-3"
+      data-testid="shell-health-banner"
+    >
       <Alert
         className={
           isOffline
@@ -71,7 +74,12 @@ export default function ShellHealthBanner({
         {isOffline ? <WifiOff /> : <AlertTriangle />}
         <AlertTitle>{isOffline ? 'Backend offline' : 'Backend degraded'}</AlertTitle>
         <AlertDescription>
-          <p>{detailMessage ?? (isOffline ? 'Unable to reach the platform health endpoints.' : 'The platform health snapshot reports degraded service.')}</p>
+          <p>
+            {detailMessage ??
+              (isOffline
+                ? 'Unable to reach the platform health endpoints.'
+                : 'The platform health snapshot reports degraded service.')}
+          </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <span className="text-xs font-medium uppercase tracking-wide">{countdownMessage}</span>
             <Button
