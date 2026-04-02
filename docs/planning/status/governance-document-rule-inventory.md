@@ -2,7 +2,7 @@
 title: Governance Document And Rule Inventory
 status: Review
 owner: Architecture / Docs
-last_reviewed: 2026-03-10
+last_reviewed: 2026-04-02
 planning_type: status
 ---
 
@@ -19,6 +19,30 @@ It answers four questions:
 3. Which files enforce those rules automatically.
 4. Which surfaces are informative, status-oriented, or historical rather than
    normative.
+
+## Quick Start / Startup Card
+
+Use this card immediately after opening the inventory. The point is to classify
+the task and route yourself to the right canonical surfaces before reading the
+full catalog.
+
+| Task type       | Open next                                                                          | Deep read required when                                                                 | Minimum validation baseline                                     |
+| --------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `code`          | `docs/guides/ai-work-protocol.md`, relevant ADR/contract, current status doc       | public boundary, cross-package, contract, or CI impact                                  | touched-package validation + `pnpm verify:prepush`              |
+| `docs`          | `docs/index.md` or relevant docs entrypoint, `docs/guides/ai-work-protocol.md`     | governance, roadmap classification, generated-doc rules, or canonical placement changes | `pnpm docs:sync` when structure changes + `pnpm verify:prepush` |
+| `planning`      | `docs/planning/state/planning-control-tower.md`, `docs/guides/ai-work-protocol.md` | sequencing, blockers, lane ownership, or canonical planning posture changes             | `pnpm docs:workboard:generate` + `pnpm verify:prepush`          |
+| `contracts`     | `docs/contracts/index.md`, relevant ADRs, versioning policy                        | always                                                                                  | contract/package validation + `pnpm verify:prepush`             |
+| `ci`            | `package.json`, relevant workflows, testing/CI capabilities                        | always                                                                                  | relevant CI/tool validation + `pnpm verify:prepush`             |
+| `cross-cutting` | combine the route surfaces above                                                   | always                                                                                  | per-slice validation + `pnpm verify:prepush`                    |
+
+### Startup rule in practice
+
+1. Open this inventory.
+2. Consume the startup card and classify the task.
+3. Open the route-specific canonical surfaces.
+4. Read the deep inventory only if the route or task risk requires it.
+5. Close the slice with the route-specific validation baseline plus
+   `pnpm verify:prepush`.
 
 ## Scope And Reading Rule
 

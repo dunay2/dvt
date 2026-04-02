@@ -54,9 +54,11 @@ Concept anchors for this page:
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
 - [G4-PR4: Admission Control Operability - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4: Admission Control Operability â€” Implementation Plan](proposals/gap4-backpressure-admission-pr4-plan-20260326.md)
+- [Governance Startup Card Router Plan](proposals/governance-startup-card-router-plan-20260402.md)
 - [MVP Backend Operability Baseline Roadmap](proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [MVP-A1 Backend Contractual Inventory](proposals/mvp-a1-backend-contractual-inventory-20260329.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)
+- [RC-C2 Shared Preflight And CI Log-First Triage Plan](proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
 - [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
 
 ## Reviews
@@ -101,6 +103,7 @@ Concept anchors for this page:
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](reviews/20260315-postgres-start-run-intent-store-qa-review.md)
 - [RC-A2 Architectural Review Hard Mode](reviews/20260322-rc-a2-architectural-review-hard-mode.md)
 - [RC-A2 QA Hard Review](reviews/20260322-rc-a2-qa-hard-review.md)
+- [RC-C2 Operational Friction Intake Review](reviews/20260402-rc-c2-operational-friction-intake-review.md)
 - [Reconciler Runtime SOLID QA Review](reviews/20260326-reconciler-runtime-solid-qa-review.md)
 - [Review Naming Policy](reviews/review-naming-policy.md)
 - [Riesgos y mitigaciones - Retención y Archivado de Eventos](reviews/20260329-run-event-retention-risks-mitigations.md)
@@ -109,6 +112,7 @@ Concept anchors for this page:
 
 ## Status
 
+- [AI Efficiency Adoption Status](status/ai-efficiency-adoption-status.md)
 - [Canonical Doc Code Matrix](status/canonical-doc-code-matrix.md)
 - [Command Logging Pane 2026-04-02](status/20260402-command-logging-pane.md)
 - [Evidence Classification Inventory 20260402](status/evidence-classification-inventory-20260402.md)

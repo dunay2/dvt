@@ -2,7 +2,7 @@
 title: Agent Lane C - Runtime Safety And Admission
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-01
 planning_type: status
 ---
 
@@ -43,9 +43,9 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - Verified on: `2026-04-01`
 - Total tasks: `16`
 - Total effort points: `59`
-- Completed weighted points: `44.5`
-- Lane progress: `75%`
-- Notes: Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while parent umbrella tasks with subtasks carry coordination-only effort.
+- Completed weighted points: `45.5`
+- Lane progress: `77%`
+- Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
 
@@ -64,7 +64,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [x] `P2` `granular RBAC` `done` `M` `5pt` `100%`: split CANCEL and PAUSE privileges.
 - [x] `P1` `RC-C1` `done` `L` `8pt` `100%`: normalize caller-visible HTTP error contracts across apps/api and separate semantic validation outcomes from transport serialization, including typed maintenance-boundary not-found handling and removal of remaining parser legacy.
 - [x] `P1` `manifestRef production path` `done` `M` `5pt` `100%`: restore manifestRef as the real protected-runtime planner path by composing a concrete artifact resolver at the API boundary and mapping predictable resolution failures to the existing plan_rejected result.
-- [ ] `P2` `RC-C2` `in_progress` `S` `3pt` `33%`: institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure log-first triage) and track measurable round reduction.
+- [ ] `P2` `RC-C2` `review` `S` `3pt` `67%`: institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI efficiency measurement for Lane C before scaling the workflow repo-wide.
 - [x] `P1` `RC-E1` `done` `S` `3pt` `100%`: harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and dangerous schemes (data:, javascript:, mailto:).
 - [x] `P1` `RC-E2` `done` `S` `2pt` `100%`: move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent plan-URI information leakage to unauthorized callers.
 

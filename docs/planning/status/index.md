@@ -11,6 +11,7 @@ Current status snapshots and implementation tracking.
 
 ## Index
 
+- [AI Efficiency Adoption Status](ai-efficiency-adoption-status.md)
 - [Canonical Doc Code Matrix](canonical-doc-code-matrix.md)
 - [Command Logging Pane 2026-04-02](20260402-command-logging-pane.md)
 - [Evidence Classification Inventory 20260402](evidence-classification-inventory-20260402.md)

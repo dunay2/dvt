@@ -15,6 +15,18 @@ export const START_RUN_TARGET_ADAPTER = {
 export type StartRunTargetAdapter =
   (typeof START_RUN_TARGET_ADAPTER)[keyof typeof START_RUN_TARGET_ADAPTER];
 
+export const SUPPORTED_START_RUN_TARGET_ADAPTERS: readonly StartRunTargetAdapter[] = [
+  START_RUN_TARGET_ADAPTER.temporal,
+  START_RUN_TARGET_ADAPTER.mock,
+] as const;
+
+export function isStartRunTargetAdapter(value: unknown): value is StartRunTargetAdapter {
+  return (
+    typeof value === 'string' &&
+    (SUPPORTED_START_RUN_TARGET_ADAPTERS as readonly string[]).includes(value)
+  );
+}
+
 export interface StartRunPlanRef {
   readonly uri: string;
   readonly sha256: string;

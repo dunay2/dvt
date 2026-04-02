@@ -2,14 +2,18 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-03-31'
-goal: Close the state-store boundary and the smallest contract cleanup slice around it.
+last_reviewed: '2026-04-02'
+goal:
+  Close the state-store boundary, retire contract ownership drift, and keep governance startup
+  executable.
 expected_outcome:
   - state-store ownership is explicit
+  - contract ownership routing is explicit
   - composition-root wiring names exact roles
   - contract drift is reduced
   - optional maintenance ownership is explicit
   - migration recovery is defined
+  - governance startup routing is explicit
 header_markdown: >
   Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y
   consistencia de interfaces.
@@ -314,6 +318,118 @@ tasks:
       The duplicate declaration is no longer present in the provider contract path and the review
       records the slice as closed.
     last_verified: '2026-03-31'
+  - task_id: RC-G1
+    priority: P1
+    status: in_progress
+    objective: retire contract ownership drift across `engine`, `planner`, and `shared`.
+    dependency: none
+    target: >-
+      Ownership matrix is frozen in docs, the migration is sequenced as `RC-G1-A..D`, and the
+      workboard reflects the active tracker instead of an orphan review note.
+    complexity: L
+    effort_points: 2
+    progress_pct: 25
+    evidence_refs:
+      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
+      - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: >-
+      `RC-G1` is now registered in Lane A and the ownership matrix freeze is delivered, but the
+      engine, delivery/traceability/artifacts, and planner cleanup slices remain queued.
+    last_verified: '2026-04-02'
+  - task_id: RC-G1-A
+    parent_task: RC-G1
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective: freeze the ownership matrix and the `stay shared` versus `move to owner` taxonomy.
+    dependency: none
+    target: >-
+      Every contract family affected by the review is classified as either `stay shared` or `move to
+      owner`, with no intermediate category.
+    evidence_refs:
+      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
+      - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
+    status_reason: >-
+      The active ownership proposal now freezes the family taxonomy and maps it to the `RC-G1`
+      execution slices.
+    last_verified: '2026-04-02'
+  - task_id: RC-G1-B
+    parent_task: RC-G1
+    priority: P1
+    status: queued
+    complexity: L
+    effort_points: 5
+    progress_pct: 0
+    objective: move non-shared engine ports out of `@dvt/contracts` and into `@dvt/engine`.
+    dependency: RC-G1-A
+    target: >-
+      Engine-owned behavioral ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
+      and any compatibility alias is explicit, temporary, and validated.
+    evidence_refs:
+      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: Engine ownership migration is now tracked and ready for execution.
+    last_verified: '2026-04-02'
+  - task_id: RC-G1-C
+    parent_task: RC-G1
+    priority: P1
+    status: queued
+    complexity: L
+    effort_points: 5
+    progress_pct: 0
+    objective: move non-shared delivery, traceability, and artifacts ports to their owner packages.
+    dependency: RC-G1-B
+    target: >-
+      Delivery, traceability, and artifacts ownership matches the bounded context and
+      `@dvt/contracts` retains only shared transport shapes for those areas.
+    evidence_refs:
+      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: Delivery/traceability/artifacts ownership migration is queued behind engine.
+    last_verified: '2026-04-02'
+  - task_id: RC-G1-D
+    parent_task: RC-G1
+    priority: P1
+    status: queued
+    complexity: L
+    effort_points: 5
+    progress_pct: 0
+    objective:
+      move planner-private ports to `@dvt/planner` and close the final shared-kernel cleanup.
+    dependency: RC-G1-C
+    target: >-
+      Planner-private ports leave `@dvt/contracts`, ADR-0035 public planner contracts stay shared,
+      and final import guards prevent regression.
+    evidence_refs:
+      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
+    last_verified: '2026-04-02'
+  - task_id: GOV-S1
+    priority: P2
+    status: done
+    objective:
+      add a quick-start governance router so startup no longer requires a deep inventory read.
+    dependency: none
+    target: >-
+      The governance inventory opens with a startup card and the AI work protocol points
+      contributors to that router before deeper reference reading.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/governance-startup-card-router-plan-20260402.md
+      - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
+      - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
+    status_reason: >-
+      The startup card/router is now implemented in the canonical governance inventory and aligned
+      with the AI work protocol.
+    last_verified: '2026-04-02'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -364,15 +480,14 @@ tasks:
       WS1/WS3/WS4/WS2/WS6.
     complexity: L
     effort_points: 2
-    progress_pct: 36
+    progress_pct: 52
     evidence_refs:
       - docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
       - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
       - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
     status_reason: >-
-      WS5 fixture modularization is now closed across the helper-heavy engine suites; the next
-      modularization workstream is WS1.
-    last_verified: '2026-03-31'
+      WS5 and WS1 are now closed; the next modularization workstream in sequence is WS3.
+    last_verified: '2026-04-01'
   - task_id: DHM-WS5-A
     parent_task: DHM
     priority: P1
@@ -411,17 +526,23 @@ tasks:
   - task_id: DHM-WS1
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS1 DDD modularization slice after WS5 fixture extraction is complete.
     dependency: DHM-WS5-B
     target: WS1 module boundaries are explicit and independently testable.
     evidence_refs:
       - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced after WS5 completion; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/planning/reviews/20260323-start-run-route-parser-qa-review.md
+      - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
+      - docs/planning/closeouts/20260401-dhm-ws1-start-run-boundary-residual-hardening-closeout.md
+    status_reason: >-
+      The residual WS1 hardening slice is closed: parser-root decomposition completed, targetAdapter
+      ownership moved to command-contract helper, and helper-level seams are covered by focused
+      tests.
+    last_verified: '2026-04-01'
   - task_id: DHM-WS3
     parent_task: DHM
     priority: P1
@@ -517,16 +638,21 @@ dependency_notes:
     `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization
     work is schedulable.
   - >-
-    `DHM-WS5-B` is now closed; `DHM-WS1` is the next modularization slice in sequence.
+    `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in
+    sequence.
+  - >-
+    `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and
+    `RC-G1-B/C/D` define the remaining execution sequence.
+  - '`GOV-S1` is closed with the startup card/router now published in the governance inventory.'
   - '`plan-version-reset` is closed and remains independent.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
-  total_tasks: 26
-  total_effort_points: 102
-  completed_weighted_points: 55.66
-  lane_progress_pct: 55
+  verified_on: '2026-04-02'
+  total_tasks: 32
+  total_effort_points: 124
+  completed_weighted_points: 61.16
+  lane_progress_pct: 49
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

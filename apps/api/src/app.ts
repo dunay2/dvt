@@ -198,7 +198,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
-      async (request, reply) => startRunRoute(request as never, reply, protectedModule.facade)
+      async (request, reply) =>
+        startRunRoute(
+          request as never,
+          reply,
+          protectedModule.facade,
+          protectedModule.startRunTargetAdapterRegistry
+        )
     );
 
     app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>

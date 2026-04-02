@@ -94,6 +94,10 @@ Before rerunning failed PR checks, verify PR metadata first. The workflow
 [`pr-quality-gate.yml`](../.github/workflows/pr-quality-gate.yml) fails if these
 rules are not met:
 
+Canonical operator workflow:
+
+- [PR Preflight And CI Triage](guides/pr-preflight-and-ci-triage.md)
+
 1. **PR title must use Conventional Commits format**
    - Required shape: `<type>: <Subject>`
    - Allowed types are defined in
@@ -110,6 +114,13 @@ rules are not met:
    - Fix title/body with `gh pr edit`.
    - Re-run checks only after metadata is corrected.
    - Confirm state with `gh pr checks` until all required checks are green.
+
+For local execution, the default path is:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight -SliceCommand "<slice command>"
+powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -LogFirstTriage
+```
 
 **Tool**: `markdownlint-cli2`  
 **Workflow**: `.github/workflows/markdown_lint.yml`  
