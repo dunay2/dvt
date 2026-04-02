@@ -10,10 +10,13 @@
  */
 import { z, ZodError, type ZodType } from 'zod';
 
+import type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
+import type { PlanExecutabilityRecord } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 import {
   PlannerPolicyClassSetSchema,
   type PlannerPolicyClassSetSchemaT,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+import type { PlanRecord } from './contracts/planner/PlanRecord.v1.js';
 import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
@@ -31,6 +34,9 @@ import {
   type PlannerGraphSourceV1SchemaT,
   PlannerBuildResultV2Schema,
   type PlannerBuildResultV2SchemaT,
+  PlanAdmissionLinkSchema,
+  PlanExecutabilityRecordSchema,
+  PlanRecordSchema,
   PlannerEnvironmentContextSchema,
   type PlannerEnvironmentContextSchemaT,
   PlannerInputEnvelopeV2Schema,
@@ -245,4 +251,16 @@ export function parsePlannerInputEnvelopeV2(input: unknown): PlannerInputEnvelop
 
 export function parsePlannerBuildResultV2(input: unknown): PlannerBuildResultV2SchemaT {
   return parseWithSchema(PlannerBuildResultV2Schema, input);
+}
+
+export function parsePlanRecord(input: unknown): PlanRecord {
+  return parseWithSchema(PlanRecordSchema, input);
+}
+
+export function parsePlanExecutabilityRecord(input: unknown): PlanExecutabilityRecord {
+  return parseWithSchema(PlanExecutabilityRecordSchema, input);
+}
+
+export function parsePlanAdmissionLink(input: unknown): PlanAdmissionLink {
+  return parseWithSchema(PlanAdmissionLinkSchema, input);
 }

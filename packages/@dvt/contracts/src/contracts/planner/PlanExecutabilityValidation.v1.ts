@@ -41,12 +41,15 @@ import type { PlanRefSchemaT } from '../../schemas.js';
  * - `INVALID_STEP_KIND` — a step kind in the plan is not registered or executable.
  * - `REJECTED` — catch-all for adapter-specific hard rejections not covered above.
  */
-export type ExecutabilityRejectionCode =
-  | 'MISSING_CAPABILITY'
-  | 'POLICY_UNSUPPORTED'
-  | 'INVALID_STEP_KIND'
-  | 'UNSUPPORTED_PLAN_VERSION'
-  | 'REJECTED';
+export const EXECUTABILITY_REJECTION_CODES = [
+  'MISSING_CAPABILITY',
+  'POLICY_UNSUPPORTED',
+  'INVALID_STEP_KIND',
+  'UNSUPPORTED_PLAN_VERSION',
+  'REJECTED',
+] as const;
+
+export type ExecutabilityRejectionCode = (typeof EXECUTABILITY_REJECTION_CODES)[number];
 
 // ── Result type ────────────────────────────────────────────────────────────────
 

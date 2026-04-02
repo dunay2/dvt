@@ -1,6 +1,6 @@
 ---
 title: ADR-0043 - Plan record, plan store, and artifacts ownership
-status: Proposed
+status: Accepted
 owner: Architecture / Planner / Artifacts / API / Contracts
 last_reviewed: 2026-04-02
 ---
@@ -9,7 +9,7 @@ last_reviewed: 2026-04-02
 
 ## Status
 
-Proposed.
+Accepted.
 
 ## Context
 

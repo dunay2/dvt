@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-03-31'
+last_reviewed: '2026-04-02'
 goal: >-
   Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
   contracts.
@@ -211,76 +211,88 @@ tasks:
       TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
       offline states with retry and backoff. No mock connectivity state anywhere in the shell.
     complexity: M
-    effort_points: 5
-    progress_pct: 35
+    effort_points: 2
+    progress_pct: 45
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/closeouts/F-02-closeout.md
+      - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
       - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
     status_reason: >-
-      The shell now renders a real degraded/offline banner and consumes the platform-health
-      capability, but hard QA found pending-state truth drift, duplicated retry ownership, synthetic
-      live-event status leakage, and missing Root seam tests; F-03 remains in progress until the
-      shell-health presenter and cadence model are normalized.
-    last_verified: '2026-03-31'
+      The visible banner/top-bar slice now exists, but hard QA on 2026-04-02 confirmed unresolved
+      acceptance gaps in retry/backoff, pre-settle shell truth, capability-boundary projection, and
+      status-surface alignment.
+    last_verified: '2026-04-02'
   - task_id: F-03-A
+    parent_task: F-03
     priority: P0
     status: queued
     objective: >-
-      extract a dedicated shell-health presenter so Root consumes one explicit health view-model
-      instead of recomputing and orchestrating policy inline.
-    dependency: F-03
+      move shell health projection back behind the `platform-health` capability boundary and expose
+      one derived shell model for the shell surface.
+    dependency: F-02
     target: >-
-      Root no longer computes health state directly from query snapshot. A single shell-health
-      presenter exposes bootstrapping, ok/degraded/offline, detail, and banner visibility semantics.
+      `Root`, `TopAppBar`, and the persistent banner consume one capability-owned shell projection
+      for severity, detail, checking state, and retry metadata. `Root` no longer inspects raw probe
+      details directly.
     complexity: M
     effort_points: 3
     progress_pct: 0
     evidence_refs:
+      - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
       - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-    status_reason: >-
-      Required by hard QA finding `F03-HQA-01` and `F03-HQA-05` to restore single-source shell
-      health ownership and reduce Root coupling.
+      - docs/architecture/frontend/planning/frontend-planning-capability-architecture.md
+    status_reason:
+      Hard QA identified capability-boundary drift and split the remaining closure work into an
+      explicit first remediation slice.
     last_verified: '2026-04-02'
   - task_id: F-03-B
+    parent_task: F-03
     priority: P0
     status: queued
     objective: >-
-      normalize health retry cadence ownership so there is exactly one policy owner for polling,
-      degraded/offline backoff, and manual retry reset.
+      restore real retry/backoff semantics for degraded and offline shell health, including reset on
+      success and manual retry.
     dependency: F-03-A
     target: >-
-      Query refetch cadence and shell backoff are unified under one policy path with no duplicated
-      scheduler between query options and Root timers.
-    complexity: M
-    effort_points: 3
+      The persistent shell banner shows the real retry/backoff schedule rather than a fixed polling
+      countdown, manual retry resets the schedule, and tests prove the bounded backoff path.
+    complexity: S
+    effort_points: 2
     progress_pct: 0
     evidence_refs:
+      - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
       - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
-    status_reason: >-
-      Required by hard QA finding `F03-HQA-02` to remove split retry logic and eliminate cadence
-      drift.
+      - docs/planning/closeouts/F-02-closeout.md
+    status_reason:
+      Hard QA confirmed that the current slice renders countdown copy but does not yet satisfy the
+      governed retry/backoff target.
     last_verified: '2026-04-02'
   - task_id: F-03-C
+    parent_task: F-03
     priority: P0
     status: queued
     objective: >-
-      add Root seam tests for pending, degraded, offline, recovery, and banner-topbar coherence.
+      remove the false initial `ok` connectivity state from shared shell behavior before the first
+      settled health check, without inventing a new backend status.
     dependency: F-03-A
     target: >-
-      A dedicated Root shell-health test suite guards bootstrapping semantics, retry behavior, and
-      consistency between top-bar and banner state.
-    complexity: M
-    effort_points: 3
+      No shell consumer can render or inherit a false `ok` connectivity state before the first
+      settled health snapshot. Pre-settle truth is modeled as shell metadata, not as a new backend
+      contract value.
+    complexity: S
+    effort_points: 2
     progress_pct: 0
     evidence_refs:
+      - docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
       - docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
-    status_reason: >-
-      Required by hard QA finding `F03-HQA-04`; current coverage stops below the critical shell
-      integration seam.
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason:
+      The top bar now hides the false positive, but the shared shell state is still initialized as
+      `ok/connected` until the first query settles.
     last_verified: '2026-04-02'
   - task_id: F-03-D
+    parent_task: F-03
     priority: P1
     status: queued
     objective: >-
@@ -300,6 +312,7 @@ tasks:
       shell" rule.
     last_verified: '2026-04-02'
   - task_id: F-03-E
+    parent_task: F-03
     priority: P1
     status: queued
     objective: >-
@@ -463,6 +476,9 @@ dependency_notes:
   - >-
     `MVP-E1` is now unblocked by the closed `MVP-A1`/`MVP-B1` backend baseline and remains queued
     until the frontend contract artifact is written.
+  - >-
+    `F-03` remains the active shell-health slice, but the 2026-04-02 hard QA review split its
+    remaining closure work into `F-03-A`, `F-03-B`, `F-03-C`, `F-03-D`, and `F-03-E`.
   - '`F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.'
   - '`F-08` through `F-11` remain blocked by backend endpoint delivery and must stay
     contracts-first.'
@@ -472,11 +488,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
-  total_tasks: 12
-  total_effort_points: 62
-  completed_weighted_points: 4.75
-  lane_progress_pct: 8
+  verified_on: '2026-04-02'
+  total_tasks: 17
+  total_effort_points: 70
+  completed_weighted_points: 3.9
+  lane_progress_pct: 6
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

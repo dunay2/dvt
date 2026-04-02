@@ -1,4 +1,7 @@
-export { createPlatformHealthCapability } from './application/platformHealthCapability';
+export {
+  createPlatformHealthCapability,
+  type PlatformHealthCapabilityApi,
+} from './application/platformHealthCapability';
 export { isPlatformReady, selectPlatformConnectionState } from './domain/platformHealthSelectors';
 export type {
   OptionalEndpointProbe,
@@ -11,6 +14,7 @@ export type {
   RequiredEndpointProbe,
 } from './domain/platformHealthTypes';
 export {
+  PLATFORM_HEALTH_REFETCH_INTERVAL_MS,
   platformHealthQueryKey,
   usePlatformHealthSnapshotQuery,
 } from './presentation/usePlatformHealthSnapshotQuery';

@@ -41,7 +41,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0040   | Retry Ownership and Attempt Authority                                                           | Accepted                 | 2026-03-24                       | [ADR-0040-retry-ownership-and-attempt-authority.md](ADR-0040-retry-ownership-and-attempt-authority.md)                                             |
 | ADR-0041   | Global Domain State Model and Boundary Contracts                                                | Accepted                 | 2026-03-26                       | [ADR-0041-global-domain-state-model-and-boundary-contracts.md](ADR-0041-global-domain-state-model-and-boundary-contracts.md)                       |
 | ADR-0041A  | Reconciler Health State and Readiness Port Semantics                                            | Accepted                 | 2026-03-26                       | [ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md](ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md)             |
-| ADR-0043   | Plan record, plan store, and artifacts ownership                                                | Proposed                 | 2026-04-02                       | [ADR-0043-plan-record-plan-store-and-artifacts-ownership.md](ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)                           |
+| ADR-0043   | Plan record, plan store, and artifacts ownership                                                | Accepted                 | 2026-04-02                       | [ADR-0043-plan-record-plan-store-and-artifacts-ownership.md](ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)                           |
 
 ## Usage rules
 

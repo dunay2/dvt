@@ -2,7 +2,7 @@
 title: Agent Lane E - Frontend And UI
 status: Active
 owner: Product / UX / Frontend
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-02
 planning_type: status
 ---
 
@@ -94,11 +94,11 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
-- Verified on: `2026-03-31`
-- Total tasks: `12`
-- Total effort points: `62`
-- Completed weighted points: `4.75`
-- Lane progress: `8%`
+- Verified on: `2026-04-02`
+- Total tasks: `17`
+- Total effort points: `70`
+- Completed weighted points: `3.9`
+- Lane progress: `6%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -108,12 +108,12 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 - [ ] `P0` `MVP-E1` `queued` `M` `5pt` `0%`: define the frontend consumption contract for the backend MVP surface that exists today, without promising non-implemented behavior.
 - [ ] `P0` `F-01` `queued` `M` `5pt` `0%`: clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify secondary controls into a contextual menu.
 - [x] `P0` `F-02` `done` `S` `3pt` `100%`: implement a typed API client covering the existing health endpoints (healthz, readyz, version, db/ready).
-- [ ] `P0` `F-03` `in_progress` `M` `5pt` `35%`: wire real backend health state into the top bar and a global degraded/offline banner.
-- [ ] `P0` `F-03-A` `queued` `M` `3pt` `0%`: extract a dedicated shell-health presenter so Root consumes one explicit health view-model instead of recomputing and orchestrating policy inline.
-- [ ] `P0` `F-03-B` `queued` `M` `3pt` `0%`: normalize health retry cadence ownership so there is exactly one policy owner for polling, degraded/offline backoff, and manual retry reset.
-- [ ] `P0` `F-03-C` `queued` `M` `3pt` `0%`: add Root seam tests for pending, degraded, offline, recovery, and banner-topbar coherence.
-- [ ] `P1` `F-03-D` `queued` `S` `2pt` `0%`: contract shell status semantics to real observed signals and remove synthetic live-events truth leakage from health surfaces.
-- [ ] `P1` `F-03-E` `queued` `S` `2pt` `0%`: align active frontend status docs with shipped reality after F-03 hardening.
+- [ ] `P0` `F-03` `in_progress` `M` `2pt` `45%`: wire real backend health state into the top bar and a global degraded/offline banner.
+- [ ] `P0` `F-03-A` `queued` `M` `3pt` `0%` parent:`F-03`: move shell health projection back behind the `platform-health` capability boundary and expose one derived shell model for the shell surface.
+- [ ] `P0` `F-03-B` `queued` `S` `2pt` `0%` parent:`F-03`: restore real retry/backoff semantics for degraded and offline shell health, including reset on success and manual retry.
+- [ ] `P0` `F-03-C` `queued` `S` `2pt` `0%` parent:`F-03`: remove the false initial `ok` connectivity state from shared shell behavior before the first settled health check, without inventing a new backend status.
+- [ ] `P1` `F-03-D` `queued` `S` `2pt` `0%` parent:`F-03`: contract shell status semantics to real observed signals and remove synthetic live-events truth leakage from health surfaces.
+- [ ] `P1` `F-03-E` `queued` `S` `2pt` `0%` parent:`F-03`: align active frontend status docs with shipped reality after F-03 hardening.
 - [ ] `P1` `F-04` `queued` `M` `5pt` `0%`: introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do not consume mock data directly.
 - [ ] `P1` `F-05` `blocked` `M` `5pt` `0%`: decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore, graphStore, runStore, statusStore).
 - [ ] `P1` `F-06` `blocked` `M` `5pt` `0%`: introduce TanStack Query as the data-fetching layer and define query/mutation patterns for health, plan, and run domains.
@@ -126,6 +126,7 @@ Evolve apps/web from a high-fidelity mock prototype to an operational UI backed 
 ## Dependencies
 
 - `MVP-E1` is now unblocked by the closed `MVP-A1`/`MVP-B1` backend baseline and remains queued until the frontend contract artifact is written.
+- `F-03` remains the active shell-health slice, but the 2026-04-02 hard QA review split its remaining closure work into `F-03-A`, `F-03-B`, `F-03-C`, `F-03-D`, and `F-03-E`.
 - `F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.
 - `F-08` through `F-11` remain blocked by backend endpoint delivery and must stay contracts-first.
 - `F-02` now has accepted implementation evidence and establishes the first capability-module pattern for Lane E; `F-03` is partially advanced but not yet complete.

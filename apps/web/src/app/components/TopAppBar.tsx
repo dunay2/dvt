@@ -4,6 +4,7 @@ import {
   Bell,
   Database,
   GitBranch,
+  LoaderCircle,
   Maximize2,
   Menu,
   Minimize2,
@@ -13,6 +14,7 @@ import {
   User,
   WifiOff,
 } from 'lucide-react';
+import type { PlatformConnectionState } from '../../capabilities/platform-health';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useAppStore } from '../stores/appStore';
@@ -46,9 +48,15 @@ const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
 type TopAppBarProps = {
   readonly connectionDetail?: string | null;
+  readonly connectionStateOverride?: PlatformConnectionState | null;
+  readonly isConnectionChecking?: boolean;
 };
 
-export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
+export default function TopAppBar({
+  connectionDetail,
+  connectionStateOverride,
+  isConnectionChecking = false,
+}: TopAppBarProps) {
   const {
     selectedTenant,
     selectedProject,
@@ -70,6 +78,7 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
     gridSize,
     setGridSize,
   } = useAppStore();
+  const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
 
   return (
     <TooltipProvider>
@@ -135,7 +144,19 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
         <div className="flex-1" />
 
         {/* Connection status — compact inline indicator, always visible when not ok */}
-        {connectionStatus.rest === 'ok' ? (
+        {isConnectionChecking ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-default px-1 select-none">
+                <LoaderCircle className="size-3.5 animate-spin" />
+                <span>Checking</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Checking platform health endpoints</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : effectiveConnectionStatus?.rest === 'ok' ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-default px-1">
@@ -144,11 +165,11 @@ export default function TopAppBar({ connectionDetail }: TopAppBarProps) {
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>REST API: {connectionStatus.rest}</p>
-              <p>Live Events: {connectionStatus.liveEvents}</p>
+              <p>REST API: {effectiveConnectionStatus.rest}</p>
+              <p>Live Events: {effectiveConnectionStatus.liveEvents}</p>
             </TooltipContent>
           </Tooltip>
-        ) : connectionStatus.rest === 'offline' ? (
+        ) : effectiveConnectionStatus?.rest === 'offline' ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-default px-1 select-none">
