@@ -41,7 +41,11 @@ Rollback / compensating transaction model — nowhere defined. If 400 of 1000 st
 
 Read-your-writes guarantee definition — a startRun() call emits events, but getRunStatus() reads from a snapshot that may lag. The staleness window is undefined in any contract or ADR.
 
-Retry ownership specification — S09 open. Does DVT count retries, or does Temporal count retries? engineAttemptId vs logicalAttemptId suggests both are tracked, but the authoritative counter for "has this step exhausted its retry budget" is not specified.
+Retry ownership specification was open in the 2026-03-24 baseline and is now
+closed by `ADR-0040`. At review time the unresolved question was: does DVT
+count retries, or does Temporal count retries? `engineAttemptId` vs
+`logicalAttemptId` suggested both were tracked, but the authoritative counter
+for "has this step exhausted its retry budget" was not specified.
 
 1. Architectural Risk Map
    Risk Severity Likelihood Why Mitigation
@@ -53,7 +57,7 @@ Retry ownership specification — S09 open. Does DVT count retries, or does Temp
    Archive restore absent (G5-PR2) High Medium Archive export is implemented. Restore model is not. If a compliance request requires event replay from archive, no path exists. The archive feature is operationally incomplete. G5-PR2 is the unlock.
    Two-phase startRun consistency window Medium Medium Between adapter.startRun() and bootstrapRunTx() crash → orphaned Temporal workflow. RunMaintenanceService reconciliation is periodic — window is minutes. Reduce reconciliation interval. Add health endpoint that reports orphan count.
    Plan version compatibility during rolling deploys Medium High SUPPORTED_EXECUTION_PLAN_VERSIONS = ['2.3']. Planner emitting 2.4 + old engine on 2.3 = 100% plan rejection. No multi-version window. Implement version range support. During deploy: support [N-1, N] concurrently.
-   Retry ownership split (S09) Medium High engineAttemptId vs logicalAttemptId — two counters. If Temporal retries silently and DVT emits a new StepStarted, event count diverges from Temporal's retry count. Which counter is authoritative for "exhausted budget"? S09 must define the authority boundary before the retry model is trustworthy.
+   Retry ownership split (historical S09 gap, now closed by ADR-0040) Medium High engineAttemptId vs logicalAttemptId — two counters. If Temporal retries silently and DVT emits a new StepStarted, event count diverges from Temporal's retry count. Which counter is authoritative for "exhausted budget"? This review recorded the question before ADR-0040 defined the authority boundary.
    DbtStepTypeConfig in @dvt/contracts (shared kernel) Medium Certain dbt-specific schema in the shared kernel means every package that imports @dvt/contracts pulls in dbt knowledge. Violates bounded context rule. Move to @dvt/planner or a dedicated @dvt/contracts-dbt package.
    Lineage dead-letter unbounded accumulation Medium High No automated DLQ replay. On sustained ILineageSink failure, lineage_dead_letter grows without bound. No size alert defined. Add DLQ size metric + alert. Implement automated replay with circuit breaker.
    Outbox claim timeout = double-delivery window Medium Medium If outbox worker crashes mid-batch, shard must wait outboxClaimTimeoutMs before another worker claims. During that window, downstream consumers see no events. Double delivery on recovery if consumers aren't idempotent. Document consumer idempotency requirement as a hard contract, not a guideline.
@@ -94,7 +98,8 @@ Partial Execution Guarantees
 There are none — by design. A failed run at step 400/1000 cannot be resumed from step 401. The retry model operates at the step level (Temporal activity retry) or at the full run level (run retry signal). Mid-run partial re-planning is not supported. This is a reasonable initial constraint, but it needs explicit documentation as a known limitation — because for a 1000-node dbt DAG, a network partition failure at step 999 forces a full re-run.
 
 Retry/Backoff Policy Ownership
-S09 is open and this matters. Currently:
+At the time of this review, S09 was open and this mattered. It is now closed by
+ADR-0040. The historical ambiguity was:
 
 RetryPolicy is declared in PlannerPolicyVocabulary.v2.ts (at-most-once, at-most-N)
 TemporalPolicyMapper.mapRetry() converts to Temporal's ActivityOptions.retry
@@ -163,7 +168,10 @@ Outbox sharding (ADR-0033) complexity: At current scale, outbox sharding with pe
 1. What Is Underbuilt?
    Event payload versioning (S05): Critical. Without payloadVersion, any payload shape change is a silent breaking change across the lineage worker, projector, and outbox consumer. Must be resolved before any payload schema change.
 
-Retry ownership model (S09): Without specifying whether DVT or Temporal is authoritative for retry count, cost attribution and compliance reporting are impossible. engineAttemptId vs logicalAttemptId are unresolved semantic duplicates.
+Retry ownership model (historical S09 gap, now closed by ADR-0040): Without
+specifying whether DVT or Temporal is authoritative for retry count, cost
+attribution and compliance reporting are impossible. `engineAttemptId` vs
+`logicalAttemptId` were unresolved semantic duplicates at review time.
 
 Read-your-writes contract: After startRun(), the caller has no guarantee that getRunStatus() returns the new run. Snapshot lag is unbounded. The API does not indicate snapshot age. This is standard eventual consistency, but it needs a documented and contractual staleness bound.
 
@@ -227,7 +235,11 @@ Replaceability of engine 6/10 IProviderAdapter is the correct extension point. B
 Determinism 6/10 Plan identity hashing via JCS + SHA-256 is correct. But dbt manifest node ordering is not guaranteed stable. compiledCodeRef SHA-256 breaks for non-deterministic dbt templates. Temporal's determinism requirements are invisible in adapter contracts.
 Extensibility 7/10 StepTypeRegistry for new step kinds is well-designed. IProviderAdapter is the correct engine extension point. CustomPolicyNamespaceRegistry is over-engineered. EngineRunRef ghost types for unimplemented providers pollute the extension surface.
 Operational realism 4/10 No SLO definitions. No automated DLQ replay. No schema rollback. No run retention automation. No RBAC at operation level. Archive restore missing. Projector staleness invisible to API callers. This system has not been validated for production operations.
-Long-term maintainability 5/10 ADR process is exemplary. Contract versioning exists. But S05 (event payloads) and S09 (retry ownership) are fundamental ambiguities that will compound with every feature added. The god IRunStateStore will make every change expensive until S02 ships.
+Long-term maintainability 5/10 ADR process is exemplary. Contract versioning
+exists. At review time, S05 (event payloads) and S09 (retry ownership) were
+fundamental ambiguities that would compound with every feature added. S09 is
+now closed by ADR-0040, but the god IRunStateStore still makes every change
+expensive until S02 ships.
 Aggregate: 40/70 = 57%. Architectural skeleton is sound; operational and structural debt is real and growing.
 
 1. Strategic Recommendations
@@ -241,8 +253,10 @@ Aggregate: 40/70 = 57%. Architectural skeleton is sound; operational and structu
 
 3 Clarifications Required Now
 
-1. Retry ownership boundary — who counts attempts, DVT or Temporal?
-   S09 must answer: Is engineAttemptId the Temporal activity attempt counter, or a DVT-managed counter? If DVT tracks attempts by emitting StepStarted per retry, and Temporal also retries without emitting DVT events, the counters diverge. Define the contract and enforce it in the adapter.
+1. Retry ownership boundary - now answered by ADR-0040.
+   The historical S09 question was whether `engineAttemptId` was the Temporal
+   activity-attempt counter or a DVT-managed counter. ADR-0040 now defines that
+   authority boundary and the adapter-enforcement expectation.
 1. Snapshot staleness contract — what is the maximum acceptable lag?
    The API returns snapshot data without indicating age. Define a maximum acceptable staleness bound (e.g., 30 seconds) and surface it in the API response (x-snapshot-age-ms header or snapshotAge in the response body). Without this, callers cannot distinguish stale data from correct idle state.
 1. dbt manifest node ordering stability — is it guaranteed?

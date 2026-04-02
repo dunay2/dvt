@@ -2,7 +2,7 @@
 title: Strategic Product Roadmap — DVT+ (2026–2027)
 status: Active
 owner: Architecture / Product
-last_reviewed: 2026-03-24
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
@@ -41,7 +41,7 @@ Roadmap items that are new and not yet ticketed in the workboard:
 | ----------------------------------- | -------- | ------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------- |
 | Schema migration rollback           | P1       | `S02`                                                   | Restoreability for Postgres DDL failures           | Break into a concrete migration/recovery slice before execution. |
 | Run event log retention + TTL       | P1       | `S02`                                                   | Bound storage growth and automate archival trigger | Create an operational storage/retention slice.                   |
-| RBAC at operation level             | P1       | `S09`                                                   | Tenant-aware enforcement for start/signal/cancel   | Split into a dedicated API/admission slice.                      |
+| RBAC at operation level             | P1       | `ADR-0040`                                              | Tenant-aware enforcement for start/signal/cancel   | Split into a dedicated API/admission slice.                      |
 | SLO definitions + runbooks          | P1       | `RC-D1`, `RC-A1`                                        | Make enterprise operations supportable             | Create an ops readiness slice with owners and alerts.            |
 | Snapshot staleness in API           | P1       | `S05`                                                   | Expose freshness to callers                        | Add a focused API/runtime slice.                                 |
 | DLQ alerting + automated replay     | P1       | `S05`, `RC-B5`                                          | Surface and reduce lineage backlogs                | Add a traceability/operations slice.                             |
@@ -75,12 +75,13 @@ Detailed per-agent workfiles:
 
 ### Lane A · Contracts And State-Store Boundary
 
-| Task                                     | Priority | Depends on | Why this lane exists                                |
-| ---------------------------------------- | -------- | ---------- | --------------------------------------------------- |
-| `S02` state-store split                  | P0       | `RC-A6`    | Removes the shared-kernel storage bottleneck.       |
-| `RC-A6` outbox dead-letter parity        | P0       | None       | Makes the state-store split mechanically safe.      |
-| Schema migration rollback                | P1       | `S02`      | Makes storage changes recoverable.                  |
-| `S13` duplicate `estimateRunRef` cleanup | P1       | None       | Low-risk contract cleanup that can run in parallel. |
+| Task                                     | Priority | Depends on | Why this lane exists                                    |
+| ---------------------------------------- | -------- | ---------- | ------------------------------------------------------- |
+| `S02` state-store split                  | P0       | `RC-A6`    | Removes the shared-kernel storage bottleneck.           |
+| `RC-A6` outbox dead-letter parity        | P0       | None       | Makes the state-store split mechanically safe.          |
+| `S08` plan record and plan store model   | P0       | `ADR-0040` | Closes planner artifact truth and plan-store ownership. |
+| Schema migration rollback                | P1       | `S02`      | Makes storage changes recoverable.                      |
+| `S13` duplicate `estimateRunRef` cleanup | P1       | None       | Low-risk contract cleanup that can run in parallel.     |
 
 ### Lane B · Event Contract And Traceability
 
@@ -96,12 +97,11 @@ Detailed per-agent workfiles:
 
 | Task                                           | Priority | Depends on                  | Why this lane exists                             |
 | ---------------------------------------------- | -------- | --------------------------- | ------------------------------------------------ |
-| `S09` retry ownership ADR                      | P0       | None                        | Clarifies retry budget authority.                |
 | `RC-D2` configurable claim timeout             | P0       | None                        | Hardens outbox lease correctness.                |
 | `RC-D3` normalized temporal not-found          | P0       | None                        | Removes provider-specific false negatives.       |
 | `RC-D1` degraded health signaling              | P1       | None                        | Exposes runtime degradation to consumers.        |
 | `RC-D1A` health compatibility + watchdog tests | P1       | `RC-D1`                     | Locks health-contract behavior.                  |
-| RBAC at operation level                        | P1       | `S09`                       | Gives runtime enforcement a tenant-aware policy. |
+| RBAC at operation level                        | P1       | `ADR-0040`                  | Gives runtime enforcement a tenant-aware policy. |
 | Snapshot staleness in API                      | P1       | `S05`                       | Exposes freshness to callers.                    |
 | Read-your-writes contract                      | P2       | `Snapshot staleness in API` | Tightens caller-visible freshness guarantees.    |
 | Granular RBAC (CANCEL vs PAUSE)                | P2       | `RBAC at operation level`   | Splits privileged operations cleanly.            |
@@ -134,7 +134,7 @@ What it does not yet have:
 
 - A correct event payload contract (S05 open)
 - A single-responsibility state store (S02 open)
-- A retry ownership model (S09 open)
+- Retry ownership follow-through on top of `ADR-0040`
 - Production operational runbooks
 - A cost/billing primitive
 - The first paying enterprise customer
@@ -156,7 +156,7 @@ gantt
     S02 IRunStateStore split          :crit, p0-s02, 2026-03-24, 14d
     S05 payloadVersion + schemas      :crit, p0-s05, 2026-03-24, 14d
     compiledCodeRef typed field       :crit, p0-ccr, 2026-03-24, 7d
-    S09 Retry ownership ADR           :crit, p0-s09, 2026-03-24, 10d
+    ADR-0040 retry ownership accepted :done, p0-s09, 2026-03-24, 1d
 
     section Phase 1 · Operational Completeness
     Schema migration rollback         :p1-mgr, after p0-s02, 10d
@@ -209,7 +209,7 @@ flowchart LR
     S02["S02\nIRunStateStore split\n14d\n🔴 CRITICAL"]
     S05["S05\npayloadVersion\n+ per-eventType schemas\n14d\n🔴 CRITICAL"]
     CCR["compiledCodeRef\ntyped field in\nExecutionStepV2\n7d\n🔴 CRITICAL"]
-    S09["S09\nRetry ownership ADR\n10d\n🔴 CRITICAL"]
+    S09["ADR-0040\nRetry ownership\naccepted\nDONE"]
 
     S02 --> P1_GATE
     S05 --> P1_GATE
@@ -226,14 +226,14 @@ flowchart LR
 | **S02** — Split `IRunStateStore` into `IRunEventStore`, `IRunMetadataStore`, `IRunSnapshotStore`, `IOutboxStore`                                          | 14d    | Contracts + Adapters                   | Schema migration rollback, Archive restore, all Phase 1 I/O |
 | **S05** — Add `payloadVersion: number` to `EventInput`. Define AJV schema per eventType. Validate at adapter write boundary.                              | 14d    | Contracts + Postgres adapter           | DLQ replay, lineage worker safety, cost attribution         |
 | **compiledCodeRef typed** — Promote from `stepTypeConfig: Record<string,unknown>` to typed `compiledCodeRef?: CompiledCodeRef` field on `ExecutionStepV2` | 7d     | Contracts + Planner + Temporal adapter | Silent cast elimination at activity boundary                |
-| **S09** — ADR: define which counter is authoritative for retry budget — DVT (`logicalAttemptId`) or Temporal (`engineAttemptId`). Enforce in adapter.     | 10d    | ADR + Temporal adapter                 | RBAC, cost-per-attempt, compliance reporting                |
 
 ### P0 acceptance criteria
 
 - `IRunStateStore` interface no longer exists; four interfaces exist in its place.
 - Every `EventInput` written to the DB carries a `payloadVersion`.
 - `ExecutionStepV2.compiledCodeRef` is a first-class typed field with no cast at activity boundary.
-- ADR-S09 is accepted; `engineAttemptId` vs `logicalAttemptId` semantics are documented with enforcement test.
+- `ADR-0040` is accepted; `engineAttemptId` vs `logicalAttemptId` semantics
+  are documented with enforcement test.
 
 ---
 
@@ -433,7 +433,7 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph "Week 1–2 · All parallel"
-        S02 & S05 & CCR & S09
+        S02 & S05 & CCR & ADR0040
     end
 
     subgraph "Week 3–7 · All parallel after P0"
@@ -453,7 +453,7 @@ flowchart LR
         POC & BIL & CMP & ACK
     end
 
-    S02 & S05 & CCR & S09 --> MGR & RET & ARC & RBC & SLO & SNS & DLQ
+    S02 & S05 & CCR & ADR0040 --> MGR & RET & ARC & RBC & SLO & SNS & DLQ
     MGR & RET --> CST & PVR
     RBC & SLO --> POC
     SNS --> RYW
@@ -479,7 +479,7 @@ quadrantChart
     compiledCodeRef typed field: [0.15, 0.95]
     S05 payloadVersion: [0.3, 0.98]
     S02 IRunStateStore split: [0.45, 0.97]
-    S09 Retry ownership: [0.25, 0.90]
+    ADR-0040 retry ownership baseline: [0.25, 0.90]
     Snapshot staleness API: [0.1, 0.72]
     DLQ alerting: [0.12, 0.70]
     SLO + runbooks: [0.3, 0.85]
@@ -536,5 +536,5 @@ The following areas are explicitly frozen pending stated blockers:
 - Principal Architect Review: `docs/reviews/DVT+_Architectural_Review_20260324.md`
 - System Delivery Status: `docs/architecture/system-delivery-status.md`
 - ADR Index: `docs/adr/ADR-Index.md`
-- Phase 2 open slices: S02, S03, S04, S05, S07, S08, S09, S11
+- Phase 2 open slices: S02, S03, S04, S05, S07, S08, S11
 - Gap tracking: `docs/planning/gaps/GAP_EXECUTION_PLANS.md`
