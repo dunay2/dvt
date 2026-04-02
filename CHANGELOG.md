@@ -7,6 +7,7 @@
 
 * **ci:** Add shared preflight and PR log triage ([#729](https://github.com/dunay2/dvt/issues/729)) ([bdc4cd4](https://github.com/dunay2/dvt/commit/bdc4cd4a49d9e0452179e2e613ff2d348f3d7069))
 * **web:** Add backend health banner and retry flow ([#739](https://github.com/dunay2/dvt/issues/739)) ([e3488c8](https://github.com/dunay2/dvt/commit/e3488c834ba8d14c9b698328ccd84718a7180501))
+* **web:** Add shell health banner with retry countdown ([#740](https://github.com/dunay2/dvt/issues/740)) ([63688dd](https://github.com/dunay2/dvt/commit/63688ddde28823bd1f66ff68ca428dac8f802ebb))
 
 
 ### Bug Fixes
