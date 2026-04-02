@@ -175,21 +175,32 @@ export class PostgresStateStoreRuntime {
 
   protected async claimSnapshotWorkInternal(
     batchSize: number
-  ): Promise<Array<{ runId: string; tenantId: string }>> {
+  ): Promise<Array<{ runId: string; tenantId: string; claimToken: string }>> {
     return this.snapshotWorkQueue.claimSnapshotWork(batchSize);
   }
 
-  protected async completeSnapshotWorkInternal(tenantId: string, runId: string): Promise<void> {
-    await this.snapshotWorkQueue.completeSnapshotWork(tenantId, runId);
+  protected async completeSnapshotWorkInternal(
+    tenantId: string,
+    runId: string,
+    claimToken: string
+  ): Promise<void> {
+    await this.snapshotWorkQueue.completeSnapshotWork(tenantId, runId, claimToken);
   }
 
   protected async failSnapshotWorkInternal(
     tenantId: string,
     runId: string,
     retryDelayMs: number,
-    errorMessage: string
+    errorMessage: string,
+    claimToken: string
   ): Promise<void> {
-    await this.snapshotWorkQueue.failSnapshotWork(tenantId, runId, retryDelayMs, errorMessage);
+    await this.snapshotWorkQueue.failSnapshotWork(
+      tenantId,
+      runId,
+      retryDelayMs,
+      errorMessage,
+      claimToken
+    );
   }
 
   protected async enqueueTxInternal(runId: RunId, events: EventEnvelope[]): Promise<void> {

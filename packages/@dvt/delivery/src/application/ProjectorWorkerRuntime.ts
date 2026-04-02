@@ -7,15 +7,18 @@ export interface ProjectorWorkerRuntimeLogger {
 }
 
 export interface ProjectorStateStore {
-  claimSnapshotWork?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
+  claimSnapshotWork?(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string; claimToken: string }>>;
   listStaleSnapshotRuns?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
   isSnapshotStale?(tenantId: string, runId: string): Promise<boolean>;
-  completeSnapshotWork?(tenantId: string, runId: string): Promise<void>;
+  completeSnapshotWork?(tenantId: string, runId: string, claimToken: string): Promise<void>;
   failSnapshotWork?(
     tenantId: string,
     runId: string,
     retryDelayMs: number,
-    errorMessage: string
+    errorMessage: string,
+    claimToken: string
   ): Promise<void>;
   rebuildSnapshot(tenantId: string, runId: string): Promise<unknown>;
 }
@@ -40,6 +43,7 @@ const DEFAULT_OPTIONS = {
 } as const;
 const INVALID_BATCH_SIZE = 'INVALID_BATCH_SIZE';
 const INVALID_FALLBACK_POLL_EVERY_TICKS = 'INVALID_FALLBACK_POLL_EVERY_TICKS';
+const CLAIM_NOT_OWNED_ERROR_CODE = 'SNAPSHOT_WORK_CLAIM_NOT_OWNED';
 
 export class ProjectorWorkerRuntime {
   private readonly batchSize: number;
@@ -140,13 +144,25 @@ export class ProjectorWorkerRuntime {
     let lag = 0;
     let processed = 0;
 
-    for (const { runId, tenantId, claimedFromQueue } of workItems) {
+    for (const { runId, tenantId, claimedFromQueue, claimToken } of workItems) {
+      const queueClaimToken = claimedFromQueue ? claimToken : undefined;
+      if (claimedFromQueue && !queueClaimToken) {
+        this.logger.error(
+          {
+            runId,
+            tenantId,
+          },
+          'projector worker: queue claim missing claim token'
+        );
+        continue;
+      }
+
       try {
         if (this.stateStore.isSnapshotStale) {
           const stale = await this.stateStore.isSnapshotStale(tenantId, runId);
           if (!stale) {
             if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
-              await this.stateStore.completeSnapshotWork(tenantId, runId);
+              await this.completeClaimedWork(tenantId, runId, queueClaimToken!);
             }
             continue;
           }
@@ -154,23 +170,36 @@ export class ProjectorWorkerRuntime {
         lag += 1;
         await this.stateStore.rebuildSnapshot(tenantId, runId);
         if (claimedFromQueue && this.stateStore.completeSnapshotWork) {
-          await this.stateStore.completeSnapshotWork(tenantId, runId);
+          await this.completeClaimedWork(tenantId, runId, queueClaimToken!);
         }
         processed++;
       } catch (err) {
+        if (isClaimNotOwnedError(err)) {
+          this.logClaimOwnershipWarning(
+            tenantId,
+            runId,
+            err,
+            'projector worker: claim ownership lost'
+          );
+          continue;
+        }
         if (claimedFromQueue && this.stateStore.failSnapshotWork) {
           try {
-            await this.stateStore.failSnapshotWork(
-              tenantId,
-              runId,
-              this.errorBackoffMs,
-              toErrorLike(err).message
-            );
+            await this.failClaimedWork(tenantId, runId, queueClaimToken!, toErrorLike(err).message);
           } catch (releaseErr) {
-            this.logger.error(
-              { err: toErrorLike(releaseErr), runId, tenantId },
-              'projector worker: failSnapshotWork failed'
-            );
+            if (isClaimNotOwnedError(releaseErr)) {
+              this.logClaimOwnershipWarning(
+                tenantId,
+                runId,
+                releaseErr,
+                'projector worker: failSnapshotWork ownership lost'
+              );
+            } else {
+              this.logger.error(
+                { err: toErrorLike(releaseErr), runId, tenantId },
+                'projector worker: failSnapshotWork failed'
+              );
+            }
           }
         }
         this.logger.error(
@@ -190,16 +219,27 @@ export class ProjectorWorkerRuntime {
     runId: string;
     tenantId: string;
     claimedFromQueue: boolean;
+    claimToken?: string;
   }> | null> {
     const claimedByKey = new Set<string>();
-    const workItems: Array<{ runId: string; tenantId: string; claimedFromQueue: boolean }> = [];
+    const workItems: Array<{
+      runId: string;
+      tenantId: string;
+      claimedFromQueue: boolean;
+      claimToken?: string;
+    }> = [];
 
     if (this.stateStore.claimSnapshotWork) {
       const claimed = await this.stateStore.claimSnapshotWork(this.batchSize);
       for (const item of claimed) {
         const key = `${item.tenantId}::${item.runId}`;
         claimedByKey.add(key);
-        workItems.push({ ...item, claimedFromQueue: true });
+        workItems.push({
+          runId: item.runId,
+          tenantId: item.tenantId,
+          claimedFromQueue: true,
+          claimToken: item.claimToken,
+        });
       }
     }
 
@@ -214,7 +254,11 @@ export class ProjectorWorkerRuntime {
         for (const item of staleByPolling) {
           const key = `${item.tenantId}::${item.runId}`;
           if (!claimedByKey.has(key)) {
-            workItems.push({ ...item, claimedFromQueue: false });
+            workItems.push({
+              runId: item.runId,
+              tenantId: item.tenantId,
+              claimedFromQueue: false,
+            });
           }
         }
       }
@@ -295,6 +339,62 @@ export class ProjectorWorkerRuntime {
       }
     }
   }
+
+  private async completeClaimedWork(
+    tenantId: string,
+    runId: string,
+    claimToken: string
+  ): Promise<void> {
+    if (!this.stateStore.completeSnapshotWork) {
+      return;
+    }
+    try {
+      await this.stateStore.completeSnapshotWork(tenantId, runId, claimToken);
+    } catch (err) {
+      if (isClaimNotOwnedError(err)) {
+        this.logClaimOwnershipWarning(
+          tenantId,
+          runId,
+          err,
+          'projector worker: completeSnapshotWork ownership lost'
+        );
+        return;
+      }
+      throw err;
+    }
+  }
+
+  private async failClaimedWork(
+    tenantId: string,
+    runId: string,
+    claimToken: string,
+    errorMessage: string
+  ): Promise<void> {
+    if (!this.stateStore.failSnapshotWork) {
+      return;
+    }
+    await this.stateStore.failSnapshotWork(
+      tenantId,
+      runId,
+      this.errorBackoffMs,
+      errorMessage,
+      claimToken
+    );
+  }
+
+  private logClaimOwnershipWarning(
+    tenantId: string,
+    runId: string,
+    err: unknown,
+    message: string
+  ): void {
+    const payload = { err: toErrorLike(err), runId, tenantId };
+    if (this.logger.warn) {
+      this.logger.warn(payload, message);
+      return;
+    }
+    this.logger.info(payload, message);
+  }
 }
 
 function isAbortError(error: unknown): boolean {
@@ -320,4 +420,8 @@ function normalizeBatchSize(value: number): number {
     throw new Error(`${INVALID_BATCH_SIZE}: ${value}`);
   }
   return value;
+}
+
+function isClaimNotOwnedError(error: unknown): boolean {
+  return toErrorLike(error).message.includes(CLAIM_NOT_OWNED_ERROR_CODE);
 }
