@@ -1,171 +1,73 @@
-﻿---
+---
 title: Domain Map
-status: Draft
+status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-15
+last_reviewed: 2026-04-02
 ---
 
 # DVT Domain Map
 
-## Purpose
+This page is the supporting bounded-context map for the repository as it exists
+today.
 
-Visual and textual map of the main domains in the DVT system, their
-boundaries, responsibilities, and relationships.
+It is grounded in current code, active component responsibilities, and the
+queued follow-up work already visible on the workboard. It still does not
+replace the normative architecture rules in
+[Reference Architecture](reference-architecture.md) or the implementation truth
+in [System Delivery Status](system-delivery-status.md).
 
-## Domain Definitions
+## Read This With
 
-| Domain                              | Main Responsibility                                        | Boundaries (packages/entry points)                                                 | Example Interaction                       |
-| ----------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
-| [Planning](domain-planning.md)      | Plan construction, compilation, and integrity validation   | `@dvt/planner`, `@dvt/plan-verifier`, `@dvt/plan-interpreter`, `@dvt/dsl`          | Delivers a plan to Execution              |
-| [Execution](domain-execution.md)    | Workflow orchestration, adapters, and persistence          | `@dvt/engine`, `@dvt/adapter-temporal`, `@dvt/adapter-postgres`                    | Executes a plan and updates state         |
-| [Delivery](domain-delivery.md)      | Outbox worker, retry, sharding, and delivery ownership     | `@dvt/delivery`, `dvt-outbox-worker`                                               | Publishes events and manages ownership    |
-| [UI / Visualization](domain-ui.md)  | Visualization, monitoring, and user interaction            | `apps/web`, `@dvt/web`                                                             | Queries status and displays runs          |
-| [API / Entry](domain-api.md)        | HTTP exposure, auth, routing, and background runtime       | `apps/api`                                                                         | Receives signals and exposes endpoints    |
-| [Shared Boundary](domain-shared.md) | Contracts, types, observability, traceability, and hashing | `@dvt/contracts`, `@dvt/crypto`, `@dvt/observability`, `@dvt/traceability-service` | Defines interfaces and validates events   |
-| [Infra](domain-infra.md)            | Infrastructure, scripts, tools, and CI/CD                  | `infra/`, `scripts/`, `tools/`                                                     | Provides environment and runs validations |
+1. [Reference Architecture](reference-architecture.md)
+2. [System Delivery Status](system-delivery-status.md)
+3. [DVT Component Map](component-map.md)
+4. [Execution Workboard](../planning/state/execution-workboard.md)
 
-## Current Status Map
-
-The following diagram highlights the current domain map and marks still-pending
-areas in red.
+## Current Domain Relationships
 
 ```mermaid
 flowchart LR
-  subgraph Planning
-    planner
-    verifier
-    interpreter
-    dsl
-  end
-  subgraph Execution
-    engine
-    temporal
-    postgres
-  end
-  subgraph Delivery
-    delivery
-    outbox
-  end
-  subgraph UI
-    web
-    dvtweb
-  end
-  subgraph API
-    api
-  end
-  subgraph Shared
-    contracts
-    crypto
-    observability
-    traceability
-  end
-  subgraph Infra
-    infra
-    scripts
-    tools
-  end
-
-  planner --> engine
-  verifier --> engine
-  interpreter --> engine
-  dsl --> engine
-  engine --> temporal
-  engine --> postgres
-  engine --> delivery
-  delivery --> outbox
-  engine --> contracts
-  engine --> observability
-  engine --> traceability
-  api --> engine
-  api --> delivery
-  web --> api
-  web --> engine
-  dvtweb --> engine
-  contracts --> engine
-  contracts --> api
-  contracts --> web
-  infra --> scripts
-  scripts --> engine
-  tools --> engine
-
-  buildApp:::missing
-  realAdapterContract:::missing
-  decoupleAPI:::missing
-  purifySnapshotProjector:::missing
-
-  classDef missing fill:#ffcccc,stroke:#ff0000,stroke-width:2px;
+  UI["UI / Visualization"] --> API["API / Entry"]
+  API --> Planning["Planning"]
+  API --> Execution["Execution and state"]
+  API --> Delivery["Delivery and retention"]
+  Planning --> Shared["Shared boundary"]
+  Planning --> Execution
+  Execution --> Shared
+  Execution --> Delivery
+  Delivery --> Shared
+  API --> Infra["Infra and automation"]
+  Delivery --> Infra
+  Shared --> Infra
 ```
 
-## Mermaid Diagram - Domain Context
+## Domain Catalog
 
-```mermaid
-flowchart LR
-  subgraph Planning
-    planner
-    verifier
-    interpreter
-    dsl
-  end
-  subgraph Execution
-    engine
-    temporal
-    postgres
-  end
-  subgraph Delivery
-    delivery
-    outbox
-  end
-  subgraph UI
-    web
-    dvtweb
-  end
-  subgraph API
-    api
-  end
-  subgraph Shared
-    contracts
-    crypto
-    observability
-    traceability
-  end
-  subgraph Infra
-    infra
-    scripts
-    tools
-  end
+| Domain                              | Owns today                                                                                                  | Main dependencies                                                              | Current posture                                                                      | Queued delta                                                                                                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [API / Entry](domain-api.md)        | `apps/api`, auth/runtime module composition, HTTP translation, readiness, and reconciler bootstrap          | inbound clients, planner, engine, delivery, observability, auth infrastructure | partial but real protected runtime surface                                           | keep the frontend/backend contract explicit and preserve admission/runtime-health correctness; related work includes `MVP-E1` plus residual Lane C hardening |
+| [UI / Visualization](domain-ui.md)  | `apps/web` package surface, browser shell, routing, run views, and platform health                          | `apps/api`, client-side state and feature services                             | partial, with live backend integration in some slices and remaining mock-heavy views | finish shell cleanup and isolate mock-vs-API data sources; active work includes `F-01`, `F-03`, `F-04`, and `MVP-E1`                                         |
+| [Planning](domain-planning.md)      | planner, verifier, interpreter, DSL, and artifact assembly inputs                                           | contracts, crypto, artifacts, manifest/backing stores                          | partially implemented and already used by runtime admission/start-run paths          | land `S08` and continue planner-private ownership cleanup without widening the shared kernel                                                                 |
+| [Execution](domain-execution.md)    | engine lifecycle semantics, access policy, start-run coordination, state-store contracts, provider adapters | planner output, shared contracts, Postgres, Temporal                           | phase-1 runtime exists and is used, with hardening and modularization still open     | continue `S02`, `S03`, `S04`, `DHM`, and `RC-G1`                                                                                                             |
+| [Delivery](domain-delivery.md)      | outbox draining, projection, lineage shipping, retention, purge, and worker composition roots               | execution events, Postgres persistence, traceability, observability            | phase-1 delivery runtime exists and owns downstream processing                       | tighten envelope and lineage seams under `S05`, `S07`, and `S11`; keep retention/restore policy explicit                                                     |
+| [Shared Boundary](domain-shared.md) | shared contracts, telemetry abstractions, OTel binding, lineage mapping, and crypto helpers                 | consumed by planning, execution, delivery, API, and UI                         | implemented but deliberately narrow                                                  | keep ownership cleanup explicit under `RC-G1` and validate production observability behavior                                                                 |
+| [Infra](domain-infra.md)            | workflows, scripts, tooling, and operational glue                                                           | every runtime domain                                                           | active and repo-wide                                                                 | continue docs/governance hardening and keep CI/tooling rules aligned with the actual system                                                                  |
 
-  planner --> engine
-  verifier --> engine
-  interpreter --> engine
-  dsl --> engine
-  engine --> temporal
-  engine --> postgres
-  engine --> delivery
-  delivery --> outbox
-  engine --> contracts
-  engine --> observability
-  engine --> traceability
-  api --> engine
-  api --> delivery
-  web --> api
-  web --> engine
-  dvtweb --> engine
-  contracts --> engine
-  contracts --> api
-  contracts --> web
-  infra --> scripts
-  scripts --> engine
-  tools --> engine
-```
+## Domain Interaction Rules
 
-## Ownership and Dependencies
+- UI remains a consumer of entry surfaces, not a second backend boundary.
+- Planning can enrich execution inputs, but execution still owns runtime
+  lifecycle semantics once a run begins.
+- Delivery and retention consume emitted runtime facts; they do not redefine the
+  state-transition rules that belong to execution.
+- Shared-boundary packages are cross-cutting support surfaces, not a place to
+  hide ownerless behavior.
+- Infra and automation are enablers for every domain, but they must not become
+  undocumented product logic.
 
-- Each domain has an explicit owner.
-- Dependencies between domains are visualized in the diagram.
-- Boundaries are defined by packages and entry points.
+## Related Pages
 
-## Recommendations
-
-- Integrate this map in `docs/architecture/index.md` and `system-map.md`.
-- Add examples of domain flows in technical documentation.
-- Formalize the use of bounded context and domain in the glossary.
+- [DVT Component Map](component-map.md)
+- [Architecture Component Surfaces](components/index.md)
+- [DVT System Architecture](system-overview.md)
+- [Execution Workboard](../planning/state/execution-workboard.md)

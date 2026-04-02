@@ -2,7 +2,7 @@
 title: Domain - Execution Runtime
 status: Review
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
@@ -13,19 +13,28 @@ runtime hardening.
 
 ## Canonical Sources
 
-- [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
-- [G5 AI Execution Tracker](../gaps/G5-AI-EXECUTION-TRACKER.md)
-- [G7 AI Execution Tracker](../gaps/G7-AI-EXECUTION-TRACKER.md)
-- [Gap 5 Executive Delivery Roadmap](../roadmap/gap-5-executive-delivery-roadmap-20260319.md)
+- [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
+- [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
+- [Execution Workboard](../state/execution-workboard.md)
 
-## Active Proposal Set
+## Active Planning Inputs
 
-- [Gap 5 Sequence and Module Design](../proposals/gap-5-sequence-and-module-design-20260319.md)
-- [Gap 5 PR1 Minimal Usable Archival](../proposals/gap-5-pr1-minimal-usable-archival-20260319.md)
-- [Gap 5 PR2 Deferred Deletion and Restore](../proposals/gap-5-pr2-deferred-deletion-and-restore-20260319.md)
-- [Gap 5 PR3 Delivery Buffer Retention](../proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)
-- [Gap 5 PR4 Redaction ADR and Follow-Up](../proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
+- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
+- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
+- [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/architecture-doc-reconciliation-plan-20260402.md)
+
+## Historical Proposal Inputs
+
+These proposals informed the current runtime shape, but they are no longer the
+active source of truth for execution-runtime planning.
+
+- [Gap 5 Sequence and Module Design](../archive/proposals/gap-5-sequence-and-module-design-20260319.md)
+- [Gap 5 PR1 Minimal Usable Archival](../archive/proposals/gap-5-pr1-minimal-usable-archival-20260319.md)
+- [Gap 5 PR2 Deferred Deletion and Restore](../archive/proposals/gap-5-pr2-deferred-deletion-and-restore-20260319.md)
+- [Gap 5 PR3 Delivery Buffer Retention](../archive/proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)
+- [Gap 5 PR4 Redaction ADR and Follow-Up](../archive/proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
+- [Gap 5 Executive Delivery Roadmap](../archive/proposals/gap-5-executive-delivery-roadmap-20260319.md)
 
 ## Relevant Reviews And Closeouts
 
@@ -44,4 +53,4 @@ runtime hardening.
 - [Gap Execution Dependency Graph](../roadmap/diagrams/gap-execution-dependency-graph.md)
 - [Gap Execution Parallel Lanes](../roadmap/diagrams/gap-execution-parallel-lanes.md)
 - [Execution Runtime Architecture Delta](../roadmap/diagrams/execution-runtime-architecture-delta.md)
-- [Gap Execution Route](../state/gap-execution-route.md)
+- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

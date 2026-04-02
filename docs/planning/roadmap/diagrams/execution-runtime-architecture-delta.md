@@ -2,7 +2,7 @@
 title: Execution Runtime Architecture Delta
 status: Review
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
@@ -42,4 +42,4 @@ flowchart LR
 ## References
 
 - [Domain - Execution Runtime](../../domains/execution-runtime.md)
-- [Gap Execution Route](../../state/gap-execution-route.md)
+- [Execution Workboard](../../state/execution-workboard.md)

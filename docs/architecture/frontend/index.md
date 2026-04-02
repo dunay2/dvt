@@ -2,7 +2,7 @@
 title: Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-04-02
 ---
 
 # Frontend Architecture
@@ -26,7 +26,8 @@ Concept anchors for this page:
 - `apps/web` is a real UI codebase, not just a mock folder.
 - It is still only partially connected to backend reality.
 - Mock data still dominates large parts of the surface.
-- There are currently no automated tests under `apps/web`.
+- Local frontend test files now exist under `apps/web/src/**`, but the
+  workspace still exposes no dedicated `test` script or CI lane.
 
 That means the frontend exists, but its documentation must be explicit about the
 gap between visual breadth and production-backed behavior.
@@ -93,7 +94,7 @@ doc must not be the only place where the topic is discoverable.
 
 ## Open Gaps
 
-- No frontend test suite exists yet.
+- No governed frontend test lane exists yet for `@dvt/web`.
 - Mock-data paths still shape the main UX.
 - The docs are now reachable, but the product boundary is still ahead of the
   implementation in several views.

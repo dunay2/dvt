@@ -11,6 +11,7 @@ Draft proposals and candidate changes. Non-normative.
 
 ## Index
 
+- [Architecture Documentation Reconciliation Plan](architecture-doc-reconciliation-plan-20260402.md)
 - [CI Delivery Governance Consolidated Action Plan](ci-delivery-governance-consolidated-action-plan-20260331.md)
 - [Contracts Domain Ownership Migration Plan](contracts-domain-ownership-migration-plan-20260327.md)
 - [DataMode Concept Proposal](datamode_proposal.md)
@@ -21,12 +22,13 @@ Draft proposals and candidate changes. Non-normative.
 - [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
 - [DVT Production Readiness Review - Corrected Top 3 Gaps and Roadmap](dvt_production_readiness_corrected_review_and_roadmap.md)
 - [Evidence Information Architecture And Governance Plan](evidence-information-architecture-plan-20260402.md)
-- [Frontend Roadmap — Prototype To Operational UI](frontend-roadmap-20260219.md)
+- [Frontend Roadmap - Prototype To Operational UI](frontend-roadmap-20260219.md)
+- [G4-PR4: Admission Control Operability - Implementation Plan](gap4-backpressure-admission-pr4-plan-20260326.md)
 - [G4-PR4: Admission Control Operability - Plan B](gap4-backpressure-admission-pr4-planb-20260326.md)
-- [G4-PR4: Admission Control Operability â€” Implementation Plan](gap4-backpressure-admission-pr4-plan-20260326.md)
 - [Governance Startup Card Router Plan](governance-startup-card-router-plan-20260402.md)
 - [MVP Backend Operability Baseline Roadmap](mvp-backend-operability-baseline-roadmap-20260329.md)
 - [MVP-A1 Backend Contractual Inventory](mvp-a1-backend-contractual-inventory-20260329.md)
+- [Proposal Priority Triage 2026-04-02](proposal-priority-triage-20260402.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](rc-c1-http-error-envelope-normalization-plan-20260331.md)
 - [RC-C2 Shared Preflight And CI Log-First Triage Plan](rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
 - [RC-E3 Execution And Task Tracking Plan](rc-e3-execution-tracking-plan-20260328.md)

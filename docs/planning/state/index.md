@@ -2,7 +2,7 @@
 title: Planning State
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: status
 ---
 
@@ -18,8 +18,6 @@ without replacing canonical status artifacts.
 - [Planning Control Tower](planning-control-tower.md)
 - [Open Task Route](open-task-route.md)
 - [Execution Workboard](execution-workboard.md)
-- [Gap Execution Status](gap-execution-status.md)
-- [Gap Execution Route](gap-execution-route.md)
 - [Domain Status Board](domain-status-board.md)
 - [Inventory and Coverage](inventory-and-coverage.md)
 
@@ -27,4 +25,5 @@ without replacing canonical status artifacts.
 
 - [Planning Status Index](../status/index.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
-- [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
+- [Roadmap Of Record](../roadmap/index.md)
+- [Planning Domains](../domains/index.md)

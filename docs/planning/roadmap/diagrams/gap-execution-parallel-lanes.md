@@ -1,26 +1,26 @@
 ---
-title: Gap Execution Parallel Lanes
+title: Execution Parallel Lanes
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
-# Gap Execution Parallel Lanes
+# Execution Parallel Lanes
 
 Parallel lane model with synchronization gates.
 
 ```mermaid
 flowchart TB
-  F[Gate F: G3 + G4 stable]
-  R[Gate R: Runtime ownership checks]
+  F[Gate F: runtime foundations stable]
+  R[Gate R: runtime ownership checks]
   C[Gate C: Contract compatibility]
   P[Gate P: Prepush + docs governance]
 
-  F --> A[Track A: Runtime G5 -> G7]
-  F --> B[Track B: API Gap4 PR1..PR5]
-  F --> D[Track D: Traceability G6 -> G10]
-  F --> E[Track C: Planner/Contracts G9+]
+  F --> A[Track A: Runtime hardening]
+  F --> B[Track B: API and admission]
+  F --> D[Track D: Traceability]
+  F --> E[Track C: Planner and contracts]
 
   A --> R
   D --> C
@@ -32,5 +32,5 @@ flowchart TB
 
 ## Canonical References
 
-- [Gap Execution Route](../../state/gap-execution-route.md)
+- [Execution Workboard](../../state/execution-workboard.md)
 - [Roadmap By Domain](../roadmap-by-domain.md)

@@ -9,8 +9,8 @@ No score in this document is based only on planning docs.
 - [Atlas Index](../index.md)
 - [Architecture Atlas](../architecture/architecture_atlas.md)
 - [Engineering Playbook](../engineering/engineering_playbook.md)
-- [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md)
-- [Parallel Execution Tracks](../../../planning/gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
+- [System Delivery Status](../../system-delivery-status.md)
+- [Roadmap Of Record](../../../planning/roadmap/index.md)
 
 ## Scoring Method
 
@@ -54,9 +54,9 @@ Weighted by operational impact (engine/planner/temporal/state/api/web/obs/plugin
 
 ## Active Planning Counterparts
 
-- Gap execution plans: `../../../planning/gaps/GAP_EXECUTION_PLANS.md`
-- Parallel execution tracks: `../../../planning/gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`
+- System delivery status: `../../system-delivery-status.md`
+- Roadmap of record: `../../../planning/roadmap/index.md`
 
 ## Next
 
-- Continue with [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md)
+- Continue with [System Delivery Status](../../system-delivery-status.md)

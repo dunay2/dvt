@@ -1,85 +1,58 @@
 ---
 title: apps/web
-status: Draft
-owner: UI / Visualization Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Architecture / Docs
+last_reviewed: 2026-04-02
 ---
 
 # apps/web
 
-## Component Map
+`apps/web` is the deployable browser application shell for DVT.
+
+It owns app bootstrap, routing, shell layout, client-side data flow, and the
+operator-facing experience that consumes the backend runtime surface.
+
+## Current Responsibilities
+
+- bootstrap the browser app and router;
+- render the top-level shell, routes, and major product views;
+- consume backend health and runtime data through client services;
+- isolate frontend composition from backend orchestration concerns.
+
+## Interface Map
 
 ```mermaid
 flowchart LR
-  web[apps/web]
-  api[apps/api]
-  engine[@dvt/engine]
-  web --> api
-  web --> engine
+  User["Browser user"] --> Web["apps/web"]
+  Web --> API["apps/api"]
+  Web --> Services["services / capabilities / stores"]
 ```
 
-## Location
+## Code Anchors
 
-- apps/web
+- [main.tsx](../../../../apps/web/src/main.tsx)
+- [App.tsx](../../../../apps/web/src/app/App.tsx)
+- [routes.ts](../../../../apps/web/src/app/routes.ts)
+- [TopAppBar.tsx](../../../../apps/web/src/app/components/TopAppBar.tsx)
+- [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx)
 
-## Domain
+## Current Posture
 
-- [UI / Visualization Domain](../domain-ui.md)
+The application shell is real and partially backend-backed. Local test files
+exist under `apps/web/src/**`, but the workspace still lacks a declared
+frontend `test` script, so the current governed lane is still `typecheck` plus
+`build`.
 
-## Main Responsibilities
+## Planned Delta
 
-- User interface, visualization
-- Root: WebAggregate (central web model)
-- Aggregates: UIComponentAggregate
-- Ensures user interaction, visualization, and status display
+- `F-01`: simplify the shell and free up canvas space;
+- `F-03`: wire platform health into the visible shell;
+- `F-04`: isolate mock-versus-API data sources;
+- `MVP-E1`: align the shell with the backend contract that exists today.
 
-## Explanation
-
-apps/web is responsible for user interaction, visualization, and status display:
-
-- **Root:** [WebAggregate](web-app.md#webaggregate) — represents the central web model, owning UI components and visualization logic.
-- **Aggregates:** [UIComponentAggregate](web-app.md#uicomponentaggregate).
-- **Responsibilities:**
-  - Display run status and workflow progress.
-  - Enable user interaction and monitoring.
-  - Integrate with API and engine.
-
-**Interactions:**
-
-- **[API](api.md):** Receives status queries and exposes endpoints.
-- **[Engine](engine.md):** Receives workflow status for display.
-
-Web coordinates these interactions to ensure user interaction, visualization, and status display.
-
-## WebAggregate
-
-Represents the central web model, owning UI components and visualization logic. Responsible for:
-
-- Managing UI components
-- Managing visualization logic
-- Reporting web status
-
-## UIComponentAggregate
-
-Represents UI component management for web. Responsible for:
-
-- Storing UI components
-- Managing UI operations
-- Reporting UI status
-
-## Restrictions
-
-- Must comply with UI contracts and API definitions
-- Only interacts with UI domain, API, and engine
-
-## Related Documentation
-
-- [Component Map](../component-map.md)
-- [UI / Visualization Domain](../domain-ui.md)
-
-## Detailed Documentation
+## Historical Deep Dives
 
 - [DDD Structure](web-app-ddd.md)
 - [Functionalities](web-app-functional.md)
-- [Constraints & Invariants](web-app-constraints.md)
-- [Sequence Diagrams](web-app-sequence.md)
+- [Constraints and invariants](web-app-constraints.md)
+- [Sequence diagrams](web-app-sequence.md)

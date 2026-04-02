@@ -15,42 +15,42 @@ expected_outcome:
   - migration recovery is defined
   - governance startup routing is explicit
 header_markdown: >
-  Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y
-  consistencia de interfaces.
+  You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal
+  design, and interface consistency.
 
 
-  ## Principios obligatorios
+  ## Mandatory Principles
 
 
-  - Shared kernel minimo: en contratos solo entra lo cross-domain
+  - Minimal shared kernel: only cross-domain surfaces belong in contracts
 
-  - Contracts-first: no se cambia runtime sin contrato verificable
+  - Contracts-first: do not change runtime behavior without a verifiable contract
 
-  - Ownership explicito: cada puerto tiene dueno y frontera clara
+  - Explicit ownership: every port has a clear owner and boundary
 
-  - Composition root disciplinado: sin rewiring por conveniencia
+  - Disciplined composition root: no convenience rewiring
 
-  - Cero drift: docs, tipos y tests deben contar la misma verdad
-
-
-  ## Forma de trabajo
+  - Zero drift: docs, types, and tests must describe the same truth
 
 
-  - Definir frontera de dominio y contrato
-
-  - Ajustar wiring del root sin mezclar responsabilidades
-
-  - Validar con pruebas de contrato y regresion negativa
+  ## Working Style
 
 
-  ## Restricciones
+  - Define the domain boundary and contract
+
+  - Adjust root wiring without mixing responsibilities
+
+  - Validate with contract tests and negative regression coverage
 
 
-  - No mover contratos de dominio a `@dvt/contracts` si no son shared
+  ## Constraints
 
-  - No agregar atajos de compatibilidad silenciosos
 
-  - No introducir deuda oculta ni TODO placeholders
+  - Do not move domain contracts into `@dvt/contracts` unless they are shared
+
+  - Do not add silent compatibility shortcuts
+
+  - Do not introduce hidden debt or TODO placeholders
 tasks:
   - task_id: MVP-A1
     priority: P0
@@ -614,94 +614,41 @@ tasks:
       facade.
     complexity: L
     effort_points: 8
-    progress_pct: 40
+    progress_pct: 25
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/contracts/planner/PlanStoreRecords.v1.md
-      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
     status_reason: >-
-      ADR-0043 is now accepted and S08-2 contract hardening is implemented with schema-backed
-      records, parser invariants, tests, and contract docs. Artifacts-owned ports, Postgres
-      migration, and admission cutover remain open.
+      The code-grounded S08 re-review is now captured in the repo and Lane A owns the execution
+      path, but contract, port, and adapter implementation work have not started yet.
     last_verified: '2026-04-02'
-  - task_id: S08-3
-    parent_task: S08
-    priority: P0
-    status: queued
+  - task_id: DOC-ARCH-01
+    priority: P1
+    status: in_progress
     objective: >-
-      introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel
-      behavior-port drift.
+      reconcile repository-wide architecture docs with current code, simplify overlapping
+      architecture surfaces, and archive stale snapshots that no longer describe the shipped
+      runtime.
     dependency: none
     target: >-
-      `@dvt/artifacts` publishes `IPlanStoreWriter` and `IPlanStoreReader` and no new plan-storage
-      behavior port is introduced in `@dvt/contracts`.
-    complexity: S
-    effort_points: 2
-    progress_pct: 0
+      Canonical architecture reading order is explicit, stale architecture snapshots are either
+      rewritten or archived, broken planning-domain references are removed, and contributors have a
+      guide for keeping architecture docs aligned after runtime changes.
+    complexity: M
+    effort_points: 3
+    progress_pct: 90
     evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
-    last_verified: '2026-04-02'
-  - task_id: S08-4
-    parent_task: S08
-    priority: P0
-    status: queued
-    objective: >-
-      evolve Postgres plan-store persistence to the three-part model while keeping compatibility
-      during migration.
-    dependency: S08-3
-    target: >-
-      Postgres persists plan records, executability records, and admission links with a
-      compatibility facade for existing callers.
-    complexity: S
-    effort_points: 2
-    progress_pct: 0
-    evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
-    last_verified: '2026-04-02'
-  - task_id: S08-5
-    parent_task: S08
-    priority: P0
-    status: queued
-    objective: >-
-      cut over planner-backed admission to require adapter-scoped executability and write explicit
-      admission links.
-    dependency: S08-4
-    target: >-
-      admission enforces adapter-scoped `VALID` executability and writes `PlanAdmissionLink`
-      relations in the new model.
-    complexity: S
-    effort_points: 2
-    progress_pct: 0
-    evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
-    last_verified: '2026-04-02'
-  - task_id: S08-6
-    parent_task: S08
-    priority: P1
-    status: queued
-    objective: >-
-      add supersession and archival lifecycle support without introducing speculative binding-state
-      lifecycle coupling.
-    dependency: S08-5
-    target: >-
-      supersession and archival transitions are explicit in persisted plan records and fully covered
-      by tests in the migrated runtime path.
-    complexity: S
-    effort_points: 2
-    progress_pct: 0
-    evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
+      - docs/planning/proposals/architecture-doc-reconciliation-plan-20260402.md
+      - docs/architecture/architecture-surface-inventory-20260402.md
+      - docs/architecture/system-delivery-status.md
+      - docs/architecture/atlas/architecture/architecture_atlas.md
+      - docs/planning/execution-model/index.md
+    status_reason: >-
+      Waves 1 to 4 are now delivered: canonical reading order is published, planning-domain drift is
+      corrected, the architecture atlas is historical, supporting architecture maps are
+      non-canonical, and the component subtree now routes through explicit supporting entrypoints,
+      but final archive consolidation and a contributor maintenance guide remain open.
     last_verified: '2026-04-02'
   - task_id: plan-version-reset
     priority: P1
@@ -752,17 +699,17 @@ dependency_notes:
     workstream; the documentation truth-correction and ownership package are in progress while
     implementation slices remain queued behind that baseline.
   - >-
-    `S08-3/4/5/6` are now explicit subtasks under `S08` with sequenced dependencies for ports,
-    Postgres migration, admission cutover, and supersession/archival closure.
+    `DOC-ARCH-01` is the active architecture-documentation reconciliation tracker; it starts by
+    freezing canonical sources, then truth-corrects active docs before any archive cleanup.
   - '`plan-version-reset` is closed and remains independent.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-02'
-  total_tasks: 37
-  total_effort_points: 140
-  completed_weighted_points: 63.16
-  lane_progress_pct: 45
+  total_tasks: 34
+  total_effort_points: 135
+  completed_weighted_points: 65.86
+  lane_progress_pct: 49
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

@@ -81,7 +81,7 @@ full catalog.
 | [docs/architecture/reference-architecture.md](../../architecture/reference-architecture.md) | `architectural`                      | Top-level principles               | Hexagonal architecture, deterministic execution, event-sourced lifecycle, explicit tenant isolation, replaceable infrastructure behind ports.                           |
 | [docs/planning/index.md](../../planning/index.md)                                           | `entrypoint`                         | Planning navigation                | Roadmap, status, gaps, proposals, and reviews are distinct planning surfaces and must not be treated as interchangeable.                                                |
 | [docs/planning/roadmap/index.md](../../planning/roadmap/index.md)                           | `operational`                        | Roadmap-of-record classification   | Do not create parallel roadmap entry points; do not use status docs as roadmap docs; classify new roadmap-like files explicitly.                                        |
-| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md) | `status`                             | Current implementation truth       | This is the status doc, not the canonical behavioral spec; use it with the canonical matrix and gap plans.                                                              |
+| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md) | `status`                             | Current implementation truth       | This is the status doc, not the canonical behavioral spec; use it with the canonical matrix, workboard, and roadmap surfaces.                                           |
 | [docs/planning/status/canonical-doc-code-matrix.md](canonical-doc-code-matrix.md)           | `status`                             | Topic-level traceability           | For each high-value topic, identify canonical spec, code paths, tests, and verification commands.                                                                       |
 
 ## Core Normative Sources
@@ -269,18 +269,18 @@ Additional enforcement surface:
 
 ## Status, Risk, Evidence, And Planning Surfaces
 
-| Source                                                                                      | Type                   | What it governs                                                       |
-| ------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------- |
-| [docs/planning/status/index.md](index.md)                                                   | `status entrypoint`    | Index of generated and curated status artifacts.                      |
-| [docs/planning/status/generated-code-state.md](generated-code-state.md)                     | `generated status`     | Current workspace, source, and test inventory.                        |
-| [docs/planning/status/generated-capability-coverage.md](generated-capability-coverage.md)   | `generated status`     | Capability coverage signal.                                           |
-| [docs/planning/status/generated-spec-traceability.md](generated-spec-traceability.md)       | `generated status`     | Generated spec traceability report.                                   |
-| [docs/planning/status/release-please-continuous.md](release-please-continuous.md)           | `status`               | Release process status.                                               |
-| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md) | `status`               | Current truth by layer, gap posture, and reading order.               |
-| [docs/planning/gaps/index.md](../gaps/index.md)                                             | `planning gap control` | Active gap execution posture and closure criteria.                    |
-| [docs/risk-register/index.md](../../risk-register/index.md)                                 | `risk`                 | Open risks that still require mitigation or acceptance.               |
-| [docs/evidence/index.md](../../evidence/index.md)                                           | `evidence`             | Validation proof for closed or hardened work.                         |
-| [docs/runbooks/index.md](../../runbooks/index.md)                                           | `operations`           | Runtime procedures, incident response, and worker operation guidance. |
+| Source                                                                                      | Type                 | What it governs                                                          |
+| ------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
+| [docs/planning/status/index.md](index.md)                                                   | `status entrypoint`  | Index of generated and curated status artifacts.                         |
+| [docs/planning/status/generated-code-state.md](generated-code-state.md)                     | `generated status`   | Current workspace, source, and test inventory.                           |
+| [docs/planning/status/generated-capability-coverage.md](generated-capability-coverage.md)   | `generated status`   | Capability coverage signal.                                              |
+| [docs/planning/status/generated-spec-traceability.md](generated-spec-traceability.md)       | `generated status`   | Generated spec traceability report.                                      |
+| [docs/planning/status/release-please-continuous.md](release-please-continuous.md)           | `status`             | Release process status.                                                  |
+| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md) | `status`             | Current truth by layer, open follow-up work, and reading order.          |
+| [docs/planning/gaps/index.md](../gaps/index.md)                                             | `planning reference` | Current tactical gap registers only; not the retired `G1`-`G10` program. |
+| [docs/risk-register/index.md](../../risk-register/index.md)                                 | `risk`               | Open risks that still require mitigation or acceptance.                  |
+| [docs/evidence/index.md](../../evidence/index.md)                                           | `evidence`           | Validation proof for closed or hardened work.                            |
+| [docs/runbooks/index.md](../../runbooks/index.md)                                           | `operations`         | Runtime procedures, incident response, and worker operation guidance.    |
 
 ## Historical And Non-Authoritative Surfaces
 

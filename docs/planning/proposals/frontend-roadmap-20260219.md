@@ -1,195 +1,183 @@
 ---
-title: Frontend Roadmap — Prototype To Operational UI
+title: Frontend Roadmap - Prototype To Operational UI
 status: Active
 owner: Product / UX / Frontend
-last_reviewed: 2026-03-27
+last_reviewed: 2026-04-03
 planning_type: proposal
 ---
 
-# Frontend Roadmap — Prototype To Operational UI
+# Frontend Roadmap - Prototype To Operational UI
 
 ## Context
 
 The execution of this roadmap is tracked in
 [Agent Lane E](../state/agent-lane-e.md) (`docs/planning/state/agent-lane-e.md`).
-Lane E tasks (F-01 through F-11) are the canonical work units; this document
-provides the strategic rationale, architecture decisions, and API surface
-requirements that inform them.
+Lane E tasks (`MVP-E1`, `F-01` through `F-14`) are the canonical work units.
+This document captures the convergence sequence and the architectural rationale
+behind those tasks.
 
-Original analysis: 2026-02-19. Updated to reflect active state: 2026-03-27.
+Original analysis: 2026-02-19. Updated to reflect active state: 2026-04-03.
 
 ---
 
 ## Diagnosis
 
-### Frontend today
+### Frontend reality today
 
-`apps/web` is a high-fidelity prototype with broad surface coverage:
+`apps/web` is no longer just a visual prototype, but it is not yet an
+operational frontend either.
 
-- 9 routes: `/canvas`, `/runs`, `/artifacts`, `/diff`, `/lineage`, `/cost`,
-  `/plugins`, `/admin`.
-- Unified global Zustand store with mock data (`mockDbtData.ts`, `mockData.ts`).
-- Full Shadcn/Radix UI component library installed.
-- No real API integration — all data is simulated.
+What is already real:
 
-State: visually complete, operationally inert. A demo-first product, not a
-workflow-first product.
+- platform health uses a typed capability boundary backed by the real API;
+- TanStack Query is already present in the shell and several views;
+- the active canvas path runs through `Canvas.tsx`, `CanvasShell`, and
+  `useCanvasController`.
 
-### Backend today
+What is still drifting:
 
-`apps/api` exposes health infrastructure only:
+- mock-backed services still shape large parts of the UI surface;
+- `appStore` still mixes shell, canvas, run, and permission state;
+- the frontend `startRun` path still posts to `/runs`, while the protected API
+  route map advertises `POST /runs/start`;
+- `GraphCanvas.tsx` still exists as a dead legacy path;
+- detailed frontend docs still contain target-state-only wording, stale route
+  claims, and encoding drift;
+- local frontend test files exist, but there is still no governed `test`
+  script or dedicated CI lane for `@dvt/web`.
 
-- `GET /healthz`, `GET /readyz`, `GET /version`, `GET /db/ready`.
-
-No domain endpoints exist yet for `plan`, `run`, `lineage`, `artifacts`,
-`cost`, or `plugins`.
-
-Implication: the frontend can deliver Phase 0 and Phase 1 work without waiting
-for the backend. Phases 2–4 are gated on backend API surface.
+State: partially operational, architecturally inconsistent. The main problem is
+not visual completeness anymore. It is convergence on one truthful runtime,
+state, and documentation model.
 
 ---
 
 ## Guiding Principle
 
-Move from **"UI with many views"** to **"Operational UI backed by real contracts"**.
+Move from "many visible views" to "one operational frontend whose contracts,
+state boundaries, and docs match the real backend surface".
 
-Sequence:
+The sequence must be reality-first:
 
-1. Shell reliability + real connectivity state (no backend domain deps).
-2. Architecture cleanup — store decomposition, service layer, data-source flag.
-3. Core flow (Plan → Run → Monitor) with real data as backend endpoints land.
-4. Secondary views (Artifacts, Diff, Lineage, Cost, Plugins, Admin) activated
-   progressively via feature flags.
-
----
-
-## View Hierarchy
-
-| Level         | Views                         | Mode                                       |
-| ------------- | ----------------------------- | ------------------------------------------ |
-| A — Core      | Canvas, Runs                  | Always active                              |
-| B — Operation | Artifacts, Diff               | Active when backend delivers artifacts API |
-| C — Advanced  | Lineage, Cost, Plugins, Admin | Hidden by default; feature-flag activated  |
+1. freeze the frontend contract baseline before feature wiring grows further;
+2. finish mock-versus-API, state, and query boundary cleanup in the current UI;
+3. deliver the real Plan -> Run -> Monitor flow on top of those boundaries;
+4. only then expand secondary views and tighten frontend validation coverage.
 
 ---
 
-## Architecture Decisions
+## Convergence Phases
+
+### Phase 0 - Contract truth and shell truth
+
+- `MVP-E1`: write the frontend-facing backend contract baseline the UI is
+  actually allowed to rely on.
+- `F-03`: finish real degraded or offline health visibility in the shell.
+- `F-07`: remove the current `/runs` versus `/runs/start` drift and align
+  runtime DTOs to the protected route set.
+
+### Phase 1 - Data and state convergence
+
+- `F-04`: finish the `VITE_DATA_SOURCE` boundary so views stop owning mode
+  decisions.
+- `F-05`: finish store decomposition so shell, graph, run, and status concerns
+  stop leaking through `appStore`.
+- `F-06`: standardize TanStack Query keys, mutation ownership, and invalidation
+  rules across existing views.
+- `F-12`: remove the legacy `GraphCanvas` path so the graph stack is singular.
+
+### Phase 2 - Core runtime flow
+
+- `F-08`: integrate Plan -> Run through the governed runtime contract.
+- `F-09`: make RunsView operational on real list and detail data.
+- `F-10`: converge the event timeline and console on real run events.
+
+### Phase 3 - Surface expansion and hardening
+
+- `F-01`: simplify the shell once the data and state boundaries are cleaner.
+- `F-11`: activate Artifacts, Diff, and Level-C surfaces progressively behind
+  real contracts and feature flags.
+- `F-13`: keep frontend docs aligned with the real code and route posture.
+- `F-14`: add a governed frontend test command and CI lane.
+
+---
+
+## Architectural Decisions
 
 ### Store decomposition
 
-Replace the current single global store with domain-scoped stores:
+The target remains domain-scoped stores, but the work is now framed as
+convergence from the current mixed surface instead of greenfield introduction:
 
-- `shellStore` — layout, panels, focus, navigation.
-- `sessionStore` — tenant, project, environment, git ref.
-- `graphStore` — nodes, edges, selection.
-- `runStore` — current plan, current run, event timeline.
-- `statusStore` — backend health, connectivity, retry state.
+- `shellStore` - layout, panels, focus, navigation;
+- `sessionStore` - tenant, project, environment, git ref;
+- `graphStore` - nodes, edges, selection;
+- `runStore` - current plan, current run, event timeline;
+- `statusStore` - backend health, connectivity, retry state.
 
 ### Data layer
 
-TanStack Query for all remote state:
+TanStack Query is already installed. The real roadmap item is standardization:
 
-- Health queries: `health`, `version`, `dbReady`.
-- Core mutations: `plan` (POST /plans/preview), `run` (POST /runs).
-- Predictable invalidation by domain.
+- stable query keys by domain;
+- mutations owned by service or capability boundaries instead of view-local
+  orchestration;
+- predictable invalidation for health, workspace, run, and operator surfaces.
 
 ### Data source separation
 
 `VITE_DATA_SOURCE=mock|api` controls the data layer. Views never import mock
-data directly — they consume `app/services/*` and typed view-models. Mock mode
-remains usable for development and demo without code changes.
+data directly; they consume `app/services/*` and typed view models. Mock mode
+must remain usable for development and demos without letting mock behavior leak
+into view composition.
 
 ### Service layer
 
-```
-View → useQuery/useMutation (TanStack Query)
-     → app/services/<domain>-service.ts
-     → app/services/platform-client.ts
-     → real API
+```text
+View -> useQuery/useMutation (TanStack Query)
+     -> app/services/<domain>-service.ts
+     -> app/services/platform-client.ts
+     -> real API
 ```
 
 No direct `fetch` calls in components.
 
 ---
 
-## Backend API Surface Required
+## Contract Rule
 
-The frontend will pre-define TypeScript interfaces for these contracts so it is
-ready before backend delivery:
+Until `MVP-E1` and `F-07` are complete, the frontend must not treat a route as
+authoritative just because a view or service currently calls it.
 
-| Endpoint                                           | Phase | Blocks                         |
-| -------------------------------------------------- | ----- | ------------------------------ |
-| `GET /healthz`, `/readyz`, `/version`, `/db/ready` | 0     | F-02, F-03 (already available) |
-| `POST /plans/preview`                              | 2     | F-08                           |
-| `POST /runs`                                       | 2     | F-08                           |
-| `GET /runs`                                        | 2     | F-09                           |
-| `GET /runs/:id`                                    | 2     | F-09                           |
-| `GET /runs/:id/events` (SSE or polling)            | 3     | F-10                           |
-| `GET /artifacts/:runId/*`                          | 4     | F-11                           |
+The protected runtime route map under `apps/api` is the implementation anchor,
+but the UI still needs its own frontend-facing contract artifact that records:
 
-Coordinate timing of Phase 2 endpoints with Lane C (admission) and Lane D
-(GTM/scale).
-
----
-
-## Roadmap Phases
-
-### Phase 0 — Foundation (no backend domain deps)
-
-Tasks: F-01, F-02, F-03, F-04
-
-- Shell cleanup: icon-only nav with tooltips, no redundant sidebar headers,
-  topbar secondary controls collapsed.
-- Typed API client for health endpoints.
-- Real platform state (ok/degraded/offline) in top bar and global banner.
-- `VITE_DATA_SOURCE` flag documented and functional.
-
-### Phase 1 — Architecture
-
-Tasks: F-05, F-06, F-07
-
-- Store decomposition into domain-scoped stores.
-- TanStack Query introduced and configured.
-- TypeScript interfaces pre-defined for Plan and Run API contracts.
-
-### Phase 2 — Core Flow
-
-Tasks: F-08, F-09 — **blocked on backend delivering POST /plans/preview, POST
-/runs, GET /runs, GET /runs/:id**
-
-- Canvas selection → Plan Preview → Run Start → RunsView.
-- Real run list and detail with polling.
-- Error and permission UX (401/403/409/5xx) with actionable messages.
-
-### Phase 3 — Monitoring
-
-Task: F-10 — **blocked on backend delivering GET /runs/:id/events**
-
-- Run event timeline via SSE or polling.
-- Console with ordered, real-time event stream.
-
-### Phase 4 — Controlled Expansion
-
-Task: F-11 — **blocked on artifact and lineage endpoints**
-
-- ArtifactsView and DiffView on real data.
-- Level-C views activated by role or feature flag.
+- the routes the UI is allowed to rely on today;
+- the request or response DTOs consumed by the UI;
+- auth assumptions and known out-of-scope behavior;
+- the difference between currently available routes and planned routes.
 
 ---
 
 ## Success Criteria
 
-1. A user can complete the main flow (Plan → Run → Monitor) without mock data.
+1. The UI contract for runtime work is explicit and matches the protected API
+   routes the backend actually exposes.
 2. The UI always reflects real backend state.
-3. Navigation focuses on core tasks; Level-C views are not visible by default.
-4. The technical base supports future contracts without shell redesign.
-5. Both `mock` and `api` modes remain runnable without code changes.
+3. Store and query boundaries are explicit enough that the shell no longer acts
+   as a god object.
+4. A user can complete the main flow (Plan -> Run -> Monitor) without mock
+   data.
+5. Level-C views remain opt-in and contract-gated.
+6. Frontend docs and validation commands describe the shipped behavior instead
+   of a target-only architecture.
 
 ---
 
 ## Related Files
 
-- [Agent Lane E](../state/agent-lane-e.md) — execution tracking
-- [`apps/web/src/`](../../../apps/web/src/) — frontend source
-- [`apps/api/`](../../../apps/api/) — backend source
-- [`apps/web/FRONTEND_SPRINT_PLAN_TASKS_RISKS.md`](../../../apps/web/FRONTEND_SPRINT_PLAN_TASKS_RISKS.md) — original sprint breakdown (retained as implementation notes)
+- [Agent Lane E](../state/agent-lane-e.md) - execution tracking
+- [Frontend Architecture](../../architecture/frontend/index.md)
+- [UI / Visualization Domain](../../architecture/domain-ui.md)
+- [`apps/web/src/`](../../../apps/web/src/) - frontend source
+- [`apps/api/`](../../../apps/api/) - backend source
