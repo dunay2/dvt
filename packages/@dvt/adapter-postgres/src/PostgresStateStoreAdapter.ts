@@ -147,27 +147,24 @@ export class PostgresStateStoreAdapter
     return this.isSnapshotStaleInternal(tenantId, runId);
   }
 
-  async claimSnapshotWork(
-    batchSize: number
-  ): Promise<Array<{ runId: string; tenantId: string; claimToken: string }>> {
+  async claimSnapshotWork(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>> {
     this.ready();
     return this.claimSnapshotWorkInternal(batchSize);
   }
 
-  async completeSnapshotWork(tenantId: string, runId: string, claimToken: string): Promise<void> {
+  async completeSnapshotWork(tenantId: string, runId: string): Promise<void> {
     this.ready();
-    await this.completeSnapshotWorkInternal(tenantId, runId, claimToken);
+    await this.completeSnapshotWorkInternal(tenantId, runId);
   }
 
   async failSnapshotWork(
     tenantId: string,
     runId: string,
     retryDelayMs: number,
-    errorMessage: string,
-    claimToken: string
+    errorMessage: string
   ): Promise<void> {
     this.ready();
-    await this.failSnapshotWorkInternal(tenantId, runId, retryDelayMs, errorMessage, claimToken);
+    await this.failSnapshotWorkInternal(tenantId, runId, retryDelayMs, errorMessage);
   }
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {

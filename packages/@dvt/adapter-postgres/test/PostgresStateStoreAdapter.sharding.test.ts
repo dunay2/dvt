@@ -1,18 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { normalizeOutboxClaimTimeoutMs } from '../src/PostgresOutboxStore.js';
-import { IS_SNAPSHOT_STALE_ALIAS } from '../src/PostgresSnapshotStalenessQuerySql.js';
 import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
 
 class RecordingPoolClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
   public releaseCalls = 0;
-  constructor(
-    private readonly options: {
-      completeResult?: { deleted: boolean; released: boolean; present?: boolean };
-      failRowCount?: number;
-    } = {}
-  ) {}
 
   async query(sql: string, params?: unknown[]): Promise<{ rows: unknown[]; rowCount: number }> {
     this.queries.push({ sql, params });
@@ -26,37 +19,11 @@ class RecordingPoolClient {
       return { rows: [], rowCount: 0 };
     }
 
-    if (
-      statement.includes('snapshot_work_queue') &&
-      statement.includes('RETURNING q.run_id') &&
-      statement.includes('FOR UPDATE SKIP LOCKED')
-    ) {
+    if (statement.includes('snapshot_work_queue') && statement.includes('RETURNING q.run_id')) {
       return {
-        rows: [
-          { run_id: 'run-1', tenant_id: 'tenant-1', claim_token: '2026-03-12T00:00:00.000000Z' },
-        ],
+        rows: [{ run_id: 'run-1', tenant_id: 'tenant-1' }],
         rowCount: 1,
       };
-    }
-
-    if (statement.includes('deleted AS (') && statement.includes('snapshot_work_queue q')) {
-      return {
-        rows: [
-          this.options.completeResult ?? {
-            deleted: true,
-            released: false,
-            present: true,
-          },
-        ],
-        rowCount: 1,
-      };
-    }
-
-    if (
-      statement.includes('attempts = attempts + 1') &&
-      statement.includes('snapshot_work_queue')
-    ) {
-      return { rows: [], rowCount: this.options.failRowCount ?? 1 };
     }
 
     return {
@@ -209,9 +176,7 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     await adapter.isSnapshotStale('tenant-1', 'run-1');
 
-    const staleQuery = client.queries.find((entry) =>
-      entry.sql.includes(`AS ${IS_SNAPSHOT_STALE_ALIAS}`)
-    );
+    const staleQuery = client.queries.find((entry) => entry.sql.includes('AS is_snapshot_stale'));
     expect(staleQuery).toBeDefined();
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
     expect(staleQuery?.sql).toContain('WHERE m.tenant_id = $1');
@@ -230,9 +195,7 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     const result = await adapter.claimSnapshotWork(7);
 
-    expect(result).toEqual([
-      { runId: 'run-1', tenantId: 'tenant-1', claimToken: '2026-03-12T00:00:00.000000Z' },
-    ]);
+    expect(result).toEqual([{ runId: 'run-1', tenantId: 'tenant-1' }]);
     const claimQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('FROM "DvtOps".snapshot_work_queue') &&
@@ -253,45 +216,26 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       assumeSchemaReady: true,
     });
 
-    await adapter.completeSnapshotWork('tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z');
-    await adapter.failSnapshotWork(
-      'tenant-1',
-      'run-1',
-      1500,
-      'rebuild failed',
-      '2026-03-12T00:00:00.000000Z'
-    );
+    await adapter.completeSnapshotWork('tenant-1', 'run-1');
+    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500, 'rebuild failed');
 
     const completeQuery = client.queries.find((entry) =>
       entry.sql.includes('DELETE FROM "DvtOps".snapshot_work_queue q')
     );
     expect(completeQuery).toBeDefined();
-    expect(completeQuery?.params).toEqual(['tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z']);
-    expect(completeQuery?.sql).toContain('WITH present AS (');
-    expect(completeQuery?.sql).toContain('deleted AS (');
+    expect(completeQuery?.params).toEqual(['tenant-1', 'run-1']);
+    expect(completeQuery?.sql).toContain('WITH deleted AS (');
     expect(completeQuery?.sql).toContain('SET claimed_at = NULL');
     expect(completeQuery?.sql).toContain('next_attempt_at = NULL');
     expect(completeQuery?.sql).toContain('last_error = NULL');
     expect(completeQuery?.sql).toContain('NOT EXISTS (SELECT 1 FROM deleted)');
-    expect(completeQuery?.sql).toContain(
-      `to_char(q.claimed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') = $3`
-    );
 
     const failQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('attempts = attempts + 1') && entry.sql.includes('last_error = $4')
     );
     expect(failQuery).toBeDefined();
-    expect(failQuery?.params).toEqual([
-      'tenant-1',
-      'run-1',
-      1500,
-      'rebuild failed',
-      '2026-03-12T00:00:00.000000Z',
-    ]);
-    expect(failQuery?.sql).toContain(
-      `to_char(claimed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') = $5`
-    );
+    expect(failQuery?.params).toEqual(['tenant-1', 'run-1', 1500, 'rebuild failed']);
   });
 
   it('normalizes snapshot work fail error payload before writing', async () => {
@@ -304,20 +248,14 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       assumeSchemaReady: true,
     });
 
-    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500, '   ', '2026-03-12T00:00:00.000000Z');
+    await adapter.failSnapshotWork('tenant-1', 'run-1', 1500, '   ');
 
     const failQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('attempts = attempts + 1') && entry.sql.includes('last_error = $4')
     );
     expect(failQuery).toBeDefined();
-    expect(failQuery?.params).toEqual([
-      'tenant-1',
-      'run-1',
-      1500,
-      'unknown_error',
-      '2026-03-12T00:00:00.000000Z',
-    ]);
+    expect(failQuery?.params).toEqual(['tenant-1', 'run-1', 1500, 'unknown_error']);
   });
 
   it('rejects invalid snapshot work retry delay values', async () => {
@@ -330,91 +268,15 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       assumeSchemaReady: true,
     });
 
-    await expect(
-      adapter.failSnapshotWork('tenant-1', 'run-1', -1, 'boom', '2026-03-12T00:00:00.000000Z')
-    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
-    await expect(
-      adapter.failSnapshotWork(
-        'tenant-1',
-        'run-1',
-        Number.NaN,
-        'boom',
-        '2026-03-12T00:00:00.000000Z'
-      )
-    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
-    await expect(
-      adapter.failSnapshotWork(
-        'tenant-1',
-        'run-1',
-        Number.POSITIVE_INFINITY,
-        'boom',
-        '2026-03-12T00:00:00.000000Z'
-      )
-    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
-  });
-
-  it('rejects empty snapshot work claim token values', async () => {
-    const adapter = new PostgresStateStoreAdapter({
-      pool: {
-        connect: async () => {
-          throw new Error('connect should not be reached');
-        },
-      } as never,
-      assumeSchemaReady: true,
-    });
-
-    await expect(adapter.completeSnapshotWork('tenant-1', 'run-1', '   ')).rejects.toThrow(
-      'INVALID_SNAPSHOT_WORK_CLAIM_TOKEN'
+    await expect(adapter.failSnapshotWork('tenant-1', 'run-1', -1, 'boom')).rejects.toThrow(
+      'INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS'
+    );
+    await expect(adapter.failSnapshotWork('tenant-1', 'run-1', Number.NaN, 'boom')).rejects.toThrow(
+      'INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS'
     );
     await expect(
-      adapter.failSnapshotWork('tenant-1', 'run-1', 1000, 'boom', '   ')
-    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_CLAIM_TOKEN');
-  });
-
-  it('rejects completeSnapshotWork when claim token no longer owns the row', async () => {
-    const client = new RecordingPoolClient({
-      completeResult: { deleted: false, released: false, present: true },
-    });
-    const adapter = new PostgresStateStoreAdapter({
-      pool: {
-        connect: async () => client,
-      } as never,
-      assumeSchemaReady: true,
-    });
-
-    await expect(
-      adapter.completeSnapshotWork('tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z')
-    ).rejects.toThrow('SNAPSHOT_WORK_CLAIM_NOT_OWNED');
-  });
-
-  it('treats completeSnapshotWork as idempotent when queue row is already gone', async () => {
-    const client = new RecordingPoolClient({
-      completeResult: { deleted: false, released: false, present: false },
-    });
-    const adapter = new PostgresStateStoreAdapter({
-      pool: {
-        connect: async () => client,
-      } as never,
-      assumeSchemaReady: true,
-    });
-
-    await expect(
-      adapter.completeSnapshotWork('tenant-1', 'run-1', '2026-03-12T00:00:00.000000Z')
-    ).resolves.toBeUndefined();
-  });
-
-  it('rejects failSnapshotWork when claim token no longer owns the row', async () => {
-    const client = new RecordingPoolClient({ failRowCount: 0 });
-    const adapter = new PostgresStateStoreAdapter({
-      pool: {
-        connect: async () => client,
-      } as never,
-      assumeSchemaReady: true,
-    });
-
-    await expect(
-      adapter.failSnapshotWork('tenant-1', 'run-1', 1000, 'boom', '2026-03-12T00:00:00.000000Z')
-    ).rejects.toThrow('SNAPSHOT_WORK_CLAIM_NOT_OWNED');
+      adapter.failSnapshotWork('tenant-1', 'run-1', Number.POSITIVE_INFINITY, 'boom')
+    ).rejects.toThrow('INVALID_SNAPSHOT_WORK_RETRY_DELAY_MS');
   });
 
   it('rejects invalid outbox claim timeout values', () => {

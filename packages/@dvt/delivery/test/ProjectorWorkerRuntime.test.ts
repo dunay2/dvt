@@ -6,12 +6,8 @@ import {
   type ProjectorWorkerRuntimeLogger,
 } from '../src/application/ProjectorWorkerRuntime.js';
 
-function makeStaleRun(
-  runId: string,
-  tenantId = 'tenant-1',
-  claimToken?: string
-): { runId: string; tenantId: string; claimToken?: string } {
-  return { runId, tenantId, claimToken };
+function makeStaleRun(runId: string, tenantId = 'tenant-1'): { runId: string; tenantId: string } {
+  return { runId, tenantId };
 }
 
 function makeSilentLogger(): ProjectorWorkerRuntimeLogger {
@@ -188,10 +184,7 @@ describe('ProjectorWorkerRuntime', () => {
       const store: ProjectorStateStore = {
         claimSnapshotWork: vi
           .fn()
-          .mockResolvedValue([
-            makeStaleRun('run-1', 'tenant-1', 'claim-token-1'),
-            makeStaleRun('run-2', 'tenant-1', 'claim-token-2'),
-          ]),
+          .mockResolvedValue([makeStaleRun('run-1'), makeStaleRun('run-2')]),
         listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-legacy')]),
         rebuildSnapshot: rebuild,
         completeSnapshotWork,
@@ -207,47 +200,6 @@ describe('ProjectorWorkerRuntime', () => {
       expect(completeSnapshotWork).toHaveBeenCalledTimes(2);
     });
 
-    it('passes claim token to completeSnapshotWork for queue-claimed work', async () => {
-      const completeSnapshotWork = vi.fn().mockResolvedValue(undefined);
-      const store: ProjectorStateStore = {
-        claimSnapshotWork: vi
-          .fn()
-          .mockResolvedValue([makeStaleRun('run-1', 'tenant-1', 'claim-token-1')]),
-        rebuildSnapshot: vi.fn().mockResolvedValue(undefined),
-        completeSnapshotWork,
-      };
-      const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), { batchSize: 5 });
-
-      await runtime.runOnce();
-
-      expect(completeSnapshotWork).toHaveBeenCalledWith('tenant-1', 'run-1', 'claim-token-1');
-    });
-
-    it('treats claim ownership loss on complete as non-fatal after rebuild', async () => {
-      const rebuildSnapshot = vi.fn().mockResolvedValue(undefined);
-      const completeSnapshotWork = vi
-        .fn()
-        .mockRejectedValue(new Error('SNAPSHOT_WORK_CLAIM_NOT_OWNED: tenant-1/run-1'));
-      const failSnapshotWork = vi.fn().mockResolvedValue(undefined);
-      const logger = makeSilentLogger();
-      const store: ProjectorStateStore = {
-        claimSnapshotWork: vi
-          .fn()
-          .mockResolvedValue([makeStaleRun('run-1', 'tenant-1', 'claim-token-1')]),
-        rebuildSnapshot,
-        completeSnapshotWork,
-        failSnapshotWork,
-      };
-      const runtime = new ProjectorWorkerRuntime(store, logger, { batchSize: 5 });
-
-      const result = await runtime.runOnce();
-
-      expect(result).toEqual({ processed: 1, lag: 1 });
-      expect(rebuildSnapshot).toHaveBeenCalledWith('tenant-1', 'run-1');
-      expect(failSnapshotWork).not.toHaveBeenCalled();
-      expect(logger.warn).toHaveBeenCalled();
-    });
-
     it('skips rebuild when isSnapshotStale reports false for queued work', async () => {
       const rebuild = vi.fn().mockResolvedValue(undefined);
       const completeSnapshotWork = vi.fn().mockResolvedValue(undefined);
@@ -255,10 +207,7 @@ describe('ProjectorWorkerRuntime', () => {
       const store: ProjectorStateStore = {
         claimSnapshotWork: vi
           .fn()
-          .mockResolvedValue([
-            makeStaleRun('run-1', 'tenant-1', 'claim-token-1'),
-            makeStaleRun('run-2', 'tenant-1', 'claim-token-2'),
-          ]),
+          .mockResolvedValue([makeStaleRun('run-1'), makeStaleRun('run-2')]),
         rebuildSnapshot: rebuild,
         isSnapshotStale,
         completeSnapshotWork,
@@ -279,7 +228,7 @@ describe('ProjectorWorkerRuntime', () => {
       const rebuild = vi.fn().mockRejectedValue(new Error('boom'));
       const failSnapshotWork = vi.fn().mockResolvedValue(undefined);
       const store: ProjectorStateStore = {
-        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-1', 'tenant-1', 'ct-1')]),
+        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-1')]),
         rebuildSnapshot: rebuild,
         failSnapshotWork,
       };
@@ -291,38 +240,13 @@ describe('ProjectorWorkerRuntime', () => {
       const result = await runtime.runOnce();
 
       expect(result).toEqual({ processed: 0, lag: 1 });
-      expect(failSnapshotWork).toHaveBeenCalledWith('tenant-1', 'run-1', 4321, 'boom', 'ct-1');
-    });
-
-    it('treats claim ownership loss on failSnapshotWork as non-fatal release race', async () => {
-      const rebuild = vi.fn().mockRejectedValue(new Error('boom'));
-      const failSnapshotWork = vi
-        .fn()
-        .mockRejectedValue(new Error('SNAPSHOT_WORK_CLAIM_NOT_OWNED: tenant-1/run-1'));
-      const logger = makeSilentLogger();
-      const store: ProjectorStateStore = {
-        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-1', 'tenant-1', 'ct-1')]),
-        rebuildSnapshot: rebuild,
-        failSnapshotWork,
-      };
-      const runtime = new ProjectorWorkerRuntime(store, logger, {
-        batchSize: 5,
-        errorBackoffMs: 4321,
-      });
-
-      const result = await runtime.runOnce();
-
-      expect(result).toEqual({ processed: 0, lag: 1 });
-      expect(logger.warn).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(failSnapshotWork).toHaveBeenCalledWith('tenant-1', 'run-1', 4321, 'boom');
     });
 
     it('falls back to listStaleSnapshotRuns to fill uncovered stale work', async () => {
       const rebuild = vi.fn().mockResolvedValue(undefined);
       const store: ProjectorStateStore = {
-        claimSnapshotWork: vi
-          .fn()
-          .mockResolvedValue([makeStaleRun('run-queue', 'tenant-1', 'claim-token-queue')]),
+        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-queue')]),
         listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
         rebuildSnapshot: rebuild,
       };
@@ -340,9 +264,7 @@ describe('ProjectorWorkerRuntime', () => {
     it('does not run fallback polling every tick when queue mode is enabled', async () => {
       const rebuild = vi.fn().mockResolvedValue(undefined);
       const store: ProjectorStateStore = {
-        claimSnapshotWork: vi
-          .fn()
-          .mockResolvedValue([makeStaleRun('run-queue', 'tenant-1', 'claim-token-queue')]),
+        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-queue')]),
         listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
         rebuildSnapshot: rebuild,
       };
@@ -362,27 +284,9 @@ describe('ProjectorWorkerRuntime', () => {
   });
 
   describe('start / stop', () => {
-    it('skips queue item when claim token is missing and logs an error', async () => {
-      const logger = makeSilentLogger();
-      const rebuildSnapshot = vi.fn().mockResolvedValue(undefined);
-      const store = {
-        claimSnapshotWork: vi.fn().mockResolvedValue([{ runId: 'run-1', tenantId: 'tenant-1' }]),
-        rebuildSnapshot,
-      } as unknown as ProjectorStateStore;
-      const runtime = new ProjectorWorkerRuntime(store, logger, { batchSize: 2 });
-
-      const result = await runtime.runOnce();
-
-      expect(result).toEqual({ processed: 0, lag: 0 });
-      expect(rebuildSnapshot).not.toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalled();
-    });
-
     it('resets fallback polling cadence across start-stop cycles', async () => {
       const store: ProjectorStateStore = {
-        claimSnapshotWork: vi
-          .fn()
-          .mockResolvedValue([makeStaleRun('run-queue', 'tenant-1', 'claim-token-queue')]),
+        claimSnapshotWork: vi.fn().mockResolvedValue([makeStaleRun('run-queue')]),
         listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
         rebuildSnapshot: vi.fn().mockResolvedValue(undefined),
       };
