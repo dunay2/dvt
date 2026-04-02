@@ -600,6 +600,29 @@ tasks:
       - docs/planning/reviews/20260322-ddd-hexagonal-port-audit-review.md
     status_reason: Final modularization backlog item; no implementation evidence yet.
     last_verified: '2026-03-31'
+  - task_id: S08
+    priority: P0
+    status: in_progress
+    objective: >-
+      formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual
+      plan identity, or repository-shaped CQRS collapse.
+    dependency: none
+    target: >-
+      Accepted ownership ADR, executable proposal, and truth-corrected planning surfaces that keep
+      serializable planner records in `@dvt/contracts`, move plan-storage behavior to
+      `@dvt/artifacts`, and sequence the Postgres-backed migration from the current lifecycle
+      facade.
+    complexity: L
+    effort_points: 8
+    progress_pct: 25
+    evidence_refs:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+    status_reason: >-
+      The code-grounded S08 re-review is now captured in the repo and Lane A owns the execution
+      path, but contract, port, and adapter implementation work have not started yet.
+    last_verified: '2026-04-02'
   - task_id: plan-version-reset
     priority: P1
     status: done
@@ -644,15 +667,19 @@ dependency_notes:
     `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and
     `RC-G1-B/C/D` define the remaining execution sequence.
   - '`GOV-S1` is closed with the startup card/router now published in the governance inventory.'
+  - >-
+    `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary
+    workstream; the documentation truth-correction and ownership package are in progress while
+    implementation slices remain queued behind that baseline.
   - '`plan-version-reset` is closed and remains independent.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-02'
-  total_tasks: 32
-  total_effort_points: 124
-  completed_weighted_points: 61.16
-  lane_progress_pct: 49
+  total_tasks: 33
+  total_effort_points: 132
+  completed_weighted_points: 63.16
+  lane_progress_pct: 48
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

@@ -2,7 +2,7 @@
 title: Planner Current State Assessment
 status: Active
 owner: Architecture / Planner / Docs
-last_reviewed: 2026-03-20
+last_reviewed: 2026-04-02
 planning_type: status
 ---
 
@@ -127,8 +127,9 @@ topo/depth -> resolve policies -> build steps -> assemble canonical plan`) is
 
 What is _not_ closed:
 
-- explicit persisted plan storage and validation lifecycle implementation
-  (`S08` plus runtime handoff);
+- explicit operational plan modeling for artifact truth, adapter-scoped
+  executability, admission linkage, supersession, and archival (`S08` plus
+  runtime handoff);
 - planner-side enforcement of `custom` namespace registration;
 - fail-closed unknown `StepKind` enforcement end-to-end;
 - unified plan-version governance across planner, contracts, verifier, engine,
@@ -137,18 +138,18 @@ What is _not_ closed:
 
 ## Component Scorecard
 
-| Component                                 | Score | Checkpoints | Current truth                                                                            | Main open items                                                 |
-| ----------------------------------------- | ----- | ----------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Contract and governance surface           | `92%` | `5.5 / 6`   | Public contracts are canonicalized; local-doc triage and owner/date assignment now exist | Stage 1.1 is still package-local rather than repo-local         |
-| Application boundary and artifact ingress | `83%` | `5 / 6`     | `PlannerFacade`, `manifestRef` ingress, and typed `graphSource` normalization are real   | default resolver composition, compatibility-path retirement     |
-| Deterministic compilation core            | `94%` | `7.5 / 8`   | Core planning pipeline is implemented and well tested                                    | volatile plan metadata still mixed into assembly                |
-| Step semantics and type governance        | `71%` | `5 / 7`     | Policy vocabulary and `IStepTypeRegistry` are real                                       | fail-closed unknown kinds, `custom` enforcement                 |
-| Compiled artifact binding and enrichment  | `70%` | `3.5 / 5`   | `compiledCodeRef` enrichment exists and is governed                                      | runtime binding lifecycle not fully closed                      |
-| Version and compatibility governance      | `67%` | `4 / 6`     | contracts, verifier, and engine now all contain plan-version surfaces                    | planner still emits a hardcoded version, governance still split |
-| Validation lifecycle and plan storage     | `50%` | `3 / 6`     | contracts describe the lifecycle and the bridge is tested                                | no `PostgresPlanStore`, no runtime lifecycle implementation     |
-| Plan interpreter satellite                | `88%` | `3.5 / 4`   | shared DAG interpreter exists and is consumed                                            | still lacks a dedicated normative contract                      |
-| Gateway DSL satellite                     | `75%` | `3 / 4`     | deterministic parser/evaluator exists and is consumed                                    | no accepted repository-wide DSL spec                            |
-| Productization and recovery integration   | `17%` | `1 / 6`     | planner-engine bridge tests exist                                                        | no recovery flow, no persisted plan product surface             |
+| Component                                 | Score | Checkpoints | Current truth                                                                                                                    | Main open items                                                          |
+| ----------------------------------------- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Contract and governance surface           | `92%` | `5.5 / 6`   | Public contracts are canonicalized; local-doc triage and owner/date assignment now exist                                         | Stage 1.1 is still package-local rather than repo-local                  |
+| Application boundary and artifact ingress | `83%` | `5 / 6`     | `PlannerFacade`, `manifestRef` ingress, and typed `graphSource` normalization are real                                           | default resolver composition, compatibility-path retirement              |
+| Deterministic compilation core            | `94%` | `7.5 / 8`   | Core planning pipeline is implemented and well tested                                                                            | volatile plan metadata still mixed into assembly                         |
+| Step semantics and type governance        | `71%` | `5 / 7`     | Policy vocabulary and `IStepTypeRegistry` are real                                                                               | fail-closed unknown kinds, `custom` enforcement                          |
+| Compiled artifact binding and enrichment  | `70%` | `3.5 / 5`   | `compiledCodeRef` enrichment exists and is governed                                                                              | runtime binding lifecycle not fully closed                               |
+| Version and compatibility governance      | `67%` | `4 / 6`     | contracts, verifier, and engine now all contain plan-version surfaces                                                            | planner still emits a hardcoded version, governance still split          |
+| Validation lifecycle and plan storage     | `50%` | `3 / 6`     | contracts describe the lifecycle and the runtime already uses `PostgresPlanStore` plus a partial executability-validation bridge | no mature `PlanRecord` model, no explicit admission/supersession surface |
+| Plan interpreter satellite                | `88%` | `3.5 / 4`   | shared DAG interpreter exists and is consumed                                                                                    | still lacks a dedicated normative contract                               |
+| Gateway DSL satellite                     | `75%` | `3 / 4`     | deterministic parser/evaluator exists and is consumed                                                                            | no accepted repository-wide DSL spec                                     |
+| Productization and recovery integration   | `17%` | `1 / 6`     | planner-engine bridge tests exist                                                                                                | no recovery flow, no persisted plan product surface                      |
 
 Equal-weight average across those components: `71%`.
 
@@ -183,6 +184,9 @@ That average is less important than the shape of the profile:
   adapters.
 - `@dvt/dsl` exists as a deliberately tiny deterministic gateway-expression
   package.
+- `PostgresPlanStore`, `StoredPlanExecutabilityValidator`, and
+  `PlannerBackedStartRunUseCase` already provide a partial persisted-plan
+  runtime bridge for planner-backed admission.
 
 ## What Is Still Open
 
@@ -195,8 +199,10 @@ That average is less important than the shape of the profile:
   `schemaVersion` and `contractVersion`; this is documented by
   `apps/api/test/integration/plannerEngineContract.test.ts`.
 - The contracts for plan validation lifecycle, executability validation,
-  binding verification, and binding storage exist, but runtime implementations
-  are not closed as a coherent planner product surface.
+  binding verification, and binding storage exist, and the runtime now has a
+  partial persisted-plan bridge, but the repository still lacks a coherent
+  `PlanRecord` model, explicit admission links, and an artifacts-owned plan
+  storage boundary.
 - `custom` namespace registration is governed in contracts but not enforced in
   planner code.
 - The target-state fail-closed unknown-step policy exists in contracts, while
@@ -508,9 +514,12 @@ Partial:
 
 Open:
 
-- no `PostgresPlanStore`
-- no runtime implementation of the persisted validation lifecycle
-- no admission flow that consumes the validated-plan lifecycle end-to-end
+- `PostgresPlanStore` now exists, but there is still no mature `PlanRecord`
+  product model
+- the persisted validation lifecycle still depends on a partial bridge rather
+  than an explicit artifacts-owned operational model
+- admission still does not consume explicit plan record, executability, and
+  admission-link records end-to-end
 
 ### 8. Plan Interpreter Satellite - `88%`
 

@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-21
+last_reviewed: 2026-04-02
 ---
 
 # Current Status
@@ -60,7 +60,7 @@ Minimum tuple for this document:
 | Area                       | Current posture    | What is true now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Primary status source                                                                                                                                                             |
 | -------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Entry layer                | Partial            | `apps/api` ships the protected runtime command/query surface (`POST /runs/start`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, `POST /runs/:runId/signal`) with OIDC auth, tenant policy, package-level route coverage, a dedicated `pnpm --filter dvt-api test:integration` lane executed against local Docker PostgreSQL on 2026-03-20, and start-run backpressure acquisition now wrapped by low-TTL cache, circuit-breaker, and persisted last-known-good fallback logic; web still has no automated tests | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                              |
-| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; quantified planner baseline is linked (`71%` overall) and the typed graph-source boundary is now real, but lifecycle, productization, and broader product hardening remain open                                                                                                                                                                                                                                                                                  | [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; quantified planner baseline is linked (`71%` overall); the typed graph-source boundary is real; and the planner-backed runtime already uses `PostgresPlanStore` plus adapter-specific executability validation, but the operational plan model, admission linkage, supersession, and broader product hardening remain open                                                                                                                                       | [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 | Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven                                                                                                                                                                                                                                                                                                                                     | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md)                                                                                                            |
 | Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open                                                                                                                                                                                                                                                                                                                                  | [Gap Execution Plans](../planning/archive/gaps/GAP_EXECUTION_PLANS.md)                                                                                                            |
 | Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                                                                                                                                                                                                                                                                                                                                                  | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                                                      |
@@ -144,19 +144,19 @@ For closure criteria, evidence, and exact verification commands, use
 
 ## Phase 2 Slice Debt
 
-| Slice | Title                                | Status                    |
-| ----- | ------------------------------------ | ------------------------- |
-| S01   | Contract And Dead Code Cleanup       | Closed 2026-03-21         |
-| S06   | Migration Version Table              | Closed 2026-03-21         |
-| S10   | Typed Graph-Source Boundary          | Closed 2026-03-20         |
-| S02   | IRunStateStore Split                 | Open (unblocked by S01)   |
-| S03   | StartRunCoordinator Extraction       | Open (unblocked by S01)   |
-| S05   | EventEnvelope.payloadVersion         | Open (unblocked by S01)   |
-| S07   | OpenLineage Job Naming Fix           | Open                      |
-| S09   | Retry Ownership ADR                  | Open                      |
-| S04   | ProviderRefUpdated Event             | Open (blocked by S02+S05) |
-| S08   | Plan Storage ADR + PostgresPlanStore | Open (blocked by S09)     |
-| S11   | ILineageSink.jobFacets Tighten       | Open (blocked by S07)     |
+| Slice | Title                            | Status                       |
+| ----- | -------------------------------- | ---------------------------- |
+| S01   | Contract And Dead Code Cleanup   | Closed 2026-03-21            |
+| S06   | Migration Version Table          | Closed 2026-03-21            |
+| S10   | Typed Graph-Source Boundary      | Closed 2026-03-20            |
+| S02   | IRunStateStore Split             | Open (unblocked by S01)      |
+| S03   | StartRunCoordinator Extraction   | Open (unblocked by S01)      |
+| S05   | EventEnvelope.payloadVersion     | Open (unblocked by S01)      |
+| S07   | OpenLineage Job Naming Fix       | Open                         |
+| S09   | Retry Ownership ADR              | Closed 2026-03-24            |
+| S04   | ProviderRefUpdated Event         | Open (blocked by S02+S05)    |
+| S08   | Plan record and plan store model | Open (unblocked by ADR-0040) |
+| S11   | ILineageSink.jobFacets Tighten   | Open (blocked by S07)        |
 
 See [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
 
