@@ -1,6 +1,6 @@
 ---
 title: 'DVT+ Architectural Review — Pass 2'
-status: Review
+status: Historical
 owner: docs
 last_reviewed: 2026-03-04
 planning_type: review

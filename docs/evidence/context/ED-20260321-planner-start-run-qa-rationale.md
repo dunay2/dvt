@@ -12,7 +12,7 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
   - packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts
   - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
-  - docs/planning/reviews/20260321-planner-backed-start-run-qa-review.md
+  - docs/planning/reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md
   - docs/risk-register/quality/R-20260321-planner-validation-lifecycle-semantics.md
 evidence:
   tests: []
@@ -33,7 +33,7 @@ planner-backed `startRun`, the discoveries made while hardening the slice, and
 the explicit boundaries of what was intentionally not changed.
 
 The repository already has a QA review in
-`docs/planning/reviews/20260321-planner-backed-start-run-qa-review.md`.
+`docs/planning/reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md`.
 That review captures compliance status and remaining gaps. This document is the
 companion rationale record: why the remediation was scoped the way it was and
 what engineering conclusions were preserved as repository truth.

@@ -23,7 +23,7 @@ Canonical write surface after this slice:
 
 - [AGENTS.md](../../../AGENTS.md)
 - [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
-- [20260322 DVT Deep Architectural Review](../reviews/20260322-dvt-deep-architectural-review.md)
+- [20260322 DVT Deep Architectural Review](../archive/reviews/architecture-and-governance/20260322-dvt-deep-architectural-review.md)
 - [ADR-0039](../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
 - [ADR-0013](../../adr/ADR-0013-run-state-store-bootstrapRunTx.md)
 

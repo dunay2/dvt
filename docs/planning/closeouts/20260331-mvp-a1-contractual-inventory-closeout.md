@@ -22,7 +22,7 @@ and synchronized the dependent MVP lane states.
 - moved `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`
   from `Proposed` to `Review`
 - added a code-grounded review at
-  `docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md`
+  `docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md`
 - added accepted evidence at
   `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`
 - updated `MVP-B1`, `MVP-C1`, and `MVP-D1` closure posture to reflect the now

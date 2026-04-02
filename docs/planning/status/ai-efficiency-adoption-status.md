@@ -16,7 +16,7 @@ Human-readable companion to the canonical machine-readable adoption log:
 
 - Initiative: `RC-C2`
 - Governing review:
-  [20260328 Lane C AI Efficiency And Cost Review](../reviews/20260328-lane-c-ai-efficiency-and-cost-review.md)
+  [20260328 Lane C AI Efficiency And Cost Review](../reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - Canonical operational guide:
   [PR Preflight And CI Triage](../../guides/pr-preflight-and-ci-triage.md)
 

@@ -56,12 +56,13 @@ reviews, or closeouts.
 ## Reviews Quick Access
 
 - [Planning Reviews Index](../reviews/index.md)
-- [20260322 Review](../reviews/20260322-general-review.md)
-- [20260322 DDD and Hexagonal Port Audit](../reviews/20260322-ddd-hexagonal-port-audit-review.md)
-- [20260322 DVT Corrected Code Grounded Review](../reviews/20260322-dvt-corrected-code-grounded-review.md)
-- [20260322 DVT Code Grounded Corrective Task List Review](../reviews/20260322-dvt-code-grounded-corrective-task-list-review.md)
-- [20260314 Domain Cohesion Review](../reviews/20260314-domain-cohesion-review.md)
-- [20260305 Review](../reviews/20260305-general-review.md)
+- [Review Status Board](../reviews/review-status-board.md)
+- [20260326 DVT Principal Architectural Review](../reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md)
+- [20260314 Domain Cohesion Review](../reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
+- [20260331 MVP-A1 Backend Contractual Inventory Review](../reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md)
+- [20260330 MVP-B1 Claim-To-Evidence Traceability Matrix](../reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md)
+- [20260330 MVP-D1 Residual Risk Baseline Review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)
+- [20260402 RC-C2 Operational Friction Intake Review](../reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)
 
 ## Recommended Reading Order For Any Planning Task
 

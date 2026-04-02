@@ -359,4 +359,4 @@ graph TD
 - [`packages/@dvt/engine/test/services/RunMaintenanceService.intentReconciliation.test.ts`](../../../packages/@dvt/engine/test/services/RunMaintenanceService.intentReconciliation.test.ts)
 - [`apps/api/src/plugins/env.ts`](../../../apps/api/src/plugins/env.ts)
 - [`apps/outbox-worker/src/plugins/env.ts`](../../../apps/outbox-worker/src/plugins/env.ts)
-- [`docs/planning/reviews/20260314-domain-cohesion-review.md`](../reviews/20260314-domain-cohesion-review.md)
+- [`docs/planning/reviews/architecture-and-governance/20260314-domain-cohesion-review.md`](../reviews/architecture-and-governance/20260314-domain-cohesion-review.md)

@@ -67,7 +67,7 @@ review becomes part of the lane's canonical evidence set.
 
 - Mode: Slim
 - Scope:
-  - `docs/planning/reviews/20260402-rc-c2-operational-friction-intake-review.md`
+  - `docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md`
   - `docs/planning/closeouts/20260402-rc-c2-operational-friction-intake-closeout.md`
   - `docs/planning/state/agent-lane-c.yaml`
   - generated planning surfaces from `pnpm docs:sync` and
@@ -108,7 +108,7 @@ review becomes part of the lane's canonical evidence set.
 
 ## Real Work Performed
 
-- Added `docs/planning/reviews/20260402-rc-c2-operational-friction-intake-review.md` as
+- Added `docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md` as
   the canonical synthesis of operational friction across multiple session
   artifacts.
 - Moved the private working log from
@@ -128,8 +128,8 @@ review becomes part of the lane's canonical evidence set.
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/reviews/review-naming-policy.md`
-- `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md`
-- `docs/planning/reviews/20260330-ci-prepush-pr-process-observations.md`
+- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
 - `docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md`
 
 ## Docs Synced

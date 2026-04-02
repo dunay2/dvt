@@ -4,7 +4,7 @@ baseline:
   tool_calls: 58
   avoidable_validation_reruns: 7
   rcu_total: 41.75
-  source_review: docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
+  source_review: docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
 targets:
   min_round_reduction_pct: 20
   required_consecutive_cycles: 3

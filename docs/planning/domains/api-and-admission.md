@@ -28,7 +28,7 @@ and auth-runtime integration.
 
 ## Relevant Reviews And Closeouts
 
-- [20260321 Planner-Backed StartRun QA Review](../reviews/20260321-planner-backed-start-run-qa-review.md)
+- [20260321 Planner-Backed StartRun QA Review](../reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md)
 - [20260316 API Start Run Adapter Config Closeout](../closeouts/20260316-api-start-run-adapter-config-closeout.md)
 - [20260320 API Runtime Query Integration Closeout](../closeouts/20260320-api-runtime-query-integration-closeout.md)
 

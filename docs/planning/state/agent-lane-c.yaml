@@ -79,7 +79,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: Accepted ADR-0040 is the canonical closure artifact for retry ownership.
     last_verified: '2026-03-31'
   - task_id: S16
@@ -305,8 +305,8 @@ tasks:
     effort_points: 3
     progress_pct: 67
     evidence_refs:
-      - docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
-      - docs/planning/reviews/20260402-rc-c2-operational-friction-intake-review.md
+      - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
+      - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
       - docs/guides/pr-preflight-and-ci-triage.md
       - docs/planning/proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
       - docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md

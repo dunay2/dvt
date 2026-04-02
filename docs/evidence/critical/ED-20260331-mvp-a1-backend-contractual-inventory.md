@@ -10,7 +10,7 @@ breaking: false
 evidence_class: critical
 code_refs:
   - docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md
-  - docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md
+  - docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
   - apps/api/src/app.ts
   - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
   - apps/api/src/routes/health.ts

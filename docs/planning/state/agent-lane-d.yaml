@@ -61,7 +61,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md
+      - docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason: >-
@@ -80,7 +80,7 @@ tasks:
     evidence_refs:
       - docs/planning/closeouts/20260329-run-event-retention-closeout.md
       - docs/evidence/critical/ED-20260330-retention-archive-object-store-hardening.md
-      - docs/planning/reviews/20260329-run-event-retention-ttl-kickoff-review.md
+      - docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md
     status_reason:
       Retention runtime wiring and hardening are closed by closeout plus accepted evidence.
     last_verified: '2026-03-31'
@@ -151,7 +151,7 @@ tasks:
     effort_points: 8
     progress_pct: 0
     evidence_refs:
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: >-
       The design remains deferred until payload versioning and retention prerequisites are fully
       closed.
@@ -192,7 +192,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/strategic-product-roadmap-20260324.md
     status_reason:
       The queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
@@ -234,7 +234,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/strategic-product-roadmap-20260324.md
-      - docs/planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md
+      - docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
     status_reason: Deferred GTM/finance integration with no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: compliance documentation pack

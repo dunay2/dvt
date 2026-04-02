@@ -1,6 +1,6 @@
 ---
 title: DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
-status: Draft
+status: Historical
 owner: docs
 last_reviewed: 2026-03-06
 planning_type: review

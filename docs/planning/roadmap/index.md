@@ -45,6 +45,9 @@ Concept anchors for this page:
 - `docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md`
   Classification: subsystem roadmap proposal
   Use it for: MVP backend operability baseline scope (`IN`/`OUT`) and consolidation lanes
+- `docs/planning/roadmap/review-remediation-roadmap-20260402.md`
+  Classification: subsystem roadmap
+  Use it for: sprint-based execution sequencing of review findings and blockers
 - `docs/architecture/system-delivery-status.md`
   Classification: status board
   Use it for: what is true now in implementation
@@ -83,6 +86,7 @@ Current subsystem roadmaps worth consulting:
 - [Gap 5 Executive Delivery Roadmap](gap-5-executive-delivery-roadmap-20260319.md)
 - [Planner Target State And Hardening Roadmap](../proposals/planner-target-state-roadmap-20260320.md)
 - [Roadmap By Domain](roadmap-by-domain.md)
+- [Review Remediation Roadmap 2026-04](review-remediation-roadmap-20260402.md)
 
 ## Domain And Diagram Navigation
 

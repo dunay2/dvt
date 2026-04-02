@@ -121,7 +121,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md
+      - docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md
       - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason:
@@ -140,8 +140,8 @@ tasks:
     effort_points: 8
     progress_pct: 70
     evidence_refs:
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
-      - docs/planning/reviews/20260324-dvt-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
+      - docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md
     status_reason: >-
       Payload-content validation landed, but the full envelope-level payloadVersion closure is still
       not accepted.
@@ -170,7 +170,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260322-dvt-code-grounded-corrective-task-list-review.md
+      - docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-code-grounded-corrective-task-list-review.md
       - apps/lineage-worker/src/server.ts
       - docs/planning/strategic-product-roadmap-20260324.md
     status_reason: >-

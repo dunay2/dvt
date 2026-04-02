@@ -12,7 +12,7 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts
   - packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
   - packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts
-  - docs/planning/reviews/20260328-lineage-outbox-fowler-qa-hard-review.md
+  - docs/planning/reviews/event-contract-and-traceability/20260328-lineage-outbox-fowler-qa-hard-review.md
 evidence:
   tests:
     - pnpm vitest packages/@dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts packages/@dvt/delivery/test/LineageWorkerRuntime.test.ts

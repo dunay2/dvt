@@ -62,7 +62,7 @@ The repository now has executable evidence for the current implementation:
 
 ## Evidence
 
-- `docs/planning/reviews/20260321-planner-backed-start-run-qa-review.md`
+- `docs/planning/reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md`
 - `docs/evidence/context/ED-20260321-planner-start-run-qa-rationale.md`
 - `packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts`
 - `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`

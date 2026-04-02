@@ -1,9 +1,17 @@
 ---
 title: Command Logging Pane 2026-04-02
+status: Draft
+owner: docs
+last_reviewed: 2026-04-02
+planning_type: status
+---
+
+title: Command Logging Pane 2026-04-02
 status: Review
 owner: Docs / Delivery
 last_reviewed: 2026-04-02
 planning_type: status
+
 ---
 
 # Command Logging Pane 2026-04-02
