@@ -2,7 +2,7 @@
 title: Agent Lane A - Contracts And State-Store Boundary
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-02
 planning_type: status
 ---
 
@@ -34,17 +34,17 @@ Generated from the verified lane registry `agent-lane-a.yaml`. Use this file whe
 
 ## Goal
 
-Close the state-store boundary and the smallest contract cleanup slice around it.
+Close the state-store boundary, retire contract ownership drift, and keep governance startup executable.
 
 ## Verification Summary
 
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
-- Verified on: `2026-03-31`
-- Total tasks: `26`
-- Total effort points: `102`
-- Completed weighted points: `55.66`
-- Lane progress: `55%`
+- Verified on: `2026-04-02`
+- Total tasks: `32`
+- Total effort points: `124`
+- Completed weighted points: `61.16`
+- Lane progress: `49%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -66,6 +66,12 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - [ ] `P2` `S18-F1-C` `queued` `M` `3pt` `0%` parent:`S18-F1`: close the bundle contract shape with explicit export semantics and negative-path tests.
 - [x] `P1` `schema-migration-rollback` `done` `M` `5pt` `100%`: make storage changes recoverable after S02.
 - [x] `P1` `S13` `done` `S` `2pt` `100%`: remove duplicate estimateRunRef declaration.
+- [ ] `P1` `RC-G1` `in_progress` `L` `2pt` `25%`: retire contract ownership drift across `engine`, `planner`, and `shared`.
+- [x] `P1` `RC-G1-A` `done` `M` `3pt` `100%` parent:`RC-G1`: freeze the ownership matrix and the `stay shared` versus `move to owner` taxonomy.
+- [ ] `P1` `RC-G1-B` `queued` `L` `5pt` `0%` parent:`RC-G1`: move non-shared engine ports out of `@dvt/contracts` and into `@dvt/engine`.
+- [ ] `P1` `RC-G1-C` `queued` `L` `5pt` `0%` parent:`RC-G1`: move non-shared delivery, traceability, and artifacts ports to their owner packages.
+- [ ] `P1` `RC-G1-D` `queued` `L` `5pt` `0%` parent:`RC-G1`: move planner-private ports to `@dvt/planner` and close the final shared-kernel cleanup.
+- [x] `P2` `GOV-S1` `done` `S` `2pt` `100%`: add a quick-start governance router so startup no longer requires a deep inventory read.
 - [x] `P1` `RC-A5` `done` `M` `3pt` `100%`: replace silent markResolved catch with warning/metric telemetry so intent-resolution failures are observable.
 - [x] `P1` `RC-E3` `done` `M` `3pt` `100%`: replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError> return type to eliminate the Divergent Change smell.
 - [ ] `P1` `DHM` `in_progress` `L` `2pt` `52%`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
@@ -88,12 +94,16 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete adapter rollback path.
 - `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization work is schedulable.
 - `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in sequence.
+- `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and `RC-G1-B/C/D` define the remaining execution sequence.
+- `GOV-S1` is closed with the startup card/router now published in the governance inventory.
 - `plan-version-reset` is closed and remains independent.
 
 ## Expected Outcome
 
 - state-store ownership is explicit
+- contract ownership routing is explicit
 - composition-root wiring names exact roles
 - contract drift is reduced
 - optional maintenance ownership is explicit
 - migration recovery is defined
+- governance startup routing is explicit

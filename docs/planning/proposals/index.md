@@ -22,6 +22,7 @@ Draft proposals and candidate changes. Non-normative.
 - [Frontend Roadmap — Prototype To Operational UI](frontend-roadmap-20260219.md)
 - [G4-PR4: Admission Control Operability - Plan B](gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4: Admission Control Operability â€” Implementation Plan](gap4-backpressure-admission-pr4-plan-20260326.md)
+- [Governance Startup Card Router Plan](governance-startup-card-router-plan-20260402.md)
 - [MVP Backend Operability Baseline Roadmap](mvp-backend-operability-baseline-roadmap-20260329.md)
 - [MVP-A1 Backend Contractual Inventory](mvp-a1-backend-contractual-inventory-20260329.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](rc-c1-http-error-envelope-normalization-plan-20260331.md)

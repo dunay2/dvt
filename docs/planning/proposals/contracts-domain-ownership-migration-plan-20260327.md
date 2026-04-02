@@ -1,8 +1,8 @@
 ---
 title: Contracts Domain Ownership Migration Plan
-status: Proposed
+status: Active
 owner: Architecture / Contracts / Engine / Planner / Delivery / Artifacts / Traceability
-last_reviewed: 2026-03-27
+last_reviewed: 2026-04-02
 planning_type: proposal
 ---
 
@@ -27,6 +27,20 @@ Separar ownership fisico y semantico de contratos para que:
 2. Los puertos no-shared se muevan a su bounded context dueno.
 3. El grafo de dependencias refleje dominio real y no conveniencia historica.
 
+## Tracker operativo activo
+
+Este documento es la propuesta canonica activa para `RC-G1`.
+
+- tracker operativo: `docs/planning/state/agent-lane-a.yaml`
+- tarea paraguas: `RC-G1`
+- slices activos:
+  - `RC-G1-A`: freeze de ownership matrix
+  - `RC-G1-B`: engine ports migration
+  - `RC-G1-C`: delivery / traceability / artifacts migration
+  - `RC-G1-D`: planner-private migration + final shared-kernel cleanup
+
+No se debe abrir una segunda propuesta paralela para este mismo trabajo.
+
 ## Regla de clasificacion (por que se mueve y por que no)
 
 Se mueve un contrato fuera de `@dvt/contracts` cuando:
@@ -40,6 +54,25 @@ No se mueve un contrato cuando:
 1. Es shape serializable cross-context (DTO, ref, envelope, id, schema).
 2. Es contrato de compatibilidad y validacion de frontera entre contextos.
 3. ADR vigente fija su hogar canonico en shared (`@dvt/contracts`).
+
+## Freeze de taxonomia por familia
+
+| Familia                   | Disposicion     | Hogar canonico              | Regla de decision                                                           |
+| ------------------------- | --------------- | --------------------------- | --------------------------------------------------------------------------- |
+| `shared` serializable     | `stay shared`   | `@dvt/contracts`            | DTOs, refs, envelopes, ids, schemas y contratos publicos cross-context      |
+| `engine` behavioral ports | `move to owner` | `@dvt/engine`               | puertos/policies cuyo significado semantico depende de engine               |
+| `planner` private ports   | `move to owner` | `@dvt/planner`              | puertos/policies privados de planner que no son contratos publicos ADR-0035 |
+| `delivery` ports          | `move to owner` | `@dvt/delivery`             | puertos operativos de outbox/delivery que no son shape shared               |
+| `traceability` ports      | `move to owner` | `@dvt/traceability-service` | puertos de emision/publicacion de lineage                                   |
+| `artifacts` ports         | `move to owner` | `@dvt/artifacts`            | puertos hexagonales de storage/reader/writer de artefactos                  |
+
+La decision binaria permitida para cada contrato afectado por `RC-G1` es solo:
+
+1. `stay shared`
+2. `move to owner`
+
+No se usan categorias intermedias, "semi-shared", ni wrappers permanentes de
+conveniencia.
 
 ## Que
 
@@ -155,12 +188,12 @@ Conteo de archivos que referencian cada contrato principal:
 
 Este documento actua como tracker dedicado para el trabajo bajo ADR-0034.
 
-| Slice                               | Owner                                           | Target date | Touched packages                                                                                                              | Validation baseline                            | Rollback note                                                  |
-| ----------------------------------- | ----------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------- |
-| S1 Engine ports                     | Engine + Contracts                              | 2026-04-03  | `@dvt/engine`, `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`                         | tests paquetes tocados + `pnpm verify:prepush` | mantener alias de compat hasta residual imports = 0            |
-| S2 Delivery/Lineage/Artifacts ports | Delivery + Traceability + Artifacts + Contracts | 2026-04-10  | `@dvt/delivery`, `@dvt/traceability-service`, `@dvt/artifacts`, `@dvt/contracts`, `apps/outbox-worker`, `apps/lineage-worker` | tests paquetes tocados + `pnpm verify:prepush` | revertir uso a alias shared temporalmente                      |
-| S3 Planner non-shared ports         | Planner + Contracts + API + Adapter-postgres    | 2026-04-17  | `@dvt/planner`, `@dvt/contracts`, `apps/api`, `@dvt/adapter-postgres`                                                         | tests paquetes tocados + `pnpm verify:prepush` | conservar dual export hasta cierre total                       |
-| S4 Contract surface cleanup         | Contracts + Architecture                        | 2026-04-24  | `@dvt/contracts`, docs governance                                                                                             | `pnpm verify:prepush` + docs checks            | restaurar re-exports removidos en hotfix si rompe consumidores |
+| Slice     | Owner                                           | Target date | Touched packages                                                                                                              | Validation baseline                                                     | Rollback note                                       |
+| --------- | ----------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------- |
+| `RC-G1-A` | Architecture + Contracts + Docs                 | 2026-04-02  | `docs/planning/proposals`, `docs/planning/reviews`, `docs/planning/state`, `docs/contracts`                                   | `pnpm docs:sync`, `pnpm docs:workboard:generate`, `pnpm verify:prepush` | N/A - doc and tracker freeze only                   |
+| `RC-G1-B` | Engine + Contracts                              | 2026-04-03  | `@dvt/engine`, `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`                         | ARC-2 evidence + touched-package tests + `pnpm verify:prepush`          | mantener alias de compat hasta residual imports = 0 |
+| `RC-G1-C` | Delivery + Traceability + Artifacts + Contracts | 2026-04-10  | `@dvt/delivery`, `@dvt/traceability-service`, `@dvt/artifacts`, `@dvt/contracts`, `apps/outbox-worker`, `apps/lineage-worker` | ARC-2 evidence + touched-package tests + `pnpm verify:prepush`          | revertir uso a alias shared temporalmente           |
+| `RC-G1-D` | Planner + Contracts + API + Adapter-postgres    | 2026-04-24  | `@dvt/planner`, `@dvt/contracts`, `apps/api`, `@dvt/adapter-postgres`, docs governance                                        | ARC-2 evidence + touched-package tests + `pnpm verify:prepush`          | conservar dual export hasta cierre total            |
 
 ## Riesgos y mitigaciones
 

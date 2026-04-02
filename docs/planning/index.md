@@ -53,6 +53,7 @@ Concept anchors for this page:
 - [Frontend Roadmap — Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
 - [G4-PR4: Admission Control Operability - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
 - [G4-PR4: Admission Control Operability â€” Implementation Plan](proposals/gap4-backpressure-admission-pr4-plan-20260326.md)
+- [Governance Startup Card Router Plan](proposals/governance-startup-card-router-plan-20260402.md)
 - [MVP Backend Operability Baseline Roadmap](proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [MVP-A1 Backend Contractual Inventory](proposals/mvp-a1-backend-contractual-inventory-20260329.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)

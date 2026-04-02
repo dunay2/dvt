@@ -46,6 +46,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260329 MVP backend operability roadmap reset](ED-20260329-mvp-backend-operability-roadmap-reset.md)
 - [ED-20260329 MVP-C1 backend control-plane runbook](ED-20260329-mvp-c1-backend-control-plane-runbook.md)
 - [ED-20260331 MVP-A1 backend contractual inventory](ED-20260331-mvp-a1-backend-contractual-inventory.md)
+- [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)
 - [Evidence Doc: G5 canary local-docker](ED-20260312-g5-canary-local-docker.md)
