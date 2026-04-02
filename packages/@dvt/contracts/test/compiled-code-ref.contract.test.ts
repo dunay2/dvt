@@ -115,6 +115,15 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     expect(() => parseRunEventWrite(withoutPayloadVersion)).toThrow();
   });
 
+  it('rejects write envelopes whose runId is only whitespace', () => {
+    expect(() =>
+      parseRunEventWrite({
+        ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
+        runId: '   ',
+      })
+    ).toThrow();
+  });
+
   it('rejects RunFailed payloads that do not expose a reason', () => {
     expect(() =>
       parseRunEventWrite({

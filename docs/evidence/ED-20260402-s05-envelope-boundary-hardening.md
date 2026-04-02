@@ -31,7 +31,8 @@ evidence:
 
 This evidence closes the `S05-part-1` hardening slice at the real write
 boundaries by enforcing the full run-event envelope contract, including
-`payloadVersion`, before in-memory or Postgres write-path logic proceeds.
+`payloadVersion`, before in-memory or Postgres write-path logic proceeds, and
+by restoring canonical rejection of whitespace-only `runId` values.
 
 ## What this evidence proves
 
@@ -41,7 +42,9 @@ boundaries by enforcing the full run-event envelope contract, including
    rather than relying on ad hoc field checks before contract validation.
 3. Postgres write-boundary tests now explicitly reject write envelopes that omit
    `payloadVersion`, not only envelopes that use the wrong version value.
-4. Both write boundaries preserve fail-closed behavior and reject invalid
+4. The shared contract now rejects whitespace-only `runId` values instead of
+   relying on one engine-local guard.
+5. Both write boundaries preserve fail-closed behavior and reject invalid
    envelopes before any event persistence occurs.
 
 ## Validation results
