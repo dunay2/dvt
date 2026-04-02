@@ -24,11 +24,11 @@ This version corrects five problems in the prior plan.
 
 ### Repository sources
 
-- [`docs/architecture/system-delivery-status.md`](https://github.com/dunay2/dvt/blob/main/docs/architecture/system-delivery-status.md)
-- [`docs/planning/status/generated-code-state.md`](https://github.com/dunay2/dvt/blob/main/docs/planning/status/generated-code-state.md)
-- [`apps/web/package.json`](https://github.com/dunay2/dvt/blob/main/apps/web/package.json)
-- [`package.json`](https://github.com/dunay2/dvt/blob/main/package.json)
-- [`docs/planning/status/planner-current-state-assessment-20260320.md`](https://github.com/dunay2/dvt/blob/main/docs/planning/status/planner-current-state-assessment-20260320.md)
+- [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
+- [`docs/planning/status/generated-code-state.md`](../status/generated-code-state.md)
+- [`apps/web/package.json`](../../../apps/web/package.json)
+- [`package.json`](../../../package.json)
+- [`docs/planning/status/planner-current-state-assessment-20260320.md`](../status/planner-current-state-assessment-20260320.md)
 
 ### External references used as design benchmarks
 
@@ -77,7 +77,7 @@ Observability is still important, but the repo's own Phase 2 debt list names mor
 - `S05 EventEnvelope.payloadVersion`
 - `S04 ProviderRefUpdated Event`
 - `S08 plan record and plan store model`
-- `S09 Retry Ownership ADR`
+- `ADR-0040 retry ownership baseline`
 
 Those are more direct production blockers than treating observability as a single generic bucket.
 
@@ -928,11 +928,11 @@ It also avoids the previous mistake of staying too generic.
 ## Repository
 
 - <https://github.com/dunay2/dvt>
-- <https://github.com/dunay2/dvt/blob/main/docs/architecture/system-delivery-status.md>
-- <https://github.com/dunay2/dvt/blob/main/docs/planning/status/generated-code-state.md>
-- <https://github.com/dunay2/dvt/blob/main/docs/planning/status/planner-current-state-assessment-20260320.md>
-- <https://github.com/dunay2/dvt/blob/main/apps/web/package.json>
-- <https://github.com/dunay2/dvt/blob/main/package.json>
+- [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)
+- [docs/planning/status/generated-code-state.md](../status/generated-code-state.md)
+- [docs/planning/status/planner-current-state-assessment-20260320.md](../status/planner-current-state-assessment-20260320.md)
+- [apps/web/package.json](../../../apps/web/package.json)
+- [package.json](../../../package.json)
 
 ## External
 
