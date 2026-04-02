@@ -1,0 +1,21 @@
+---
+id: R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE
+title: Snapshot retry error capture and fallback polling cadence may alter operator expectations
+status: Open
+date: 2026-04-02
+owners:
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/delivery
+severity: Medium
+probability: Medium
+context: >
+  The adapter now writes normalized failure text to snapshot retry rows and the projector runtime
+  throttles fallback stale-run polling while queue mode is enabled.
+risk: >
+  Operators and downstream tooling may observe different retry diagnostics and different timing of
+  fallback discovery compared with prior behavior.
+mitigations:
+  - Adapter tests verify retry delay guards and normalized error payload persistence.
+  - Delivery tests verify fallback polling cadence and restart-cycle behavior.
+  - Pre-push gate and package tests are executed before PR publication.
+---
