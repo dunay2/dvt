@@ -1,11 +1,9 @@
 ---
-title: Fecha Logging pane
+title: Command Logging Pane 2026-04-02
 status: Draft
 owner: docs
 last_reviewed: 2026-04-02
 planning_type: status
----
-
 ---
 
 title: Command Logging Pane 2026-04-02
@@ -16,7 +14,7 @@ planning_type: status
 
 ---
 
-# Fecha Logging pane
+# Command Logging Pane 2026-04-02
 
 ## Command Log
 

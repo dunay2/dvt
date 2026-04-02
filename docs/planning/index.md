@@ -73,8 +73,8 @@ Concept anchors for this page:
 
 - [AI Efficiency Adoption Status](status/ai-efficiency-adoption-status.md)
 - [Canonical Doc Code Matrix](status/canonical-doc-code-matrix.md)
+- [Command Logging Pane 2026-04-02](status/20260402-command-logging-pane.md)
 - [Evidence Classification Inventory 20260402](status/evidence-classification-inventory-20260402.md)
-- [Fecha Logging pane](status/20260402-command-logging-pane.md)
 - [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)
 - [Generated Spec Traceability](status/generated-spec-traceability.md)
