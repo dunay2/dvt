@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:contracts:planner:PlanAdmissionLink:v1.0.0",
+  "title": "PlanAdmissionLinkV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["planId", "runId", "adapterId", "admittedAtIso"],
+  "properties": {
+    "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "runId": { "type": "string", "minLength": 1 },
+    "adapterId": { "type": "string", "minLength": 1 },
+    "admittedAtIso": { "type": "string", "minLength": 1 }
+  }
+}

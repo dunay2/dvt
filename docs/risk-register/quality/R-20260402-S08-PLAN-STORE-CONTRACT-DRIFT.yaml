@@ -1,0 +1,27 @@
+---
+id: R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT
+title: Persisted plan record contracts can drift back into dual truth and invalid state acceptance
+status: Open
+date: 2026-04-02
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/artifacts
+severity: Medium
+probability: Medium
+context: >
+  S08 introduces persisted planner-record contracts for canonical plan truth, adapter-scoped
+  executability, and plan-to-run admission links. The initial contract slice allowed metadata
+  duplication without embedded-plan validation, widened rejection codes beyond the canonical
+  vocabulary, and modeled state-dependent fields as loose optionals.
+risk: >
+  If future changes let top-level planner-record metadata diverge from the embedded canonical
+  ExecutionPlan, or weaken the explicit record variants, storage and admission flows can reintroduce
+  dual identity, impossible record states, and non-canonical rejection semantics across planner,
+  artifacts, and adapters.
+mitigations:
+  - parsePlanRecord reparses canonicalPlanJson through the canonical ExecutionPlan parser.
+  - Planner-record identity fields must match embedded canonical metadata exactly.
+  - PlanRecord and PlanExecutabilityRecord are modeled as explicit discriminated unions.
+  - Executability rejection codes are locked to the canonical planner vocabulary.
+  - Contract docs, schema-sync tests, and validation tests now ship with the record family.
+---

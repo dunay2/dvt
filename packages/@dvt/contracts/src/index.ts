@@ -62,6 +62,7 @@ export type {
   PolicyMappingEntry,
 } from './contracts/planner/PolicyMappingTable.v1.js';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
+export { EXECUTABILITY_REJECTION_CODES } from './contracts/planner/PlanExecutabilityValidation.v1.js';
 export type {
   ExecutabilityRejectionCode,
   ExecutabilityValidationResult,
@@ -74,6 +75,13 @@ export type {
   PlanBindingRecord,
   StepBindingEntry,
 } from './contracts/planner/ExecutionBindingVerification.v1.js';
+export type { PlanRecord, PlanRecordState } from './contracts/planner/PlanRecord.v1.js';
+export type {
+  PlanExecutabilityRecord,
+  PlanExecutabilityRejectionReport,
+  PlanExecutabilityState,
+} from './contracts/planner/PlanExecutabilityRecord.v1.js';
+export type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
 export type {
   IPlanValidationLifecycleStore,
   PlanValidationRecord,

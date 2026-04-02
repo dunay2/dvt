@@ -41,10 +41,10 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
 - Verified on: `2026-04-02`
-- Total tasks: `33`
-- Total effort points: `132`
+- Total tasks: `37`
+- Total effort points: `140`
 - Completed weighted points: `63.16`
-- Lane progress: `48%`
+- Lane progress: `45%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -82,7 +82,11 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - [ ] `P1` `DHM-WS4` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS4 modularization slice after WS3.
 - [ ] `P1` `DHM-WS2` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS2 modularization slice after WS4.
 - [ ] `P1` `DHM-WS6` `queued` `M` `5pt` `0%` parent:`DHM`: close the final WS6 modularization stream after the preceding workstreams land.
-- [ ] `P0` `S08` `in_progress` `L` `8pt` `25%`: formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual plan identity, or repository-shaped CQRS collapse.
+- [ ] `P0` `S08` `in_progress` `L` `8pt` `40%`: formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual plan identity, or repository-shaped CQRS collapse.
+- [ ] `P0` `S08-3` `queued` `S` `2pt` `0%` parent:`S08`: introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel behavior-port drift.
+- [ ] `P0` `S08-4` `queued` `S` `2pt` `0%` parent:`S08`: evolve Postgres plan-store persistence to the three-part model while keeping compatibility during migration.
+- [ ] `P0` `S08-5` `queued` `S` `2pt` `0%` parent:`S08`: cut over planner-backed admission to require adapter-scoped executability and write explicit admission links.
+- [ ] `P1` `S08-6` `queued` `S` `2pt` `0%` parent:`S08`: add supersession and archival lifecycle support without introducing speculative binding-state lifecycle coupling.
 - [x] `P1` `plan-version-reset` `done` `S` `3pt` `100%`: reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before go-live.
 
 ## Dependencies
@@ -98,6 +102,7 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and `RC-G1-B/C/D` define the remaining execution sequence.
 - `GOV-S1` is closed with the startup card/router now published in the governance inventory.
 - `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary workstream; the documentation truth-correction and ownership package are in progress while implementation slices remain queued behind that baseline.
+- `S08-3/4/5/6` are now explicit subtasks under `S08` with sequenced dependencies for ports, Postgres migration, admission cutover, and supersession/archival closure.
 - `plan-version-reset` is closed and remains independent.
 
 ## Expected Outcome
