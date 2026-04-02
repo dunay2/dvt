@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.0](https://github.com/dunay2/dvt/compare/v5.4.6...v5.5.0) (2026-04-01)
+
+
+### Features
+
+* **api:** Add startRun target-adapter registry wiring ([#727](https://github.com/dunay2/dvt/issues/727)) ([c39574b](https://github.com/dunay2/dvt/commit/c39574b7df1ed9b46c0eff9cf92feb0e32da6a0b))
+
 ## [5.4.6](https://github.com/dunay2/dvt/compare/v5.4.5...v5.4.6) (2026-04-01)
 
 ### Bug Fixes
