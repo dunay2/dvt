@@ -27,6 +27,13 @@ planning_type: status
 - 2026-04-02 16:15:16 | `Get-Date -Format "yyyy-MM-dd HH:mm:ss"` | PASS
 - 2026-04-02 16:15:52 | `Get-Date -Format "yyyy-MM-dd HH:mm:ss"` | PASS
 - 2026-04-02 16:15:53 | `pnpm verify:prepush` | FAIL (`MD060` in this file due to strict table alignment)
+- 2026-04-02 16:17:32 | `git add docs/planning/status/20260402-command-logging-pane.md` | PASS
+- 2026-04-02 16:17:33 | `pnpm commit docs docs "Finalize command logging pane for push and PR evidence"` | PASS
+- 2026-04-02 16:18:25 | `pnpm verify:prepush` | PASS
+- 2026-04-02 16:19:06 | `git push` | PASS
+- 2026-04-02 16:19:26 | `gh pr view --json number,title,url,state,headRefName,baseRefName` | PASS (existing PR #725 was closed)
+- 2026-04-02 16:19:49 | `pnpm pr:validate-title "docs(docs): Reorganize evidence information architecture artifacts"` | PASS
+- 2026-04-02 16:20:07 | `gh pr create --base main --head refactor/executionplan-canonical-name-no-alias --title "docs(docs): Reorganize evidence information architecture artifacts" --body "..."` | PASS (created PR #732)
 
 ## Command Responses
 
@@ -38,6 +45,12 @@ planning_type: status
 - `pnpm exec markdownlint-cli2 ...`: reported `MD060`, requiring table-format correction.
 - `pnpm verify:prepush` at `16:11:52`: failed at `lint:md:changed` for same `MD060`.
 - `pnpm verify:prepush` at `16:15:53`: failed again, confirming table format remained incompatible.
+- `pnpm commit ... finalize command logging pane ...`: pre-commit hooks auto-formatted and commit completed.
+- `pnpm verify:prepush` at `16:18:25`: full chain passed and push-readiness confirmed.
+- `git push` at `16:19:06`: remote branch updated successfully.
+- `gh pr view --json ...`: detected previous PR in `CLOSED` state, so a new PR was required.
+- `pnpm pr:validate-title ...`: title passed local semantic PR gate.
+- `gh pr create ...`: opened new PR `https://github.com/dunay2/dvt/pull/732`.
 
 ## Mejoras Posibles
 
