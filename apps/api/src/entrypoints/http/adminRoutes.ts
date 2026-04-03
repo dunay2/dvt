@@ -12,6 +12,7 @@ import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import type { FastifyInstance } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
+
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { TenantId } from '../../domain/auth/types.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
