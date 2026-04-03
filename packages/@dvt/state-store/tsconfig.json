@@ -8,10 +8,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
-      "@dvt/crypto": ["packages/@dvt/canonical/dist/index.d.ts"],
-      "@dvt/crypto/*": ["packages/@dvt/canonical/dist/*"],
-      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
-      "@dvt/contracts/*": ["packages/@dvt/contracts/dist/*"]
+      "@dvt/crypto": ["../../../packages/@dvt/canonical/dist/index.d.ts"],
+      "@dvt/crypto/*": ["../../../packages/@dvt/canonical/dist/*"],
+      "@dvt/contracts": ["../../../packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"]
     }
   },
   "include": ["src"],
