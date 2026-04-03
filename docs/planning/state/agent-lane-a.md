@@ -2,7 +2,7 @@
 title: Agent Lane A - Contracts And State-Store Boundary
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-03
 planning_type: status
 ---
 
@@ -40,11 +40,11 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
-- Verified on: `2026-04-02`
-- Total tasks: `45`
-- Total effort points: `186`
-- Completed weighted points: `65.86`
-- Lane progress: `35%`
+- Verified on: `2026-04-03`
+- Total tasks: `37`
+- Total effort points: `140`
+- Completed weighted points: `66.36`
+- Lane progress: `47%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -82,19 +82,11 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - [ ] `P1` `DHM-WS4` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS4 modularization slice after WS3.
 - [ ] `P1` `DHM-WS2` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS2 modularization slice after WS4.
 - [ ] `P1` `DHM-WS6` `queued` `M` `5pt` `0%` parent:`DHM`: close the final WS6 modularization stream after the preceding workstreams land.
-- [ ] `P0` `S08` `in_progress` `L` `8pt` `25%`: formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual plan identity, or repository-shaped CQRS collapse.
-- [ ] `P0` `AR-A1` `queued` `L` `8pt` `0%`: introduce TenantId, RunId, PlanId branded/nominal types in @dvt/contracts and propagate to all port signatures to prevent silent parameter swapping and enforce tenant isolation at compile time.
-- [ ] `P0` `AR-A2` `queued` `M` `5pt` `0%`: add per-StepKind JSON Schema validation in @dvt/plan-verifier so that stepTypeConfig is validated against a kind-specific schema before the plan reaches the adapter.
-- [ ] `P0` `MW-A1` `queued` `L` `8pt` `0%`: create a StepKindRegistry with per-kind schema validation, adapter-to-kind mapping, and a documented extension protocol so that adding a new StepKind is a governed, testable operation.
-- [ ] `P0` `MW-A2` `queued` `L` `8pt` `0%`: create a GenericGraphSource format that allows defining DAGs without dbt manifests, so the planner can accept workflow definitions from any source (Spark, Python, API, custom ETL).
-- [ ] `P1` `AR-A3` `queued` `M` `5pt` `0%`: extract enrichRunStatus from IWorkflowEngine into a separate IRunEnrichmentService interface to keep the engine contract pure and remove adapter availability dependency from the read path.
-- [ ] `P1` `MW-A3` `queued` `M` `5pt` `0%`: generalize compiledCodeRef to StepArtifactRef — not every step produces SQL; the artifact model must be step-kind-agnostic to support Python scripts, Spark jobs, API calls, etc.
-- [ ] `P1` `MW-A4` `queued` `S` `3pt` `0%`: document a governed 'How to add a new StepKind' guide covering schema definition, adapter implementation, activity registration, policy mapping, and contract test requirements.
-- [ ] `P2` `AR-A4` `queued` `S` `1pt` `0%`: remove or freeze the custom policy namespace registry (CustomPolicyNamespaceRegistry.v1.ts) until a real consumer exists to reduce speculative extensibility maintenance cost.
-- [ ] `P2` `AR-A5` `queued` `S` `1pt` `0%`: verify that createdAtIso is excluded from the planCore JCS input for planId computation; if included, the same logical plan at different times produces different identity.
-- [ ] `P2` `AR-A6` `queued` `S` `2pt` `0%`: add snapshot projection concurrency requirement to IRunStateStore contract so that mutual exclusion during rebuild is a contract invariant, not an implementation detail of advisory locks.
-- [ ] `P2` `AR-A7` `queued` `M` `5pt` `0%`: split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
-- [ ] `P1` `DOC-ARCH-01` `in_progress` `M` `3pt` `90%`: reconcile repository-wide architecture docs with current code, simplify overlapping architecture surfaces, and archive stale snapshots that no longer describe the shipped runtime.
+- [ ] `P0` `S08` `in_progress` `L` `8pt` `55%`: formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual plan identity, or repository-shaped CQRS collapse.
+- [x] `P0` `S08-3` `done` `S` `2pt` `100%` parent:`S08`: introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel behavior-port drift.
+- [ ] `P0` `S08-4` `queued` `S` `2pt` `0%` parent:`S08`: evolve Postgres plan-store persistence to the three-part model while keeping compatibility during migration.
+- [ ] `P0` `S08-5` `queued` `S` `2pt` `0%` parent:`S08`: cut over planner-backed admission to require adapter-scoped executability and write explicit admission links.
+- [ ] `P1` `S08-6` `queued` `S` `2pt` `0%` parent:`S08`: add supersession and archival lifecycle support without introducing speculative binding-state lifecycle coupling.
 - [x] `P1` `plan-version-reset` `done` `S` `3pt` `100%`: reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before go-live.
 
 ## Dependencies
@@ -109,8 +101,8 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in sequence.
 - `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and `RC-G1-B/C/D` define the remaining execution sequence.
 - `GOV-S1` is closed with the startup card/router now published in the governance inventory.
-- `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary workstream; the documentation truth-correction and ownership package are in progress while implementation slices remain queued behind that baseline.
-- `DOC-ARCH-01` is the active architecture-documentation reconciliation tracker; it starts by freezing canonical sources, then truth-corrects active docs before any archive cleanup.
+- `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are delivered while migration and admission slices remain open.
+- `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next execution slice for Postgres migration compatibility.
 - `plan-version-reset` is closed and remains independent.
 - `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address branded types (P0), stepTypeConfig validation (P0), enrichRunStatus extraction (P1), custom policy cleanup (P2), planId determinism (P2), snapshot concurrency contract (P2), and delivery package split (P2).
 - `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0), GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends on AR-A2; MW-A3 depends on MW-A1.

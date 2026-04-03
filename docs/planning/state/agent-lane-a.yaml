@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-02'
+last_reviewed: '2026-04-03'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -614,36 +614,42 @@ tasks:
       facade.
     complexity: L
     effort_points: 8
-    progress_pct: 25
+    progress_pct: 55
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
     status_reason: >-
-      The code-grounded S08 re-review is now captured in the repo and Lane A owns the execution
-      path, but contract, port, and adapter implementation work have not started yet.
-    last_verified: '2026-04-02'
-  - task_id: AR-A1
+      ADR-0043 is accepted, S08-2 contract hardening is implemented, and S08-3 artifacts-owned
+      read/write ports are now delivered. Postgres migration and admission cutover remain open.
+    last_verified: '2026-04-03'
+  - task_id: S08-3
+    parent_task: S08
     priority: P0
-    status: queued
+    status: done
     objective: >-
       introduce TenantId, RunId, PlanId branded/nominal types in @dvt/contracts and propagate to all
       port signatures to prevent silent parameter swapping and enforce tenant isolation at compile
       time.
     dependency: none
     target: >-
-      All port method signatures use branded types instead of raw strings for domain identifiers;
-      background workers (outbox, projector, archival) cannot silently lose tenant context.
-    complexity: L
-    effort_points: 8
-    progress_pct: 0
+      `@dvt/artifacts` publishes `IPlanStoreWriter` and `IPlanStoreReader` and no new plan-storage
+      behavior port is introduced in `@dvt/contracts`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
     status_reason: >-
-      Identified in deep architectural review as P0 critical risk — tenantId: string has no
-      compile-time enforcement and is a silent corruption vector in background workers.
-    last_verified: '2026-04-02'
-  - task_id: AR-A2
+      Artifacts-owned plan-store writer/reader ports are now implemented and exported from
+      `@dvt/artifacts`, with no new plan-storage behavior port added in `@dvt/contracts`.
+    last_verified: '2026-04-03'
+  - task_id: S08-4
+    parent_task: S08
     priority: P0
     status: queued
     objective: >-
@@ -905,11 +911,11 @@ dependency_notes:
   - '`GOV-S1` is closed with the startup card/router now published in the governance inventory.'
   - >-
     `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary
-    workstream; the documentation truth-correction and ownership package are in progress while
-    implementation slices remain queued behind that baseline.
+    workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are
+    delivered while migration and admission slices remain open.
   - >-
-    `DOC-ARCH-01` is the active architecture-documentation reconciliation tracker; it starts by
-    freezing canonical sources, then truth-corrects active docs before any archive cleanup.
+    `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next
+    execution slice for Postgres migration compatibility.
   - '`plan-version-reset` is closed and remains independent.'
   - >-
     `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address
@@ -923,11 +929,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-02'
-  total_tasks: 45
-  total_effort_points: 186
-  completed_weighted_points: 65.86
-  lane_progress_pct: 35
+  verified_on: '2026-04-03'
+  total_tasks: 37
+  total_effort_points: 140
+  completed_weighted_points: 66.36
+  lane_progress_pct: 47
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
