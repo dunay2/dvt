@@ -344,6 +344,70 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       );
     }));
 
+  test('markSuperseded rejects source that is no longer ACTIVE', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+
+      await store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11);
+      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11)).rejects.toThrow(
+        'PLAN_RECORD_NOT_ACTIVE'
+      );
+    }));
+
+  test('archivePlan rejects unknown plan id', () =>
+    withStore(async (store) => {
+      await expect(store.archivePlan(PLAN_ID.r4_missing, NOW)).rejects.toThrow(
+        'PLAN_RECORD_NOT_FOUND'
+      );
+    }));
+
+  test('getPlanRecordByRef rejects mismatched uri and schemaVersion', () =>
+    withStore(async (store) => {
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+      await expect(
+        store.getPlanRecordByRef({
+          ...planRef,
+          uri: `dvt-plan://postgres/${PLAN_ID.r4_10}`,
+          schemaVersion: 'v1.3',
+        })
+      ).rejects.toThrow('PLAN_REF_MISMATCH');
+    }));
+
+  test('listExecutabilityByAdapter fails fast when persisted VALID row is corrupted', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+      await store.recordExecutability({
+        planId: PLAN_ID.r4_11,
+        adapterId: 'temporal',
+        state: 'VALID',
+        validatedAtIso: NOW,
+      });
+
+      const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('missing postgres connection string for integration test');
+      }
+      const client = new Client({ connectionString });
+      await client.connect();
+      try {
+        await client.query(
+          `
+            UPDATE ${quoteIdentifier(schema)}.plan_executability_records
+            SET validated_at = NULL
+            WHERE plan_id = $1 AND adapter_id = 'temporal'
+          `,
+          [PLAN_ID.r4_11]
+        );
+      } finally {
+        await client.end();
+      }
+
+      await expect(store.listExecutabilityByAdapter(PLAN_ID.r4_11)).rejects.toThrow(
+        'PLAN_EXECUTABILITY_ROW_INVALID'
+      );
+    }));
+
   test('getPlanRecordByRef rejects mismatched PlanRef metadata', () =>
     withStore(async (store) => {
       const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
