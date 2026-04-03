@@ -51,6 +51,7 @@ Concept anchors for this page:
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
+- [DVT — Propuesta de arquitectura para eliminar SPOF y dejar una vía abierta a Kafka](proposals/propuesta_dvt_ha_distribuido_kafka.md)
 - [DVT Production Readiness Review - Corrected Top 3 Gaps and Roadmap](proposals/dvt_production_readiness_corrected_review_and_roadmap.md)
 - [Evidence Information Architecture And Governance Plan](proposals/evidence-information-architecture-plan-20260402.md)
 - [Frontend Roadmap - Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)

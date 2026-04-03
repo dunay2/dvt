@@ -20,6 +20,7 @@ Draft proposals and candidate changes. Non-normative.
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](../domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
+- [DVT — Propuesta de arquitectura para eliminar SPOF y dejar una vía abierta a Kafka](propuesta_dvt_ha_distribuido_kafka.md)
 - [DVT Production Readiness Review - Corrected Top 3 Gaps and Roadmap](dvt_production_readiness_corrected_review_and_roadmap.md)
 - [Evidence Information Architecture And Governance Plan](evidence-information-architecture-plan-20260402.md)
 - [Frontend Roadmap - Prototype To Operational UI](frontend-roadmap-20260219.md)
