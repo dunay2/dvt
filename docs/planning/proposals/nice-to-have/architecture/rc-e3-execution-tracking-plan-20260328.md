@@ -17,7 +17,7 @@ removing facade-local catch mapping drift.
 References:
 
 - `docs/planning/state/agent-lane-a.yaml`
-- `docs/planning/state/execution-workboard.md`
+- `docs/planning/state/planning-control-tower.md`
 - `apps/api/src/application/services/startRunAuthorizedFacade.ts`
 
 ## Rationale

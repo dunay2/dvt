@@ -16,16 +16,19 @@ flowchart LR
   REV[Reviews]
   PROP[Proposals]
   STATUS[Status and roadmap]
+  CTRL[Planning Control Tower]
+  REG[Lane YAML registry]
 
-  REV --> WB[Execution Workboard]
-  PROP --> WB
-  STATUS --> WB
+  REV --> CTRL
+  PROP --> CTRL
+  STATUS --> CTRL
+  CTRL --> REG
 
-  WB --> L1[Execution Runtime lane]
-  WB --> L2[API and Admission lane]
-  WB --> L3[Planner and Contracts lane]
-  WB --> L4[Event Lifecycle and Retention lane]
-  WB --> L5[Documentation Governance lane]
+  REG --> L1[Execution Runtime lane]
+  REG --> L2[API and Admission lane]
+  REG --> L3[Planner and Contracts lane]
+  REG --> L4[Event Lifecycle and Retention lane]
+  REG --> L5[Documentation Governance lane]
 
   L1 --> PR[PR slices]
   L2 --> PR
@@ -39,7 +42,11 @@ flowchart LR
 
 ## Canonical Links
 
-- [Execution Workboard](../../state/execution-workboard.md)
-- [Open Task Route](../../state/open-task-route.md)
+- [Planning Control Tower](../../state/planning-control-tower.md)
+- [Agent Lane A YAML](../../state/agent-lane-a.yaml)
+- [Agent Lane B YAML](../../state/agent-lane-b.yaml)
+- [Agent Lane C YAML](../../state/agent-lane-c.yaml)
+- [Agent Lane D YAML](../../state/agent-lane-d.yaml)
+- [Agent Lane E YAML](../../state/agent-lane-e.yaml)
 - [Roadmap By Domain](../roadmap-by-domain.md)
 - [Roadmap Of Record](../index.md)

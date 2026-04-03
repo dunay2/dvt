@@ -42,4 +42,4 @@ flowchart LR
 ## References
 
 - [Domain - Execution Runtime](../../domains/execution-runtime.md)
-- [Execution Workboard](../../state/execution-workboard.md)
+- [Planning Control Tower](../../state/planning-control-tower.md)

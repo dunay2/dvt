@@ -45,7 +45,7 @@ flowchart LR
   evidence-backed closeouts.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
-  [RC-C1 HTTP Error Envelope Normalization Plan](../proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)
+  [RC-C1 HTTP Error Envelope Normalization Plan](../proposals/mandatory/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
   Near-term target: deliver admission/backpressure sequence with rollout
   observability.
 - `Planner and Contracts`
@@ -61,19 +61,18 @@ flowchart LR
 - `UI and Frontend`
   Current sources: [Frontend Architecture](../../architecture/frontend/index.md),
   [UI / Visualization Domain](../../architecture/domain-ui.md),
-  [Frontend Roadmap - Prototype To Operational UI](../proposals/frontend-roadmap-20260219.md)
+  [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
   Near-term target: converge Lane E on contract truth, mock-versus-api
   boundaries, state and query cleanup, and a real Plan -> Run -> Monitor path.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
-  [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/architecture-doc-reconciliation-plan-20260402.md)
+  [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
   Near-term target: keep the planning map coherent and reduce navigation
   friction by domain.
 
 ## Related Diagrams
 
-- [Execution Workboard](../state/execution-workboard.md)
-- [Open Task Route](../state/open-task-route.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 - [Review Sprint Critical Path 2026-04](diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](diagrams/planning-domain-map.md)
 - [Execution Runtime Architecture Delta](diagrams/execution-runtime-architecture-delta.md)

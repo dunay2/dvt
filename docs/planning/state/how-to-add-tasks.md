@@ -8,8 +8,9 @@ planning_type: guide
 
 # How to Add Tasks to an Agent Lane
 
-Tasks live in the `agent-lane-*.yaml` files. The workboard and open-task-route are
-generated views and must never be edited directly.
+Tasks live in the `agent-lane-*.yaml` files. The lane Markdown views,
+workboard, open-task-route, and planning landing indexes are generated local/CI
+artifacts and must never be edited directly or committed.
 
 The lane YAML is the verified planning registry, but task closure is evidence-based:
 
@@ -107,6 +108,16 @@ If you added, removed, or renamed documentation files under `docs/`, also run:
 ```bash
 pnpm docs:sync
 ```
+
+Do not stage the generated planning-derived files after regeneration:
+
+- `docs/planning/index.md`
+- `docs/planning/proposals/index.md`
+- `docs/planning/reviews/index.md`
+- `docs/planning/status/index.md`
+- `docs/planning/state/agent-lane-*.md`
+- `docs/planning/state/execution-workboard.md`
+- `docs/planning/state/open-task-route.md`
 
 ## Field reference
 

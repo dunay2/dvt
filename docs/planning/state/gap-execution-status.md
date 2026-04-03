@@ -15,9 +15,8 @@ an active planning board and it does not carry the current delivery posture.
 
 ## Use Instead
 
-- [Execution Workboard](execution-workboard.md) for active work items and lane
-  routing
-- [Open Task Route](open-task-route.md) for current task triage
+- [Planning Control Tower](planning-control-tower.md) for active work items,
+  lane routing, and task triage
 - [Domain Status Board](domain-status-board.md) for domain-level priorities
 - [Roadmap Of Record](../roadmap/index.md) for sequencing and roadmap posture
 - [System Delivery Status](../../architecture/system-delivery-status.md) for

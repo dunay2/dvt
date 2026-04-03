@@ -148,7 +148,7 @@ Outcome:
 
 ## Related Task Route
 
-- [Lane A](/f:/tercerdvt/dvt/docs/planning/state/agent-lane-a.md)
-- [Lane C](/f:/tercerdvt/dvt/docs/planning/state/agent-lane-c.md)
-- [Lane D](/f:/tercerdvt/dvt/docs/planning/state/agent-lane-d.md)
-- [Deep Architectural Review](/f:/tercerdvt/dvt/docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md)
+- [Lane A](../../../state/agent-lane-a.yaml)
+- [Lane C](../../../state/agent-lane-c.yaml)
+- [Lane D](../../../state/agent-lane-d.yaml)
+- [Deep Architectural Review](../../../reviews/architecture-and-governance/20260402-deep-architectural-review.md)

@@ -58,7 +58,12 @@ tmpclaude-*-cwd
 docs-dist/
 /site/
 
-# Generated planning views (produced by pnpm docs:workboard:generate)
+# Generated planning views and landing pages (produced by pnpm docs:sync / pnpm docs:workboard:generate)
+docs/planning/index.md
+docs/planning/proposals/index.md
+docs/planning/reviews/index.md
+docs/planning/status/index.md
+docs/planning/state/agent-lane-*.md
 docs/planning/state/execution-workboard.md
 docs/planning/state/open-task-route.md
 

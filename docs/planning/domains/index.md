@@ -30,6 +30,6 @@ This page does not replace canonical roadmap or status docs.
 ## Canonical Anchors
 
 - [Roadmap Of Record](../roadmap/index.md)
-- [Execution Workboard](../state/execution-workboard.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
-- [Planning Status](../status/index.md)
+- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)

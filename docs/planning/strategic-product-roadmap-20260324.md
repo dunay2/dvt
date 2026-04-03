@@ -17,8 +17,8 @@ positioning.
 This document is strategic and multi-consumer.
 It is not the execution queue.
 Operational status lives in
-[Execution Workboard](docs/planning/state/execution-workboard.md) and
-[Open Task Route](docs/planning/state/open-task-route.md).
+[Planning Control Tower](state/planning-control-tower.md) and the
+`agent-lane-*.yaml` registry.
 
 ## Workboard Coverage
 
@@ -35,7 +35,7 @@ Items already ticketed in the workboard and therefore operational:
 - `A1`, `A2`
 - `R3`, `R4`, `R5`, `R6`, `R7`
 
-Roadmap items that are new and not yet ticketed in the workboard:
+Roadmap items that are new and not yet ticketed in the lane registry:
 
 | Roadmap item                        | Priority | Depends on                                              | Strategic intent                                   | Recommended next step                                            |
 | ----------------------------------- | -------- | ------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------- |
@@ -58,7 +58,8 @@ Roadmap items that are new and not yet ticketed in the workboard:
 | Compliance documentation pack       | P3       | `First enterprise pilot`                                | Prepare for regulated customer review              | Track as docs/ops work, outside the technical queue.             |
 | Acquisition positioning deck        | P3       | `Billing integration`, `Compliance documentation pack`  | Support exit positioning and narrative             | Track as GTM work, not as implementation work.                   |
 
-Items already represented in the workboard should not be duplicated here as new tasks.
+Items already represented in the lane registry should not be duplicated here as
+new tasks.
 This file should describe sequence and intent, not create a second execution queue.
 
 ## Independent Agent Lanes
@@ -68,10 +69,10 @@ owned by one agent at a time and to minimize cross-lane coupling.
 
 Detailed per-agent workfiles:
 
-- [Lane A](docs/planning/state/agent-lane-a.md)
-- [Lane B](docs/planning/state/agent-lane-b.md)
-- [Lane C](docs/planning/state/agent-lane-c.md)
-- [Lane D](docs/planning/state/agent-lane-d.md)
+- [Lane A](state/agent-lane-a.yaml)
+- [Lane B](state/agent-lane-b.yaml)
+- [Lane C](state/agent-lane-c.yaml)
+- [Lane D](state/agent-lane-d.yaml)
 
 ### Lane A · Contracts And State-Store Boundary
 

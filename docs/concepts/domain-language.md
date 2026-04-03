@@ -84,7 +84,7 @@ its canonical concept page when that improves reader orientation.
 
 Examples:
 
-- `roadmap` -> [Planning](../planning/index.md)
+- `roadmap` -> [Roadmap Of Record](../planning/roadmap/index.md)
 - `status` -> [System Delivery Status](../architecture/system-delivery-status.md)
 - `risk` -> [Risk Register](../risk-register/index.md)
 - `evidence` -> [Evidence](../evidence/index.md)

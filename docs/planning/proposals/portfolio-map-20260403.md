@@ -19,6 +19,7 @@ planning_type: proposal
 ## Mandatory
 
 - [Governance And Docs](mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
+- [Generated Planning Surfaces Extraction](mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md)
 - [Runtime And Contracts](mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [DBT-Agnostic Generalization](mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md)
 
