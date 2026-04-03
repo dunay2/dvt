@@ -92,6 +92,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: ARC_JSON=arc.json node tools/ci/doc-check.mjs
         env:
+          DOCS_ONLY_SCOPE:
+            ${{ steps.scope.outputs.any_code != 'true' && steps.scope.outputs.docs_changed == 'true'
+            }}
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
 
