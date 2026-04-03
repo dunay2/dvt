@@ -5,7 +5,7 @@ status: Active
 last_reviewed: '2026-04-03'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
-  executable.
+  executable while making planner and execution contracts dbt-agnostic at the core.
 expected_outcome:
   - state-store ownership is explicit
   - contract ownership routing is explicit
@@ -14,6 +14,7 @@ expected_outcome:
   - optional maintenance ownership is explicit
   - migration recovery is defined
   - governance startup routing is explicit
+  - planner inputs are dbt-agnostic and dbt is only one supported graph source
 header_markdown: >
   You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal
   design, and interface consistency.
@@ -697,16 +698,18 @@ tasks:
     target: >-
       A documented, schema-validated graph source format exists alongside ManifestGraphDeriver;
       PlannerFacade accepts both dbt manifests and generic graph sources without code changes to the
-      core planner.
+      core planner, and dbt becomes one graph-source adapter rather than the product's core model.
     complexity: L
     effort_points: 8
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md
     status_reason: >-
       The single biggest blocker for multi-workflow support — today the only entry to the planner is
-      dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
-    last_verified: '2026-04-02'
+      dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only and DVT
+      remains conceptually dbt-first instead of dbt-agnostic.
+    last_verified: '2026-04-03'
   - task_id: AR-A3
     priority: P1
     status: queued
@@ -926,6 +929,9 @@ dependency_notes:
     `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
     GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends
     on AR-A2; MW-A3 depends on MW-A1.
+  - >-
+    `MW-A2` is the architectural anchor for the dbt-agnostic product direction: dbt remains
+    supported, but only as one graph-source adapter feeding a generic planner contract.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure

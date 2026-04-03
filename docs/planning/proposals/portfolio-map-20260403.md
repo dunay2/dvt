@@ -20,6 +20,7 @@ planning_type: proposal
 
 - [Governance And Docs](mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 - [Runtime And Contracts](mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [DBT-Agnostic Generalization](mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md)
 
 ## Nice To Have
 
