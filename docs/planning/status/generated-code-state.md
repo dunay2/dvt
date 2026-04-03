@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-01
+last_reviewed: 2026-04-03
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-01.
+Generated automatically from repository code on 2026-04-03.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 568   |
-| Total test files             | 216   |
+| Total source files           | 586   |
+| Total test files             | 221   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
@@ -28,13 +28,13 @@ Generated automatically from repository code on 2026-04-01.
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 19         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 138       | 9          | yes   | no   | yes       | -                       |
-| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 39        | 18         | yes   | yes  | yes       | 22                      |
+| @dvt/web                  | `apps/web`                           | 140       | 11         | yes   | no   | yes       | -                       |
+| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 47        | 20         | yes   | yes  | yes       | 22                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
-| @dvt/artifacts            | `packages/@dvt/artifacts`            | 9         | 1          | yes   | yes  | no        | 8                       |
+| @dvt/artifacts            | `packages/@dvt/artifacts`            | 11        | 1          | yes   | yes  | no        | 10                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 33        | 10         | yes   | yes  | no        | 31                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 39        | 11         | yes   | yes  | no        | 35                      |
 | packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/engine               | `packages/@dvt/engine`               | 87        | 35         | yes   | yes  | no        | 31                      |

@@ -40,11 +40,63 @@ export function sqlCreatePlanRecordsTable(schema: string): string {
       state TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL,
-      derived_from_plan_id TEXT,
-      supersedes_plan_id TEXT,
+      derived_from_plan_id TEXT REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id),
+      supersedes_plan_id TEXT REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id),
       archived_at TIMESTAMPTZ
     )
   `;
+}
+
+export function sqlEnsurePlanRecordLineageConstraints(schema: string): string {
+  return `
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON t.oid = c.conrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE c.contype = 'f'
+          AND c.conname = 'plan_records_derived_from_plan_id_fkey'
+          AND n.nspname = ${quoteLiteral(schema)}
+          AND t.relname = 'plan_records'
+      ) THEN
+        ALTER TABLE ${quoteIdentifier(schema)}.plan_records
+          ADD CONSTRAINT plan_records_derived_from_plan_id_fkey
+          FOREIGN KEY (derived_from_plan_id)
+          REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id);
+      END IF;
+    END
+    $$;
+  `;
+}
+
+export function sqlEnsurePlanRecordSupersedesConstraints(schema: string): string {
+  return `
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON t.oid = c.conrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE c.contype = 'f'
+          AND c.conname = 'plan_records_supersedes_plan_id_fkey'
+          AND n.nspname = ${quoteLiteral(schema)}
+          AND t.relname = 'plan_records'
+      ) THEN
+        ALTER TABLE ${quoteIdentifier(schema)}.plan_records
+          ADD CONSTRAINT plan_records_supersedes_plan_id_fkey
+          FOREIGN KEY (supersedes_plan_id)
+          REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id);
+      END IF;
+    END
+    $$;
+  `;
+}
+
+function quoteLiteral(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
 }
 
 export function sqlCreatePlanExecutabilityRecordsTable(schema: string): string {

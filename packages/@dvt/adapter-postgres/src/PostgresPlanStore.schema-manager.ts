@@ -9,6 +9,8 @@ import {
   sqlCreatePlanRecordsTable,
   sqlCreateStoredPlansTable,
   sqlCreateStoredPlansValidationStateIndex,
+  sqlEnsurePlanRecordLineageConstraints,
+  sqlEnsurePlanRecordSupersedesConstraints,
 } from './PostgresPlanStore.sql.js';
 import { PostgresPlanStoreTxRunner } from './PostgresPlanStore.tx.js';
 import { quoteIdentifier } from './sqlUtils.js';
@@ -28,6 +30,8 @@ export class PostgresPlanStoreSchemaManager {
       await client.query(sqlCreatePlanExecutabilityRecordsTable(this.schema));
       await client.query(sqlCreatePlanAdmissionLinksTable(this.schema));
       await client.query(sqlBackfillPlanRecordsFromStoredPlans(this.schema));
+      await client.query(sqlEnsurePlanRecordLineageConstraints(this.schema));
+      await client.query(sqlEnsurePlanRecordSupersedesConstraints(this.schema));
       await this.reconcileBackfilledCanonicalHashes(client);
     });
   }

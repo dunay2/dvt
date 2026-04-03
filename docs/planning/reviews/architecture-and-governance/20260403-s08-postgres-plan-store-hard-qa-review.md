@@ -58,9 +58,9 @@ current state.
 
 ### Gaps still open after re-audit
 
-- `S08-HQA-05` remains open: lineage columns
-  (`derived_from_plan_id` / `supersedes_plan_id`) still have no FK-level
-  referential integrity.
+- `S08-HQA-05` is now closed: lineage columns
+  (`derived_from_plan_id` / `supersedes_plan_id`) are FK-constrained at DB
+  level.
 - `S08-HQA-07` is near closure: transaction/schema/repository/blob concerns are
   now extracted; remaining work is composer-level assembly split if we decide
   to remove facade composition from `PostgresPlanStore`.
@@ -83,7 +83,7 @@ Treat this file as a mixed artifact:
 - `S08-HQA-02` Closed
 - `S08-HQA-03` Closed
 - `S08-HQA-04` Closed
-- `S08-HQA-05` Open
+- `S08-HQA-05` Closed
 - `S08-HQA-06` Closed
 - `S08-HQA-07` Partial
   note: now near closure after blob repository extraction
@@ -558,7 +558,6 @@ Required after any fix slice that follows from this review:
 This slice is **merge-green but not architecture-closed**.
 
 The new three-part model is present and usable, and the main correctness drifts
-(`S08-HQA-01` to `S08-HQA-04`) are now closed in code. Remaining closure work
-is focused on FK-level lineage hardening and integration-test posture
-(`S08-HQA-05`, `S08-HQA-09`), with optional final composer extraction for
-`S08-HQA-07`.
+(`S08-HQA-01` to `S08-HQA-05`) are now closed in code. Remaining closure work
+is focused on integration-test posture (`S08-HQA-09`), with optional final
+composer extraction for `S08-HQA-07`.

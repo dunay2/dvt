@@ -151,7 +151,8 @@ erDiagram
 ## Known open architectural gaps
 
 1. Lineage FK integrity remains partially soft:
-   `derived_from_plan_id` and `supersedes_plan_id` are not FK-constrained.
+   closed in this slice: `derived_from_plan_id` and `supersedes_plan_id` are
+   now FK-constrained to `plan_records(plan_id)`.
 2. Repository split for `plan-record` / `executability` / `admission` is
    complete and already delegated to dedicated repository classes.
 3. Integration-heavy test paths still rely on `DVT_PG_INTEGRATION=1`.
@@ -175,16 +176,8 @@ $env:DVT_PG_INTEGRATION='1'
 pnpm --filter @dvt/adapter-postgres test
 ```
 
-## Target decomposition roadmap
+## Implementation status
 
-```mermaid
-flowchart TD
-  A[Initial monolith]
-  B[Extract PostgresTxRunner - done]
-  C[Extract PostgresPlanStoreSchemaManager - done]
-  D[Extract repositories: PlanRecord, Executability, Admission - done]
-  E[Extract executable blob repository - done]
-  F[Wire PostgresPlanStoreComposer - pending]
-
-  A --> B --> C --> D --> E --> F
-```
+Decomposition milestones already completed are documented in this manual's
+"Composition now delegates infrastructure responsibilities" section.
+This manual intentionally tracks only current state and open gaps.
