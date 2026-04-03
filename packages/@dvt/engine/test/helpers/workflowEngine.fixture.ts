@@ -7,6 +7,7 @@ import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
+import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
@@ -59,6 +60,7 @@ export function createWorkflowEngineFixture(input?: {
   allowedSchemes?: string[];
   requiredProviders?: EngineRunRef['provider'][];
   observabilityFallbackThrottleMs?: number;
+  runExecutionContextResolver?: IRunExecutionContextResolver;
 }): {
   engine: WorkflowEngine;
   store: InMemoryTxStore;
@@ -98,6 +100,7 @@ export function createWorkflowEngineFixture(input?: {
     adapters,
     requiredProviders: input?.requiredProviders,
     observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
+    runExecutionContextResolver: input?.runExecutionContextResolver,
   });
 
   return {

@@ -18,6 +18,7 @@ import {
   type IClock,
   type IOutboxRateLimiter,
   type IProviderAdapter,
+  type IRunExecutionContextResolver,
   type IRunAccessPolicy,
   type IRunStateStoreRead,
   type IRunStateStoreWrite,
@@ -43,6 +44,7 @@ export interface EnginePersistenceConfig {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
+  runExecutionContextResolver?: IRunExecutionContextResolver;
 }
 
 export interface EngineRuntimeConfig {
@@ -102,6 +104,9 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
     intentStore: config.persistence.intentStore,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
+    ...(config.persistence.runExecutionContextResolver !== undefined
+      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+      : {}),
     ...(config.runtime.requiredProviders !== undefined
       ? { requiredProviders: config.runtime.requiredProviders }
       : {}),

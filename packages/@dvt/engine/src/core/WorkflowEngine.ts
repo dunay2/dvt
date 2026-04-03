@@ -24,6 +24,7 @@ import { StartRunCoordinator } from '../application/StartRunCoordinator.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
+import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
@@ -42,6 +43,7 @@ export interface WorkflowEngineDeps {
   clock: IClock;
   policy: IRunAccessPolicy;
   intentStore: IStartRunIntentStore;
+  runExecutionContextResolver?: IRunExecutionContextResolver;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
   observability: IObservability;
@@ -78,6 +80,9 @@ export class WorkflowEngine implements IWorkflowEngine {
       policy: deps.policy,
       stateStoreRead: deps.stateStoreRead,
       adapters: deps.adapters,
+      ...(deps.runExecutionContextResolver === undefined
+        ? {}
+        : { runExecutionContextResolver: deps.runExecutionContextResolver }),
     });
     this.startRunCoordinator = new StartRunCoordinator({
       policy: deps.policy,
@@ -258,13 +263,17 @@ function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
 }
 
 function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunContext {
-  return {
+  const out: RunContext = {
     tenantId: input.tenantId,
     projectId: input.projectId,
     environmentId: input.environmentId,
     runId: input.runId,
     targetAdapter: input.targetAdapter,
   };
+  if (input.runExecutionContextRef !== undefined) {
+    out.runExecutionContextRef = input.runExecutionContextRef;
+  }
+  return out;
 }
 
 function resolveInitialRunContext(ctx: RunContext): ResolvedRunContext {

@@ -8,6 +8,7 @@ import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidatio
 import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 import { evaluateStartRunPlanSource } from './startRunRoutePlanSourcePolicy.js';
+import { parseStartRunRunExecutionContextRef } from './startRunRouteRunExecutionContextRefParser.js';
 import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
 
@@ -39,6 +40,7 @@ export function parseStartRunCommand(
   if (sourceDecision.value.kind === 'planRef') {
     return buildPlanRefStartRunCommand({
       rawPlanRef: record.planRef,
+      rawRunExecutionContextRef: record.runExecutionContextRef,
       runId: runId.value,
       targetAdapter: targetAdapter.value,
       selection: selection.value,
@@ -47,6 +49,7 @@ export function parseStartRunCommand(
 
   return buildPlannerBackedStartRunCommand({
     record,
+    rawRunExecutionContextRef: record.runExecutionContextRef,
     runId: runId.value,
     targetAdapter: targetAdapter.value,
     selection: selection.value,
@@ -55,6 +58,7 @@ export function parseStartRunCommand(
 
 export function buildPlanRefStartRunCommand(input: {
   readonly rawPlanRef: unknown;
+  readonly rawRunExecutionContextRef: unknown;
   readonly runId: string;
   readonly targetAdapter: StartRunCommand['targetAdapter'];
   readonly selection: ReadonlyArray<string>;
@@ -64,10 +68,20 @@ export function buildPlanRefStartRunCommand(input: {
     return planRef;
   }
 
+  const runExecutionContextRef = parseOptionalRunExecutionContextRef(
+    input.rawRunExecutionContextRef
+  );
+  if (!runExecutionContextRef.ok) {
+    return runExecutionContextRef;
+  }
+
   return {
     ok: true,
     value: {
       planRef: planRef.value,
+      ...(runExecutionContextRef.value === undefined
+        ? {}
+        : { runExecutionContextRef: runExecutionContextRef.value }),
       runId: input.runId,
       targetAdapter: input.targetAdapter,
       selection: input.selection,
@@ -77,6 +91,7 @@ export function buildPlanRefStartRunCommand(input: {
 
 export function buildPlannerBackedStartRunCommand(input: {
   readonly record: Record<string, unknown>;
+  readonly rawRunExecutionContextRef: unknown;
   readonly runId: string;
   readonly targetAdapter: StartRunCommand['targetAdapter'];
   readonly selection: ReadonlyArray<string>;
@@ -86,12 +101,22 @@ export function buildPlannerBackedStartRunCommand(input: {
     return plannerInput;
   }
 
+  const runExecutionContextRef = parseOptionalRunExecutionContextRef(
+    input.rawRunExecutionContextRef
+  );
+  if (!runExecutionContextRef.ok) {
+    return runExecutionContextRef;
+  }
+
   return {
     ok: true,
     value: {
       runId: input.runId,
       targetAdapter: input.targetAdapter,
       selection: input.selection,
+      ...(runExecutionContextRef.value === undefined
+        ? {}
+        : { runExecutionContextRef: runExecutionContextRef.value }),
       ...plannerInput.value,
     },
   };
@@ -103,4 +128,14 @@ function parseStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
   return { ok: true, value: runId };
+}
+
+function parseOptionalRunExecutionContextRef(
+  raw: unknown
+): RouteParseResult<StartRunCommand['runExecutionContextRef']> {
+  if (raw === undefined) {
+    return { ok: true, value: undefined };
+  }
+
+  return parseStartRunRunExecutionContextRef(raw);
 }

@@ -1,0 +1,31 @@
+---
+id: R-20260403-RUN-EXECUTION-CONTEXT-BOUNDARY
+title: Run execution context provenance drift at start-run boundary
+status: Open
+date: 2026-04-03
+owners:
+  - '@dvt/engine'
+  - 'dvt-api'
+severity: Medium
+probability: Medium
+---
+summary: >
+  Start-run now accepts an optional runExecutionContextRef. If resolver wiring is missing or context
+  provenance drifts from PlanRef/RunContext, execution admission must fail closed before adapter
+  dispatch.
+
+mitigations:
+  - Governed shared contracts and parsers in @dvt/contracts.
+  - Explicit engine admission policy checks for tenant/project/environment and plan identity/hash
+    alignment.
+  - API mapping to deterministic planRejected response with explicit cause.
+  - Contract and runtime tests for acceptance and mismatch paths.
+
+monitoring:
+  - Track `RUN_EXECUTION_CONTEXT_REJECTED` occurrences.
+  - Audit planRejected responses with cause `run_execution_context`.
+
+follow_up:
+  - Wire production resolver implementation behind artifacts-owned IRunExecutionContextReader in
+    composition roots.
+  - Keep S08-5-C compatibility fingerprint work isolated from this boundary slice.
