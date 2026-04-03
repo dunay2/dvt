@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Planner } from '../../src/domain/Planner.js';
 import type { PlannerInputEnvelopeV2 } from '../../src/domain/types.js';
@@ -12,6 +12,10 @@ function sha256Sync(text: string): string {
 }
 
 describe('determinism', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('produces stable planId for same semantic input, ignoring volatile fields and observability', async () => {
     const planner = new Planner();
 
@@ -64,6 +68,25 @@ describe('determinism', () => {
     expect(meta?.['createdAtIso']).toBeUndefined();
     expect(meta?.['schemaVersion']).toBeUndefined();
     expect(meta?.['contractVersion']).toBeUndefined();
+  });
+
+  it('keeps planId stable even when createdAtIso differs across build timestamps', async () => {
+    vi.useFakeTimers();
+    const planner = new Planner();
+    const input: PlannerInputEnvelopeV2 = {
+      nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
+      selection: { selectedNodeIds: ['model.a'] },
+    };
+
+    vi.setSystemTime(new Date('2026-04-03T10:00:00.000Z'));
+    const first = await planner.buildPlan(input);
+
+    vi.setSystemTime(new Date('2026-04-03T10:00:05.000Z'));
+    const second = await planner.buildPlan(input);
+
+    expect(first.plan.metadata.createdAtIso).not.toBe(second.plan.metadata.createdAtIso);
+    expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
+    expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
   });
 
   it('fixed vector produces expected planId', async () => {
