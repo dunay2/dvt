@@ -220,6 +220,50 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
         'PLAN_VALIDATION_STATE_INVALID_TRANSITION'
       );
     }));
+
+  test('persists and reads the S08 three-part model while keeping lifecycle facade compatibility', () =>
+    withStore(async (store) => {
+      const planRef = await store.storePlan(makeBuildResult('plan-r4-9'));
+
+      await store.recordExecutability({
+        planId: 'plan-r4-9',
+        adapterId: 'temporal',
+        state: 'VALID',
+        validatedAtIso: NOW,
+      });
+      await store.markAdmitted({
+        planId: 'plan-r4-9',
+        runId: 'run-r4-9',
+        adapterId: 'temporal',
+        admittedAtIso: NOW,
+      });
+
+      const record = await store.getPlanRecordByRef(planRef);
+      const executability = await store.listExecutabilityByAdapter('plan-r4-9');
+      const links = await store.getAdmissionLinks('plan-r4-9');
+
+      expect(record).toMatchObject({
+        planId: 'plan-r4-9',
+        state: 'ACTIVE',
+      });
+      expect(executability).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            planId: 'plan-r4-9',
+            adapterId: 'temporal',
+            state: 'VALID',
+          }),
+        ])
+      );
+      expect(links).toEqual([
+        {
+          planId: 'plan-r4-9',
+          runId: 'run-r4-9',
+          adapterId: 'temporal',
+          admittedAtIso: expect.any(String),
+        },
+      ]);
+    }));
 });
 
 function makeBuildResult(planId: string): PlannerBuildResultV2 {

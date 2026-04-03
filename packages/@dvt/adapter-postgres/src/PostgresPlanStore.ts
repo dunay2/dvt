@@ -1,11 +1,19 @@
 import { createHash } from 'node:crypto';
 
+import type { IPlanStoreReader, IPlanStoreWriter } from '@dvt/artifacts';
 import {
   type ExecutabilityValidationResult,
   type IPlanFetcher,
   type IPlanValidationLifecycleStore,
+  type PlanAdmissionLink,
+  type PlanExecutabilityRecord,
+  type PlanExecutabilityRejectionReport,
   type PlanRefSchemaT,
+  type PlanRecord,
   type PlanValidationRecord,
+  parsePlanAdmissionLink,
+  parsePlanExecutabilityRecord,
+  parsePlanRecord,
   parsePlanRef,
   type PlannerBuildResultV2,
 } from '@dvt/contracts';
@@ -46,8 +54,12 @@ type StoredPlanRow = {
 };
 
 const PLAN_URI_SCHEME = 'dvt-plan';
+const LEGACY_EXECUTABILITY_ADAPTER_ID = '__legacy_validation__';
+type ExecutabilityState = 'PENDING' | 'VALID' | 'INVALID';
 
-export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFetcher {
+export class PostgresPlanStore
+  implements IPlanValidationLifecycleStore, IPlanFetcher, IPlanStoreWriter, IPlanStoreReader
+{
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
   private readonly schema: string;
@@ -99,6 +111,93 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
         CREATE INDEX IF NOT EXISTS stored_plans_validation_state_idx
         ON ${quoteIdentifier(this.schema)}.stored_plans (validation_state, updated_at DESC)
       `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.plan_records (
+          plan_id TEXT PRIMARY KEY,
+          canonical_plan_json TEXT NOT NULL,
+          canonical_hash TEXT NOT NULL,
+          plan_version TEXT NOT NULL,
+          schema_version TEXT NOT NULL,
+          contract_version TEXT NOT NULL,
+          source_ref TEXT NOT NULL,
+          state TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL,
+          derived_from_plan_id TEXT,
+          supersedes_plan_id TEXT,
+          archived_at TIMESTAMPTZ
+        )
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.plan_executability_records (
+          plan_id TEXT NOT NULL REFERENCES ${quoteIdentifier(this.schema)}.plan_records(plan_id) ON DELETE CASCADE,
+          adapter_id TEXT NOT NULL,
+          state TEXT NOT NULL,
+          validated_at TIMESTAMPTZ,
+          rejection_report_json JSONB,
+          PRIMARY KEY (plan_id, adapter_id)
+        )
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.plan_admission_links (
+          plan_id TEXT NOT NULL REFERENCES ${quoteIdentifier(this.schema)}.plan_records(plan_id) ON DELETE CASCADE,
+          run_id TEXT NOT NULL,
+          adapter_id TEXT NOT NULL,
+          admitted_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (plan_id, run_id, adapter_id)
+        )
+      `);
+      await client.query(`
+        INSERT INTO ${quoteIdentifier(this.schema)}.plan_records (
+          plan_id,
+          canonical_plan_json,
+          canonical_hash,
+          plan_version,
+          schema_version,
+          contract_version,
+          source_ref,
+          state,
+          created_at,
+          updated_at
+        )
+        SELECT
+          sp.plan_id,
+          sp.canonical_plan_json,
+          sp.plan_sha256,
+          sp.plan_version,
+          sp.schema_version,
+          COALESCE((sp.canonical_plan_json::jsonb #>> '{metadata,contractVersion}'), '1.0.0'),
+          sp.plan_uri,
+          'ACTIVE',
+          sp.stored_at,
+          sp.updated_at
+        FROM ${quoteIdentifier(this.schema)}.stored_plans sp
+        ON CONFLICT (plan_id) DO NOTHING
+      `);
+      await client.query(
+        `
+        INSERT INTO ${quoteIdentifier(this.schema)}.plan_executability_records (
+          plan_id,
+          adapter_id,
+          state,
+          validated_at,
+          rejection_report_json
+        )
+        SELECT
+          sp.plan_id,
+          $1,
+          CASE sp.validation_state
+            WHEN 'PENDING_VALIDATION' THEN 'PENDING'
+            WHEN 'VALID' THEN 'VALID'
+            ELSE 'INVALID'
+          END,
+          CASE WHEN sp.validation_state = 'PENDING_VALIDATION' THEN NULL ELSE sp.updated_at END,
+          sp.rejection_report_json
+        FROM ${quoteIdentifier(this.schema)}.stored_plans sp
+        ON CONFLICT (plan_id, adapter_id) DO NOTHING
+      `,
+        [LEGACY_EXECUTABILITY_ADAPTER_ID]
+      );
     });
   }
 
@@ -188,6 +287,7 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
           `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED: ${planId}:${persisted.validation_state}`
         );
       }
+      await this.upsertPlanRecord(client, buildPlanRecord(buildResult, planRef));
 
       return buildPlanRefFromStoredRow(persisted);
     });
@@ -195,7 +295,15 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
 
   public async markValid(planRef: PlanRefSchemaT): Promise<void> {
     const validated = parsePlanRef(planRef);
-    await this.transition(validated.planId, 'PENDING_VALIDATION', 'VALID', null);
+    const validatedAtIso = new Date().toISOString();
+    await this.transition(validated.planId, 'PENDING_VALIDATION', 'VALID', null, async (client) => {
+      await this.upsertExecutabilityRecord(client, {
+        planId: validated.planId,
+        adapterId: LEGACY_EXECUTABILITY_ADAPTER_ID,
+        state: 'VALID',
+        validatedAtIso,
+      });
+    });
   }
 
   public async markInvalid(
@@ -203,7 +311,233 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
     report: ExecutabilityValidationResult & { status: 'ERROR' }
   ): Promise<void> {
     const validated = parsePlanRef(planRef);
-    await this.transition(validated.planId, 'PENDING_VALIDATION', 'INVALID', report);
+    const validatedAtIso = new Date().toISOString();
+    await this.transition(
+      validated.planId,
+      'PENDING_VALIDATION',
+      'INVALID',
+      report,
+      async (client) => {
+        await this.upsertExecutabilityRecord(client, {
+          planId: validated.planId,
+          adapterId: LEGACY_EXECUTABILITY_ADAPTER_ID,
+          state: 'INVALID',
+          validatedAtIso,
+          rejectionReport: {
+            code: report.code,
+            reason: report.reason,
+            degradable: report.degradable,
+            ...(report.cause === undefined ? {} : { cause: report.cause }),
+          },
+        });
+      }
+    );
+  }
+
+  public async createPlanRecord(record: PlanRecord): Promise<void> {
+    const validated = parsePlanRecord(record);
+    await this.withTransaction(async (client) => {
+      await this.upsertPlanRecord(client, validated);
+    });
+  }
+
+  public async recordExecutability(record: PlanExecutabilityRecord): Promise<void> {
+    const validated = parsePlanExecutabilityRecord(record);
+    await this.withTransaction(async (client) => {
+      await this.upsertExecutabilityRecord(client, validated);
+    });
+  }
+
+  public async markAdmitted(link: PlanAdmissionLink): Promise<void> {
+    const validated = parsePlanAdmissionLink(link);
+    await this.withTransaction(async (client) => {
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(this.schema)}.plan_admission_links (
+            plan_id,
+            run_id,
+            adapter_id,
+            admitted_at
+          ) VALUES ($1, $2, $3, $4::timestamptz)
+          ON CONFLICT (plan_id, run_id, adapter_id) DO NOTHING
+        `,
+        [validated.planId, validated.runId, validated.adapterId, validated.admittedAtIso]
+      );
+    });
+  }
+
+  public async markSuperseded(
+    planId: PlanRecord['planId'],
+    supersededByPlanId: PlanRecord['planId']
+  ): Promise<void> {
+    await this.withTransaction(async (client) => {
+      const result = await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.plan_records
+          SET state = 'SUPERSEDED',
+              updated_at = NOW()
+          WHERE plan_id = $1 AND state = 'ACTIVE'
+        `,
+        [planId]
+      );
+      if (result.rowCount === 0) {
+        throw new Error(`PLAN_RECORD_NOT_ACTIVE: ${planId}`);
+      }
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.plan_records
+          SET supersedes_plan_id = COALESCE(supersedes_plan_id, $2)
+          WHERE plan_id = $1
+        `,
+        [planId, supersededByPlanId]
+      );
+    });
+  }
+
+  public async archivePlan(planId: PlanRecord['planId'], archivedAtIso: string): Promise<void> {
+    await this.withTransaction(async (client) => {
+      const result = await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.plan_records
+          SET state = 'ARCHIVED',
+              archived_at = $2::timestamptz,
+              updated_at = NOW()
+          WHERE plan_id = $1
+        `,
+        [planId, archivedAtIso]
+      );
+      if (result.rowCount === 0) {
+        throw new Error(`PLAN_RECORD_NOT_FOUND: ${planId}`);
+      }
+    });
+  }
+
+  public async getPlanRecord(planId: PlanRecord['planId']): Promise<PlanRecord | undefined> {
+    return this.withClient(async (client) => {
+      const row = await client.query<{
+        plan_id: string;
+        canonical_plan_json: string;
+        canonical_hash: string;
+        plan_version: string;
+        schema_version: string;
+        contract_version: string;
+        source_ref: string;
+        state: 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
+        created_at_iso: string;
+        updated_at_iso: string;
+        derived_from_plan_id: string | null;
+        supersedes_plan_id: string | null;
+        archived_at_iso: string | null;
+      }>(
+        `
+          SELECT
+            plan_id,
+            canonical_plan_json,
+            canonical_hash,
+            plan_version,
+            schema_version,
+            contract_version,
+            source_ref,
+            state,
+            created_at::text AS created_at_iso,
+            updated_at::text AS updated_at_iso,
+            derived_from_plan_id,
+            supersedes_plan_id,
+            archived_at::text AS archived_at_iso
+          FROM ${quoteIdentifier(this.schema)}.plan_records
+          WHERE plan_id = $1
+        `,
+        [planId]
+      );
+      const first = row.rows[0];
+      return first ? parsePlanRecord(toPlanRecord(first)) : undefined;
+    });
+  }
+
+  public async getPlanRecordByRef(planRef: PlanRefSchemaT): Promise<PlanRecord | undefined> {
+    const validated = parsePlanRef(planRef);
+    return this.getPlanRecord(validated.planId);
+  }
+
+  public async listExecutabilityByAdapter(
+    planId: PlanRecord['planId']
+  ): Promise<ReadonlyArray<PlanExecutabilityRecord>> {
+    return this.withClient(async (client) => {
+      const result = await client.query<{
+        plan_id: string;
+        adapter_id: string;
+        state: ExecutabilityState;
+        validated_at_iso: string | null;
+        rejection_report_json: unknown;
+      }>(
+        `
+          SELECT
+            plan_id,
+            adapter_id,
+            state,
+            validated_at::text AS validated_at_iso,
+            rejection_report_json
+          FROM ${quoteIdentifier(this.schema)}.plan_executability_records
+          WHERE plan_id = $1
+        `,
+        [planId]
+      );
+      return result.rows.map((row) => parsePlanExecutabilityRecord(toPlanExecutabilityRecord(row)));
+    });
+  }
+
+  public async getAdmissionLinks(
+    planId: PlanRecord['planId']
+  ): Promise<ReadonlyArray<PlanAdmissionLink>> {
+    return this.withClient(async (client) => {
+      const result = await client.query<{
+        plan_id: string;
+        run_id: string;
+        adapter_id: string;
+        admitted_at_iso: string;
+      }>(
+        `
+          SELECT
+            plan_id,
+            run_id,
+            adapter_id,
+            admitted_at::text AS admitted_at_iso
+          FROM ${quoteIdentifier(this.schema)}.plan_admission_links
+          WHERE plan_id = $1
+          ORDER BY admitted_at ASC
+        `,
+        [planId]
+      );
+      return result.rows.map((row) =>
+        parsePlanAdmissionLink({
+          planId: row.plan_id,
+          runId: row.run_id,
+          adapterId: row.adapter_id,
+          admittedAtIso: row.admitted_at_iso,
+        })
+      );
+    });
+  }
+
+  public async getSupersession(
+    planId: PlanRecord['planId']
+  ): Promise<{ supersededByPlanId: PlanRecord['planId'] } | undefined> {
+    return this.withClient(async (client) => {
+      const result = await client.query<{ superseded_by_plan_id: string | null }>(
+        `
+          SELECT p2.plan_id AS superseded_by_plan_id
+          FROM ${quoteIdentifier(this.schema)}.plan_records p1
+          LEFT JOIN ${quoteIdentifier(this.schema)}.plan_records p2
+            ON p2.supersedes_plan_id = p1.plan_id
+          WHERE p1.plan_id = $1
+          ORDER BY p2.updated_at DESC
+          LIMIT 1
+        `,
+        [planId]
+      );
+      const supersededByPlanId = result.rows[0]?.superseded_by_plan_id;
+      return supersededByPlanId ? { supersededByPlanId } : undefined;
+    });
   }
 
   public async getValidationRecord(planId: string): Promise<PlanValidationRecord | undefined> {
@@ -320,7 +654,8 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
     planId: string,
     expectedState: 'PENDING_VALIDATION',
     nextState: 'VALID' | 'INVALID',
-    report: (ExecutabilityValidationResult & { status: 'ERROR' }) | null
+    report: (ExecutabilityValidationResult & { status: 'ERROR' }) | null,
+    onTransition?: (client: PoolClient) => Promise<void>
   ): Promise<void> {
     await this.withTransaction(async (client) => {
       const current = await client.query<{ validation_state: string }>(
@@ -353,7 +688,82 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
         `,
         [planId, nextState, JSON.stringify(report)]
       );
+      if (onTransition) {
+        await onTransition(client);
+      }
     });
+  }
+
+  private async upsertPlanRecord(client: PoolClient, record: PlanRecord): Promise<void> {
+    await client.query(
+      `
+        INSERT INTO ${quoteIdentifier(this.schema)}.plan_records (
+          plan_id,
+          canonical_plan_json,
+          canonical_hash,
+          plan_version,
+          schema_version,
+          contract_version,
+          source_ref,
+          state,
+          created_at,
+          updated_at,
+          derived_from_plan_id,
+          supersedes_plan_id,
+          archived_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9::timestamptz, $10::timestamptz, $11, $12, $13::timestamptz
+        )
+        ON CONFLICT (plan_id) DO UPDATE
+        SET state = EXCLUDED.state,
+            updated_at = EXCLUDED.updated_at,
+            supersedes_plan_id = COALESCE(plan_records.supersedes_plan_id, EXCLUDED.supersedes_plan_id),
+            archived_at = COALESCE(EXCLUDED.archived_at, plan_records.archived_at)
+      `,
+      [
+        record.planId,
+        record.canonicalPlanJson,
+        record.canonicalHash,
+        record.planVersion,
+        record.schemaVersion,
+        record.contractVersion,
+        record.sourceRef,
+        record.state,
+        record.createdAtIso,
+        record.updatedAtIso,
+        record.derivedFromPlanId ?? null,
+        record.supersedesPlanId ?? null,
+        record.state === 'ARCHIVED' ? record.archivedAtIso : null,
+      ]
+    );
+  }
+
+  private async upsertExecutabilityRecord(
+    client: PoolClient,
+    record: PlanExecutabilityRecord
+  ): Promise<void> {
+    await client.query(
+      `
+        INSERT INTO ${quoteIdentifier(this.schema)}.plan_executability_records (
+          plan_id,
+          adapter_id,
+          state,
+          validated_at,
+          rejection_report_json
+        ) VALUES ($1, $2, $3, $4::timestamptz, $5::jsonb)
+        ON CONFLICT (plan_id, adapter_id) DO UPDATE
+        SET state = EXCLUDED.state,
+            validated_at = EXCLUDED.validated_at,
+            rejection_report_json = EXCLUDED.rejection_report_json
+      `,
+      [
+        record.planId,
+        record.adapterId,
+        record.state,
+        record.state === 'PENDING' ? null : record.validatedAtIso,
+        record.state === 'INVALID' ? JSON.stringify(record.rejectionReport) : null,
+      ]
+    );
   }
 
   private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
@@ -389,6 +799,87 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
       client.release();
     }
   }
+}
+
+function buildPlanRecord(buildResult: PlannerBuildResultV2, planRef: PlanRefSchemaT): PlanRecord {
+  const nowIso = new Date().toISOString();
+  return parsePlanRecord({
+    planId: buildResult.plan.metadata.planId,
+    canonicalPlanJson: buildResult.canonicalPlanJson,
+    canonicalHash: createHash('sha256').update(buildResult.canonicalPlanJson).digest('hex'),
+    planVersion: buildResult.plan.metadata.planVersion,
+    schemaVersion: buildResult.plan.metadata.schemaVersion,
+    contractVersion: buildResult.plan.metadata.contractVersion,
+    sourceRef: planRef.uri,
+    state: 'ACTIVE',
+    createdAtIso: buildResult.plan.metadata.createdAtIso,
+    updatedAtIso: nowIso,
+  });
+}
+
+function toPlanRecord(row: {
+  plan_id: string;
+  canonical_plan_json: string;
+  canonical_hash: string;
+  plan_version: string;
+  schema_version: string;
+  contract_version: string;
+  source_ref: string;
+  state: 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
+  created_at_iso: string;
+  updated_at_iso: string;
+  derived_from_plan_id: string | null;
+  supersedes_plan_id: string | null;
+  archived_at_iso: string | null;
+}): PlanRecord {
+  return parsePlanRecord({
+    planId: row.plan_id,
+    canonicalPlanJson: row.canonical_plan_json,
+    canonicalHash: row.canonical_hash,
+    planVersion: row.plan_version,
+    schemaVersion: row.schema_version,
+    contractVersion: row.contract_version,
+    sourceRef: row.source_ref,
+    state: row.state,
+    createdAtIso: row.created_at_iso,
+    updatedAtIso: row.updated_at_iso,
+    ...(row.derived_from_plan_id === null ? {} : { derivedFromPlanId: row.derived_from_plan_id }),
+    ...(row.supersedes_plan_id === null ? {} : { supersedesPlanId: row.supersedes_plan_id }),
+    ...(row.state === 'ARCHIVED'
+      ? { archivedAtIso: row.archived_at_iso ?? row.updated_at_iso }
+      : {}),
+  });
+}
+
+function toPlanExecutabilityRecord(row: {
+  plan_id: string;
+  adapter_id: string;
+  state: ExecutabilityState;
+  validated_at_iso: string | null;
+  rejection_report_json: unknown;
+}): PlanExecutabilityRecord {
+  if (row.state === 'PENDING') {
+    return { planId: row.plan_id, adapterId: row.adapter_id, state: 'PENDING' };
+  }
+  if (row.state === 'VALID') {
+    return {
+      planId: row.plan_id,
+      adapterId: row.adapter_id,
+      state: 'VALID',
+      validatedAtIso: row.validated_at_iso ?? new Date(0).toISOString(),
+    };
+  }
+  return {
+    planId: row.plan_id,
+    adapterId: row.adapter_id,
+    state: 'INVALID',
+    validatedAtIso: row.validated_at_iso ?? new Date(0).toISOString(),
+    rejectionReport: (row.rejection_report_json ?? {
+      code: 'REJECTED',
+      reason: 'missing rejection report',
+      degradable: false,
+    }) as PlanExecutabilityRejectionReport,
+  };
 }
 
 function buildPlanRef(input: {
