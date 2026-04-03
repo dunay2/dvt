@@ -15,42 +15,42 @@ expected_outcome:
   - migration recovery is defined
   - governance startup routing is explicit
 header_markdown: >
-  Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y
-  consistencia de interfaces.
+  You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal
+  design, and interface consistency.
 
 
-  ## Principios obligatorios
+  ## Mandatory Principles
 
 
-  - Shared kernel minimo: en contratos solo entra lo cross-domain
+  - Minimal shared kernel: only cross-domain surfaces belong in contracts
 
-  - Contracts-first: no se cambia runtime sin contrato verificable
+  - Contracts-first: do not change runtime behavior without a verifiable contract
 
-  - Ownership explicito: cada puerto tiene dueno y frontera clara
+  - Explicit ownership: every port has a clear owner and boundary
 
-  - Composition root disciplinado: sin rewiring por conveniencia
+  - Disciplined composition root: no convenience rewiring
 
-  - Cero drift: docs, tipos y tests deben contar la misma verdad
-
-
-  ## Forma de trabajo
+  - Zero drift: docs, types, and tests must describe the same truth
 
 
-  - Definir frontera de dominio y contrato
-
-  - Ajustar wiring del root sin mezclar responsabilidades
-
-  - Validar con pruebas de contrato y regresion negativa
+  ## Working Style
 
 
-  ## Restricciones
+  - Define the domain boundary and contract
+
+  - Adjust root wiring without mixing responsibilities
+
+  - Validate with contract tests and negative regression coverage
 
 
-  - No mover contratos de dominio a `@dvt/contracts` si no son shared
+  ## Constraints
 
-  - No agregar atajos de compatibilidad silenciosos
 
-  - No introducir deuda oculta ni TODO placeholders
+  - Do not move domain contracts into `@dvt/contracts` unless they are shared
+
+  - Do not add silent compatibility shortcuts
+
+  - Do not introduce hidden debt or TODO placeholders
 tasks:
   - task_id: MVP-A1
     priority: P0
@@ -617,11 +617,8 @@ tasks:
     progress_pct: 55
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/contracts/planner/PlanStoreRecords.v1.md
-      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
     status_reason: >-
       ADR-0043 is accepted, S08-2 contract hardening is implemented, and S08-3 artifacts-owned
       read/write ports are now delivered. Postgres migration and admission cutover remain open.
@@ -631,8 +628,9 @@ tasks:
     priority: P0
     status: done
     objective: >-
-      introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel
-      behavior-port drift.
+      introduce TenantId, RunId, PlanId branded/nominal types in @dvt/contracts and propagate to all
+      port signatures to prevent silent parameter swapping and enforce tenant isolation at compile
+      time.
     dependency: none
     target: >-
       `@dvt/artifacts` publishes `IPlanStoreWriter` and `IPlanStoreReader` and no new plan-storage
@@ -655,57 +653,217 @@ tasks:
     priority: P0
     status: queued
     objective: >-
-      evolve Postgres plan-store persistence to the three-part model while keeping compatibility
-      during migration.
-    dependency: S08-3
+      add per-StepKind JSON Schema validation in @dvt/plan-verifier so that stepTypeConfig is
+      validated against a kind-specific schema before the plan reaches the adapter.
+    dependency: none
     target: >-
-      Postgres persists plan records, executability records, and admission links with a
-      compatibility facade for existing callers.
-    complexity: S
-    effort_points: 2
+      Each registered StepKind has a corresponding JSON Schema; plan verification rejects plans with
+      invalid stepTypeConfig at admission, not at adapter execution time.
+    complexity: M
+    effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
+      runtime failures as step kinds multiply.
     last_verified: '2026-04-02'
-  - task_id: S08-5
-    parent_task: S08
+  - task_id: MW-A1
     priority: P0
     status: queued
     objective: >-
-      cut over planner-backed admission to require adapter-scoped executability and write explicit
-      admission links.
-    dependency: S08-4
+      create a StepKindRegistry with per-kind schema validation, adapter-to-kind mapping, and a
+      documented extension protocol so that adding a new StepKind is a governed, testable operation.
+    dependency: AR-A2
     target: >-
-      admission enforces adapter-scoped `VALID` executability and writes `PlanAdmissionLink`
-      relations in the new model.
-    complexity: S
-    effort_points: 2
+      Registry maps each StepKind to its JSON Schema, supported adapters, and required capabilities;
+      adding a new kind follows a documented protocol with contract tests.
+    complexity: L
+    effort_points: 8
     progress_pct: 0
     evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Required for multi-workflow generalization — without a registry, adding step kinds is an act
+      of faith with no validation or adapter routing guarantee.
     last_verified: '2026-04-02'
-  - task_id: S08-6
-    parent_task: S08
+  - task_id: MW-A2
+    priority: P0
+    status: queued
+    objective: >-
+      create a GenericGraphSource format that allows defining DAGs without dbt manifests, so the
+      planner can accept workflow definitions from any source (Spark, Python, API, custom ETL).
+    dependency: none
+    target: >-
+      A documented, schema-validated graph source format exists alongside ManifestGraphDeriver;
+      PlannerFacade accepts both dbt manifests and generic graph sources without code changes to the
+      core planner.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      The single biggest blocker for multi-workflow support — today the only entry to the planner is
+      dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
+    last_verified: '2026-04-02'
+  - task_id: AR-A3
     priority: P1
     status: queued
     objective: >-
-      add supersession and archival lifecycle support without introducing speculative binding-state
-      lifecycle coupling.
-    dependency: S08-5
+      extract enrichRunStatus from IWorkflowEngine into a separate IRunEnrichmentService interface
+      to keep the engine contract pure and remove adapter availability dependency from the read
+      path.
+    dependency: none
     target: >-
-      supersession and archival transitions are explicit in persisted plan records and fully covered
-      by tests in the migrated runtime path.
+      IWorkflowEngine has 4 methods (startRun, cancelRun, getRunStatus, signal); enrichment lives in
+      a separate service behind a circuit breaker; no adapter call on the core status read path.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      enrichRunStatus contradicts the principle that the engine does not call the adapter for reads;
+      extraction preserves engine contract minimality.
+    last_verified: '2026-04-02'
+  - task_id: MW-A3
+    priority: P1
+    status: queued
+    objective: >-
+      generalize compiledCodeRef to StepArtifactRef — not every step produces SQL; the artifact
+      model must be step-kind-agnostic to support Python scripts, Spark jobs, API calls, etc.
+    dependency: MW-A1
+    target: >-
+      StepStarted.payload uses StepArtifactRef (content-addressable, kind-aware) instead of
+      compiledCodeRef; existing dbt SQL artifacts are a specialization, not the only type.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      ADR-0032 compiledCodeRef assumes SQL; multi-workflow requires a kind-agnostic artifact
+      reference model.
+    last_verified: '2026-04-02'
+  - task_id: MW-A4
+    priority: P1
+    status: queued
+    objective: >-
+      document a governed 'How to add a new StepKind' guide covering schema definition, adapter
+      implementation, activity registration, policy mapping, and contract test requirements.
+    dependency: MW-A1
+    target: >-
+      A contributor can add a new StepKind (e.g., PYTHON_SCRIPT) by following the documented
+      protocol without implicit knowledge of adapter internals.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Without this guide, extensibility is theoretical — a third party cannot add a step kind
+      without reverse-engineering the system.
+    last_verified: '2026-04-02'
+  - task_id: AR-A4
+    priority: P2
+    status: queued
+    objective: >-
+      remove or freeze the custom policy namespace registry (CustomPolicyNamespaceRegistry.v1.ts)
+      until a real consumer exists to reduce speculative extensibility maintenance cost.
+    dependency: none
+    target: >-
+      Registry is either deleted or explicitly frozen with a note that reactivation requires a real
+      consumer and ADR backing.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: Zero consumers exist; speculative extensibility carries maintenance cost.
+    last_verified: '2026-04-02'
+  - task_id: AR-A5
+    priority: P2
+    status: queued
+    objective: >-
+      verify that createdAtIso is excluded from the planCore JCS input for planId computation; if
+      included, the same logical plan at different times produces different identity.
+    dependency: none
+    target: >-
+      Determinism test confirms createdAtIso exclusion from planId hash; if included, fix and add
+      golden vector regression test.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: Potential determinism violation identified in review; requires verification.
+    last_verified: '2026-04-02'
+  - task_id: AR-A6
+    priority: P2
+    status: queued
+    objective: >-
+      add snapshot projection concurrency requirement to IRunStateStore contract so that mutual
+      exclusion during rebuild is a contract invariant, not an implementation detail of advisory
+      locks.
+    dependency: none
+    target: >-
+      IRunStateStoreMaintenance.rebuildSnapshot contract mandates mutual exclusion semantics;
+      alternative adapter implementations must honor the invariant.
     complexity: S
     effort_points: 2
     progress_pct: 0
     evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Advisory locks are PostgreSQL-specific; the contract must mandate concurrency safety for any
+      adapter implementation.
+    last_verified: '2026-04-02'
+  - task_id: AR-A7
+    priority: P2
+    status: queued
+    objective: >-
+      split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime
+      orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
+    dependency: none
+    target: >-
+      Backpressure domain logic is independently testable without worker runtime; worker runtime
+      depends on domain rules, not vice versa.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Package currently mixes domain logic and application orchestration, violating hexagonal
+      separation.
+    last_verified: '2026-04-02'
+  - task_id: DOC-ARCH-01
+    priority: P1
+    status: in_progress
+    objective: >-
+      reconcile repository-wide architecture docs with current code, simplify overlapping
+      architecture surfaces, and archive stale snapshots that no longer describe the shipped
+      runtime.
+    dependency: none
+    target: >-
+      Canonical architecture reading order is explicit, stale architecture snapshots are either
+      rewritten or archived, broken planning-domain references are removed, and contributors have a
+      guide for keeping architecture docs aligned after runtime changes.
+    complexity: M
+    effort_points: 3
+    progress_pct: 90
+    evidence_refs:
+      - docs/planning/proposals/architecture-doc-reconciliation-plan-20260402.md
+      - docs/architecture/architecture-surface-inventory-20260402.md
+      - docs/architecture/system-delivery-status.md
+      - docs/architecture/atlas/architecture/architecture_atlas.md
+      - docs/planning/execution-model/index.md
+    status_reason: >-
+      Waves 1 to 4 are now delivered: canonical reading order is published, planning-domain drift is
+      corrected, the architecture atlas is historical, supporting architecture maps are
+      non-canonical, and the component subtree now routes through explicit supporting entrypoints,
+      but final archive consolidation and a contributor maintenance guide remain open.
     last_verified: '2026-04-02'
   - task_id: plan-version-reset
     priority: P1
@@ -759,6 +917,15 @@ dependency_notes:
     `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next
     execution slice for Postgres migration compatibility.
   - '`plan-version-reset` is closed and remains independent.'
+  - >-
+    `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address
+    branded types (P0), stepTypeConfig validation (P0), enrichRunStatus extraction (P1), custom
+    policy cleanup (P2), planId determinism (P2), snapshot concurrency contract (P2), and delivery
+    package split (P2).
+  - >-
+    `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
+    GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends
+    on AR-A2; MW-A3 depends on MW-A1.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure

@@ -210,6 +210,164 @@ tasks:
       - docs/planning/strategic-product-roadmap-20260324.md
     status_reason: Backpressure propagation remains planned admission hardening work.
     last_verified: '2026-03-31'
+  - task_id: AR-D1
+    priority: P1
+    status: queued
+    objective: >-
+      implement incremental snapshot projection (apply event delta instead of full replay) so that
+      getRunStatus does not degrade to O(n) for high-step-count DAGs when snapshot is stale.
+    dependency: S19-F1
+    target: >-
+      Snapshot projector applies only new events since last projection checkpoint; full replay is
+      fallback-only for corrupted or missing snapshots; projection latency is O(delta), not
+      O(total).
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      At 1000-step DAGs with 3000+ events, full replay on cache miss is unacceptable for status
+      polling latency.
+    last_verified: '2026-04-02'
+  - task_id: AR-D2
+    priority: P2
+    status: queued
+    objective: >-
+      define Temporal continueAsNew threshold as a governed contract parameter with documented SLA
+      for maximum workflow history size and step count per segment.
+    dependency: none
+    target: >-
+      continueAsNewAfterLayerCount is a documented, configurable parameter with tests that verify
+      workflow correctly continues-as-new at the threshold boundary.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Undocumented threshold silently degrades large DAG execution when Temporal history size limits
+      are hit.
+    last_verified: '2026-04-02'
+  - task_id: AR-D3
+    priority: P2
+    status: queued
+    objective: >-
+      document worker scaling strategy for 1000+ tenants — per-tenant workers vs shared pool, task
+      queue density model, cold-start latency targets, and worker auto-scaling policy.
+    dependency: none
+    target: >-
+      Architecture document defines worker topology for multi-tenant scale; operational runbook
+      covers worker provisioning, scaling triggers, and tenant-to-queue assignment policy.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      1000+ task queues (one per tenant) requires explicit worker density planning that does not
+      exist today.
+    last_verified: '2026-04-02'
+  - task_id: AR-D4
+    priority: P2
+    status: queued
+    objective: >-
+      design and implement zero-downtime schema rollback strategy to eliminate the maintenance-mode
+      requirement for state-store schema changes in a multi-tenant SaaS environment.
+    dependency: schema-migration-rollback
+    target: >-
+      Schema migrations can be rolled back without setting hasActiveClients=false; rollback strategy
+      uses expand-contract pattern for backward-compatible transitions; tested with concurrent reads
+      during rollback.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Current rollback requires maintenance mode (no active clients) which is costly for
+      multi-tenant SaaS with always-on availability expectations.
+    last_verified: '2026-04-02'
+  - task_id: AR-D5
+    priority: P2
+    status: queued
+    objective: >-
+      add tenant-configurable retention policies so enterprise tenants can retain data longer and
+      free-tier tenants have aggressive purging, instead of one-size-fits-all hotRetentionDays.
+    dependency: run event log retention + TTL
+    target: >-
+      Retention configuration is per-tenant in tenant settings; archive lifecycle respects
+      tenant-specific retention windows; tests validate that different tenants within the same
+      archive unit respect their individual retention policies.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      All tenants currently share the same retention window; enterprise and free-tier tenants have
+      fundamentally different retention requirements.
+    last_verified: '2026-04-02'
+  - task_id: MW-D1
+    priority: P1
+    status: queued
+    objective: >-
+      create an SDK/API for external plan definition that allows systems outside the dbt ecosystem
+      to submit DAGs to the planner without going through the dbt manifest format.
+    dependency: MW-A2
+    target: >-
+      A documented API endpoint or SDK function accepts a GenericGraphSource payload and returns an
+      ExecutionPlan; integration tests demonstrate plan creation from a non-dbt source (e.g., a
+      Python script DAG or a Spark job dependency graph).
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      This opens the door to multi-workflow integrations; depends on GenericGraphSource format
+      (MW-A2) being defined first.
+    last_verified: '2026-04-02'
+  - task_id: MW-D2
+    priority: P2
+    status: queued
+    objective: >-
+      define worker routing model by step kind — which workers execute which types of steps, how
+      task queues are assigned per step kind, and how worker images are specialized (e.g., a
+      SPARK_JOB worker needs Spark client, not dbt CLI).
+    dependency: MW-C1
+    target: >-
+      Architecture document defines worker-to-step-kind routing; task queue naming convention
+      includes step kind or capability; worker deployment manifests are parameterized by step kind.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      A PYTHON_SCRIPT step needs a different worker runtime than a DBT_MODEL step; routing model
+      must be explicit for multi-workflow to function.
+    last_verified: '2026-04-02'
+  - task_id: AR-D6
+    priority: P2
+    status: queued
+    objective: >-
+      assess triple versioning (planVersion + schemaVersion + contractVersion) governance burden
+      after 6 months — if still only planVersion '1.0', evaluate whether the overhead is justified
+      and consider simplification.
+    dependency: none
+    target: >-
+      Review document assesses governance cost vs value of triple versioning; decision to retain,
+      simplify, or defer is recorded as an ADR addendum.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Triple versioning is justified as pre-investment but should be re-evaluated if only one
+      version exists after 6 months.
+    last_verified: '2026-04-02'
   - task_id: first enterprise pilot
     priority: P3
     status: blocked
@@ -278,14 +436,21 @@ dependency_notes:
   - >-
     `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM
     backlog rather than implementation work.
+  - >-
+    `AR-D1` through `AR-D6` originate from the 2026-04-02 deep architectural review: incremental
+    snapshot projection (P1), continueAsNew governance (P2), worker scaling docs (P2), zero-downtime
+    rollback (P2), tenant-configurable retention (P2), and triple versioning assessment (P2).
+  - >-
+    `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2)
+    and worker routing model by step kind (P2, depends on MW-C1).
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-03-31'
-  total_tasks: 15
-  total_effort_points: 84
+  total_tasks: 23
+  total_effort_points: 124
   completed_weighted_points: 30
-  lane_progress_pct: 36
+  lane_progress_pct: 24
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

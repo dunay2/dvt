@@ -2,101 +2,145 @@
 title: Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-04-03
 ---
 
 # Frontend Architecture
 
-This page is the canonical landing page for frontend documentation inside
-`docs/`.
+This page is the canonical entry point for the DVT frontend architecture
+surface.
 
-The detailed product and implementation notes still live under `apps/web/`, but
-they are not allowed to behave like a parallel documentation root. Start here,
-then go to the linked local frontend docs.
+Use it to answer four questions quickly:
 
-Concept anchors for this page:
-
-- [Glossary](../../concepts/glossary.md) for `run`, `artifact`, `status`, and
-  `runtime`
-- [Domain Language](../../concepts/domain-language.md) for the distinction
-  between DVT, engine, planner, adapter, and status
+1. what the frontend actually ships today;
+2. which views make up the main workbench;
+3. how those views relate to each other;
+4. which libraries and mature open-source patterns the frontend should build on.
 
 ## Current Reality
 
-- `apps/web` is a real UI codebase, not just a mock folder.
-- It is still only partially connected to backend reality.
-- Mock data still dominates large parts of the surface.
-- There are currently no automated tests under `apps/web`.
+- `apps/web` is a real browser application with a persistent shell, plugin-based
+  routing, and working Canvas, Runs, Lineage, Diff, and Artifacts views.
+- The shell is partially backend-backed today: platform health is real, while
+  several feature views still mix API data and mock-oriented paths.
+- The main UX is already workbench-shaped, but the documentation had lagged
+  behind the implementation and was too abstract to explain the real product
+  behavior.
+- The next missing route-level slice is a governed execution-template and
+  source-generation workbench for producing execution artifacts such as
+  Snowflake tasks, procedures, and ETL scaffolds.
 
-That means the frontend exists, but its documentation must be explicit about the
-gap between visual breadth and production-backed behavior.
+## Current Shell Topology
 
-## What This Section Covers
+```mermaid
+flowchart TB
+  Boot["App bootstrap"] --> Router["RouterProvider"]
+  Router --> Root["Root shell"]
+  Root --> TopBar["TopAppBar"]
+  Root --> Health["ShellHealthBanner"]
+  Root --> Nav["LeftNavigation"]
+  Root --> Outlet["Route outlet"]
+  Root --> Console["Console drawer"]
 
-- shell structure and routing;
-- the intended Canvas -> Plan -> Run -> Monitor interaction path;
-- the current backend boundary the UI is allowed to rely on;
-- where local frontend docs live;
-- which commands verify the client surface today.
+  Outlet --> Canvas["/canvas"]
+  Outlet --> Runs["/runs"]
+  Outlet --> Lineage["/lineage"]
+  Outlet --> Diff["/diff"]
+  Outlet --> Artifacts["/artifacts"]
+  Outlet --> Plugins["/plugins"]
+  Outlet --> Admin["/admin"]
+```
+
+## Main Views
+
+| View      | Current route           | Current role                                                           |
+| --------- | ----------------------- | ---------------------------------------------------------------------- |
+| Canvas    | `/canvas`               | Main graph workbench with explorer, viewport, overlays, and inspector  |
+| Runs      | `/runs`, `/runs/:runId` | Operational run list and run detail workbench                          |
+| Lineage   | `/lineage`              | Dependency and impact analysis surface derived from the graph snapshot |
+| Diff      | `/diff`                 | Early change-review surface for graph, SQL, and catalog deltas         |
+| Artifacts | `/artifacts`            | Artifact browser and local manifest import surface                     |
+| Plugins   | `/plugins`              | Installed-plugin inspection and configuration shell route              |
+| Admin     | `/admin`                | Administrative shell route                                             |
+
+## Next Governed Slice
+
+The main workbench still lacks a dedicated source-generation surface.
+
+That future route-level workbench should cover:
+
+- execution-template selection and provider-profile choice;
+- parameterized generation of source artifacts such as Snowflake tasks,
+  procedures, and ETL scaffolds;
+- preview and diff of generated source before export or apply;
+- traceability back to the selected template, version, and workflow context.
 
 ## Canonical Reading Order
 
-1. [apps/web/README.md](../../../apps/web/README.md)
-2. [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
-3. [apps/web/DOCUMENTATION_INDEX.md](../../../apps/web/DOCUMENTATION_INDEX.md)
-4. [System Delivery Status](../system-delivery-status.md)
-5. [G8 Real Auth Final Spec](../../planning/archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
+1. [Main Workspace Views And UX](main-workspace-views-and-ux.md)
+2. [Screen Manuals And User Stories](screen-manuals-and-user-stories.md)
+3. [UX Implementation Guide](ux-implementation-guide.md)
+4. [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
+5. [App Shell](appshell/app-shell.md)
+6. [Graph Frontend Architecture](graph/graph-frontend-architecture.md)
+7. [Inspector](inspector/inspector-frontend-architecture.md)
+8. [Runs](runs/dvt-runs-frontend-architecture.md)
+9. [Lineage](lineage/dvt-frontend-lineage.md)
+10. [Git Mode Architecture](git/git-mode-architecture.md)
+11. [Frontend Observability Architecture](observability/front-observability-architecture-dvt.md)
+12. [Frontend Artifacts](artifacts/front-artifacts.md)
+13. [apps/web](../components/web-app/index.md)
+14. [@dvt/web package surface](../components/web/index.md)
 
-## Primary Code Anchors
+## Current Code Anchors
 
 - App bootstrap:
-  [apps/web/src/main.tsx](../../../apps/web/src/main.tsx)
-- App shell:
-  [apps/web/src/app/App.tsx](../../../apps/web/src/app/App.tsx)
-- Route map:
-  [apps/web/src/app/routes.ts](../../../apps/web/src/app/routes.ts)
-- Top application bar:
-  [apps/web/src/app/components/TopAppBar.tsx](../../../apps/web/src/app/components/TopAppBar.tsx)
-- Current mock-heavy data sources:
-  [apps/web/src/app/data/mockData.ts](../../../apps/web/src/app/data/mockData.ts)
-  and
-  [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts)
+  [main.tsx](../../../apps/web/src/main.tsx)
+- Shell wiring:
+  [App.tsx](../../../apps/web/src/app/App.tsx),
+  [Root.tsx](../../../apps/web/src/app/Root.tsx),
+  [routes.ts](../../../apps/web/src/app/routes.ts)
+- Shell chrome:
+  [TopAppBar.tsx](../../../apps/web/src/app/components/TopAppBar.tsx),
+  [LeftNavigation.tsx](../../../apps/web/src/app/components/LeftNavigation.tsx),
+  [Console.tsx](../../../apps/web/src/app/components/Console.tsx)
+- Main workbench:
+  [Canvas.tsx](../../../apps/web/src/app/views/Canvas.tsx),
+  [CanvasShell.tsx](../../../apps/web/src/app/views/canvas/CanvasShell.tsx),
+  [useCanvasController.ts](../../../apps/web/src/app/views/canvas/useCanvasController.ts)
+- Operational views:
+  [RunsView.tsx](../../../apps/web/src/app/views/RunsView.tsx),
+  [LineageView.tsx](../../../apps/web/src/app/views/LineageView.tsx),
+  [DiffView.tsx](../../../apps/web/src/app/views/DiffView.tsx),
+  [ArtifactsView.tsx](../../../apps/web/src/app/views/ArtifactsView.tsx)
 
-## Architectural Position
+## Architecture Rules
 
-### UI scope
+- The frontend consumes `apps/api`; it is not a second execution authority.
+- Views should consume client services, capabilities, and typed mappers instead
+  of reading mock data directly.
+- The workbench must separate shell state, view-local UI state, and server
+  state. The current global app store is still too broad and remains an active
+  cleanup target.
+- Mature libraries and open-source precedents should be preferred over
+  home-grown primitives for graphing, tables, editors, accessibility,
+  observability widgets, and workbench layout patterns.
 
-The frontend is the operator-facing and editor-facing surface for DVT. It is
-responsible for navigation, visualization, selection, and status display. It is
-not allowed to become a hidden orchestration engine.
+## Current Gaps
 
-### Backend boundary
+- The shell and workbench are real, but some capability docs were still
+  describing target architecture instead of current behavior.
+- Several feature views still rely on placeholder or mock-backed data paths.
+- The workspace has local frontend tests, but no governed `test` script or
+  dedicated CI lane yet.
+- The frontend still needs stricter contract alignment with the protected API
+  runtime surface, especially around run start and richer run diagnostics.
+- The frontend still lacks a first-class execution-template and code-generation
+  workbench, so generation intent is not yet modeled as a governed UX surface.
 
-The current stable backend boundary is still narrow:
+## Related Pages
 
-- health and readiness;
-- version and db readiness;
-- protected runtime endpoints growing behind the API auth boundary.
-
-Do not document the UI as if plan, run, lineage, cost, and artifact contracts
-were already production-complete unless the API actually exposes them.
-
-### Documentation rule
-
-When a frontend-local doc is important, this page must link to it. The local
-doc must not be the only place where the topic is discoverable.
-
-## Verification
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web build`
-
-## Open Gaps
-
-- No frontend test suite exists yet.
-- Mock-data paths still shape the main UX.
-- The docs are now reachable, but the product boundary is still ahead of the
-  implementation in several views.
-
-If this page becomes stale, frontend documentation becomes misleading again very
-quickly because local docs in `apps/web/` are richer than the published surface.
+- [UI / Visualization Domain](../domain-ui.md)
+- [DVT Component Map](../component-map.md)
+- [System Delivery Status](../system-delivery-status.md)
+- [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)

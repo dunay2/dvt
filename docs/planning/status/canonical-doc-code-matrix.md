@@ -40,12 +40,12 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | Topic                                          | Primary packages                                                                       | Canonical spec                                                                                                                                                                                                                     | Current status                                                                                                                   |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Workflow engine core                           | `@dvt/contracts`, `@dvt/engine`                                                        | [IWorkflowEngine v1](../../architecture/engine/contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics v1](../../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)                                               | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Temporal adapter runtime                       | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)                                    | [Planning Gaps](../gaps/index.md)                                                                                                |
+| Temporal adapter runtime                       | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | Postgres state store                           | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../archive/gaps/G3-TASK-SPECIFICATION.md)                                                                                                       | [Planning Gaps](../gaps/index.md)                                                                                                |
-| Outbox worker runtime                          | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`                          | [G5 - Outbox Worker Consolidated Plan](../archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md), [Planning Gaps](../gaps/index.md), [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)             | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Read models and projector catch-up             | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres`, `@dvt/engine`       | [G7 - AI Execution Tracker](../archive/gaps/G7-AI-EXECUTION-TRACKER.md), [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md)                           | [Planning Gaps](../gaps/index.md)                                                                                                |
-| compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../archive/gaps/G4-TASK-SPECIFICATION.md)                                                                                                     | [Planning Gaps](../gaps/index.md)                                                                                                |
+| Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../archive/gaps/G3-TASK-SPECIFICATION.md)                                                                                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
+| Outbox worker runtime                          | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`                          | [G5 - Outbox Worker Consolidated Plan](../archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md), [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)                                                | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
+| Read models and projector catch-up             | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres`, `@dvt/engine`       | [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ED-20260316 - G7 closeout](../../evidence/critical/ED-20260316-g7-closeout.md)                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
+| compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../archive/gaps/G4-TASK-SPECIFICATION.md)                                                                                                     | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                                                  | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                                              | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | Web frontend shell and client routing          | `apps/web`                                                                             | [Frontend Architecture](../../architecture/frontend/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
@@ -94,7 +94,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)
 - Current status source:
-  [Planning Gaps](../gaps/index.md) (`G1`)
+  [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
   [packages/@dvt/adapter-temporal/src/TemporalAdapter.ts](../../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
   and
@@ -136,7 +136,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [G3 Task Specification](../archive/gaps/G3-TASK-SPECIFICATION.md)
 - Current status source:
-  [Planning Gaps](../gaps/index.md) (`G3`)
+  [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
   [packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts),
   [packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts](../../../packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts),
@@ -156,8 +156,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 
 - Canonical spec:
   [G5 - Outbox Worker Consolidated Plan](../archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- Current planning source:
-  [Planning Gaps](../gaps/index.md) (`G5`)
+- Historical implementation record:
+  [G5 - Outbox Worker Consolidated Plan](../archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
@@ -208,17 +208,15 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 ### Read models and projector catch-up
 
 - Canonical spec:
-  [G7 - AI Execution Tracker](../archive/gaps/G7-AI-EXECUTION-TRACKER.md)
-  and
   [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md)
   and
   [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
 - Current status source:
-  [Planning Gaps](../gaps/index.md) (`G7`)
+  [System Delivery Status](../../architecture/system-delivery-status.md)
 - Current posture:
-  G7 is **Closed**. G7.1 (`run_snapshots` formalization + `rebuildSnapshot`),
-  G7.2 (standalone projector runtime), and G7.3 (provider run-id
-  reconciliation) are delivered.
+  Read-model and projector delivery is shipped; `run_snapshots`
+  formalization, standalone projector runtime, and provider run-id
+  reconciliation are all delivered.
 - Primary code:
   [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
   and
@@ -265,7 +263,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [G4 Task Specification](../archive/gaps/G4-TASK-SPECIFICATION.md)
 - Current status source:
-  [Planning Gaps](../gaps/index.md) (`G4`)
+  [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
   [packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts](../../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts),
   [packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts),
@@ -333,9 +331,6 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 ### Step type registry and step config hardening
 
 - Canonical source today:
-  [Planning Gaps](../gaps/index.md) (`G9`)
-  for closeout status and evidence,
-  and
   [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md)
   for the current `compiledCodeRef` carve-out inside opaque `stepTypeConfig`
 - Current status source:
@@ -381,8 +376,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [Traceability Contracts](../../contracts/traceability/index.md)
   for the normative emitted facet artifacts,
   and
-  [Planning Gaps](../gaps/index.md) (`G10`)
-  for delivery/runtime follow-up
+  [System Delivery Status](../../architecture/system-delivery-status.md)
+  for current delivery/runtime posture
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
@@ -467,7 +462,14 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/web/src/app/routes.ts](../../../apps/web/src/app/routes.ts),
   [apps/web/src/app/components/TopAppBar.tsx](../../../apps/web/src/app/components/TopAppBar.tsx)
 - Current test posture:
-  No automated tests exist yet under `apps/web`.
+  Local test files exist under `apps/web/src/**`, but the workspace currently
+  exposes no package-level `test` command, so the governed lane is still
+  `typecheck` plus `build`.
+- Key tests:
+  [apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts](../../../apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts),
+  [apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts](../../../apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts),
+  [apps/web/src/app/views/canvas/useCanvasController.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.test.tsx),
+  [apps/web/src/app/views/runs/RunStates.test.tsx](../../../apps/web/src/app/views/runs/RunStates.test.tsx)
 - Verification:
   `pnpm --filter @dvt/web typecheck`
   and

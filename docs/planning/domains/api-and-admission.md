@@ -2,7 +2,7 @@
 title: Domain - API And Admission
 status: Review
 owner: API / Product / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
@@ -13,18 +13,27 @@ and auth-runtime integration.
 
 ## Canonical Sources
 
-- [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
+- [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
+- [Execution Workboard](../state/execution-workboard.md)
 
-## Active Proposal Set
+## Active Planning Inputs
 
-- [Gap 4 Backpressure Admission Design](../proposals/gap4-backpressure-admission-design-20260319.md)
-- [Gap 4 PR1 Admission Foundation](../proposals/gap4-backpressure-admission-pr1-foundation-20260319.md)
-- [Gap 4 PR2 Raw Snapshot Store](../proposals/gap4-backpressure-admission-pr2-raw-store-20260319.md)
-- [Gap 4 PR3 Resilience Envelope](../proposals/gap4-backpressure-admission-pr3-resilience-20260319.md)
-- [Gap 4 PR4 Operability and Rollout](../proposals/gap4-backpressure-admission-pr4-operability-20260319.md)
-- [Gap 4 PR5 Projected Read Model](../proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md)
+- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
+- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
+
+## Historical Proposal Inputs
+
+These proposals informed the admission and API hardening path, but they are now
+archived planning inputs rather than active proposal authorities.
+
+- [Gap 4 Backpressure Admission Design](../archive/proposals/gap4-backpressure-admission-design-20260319.md)
+- [Gap 4 PR1 Admission Foundation](../archive/proposals/gap4-backpressure-admission-pr1-foundation-20260319.md)
+- [Gap 4 PR2 Raw Snapshot Store](../archive/proposals/gap4-backpressure-admission-pr2-raw-store-20260319.md)
+- [Gap 4 PR3 Resilience Envelope](../archive/proposals/gap4-backpressure-admission-pr3-resilience-20260319.md)
+- [Gap 4 PR4 Operability and Rollout](../archive/proposals/gap4-backpressure-admission-pr4-operability-20260319.md)
+- [Gap 4 PR5 Projected Read Model](../archive/proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md)
 
 ## Relevant Reviews And Closeouts
 
@@ -40,4 +49,4 @@ and auth-runtime integration.
 ## Diagram Sources
 
 - [API and Admission Architecture Delta](../roadmap/diagrams/api-admission-architecture-delta.md)
-- [Gap Execution Dependency Graph](../roadmap/diagrams/gap-execution-dependency-graph.md)
+- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

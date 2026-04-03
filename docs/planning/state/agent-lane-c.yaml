@@ -290,6 +290,107 @@ tasks:
       the file and s3 paths, and predictable resolver failures map to plan_rejected with stable
       cause tokens.
     last_verified: '2026-03-31'
+  - task_id: AR-C1
+    priority: P0
+    status: queued
+    objective: >-
+      add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
+      admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
+      required regardless of feature flag state.
+    dependency: none
+    target: >-
+      Admin routes enforce an explicit admin-role RBAC check; any authenticated principal without
+      admin grant receives 403; test coverage includes negative path for non-admin principals.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Feature flag alone is not a security gate — if DVT_ADMIN_ROUTES_ENABLED=true, any
+      authenticated user can trigger snapshot rebuilds today.
+    last_verified: '2026-04-02'
+  - task_id: AR-C2
+    priority: P0
+    status: queued
+    objective: >-
+      define and document formal SLA targets for event delivery latency, snapshot freshness, plan
+      compilation time, run start latency, and outbox drain rate with measurable thresholds and
+      monitoring signals.
+    dependency: none
+    target: >-
+      SLA document defines p50/p99 targets for each metric; monitoring dashboards and alerts are
+      configured against those targets; operational runbook references the SLA definitions.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      No formal SLA document exists — performance targets are embedded in scattered configuration
+      defaults with no measurable definition of 'healthy'.
+    last_verified: '2026-04-02'
+  - task_id: AR-C3
+    priority: P1
+    status: queued
+    objective: >-
+      add end-to-end backpressure from Temporal task queue saturation back to StartRunAdmissionGuard
+      so the system stops accepting runs it cannot execute when Temporal workers are saturated.
+    dependency: Temporal -> API backpressure
+    target: >-
+      Adapter exposes a capacity signal (queue depth or worker utilization); admission guard
+      incorporates adapter capacity into acceptance decision; runs are rejected with explicit
+      backpressure error when adapter is saturated.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Current backpressure only covers outbox lag and tenant pending events — adapter saturation is
+      invisible to admission control.
+    last_verified: '2026-04-02'
+  - task_id: AR-C4
+    priority: P1
+    status: queued
+    objective: >-
+      add circuit breaker between Temporal activities and IRunStateStore to prevent state store
+      unavailability from blocking all step execution with no fallback or degradation signal.
+    dependency: none
+    target: >-
+      Activities use a circuit-breaker-wrapped state store client; when state store is unavailable,
+      activities fail fast with a retryable error instead of hanging; circuit state is observable
+      via metrics.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Temporal activities write directly to IRunStateStore with no protection — state store latency
+      or unavailability cascades into workflow timeouts.
+    last_verified: '2026-04-02'
+  - task_id: MW-C1
+    priority: P0
+    status: queued
+    objective: >-
+      abstract step execution in Temporal adapter by separating DbtStepActivity from a
+      StepActivityDispatcher that routes by StepKind to the correct activity implementation,
+      enabling non-dbt step types (PYTHON_SCRIPT, SPARK_JOB, API_CALL).
+    dependency: MW-A1
+    target: >-
+      RunPlanWorkflow dispatches steps via StepActivityDispatcher.execute(step); dispatcher routes
+      to DbtStepActivity for DBT_MODEL/DBT_TEST and throws UnsupportedStepKindError for unregistered
+      kinds; adding a new kind requires registering an activity, not modifying workflow code.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Current Temporal activities assume every step is a dbt operation — this is the execution-layer
+      blocker for multi-workflow support.
+    last_verified: '2026-04-02'
   - task_id: RC-C2
     priority: P2
     status: review
@@ -372,14 +473,23 @@ dependency_notes:
   - >-
     `RC-C2` moved to in-progress with cycle-1 preflight evidence captured; completion still requires
     two additional consecutive PR cycles under the same protocol.
+  - >-
+    `AR-C1` and `AR-C2` are P0 tasks from the 2026-04-02 deep review: admin route RBAC and formal
+    SLA definitions.
+  - >-
+    `AR-C3` and `AR-C4` are P1 tasks: end-to-end adapter backpressure and activity-to-state-store
+    circuit breaker.
+  - >-
+    `MW-C1` is the P0 multi-workflow execution-layer blocker: abstract step execution in Temporal to
+    support non-dbt step kinds via StepActivityDispatcher.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-01'
-  total_tasks: 16
-  total_effort_points: 59
+  total_tasks: 21
+  total_effort_points: 83
   completed_weighted_points: 45.5
-  lane_progress_pct: 77
+  lane_progress_pct: 55
   notes: >-
     Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
     parent umbrella tasks with subtasks carry coordination-only effort.
