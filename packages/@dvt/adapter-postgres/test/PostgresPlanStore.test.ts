@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import type { PlannerBuildResultV2 } from '@dvt/contracts';
 import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
@@ -9,6 +11,17 @@ const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 const describeIfPg = runIntegration ? describe : describe.skip;
 
 const NOW = '2026-03-21T00:00:00.000Z';
+const PLAN_ID = {
+  r4_1: toCanonicalPlanId('plan-r4-1'),
+  r4_2: toCanonicalPlanId('plan-r4-2'),
+  r4_3: toCanonicalPlanId('plan-r4-3'),
+  r4_4: toCanonicalPlanId('plan-r4-4'),
+  r4_5: toCanonicalPlanId('plan-r4-5'),
+  r4_6: toCanonicalPlanId('plan-r4-6'),
+  r4_7: toCanonicalPlanId('plan-r4-7'),
+  r4_8: toCanonicalPlanId('plan-r4-8'),
+  r4_9: toCanonicalPlanId('plan-r4-9'),
+} as const;
 
 describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
   const schema = `dvt_plan_it_${Date.now()}`;
@@ -53,17 +66,17 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
   test('storePlan persists a PENDING_VALIDATION record and returns a stable PlanRef', () =>
     withStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult('plan-r4-1'));
-      const record = await store.getValidationRecord('plan-r4-1');
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_1));
+      const record = await store.getValidationRecord(PLAN_ID.r4_1);
 
       expect(planRef).toMatchObject({
-        uri: 'dvt-plan://postgres/plan-r4-1',
+        uri: `dvt-plan://postgres/${PLAN_ID.r4_1}`,
         schemaVersion: 'v1.2',
-        planId: 'plan-r4-1',
+        planId: PLAN_ID.r4_1,
         planVersion: '1.0',
       });
       expect(record).toMatchObject({
-        planId: 'plan-r4-1',
+        planId: PLAN_ID.r4_1,
         state: 'PENDING_VALIDATION',
       });
       expect(record?.storedAtIso).toBeTruthy();
@@ -72,13 +85,13 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
   test('markValid transitions the plan and enables fetch by PlanRef', () =>
     withStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult('plan-r4-2'));
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_2));
       const pendingBytes = await store.fetchForValidation(planRef);
 
       await expect(store.fetch(planRef)).rejects.toThrow('PLAN_NOT_VALID');
       expect(JSON.parse(Buffer.from(pendingBytes).toString('utf8'))).toMatchObject({
         metadata: {
-          planId: 'plan-r4-2',
+          planId: PLAN_ID.r4_2,
           planVersion: '1.0',
           schemaVersion: 'v1.2',
           contractVersion: '1.0.0',
@@ -87,13 +100,13 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
       await store.markValid(planRef);
 
-      const record = await store.getValidationRecord('plan-r4-2');
+      const record = await store.getValidationRecord(PLAN_ID.r4_2);
       const bytes = await store.fetch(planRef);
 
       expect(record?.state).toBe('VALID');
       expect(JSON.parse(Buffer.from(bytes).toString('utf8'))).toMatchObject({
         metadata: {
-          planId: 'plan-r4-2',
+          planId: PLAN_ID.r4_2,
           planVersion: '1.0',
           schemaVersion: 'v1.2',
           contractVersion: '1.0.0',
@@ -103,10 +116,10 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
   test('markInvalid stores the structured rejection report and keeps the plan non-runnable', () =>
     withStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult('plan-r4-3'));
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_3));
       const rejection = {
         status: 'ERROR' as const,
-        planId: 'plan-r4-3',
+        planId: PLAN_ID.r4_3,
         adapterId: 'temporal',
         code: 'REJECTED' as const,
         degradable: false,
@@ -116,12 +129,12 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
       await store.markInvalid(planRef, rejection);
 
-      const record = await store.getValidationRecord('plan-r4-3');
+      const record = await store.getValidationRecord(PLAN_ID.r4_3);
       await expect(store.fetch(planRef)).rejects.toThrow('PLAN_NOT_VALID');
       await expect(store.fetchForValidation(planRef)).rejects.toThrow('PLAN_NOT_VALID');
 
       expect(record).toMatchObject({
-        planId: 'plan-r4-3',
+        planId: PLAN_ID.r4_3,
         state: 'INVALID',
         rejectionReport: rejection,
       });
@@ -129,32 +142,34 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
   test('treats an identical pending plan store attempt as idempotent and returns the persisted ref', () =>
     withStore(async (store) => {
-      const first = await store.storePlan(makeBuildResult('plan-r4-5'));
-      const second = await store.storePlan(makeBuildResult('plan-r4-5'));
+      const first = await store.storePlan(makeBuildResult(PLAN_ID.r4_5));
+      const second = await store.storePlan(makeBuildResult(PLAN_ID.r4_5));
 
       expect(second).toEqual(first);
-      expect(await store.getValidationRecord('plan-r4-5')).toMatchObject({
-        planId: 'plan-r4-5',
+      expect(await store.getValidationRecord(PLAN_ID.r4_5)).toMatchObject({
+        planId: PLAN_ID.r4_5,
         state: 'PENDING_VALIDATION',
       });
     }));
 
   test('rejects conflicting plan collisions for the same planId', () =>
     withStore(async (store) => {
-      await store.storePlan(makeBuildResult('plan-r4-6'));
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_6));
 
       await expect(
         store.storePlan({
           plan: {
             metadata: {
-              planId: 'plan-r4-6',
+              planId: PLAN_ID.r4_6,
               planVersion: '9.9',
+              schemaVersion: 'v1.2',
+              contractVersion: '1.0.0',
               inputHashSha256: '2'.repeat(64),
               createdAtIso: NOW,
             },
             steps: [
               {
-                stepId: 'plan-r4-6.step.changed',
+                stepId: `${PLAN_ID.r4_6}.step.changed`,
                 kind: 'DBT_MODEL',
                 dependsOn: [],
               },
@@ -162,14 +177,16 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
           },
           canonicalPlanJson: JSON.stringify({
             metadata: {
-              planId: 'plan-r4-6',
+              planId: PLAN_ID.r4_6,
               planVersion: '9.9',
+              schemaVersion: 'v1.2',
+              contractVersion: '1.0.0',
               inputHashSha256: '2'.repeat(64),
               createdAtIso: NOW,
             },
             steps: [
               {
-                stepId: 'plan-r4-6.step.changed',
+                stepId: `${PLAN_ID.r4_6}.step.changed`,
                 kind: 'DBT_MODEL',
                 dependsOn: [],
               },
@@ -181,18 +198,18 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
   test('rejects reuse of an already validated plan because storePlan must return a non-runnable ref', () =>
     withStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult('plan-r4-7'));
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_7));
       await store.markValid(planRef);
 
-      await expect(store.storePlan(makeBuildResult('plan-r4-7'))).rejects.toThrow(
+      await expect(store.storePlan(makeBuildResult(PLAN_ID.r4_7))).rejects.toThrow(
         'PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED'
       );
     }));
 
   test('allows duplicate pending admission but only one caller can claim the validation transition', () =>
     withStore(async (store) => {
-      const first = await store.storePlan(makeBuildResult('plan-r4-8'));
-      const second = await store.storePlan(makeBuildResult('plan-r4-8'));
+      const first = await store.storePlan(makeBuildResult(PLAN_ID.r4_8));
+      const second = await store.storePlan(makeBuildResult(PLAN_ID.r4_8));
 
       expect(second).toEqual(first);
 
@@ -202,18 +219,18 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
         'PLAN_VALIDATION_STATE_INVALID_TRANSITION'
       );
 
-      expect(await store.getValidationRecord('plan-r4-8')).toMatchObject({
-        planId: 'plan-r4-8',
+      expect(await store.getValidationRecord(PLAN_ID.r4_8)).toMatchObject({
+        planId: PLAN_ID.r4_8,
         state: 'VALID',
       });
     }));
 
   test('rejects invalid lifecycle transitions', () =>
     withStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult('plan-r4-4'));
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_4));
       await store.markValid(planRef);
 
-      await expect(store.markInvalid(planRef, makeRejection('plan-r4-4'))).rejects.toThrow(
+      await expect(store.markInvalid(planRef, makeRejection(PLAN_ID.r4_4))).rejects.toThrow(
         'PLAN_VALIDATION_STATE_INVALID_TRANSITION'
       );
       await expect(store.markValid(planRef)).rejects.toThrow(
@@ -223,33 +240,33 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
 
   test('persists and reads the S08 three-part model while keeping lifecycle facade compatibility', () =>
     withStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult('plan-r4-9'));
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
 
       await store.recordExecutability({
-        planId: 'plan-r4-9',
+        planId: PLAN_ID.r4_9,
         adapterId: 'temporal',
         state: 'VALID',
         validatedAtIso: NOW,
       });
       await store.markAdmitted({
-        planId: 'plan-r4-9',
+        planId: PLAN_ID.r4_9,
         runId: 'run-r4-9',
         adapterId: 'temporal',
         admittedAtIso: NOW,
       });
 
       const record = await store.getPlanRecordByRef(planRef);
-      const executability = await store.listExecutabilityByAdapter('plan-r4-9');
-      const links = await store.getAdmissionLinks('plan-r4-9');
+      const executability = await store.listExecutabilityByAdapter(PLAN_ID.r4_9);
+      const links = await store.getAdmissionLinks(PLAN_ID.r4_9);
 
       expect(record).toMatchObject({
-        planId: 'plan-r4-9',
+        planId: PLAN_ID.r4_9,
         state: 'ACTIVE',
       });
       expect(executability).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            planId: 'plan-r4-9',
+            planId: PLAN_ID.r4_9,
             adapterId: 'temporal',
             state: 'VALID',
           }),
@@ -257,7 +274,7 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       );
       expect(links).toEqual([
         {
-          planId: 'plan-r4-9',
+          planId: PLAN_ID.r4_9,
           runId: 'run-r4-9',
           adapterId: 'temporal',
           admittedAtIso: expect.any(String),
@@ -272,6 +289,8 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
       metadata: {
         planId,
         planVersion: '1.0',
+        schemaVersion: 'v1.2',
+        contractVersion: '1.0.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: NOW,
       },
@@ -287,6 +306,8 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
       metadata: {
         planId,
         planVersion: '1.0',
+        schemaVersion: 'v1.2',
+        contractVersion: '1.0.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: NOW,
       },
@@ -299,6 +320,10 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
       ],
     }),
   };
+}
+
+function toCanonicalPlanId(seed: string): string {
+  return createHash('sha256').update(seed).digest('hex');
 }
 
 function makeRejection(planId: string): {
