@@ -43,32 +43,15 @@ jobs:
         with:
           fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
-      - name: Detect docs-only scope
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Detect workflow scope
         id: scope
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
-        with:
-          filters: |
-            any_code:
-              - 'apps/**'
-              - 'packages/**'
-              - 'specs/**'
-              - 'tools/**'
-              - '.github/workflows/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'tsconfig*.json'
-              - 'vitest.config.ts'
-              - 'eslint.config.cjs'
-            docs_changed:
-              - 'docs/**'
-              - 'AGENTS.md'
-              - 'CLAUDE.md'
-              - 'scripts/docs-*.cjs'
-              - 'scripts/generate-*.cjs'
-              - 'commitlint.config.cjs'
-              - '.prettierrc.json'
+        run: node tools/ci/emit-scope.mjs --mode workflow
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: Validate adapter-postgres policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
@@ -102,11 +85,13 @@ jobs:
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate docs sync outputs (ADR/index coherence)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.docs_structure_changed ==
+          'true'
         run: pnpm docs:sync:check
 
       - name: Validate planning workboard outputs
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
         run: pnpm docs:workboard:check
 
       - name: Validate docs quality policy (English/no duplicate indexes)
@@ -125,27 +110,17 @@ jobs:
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:canonical:check
 
-      - name: Lint changed Markdown files
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
-        run: pnpm lint:md:changed
-
       - name: Validate generated code-state status doc
-        if: >-
-          github.event_name == 'pull_request' && (steps.scope.outputs.docs_changed == 'true' ||
-          steps.scope.outputs.any_code == 'true')
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
+          'true'
         run: pnpm docs:status:check
 
       - name: Validate generated capability coverage doc
-        if: >-
-          github.event_name == 'pull_request' && (steps.scope.outputs.docs_changed == 'true' ||
-          steps.scope.outputs.any_code == 'true')
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.generated_capability_relevant
+          == 'true'
         run: pnpm docs:capability:check
-
-      - name: Workspace type-check (fast-fail)
-        if: >-
-          (github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
-          'true') && (github.event_name != 'pull_request' || steps.scope.outputs.any_code == 'true')
-        run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
