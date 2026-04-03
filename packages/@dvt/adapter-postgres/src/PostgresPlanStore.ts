@@ -28,7 +28,7 @@ import {
 import { PostgresPlanRecordRepository } from './PostgresPlanStore.plan-record-repository.js';
 import { PostgresPlanStoreSchemaManager } from './PostgresPlanStore.schema-manager.js';
 import { PostgresPlanStoreTxRunner } from './PostgresPlanStore.tx.js';
-import { normalizeSchema } from './sqlUtils.js';
+import { composePostgresPlanStore } from './PostgresPlanStoreComposer.js';
 
 export interface ExecutablePlanArtifact {
   readonly text: string;
@@ -53,8 +53,6 @@ export class PostgresPlanStore
 {
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
-  private readonly schema: string;
-  private readonly statementTimeoutMs: number;
   private readonly txRunner: PostgresPlanStoreTxRunner;
   private readonly schemaManager: PostgresPlanStoreSchemaManager;
   private readonly planRecordRepository: PostgresPlanRecordRepository;
@@ -63,31 +61,15 @@ export class PostgresPlanStore
   private readonly executableBlobRepository: PostgresExecutableBlobRepository;
 
   public constructor(private readonly config: PostgresPlanStoreConfig) {
-    this.schema = normalizeSchema(config.schema ?? 'dvt');
-    this.statementTimeoutMs =
-      config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0);
-
-    if (config.pool) {
-      this.pool = config.pool;
-      this.ownsPool = false;
-    } else {
-      this.pool = new Pool({
-        connectionString:
-          config.connectionString ??
-          process.env['DVT_PG_URL'] ??
-          process.env['DATABASE_URL'] ??
-          'postgresql://dvt:dvt@localhost:5432/dvt',
-        statement_timeout: this.statementTimeoutMs,
-        query_timeout: config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0),
-      });
-      this.ownsPool = true;
-    }
-    this.txRunner = new PostgresPlanStoreTxRunner(this.pool, this.statementTimeoutMs);
-    this.schemaManager = new PostgresPlanStoreSchemaManager(this.schema, this.txRunner);
-    this.planRecordRepository = new PostgresPlanRecordRepository(this.schema);
-    this.planExecutabilityRepository = new PostgresPlanExecutabilityRepository(this.schema);
-    this.planAdmissionRepository = new PostgresPlanAdmissionRepository(this.schema);
-    this.executableBlobRepository = new PostgresExecutableBlobRepository(this.schema);
+    const services = composePostgresPlanStore(config);
+    this.pool = services.pool;
+    this.ownsPool = services.ownsPool;
+    this.txRunner = services.txRunner;
+    this.schemaManager = services.schemaManager;
+    this.planRecordRepository = services.planRecordRepository;
+    this.planExecutabilityRepository = services.planExecutabilityRepository;
+    this.planAdmissionRepository = services.planAdmissionRepository;
+    this.executableBlobRepository = services.executableBlobRepository;
   }
 
   public async migrate(): Promise<void> {

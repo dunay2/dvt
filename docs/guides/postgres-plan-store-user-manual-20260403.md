@@ -57,6 +57,7 @@ await store.close()
 Run local checks before pushing:
 
 ```bash
+pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.invariants.unit.test.ts
 pnpm --filter @dvt/adapter-postgres test
 pnpm --filter @dvt/adapter-postgres build
 pnpm verify:prepush
@@ -106,7 +107,8 @@ stateDiagram-v2
 
 ## Current limitations to keep in mind
 
-1. Integration-heavy coverage remains gated by `DVT_PG_INTEGRATION=1`.
+1. No open S08 architectural limitations remain; `DVT_PG_INTEGRATION=1` is now
+   only for optional real-DB conformance tests.
 
 ## Safe usage checklist
 

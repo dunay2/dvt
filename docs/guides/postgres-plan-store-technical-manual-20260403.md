@@ -11,7 +11,7 @@ last_reviewed: 2026-04-03
 
 This manual describes the current technical behavior of
 `packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts`, the active
-invariants, and the remaining architectural gaps to close.
+invariants, and the current architectural-gap status.
 
 ## Governing sources
 
@@ -63,6 +63,8 @@ flowchart LR
 
 Composition now delegates infrastructure responsibilities:
 
+- `composePostgresPlanStore` owns runtime assembly wiring for the plan-store
+  facade.
 - `PostgresPlanStoreTxRunner` owns connection/transaction execution policy.
 - `PostgresPlanStoreSchemaManager` owns schema creation and backfill/reconcile.
 - `PostgresPlanRecordRepository` owns `plan_records` reads/writes/lineage checks.
@@ -148,28 +150,32 @@ erDiagram
   - `INVALID` without `validated_at` or `rejection_report_json` throws.
   - No fabricated fallback records are emitted.
 
-## Known open architectural gaps
+## Architectural gap status
 
-1. Lineage FK integrity remains partially soft:
-   closed in this slice: `derived_from_plan_id` and `supersedes_plan_id` are
-   now FK-constrained to `plan_records(plan_id)`.
+No open architectural gaps remain for the S08 scope.
+
+## Closed in this slice
+
+1. `derived_from_plan_id` and `supersedes_plan_id` are now FK-constrained to
+   `plan_records(plan_id)`.
 2. Repository split for `plan-record` / `executability` / `admission` is
-   complete and already delegated to dedicated repository classes.
-3. Integration-heavy test paths still rely on `DVT_PG_INTEGRATION=1`.
-4. Composer-level extraction is still pending (`PostgresPlanStore` remains the
-   facade assembly point).
+   complete and delegated to dedicated repository classes.
+3. Composer-level extraction is complete through `composePostgresPlanStore`.
+4. Critical invariants are now covered by always-on unit tests without
+   PostgreSQL.
 
 ## Validation and diagnostics
 
 Recommended local validation for this slice:
 
 ```bash
+pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.invariants.unit.test.ts
 pnpm --filter @dvt/adapter-postgres test
 pnpm --filter @dvt/adapter-postgres build
 pnpm verify:prepush
 ```
 
-If validating integration-only scenarios, set:
+For optional real-DB conformance scenarios, set:
 
 ```bash
 $env:DVT_PG_INTEGRATION='1'

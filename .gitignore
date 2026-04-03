@@ -62,6 +62,9 @@ docs-dist/
 docs/planning/state/execution-workboard.md
 docs/planning/state/open-task-route.md
 
+# Generated AI index artifacts
+**/AI_INDEX.json
+
 # Root-local tooling artifacts
 /bfg.jar
 /eslint-issues.txt

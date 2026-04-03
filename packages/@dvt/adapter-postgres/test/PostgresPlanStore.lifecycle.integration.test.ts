@@ -75,21 +75,21 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
 
   test('rejects conflicting plan collisions for same planId', () =>
     withStore(schema, async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_6));
+      const base = makeBuildResult(PLAN_ID.r4_6);
+      await store.storePlan(base);
+
+      const conflicting = {
+        ...base,
+        plan: {
+          ...base.plan,
+          steps: [{ stepId: `${PLAN_ID.r4_6}.step.changed`, kind: 'DBT_MODEL', dependsOn: [] }],
+        },
+      };
+
       await expect(
         store.storePlan({
-          ...makeBuildResult(PLAN_ID.r4_6),
-          plan: {
-            ...makeBuildResult(PLAN_ID.r4_6).plan,
-            metadata: { ...makeBuildResult(PLAN_ID.r4_6).plan.metadata, planVersion: '9.9' },
-          },
-          canonicalPlanJson: JSON.stringify({
-            ...JSON.parse(makeBuildResult(PLAN_ID.r4_6).canonicalPlanJson),
-            metadata: {
-              ...JSON.parse(makeBuildResult(PLAN_ID.r4_6).canonicalPlanJson).metadata,
-              planVersion: '9.9',
-            },
-          }),
+          ...conflicting,
+          canonicalPlanJson: JSON.stringify(conflicting.plan),
         })
       ).rejects.toThrow('PLAN_STORE_CONFLICT');
     }));
