@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 
-import { afterAll, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 
+import type { PostgresPlanStore } from '../src/PostgresPlanStore.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
 import {
@@ -11,7 +12,7 @@ import {
   dropSchema,
   makeBuildResult,
   toCanonicalPlanId,
-  withStore,
+  createStore,
 } from './PostgresPlanStore.integration.helpers.js';
 
 const PLAN_ID = {
@@ -21,14 +22,24 @@ const PLAN_ID = {
 } as const;
 
 describeIfPg('PostgresPlanStore records core integration', () => {
-  const schema = `dvt_plan_records_core_it_${Date.now()}`;
+  let schemaCounter = 0;
 
-  afterAll(async () => {
-    await dropSchema(schema);
-  });
+  async function withIsolatedStore(
+    fn: (store: PostgresPlanStore, schema: string) => Promise<void>
+  ): Promise<void> {
+    const schema = `dvt_plan_records_core_it_${Date.now()}_${schemaCounter++}`;
+    const store = createStore(schema);
+    try {
+      await store.migrate();
+      await fn(store, schema);
+    } finally {
+      await store.close();
+      await dropSchema(schema);
+    }
+  }
 
   test('persists and reads three-part model', () =>
-    withStore(schema, async (store) => {
+    withIsolatedStore(async (store) => {
       const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
       await store.recordExecutability({
         planId: PLAN_ID.r4_9,
@@ -51,7 +62,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
     }));
 
   test('markSuperseded links old->new coherently', () =>
-    withStore(schema, async (store) => {
+    withIsolatedStore(async (store) => {
       await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
       await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
       await store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11);
@@ -64,7 +75,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
     }));
 
   test('archivePlan marks record as ARCHIVED', () =>
-    withStore(schema, async (store) => {
+    withIsolatedStore(async (store) => {
       await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
       await store.archivePlan(PLAN_ID.r4_11, NOW);
       expect(await store.getPlanRecord(PLAN_ID.r4_11)).toMatchObject({
@@ -74,7 +85,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
     }));
 
   test('getPlanRecordByRef rejects mismatched metadata', () =>
-    withStore(schema, async (store) => {
+    withIsolatedStore(async (store) => {
       const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
       await expect(
         store.getPlanRecordByRef({ ...planRef, uri: `dvt-plan://postgres/${PLAN_ID.r4_10}` })
@@ -85,23 +96,37 @@ describeIfPg('PostgresPlanStore records core integration', () => {
     }));
 
   test('createPlanRecord rejects duplicate and missing lineage refs', () =>
-    withStore(schema, async (store) => {
+    withIsolatedStore(async (store) => {
       const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
       const record = await store.getPlanRecordByRef(planRef);
       if (!record) throw new Error('expected persisted plan record');
       await expect(store.createPlanRecord(record)).rejects.toThrow('PLAN_RECORD_ALREADY_EXISTS');
+      const missingLineagePlanId = toCanonicalPlanId('new-plan-with-missing-ref');
+      const missingLineageSourceRef = `dvt-plan://postgres/${missingLineagePlanId}`;
+      const missingLineageCanonicalPlanJson = JSON.stringify({
+        metadata: {
+          planId: missingLineagePlanId,
+          planVersion: record.planVersion,
+          schemaVersion: record.schemaVersion,
+          contractVersion: record.contractVersion,
+          inputHashSha256: '1'.repeat(64),
+          createdAtIso: record.createdAtIso,
+        },
+        steps: [{ stepId: `${missingLineagePlanId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
+      });
       await expect(
         store.createPlanRecord({
           ...record,
-          planId: toCanonicalPlanId('new-plan-with-missing-ref'),
-          sourceRef: `dvt-plan://postgres/${toCanonicalPlanId('new-plan-with-missing-ref')}`,
+          planId: missingLineagePlanId,
+          canonicalPlanJson: missingLineageCanonicalPlanJson,
+          sourceRef: missingLineageSourceRef,
           derivedFromPlanId: toCanonicalPlanId('missing-lineage-ref'),
         })
       ).rejects.toThrow('PLAN_RECORD_REFERENCE_NOT_FOUND: derived_from_plan_id');
     }));
 
   test('migrate backfill normalizes canonical_hash from canonical_plan_json', () =>
-    withStore(schema, async (store) => {
+    withIsolatedStore(async (store, schema) => {
       const client = await createPgClient();
       const legacyPlanId = toCanonicalPlanId('legacy-backfill-plan');
       const canonicalPlanJson = JSON.stringify({

@@ -1,0 +1,38 @@
+---
+id: R-20260403-S08-4-CI-REGRESSION-FIX
+title: Integration-smoke drift from shared schema test state in S08-4
+status: Open
+date: 2026-04-03
+owners:
+  - '@dvt/adapter-postgres'
+severity: Medium
+probability: Medium
+---
+context:
+  summary: >
+    The S08-4 refactor tightened plan-record upsert and supersession invariants. Integration tests
+    still shared schema state across cases, causing ordering-dependent failures in CI smoke after
+    main merge.
+  scope:
+    - packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
+    - packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+
+risk:
+  statement: >
+    Shared-state integration suites can produce false regressions and hide real behavioral defects
+    because failures depend on prior test side effects rather than single-case invariants.
+  triggers:
+    - reused plan_id fixtures across tests in a single schema
+    - stricter conflict/guard checks in persistence repositories
+    - reordered invariant checks for supersession guards
+
+mitigation:
+  implemented:
+    - isolated schema per integration test case
+    - aligned assertions with current invariant order and contract-valid fixtures
+  next_actions:
+    - keep CI smoke gate required for adapter-postgres
+    - continue extracting reusable integration harness helpers for per-test isolation
+
+review:
+  cadence: each PR touching adapter-postgres integration fixtures or persistence guards
