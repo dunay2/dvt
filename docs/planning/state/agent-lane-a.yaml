@@ -621,10 +621,9 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
     status_reason: >-
-      ADR-0043 is accepted, S08-2 contract hardening is implemented, and S08-3 artifacts-owned
-      read/write ports are now delivered. The 2026-04-03 hard QA review now records open
-      supersession, integrity, and SRP defects in the current Postgres migration slice, so Postgres
-      migration and admission cutover remain open.
+      ADR-0043 is accepted, S08-2 contract hardening is implemented, S08-3 artifacts-owned ports are
+      delivered, and the 2026-04-03 hard QA review is now closed for S08 defects. Remaining work is
+      governance hardening and follow-up architecture consolidation tasks.
     last_verified: '2026-04-03'
   - task_id: S08-3
     parent_task: S08
@@ -671,6 +670,70 @@ tasks:
       Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
       runtime failures as step kinds multiply.
     last_verified: '2026-04-02'
+  - task_id: S08-5
+    parent_task: S08
+    priority: P1
+    status: queued
+    objective: >-
+      extract plan-store orchestration from `PostgresPlanStore` into a dedicated application service
+      so the adapter remains a thin infrastructure boundary.
+    dependency: S08-3
+    target: >-
+      `PostgresPlanStore` delegates orchestration paths to a dedicated service and remains focused
+      on adapter-facing port implementation plus repository delegation.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    status_reason: >-
+      Composer extraction is complete, but facade-level orchestration concentration remains a
+      maintainability risk for future adapter evolution.
+    last_verified: '2026-04-03'
+  - task_id: S08-6
+    parent_task: S08
+    priority: P1
+    status: queued
+    objective: >-
+      add golden contract tests for `PLAN_*` error semantics to prevent drift in error-code and
+      failure-shape behavior during refactors.
+    dependency: S08-3
+    target: >-
+      Regression suite fails if plan-store invariant failures change canonical `PLAN_*` error
+      semantics without explicit contract update.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    status_reason: >-
+      Invariants are covered, but there is no golden guardrail yet for long-term stability of
+      emitted `PLAN_*` error semantics.
+    last_verified: '2026-04-03'
+  - task_id: S08-7
+    parent_task: S08
+    priority: P2
+    status: queued
+    objective: >-
+      consolidate S08 state reporting into a single source-of-truth surface and remove duplicated
+      status narration across hard-QA and guides.
+    dependency: S08-3
+    target: >-
+      One canonical S08 status source is referenced by manuals and review docs, preventing future
+      documentation drift.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/guides/postgres-plan-store-technical-manual-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    status_reason: >-
+      Current docs are aligned, but S08 status is still repeated in multiple surfaces and can drift
+      again without an explicit single-source policy.
+    last_verified: '2026-04-03'
   - task_id: MW-A1
     priority: P0
     status: queued
@@ -917,8 +980,8 @@ dependency_notes:
     workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are
     delivered while migration and admission slices remain open.
   - >-
-    `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next
-    execution slice for Postgres migration compatibility.
+    `S08-3/4/5/6/7` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` remains the
+    next execution slice, with `S08-5/6/7` queued as architecture/governance hardening follow-ups.
   - '`plan-version-reset` is closed and remains independent.'
   - >-
     `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address
@@ -933,10 +996,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-03'
-  total_tasks: 37
-  total_effort_points: 140
+  total_tasks: 40
+  total_effort_points: 147
   completed_weighted_points: 66.36
-  lane_progress_pct: 47
+  lane_progress_pct: 45
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

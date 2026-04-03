@@ -73,6 +73,9 @@ jobs:
       - name: Validate adapter-postgres policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
 
+      - name: Enforce forbidden generated files policy
+        run: node scripts/check-forbidden-tracked-files.cjs
+
       - name: Setup pnpm, cache and dependencies (fast-fail)
         if:
           github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
