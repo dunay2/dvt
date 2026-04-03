@@ -84,7 +84,12 @@ export class EnvironmentId {
 export type AuthorizationAction =
   | {
       readonly kind: 'command';
-      readonly name: 'run:start' | 'run:cancel' | 'run:retry' | 'run:signal';
+      readonly name:
+        | 'run:start'
+        | 'run:cancel'
+        | 'run:retry'
+        | 'run:signal'
+        | 'admin:rebuild-snapshot';
     }
   | { readonly kind: 'query'; readonly name: 'run:view' | 'run:list' | 'run:logs:view' };
 

@@ -23,7 +23,43 @@ function makeSnapshot(
 
 function createApp(rebuildSnapshot: RebuildSnapshot): ReturnType<typeof Fastify> {
   const app = Fastify({ logger: false });
-  registerAdminRoutes(app, { rebuildSnapshot });
+  registerAdminRoutes(
+    app,
+    { rebuildSnapshot },
+    {
+      authenticator: {
+        authenticateBearerToken: async () => ({
+          ok: true,
+          principal: {
+            principalId: 'user-1',
+            subjectId: 'user-1',
+            issuer: 'issuer',
+            audience: 'audience',
+            principalType: 'user',
+            expiresAt: new Date('2030-01-01T00:00:00Z'),
+            rawScopes: [],
+            assertedTenantIds: ['tenant-a'],
+            assertedProjectIds: [],
+          },
+        }),
+      } as never,
+      authorizer: {
+        authorize: async () => ({
+          ok: true,
+          context: {
+            principal: {
+              principalId: 'user-1',
+              principalType: 'user',
+            },
+            scope: { tenantId: { value: 'tenant-a' } },
+            action: { kind: 'command', name: 'admin:rebuild-snapshot' },
+            requestId: 'req-1',
+            authorizedAt: new Date('2026-04-03T00:00:00Z'),
+          },
+        }),
+      } as never,
+    }
+  );
   return app;
 }
 
