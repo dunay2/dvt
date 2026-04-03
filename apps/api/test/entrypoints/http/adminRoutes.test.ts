@@ -1,22 +1,37 @@
+import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 
-function createApp(
-  rebuildSnapshot: (tenantId: string, runId: string) => Promise<unknown>
-): ReturnType<typeof Fastify> {
+type RebuildSnapshot = IRunStateStoreMaintenance['rebuildSnapshot'];
+type WorkflowSnapshotResult = Awaited<ReturnType<RebuildSnapshot>>;
+
+function makeSnapshot(
+  runId: string,
+  status: WorkflowSnapshotResult['status'] = 'PENDING'
+): WorkflowSnapshotResult {
+  return {
+    runId,
+    status,
+    paused: false,
+    cancelling: false,
+    steps: {},
+  };
+}
+
+function createApp(rebuildSnapshot: RebuildSnapshot): ReturnType<typeof Fastify> {
   const app = Fastify({ logger: false });
   registerAdminRoutes(app, {
     rebuildSnapshot,
-  } as never);
+  });
   return app;
 }
 
 describe('adminRoutes', () => {
   it('returns 400 when tenantId is missing', async () => {
-    const app = createApp(async () => ({ runId: 'r1', status: 'PENDING' }));
+    const app = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 
     try {
       const response = await app.inject({
@@ -39,7 +54,7 @@ describe('adminRoutes', () => {
   });
 
   it('returns 400 when body is not an object', async () => {
-    const app = createApp(async () => ({ runId: 'r1', status: 'PENDING' }));
+    const app = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 
     try {
       const response = await app.inject({
@@ -64,7 +79,7 @@ describe('adminRoutes', () => {
     ['tenantId has invalid type', { tenantId: 123 }],
     ['tenantId is blank', { tenantId: '   ' }],
   ])('returns 400 when %s', async (_desc, payload) => {
-    const app = createApp(async () => ({ runId: 'r1', status: 'PENDING' }));
+    const app = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 
     try {
       const response = await app.inject({
@@ -87,10 +102,7 @@ describe('adminRoutes', () => {
   });
 
   it('returns 200 with rebuilt snapshot status', async () => {
-    const app = createApp(async (_tenantId, runId) => ({
-      runId,
-      status: 'RUNNING',
-    }));
+    const app = createApp(async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'));
 
     try {
       const response = await app.inject({
@@ -107,7 +119,7 @@ describe('adminRoutes', () => {
   });
 
   it('returns 404 when the run does not exist for the tenant', async () => {
-    const app = createApp(async () => {
+    const app = createApp(async (_tenantId, _runId) => {
       throw new RunNotFoundError('r404');
     });
 
@@ -132,7 +144,7 @@ describe('adminRoutes', () => {
   });
 
   it('returns 500 for legacy stringly not-found errors', async () => {
-    const app = createApp(async () => {
+    const app = createApp(async (_tenantId, _runId) => {
       throw new Error('RUN_NOT_FOUND: r404');
     });
 
@@ -156,7 +168,7 @@ describe('adminRoutes', () => {
   });
 
   it('returns 500 on unexpected rebuild failure', async () => {
-    const app = createApp(async () => {
+    const app = createApp(async (_tenantId, _runId) => {
       throw new Error('db down');
     });
 
