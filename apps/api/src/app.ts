@@ -228,7 +228,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
-      registerAdminRoutes(app, protectedModule.stateStore.maintenance);
+      registerAdminRoutes(app, protectedModule.stateStore.maintenance, runtimeAuth);
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
 
