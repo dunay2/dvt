@@ -1,6 +1,6 @@
 ---
 title: Generated Planning Surfaces Extraction Plan
-status: Draft
+status: Review
 owner: Product / Architecture / Delivery / Docs
 last_reviewed: 2026-04-03
 planning_type: proposal
@@ -193,12 +193,43 @@ Wave 2 status (2026-04-03): implemented.
 - validate the generated planning views in CI as reproduced artifacts
 - keep the checks fail-closed if generation breaks
 
+Wave 3 status (2026-04-03): implemented.
+
+- `docs:sync:check` now validates only tracked generated index families and no
+  longer includes planning-generated surfaces.
+- `docs:workboard:check` delegates to
+  `docs:planning:generated:check` for planning artifact generation integrity.
+- CI runs these checks through `PR Quality Gate` for docs-changing pull
+  requests.
+
 ### Wave 4 - Remove tracked generated planning views
 
 - delete the tracked `agent-lane-*.md`, `execution-workboard.md`, and
   `open-task-route.md` from git
 - move references to canonical YAML or published generated docs where needed
 - add rollback instructions in case docs discoverability regresses
+
+Wave 4 status (2026-04-03): implemented.
+
+- planning landing pages and rendered planning state views were removed from
+  git tracking.
+- contributors now rely on local/CI generation for those extracted pages.
+- governance and contributor docs were updated to point to canonical tracked
+  planning sources.
+
+### Wave 5 - Hardening and operational adoption
+
+- add a post-migration runbook for docs contributors and release managers
+- add a CI smoke assertion that docs build output contains extracted planning
+  pages
+- add a short rollback playbook for temporary re-tracking in incident mode
+- monitor 2 sprint cycles for conflict-rate reduction and docs gate stability
+
+Wave 5 status (2026-04-03): in progress.
+
+Initial delivery completed:
+
+- [Planning Generated Artifacts Operations Runbook](../../../../runbooks/planning-generated-artifacts-operations-20260403.md)
 
 ## Acceptance Criteria
 
