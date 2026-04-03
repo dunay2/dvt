@@ -115,6 +115,9 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
           contractVersion: '1.0.0',
         },
       });
+
+      const executability = await store.listExecutabilityByAdapter(PLAN_ID.r4_2);
+      expect(executability).toEqual([]);
     }));
 
   test('markInvalid stores the structured rejection report and keeps the plan non-runnable', () =>
@@ -355,6 +358,25 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       );
     }));
 
+  test('markSuperseded rejects superseder that is already linked to another plan', () =>
+    withStore(async (store) => {
+      const oldA = toCanonicalPlanId('old-a');
+      const oldB = toCanonicalPlanId('old-b');
+      const superseder = toCanonicalPlanId('superseder');
+
+      await store.storePlan(makeBuildResult(oldA));
+      await store.storePlan(makeBuildResult(oldB));
+      await store.storePlan(makeBuildResult(superseder));
+
+      await store.markSuperseded(oldA, superseder);
+      await expect(store.markSuperseded(oldB, superseder)).rejects.toThrow(
+        'PLAN_RECORD_SUPERSEDER_ALREADY_LINKED'
+      );
+
+      const oldBRecord = await store.getPlanRecord(oldB);
+      expect(oldBRecord?.state).toBe('ACTIVE');
+    }));
+
   test('archivePlan rejects unknown plan id', () =>
     withStore(async (store) => {
       await expect(store.archivePlan(PLAN_ID.r4_missing, NOW)).rejects.toThrow(
@@ -426,6 +448,90 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       }
 
       await expect(store.createPlanRecord(record)).rejects.toThrow('PLAN_RECORD_ALREADY_EXISTS');
+    }));
+
+  test('createPlanRecord rejects missing lineage references', () =>
+    withStore(async (store) => {
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
+      const record = await store.getPlanRecordByRef(planRef);
+      if (!record) {
+        throw new Error('expected persisted plan record');
+      }
+
+      const missingRef = toCanonicalPlanId('missing-lineage-ref');
+      await expect(
+        store.createPlanRecord({
+          ...record,
+          planId: toCanonicalPlanId('new-plan-with-missing-ref'),
+          sourceRef: `dvt-plan://postgres/${toCanonicalPlanId('new-plan-with-missing-ref')}`,
+          derivedFromPlanId: missingRef,
+        })
+      ).rejects.toThrow('PLAN_RECORD_REFERENCE_NOT_FOUND: derived_from_plan_id');
+    }));
+
+  test('migrate backfill normalizes canonical_hash from canonical_plan_json', () =>
+    withStore(async (store) => {
+      const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('missing postgres connection string for integration test');
+      }
+      const client = new Client({ connectionString });
+      const legacyPlanId = toCanonicalPlanId('legacy-backfill-plan');
+      const canonicalPlanJson = JSON.stringify({
+        metadata: {
+          planId: legacyPlanId,
+          planVersion: '1.0',
+          schemaVersion: 'v1.2',
+          contractVersion: '1.0.0',
+          inputHashSha256: '3'.repeat(64),
+          createdAtIso: NOW,
+        },
+        steps: [{ stepId: `${legacyPlanId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
+      });
+      const canonicalHash = createHash('sha256').update(canonicalPlanJson).digest('hex');
+      const executablePlanJson = JSON.stringify({ metadata: { planId: legacyPlanId }, steps: [] });
+      const wrongHash = createHash('sha256').update(executablePlanJson).digest('hex');
+
+      await client.connect();
+      try {
+        await client.query(
+          `
+            INSERT INTO ${quoteIdentifier(schema)}.stored_plans (
+              plan_id,
+              plan_version,
+              plan_uri,
+              plan_sha256,
+              schema_version,
+              size_bytes,
+              requires_capabilities,
+              canonical_plan_json,
+              executable_plan_json,
+              validation_state,
+              rejection_report_json,
+              stored_at,
+              updated_at
+            ) VALUES (
+              $1, '1.0', $2, $3, 'v1.2', $4, NULL, $5, $6, 'PENDING_VALIDATION', NULL, NOW(), NOW()
+            )
+            ON CONFLICT (plan_id) DO NOTHING
+          `,
+          [
+            legacyPlanId,
+            `dvt-plan://postgres/${legacyPlanId}`,
+            wrongHash,
+            Buffer.byteLength(executablePlanJson, 'utf8'),
+            canonicalPlanJson,
+            executablePlanJson,
+          ]
+        );
+      } finally {
+        await client.end();
+      }
+
+      await store.migrate();
+      const record = await store.getPlanRecord(legacyPlanId);
+      expect(record?.canonicalHash).toBe(canonicalHash);
+      expect(record?.canonicalHash).not.toBe(wrongHash);
     }));
 });
 

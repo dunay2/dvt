@@ -32,6 +32,48 @@ closure. The current implementation is useful as a transition step, but it
 still contains correctness drift, contract ambiguity, and SRP violations that
 should be treated as open work before `S08` is considered structurally closed.
 
+## Re-audit delta (2026-04-03)
+
+Re-auditing the current branch against this same review shows that parts of this
+document are now stale and must be interpreted as historical findings, not
+current state.
+
+### Incongruences detected in this review document
+
+- `S08-HQA-01` was originally marked `Blocking`; current implementation now has
+  coherent supersession semantics (`markSuperseded` writes the relation on the
+  superseder and `getSupersession` reads the same direction).
+- `S08-HQA-02` was originally `High`; `createPlanRecord` now behaves as
+  create-or-conflict (`PLAN_RECORD_ALREADY_EXISTS`) instead of delegating to a
+  permissive partial upsert.
+- `S08-HQA-03` was originally `High`; `getPlanRecordByRef` now enforces
+  consistency (`uri`, `planVersion`, `schemaVersion`) and throws
+  `PLAN_REF_MISMATCH`.
+- `S08-HQA-04` was originally `High`; `toPlanExecutabilityRecord` now fails fast
+  with `PLAN_EXECUTABILITY_ROW_INVALID` and no longer fabricates fallback
+  values.
+- `S08-HQA-08` was originally `Medium`; negative-path tests were added for
+  supersession invariants, archive behavior, and PlanRef mismatch handling.
+
+### Gaps still open after re-audit
+
+- `S08-HQA-05` remains open: lineage columns
+  (`derived_from_plan_id` / `supersedes_plan_id`) still have no FK-level
+  referential integrity.
+- `S08-HQA-07` remains open: `PostgresPlanStore` still carries too many
+  responsibilities for ADR-0039 target SRP posture.
+- `S08-HQA-09` remains open: highest-value integration tests still depend on
+  `DVT_PG_INTEGRATION=1` and are not always-on in default local runs.
+
+### Practical interpretation
+
+Treat this file as a mixed artifact:
+
+- closed findings remain useful as audit history
+- open findings should drive the next remediation slices
+- closure claims must reference this re-audit delta, not only the original
+  findings text
+
 ## Governing sources
 
 - `AGENTS.md`
@@ -282,7 +324,8 @@ Code references:
 
 Evidence:
 
-- the class hardcodes `const LEGACY_EXECUTABILITY_ADAPTER_ID = '__legacy_validation__'`
+- historical snapshot: the class used to hardcode
+  `const LEGACY_EXECUTABILITY_ADAPTER_ID = '__legacy_validation__'`
 - `migrate()`, `markValid()`, and `markInvalid()` all write compatibility data
   with that magic value
 - the compatibility policy is not isolated behind a dedicated facade adapter
@@ -460,7 +503,8 @@ Do not keep the current mixed model.
 
 ### `S08-QA-FIX-5` Extract the compatibility seam
 
-- move `__legacy_validation__` handling into a dedicated transitional adapter
+- historical recommendation (now superseded): move `__legacy_validation__`
+  handling into a dedicated transitional adapter
 - keep the main repositories free of legacy lifecycle policy
 
 ### `S08-QA-FIX-6` Split tests by responsibility

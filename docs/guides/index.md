@@ -15,6 +15,8 @@ Developer guides, contribution guides, and quality standards.
 - [DVT+ Design Guide](dvt-code-style-solid-hexagonal-cqrs.md)
 - [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
 - [Gap 5 User Reference](gap-5-user-reference-20260319.md)
+- [PostgresPlanStore Technical Manual](postgres-plan-store-technical-manual-20260403.md)
+- [PostgresPlanStore User Manual](postgres-plan-store-user-manual-20260403.md)
 - [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md)
 - [Test Architecture](test-architecture.md)
 - [Testing and CI Capabilities](testing-and-ci-capabilities.md)
