@@ -5,7 +5,7 @@ status: Active
 last_reviewed: '2026-04-03'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
-  executable while making planner and execution contracts dbt-agnostic at the core.
+  executable.
 expected_outcome:
   - state-store ownership is explicit
   - contract ownership routing is explicit
@@ -14,7 +14,6 @@ expected_outcome:
   - optional maintenance ownership is explicit
   - migration recovery is defined
   - governance startup routing is explicit
-  - planner inputs are dbt-agnostic and dbt is only one supported graph source
 header_markdown: >
   You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal
   design, and interface consistency.
@@ -619,10 +618,12 @@ tasks:
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
     status_reason: >-
-      ADR-0043 is accepted, S08-2 contract hardening is implemented, and S08-3 artifacts-owned
-      read/write ports are now delivered. Postgres migration and admission cutover remain open.
+      ADR-0043 is accepted, S08-2 contract hardening is implemented, S08-3 artifacts-owned ports are
+      delivered, and the 2026-04-03 hard QA review is now closed for S08 defects. Remaining work is
+      governance hardening and follow-up architecture consolidation tasks.
     last_verified: '2026-04-03'
   - task_id: S08-3
     parent_task: S08
@@ -669,6 +670,70 @@ tasks:
       Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
       runtime failures as step kinds multiply.
     last_verified: '2026-04-02'
+  - task_id: S08-5
+    parent_task: S08
+    priority: P1
+    status: queued
+    objective: >-
+      extract plan-store orchestration from `PostgresPlanStore` into a dedicated application service
+      so the adapter remains a thin infrastructure boundary.
+    dependency: S08-3
+    target: >-
+      `PostgresPlanStore` delegates orchestration paths to a dedicated service and remains focused
+      on adapter-facing port implementation plus repository delegation.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    status_reason: >-
+      Composer extraction is complete, but facade-level orchestration concentration remains a
+      maintainability risk for future adapter evolution.
+    last_verified: '2026-04-03'
+  - task_id: S08-6
+    parent_task: S08
+    priority: P1
+    status: queued
+    objective: >-
+      add golden contract tests for `PLAN_*` error semantics to prevent drift in error-code and
+      failure-shape behavior during refactors.
+    dependency: S08-3
+    target: >-
+      Regression suite fails if plan-store invariant failures change canonical `PLAN_*` error
+      semantics without explicit contract update.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    status_reason: >-
+      Invariants are covered, but there is no golden guardrail yet for long-term stability of
+      emitted `PLAN_*` error semantics.
+    last_verified: '2026-04-03'
+  - task_id: S08-7
+    parent_task: S08
+    priority: P2
+    status: queued
+    objective: >-
+      consolidate S08 state reporting into a single source-of-truth surface and remove duplicated
+      status narration across hard-QA and guides.
+    dependency: S08-3
+    target: >-
+      One canonical S08 status source is referenced by manuals and review docs, preventing future
+      documentation drift.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/guides/postgres-plan-store-technical-manual-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    status_reason: >-
+      Current docs are aligned, but S08 status is still repeated in multiple surfaces and can drift
+      again without an explicit single-source policy.
+    last_verified: '2026-04-03'
   - task_id: MW-A1
     priority: P0
     status: queued
@@ -698,18 +763,16 @@ tasks:
     target: >-
       A documented, schema-validated graph source format exists alongside ManifestGraphDeriver;
       PlannerFacade accepts both dbt manifests and generic graph sources without code changes to the
-      core planner, and dbt becomes one graph-source adapter rather than the product's core model.
+      core planner.
     complexity: L
     effort_points: 8
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md
     status_reason: >-
       The single biggest blocker for multi-workflow support — today the only entry to the planner is
-      dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only and DVT
-      remains conceptually dbt-first instead of dbt-agnostic.
-    last_verified: '2026-04-03'
+      dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
+    last_verified: '2026-04-02'
   - task_id: AR-A3
     priority: P1
     status: queued
@@ -787,7 +850,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-A5
     priority: P2
-    status: in_progress
+    status: queued
     objective: >-
       verify that createdAtIso is excluded from the planCore JCS input for planId computation; if
       included, the same logical plan at different times produces different identity.
@@ -797,14 +860,11 @@ tasks:
       golden vector regression test.
     complexity: S
     effort_points: 1
-    progress_pct: 80
+    progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-      - packages/@dvt/planner/test/unit/determinism.test.ts
-    status_reason: >-
-      Added explicit regression coverage proving `createdAtIso` variation does not change `planId`;
-      pending merge closure.
-    last_verified: '2026-04-03'
+    status_reason: Potential determinism violation identified in review; requires verification.
+    last_verified: '2026-04-02'
   - task_id: AR-A6
     priority: P2
     status: queued
@@ -920,8 +980,8 @@ dependency_notes:
     workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are
     delivered while migration and admission slices remain open.
   - >-
-    `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next
-    execution slice for Postgres migration compatibility.
+    `S08-3/4/5/6/7` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` remains the
+    next execution slice, with `S08-5/6/7` queued as architecture/governance hardening follow-ups.
   - '`plan-version-reset` is closed and remains independent.'
   - >-
     `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address
@@ -932,17 +992,14 @@ dependency_notes:
     `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
     GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends
     on AR-A2; MW-A3 depends on MW-A1.
-  - >-
-    `MW-A2` is the architectural anchor for the dbt-agnostic product direction: dbt remains
-    supported, but only as one graph-source adapter feeding a generic planner contract.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-03'
-  total_tasks: 37
-  total_effort_points: 140
-  completed_weighted_points: 67.16
-  lane_progress_pct: 48
+  total_tasks: 40
+  total_effort_points: 147
+  completed_weighted_points: 66.36
+  lane_progress_pct: 45
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
