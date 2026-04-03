@@ -11,6 +11,7 @@ Draft proposals and candidate changes. Non-normative.
 
 ## Index
 
+- [Contracts error boundary SRP refactor plan](contracts-error-boundary-srp-refactor-plan-20260403.md)
 - [Domain Cohesion Refactor Plan](../domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
 - [Proposal Portfolio Map 2026-04-03](portfolio-map-20260403.md)

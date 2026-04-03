@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { CONTRACTS_ERROR_CODE, CONTRACTS_ERROR_MESSAGE_KEY } from '../src/errorContract.js';
 import {
   ContractValidationError,
   parsePlanAdmissionLink,
@@ -11,6 +12,7 @@ import {
   parseResolvedRunContext,
   parseRunContext,
   parseSignalRequest,
+  toValidationErrorResponse,
 } from '../src/validation.js';
 
 import { VALID_EXECUTION_PLAN_V2_FIXTURE } from './fixtures/planner-contract.fixtures.js';
@@ -49,6 +51,29 @@ describe('contracts: validation helpers', () => {
         type: 'INVALID_SIGNAL',
       })
     ).toThrow(ContractValidationError);
+  });
+
+  it('uses canonical validation message keys instead of hardcoded english text', () => {
+    try {
+      parseSignalRequest({
+        signalId: 'sig-1',
+        type: 'INVALID_SIGNAL',
+      });
+      throw new Error('Expected parseSignalRequest to fail');
+    } catch (error) {
+      const response = toValidationErrorResponse(error);
+      expect(response.code).toBe(CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED);
+      expect(response.messageKey).toBe(CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED);
+      expect(response.messageParams).toEqual({});
+      expect(response.message).toBe('Validation failed');
+    }
+
+    const response = toValidationErrorResponse(new Error('boom'));
+    expect(response.code).toBe(CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED);
+    expect(response.messageKey).toBe(CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED);
+    expect(response.messageParams).toEqual({});
+    expect(response.message).toBe('Validation failed');
+    expect(response.details[0]?.message).toBe('Unknown validation error');
   });
 
   it('parses RunContext with valid provider', () => {

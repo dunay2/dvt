@@ -1,0 +1,26 @@
+---
+id: R-20260403-CONTRACT-ERROR-SEMANTIC-DRIFT
+title:
+  Shared-kernel consumers can regress to parsing contracts error text instead of structured metadata
+status: Open
+date: 2026-04-03
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+severity: Medium
+probability: Medium
+context: >
+  The repository previously mixed hardcoded English contract-error messages with a partial attempt
+  to encode message keys inside Error.message. That created drift between diagnostic text and
+  semantic contract truth across contracts, engine, planner, artifacts, and adapters.
+risk: >
+  If future consumers or tests regress to parsing Error.message instead of using code, messageKey,
+  and messageParams, shared-kernel behavior will become brittle again and cross-package changes will
+  trigger avoidable failures or incorrect control flow.
+mitigations:
+  - Public @dvt/contracts errors now expose code, messageKey, and messageParams.
+  - ValidationErrorResponse now carries structured top-level semantics.
+  - Engine validation-boundary tests assert typed metadata instead of raw text.
+  - Active contracts docs and ADR-0044 define Error.message as diagnostic only.
+  - ARC evidence records the repo-wide consumer cutover for this slice.
+---
