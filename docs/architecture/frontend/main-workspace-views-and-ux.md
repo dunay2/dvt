@@ -1,0 +1,192 @@
+---
+title: Main Workspace Views And UX
+status: Active
+owner: Frontend / Architecture
+last_reviewed: 2026-04-03
+---
+
+# Main Workspace Views And UX
+
+This page documents the real DVT frontend workbench as it exists today in
+`apps/web`.
+
+It explains the current view inventory, how the views hand off context to each
+other, and which UX states users should experience across the shell.
+
+## Shell Composition
+
+The current shell is composed from:
+
+- a persistent top bar with tenant, project, environment, git context, and
+  shell controls;
+- a health banner that reports platform-health probe state;
+- a left navigation rail populated by plugin-contributed core views;
+- a central route outlet where the active product view renders;
+- an optional bottom console drawer;
+- focus mode, explorer visibility, and inspector visibility controls stored in
+  the shell app store.
+
+```mermaid
+flowchart LR
+  TopBar["TopAppBar"] --> Canvas
+  TopBar --> Runs
+  TopBar --> Lineage
+  TopBar --> Diff
+  TopBar --> Artifacts
+
+  Health["ShellHealthBanner"] --> Runs
+  Health --> Canvas
+
+  Nav["LeftNavigation"] --> Canvas
+  Nav --> Runs
+  Nav --> Lineage
+  Nav --> Diff
+  Nav --> Artifacts
+
+  Canvas --> Console["Console drawer"]
+  Runs --> Console
+```
+
+## Main Product Views
+
+### Canvas
+
+Current route: `/canvas`
+
+Current composition:
+
+- `CanvasToolbar`
+- optional `DbtExplorer` on the left
+- `CanvasViewport` in the center
+- optional `InspectorPanel` on the right
+- `PlanPreviewModal`
+- `ConfirmEdgeModal`
+- `SourceImportWizard`
+
+Current user jobs:
+
+- inspect workflow topology;
+- drag dbt graph entities into the canvas;
+- run auto-layout;
+- toggle impact and column overlays;
+- request plan;
+- start a run;
+- pivot to run detail when a run exists.
+
+### Runs
+
+Current routes: `/runs`, `/runs/:runId`
+
+Current composition:
+
+- run list state when no `runId` is present;
+- `RunHeader` on detail route;
+- `RunTabsContent` with `Timeline`, `Steps`, `Events`, `Metrics`, and
+  `Artifacts` tabs.
+
+Current user jobs:
+
+- find active or failed runs;
+- inspect progress and step-level state;
+- review events and metrics;
+- jump from Canvas execution to full run detail.
+
+### Lineage
+
+Current route: `/lineage`
+
+Current composition:
+
+- search field;
+- optional column-level lineage toggle;
+- breadcrumb path;
+- layered lineage cards for the focused node;
+- impact summary cards.
+
+### Diff
+
+Current route: `/diff`
+
+Current composition:
+
+- compare mode selector;
+- severity filters;
+- summary cards;
+- tabs for `Graph Diff`, `SQL Diff`, and `Catalog Diff`.
+
+### Artifacts
+
+Current route: `/artifacts`
+
+Current composition:
+
+- local manifest import drop zone;
+- artifact list cards;
+- preview tabs for `manifest.json`, `run_results.json`, and `catalog.json`.
+
+## View Relationships
+
+```mermaid
+flowchart TB
+  Canvas -->|"Start run / open run"| Runs
+  Canvas -->|"Selected node"| Inspector
+  Canvas -->|"Column toggle and graph context"| Lineage
+  Lineage -->|"Pin-to-canvas intent exists, not complete yet"| Canvas
+  Runs -->|"Artifacts tab"| Artifacts
+  Diff -->|"Changed graph and SQL context"| Canvas
+  TopBar -->|"Tenant / project / environment"| Canvas
+  TopBar --> Runs
+  TopBar --> Lineage
+  TopBar --> Diff
+  TopBar --> Artifacts
+```
+
+## UX Baseline
+
+### Shell UX
+
+- the top bar is always visible;
+- the health banner is visible when health is being checked, degraded, or
+  offline;
+- the left navigation is hidden in focus mode;
+- the bottom console is optional and should never hide the current route state.
+
+### Canvas UX
+
+- explorer and inspector can be hidden or restored from side reveal buttons;
+- graph operations live in the toolbar, not in the top bar;
+- planning and run actions belong to Canvas because they are graph-contextual;
+- graph overlays must remain visual layers over canonical structure, not mutate
+  graph truth.
+
+### Runs UX
+
+- `/runs` is the operational list entry point;
+- `/runs/:runId` is the focused execution workspace;
+- empty state must send the operator back to Canvas to create meaningful work.
+
+### Common States
+
+| State     | Expected treatment                                                              |
+| --------- | ------------------------------------------------------------------------------- |
+| Loading   | keep shell frame visible and show local view loading                            |
+| Empty     | explain why the view is empty and provide the next route or action              |
+| Error     | keep context visible and show a retry path if meaningful                        |
+| Degraded  | display staleness or source-quality signals instead of pretending data is fresh |
+| Read-only | make it obvious that analysis is allowed but mutation is not                    |
+
+## Current Constraints
+
+- The shell already behaves like a workbench, but state ownership is still too
+  centralized in `appStore.ts`.
+- Canvas is the most mature workbench route. Lineage, Diff, and Artifacts still
+  need stronger data contracts and more consistent UX hardening.
+- There is a hidden `CostView` implementation in the codebase, but it is not an
+  active shell route today. Observability is currently expressed through the
+  shell health banner and the Runs detail surface instead.
+
+## Related Pages
+
+- [UX Implementation Guide](ux-implementation-guide.md)
+- [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
+- [App Shell](appshell/app-shell.md)

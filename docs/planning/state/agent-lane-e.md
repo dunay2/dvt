@@ -95,10 +95,10 @@ Evolve apps/web from a mixed mock prototype into an operational UI whose contrac
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
 - Verified on: `2026-04-03`
-- Total tasks: `15`
-- Total effort points: `73`
-- Completed weighted points: `9.6`
-- Lane progress: `13%`
+- Total tasks: `21`
+- Total effort points: `97`
+- Completed weighted points: `15.3`
+- Lane progress: `16%`
 - Notes: Weighted progress uses effort_points and records partial convergence already present in the frontend, even when the lane still lacks accepted closure for most slices.
 
 ## Tasks
@@ -118,8 +118,14 @@ Evolve apps/web from a mixed mock prototype into an operational UI whose contrac
 - [ ] `P1` `F-10` `blocked` `M` `5pt` `0%`: implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the Console with real log output.
 - [ ] `P2` `F-11` `blocked` `L` `8pt` `0%`: wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and Admin views progressively via feature flags.
 - [ ] `P1` `F-12` `queued` `S` `3pt` `0%`: retire the legacy GraphCanvas path and converge graph rendering on CanvasShell, useCanvasController, and the plugin graph strategy boundary.
-- [ ] `P1` `F-13` `in_progress` `S` `3pt` `20%`: reconcile frontend architecture and roadmap documents with current code, real routes, and English-only wording.
+- [ ] `P1` `F-13` `in_progress` `S` `3pt` `60%`: reconcile frontend architecture and roadmap documents with current code, real routes, and English-only wording.
 - [ ] `P1` `F-14` `queued` `S` `3pt` `0%`: add a governed frontend test command and CI lane for the existing @dvt/web test files.
+- [ ] `P1` `F-15` `in_progress` `M` `5pt` `30%`: define and implement the workbench UX contract so the frontend converges on a VS Code-like shell grammar without cloning an IDE.
+- [ ] `P1` `F-16` `queued` `M` `5pt` `0%`: introduce dense operational tables where card layouts stop scaling, starting with Runs and event-heavy operational views.
+- [ ] `P2` `F-17` `queued` `M` `5pt` `0%`: adopt Monaco-based code and diff panes for SQL, JSON artifact, and review-heavy surfaces instead of growing bespoke viewers.
+- [ ] `P2` `F-18` `queued` `S` `3pt` `0%`: converge the shell console and run-log experience into a real live-log surface, using xterm.js only if the product needs terminal-grade streaming instead of static panels.
+- [ ] `P2` `F-19` `in_progress` `S` `3pt` `20%`: formalize the Marquez visual system for open-data and public-data surfaces so that the product distinguishes civic or explanatory views from the operator workbench.
+- [ ] `P1` `F-20` `review` `S` `3pt` `80%`: write and maintain per-screen user manuals and user stories so each route-level workbench has explicit expected behavior, states, and acceptance posture.
 
 ## Dependencies
 

@@ -2,57 +2,56 @@
 title: apps/web
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-03
 ---
 
 # apps/web
 
-`apps/web` is the deployable browser application shell for DVT.
-
-It owns app bootstrap, routing, shell layout, client-side data flow, and the
-operator-facing experience that consumes the backend runtime surface.
+`apps/web` is the deployable browser application for DVT.
 
 ## Current Responsibilities
 
-- bootstrap the browser app and router;
-- render the top-level shell, routes, and major product views;
-- consume backend health and runtime data through client services;
-- isolate frontend composition from backend orchestration concerns.
+- bootstrap the browser application and router;
+- host the persistent shell;
+- render Canvas, Runs, Lineage, Diff, Artifacts, Plugins, and Admin routes;
+- provide health visibility and shell-level UX context;
+- compose client services, capabilities, and plugin-contributed views.
 
-## Interface Map
+## Current Route Inventory
 
-```mermaid
-flowchart LR
-  User["Browser user"] --> Web["apps/web"]
-  Web --> API["apps/api"]
-  Web --> Services["services / capabilities / stores"]
-```
+| Route                   | View                                 |
+| ----------------------- | ------------------------------------ |
+| `/canvas`               | graph workbench                      |
+| `/runs`, `/runs/:runId` | run-monitoring workbench             |
+| `/lineage`              | dependency and impact analysis       |
+| `/diff`                 | review and diff surface              |
+| `/artifacts`            | artifact browser and manifest import |
+| `/plugins`              | plugin management shell page         |
+| `/admin`                | admin shell page                     |
 
-## Code Anchors
+## Current Code Anchors
 
 - [main.tsx](../../../../apps/web/src/main.tsx)
 - [App.tsx](../../../../apps/web/src/app/App.tsx)
+- [Root.tsx](../../../../apps/web/src/app/Root.tsx)
 - [routes.ts](../../../../apps/web/src/app/routes.ts)
-- [TopAppBar.tsx](../../../../apps/web/src/app/components/TopAppBar.tsx)
+- [Canvas.tsx](../../../../apps/web/src/app/views/Canvas.tsx)
 - [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx)
 
-## Current Posture
+## Library Direction
 
-The application shell is real and partially backend-backed. Local test files
-exist under `apps/web/src/**`, but the workspace still lacks a declared
-frontend `test` script, so the current governed lane is still `typecheck` plus
-`build`.
+- [React Flow](https://reactflow.dev/) for graph interaction;
+- TanStack Query for server-state and polling;
+- Zustand for local shell and view state;
+- [Radix Primitives](https://www.radix-ui.com/primitives) and
+  [shadcn/ui](https://ui.shadcn.com/) for accessible UI primitives;
+- [TanStack Table](https://tanstack.com/table/latest) for future dense grids;
+- [Monaco Editor](https://github.com/microsoft/monaco-editor) for future code
+  and diff panes;
+- [xterm.js](https://xtermjs.org/) for any future real console surface.
 
-## Planned Delta
+## Related Pages
 
-- `F-01`: simplify the shell and free up canvas space;
-- `F-03`: wire platform health into the visible shell;
-- `F-04`: isolate mock-versus-API data sources;
-- `MVP-E1`: align the shell with the backend contract that exists today.
-
-## Historical Deep Dives
-
-- [DDD Structure](web-app-ddd.md)
-- [Functionalities](web-app-functional.md)
-- [Constraints and invariants](web-app-constraints.md)
-- [Sequence diagrams](web-app-sequence.md)
+- [Frontend Architecture](../../frontend/index.md)
+- [Main Workspace Views And UX](../../frontend/main-workspace-views-and-ux.md)
+- [UX Implementation Guide](../../frontend/ux-implementation-guide.md)

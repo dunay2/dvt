@@ -99,6 +99,17 @@ The sequence must be reality-first:
   real contracts and feature flags.
 - `F-13`: keep frontend docs aligned with the real code and route posture.
 - `F-14`: add a governed frontend test command and CI lane.
+- `F-15`: formalize the workbench UX contract so the product converges on a
+  stable VS Code-like shell grammar.
+- `F-16`: move dense operational views to TanStack Table where card layouts stop
+  scaling.
+- `F-17`: adopt Monaco-based panes for SQL, JSON, and diff-heavy surfaces.
+- `F-18`: converge the shell console and run-log story, using xterm.js only if
+  terminal-grade streaming is truly required.
+- `F-19`: formalize the `Marquez` visual direction for open-data and
+  explanatory public-data surfaces.
+- `F-20`: maintain per-screen user manuals and user stories as the UX
+  acceptance baseline for the main workbenches.
 
 ---
 
@@ -141,6 +152,32 @@ View -> useQuery/useMutation (TanStack Query)
 ```
 
 No direct `fetch` calls in components.
+
+### Workbench UX direction
+
+The frontend should feel closer to a workbench than to a set of unrelated
+dashboards:
+
+- persistent shell;
+- icon-first navigation;
+- route-level primary surface;
+- optional side panels;
+- optional bottom drawer;
+- dense operator views where needed;
+- mature editor and diff primitives instead of bespoke viewers.
+
+For open-data or public-data slices, the visual direction should not simply copy
+the operator workbench. That slice should use the named `Marquez` theme:
+editorial, curated, and explanatory, while still reusing the governed shell and
+component stack where it makes sense. In this frontend context, `Marquez` names
+the design direction, not the OpenLineage backend product.
+
+That direction is now documented in:
+
+- [Main Workspace Views And UX](../../architecture/frontend/main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](../../architecture/frontend/screen-manuals-and-user-stories.md)
+- [UX Implementation Guide](../../architecture/frontend/ux-implementation-guide.md)
+- [Library And Open-Source Reference Stack](../../architecture/frontend/library-and-open-source-reference-stack.md)
 
 ---
 

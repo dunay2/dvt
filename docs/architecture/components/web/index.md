@@ -2,57 +2,41 @@
 title: '@dvt/web package surface'
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-03
 ---
 
 # @dvt/web Package Surface
 
-`@dvt/web` is the package view of the `apps/web` workspace.
+`@dvt/web` is the package-level view of the `apps/web` workspace.
 
-Use this page when the question is about frontend module boundaries inside the
-workspace rather than the deployable shell as a whole.
+Use this page when the question is about module boundaries inside the frontend
+package rather than the deployable shell as a whole.
 
 ## Current Responsibilities
 
-- define client-side service and capability modules;
-- hold view-model, store, and capability-level frontend logic;
-- expose the package-level structure consumed by the browser application shell;
-- keep platform-health and other frontend capabilities isolated from route
-  wiring.
+- client-side API, runs, and workspace services;
+- platform-health capability and related hooks;
+- plugin registry, contributions, and route/view discovery;
+- route-level views and the supporting state used by those views.
 
-## Interface Map
-
-```mermaid
-flowchart LR
-  Shell["apps/web shell"] --> Package["`@dvt/web` package surface"]
-  Package --> Services["API, runs, plans, workspace services"]
-  Package --> Capabilities["platform-health and view capabilities"]
-```
-
-## Code Anchors
+## Current Code Anchors
 
 - [createApiClient.ts](../../../../apps/web/src/app/services/api/createApiClient.ts)
 - [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts)
 - [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts)
-- [usePlatformHealthSnapshotQuery.ts](../../../../apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts)
-- [platformHealthCapability.test.ts](../../../../apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts)
+- [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
 
-## Current Posture
+## Library Direction
 
-This view is useful because the workspace mixes deployable-shell concerns with
-package-level modules. The package surface already has meaningful local tests,
-but those tests are not yet exposed through a workspace `test` script.
+- React Flow for graph rendering adapters;
+- TanStack Query for remote query orchestration;
+- Zustand for focused local UI state;
+- Radix/shadcn primitives for reusable accessible UI;
+- TanStack Table, Monaco Editor, and xterm.js when the corresponding capability
+  surfaces mature enough to justify them.
 
-## Planned Delta
+## Related Pages
 
-- push views to consume service and capability layers instead of mock data
-  directly under `F-04`;
-- keep package boundaries explicit as the shell cleanup and backend alignment
-  work land.
-
-## Historical Deep Dives
-
-- [DDD Structure](web-ddd.md)
-- [Functionalities](web-functional.md)
-- [Constraints and invariants](web-constraints.md)
-- [Sequence diagrams](web-sequence.md)
+- [apps/web](../web-app/index.md)
+- [Frontend Architecture](../../frontend/index.md)
+- [Library And Open-Source Reference Stack](../../frontend/library-and-open-source-reference-stack.md)
