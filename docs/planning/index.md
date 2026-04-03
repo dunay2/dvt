@@ -62,6 +62,7 @@ Concept anchors for this page:
 - [RC-C2 Shared Preflight And CI Log-First Triage Plan](proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
 - [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
 - [S08 plan record and plan store execution plan](proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [TypeScript 6 Migration Defer Decision](proposals/typescript-6-migration-defer-decision-20260403.md)
 
 ## Reviews
 
