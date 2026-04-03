@@ -787,7 +787,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-A5
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       verify that createdAtIso is excluded from the planCore JCS input for planId computation; if
       included, the same logical plan at different times produces different identity.
@@ -797,11 +797,14 @@ tasks:
       golden vector regression test.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-    status_reason: Potential determinism violation identified in review; requires verification.
-    last_verified: '2026-04-02'
+      - packages/@dvt/planner/test/unit/determinism.test.ts
+    status_reason: >-
+      Added explicit regression coverage proving `createdAtIso` variation does not change `planId`;
+      pending merge closure.
+    last_verified: '2026-04-03'
   - task_id: AR-A6
     priority: P2
     status: queued
@@ -938,8 +941,8 @@ verification_summary:
   verified_on: '2026-04-03'
   total_tasks: 37
   total_effort_points: 140
-  completed_weighted_points: 66.36
-  lane_progress_pct: 47
+  completed_weighted_points: 67.16
+  lane_progress_pct: 48
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
