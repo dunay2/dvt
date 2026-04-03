@@ -68,7 +68,9 @@ export function buildPlanRefStartRunCommand(input: {
     return planRef;
   }
 
-  const runExecutionContextRef = parseOptionalRunExecutionContextRef(input.rawRunExecutionContextRef);
+  const runExecutionContextRef = parseOptionalRunExecutionContextRef(
+    input.rawRunExecutionContextRef
+  );
   if (!runExecutionContextRef.ok) {
     return runExecutionContextRef;
   }
@@ -99,7 +101,9 @@ export function buildPlannerBackedStartRunCommand(input: {
     return plannerInput;
   }
 
-  const runExecutionContextRef = parseOptionalRunExecutionContextRef(input.rawRunExecutionContextRef);
+  const runExecutionContextRef = parseOptionalRunExecutionContextRef(
+    input.rawRunExecutionContextRef
+  );
   if (!runExecutionContextRef.ok) {
     return runExecutionContextRef;
   }

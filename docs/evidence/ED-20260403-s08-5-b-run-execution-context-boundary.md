@@ -3,10 +3,10 @@ title: S08-5-B runExecutionContext governed boundary
 status: Accepted
 date: 2026-04-03
 owners:
-  - @dvt/contracts
-  - @dvt/engine
-  - @dvt/artifacts
-  - dvt-api
+  - '@dvt/contracts'
+  - '@dvt/engine'
+  - '@dvt/artifacts'
+  - 'dvt-api'
 arc_level: ARC-2
 breaking: false
 code_refs:
