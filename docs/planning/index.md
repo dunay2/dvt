@@ -46,6 +46,7 @@ Concept anchors for this page:
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
 - [Proposal Portfolio Map 2026-04-03](proposals/portfolio-map-20260403.md)
+- [TypeScript 6 Migration Defer Decision](proposals/typescript-6-migration-defer-decision-20260403.md)
 
 ## Reviews
 
