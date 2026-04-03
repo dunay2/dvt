@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 import type { IPlanStoreReader, IPlanStoreWriter } from '@dvt/artifacts';
 import {
   type ExecutabilityValidationResult,
@@ -28,14 +26,8 @@ import {
   toPlanExecutabilityRecord,
   toPlanRecord,
 } from './PostgresPlanStore.mappers.js';
-import {
-  sqlBackfillPlanRecordsFromStoredPlans,
-  sqlCreatePlanAdmissionLinksTable,
-  sqlCreatePlanExecutabilityRecordsTable,
-  sqlCreatePlanRecordsTable,
-  sqlCreateStoredPlansTable,
-  sqlCreateStoredPlansValidationStateIndex,
-} from './PostgresPlanStore.sql.js';
+import { PostgresPlanStoreSchemaManager } from './PostgresPlanStore.schema-manager.js';
+import { PostgresPlanStoreTxRunner } from './PostgresPlanStore.tx.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
 export interface ExecutablePlanArtifact {
@@ -63,6 +55,8 @@ export class PostgresPlanStore
   private readonly ownsPool: boolean;
   private readonly schema: string;
   private readonly statementTimeoutMs: number;
+  private readonly txRunner: PostgresPlanStoreTxRunner;
+  private readonly schemaManager: PostgresPlanStoreSchemaManager;
 
   public constructor(private readonly config: PostgresPlanStoreConfig) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
@@ -84,19 +78,12 @@ export class PostgresPlanStore
       });
       this.ownsPool = true;
     }
+    this.txRunner = new PostgresPlanStoreTxRunner(this.pool, this.statementTimeoutMs);
+    this.schemaManager = new PostgresPlanStoreSchemaManager(this.schema, this.txRunner);
   }
 
   public async migrate(): Promise<void> {
-    await this.withTransaction(async (client) => {
-      await client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
-      await client.query(sqlCreateStoredPlansTable(this.schema));
-      await client.query(sqlCreateStoredPlansValidationStateIndex(this.schema));
-      await client.query(sqlCreatePlanRecordsTable(this.schema));
-      await client.query(sqlCreatePlanExecutabilityRecordsTable(this.schema));
-      await client.query(sqlCreatePlanAdmissionLinksTable(this.schema));
-      await client.query(sqlBackfillPlanRecordsFromStoredPlans(this.schema));
-      await this.reconcileBackfilledCanonicalHashes(client);
-    });
+    await this.schemaManager.migrate();
   }
 
   public async close(): Promise<void> {
@@ -654,33 +641,6 @@ export class PostgresPlanStore
     });
   }
 
-  private async reconcileBackfilledCanonicalHashes(client: PoolClient): Promise<void> {
-    const backfilled = await client.query<{
-      plan_id: string;
-      canonical_plan_json: string;
-      canonical_hash: string;
-    }>(
-      `
-        SELECT plan_id, canonical_plan_json, canonical_hash
-        FROM ${quoteIdentifier(this.schema)}.plan_records
-      `
-    );
-
-    for (const row of backfilled.rows) {
-      const canonicalHash = createHash('sha256').update(row.canonical_plan_json).digest('hex');
-      if (row.canonical_hash !== canonicalHash) {
-        await client.query(
-          `
-            UPDATE ${quoteIdentifier(this.schema)}.plan_records
-            SET canonical_hash = $2
-            WHERE plan_id = $1
-          `,
-          [row.plan_id, canonicalHash]
-        );
-      }
-    }
-  }
-
   private async assertPlanRecordExists(
     client: PoolClient,
     planId: string,
@@ -784,36 +744,10 @@ export class PostgresPlanStore
   }
 
   private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      if (this.statementTimeoutMs > 0) {
-        await client.query('SET LOCAL statement_timeout = $1', [this.statementTimeoutMs]);
-      }
-      const result = await fn(client);
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      try {
-        await client.query('ROLLBACK');
-      } catch {
-        // ignore rollback failure
-      }
-      throw error;
-    } finally {
-      client.release();
-    }
+    return this.txRunner.withTransaction(fn);
   }
 
   private async withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect();
-    try {
-      if (this.statementTimeoutMs > 0) {
-        await client.query('SET statement_timeout = $1', [this.statementTimeoutMs]);
-      }
-      return await fn(client);
-    } finally {
-      client.release();
-    }
+    return this.txRunner.withClient(fn);
   }
 }

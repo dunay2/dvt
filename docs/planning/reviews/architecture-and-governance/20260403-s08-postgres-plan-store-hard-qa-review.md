@@ -61,7 +61,8 @@ current state.
   (`derived_from_plan_id` / `supersedes_plan_id`) still have no FK-level
   referential integrity.
 - `S08-HQA-07` remains open: `PostgresPlanStore` still carries too many
-  responsibilities for ADR-0039 target SRP posture.
+  responsibilities for ADR-0039 target SRP posture, although transaction and
+  schema concerns have already been extracted into dedicated components.
 - `S08-HQA-09` remains open: highest-value integration tests still depend on
   `DVT_PG_INTEGRATION=1` and are not always-on in default local runs.
 

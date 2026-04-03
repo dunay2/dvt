@@ -107,7 +107,8 @@ stateDiagram-v2
 ## Current limitations to keep in mind
 
 1. Lineage fields in `plan_records` are not FK-constrained yet.
-2. Full SRP decomposition is planned but not fully implemented yet.
+2. SRP decomposition is in progress (`TxRunner` and `SchemaManager` extracted),
+   but repository-level split is still pending.
 
 ## Safe usage checklist
 

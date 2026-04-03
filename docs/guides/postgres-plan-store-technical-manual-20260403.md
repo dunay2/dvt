@@ -61,6 +61,12 @@ flowchart LR
   S --> T4
 ```
 
+Composition now delegates infrastructure responsibilities:
+
+- `PostgresPlanStoreTxRunner` owns connection/transaction execution policy.
+- `PostgresPlanStoreSchemaManager` owns schema creation and backfill/reconcile.
+- `PostgresPlanStore` remains the application-facing adapter/facade.
+
 ## Current data model
 
 ```mermaid
@@ -141,8 +147,9 @@ erDiagram
 
 1. Lineage FK integrity remains partially soft:
    `derived_from_plan_id` and `supersedes_plan_id` are not FK-constrained.
-2. Class decomposition target (schema manager, repositories, lifecycle facade,
-   composer, tx runner split) is not complete.
+2. Repository split is still partial:
+   plan-record/executability/admission behavior is still concentrated in
+   `PostgresPlanStore` instead of dedicated repository classes.
 3. Integration-heavy test paths still rely on `DVT_PG_INTEGRATION=1`.
 
 ## Validation and diagnostics
@@ -166,13 +173,11 @@ pnpm --filter @dvt/adapter-postgres test
 
 ```mermaid
 flowchart TD
-  A[Current PostgresPlanStore monolith]
-  B[Extract PostgresTxRunner]
-  C[Extract PostgresPlanStoreSchemaManager]
-  D[Extract repositories: PlanRecord, Executability, Admission, Blob]
-  E[Introduce PlanValidationLifecycleFacadeAdapter]
-  F[Wire PostgresPlanStoreComposer]
-  G[Retire in-class compatibility seam]
+  A[Initial monolith]
+  B[Extract PostgresTxRunner - done]
+  C[Extract PostgresPlanStoreSchemaManager - done]
+  D[Extract repositories: PlanRecord, Executability, Admission, Blob - pending]
+  E[Wire PostgresPlanStoreComposer - pending]
 
-  A --> B --> C --> D --> E --> F --> G
+  A --> B --> C --> D --> E
 ```
