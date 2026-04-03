@@ -17,12 +17,15 @@ The code lives in the `apps/web` workspace, whose package name is `@dvt/web`.
 - package surface `@dvt/web`
 - frontend routing, shell, graph workbench, runs, lineage, diff, artifacts, and
   platform health
+- future execution-template and source-generation workbenches
 
 ## Current Responsibilities
 
 - bootstrap the browser app and route operators through the current shell;
 - render the active workbench views;
 - present platform-health state and execution-facing UX;
+- model governed source-generation UX for execution templates and provider
+  scaffolds without becoming the execution authority;
 - keep client composition separate from execution, planner, and persistence
   authority.
 

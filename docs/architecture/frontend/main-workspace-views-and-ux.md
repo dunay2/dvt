@@ -8,7 +8,8 @@ last_reviewed: 2026-04-03
 # Main Workspace Views And UX
 
 This page documents the real DVT frontend workbench as it exists today in
-`apps/web`.
+`apps/web`, plus the next missing route-level slice that should become a
+first-class workbench.
 
 It explains the current view inventory, how the views hand off context to each
 other, and which UX states users should experience across the shell.
@@ -124,6 +125,28 @@ Current composition:
 - artifact list cards;
 - preview tabs for `manifest.json`, `run_results.json`, and `catalog.json`.
 
+## Next Governed Workbench Slice
+
+### Execution Templates And Source Generation
+
+Current route: not wired yet
+
+Planned composition:
+
+- template catalog and provider-profile selector;
+- schema-driven parameter form;
+- generated-source preview for task DDL, procedure bodies, and ETL scaffolds;
+- diff or review pane before export or apply;
+- explicit export, copy, or dispatch actions.
+
+Current user jobs:
+
+- choose an execution-template profile from workflow context;
+- generate governed source for provider-facing execution artifacts;
+- preview and review generated output before using it;
+- move from workflow design to executable scaffolding without manual
+  copy-paste.
+
 ## View Relationships
 
 ```mermaid
@@ -131,14 +154,17 @@ flowchart TB
   Canvas -->|"Start run / open run"| Runs
   Canvas -->|"Selected node"| Inspector
   Canvas -->|"Column toggle and graph context"| Lineage
+  Canvas -->|"Generate execution scaffolding from current workflow context"| Templates
   Lineage -->|"Pin-to-canvas intent exists, not complete yet"| Canvas
   Runs -->|"Artifacts tab"| Artifacts
+  Diff -->|"Review generated source deltas"| Templates
   Diff -->|"Changed graph and SQL context"| Canvas
   TopBar -->|"Tenant / project / environment"| Canvas
   TopBar --> Runs
   TopBar --> Lineage
   TopBar --> Diff
   TopBar --> Artifacts
+  TopBar --> Templates
 ```
 
 ## UX Baseline
@@ -184,6 +210,9 @@ flowchart TB
 - There is a hidden `CostView` implementation in the codebase, but it is not an
   active shell route today. Observability is currently expressed through the
   shell health banner and the Runs detail surface instead.
+- There is still no route-level workbench for execution-template creation and
+  governed source generation, even though ETL and provider-oriented execution
+  scaffolding are part of the intended product direction.
 
 ## Related Pages
 

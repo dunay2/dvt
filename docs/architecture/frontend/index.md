@@ -26,6 +26,9 @@ Use it to answer four questions quickly:
 - The main UX is already workbench-shaped, but the documentation had lagged
   behind the implementation and was too abstract to explain the real product
   behavior.
+- The next missing route-level slice is a governed execution-template and
+  source-generation workbench for producing execution artifacts such as
+  Snowflake tasks, procedures, and ETL scaffolds.
 
 ## Current Shell Topology
 
@@ -59,6 +62,18 @@ flowchart TB
 | Artifacts | `/artifacts`            | Artifact browser and local manifest import surface                     |
 | Plugins   | `/plugins`              | Installed-plugin inspection and configuration shell route              |
 | Admin     | `/admin`                | Administrative shell route                                             |
+
+## Next Governed Slice
+
+The main workbench still lacks a dedicated source-generation surface.
+
+That future route-level workbench should cover:
+
+- execution-template selection and provider-profile choice;
+- parameterized generation of source artifacts such as Snowflake tasks,
+  procedures, and ETL scaffolds;
+- preview and diff of generated source before export or apply;
+- traceability back to the selected template, version, and workflow context.
 
 ## Canonical Reading Order
 
@@ -120,6 +135,8 @@ flowchart TB
   dedicated CI lane yet.
 - The frontend still needs stricter contract alignment with the protected API
   runtime surface, especially around run start and richer run diagnostics.
+- The frontend still lacks a first-class execution-template and code-generation
+  workbench, so generation intent is not yet modeled as a governed UX surface.
 
 ## Related Pages
 

@@ -95,9 +95,9 @@ Evolve apps/web from a mixed mock prototype into an operational UI whose contrac
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
 - Verified on: `2026-04-03`
-- Total tasks: `21`
-- Total effort points: `97`
-- Completed weighted points: `15.3`
+- Total tasks: `22`
+- Total effort points: `102`
+- Completed weighted points: `16.3`
 - Lane progress: `16%`
 - Notes: Weighted progress uses effort_points and records partial convergence already present in the frontend, even when the lane still lacks accepted closure for most slices.
 
@@ -126,6 +126,7 @@ Evolve apps/web from a mixed mock prototype into an operational UI whose contrac
 - [ ] `P2` `F-18` `queued` `S` `3pt` `0%`: converge the shell console and run-log experience into a real live-log surface, using xterm.js only if the product needs terminal-grade streaming instead of static panels.
 - [ ] `P2` `F-19` `in_progress` `S` `3pt` `20%`: formalize the Marquez visual system for open-data and public-data surfaces so that the product distinguishes civic or explanatory views from the operator workbench.
 - [ ] `P1` `F-20` `review` `S` `3pt` `80%`: write and maintain per-screen user manuals and user stories so each route-level workbench has explicit expected behavior, states, and acceptance posture.
+- [ ] `P1` `F-21` `in_progress` `M` `5pt` `20%`: add a governed execution-template and source-generation workbench for provider-facing execution scaffolds.
 
 ## Dependencies
 
@@ -145,5 +146,6 @@ Evolve apps/web from a mixed mock prototype into an operational UI whose contrac
 - store responsibilities are decomposed by domain
 - legacy canvas paths are removed so one graph interaction stack remains
 - core flow (Plan -> Run -> Monitor) works with real data
+- execution-template and source-generation workbenches are modeled as governed UI surfaces
 - secondary views activate progressively via feature flags
 - frontend docs and validation describe the real system in English

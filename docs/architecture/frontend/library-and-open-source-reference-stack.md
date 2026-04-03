@@ -21,6 +21,8 @@ product UX decisions.
 - wrap third-party primitives behind DVT adapters when they affect core product
   concepts such as graph models, diff surfaces, or editor models;
 - use open-source products as design and interaction precedents;
+- keep source generation behind governed template or service boundaries instead
+  of concatenating provider-specific strings inside UI components;
 - do not vendor code from third-party projects without explicit license review.
 
 ## Recommended Library Stack
@@ -62,3 +64,6 @@ product UX decisions.
   own domain model.
 - Monaco and xterm.js are not active shell primitives yet, but they are the
   right maturity targets for code, diff, and console surfaces.
+- The future execution-template workbench should reuse Monaco for preview and
+  diff while keeping template semantics and source generation outside React
+  component logic.

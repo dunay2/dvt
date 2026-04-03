@@ -14,6 +14,7 @@ expected_outcome:
   - store responsibilities are decomposed by domain
   - legacy canvas paths are removed so one graph interaction stack remains
   - core flow (Plan -> Run -> Monitor) works with real data
+  - execution-template and source-generation workbenches are modeled as governed UI surfaces
   - secondary views activate progressively via feature flags
   - frontend docs and validation describe the real system in English
 header_markdown: >
@@ -583,6 +584,29 @@ tasks:
       A maintained screen-manual and user-story document now covers the main workbenches and ties UX
       acceptance to Lane E, but future route changes still need to keep those stories in sync.
     last_verified: '2026-04-03'
+  - task_id: F-21
+    priority: P1
+    status: in_progress
+    objective: >-
+      add a governed execution-template and source-generation workbench for provider-facing
+      execution scaffolds.
+    dependency: F-15, F-17
+    target: >-
+      A route-level workbench supports template selection, schema-driven parameter capture, preview,
+      diff, and export for source artifacts such as Snowflake tasks, procedures, and ETL scaffolds,
+      while keeping provider semantics in governed backend services and contracts.
+    complexity: M
+    effort_points: 5
+    progress_pct: 20
+    evidence_refs:
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: >-
+      The frontend architecture and roadmap now name execution-template and source-generation UX as
+      a governed workbench slice, but no route, template catalog, or service contract exists yet.
+    last_verified: '2026-04-03'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. No core-flow task should
@@ -608,9 +632,9 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-03'
-  total_tasks: 21
-  total_effort_points: 97
-  completed_weighted_points: 15.3
+  total_tasks: 22
+  total_effort_points: 102
+  completed_weighted_points: 16.3
   lane_progress_pct: 16
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the

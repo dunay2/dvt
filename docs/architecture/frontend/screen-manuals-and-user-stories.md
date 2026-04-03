@@ -11,7 +11,8 @@ This document defines what each main frontend screen is expected to do from a
 user perspective.
 
 It works as a lightweight user manual plus a story inventory for the current
-frontend surfaces.
+frontend surfaces and the next governed route-level slice that still needs
+delivery.
 
 ## Shell
 
@@ -192,6 +193,41 @@ The user expects:
 - Loading: preserve route frame.
 - Invalid import: show why the local file is rejected.
 
+## Execution Templates And Source Generation
+
+### User expectation
+
+This future workbench should let users move from workflow intent to governed
+execution scaffolding.
+
+The user expects to:
+
+- pick a template or provider profile;
+- provide parameters without editing raw boilerplate first;
+- preview generated source before exporting or dispatching it;
+- generate artifacts such as Snowflake tasks, procedures, or ETL scaffolds
+  without losing traceability to the workflow context.
+
+### Primary user stories
+
+- As a data engineer, I want to generate Snowflake tasks and procedures from a
+  governed template so I do not handcraft repetitive execution code each time.
+- As an ETL designer, I want a code-generation surface tied to the workflow
+  context so I can move from design to executable scaffolding without manual
+  copy-paste.
+- As a reviewer, I want to diff generated source before export or apply so I
+  can validate what the template produced.
+
+### Expected states
+
+- Empty: explain that no template profile or workflow context is selected yet.
+- Loading: preserve route frame while template catalog or generation preview is
+  resolving.
+- Validation error: explain which parameters are missing or invalid.
+- Preview ready: generated source is visible and clearly marked with template
+  provenance and target profile.
+- Read-only: allow review and export while mutation or dispatch is gated.
+
 ## Tracking Stories As Work
 
 These manuals should be translated into implementation work through Lane E task
@@ -205,3 +241,4 @@ Current related tasks:
 - `F-17` Monaco adoption for review panes
 - `F-18` console and live-log convergence
 - `F-19` Marquez open-data visual direction
+- `F-21` execution-template and source-generation workbench

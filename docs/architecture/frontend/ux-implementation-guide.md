@@ -17,6 +17,8 @@ Its job is not to describe aspiration. Its job is to define:
 - which existing libraries and code paths we reuse;
 - which layers own which responsibilities;
 - which sequence gets us there without rewriting `apps/web`;
+- how execution-template and code-generation surfaces fit without turning the
+  frontend into a freeform IDE;
 - what "done" means for each major frontend surface.
 
 ## Target UX
@@ -30,7 +32,8 @@ That means:
 - one active route-level work surface at a time;
 - optional left and right contextual panels;
 - an optional bottom drawer for dense supporting context;
-- fast transitions between authoring, review, and monitoring surfaces;
+- fast transitions between authoring, code generation, review, and monitoring
+  surfaces;
 - explicit empty, loading, error, degraded, and read-only states.
 
 For open-data or public-data slices, the visual direction may diverge from the
@@ -53,7 +56,7 @@ Use the current stack and deepen it:
 | Radix + shadcn/ui         | shell primitives, menus, tabs, dialogs, drawers, scroll areas                   |
 | Recharts                  | current light metrics and cost charts                                           |
 | TanStack Table            | dense operational tables for runs, events, diagnostics, and diff lists          |
-| Monaco Editor             | SQL, JSON, and diff-heavy read or review panes                                  |
+| Monaco Editor             | SQL, JSON, generated DDL, stored procedure, and diff-heavy read or review panes |
 | xterm.js                  | live log or terminal-grade console surface when static panels stop being enough |
 
 ## Workbench Contract
@@ -128,6 +131,24 @@ DVT still owns:
 - capability contracts;
 - UX acceptance rules.
 
+### Generated Source Rule
+
+The frontend may own:
+
+- template selection;
+- parameter capture;
+- generated-source preview;
+- diff, export, and review UX.
+
+The frontend must not own:
+
+- provider execution semantics;
+- freeform string-concatenation code generation inside React components;
+- hidden mutation of backend templates from view-local state.
+
+Generation contracts, template semantics, and provider-specific translation
+must stay behind governed DVT services and backend contracts.
+
 ## Implementation Sequence
 
 ### Phase 1. Stabilize the shell grammar
@@ -180,7 +201,19 @@ Primary tasks:
 - `F-17`
 - `F-18`
 
-### Phase 5. Separate open-data presentation from operator workbench
+### Phase 5. Add governed source generation
+
+- add a route-level workbench for execution templates and code generation;
+- keep parameter input structured and schema-driven;
+- preview and diff generated source before export or apply;
+- support governed scaffolds such as Snowflake tasks, procedures, and ETL
+  execution templates.
+
+Primary task:
+
+- `F-21`
+
+### Phase 6. Separate open-data presentation from operator workbench
 
 - keep the workbench grammar for operator routes;
 - use `Marquez` only for public or explanatory open-data surfaces.
@@ -233,6 +266,18 @@ Done when:
 - bottom drawer purpose is explicit;
 - real event or log playback is modeled;
 - xterm.js is used only if structured panels are insufficient.
+
+### Execution Templates And Code Generation
+
+Done when:
+
+- template catalog and provider-profile choice are explicit;
+- parameter capture is schema-driven instead of raw boilerplate editing;
+- generated source can be previewed and diffed before export or apply;
+- artifacts such as Snowflake tasks, procedures, and ETL scaffolds carry
+  template provenance and workflow context;
+- provider semantics still live in governed backend services, not in React
+  component logic.
 
 ## Reference Documents
 

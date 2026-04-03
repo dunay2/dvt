@@ -12,7 +12,7 @@ planning_type: proposal
 
 The execution of this roadmap is tracked in
 [Agent Lane E](../state/agent-lane-e.md) (`docs/planning/state/agent-lane-e.md`).
-Lane E tasks (`MVP-E1`, `F-01` through `F-14`) are the canonical work units.
+Lane E tasks (`MVP-E1`, `F-01` through `F-21`) are the canonical work units.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
 
@@ -110,6 +110,9 @@ The sequence must be reality-first:
   explanatory public-data surfaces.
 - `F-20`: maintain per-screen user manuals and user stories as the UX
   acceptance baseline for the main workbenches.
+- `F-21`: add a governed execution-template and source-generation workbench for
+  provider-facing artifacts such as Snowflake tasks, procedures, and ETL
+  scaffolds.
 
 ---
 
@@ -164,6 +167,7 @@ dashboards:
 - optional side panels;
 - optional bottom drawer;
 - dense operator views where needed;
+- governed source-generation surfaces instead of ad hoc boilerplate editing;
 - mature editor and diff primitives instead of bespoke viewers.
 
 For open-data or public-data slices, the visual direction should not simply copy
@@ -178,6 +182,20 @@ That direction is now documented in:
 - [Screen Manuals And User Stories](../../architecture/frontend/screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](../../architecture/frontend/ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](../../architecture/frontend/library-and-open-source-reference-stack.md)
+
+### Source generation direction
+
+The frontend should not stop at graph authoring and artifact inspection. It
+also needs a governed source-generation surface that lets users move from
+workflow intent to executable scaffolding.
+
+That surface should:
+
+- start from templates and provider profiles rather than empty editors;
+- support artifacts such as Snowflake tasks, procedures, and ETL scaffolds;
+- preview and diff generated source before export or apply;
+- keep generation semantics in backend contracts and services, not in view-local
+  string assembly.
 
 ---
 
@@ -208,6 +226,8 @@ but the UI still needs its own frontend-facing contract artifact that records:
 5. Level-C views remain opt-in and contract-gated.
 6. Frontend docs and validation commands describe the shipped behavior instead
    of a target-only architecture.
+7. Execution-template and source-generation UX is modeled as a governed
+   workbench slice instead of being left implicit in artifact viewers.
 
 ---
 
