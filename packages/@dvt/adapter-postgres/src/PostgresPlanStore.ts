@@ -337,7 +337,47 @@ export class PostgresPlanStore
   public async createPlanRecord(record: PlanRecord): Promise<void> {
     const validated = parsePlanRecord(record);
     await this.withTransaction(async (client) => {
-      await this.upsertPlanRecord(client, validated);
+      const inserted = await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(this.schema)}.plan_records (
+            plan_id,
+            canonical_plan_json,
+            canonical_hash,
+            plan_version,
+            schema_version,
+            contract_version,
+            source_ref,
+            state,
+            created_at,
+            updated_at,
+            derived_from_plan_id,
+            supersedes_plan_id,
+            archived_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9::timestamptz, $10::timestamptz, $11, $12, $13::timestamptz
+          )
+          ON CONFLICT (plan_id) DO NOTHING
+          RETURNING plan_id
+        `,
+        [
+          validated.planId,
+          validated.canonicalPlanJson,
+          validated.canonicalHash,
+          validated.planVersion,
+          validated.schemaVersion,
+          validated.contractVersion,
+          validated.sourceRef,
+          validated.state,
+          validated.createdAtIso,
+          validated.updatedAtIso,
+          validated.derivedFromPlanId ?? null,
+          validated.supersedesPlanId ?? null,
+          validated.state === 'ARCHIVED' ? validated.archivedAtIso : null,
+        ]
+      );
+      if (inserted.rowCount === 0) {
+        throw new Error(`PLAN_RECORD_ALREADY_EXISTS: ${validated.planId}`);
+      }
     });
   }
 
@@ -370,6 +410,9 @@ export class PostgresPlanStore
     planId: PlanRecord['planId'],
     supersededByPlanId: PlanRecord['planId']
   ): Promise<void> {
+    if (planId === supersededByPlanId) {
+      throw new Error(`PLAN_RECORD_INVALID_SUPERSESSION_SELF: ${planId}`);
+    }
     await this.withTransaction(async (client) => {
       const result = await client.query(
         `
@@ -383,14 +426,19 @@ export class PostgresPlanStore
       if (result.rowCount === 0) {
         throw new Error(`PLAN_RECORD_NOT_ACTIVE: ${planId}`);
       }
-      await client.query(
+
+      const superseder = await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.plan_records
-          SET supersedes_plan_id = COALESCE(supersedes_plan_id, $2)
+          SET supersedes_plan_id = COALESCE(supersedes_plan_id, $2),
+              updated_at = NOW()
           WHERE plan_id = $1
         `,
-        [planId, supersededByPlanId]
+        [supersededByPlanId, planId]
       );
+      if (superseder.rowCount === 0) {
+        throw new Error(`PLAN_RECORD_SUPERSEDER_NOT_FOUND: ${supersededByPlanId}`);
+      }
     });
   }
 
@@ -456,7 +504,18 @@ export class PostgresPlanStore
 
   public async getPlanRecordByRef(planRef: PlanRefSchemaT): Promise<PlanRecord | undefined> {
     const validated = parsePlanRef(planRef);
-    return this.getPlanRecord(validated.planId);
+    const record = await this.getPlanRecord(validated.planId);
+    if (!record) {
+      return undefined;
+    }
+    const mismatches: string[] = [];
+    if (record.sourceRef !== validated.uri) mismatches.push('uri');
+    if (record.planVersion !== validated.planVersion) mismatches.push('planVersion');
+    if (record.schemaVersion !== validated.schemaVersion) mismatches.push('schemaVersion');
+    if (mismatches.length > 0) {
+      throw new Error(`PLAN_REF_MISMATCH: ${validated.planId}:${mismatches.join(',')}`);
+    }
+    return record;
   }
 
   public async listExecutabilityByAdapter(
@@ -695,7 +754,7 @@ export class PostgresPlanStore
   }
 
   private async upsertPlanRecord(client: PoolClient, record: PlanRecord): Promise<void> {
-    await client.query(
+    const upsertResult = await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.plan_records (
           plan_id,
@@ -719,6 +778,15 @@ export class PostgresPlanStore
             updated_at = EXCLUDED.updated_at,
             supersedes_plan_id = COALESCE(plan_records.supersedes_plan_id, EXCLUDED.supersedes_plan_id),
             archived_at = COALESCE(EXCLUDED.archived_at, plan_records.archived_at)
+        WHERE
+          plan_records.canonical_plan_json = EXCLUDED.canonical_plan_json
+          AND plan_records.canonical_hash = EXCLUDED.canonical_hash
+          AND plan_records.plan_version = EXCLUDED.plan_version
+          AND plan_records.schema_version = EXCLUDED.schema_version
+          AND plan_records.contract_version = EXCLUDED.contract_version
+          AND plan_records.source_ref = EXCLUDED.source_ref
+          AND plan_records.created_at = EXCLUDED.created_at
+        RETURNING plan_id
       `,
       [
         record.planId,
@@ -736,6 +804,9 @@ export class PostgresPlanStore
         record.state === 'ARCHIVED' ? record.archivedAtIso : null,
       ]
     );
+    if (upsertResult.rowCount === 0) {
+      throw new Error(`PLAN_RECORD_CONFLICT: ${record.planId}`);
+    }
   }
 
   private async upsertExecutabilityRecord(
@@ -862,23 +933,25 @@ function toPlanExecutabilityRecord(row: {
     return { planId: row.plan_id, adapterId: row.adapter_id, state: 'PENDING' };
   }
   if (row.state === 'VALID') {
+    if (row.validated_at_iso === null) {
+      throw new Error(`PLAN_EXECUTABILITY_ROW_INVALID: ${row.plan_id}:${row.adapter_id}:VALID`);
+    }
     return {
       planId: row.plan_id,
       adapterId: row.adapter_id,
       state: 'VALID',
-      validatedAtIso: row.validated_at_iso ?? new Date(0).toISOString(),
+      validatedAtIso: row.validated_at_iso,
     };
+  }
+  if (row.validated_at_iso === null || row.rejection_report_json === null) {
+    throw new Error(`PLAN_EXECUTABILITY_ROW_INVALID: ${row.plan_id}:${row.adapter_id}:INVALID`);
   }
   return {
     planId: row.plan_id,
     adapterId: row.adapter_id,
     state: 'INVALID',
-    validatedAtIso: row.validated_at_iso ?? new Date(0).toISOString(),
-    rejectionReport: (row.rejection_report_json ?? {
-      code: 'REJECTED',
-      reason: 'missing rejection report',
-      degradable: false,
-    }) as PlanExecutabilityRejectionReport,
+    validatedAtIso: row.validated_at_iso,
+    rejectionReport: row.rejection_report_json as PlanExecutabilityRejectionReport,
   };
 }
 

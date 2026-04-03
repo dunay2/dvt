@@ -21,6 +21,9 @@ const PLAN_ID = {
   r4_7: toCanonicalPlanId('plan-r4-7'),
   r4_8: toCanonicalPlanId('plan-r4-8'),
   r4_9: toCanonicalPlanId('plan-r4-9'),
+  r4_10: toCanonicalPlanId('plan-r4-10'),
+  r4_11: toCanonicalPlanId('plan-r4-11'),
+  r4_missing: toCanonicalPlanId('plan-r4-missing'),
 } as const;
 
 describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
@@ -280,6 +283,51 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
           admittedAtIso: expect.any(String),
         },
       ]);
+    }));
+
+  test('markSuperseded links old->new coherently and getSupersession resolves the new plan id', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+
+      await store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11);
+
+      const oldRecord = await store.getPlanRecord(PLAN_ID.r4_10);
+      const newRecord = await store.getPlanRecord(PLAN_ID.r4_11);
+      const supersession = await store.getSupersession(PLAN_ID.r4_10);
+
+      expect(oldRecord?.state).toBe('SUPERSEDED');
+      expect(newRecord?.supersedesPlanId).toBe(PLAN_ID.r4_10);
+      expect(supersession).toEqual({ supersededByPlanId: PLAN_ID.r4_11 });
+    }));
+
+  test('markSuperseded rejects missing superseder target', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+
+      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_missing)).rejects.toThrow(
+        'PLAN_RECORD_SUPERSEDER_NOT_FOUND'
+      );
+    }));
+
+  test('getPlanRecordByRef rejects mismatched PlanRef metadata', () =>
+    withStore(async (store) => {
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+
+      await expect(store.getPlanRecordByRef({ ...planRef, planVersion: '9.9' })).rejects.toThrow(
+        'PLAN_REF_MISMATCH'
+      );
+    }));
+
+  test('createPlanRecord rejects duplicate plan id instead of silently mutating', () =>
+    withStore(async (store) => {
+      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
+      const record = await store.getPlanRecordByRef(planRef);
+      if (!record) {
+        throw new Error('expected persisted plan record');
+      }
+
+      await expect(store.createPlanRecord(record)).rejects.toThrow('PLAN_RECORD_ALREADY_EXISTS');
     }));
 });
 
