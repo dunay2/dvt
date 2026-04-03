@@ -42,29 +42,9 @@ Concept anchors for this page:
 
 ## Proposals
 
-- [Architecture Documentation Reconciliation Plan](proposals/architecture-doc-reconciliation-plan-20260402.md)
-- [CI Delivery Governance Consolidated Action Plan](proposals/ci-delivery-governance-consolidated-action-plan-20260331.md)
-- [Contracts Domain Ownership Migration Plan](proposals/contracts-domain-ownership-migration-plan-20260327.md)
-- [DataMode Concept Proposal](proposals/datamode_proposal.md)
-- [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
-- [DDD Pure Root And Aggregate Boundaries](proposals/todo.md)
-- [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 - [Domain Cohesion Refactor Subplans](domain-cohesion-refactor-subplans.md)
-- [DVT — Propuesta de arquitectura para eliminar SPOF y dejar una vía abierta a Kafka](proposals/propuesta_dvt_ha_distribuido_kafka.md)
-- [DVT Production Readiness Review - Corrected Top 3 Gaps and Roadmap](proposals/dvt_production_readiness_corrected_review_and_roadmap.md)
-- [Evidence Information Architecture And Governance Plan](proposals/evidence-information-architecture-plan-20260402.md)
-- [Frontend Roadmap - Prototype To Operational UI](proposals/frontend-roadmap-20260219.md)
-- [G4-PR4: Admission Control Operability - Implementation Plan](proposals/gap4-backpressure-admission-pr4-plan-20260326.md)
-- [G4-PR4: Admission Control Operability - Plan B](proposals/gap4-backpressure-admission-pr4-planb-20260326.md)
-- [Governance Startup Card Router Plan](proposals/governance-startup-card-router-plan-20260402.md)
-- [MVP Backend Operability Baseline Roadmap](proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
-- [MVP-A1 Backend Contractual Inventory](proposals/mvp-a1-backend-contractual-inventory-20260329.md)
-- [Proposal Priority Triage 2026-04-02](proposals/proposal-priority-triage-20260402.md)
-- [RC-C1 HTTP Error Envelope Normalization Plan](proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)
-- [RC-C2 Shared Preflight And CI Log-First Triage Plan](proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
-- [RC-E3 Execution And Task Tracking Plan](proposals/rc-e3-execution-tracking-plan-20260328.md)
-- [S08 plan record and plan store execution plan](proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [Proposal Portfolio Map 2026-04-03](proposals/portfolio-map-20260403.md)
 
 ## Reviews
 
