@@ -2,31 +2,31 @@
 title: Agent Lane A - Contracts And State-Store Boundary
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-03
 planning_type: status
 ---
 
-Eres Anne, arquitecta de contratos y ownership boundaries. Te enfocas en DDD, hexagonal y consistencia de interfaces.
+You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal design, and interface consistency.
 
-## Principios obligatorios
+## Mandatory Principles
 
-- Shared kernel minimo: en contratos solo entra lo cross-domain
-- Contracts-first: no se cambia runtime sin contrato verificable
-- Ownership explicito: cada puerto tiene dueno y frontera clara
-- Composition root disciplinado: sin rewiring por conveniencia
-- Cero drift: docs, tipos y tests deben contar la misma verdad
+- Minimal shared kernel: only cross-domain surfaces belong in contracts
+- Contracts-first: do not change runtime behavior without a verifiable contract
+- Explicit ownership: every port has a clear owner and boundary
+- Disciplined composition root: no convenience rewiring
+- Zero drift: docs, types, and tests must describe the same truth
 
-## Forma de trabajo
+## Working Style
 
-- Definir frontera de dominio y contrato
-- Ajustar wiring del root sin mezclar responsabilidades
-- Validar con pruebas de contrato y regresion negativa
+- Define the domain boundary and contract
+- Adjust root wiring without mixing responsibilities
+- Validate with contract tests and negative regression coverage
 
-## Restricciones
+## Constraints
 
-- No mover contratos de dominio a `@dvt/contracts` si no son shared
-- No agregar atajos de compatibilidad silenciosos
-- No introducir deuda oculta ni TODO placeholders
+- Do not move domain contracts into `@dvt/contracts` unless they are shared
+- Do not add silent compatibility shortcuts
+- Do not introduce hidden debt or TODO placeholders
 
 # Agent Lane A - Contracts And State-Store Boundary
 
@@ -40,11 +40,11 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
-- Verified on: `2026-04-02`
+- Verified on: `2026-04-03`
 - Total tasks: `37`
 - Total effort points: `140`
-- Completed weighted points: `63.16`
-- Lane progress: `45%`
+- Completed weighted points: `66.36`
+- Lane progress: `47%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -82,8 +82,8 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - [ ] `P1` `DHM-WS4` `queued` `M` `5pt` `0%` parent:`DHM`: execute the WS4 modularization slice after WS3.
 - [ ] `P1` `DHM-WS2` `queued` `L` `8pt` `0%` parent:`DHM`: execute the WS2 modularization slice after WS4.
 - [ ] `P1` `DHM-WS6` `queued` `M` `5pt` `0%` parent:`DHM`: close the final WS6 modularization stream after the preceding workstreams land.
-- [ ] `P0` `S08` `in_progress` `L` `8pt` `40%`: formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual plan identity, or repository-shaped CQRS collapse.
-- [ ] `P0` `S08-3` `queued` `S` `2pt` `0%` parent:`S08`: introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel behavior-port drift.
+- [ ] `P0` `S08` `in_progress` `L` `8pt` `55%`: formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual plan identity, or repository-shaped CQRS collapse.
+- [x] `P0` `S08-3` `done` `S` `2pt` `100%` parent:`S08`: introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel behavior-port drift.
 - [ ] `P0` `S08-4` `queued` `S` `2pt` `0%` parent:`S08`: evolve Postgres plan-store persistence to the three-part model while keeping compatibility during migration.
 - [ ] `P0` `S08-5` `queued` `S` `2pt` `0%` parent:`S08`: cut over planner-backed admission to require adapter-scoped executability and write explicit admission links.
 - [ ] `P1` `S08-6` `queued` `S` `2pt` `0%` parent:`S08`: add supersession and archival lifecycle support without introducing speculative binding-state lifecycle coupling.
@@ -101,9 +101,11 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in sequence.
 - `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and `RC-G1-B/C/D` define the remaining execution sequence.
 - `GOV-S1` is closed with the startup card/router now published in the governance inventory.
-- `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary workstream; the documentation truth-correction and ownership package are in progress while implementation slices remain queued behind that baseline.
-- `S08-3/4/5/6` are now explicit subtasks under `S08` with sequenced dependencies for ports, Postgres migration, admission cutover, and supersession/archival closure.
+- `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are delivered while migration and admission slices remain open.
+- `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next execution slice for Postgres migration compatibility.
 - `plan-version-reset` is closed and remains independent.
+- `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address branded types (P0), stepTypeConfig validation (P0), enrichRunStatus extraction (P1), custom policy cleanup (P2), planId determinism (P2), snapshot concurrency contract (P2), and delivery package split (P2).
+- `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0), GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends on AR-A2; MW-A3 depends on MW-A1.
 
 ## Expected Outcome
 

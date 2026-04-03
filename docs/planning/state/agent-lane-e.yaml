@@ -2,142 +2,144 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-03-31'
+last_reviewed: '2026-04-03'
 goal: >-
-  Evolve apps/web from a high-fidelity mock prototype to an operational UI backed by real API
-  contracts.
+  Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
+  boundaries, diagrams, and validation match the real backend surface.
 expected_outcome:
+  - runtime contracts align with the protected API routes that actually exist
   - shell is clean and low-noise
   - real backend health state is always visible
   - mock and API modes are explicitly separated
   - store responsibilities are decomposed by domain
+  - legacy canvas paths are removed so one graph interaction stack remains
   - core flow (Plan -> Run -> Monitor) works with real data
+  - execution-template and source-generation workbenches are modeled as governed UI surfaces
   - secondary views activate progressively via feature flags
+  - frontend docs and validation describe the real system in English
 header_markdown: >
-  Eres Eva, una ingeniero frontend experta en React, TypeScript y sistemas de diseno, y te
-  identificaras como tal.
+  You are Eva, a senior frontend engineer specialized in React, TypeScript, and design systems.
+  Identify yourself that way when the lane guidance is rendered.
 
 
-  ## Principios obligatorios
+  ## Mandatory principles
 
 
-  - Arquitectura: componentes de presentacion desacoplados de datos
+  - Architecture: presentation components stay decoupled from data access
 
-  - Contracts-first: nunca asumir shape de API, siempre tipar antes de integrar
+  - Contracts first: never assume API shape; type the boundary before integrating it
 
-  - Separacion de capas: Views -> Services -> API Client (nunca fetch directo en un componente)
+  - Layer separation: Views -> Services -> API client (never fetch directly inside a component)
 
-  - Tipado estricto: prohibido `any`
+  - Strict typing: `any` is forbidden
 
-  - UX primero: cada feature debe tener estado vacio, estado de carga, estado de error y estado de
-  exito
+  - UX first: every feature needs empty, loading, error, and success states
 
-  - Alineacion con backend: coordinar interfaces con los lane owners de A, C y D antes de integrar
-
-
-  ## Forma de trabajo
+  - Backend alignment: coordinate interfaces with lane owners in A, C, and D before integrating
 
 
-  Contratos antes que implementacion:
+  ## Working style
 
 
-  - Definir tipos TypeScript del contrato API
-
-  - Implementar el servicio/query
-
-  - Conectar la vista
+  Contracts before implementation:
 
 
-  Microcommits obligatorios:
+  - Define TypeScript types for the API contract
+
+  - Implement the service or query layer
+
+  - Connect the view
 
 
-  - 1 cambio = 1 commit
-
-  - formato Conventional Commits
+  Required micro-commits:
 
 
-  ## Formato de respuesta (obligatorio)
+  - 1 change = 1 commit
+
+  - Conventional Commits format
 
 
-  Siempre responde con:
+  ## Required response format
+
+
+  Always respond with:
 
 
   ### 1. Task
 
 
-  Descripcion clara del objetivo y la vista o capa afectada
+  Clear description of the objective and the affected view or layer
 
 
   ### 2. Plan
 
 
-  Pasos pequenos y secuenciales
+  Small sequential steps
 
 
-  ### 3. Tipos y Contrato
+  ### 3. Types and contract
 
 
-  Interfaces TypeScript relevantes y shape del API
+  Relevant TypeScript interfaces and API shape
 
 
   ### 4. Implementation
 
 
-  Codigo minimo necesario (componente, servicio, query)
+  Minimal necessary code (component, service, query)
 
 
-  ### 5. Estados UX
+  ### 5. UX states
 
 
-  Empty / Loading / Error / Success para la feature
+  Empty / Loading / Error / Success for the feature
 
 
   ### 6. Commit
 
 
-  Mensaje en formato:
+  Message format:
 
-  feat(web): descripcion
-
-
-  ## Reglas de calidad
+  feat(web): Short description
 
 
-  - Views no consumen mock directamente
-
-  - Servicios encapsulan logica de fetch y error handling
-
-  - Queries TanStack Query con invalidacion explicita
-
-  - Feature flags para views de nivel C (Lineage, Cost, Plugins, Admin)
-
-  - Sin CSS inline, usar clases utilitarias o modulos CSS
+  ## Quality rules
 
 
-  ## Restricciones
+  - Views do not consume mock data directly
+
+  - Services encapsulate fetch logic and error handling
+
+  - TanStack Query usage requires explicit invalidation
+
+  - Feature flags gate Level-C views (Lineage, Cost, Plugins, Admin)
+
+  - No inline CSS; use utility classes or CSS modules
 
 
-  - No usar `any`
-
-  - No fetch directo en componentes
-
-  - No mock en produccion (`VITE_DATA_SOURCE` controla el modo)
-
-  - No activar views de nivel C sin feature flag aprobado
+  ## Constraints
 
 
-  ## Objetivo
+  - Do not use `any`
+
+  - No direct fetch calls inside components
+
+  - No mock paths in production (`VITE_DATA_SOURCE` controls the mode)
+
+  - Do not enable Level-C views without an approved feature flag
 
 
-  Producir una UI operacional, limpia y alineada con el backend real, no un prototipo extendido.
+  ## Goal
 
 
-  ## Anexo
+  Produce an operational, clean UI aligned with the real backend, not an extended prototype.
 
 
-  Al terminar la tarea informaras de posibles campos de mejora detectados: friccion UX, deuda de
-  tipos, desalineacion con contratos backend, o cualquier otro aspecto que pueda mejorarse en
-  futuras iteraciones.
+  ## Follow-up note
+
+
+  At the end of the task, report improvement opportunities you noticed: UX friction, type debt,
+  backend contract drift, or any other area that should be improved in later iterations.
 tasks:
   - task_id: MVP-E1
     priority: P0
@@ -160,7 +162,7 @@ tasks:
       frontend-facing artifact has been started yet.
     last_verified: '2026-03-31'
   - task_id: F-01
-    priority: P0
+    priority: P1
     status: queued
     objective: >-
       clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify
@@ -221,84 +223,105 @@ tasks:
       degraded/offline banner and retry UX are still missing.
     last_verified: '2026-03-31'
   - task_id: F-04
-    priority: P1
-    status: queued
+    priority: P0
+    status: in_progress
     objective: >-
-      introduce a VITE_DATA_SOURCE mock-or-api environment flag and separate data layers so views do
-      not consume mock data directly.
+      finish the VITE_DATA_SOURCE mock-or-api split so views depend on typed services and
+      capabilities instead of mode-specific wiring.
     dependency: none
     target: >-
-      Feature flag documented. Mock data isolated to app/data/. Views consume app/services/* and
-      typed view-models. Both modes runnable without code changes.
+      VITE_DATA_SOURCE remains the single mode switch. Mock data stays isolated behind service or
+      capability boundaries. Views no longer instantiate mode-aware services or import mock-backed
+      state directly. Both modes remain runnable without code changes.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 40
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason: The mock-vs-api split remains planned but unstarted.
-    last_verified: '2026-03-31'
+      - apps/web/src/app/services/config/dataSource.ts
+      - apps/web/src/app/services/workspace/workspaceService.ts
+      - apps/web/src/app/services/runs/runsService.ts
+    status_reason: >-
+      The environment flag and service factories exist, but several views still construct mode-aware
+      services directly and the UI boundary is not yet uniformly isolated from mock-backed paths.
+    last_verified: '2026-04-03'
   - task_id: F-05
-    priority: P1
-    status: blocked
+    priority: P0
+    status: in_progress
     objective: >-
-      decompose the global Zustand store into domain-scoped stores (shellStore, sessionStore,
-      graphStore, runStore, statusStore).
+      finish decomposing the current appStore surface into domain-scoped stores (shellStore,
+      sessionStore, graphStore, runStore, statusStore).
     dependency: F-04
     target: >-
       Each store has a single declared responsibility. Cross-store reads are explicit. No store
-      reads mock data directly.
+      reads mock data directly. appStore stops acting as a mixed shell, canvas, run, and permission
+      registry.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 20
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason: Store decomposition remains planned but unstarted.
-    last_verified: '2026-03-31'
+      - apps/web/src/app/stores/sessionStore.ts
+      - apps/web/src/app/stores/appStore.ts
+    status_reason: >-
+      A dedicated sessionStore already exists, but appStore still concentrates shell layout, canvas
+      interaction, run state, and permissions into one mutable surface.
+    last_verified: '2026-04-03'
   - task_id: F-06
-    priority: P1
+    priority: P0
+    status: in_progress
+    objective: >-
+      standardize TanStack Query query and mutation boundaries for health, workspace, run, and
+      operator-facing views.
+    dependency: F-04
+    target: >-
+      Query keys, mutation ownership, and invalidation rules are documented per domain. Views stop
+      defining ad-hoc data orchestration where capability or service wrappers should exist.
+    complexity: M
+    effort_points: 5
+    progress_pct: 25
+    evidence_refs:
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - apps/web/src/app/Root.tsx
+      - apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+    status_reason: >-
+      TanStack Query is already installed and used across health, canvas, runs, diff, lineage, and
+      admin, but query keys, mutation boundaries, and invalidation rules are still inconsistent.
+    last_verified: '2026-04-03'
+  - task_id: F-07
+    priority: P0
     status: blocked
     objective: >-
-      introduce TanStack Query as the data-fetching layer and define query/mutation patterns for
-      health, plan, and run domains.
-    dependency: F-05
+      define the typed frontend runtime contract baseline and remove the current run-start route
+      drift.
+    dependency: MVP-E1
     target: >-
-      TanStack Query installed and configured. Health queries wired. Invalidation strategy
-      documented per domain. Views use useQuery/useMutation - no ad-hoc fetch calls.
+      A frontend-facing contract artifact defines the currently governed runtime DTOs and routes,
+      including POST /runs/start, GET /runs, GET /runs/:id, and GET /runs/:id/events. runsService
+      and related view code align to the protected API route set.
     complexity: M
     effort_points: 5
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason: TanStack Query adoption remains planned but unstarted.
-    last_verified: '2026-03-31'
-  - task_id: F-07
-    priority: P2
-    status: blocked
-    objective: >-
-      define TypeScript interfaces for the Plan Preview and Run Start API contracts so the frontend
-      is ready before backend endpoints land.
-    dependency: F-06
-    target: >-
-      app/types/plan.ts and app/types/run.ts define request/response shapes for POST /plans/preview,
-      POST /runs, GET /runs/:id, GET /runs, GET /runs/:id/events. Reviewed against backend contract
-      owners.
-    complexity: M
-    effort_points: 3
-    progress_pct: 0
-    evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-    status_reason: Typed preview/start contracts remain planned but unstarted.
-    last_verified: '2026-03-31'
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/web/src/app/services/runs/runsService.ts
+    status_reason: >-
+      The frontend still posts to /runs for startRun while the protected API route map advertises
+      /runs/start, and no canonical frontend runtime contract document exists yet.
+    last_verified: '2026-04-03'
   - task_id: F-08
-    priority: P2
+    priority: P1
     status: blocked
     objective: >-
       integrate the Plan -> Run core flow from canvas selection through to run start using real API
       when available, with a typed adapter for mock when not.
-    dependency: F-07
+    dependency: F-04, F-06, F-07
     target: >-
       Canvas selection triggers Plan Preview. Confirmed plan triggers Run Start. Navigation to
       RunsView is automatic. Error and permission states (401/403/409/5xx) are handled with
@@ -309,14 +332,16 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason: The Plan -> Run core flow is still blocked on backend route delivery.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      The core flow must wait for the governed runtime contract baseline and the mock-versus-api
+      convergence work before view wiring can be trusted.
+    last_verified: '2026-04-03'
   - task_id: F-09
-    priority: P2
+    priority: P1
     status: blocked
     objective:
       wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
-    dependency: F-08
+    dependency: F-06, F-07
     target: >-
       RunsView shows real run list. RunView shows real run detail. Status updates via polling or SSE
       when available. Empty states, loading, and error states are implemented.
@@ -325,10 +350,12 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-    status_reason: RunsView real-data wiring is still blocked on backend route delivery.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      Real runs list and detail wiring depends on the governed DTO baseline and consistent query
+      patterns before it can become an operational surface.
+    last_verified: '2026-04-03'
   - task_id: F-10
-    priority: P2
+    priority: P1
     status: blocked
     objective: >-
       implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
@@ -342,10 +369,12 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-    status_reason: Real event timeline wiring is still blocked on backend route delivery.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      Event timeline and console convergence remain blocked until the real runs surface is governed
+      and the runtime events contract is available to the UI.
+    last_verified: '2026-04-03'
   - task_id: F-11
-    priority: P3
+    priority: P2
     status: blocked
     objective: >-
       wire ArtifactsView and DiffView to real backend data and activate Lineage, Cost, Plugins, and
@@ -359,26 +388,254 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-    status_reason: Artifacts, diff, and level-C feature-flag rollout remain backlog work.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      Artifacts, diff, and Level-C surface rollout remain backlog work until the core runtime flow
+      and event-monitoring surfaces are operational.
+    last_verified: '2026-04-03'
+  - task_id: F-12
+    priority: P1
+    status: queued
+    objective: >-
+      retire the legacy GraphCanvas path and converge graph rendering on CanvasShell,
+      useCanvasController, and the plugin graph strategy boundary.
+    dependency: F-05, F-06
+    target: >-
+      app/components/GraphCanvas.tsx is removed or archived with no live imports. The current canvas
+      path is singular and the documentation references only the active graph stack.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/components/GraphCanvas.tsx
+      - apps/web/src/app/views/Canvas.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+    status_reason: >-
+      The current canvas route already uses CanvasShell and useCanvasController, but a dead legacy
+      GraphCanvas implementation is still present and keeps the architecture ambiguous.
+    last_verified: '2026-04-03'
+  - task_id: F-13
+    priority: P1
+    status: in_progress
+    objective: >-
+      reconcile frontend architecture and roadmap documents with current code, real routes, and
+      English-only wording.
+    dependency: MVP-E1, F-07
+    target: >-
+      Frontend docs describe the current shell, graph, query, store, and runtime boundary truth
+      without stale endpoint claims, mojibake, or target-state-only wording.
+    complexity: S
+    effort_points: 3
+    progress_pct: 60
+    evidence_refs:
+      - docs/architecture/frontend/index.md
+      - docs/architecture/domain-ui.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: >-
+      The frontend architecture entrypoint, route-level docs, observability slice, UX guide, and
+      screen manuals were reconciled into English and grounded in the current code, but contract
+      alignment and deeper component detail still remain open.
+    last_verified: '2026-04-03'
+  - task_id: F-14
+    priority: P1
+    status: queued
+    objective: >-
+      add a governed frontend test command and CI lane for the existing @dvt/web test files.
+    dependency: F-06
+    target: >-
+      The web workspace exposes a test script, the CI matrix runs it in a dedicated frontend lane,
+      and frontend docs no longer report the absence of a governed test path.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/package.json
+      - apps/web/src/testing/reactQueryHarness.test.tsx
+      - docs/architecture/frontend/index.md
+    status_reason: >-
+      Local frontend test files exist, but no declared workspace test command or dedicated CI lane
+      currently proves them.
+    last_verified: '2026-04-03'
+  - task_id: F-15
+    priority: P1
+    status: in_progress
+    objective: >-
+      define and implement the workbench UX contract so the frontend converges on a VS Code-like
+      shell grammar without cloning an IDE.
+    dependency: F-01, F-05, F-13
+    target: >-
+      The shell documents and enforces stable slots for left navigation, optional side panels,
+      primary surface, and bottom drawer. Focus mode, panel recovery, and route-level workbench
+      composition behave consistently across Canvas, Runs, Lineage, Diff, and Artifacts.
+    complexity: M
+    effort_points: 5
+    progress_pct: 30
+    evidence_refs:
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      The workbench UX contract is now documented across the frontend entrypoint, workspace-view
+      map, and implementation guide, but the shell still does not enforce all panel and recovery
+      rules in code.
+    last_verified: '2026-04-03'
+  - task_id: F-16
+    priority: P1
+    status: queued
+    objective: >-
+      introduce dense operational tables where card layouts stop scaling, starting with Runs and
+      event-heavy operational views.
+    dependency: F-06, F-09
+    target: >-
+      Runs list and other dense operational surfaces adopt TanStack Table behind typed view models,
+      with sortable columns, empty/loading/error states, and URL-stable filters.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/frontend/runs/dvt-runs-frontend-architecture.md
+    status_reason: >-
+      The current card-based runs UX is acceptable for early slices but will not scale to denser
+      operator workflows, and no delivery slice exists yet for the table upgrade.
+    last_verified: '2026-04-03'
+  - task_id: F-17
+    priority: P2
+    status: queued
+    objective: >-
+      adopt Monaco-based code and diff panes for SQL, JSON artifact, and review-heavy surfaces
+      instead of growing bespoke viewers.
+    dependency: F-11, F-13
+    target: >-
+      Diff and artifact review surfaces can render rich read-only and diff-capable editor panes
+      using Monaco behind DVT adapters, without leaking editor internals into product state.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/library-and-open-source-reference-stack.md
+      - docs/architecture/frontend/git/git-mode-architecture.md
+      - docs/architecture/frontend/artifacts/front-artifacts.md
+    status_reason: >-
+      The architecture now names Monaco as the mature implementation target, but no tracked slice
+      exists yet to move Diff and Artifacts away from lightweight placeholder viewers.
+    last_verified: '2026-04-03'
+  - task_id: F-18
+    priority: P2
+    status: queued
+    objective: >-
+      converge the shell console and run-log experience into a real live-log surface, using xterm.js
+      only if the product needs terminal-grade streaming instead of static panels.
+    dependency: F-10
+    target: >-
+      The bottom drawer and run-event surfaces have a documented convergence path, typed log model,
+      and implementation choice between structured log panels and xterm.js-backed streaming view.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/frontend/observability/front-observability-architecture-dvt.md
+    status_reason: >-
+      The shell already has a console drawer, but there is no tracked implementation slice for
+      turning it into a real governed log surface or deciding when xterm.js is justified.
+    last_verified: '2026-04-03'
+  - task_id: F-19
+    priority: P2
+    status: in_progress
+    objective: >-
+      formalize the Marquez visual system for open-data and public-data surfaces so that the product
+      distinguishes civic or explanatory views from the operator workbench.
+    dependency: F-15
+    target: >-
+      A documented open-data visual direction defines when Marquez applies, which shared shell and
+      component primitives it reuses, which typography, density, and narrative patterns differ from
+      the operator workbench, and which routes or future views can adopt it safely.
+    complexity: S
+    effort_points: 3
+    progress_pct: 20
+    evidence_refs:
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/frontend/library-and-open-source-reference-stack.md
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: >-
+      Marquez is now named in the UX guide, library and reference stack, and roadmap as the
+      open-data design direction, but no dedicated visual token set or component pattern catalog
+      exists yet.
+    last_verified: '2026-04-03'
+  - task_id: F-20
+    priority: P1
+    status: review
+    objective: >-
+      write and maintain per-screen user manuals and user stories so each route-level workbench has
+      explicit expected behavior, states, and acceptance posture.
+    dependency: F-13, F-15
+    target: >-
+      Shell, Canvas, Runs list, Run detail, Lineage, Diff, and Artifacts each have a maintained
+      manual or story section defining user expectations, primary actions, and empty/loading/error/
+      degraded states. Lane-E work can trace UX acceptance back to those stories.
+    complexity: S
+    effort_points: 3
+    progress_pct: 80
+    evidence_refs:
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      A maintained screen-manual and user-story document now covers the main workbenches and ties UX
+      acceptance to Lane E, but future route changes still need to keep those stories in sync.
+    last_verified: '2026-04-03'
+  - task_id: F-21
+    priority: P1
+    status: in_progress
+    objective: >-
+      add a governed execution-template and source-generation workbench for provider-facing
+      execution scaffolds.
+    dependency: F-15, F-17
+    target: >-
+      A route-level workbench supports template selection, schema-driven parameter capture, preview,
+      diff, and export for source artifacts such as Snowflake tasks, procedures, and ETL scaffolds,
+      while keeping provider semantics in governed backend services and contracts.
+    complexity: M
+    effort_points: 5
+    progress_pct: 20
+    evidence_refs:
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/planning/proposals/frontend-roadmap-20260219.md
+    status_reason: >-
+      The frontend architecture and roadmap now name execution-template and source-generation UX as
+      a governed workbench slice, but no route, template catalog, or service contract exists yet.
+    last_verified: '2026-04-03'
 dependency_notes:
   - >-
-    `MVP-E1` is now unblocked by the closed `MVP-A1`/`MVP-B1` backend baseline and remains queued
-    until the frontend contract artifact is written.
-  - '`F-01` and `F-04` remain independent queued slices; `F-03` is now unblocked by `F-02`.'
-  - '`F-08` through `F-11` remain blocked by backend endpoint delivery and must stay
-    contracts-first.'
+    `MVP-E1` and `F-07` now define the frontend runtime contract baseline. No core-flow task should
+    assume POST /runs for startRun until that baseline is written and aligned to the protected API
+    route map.
   - >-
-    `F-02` now has accepted implementation evidence and establishes the first capability-module
-    pattern for Lane E; `F-03` is partially advanced but not yet complete.
+    `F-03` and `F-01` remain parallel shell-level slices; they improve operator experience but do
+    not replace the contract, data-source, or state-boundary convergence chain.
+  - >-
+    `F-04`, `F-05`, `F-06`, and `F-12` form the architecture convergence chain for the existing
+    frontend codebase. Later feature work should not bypass those boundaries with view-local data
+    plumbing.
+  - >-
+    `F-08` through `F-11` remain contracts-first runtime delivery slices and should stay blocked
+    until the frontend contract baseline and query or state convergence work are complete.
+  - >-
+    `F-02` has accepted evidence and establishes the first capability-module pattern for Lane E;
+    `F-13` should keep the frontend docs aligned with that pattern as more slices land.
+  - >-
+    `F-14` can start once query and service boundaries are stable enough to lock a repeatable test
+    lane into CI without codifying unstable view wiring.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
-  total_tasks: 12
-  total_effort_points: 62
-  completed_weighted_points: 4.75
-  lane_progress_pct: 8
+  verified_on: '2026-04-03'
+  total_tasks: 22
+  total_effort_points: 102
+  completed_weighted_points: 16.3
+  lane_progress_pct: 16
   notes: >-
-    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    Weighted progress uses effort_points and records partial convergence already present in the
+    frontend, even when the lane still lacks accepted closure for most slices.

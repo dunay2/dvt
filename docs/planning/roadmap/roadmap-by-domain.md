@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-03
 planning_type: proposal
 ---
 
@@ -20,15 +20,18 @@ flowchart LR
   R --> A[API And Admission]
   R --> P[Planner And Contracts]
   R --> L[Event Lifecycle And Retention]
+  R --> U[UI And Frontend]
   R --> D[Documentation Governance]
 
-  E --> E1[Gap 5 PR lanes]
-  E --> E2[G7 projector/runtime hardening]
-  A --> A1[Gap 4 PR1-PR5]
-  P --> P1[Planner target state]
+  E --> E1[Runtime hardening boards]
+  E --> E2[Execution model cleanup]
+  A --> A1[Admission and query hardening]
+  P --> P1[Plan record and contract model]
   P --> P2[Stage 1.1 canonicalization]
   L --> L1[Archival and restore]
   L --> L2[Retention and purge controls]
+  U --> U1[Contract and data-boundary convergence]
+  U --> U2[Operational run-monitoring flow]
   D --> D1[Doc governance checks]
   D --> D2[Index and taxonomy maintenance]
 ```
@@ -36,40 +39,46 @@ flowchart LR
 ## Sequencing By Lane
 
 - `Execution Runtime`
-  Current sources: [Gap 5 Executive Roadmap](gap-5-executive-delivery-roadmap-20260319.md),
-  [G5 Tracker](../gaps/G5-AI-EXECUTION-TRACKER.md)
+  Current sources: [Execution Runtime domain view](../domains/execution-runtime.md),
+  [Review Remediation Roadmap 2026-04-02](review-remediation-roadmap-20260402.md)
   Near-term target: close residual runtime and hardening slices with
   evidence-backed closeouts.
 - `API and Admission`
-  Current sources: [Gap 4 PR Set](../proposals/gap4-backpressure-admission-design-20260319.md)
+  Current sources: [API and Admission domain view](../domains/api-and-admission.md),
+  [RC-C1 HTTP Error Envelope Normalization Plan](../proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md)
   Near-term target: deliver admission/backpressure sequence with rollout
   observability.
 - `Planner and Contracts`
-  Current sources: [Planner Target State Roadmap](../proposals/planner-target-state-roadmap-20260320.md),
+  Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
   [Planner Assessment](../status/planner-current-state-assessment-20260320.md)
   Near-term target: stage compatibility, policy vocabulary, and contract
   evolution hardening.
 - `Event Lifecycle and Retention`
-  Current sources: [Gap 5 Lifecycle Design](../proposals/gap-5-event-lifecycle-and-archival-design-20260319.md),
-  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
+  Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
+  [Review Remediation Roadmap 2026-04-02](review-remediation-roadmap-20260402.md)
   Near-term target: retention, archival, restore, and purge controls aligned
   with ADR-backed policy.
+- `UI and Frontend`
+  Current sources: [Frontend Architecture](../../architecture/frontend/index.md),
+  [UI / Visualization Domain](../../architecture/domain-ui.md),
+  [Frontend Roadmap - Prototype To Operational UI](../proposals/frontend-roadmap-20260219.md)
+  Near-term target: converge Lane E on contract truth, mock-versus-api
+  boundaries, state and query cleanup, and a real Plan -> Run -> Monitor path.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
-  [Docs Proposal Set](../proposals/repository-governance-proposal-set-20260317.md)
-  Near-term target: keep planning map coherent and reduce navigation friction
-  by domain.
+  [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/architecture-doc-reconciliation-plan-20260402.md)
+  Near-term target: keep the planning map coherent and reduce navigation
+  friction by domain.
 
 ## Related Diagrams
 
 - [Execution Workboard](../state/execution-workboard.md)
+- [Open Task Route](../state/open-task-route.md)
+- [Review Sprint Critical Path 2026-04](diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](diagrams/planning-domain-map.md)
-- [Gap Execution Dependency Graph](diagrams/gap-execution-dependency-graph.md)
-- [Gap Execution Parallel Lanes](diagrams/gap-execution-parallel-lanes.md)
 - [Execution Runtime Architecture Delta](diagrams/execution-runtime-architecture-delta.md)
 - [API and Admission Architecture Delta](diagrams/api-admission-architecture-delta.md)
 - [Planner and Contracts Architecture Delta](diagrams/planner-contracts-architecture-delta.md)
 - [Event Lifecycle and Retention Architecture Delta](diagrams/event-lifecycle-retention-architecture-delta.md)
 - [Documentation Governance Architecture Delta](diagrams/documentation-governance-architecture-delta.md)
-- [Gap Execution Route](../state/gap-execution-route.md)
 - [Execution Model Index](../execution-model/index.md)

@@ -1,5 +1,29 @@
 # Changelog
 
+## [5.7.0](https://github.com/dunay2/dvt/compare/v5.6.0...v5.7.0) (2026-04-03)
+
+
+### Features
+
+* **adapters:** Add artifacts-owned S08 plan-store read-write ports ([#745](https://github.com/dunay2/dvt/issues/745)) ([6ae354a](https://github.com/dunay2/dvt/commit/6ae354ad5a91c7e1c2129564bec05c08d4b6c877))
+
+## [5.6.0](https://github.com/dunay2/dvt/compare/v5.5.0...v5.6.0) (2026-04-02)
+
+
+### Features
+
+* **ci:** Add shared preflight and PR log triage ([#729](https://github.com/dunay2/dvt/issues/729)) ([bdc4cd4](https://github.com/dunay2/dvt/commit/bdc4cd4a49d9e0452179e2e613ff2d348f3d7069))
+* **web:** Add backend health banner and retry flow ([#739](https://github.com/dunay2/dvt/issues/739)) ([e3488c8](https://github.com/dunay2/dvt/commit/e3488c834ba8d14c9b698328ccd84718a7180501))
+* **web:** Add shell health banner with retry countdown ([#740](https://github.com/dunay2/dvt/issues/740)) ([63688dd](https://github.com/dunay2/dvt/commit/63688ddde28823bd1f66ff68ca428dac8f802ebb))
+
+
+### Bug Fixes
+
+* **adapters:** Harden snapshot retry errors and fallback polling cadence ([#736](https://github.com/dunay2/dvt/issues/736)) ([cd84eef](https://github.com/dunay2/dvt/commit/cd84eefcddf4215ab452f6d7916fc92b4a4ec39c))
+* **contracts:** Harden S08 plan-store contract boundaries ([#741](https://github.com/dunay2/dvt/issues/741)) ([582312d](https://github.com/dunay2/dvt/commit/582312d23c373096870be944a191fb1561e17687))
+* **docs:** Fix docs sync drift at source ([#733](https://github.com/dunay2/dvt/issues/733)) ([4734154](https://github.com/dunay2/dvt/commit/47341545560a41f5af1478ac799e90e81617e8ac))
+* **engine:** Harden run-event envelope payloadVersion gating ([#734](https://github.com/dunay2/dvt/issues/734)) ([3e660d5](https://github.com/dunay2/dvt/commit/3e660d52186660a531dd316f4042aeffa807f3e3))
+
 ## [5.5.0](https://github.com/dunay2/dvt/compare/v5.4.6...v5.5.0) (2026-04-01)
 
 
