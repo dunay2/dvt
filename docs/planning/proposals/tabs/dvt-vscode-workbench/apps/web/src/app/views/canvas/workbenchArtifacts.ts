@@ -42,7 +42,8 @@ models:
       kind: ${JSON.stringify(node.kind)}
 `;
 
-  const usesYaml = node.path?.endsWith('.yml') || node.path?.endsWith('.yaml') || node.kind.includes(':source');
+  const usesYaml =
+    node.path?.endsWith('.yml') || node.path?.endsWith('.yaml') || node.kind.includes(':source');
 
   return {
     id: `node:${node.id}:${usesYaml ? 'yaml' : 'sql'}`,
@@ -98,7 +99,10 @@ from ${node.name};`,
   };
 }
 
-export function buildManifestArtifact(nodes: CanonicalNode[], edges: CanonicalEdge[]): ArtifactTabDescriptor {
+export function buildManifestArtifact(
+  nodes: CanonicalNode[],
+  edges: CanonicalEdge[]
+): ArtifactTabDescriptor {
   return {
     title: 'manifest.json',
     path: 'target/manifest.json',
@@ -161,7 +165,10 @@ export function buildCatalogArtifact(nodes: CanonicalNode[]): ArtifactTabDescrip
   };
 }
 
-export function buildRunResultsArtifact(nodes: CanonicalNode[], activeRunId: string | null): ArtifactTabDescriptor {
+export function buildRunResultsArtifact(
+  nodes: CanonicalNode[],
+  activeRunId: string | null
+): ArtifactTabDescriptor {
   return {
     title: 'run_results.json',
     path: 'target/run_results.json',
@@ -200,13 +207,21 @@ export function buildPlanArtifact(plan: ExecutionPlan | null): ArtifactTabDescri
   };
 }
 
-export function buildRunLog(activeRunId: string | null, nodes: CanonicalNode[]): ArtifactTabDescriptor {
+export function buildRunLog(
+  activeRunId: string | null,
+  nodes: CanonicalNode[]
+): ArtifactTabDescriptor {
   const lines = [
     `[${new Date().toISOString()}] boot workbench`,
-    activeRunId ? `[${new Date().toISOString()}] active run: ${activeRunId}` : '[idle] no active run',
+    activeRunId
+      ? `[${new Date().toISOString()}] active run: ${activeRunId}`
+      : '[idle] no active run',
     ...nodes
       .slice(0, 12)
-      .map((node, index) => `[step ${index + 1}] ${node.name} status=${node.status} duration=${node.lastDuration ?? 'n/a'}`),
+      .map(
+        (node, index) =>
+          `[step ${index + 1}] ${node.name} status=${node.status} duration=${node.lastDuration ?? 'n/a'}`
+      ),
   ];
 
   return {

@@ -32,11 +32,7 @@ export default function WorkbenchStatusBar({
           {gitBranch}@{gitSha}
         </span>
 
-        {selectedNode ? (
-          <span className="truncate">
-            node: {selectedNode.name}
-          </span>
-        ) : null}
+        {selectedNode ? <span className="truncate">node: {selectedNode.name}</span> : null}
 
         {activeRunId ? (
           <span className="flex items-center gap-1.5">

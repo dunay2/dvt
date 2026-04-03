@@ -1,4 +1,8 @@
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../components/ui/resizable';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '../../components/ui/resizable';
 import InspectorPanel from '../../components/InspectorPanel';
 import type { CanonicalNode } from '../../types/canonical';
 import CanvasToolbar from './CanvasToolbar';
@@ -17,10 +21,7 @@ import {
   buildRunLog,
   buildRunResultsArtifact,
 } from './workbenchArtifacts';
-import {
-  DEFAULT_GRAPH_TAB,
-  useCanvasWorkbenchStore,
-} from './workbenchStore';
+import { DEFAULT_GRAPH_TAB, useCanvasWorkbenchStore } from './workbenchStore';
 import type { EditorTab, PaletteItem } from './workbenchTypes';
 import type { useCanvasController } from './useCanvasController';
 import { useEffect, useMemo } from 'react';
@@ -37,15 +38,21 @@ function breadcrumbParts(activeTab: EditorTab | null): string[] {
   return activeTab.path.split('/').filter(Boolean);
 }
 
-function tabFromArtifact(artifactId: 'manifest' | 'catalog' | 'plan' | 'run_results' | 'run_log', controller: ReturnType<typeof useCanvasController>): EditorTab {
+function tabFromArtifact(
+  artifactId: 'manifest' | 'catalog' | 'plan' | 'run_results' | 'run_log',
+  controller: ReturnType<typeof useCanvasController>
+): EditorTab {
   switch (artifactId) {
     case 'manifest': {
-      const artifact = buildManifestArtifact(controller.explorerNodes, controller.edges.map((edge) => ({
-        id: edge.id,
-        sourceId: edge.source,
-        targetId: edge.target,
-        relation: 'lineage',
-      })));
+      const artifact = buildManifestArtifact(
+        controller.explorerNodes,
+        controller.edges.map((edge) => ({
+          id: edge.id,
+          sourceId: edge.source,
+          targetId: edge.target,
+          relation: 'lineage',
+        }))
+      );
       return {
         id: 'artifact:manifest',
         title: artifact.title,
@@ -357,7 +364,9 @@ export default function CanvasWorkbench({ controller }: CanvasWorkbenchProps) {
 
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      const primaryModifier = navigator.platform.toLowerCase().includes('mac') ? event.metaKey : event.ctrlKey;
+      const primaryModifier = navigator.platform.toLowerCase().includes('mac')
+        ? event.metaKey
+        : event.ctrlKey;
       if (!primaryModifier) {
         return;
       }

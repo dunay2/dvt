@@ -84,7 +84,10 @@ export default function CommandPalette({
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-12" onClick={onClose}>
+    <div
+      className="absolute inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-12"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-3xl overflow-hidden rounded-lg border border-[#3a3d41] bg-[#252526] shadow-2xl"
         onClick={(event) => {
@@ -133,7 +136,9 @@ export default function CommandPalette({
                   <span className="min-w-0">
                     <span className="block truncate text-sm text-[#d4d4d4]">{item.label}</span>
                     {item.description ? (
-                      <span className="block truncate text-xs text-[#8b949e]">{item.description}</span>
+                      <span className="block truncate text-xs text-[#8b949e]">
+                        {item.description}
+                      </span>
                     ) : null}
                   </span>
 

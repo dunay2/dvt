@@ -26,7 +26,12 @@ function getIcon(tab: EditorTab) {
   }
 }
 
-export default function WorkbenchTabs({ tabs, activeTabId, onActivate, onClose }: WorkbenchTabsProps) {
+export default function WorkbenchTabs({
+  tabs,
+  activeTabId,
+  onActivate,
+  onClose,
+}: WorkbenchTabsProps) {
   return (
     <div className="flex h-9 items-end overflow-x-auto border-b border-[#2a2d2e] bg-[#2d2d2d]">
       {tabs.map((tab) => {
@@ -38,7 +43,9 @@ export default function WorkbenchTabs({ tabs, activeTabId, onActivate, onClose }
             key={tab.id}
             className={[
               'group flex h-9 shrink-0 items-center gap-2 border-r border-[#252526] px-3 text-xs',
-              isActive ? 'bg-[#1e1e1e] text-[#ffffff]' : 'bg-[#2d2d2d] text-[#bbbbbb] hover:bg-[#323233]',
+              isActive
+                ? 'bg-[#1e1e1e] text-[#ffffff]'
+                : 'bg-[#2d2d2d] text-[#bbbbbb] hover:bg-[#323233]',
             ].join(' ')}
           >
             <button

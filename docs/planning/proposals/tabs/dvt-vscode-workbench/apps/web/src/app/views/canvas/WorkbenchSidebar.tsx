@@ -39,7 +39,13 @@ const SECTION_BUTTONS: Array<{ id: SidebarSection; label: string; icon: typeof F
 ];
 
 function groupLabel(kind: string): string {
-  return kind.split(':').at(-1)?.replace(/_/g, ' ')?.replace(/\b\w/g, (value) => value.toUpperCase()) ?? kind;
+  return (
+    kind
+      .split(':')
+      .at(-1)
+      ?.replace(/_/g, ' ')
+      ?.replace(/\b\w/g, (value) => value.toUpperCase()) ?? kind
+  );
 }
 
 function statusDot(status: CanonicalNode['status']): string {
@@ -73,12 +79,13 @@ export default function WorkbenchSidebar({
   artifactButtons,
 }: WorkbenchSidebarProps) {
   const groupedNodes = useMemo(() => {
-    const filtered = activeSection === 'search'
-      ? nodes.filter((node) => {
-          const haystack = `${node.name} ${node.path ?? ''} ${node.tags.join(' ')}`.toLowerCase();
-          return haystack.includes(searchText.trim().toLowerCase());
-        })
-      : nodes;
+    const filtered =
+      activeSection === 'search'
+        ? nodes.filter((node) => {
+            const haystack = `${node.name} ${node.path ?? ''} ${node.tags.join(' ')}`.toLowerCase();
+            return haystack.includes(searchText.trim().toLowerCase());
+          })
+        : nodes;
 
     const groups = new Map<string, CanonicalNode[]>();
     filtered.forEach((node) => {
@@ -106,7 +113,9 @@ export default function WorkbenchSidebar({
               }}
               className={[
                 'flex size-9 items-center justify-center rounded-md transition-colors',
-                isActive ? 'bg-[#094771] text-white' : 'text-[#b3b3b3] hover:bg-[#2a2d2e] hover:text-white',
+                isActive
+                  ? 'bg-[#094771] text-white'
+                  : 'text-[#b3b3b3] hover:bg-[#2a2d2e] hover:text-white',
               ].join(' ')}
               title={section.label}
             >
@@ -118,9 +127,13 @@ export default function WorkbenchSidebar({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex h-9 items-center justify-between border-b border-[#2a2d2e] px-3">
-          <span className="text-[11px] uppercase tracking-[0.08em] text-[#bbbbbb]">{activeSection}</span>
+          <span className="text-[11px] uppercase tracking-[0.08em] text-[#bbbbbb]">
+            {activeSection}
+          </span>
           {activeSection === 'search' ? (
-            <span className="text-[11px] text-[#8b949e]">{groupedNodes.reduce((sum, [, bucket]) => sum + bucket.length, 0)} hits</span>
+            <span className="text-[11px] text-[#8b949e]">
+              {groupedNodes.reduce((sum, [, bucket]) => sum + bucket.length, 0)} hits
+            </span>
           ) : null}
         </div>
 
@@ -165,7 +178,9 @@ export default function WorkbenchSidebar({
 
             {selectedNode ? (
               <div className="mt-4 border-t border-[#2a2d2e] pt-4">
-                <div className="mb-2 text-[11px] uppercase tracking-[0.08em] text-[#bbbbbb]">Selected node</div>
+                <div className="mb-2 text-[11px] uppercase tracking-[0.08em] text-[#bbbbbb]">
+                  Selected node
+                </div>
 
                 <div className="space-y-2">
                   <button
@@ -201,7 +216,9 @@ export default function WorkbenchSidebar({
               <div className="space-y-4">
                 <div>
                   <div className="text-sm font-medium text-white">{selectedNode.name}</div>
-                  <div className="mt-1 text-xs text-[#8b949e]">{selectedNode.path ?? 'No path'}</div>
+                  <div className="mt-1 text-xs text-[#8b949e]">
+                    {selectedNode.path ?? 'No path'}
+                  </div>
                 </div>
 
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
@@ -262,14 +279,18 @@ export default function WorkbenchSidebar({
                       }}
                       className={[
                         'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm',
-                        selectedNode?.id === node.id ? 'bg-[#094771] text-white' : 'hover:bg-[#2a2d2e]',
+                        selectedNode?.id === node.id
+                          ? 'bg-[#094771] text-white'
+                          : 'hover:bg-[#2a2d2e]',
                       ].join(' ')}
                       title={node.path ?? node.name}
                     >
                       <span className={`size-2 rounded-full ${statusDot(node.status)}`} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate">{node.name}</span>
-                        <span className="block truncate text-xs text-[#8b949e]">{node.path ?? kind}</span>
+                        <span className="block truncate text-xs text-[#8b949e]">
+                          {node.path ?? kind}
+                        </span>
                       </span>
                     </button>
                   ))}

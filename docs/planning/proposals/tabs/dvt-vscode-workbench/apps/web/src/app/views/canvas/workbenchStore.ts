@@ -87,7 +87,9 @@ export const useCanvasWorkbenchStore = create<CanvasWorkbenchState>((set) => ({
 
       const nextTabs = withGraphTab(state.openTabs.filter((tab) => tab.id !== tabId));
       const nextActiveTabId =
-        state.activeTabId === tabId ? (nextTabs.at(-1)?.id ?? DEFAULT_GRAPH_TAB.id) : state.activeTabId;
+        state.activeTabId === tabId
+          ? (nextTabs.at(-1)?.id ?? DEFAULT_GRAPH_TAB.id)
+          : state.activeTabId;
 
       return {
         openTabs: nextTabs,
