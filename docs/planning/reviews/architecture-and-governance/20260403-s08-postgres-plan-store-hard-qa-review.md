@@ -60,9 +60,9 @@ current state.
 - `S08-HQA-05` remains open: lineage columns
   (`derived_from_plan_id` / `supersedes_plan_id`) still have no FK-level
   referential integrity.
-- `S08-HQA-07` remains open: `PostgresPlanStore` still carries too many
-  responsibilities for ADR-0039 target SRP posture, although transaction and
-  schema concerns have already been extracted into dedicated components.
+- `S08-HQA-07` is partially closed: transaction/schema/repository concerns have
+  been extracted, but executable-blob persistence and lifecycle facade remain
+  in `PostgresPlanStore` and still need final decomposition.
 - `S08-HQA-09` remains open: highest-value integration tests still depend on
   `DVT_PG_INTEGRATION=1` and are not always-on in default local runs.
 
@@ -452,7 +452,12 @@ Code references:
 ```mermaid
 flowchart LR
   subgraph Current[Current implementation]
-    C1[PostgresPlanStore]
+    C1[PostgresPlanStore Facade]
+    C2[SchemaManager]
+    C3[TxRunner]
+    C4[PlanRecordRepository]
+    C5[PlanExecutabilityRepository]
+    C6[PlanAdmissionRepository]
   end
 
   subgraph Target[Published target]
@@ -465,13 +470,13 @@ flowchart LR
     T7[Composer]
   end
 
-  C1 -. owns all .-> T1
-  C1 -. owns all .-> T2
-  C1 -. owns all .-> T3
-  C1 -. owns all .-> T4
-  C1 -. owns all .-> T5
-  C1 -. owns all .-> T6
-  C1 -. owns all .-> T7
+  C2 --> T1
+  C3 --> T7
+  C4 --> T2
+  C5 --> T3
+  C6 --> T4
+  C1 -. pending .-> T5
+  C1 -. pending .-> T6
 ```
 
 ## Recommended remediation order
@@ -536,8 +541,7 @@ Required after any fix slice that follows from this review:
 
 This slice is **merge-green but not architecture-closed**.
 
-The new three-part model is present and usable, but the current adapter is
-still a transitional monolith with one blocking correctness defect
-(`S08-HQA-01`) and several high-severity integrity drifts. `S08` should remain
-`in_progress` until the supersession semantics, immutable create semantics,
-row-integrity behavior, and SRP decomposition are corrected.
+The new three-part model is present and usable, and the main correctness drifts
+(`S08-HQA-01` to `S08-HQA-04`) are now closed in code. Remaining closure work
+is focused on FK-level lineage hardening, final blob/facade decomposition, and
+integration-test posture (`S08-HQA-05`, `S08-HQA-07` partial, `S08-HQA-09`).

@@ -36,7 +36,7 @@ sequenceDiagram
   Store-->>Planner: PlanRef
 
   Planner->>Store: markValid(planRef) or markInvalid(planRef, report)
-  Store->>DB: transition validation + upsert executability
+  Store->>DB: transition validation state
   DB-->>Store: state updated
 ```
 
@@ -107,8 +107,8 @@ stateDiagram-v2
 ## Current limitations to keep in mind
 
 1. Lineage fields in `plan_records` are not FK-constrained yet.
-2. SRP decomposition is in progress (`TxRunner` and `SchemaManager` extracted),
-   but repository-level split is still pending.
+2. Executable-blob persistence/fetch still belongs to the lifecycle facade and
+   has not been moved to a dedicated blob repository yet.
 
 ## Safe usage checklist
 

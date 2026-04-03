@@ -65,7 +65,10 @@ Composition now delegates infrastructure responsibilities:
 
 - `PostgresPlanStoreTxRunner` owns connection/transaction execution policy.
 - `PostgresPlanStoreSchemaManager` owns schema creation and backfill/reconcile.
-- `PostgresPlanStore` remains the application-facing adapter/facade.
+- `PostgresPlanRecordRepository` owns `plan_records` reads/writes/lineage checks.
+- `PostgresPlanExecutabilityRepository` owns `plan_executability_records`.
+- `PostgresPlanAdmissionRepository` owns `plan_admission_links`.
+- `PostgresPlanStore` remains the application-facing lifecycle/fetch facade.
 
 ## Current data model
 
@@ -147,9 +150,8 @@ erDiagram
 
 1. Lineage FK integrity remains partially soft:
    `derived_from_plan_id` and `supersedes_plan_id` are not FK-constrained.
-2. Repository split is still partial:
-   plan-record/executability/admission behavior is still concentrated in
-   `PostgresPlanStore` instead of dedicated repository classes.
+2. Executable-blob persistence/fetch still lives in `PostgresPlanStore`; the
+   dedicated blob repository extraction is still pending.
 3. Integration-heavy test paths still rely on `DVT_PG_INTEGRATION=1`.
 
 ## Validation and diagnostics
@@ -176,8 +178,9 @@ flowchart TD
   A[Initial monolith]
   B[Extract PostgresTxRunner - done]
   C[Extract PostgresPlanStoreSchemaManager - done]
-  D[Extract repositories: PlanRecord, Executability, Admission, Blob - pending]
-  E[Wire PostgresPlanStoreComposer - pending]
+  D[Extract repositories: PlanRecord, Executability, Admission - done]
+  E[Extract executable blob repository - pending]
+  F[Wire PostgresPlanStoreComposer - pending]
 
-  A --> B --> C --> D --> E
+  A --> B --> C --> D --> E --> F
 ```
