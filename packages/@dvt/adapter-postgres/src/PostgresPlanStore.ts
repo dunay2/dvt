@@ -432,12 +432,12 @@ export class PostgresPlanStore
           UPDATE ${quoteIdentifier(this.schema)}.plan_records
           SET supersedes_plan_id = COALESCE(supersedes_plan_id, $2),
               updated_at = NOW()
-          WHERE plan_id = $1
+          WHERE plan_id = $1 AND state = 'ACTIVE'
         `,
         [supersededByPlanId, planId]
       );
       if (superseder.rowCount === 0) {
-        throw new Error(`PLAN_RECORD_SUPERSEDER_NOT_FOUND: ${supersededByPlanId}`);
+        throw new Error(`PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND: ${supersededByPlanId}`);
       }
     });
   }

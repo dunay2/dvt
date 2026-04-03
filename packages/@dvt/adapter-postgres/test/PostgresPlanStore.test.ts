@@ -306,7 +306,41 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
 
       await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_missing)).rejects.toThrow(
-        'PLAN_RECORD_SUPERSEDER_NOT_FOUND'
+        'PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND'
+      );
+    }));
+
+  test('markSuperseded rejects self supersession', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+
+      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_10)).rejects.toThrow(
+        'PLAN_RECORD_INVALID_SUPERSESSION_SELF'
+      );
+    }));
+
+  test('archivePlan marks record as ARCHIVED with archivedAtIso', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+
+      await store.archivePlan(PLAN_ID.r4_11, NOW);
+
+      const record = await store.getPlanRecord(PLAN_ID.r4_11);
+      expect(record).toMatchObject({
+        planId: PLAN_ID.r4_11,
+        state: 'ARCHIVED',
+        archivedAtIso: expect.any(String),
+      });
+    }));
+
+  test('markSuperseded rejects non-active superseder target', () =>
+    withStore(async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+      await store.archivePlan(PLAN_ID.r4_11, NOW);
+
+      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11)).rejects.toThrow(
+        'PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND'
       );
     }));
 
