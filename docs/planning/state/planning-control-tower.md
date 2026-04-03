@@ -2,7 +2,7 @@
 title: Planning Control Tower
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: operational
 ---
 
@@ -10,40 +10,54 @@ planning_type: operational
 
 Single operational entry point for all planning documentation.
 
-Use this page first when a task affects planning, roadmap, gaps, proposals,
-reviews, or closeouts.
+Use this page first when a task affects planning, roadmap, proposals, reviews,
+or closeouts.
 
 ## Mandatory Update Map By Task Type
 
-| If the task does this                                         | Update these documents                                                                                                                                                                                                      |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Starts, re-scopes, or changes an active work item             | [Execution Workboard](execution-workboard.md)                                                                                                                                                                               |
-| Changes sequencing, dependencies, blockers, or parallel lanes | [Gap Execution Route](gap-execution-route.md), [Gap Execution Dependency Graph](../roadmap/diagrams/gap-execution-dependency-graph.md), [Gap Execution Parallel Lanes](../roadmap/diagrams/gap-execution-parallel-lanes.md) |
-| Changes domain priorities or active objective focus           | [Domain Status Board](domain-status-board.md), [Roadmap by Domain](../roadmap/roadmap-by-domain.md)                                                                                                                         |
-| Introduces or updates a plan/proposal                         | corresponding file under `docs/planning/proposals/` and its linked work item in [Execution Workboard](execution-workboard.md)                                                                                               |
-| Produces review findings that require execution               | corresponding file under `docs/planning/reviews/` and the `Review Intake To Workboard` section in [Execution Workboard](execution-workboard.md)                                                                             |
-| Closes implementation work                                    | corresponding file under `docs/planning/closeouts/`, status in [Execution Workboard](execution-workboard.md), and canonical status surfaces if closure changes posture                                                      |
-| Changes roadmap classification or canonical roadmap posture   | [Roadmap Of Record](../roadmap/index.md)                                                                                                                                                                                    |
-| Changes official gap posture                                  | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md), [Gap Execution Status](gap-execution-status.md), [System Delivery Status](../../architecture/system-delivery-status.md)                                              |
+- Starts, re-scopes, or changes an active work item:
+  update [Execution Workboard](execution-workboard.md).
+- Changes sequencing, dependencies, blockers, or parallel lanes:
+  update [Roadmap Of Record](../roadmap/index.md),
+  [Roadmap By Domain](../roadmap/roadmap-by-domain.md),
+  [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md),
+  and [Execution Workboard](execution-workboard.md).
+- Changes domain priorities or active objective focus:
+  update [Domain Status Board](domain-status-board.md) and
+  [Roadmap By Domain](../roadmap/roadmap-by-domain.md).
+- Introduces or updates a plan/proposal:
+  update the corresponding file under `docs/planning/proposals/` and its linked
+  work item in [Execution Workboard](execution-workboard.md).
+- Produces review findings that require execution:
+  update the corresponding file under `docs/planning/reviews/` and the `Review
+Intake To Workboard` section in [Execution Workboard](execution-workboard.md).
+- Closes implementation work:
+  update the corresponding file under `docs/planning/closeouts/`, the status in
+  [Execution Workboard](execution-workboard.md), and any canonical status
+  surfaces whose posture changed.
+- Changes roadmap classification or canonical roadmap posture:
+  update [Roadmap Of Record](../roadmap/index.md).
+- Retires or supersedes a planning construct:
+  update the affected active surfaces,
+  [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md),
+  and [System Delivery Status](../../architecture/system-delivery-status.md).
 
-## Gap Versus Slice Rule
+## Legacy Gap Program Rule
 
-- `G1..G10` means canonical execution gaps (authority:
-  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)).
-- IDs like `G4-PRx` and `G5-PRx` are proposal slices and execution lanes, not a
-  change of canonical gap closure state.
-- If a canonical gap is reopened, it must be updated first in
-  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) and then synchronized to
-  [Gap Execution Status](gap-execution-status.md) and
-  [System Delivery Status](../../architecture/system-delivery-status.md).
+- `G1` through `G10` are retired identifiers from a closed planning program.
+- Do not use legacy gap IDs as active work IDs, roadmap lanes, or current
+  authority references.
+- Express live work as sprint boards, proposal slices, review intake items, or
+  lane `task_id` entries.
+- If a historical gap document is still cited, treat it as archive-only context
+  and route active truth through current status, roadmap, and workboard docs.
 
 ## Canonical Planning Navigation
 
 - Strategy and classification: [Roadmap Of Record](../roadmap/index.md)
-- Cross-domain roadmap view: [Roadmap by Domain](../roadmap/roadmap-by-domain.md)
+- Cross-domain roadmap view: [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
+- Task triage: [Open Task Route](open-task-route.md)
 - Task execution tracking: [Execution Workboard](execution-workboard.md)
-- Dependency and blockers route: [Gap Execution Route](gap-execution-route.md)
-- Gap authority: [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
 - Domain views: [Planning Domains](../domains/index.md)
 - Proposals: [Planning Proposals](../proposals/index.md)
 - Reviews: [Planning Reviews](../reviews/index.md)
@@ -68,8 +82,7 @@ reviews, or closeouts.
 
 1. [Open Task Route](open-task-route.md)
 2. [Execution Workboard](execution-workboard.md)
-3. [Gap Execution Route](gap-execution-route.md)
-4. [Roadmap Of Record](../roadmap/index.md)
-5. [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
-6. [Domain Status Board](domain-status-board.md)
-7. Relevant proposal or review document for the specific slice
+3. [Roadmap Of Record](../roadmap/index.md)
+4. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
+5. [Domain Status Board](domain-status-board.md)
+6. Relevant proposal or review document for the specific slice

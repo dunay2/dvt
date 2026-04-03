@@ -1,52 +1,61 @@
 ---
 title: apps/api
-status: Draft
-owner: API / Entry Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Architecture / Docs
+last_reviewed: 2026-04-02
 ---
 
 # apps/api
 
-## Component Map
+`apps/api` is the authenticated HTTP composition root for DVT.
+
+It owns route parsing, auth and tenant checks, admission, runtime command and
+query wiring, operational probes, and reconciler bootstrap inside the API
+process.
+
+## Current Responsibilities
+
+- expose protected runtime routes for start, list, get, events, and signal;
+- compose planner, engine, delivery, and operational dependencies;
+- surface readiness, health, version, and reconciler state;
+- keep auth and admission decisions at the entry boundary.
+
+## Interface Map
 
 ```mermaid
 flowchart LR
-  api[apps/api]
-  engine[@dvt/engine]
-  delivery[@dvt/delivery]
-  api --> engine
-  api --> delivery
+  Clients["apps/web / operators / automation"] --> API["apps/api"]
+  API --> Planner["@dvt/planner"]
+  API --> Engine["@dvt/engine"]
+  API --> Delivery["@dvt/delivery"]
+  API --> Auth["OIDC / JWKS / access repo"]
 ```
 
-## Location
+## Code Anchors
 
-- apps/api
+- [app.ts](../../../../apps/api/src/app.ts)
+- [server.ts](../../../../apps/api/src/server.ts)
+- [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
+- [getRunRoute.ts](../../../../apps/api/src/entrypoints/http/getRunRoute.ts)
 
-## Domain
+## Current Posture
 
-- [API / Entry Domain](../domain-api.md)
+This component is active product code. The remaining work is about contract
+clarity and incremental hardening, not about inventing the API layer.
 
-## Main Responsibility
+## Planned Delta
 
-- HTTP API, routing, authentication, signal handling
+- keep the frontend-consumable contract explicit under `MVP-E1`;
+- preserve admission and health semantics that the UI health work (`F-03`)
+  relies on.
 
-## Explanation
+## Historical Deep Dives
 
-apps/api exposes HTTP endpoints, manages routing and authentication, and handles signals for plan execution and status queries.
-
-## Restrictions
-
-- Must comply with API contracts and authentication requirements
-- Only interacts with API domain, engine, and delivery
-
-## Related Documentation
-
-- [Component Map](../component-map.md)
-- [API / Entry Domain](../domain-api.md)
-
-## Detailed Documentation
+These notes are older decomposition artifacts. Use them only as supporting
+detail after the current page:
 
 - [DDD Structure](api-ddd.md)
 - [Functionalities](api-functional.md)
-- [Constraints & Invariants](api-constraints.md)
-- [Sequence Diagrams](api-sequence.md)
+- [Constraints and invariants](api-constraints.md)
+- [Sequence diagrams](api-sequence.md)

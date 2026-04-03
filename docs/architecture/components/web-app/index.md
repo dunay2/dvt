@@ -1,85 +1,57 @@
 ---
 title: apps/web
-status: Draft
-owner: UI / Visualization Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Architecture / Docs
+last_reviewed: 2026-04-03
 ---
 
 # apps/web
 
-## Component Map
+`apps/web` is the deployable browser application for DVT.
 
-```mermaid
-flowchart LR
-  web[apps/web]
-  api[apps/api]
-  engine[@dvt/engine]
-  web --> api
-  web --> engine
-```
+## Current Responsibilities
 
-## Location
+- bootstrap the browser application and router;
+- host the persistent shell;
+- render Canvas, Runs, Lineage, Diff, Artifacts, Plugins, and Admin routes;
+- provide health visibility and shell-level UX context;
+- compose client services, capabilities, and plugin-contributed views.
 
-- apps/web
+## Current Route Inventory
 
-## Domain
+| Route                   | View                                 |
+| ----------------------- | ------------------------------------ |
+| `/canvas`               | graph workbench                      |
+| `/runs`, `/runs/:runId` | run-monitoring workbench             |
+| `/lineage`              | dependency and impact analysis       |
+| `/diff`                 | review and diff surface              |
+| `/artifacts`            | artifact browser and manifest import |
+| `/plugins`              | plugin management shell page         |
+| `/admin`                | admin shell page                     |
 
-- [UI / Visualization Domain](../domain-ui.md)
+## Current Code Anchors
 
-## Main Responsibilities
+- [main.tsx](../../../../apps/web/src/main.tsx)
+- [App.tsx](../../../../apps/web/src/app/App.tsx)
+- [Root.tsx](../../../../apps/web/src/app/Root.tsx)
+- [routes.ts](../../../../apps/web/src/app/routes.ts)
+- [Canvas.tsx](../../../../apps/web/src/app/views/Canvas.tsx)
+- [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx)
 
-- User interface, visualization
-- Root: WebAggregate (central web model)
-- Aggregates: UIComponentAggregate
-- Ensures user interaction, visualization, and status display
+## Library Direction
 
-## Explanation
+- [React Flow](https://reactflow.dev/) for graph interaction;
+- TanStack Query for server-state and polling;
+- Zustand for local shell and view state;
+- [Radix Primitives](https://www.radix-ui.com/primitives) and
+  [shadcn/ui](https://ui.shadcn.com/) for accessible UI primitives;
+- [TanStack Table](https://tanstack.com/table/latest) for future dense grids;
+- [Monaco Editor](https://github.com/microsoft/monaco-editor) for future code
+  and diff panes;
+- [xterm.js](https://xtermjs.org/) for any future real console surface.
 
-apps/web is responsible for user interaction, visualization, and status display:
+## Related Pages
 
-- **Root:** [WebAggregate](web-app.md#webaggregate) — represents the central web model, owning UI components and visualization logic.
-- **Aggregates:** [UIComponentAggregate](web-app.md#uicomponentaggregate).
-- **Responsibilities:**
-  - Display run status and workflow progress.
-  - Enable user interaction and monitoring.
-  - Integrate with API and engine.
-
-**Interactions:**
-
-- **[API](api.md):** Receives status queries and exposes endpoints.
-- **[Engine](engine.md):** Receives workflow status for display.
-
-Web coordinates these interactions to ensure user interaction, visualization, and status display.
-
-## WebAggregate
-
-Represents the central web model, owning UI components and visualization logic. Responsible for:
-
-- Managing UI components
-- Managing visualization logic
-- Reporting web status
-
-## UIComponentAggregate
-
-Represents UI component management for web. Responsible for:
-
-- Storing UI components
-- Managing UI operations
-- Reporting UI status
-
-## Restrictions
-
-- Must comply with UI contracts and API definitions
-- Only interacts with UI domain, API, and engine
-
-## Related Documentation
-
-- [Component Map](../component-map.md)
-- [UI / Visualization Domain](../domain-ui.md)
-
-## Detailed Documentation
-
-- [DDD Structure](web-app-ddd.md)
-- [Functionalities](web-app-functional.md)
-- [Constraints & Invariants](web-app-constraints.md)
-- [Sequence Diagrams](web-app-sequence.md)
+- [Frontend Architecture](../../frontend/index.md)
+- [Main Workspace Views And UX](../../frontend/main-workspace-views-and-ux.md)
+- [UX Implementation Guide](../../frontend/ux-implementation-guide.md)

@@ -41,10 +41,10 @@ Prepare the system for scale and for the first enterprise customer.
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
 - Verified on: `2026-03-31`
-- Total tasks: `15`
-- Total effort points: `84`
+- Total tasks: `23`
+- Total effort points: `124`
 - Completed weighted points: `30`
-- Lane progress: `36%`
+- Lane progress: `24%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -62,6 +62,14 @@ Prepare the system for scale and for the first enterprise customer.
 - [ ] `P2` `read replica query path` `blocked` `M` `5pt` `0%`: offload read traffic from primary.
 - [ ] `P2` `projector event-driven invalidation` `blocked` `M` `5pt` `0%`: remove polling bottlenecks.
 - [ ] `P2` `Temporal -> API backpressure` `blocked` `M` `5pt` `0%`: protect admission under saturation.
+- [ ] `P1` `AR-D1` `queued` `L` `8pt` `0%`: implement incremental snapshot projection (apply event delta instead of full replay) so that getRunStatus does not degrade to O(n) for high-step-count DAGs when snapshot is stale.
+- [ ] `P2` `AR-D2` `queued` `S` `2pt` `0%`: define Temporal continueAsNew threshold as a governed contract parameter with documented SLA for maximum workflow history size and step count per segment.
+- [ ] `P2` `AR-D3` `queued` `S` `3pt` `0%`: document worker scaling strategy for 1000+ tenants — per-tenant workers vs shared pool, task queue density model, cold-start latency targets, and worker auto-scaling policy.
+- [ ] `P2` `AR-D4` `queued` `L` `8pt` `0%`: design and implement zero-downtime schema rollback strategy to eliminate the maintenance-mode requirement for state-store schema changes in a multi-tenant SaaS environment.
+- [ ] `P2` `AR-D5` `queued` `M` `5pt` `0%`: add tenant-configurable retention policies so enterprise tenants can retain data longer and free-tier tenants have aggressive purging, instead of one-size-fits-all hotRetentionDays.
+- [ ] `P1` `MW-D1` `queued` `L` `8pt` `0%`: create an SDK/API for external plan definition that allows systems outside the dbt ecosystem to submit DAGs to the planner without going through the dbt manifest format.
+- [ ] `P2` `MW-D2` `queued` `M` `5pt` `0%`: define worker routing model by step kind — which workers execute which types of steps, how task queues are assigned per step kind, and how worker images are specialized (e.g., a SPARK_JOB worker needs Spark client, not dbt CLI).
+- [ ] `P2` `AR-D6` `queued` `S` `1pt` `0%`: assess triple versioning (planVersion + schemaVersion + contractVersion) governance burden after 6 months — if still only planVersion '1.0', evaluate whether the overhead is justified and consider simplification.
 - [ ] `P3` `first enterprise pilot` `blocked` `L` `8pt` `0%`: validate product-market fit.
 - [ ] `P3` `billing integration` `blocked` `M` `5pt` `0%`: turn usage into invoicing.
 - [ ] `P3` `compliance documentation pack` `blocked` `M` `5pt` `0%`: prepare regulated customer onboarding.
@@ -75,6 +83,8 @@ Prepare the system for scale and for the first enterprise customer.
 - `cost attribution model` remains blocked on `S05` and on retention being fully operationalized.
 - `projector event-driven invalidation` stays blocked on the read-your-writes contract even though the staleness surface is now caller-visible.
 - `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM backlog rather than implementation work.
+- `AR-D1` through `AR-D6` originate from the 2026-04-02 deep architectural review: incremental snapshot projection (P1), continueAsNew governance (P2), worker scaling docs (P2), zero-downtime rollback (P2), tenant-configurable retention (P2), and triple versioning assessment (P2).
+- `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2) and worker routing model by step kind (P2, depends on MW-C1).
 
 ## Expected Outcome
 
