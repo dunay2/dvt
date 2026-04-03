@@ -120,6 +120,13 @@ erDiagram
    `PENDING_VALIDATION`.
 2. Validates idempotent replay via `assertStoredPlanMatchesRequest`.
 3. Upserts `plan_records` with guarded immutable equality checks.
+4. Upsert guard is intentionally strict and non-legacy:
+   - row must match immutable identity, including `created_at`
+   - row must still be `ACTIVE`
+   - duplicate writes against `ARCHIVED` / `SUPERSEDED` records fail with
+     `PLAN_RECORD_CONFLICT`
+   - backfilled legacy rows whose `created_at` does not match the incoming
+     canonical metadata timestamp fail with `PLAN_RECORD_CONFLICT` by design.
 
 ### `markValid(planRef)` and `markInvalid(planRef, report)`
 
@@ -153,6 +160,14 @@ erDiagram
 ## Architectural gap status
 
 No open architectural gaps remain for the S08 scope.
+
+## Compatibility posture
+
+This slice does not preserve legacy timestamp compatibility for backfilled
+`plan_records.created_at` values. Upgrade paths that rely on idempotent replay
+for old pending rows with backfilled timestamps can now fail with
+`PLAN_RECORD_CONFLICT`. This is intentional: no legacy fallback path is
+applied in `upsert`.
 
 ## Closed in this slice
 

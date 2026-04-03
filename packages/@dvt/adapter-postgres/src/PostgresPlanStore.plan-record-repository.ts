@@ -96,10 +96,9 @@ export class PostgresPlanRecordRepository {
           $1, $2, $3, $4, $5, $6, $7, $8, $9::timestamptz, $10::timestamptz, $11, $12, $13::timestamptz
         )
         ON CONFLICT (plan_id) DO UPDATE
-        SET state = EXCLUDED.state,
-            updated_at = EXCLUDED.updated_at,
+        SET updated_at = EXCLUDED.updated_at,
             supersedes_plan_id = COALESCE(plan_records.supersedes_plan_id, EXCLUDED.supersedes_plan_id),
-            archived_at = COALESCE(EXCLUDED.archived_at, plan_records.archived_at)
+            archived_at = plan_records.archived_at
         WHERE
           plan_records.canonical_plan_json = EXCLUDED.canonical_plan_json
           AND plan_records.canonical_hash = EXCLUDED.canonical_hash
@@ -108,6 +107,7 @@ export class PostgresPlanRecordRepository {
           AND plan_records.contract_version = EXCLUDED.contract_version
           AND plan_records.source_ref = EXCLUDED.source_ref
           AND plan_records.created_at = EXCLUDED.created_at
+          AND plan_records.state = 'ACTIVE'
         RETURNING plan_id
       `,
       [

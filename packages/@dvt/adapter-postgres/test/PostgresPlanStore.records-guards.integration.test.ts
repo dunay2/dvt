@@ -15,6 +15,7 @@ import {
 const PLAN_ID = {
   r4_10: toCanonicalPlanId('plan-r4-10'),
   r4_11: toCanonicalPlanId('plan-r4-11'),
+  r4_12: toCanonicalPlanId('plan-r4-12'),
   r4_missing: toCanonicalPlanId('plan-r4-missing'),
 } as const;
 
@@ -79,6 +80,25 @@ describeIfPg('PostgresPlanStore records guard integration', () => {
     withStore(schema, async (store) => {
       await expect(store.archivePlan(PLAN_ID.r4_missing, NOW)).rejects.toThrow(
         'PLAN_RECORD_NOT_FOUND'
+      );
+    }));
+
+  test('storePlan rejects duplicates for ARCHIVED records (no lifecycle reopening)', () =>
+    withStore(schema, async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+      await store.archivePlan(PLAN_ID.r4_10, NOW);
+      await expect(store.storePlan(makeBuildResult(PLAN_ID.r4_10))).rejects.toThrow(
+        'PLAN_RECORD_CONFLICT'
+      );
+    }));
+
+  test('storePlan rejects duplicates for SUPERSEDED records (no lifecycle reopening)', () =>
+    withStore(schema, async (store) => {
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+      await store.storePlan(makeBuildResult(PLAN_ID.r4_12));
+      await store.markSuperseded(PLAN_ID.r4_11, PLAN_ID.r4_12);
+      await expect(store.storePlan(makeBuildResult(PLAN_ID.r4_11))).rejects.toThrow(
+        'PLAN_RECORD_CONFLICT'
       );
     }));
 
