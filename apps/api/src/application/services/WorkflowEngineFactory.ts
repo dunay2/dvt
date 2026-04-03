@@ -102,9 +102,11 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
     clock: config.infrastructure.clock,
     policy,
     intentStore: config.persistence.intentStore,
-    runExecutionContextResolver: config.persistence.runExecutionContextResolver,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
+    ...(config.persistence.runExecutionContextResolver !== undefined
+      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+      : {}),
     ...(config.runtime.requiredProviders !== undefined
       ? { requiredProviders: config.runtime.requiredProviders }
       : {}),
