@@ -48,24 +48,31 @@ function createApp(
       },
     }));
 
-  registerAdminRoutes(app, {
-    rebuildSnapshot: rebuildSnapshotSpy,
-  } as never, {
-    authenticator: {
-      authenticateBearerToken,
+  registerAdminRoutes(
+    app,
+    {
+      rebuildSnapshot: rebuildSnapshotSpy,
     } as never,
-    authorizer: {
-      authorize,
-    } as never,
-  });
+    {
+      authenticator: {
+        authenticateBearerToken,
+      } as never,
+      authorizer: {
+        authorize,
+      } as never,
+    }
+  );
   return { app, rebuildSnapshotSpy };
 }
 
 describe('adminRoutes', () => {
   it('returns 401 when token is missing or invalid', async () => {
-    const { app, rebuildSnapshotSpy } = createApp(async () => ({ runId: 'r1', status: 'PENDING' }), {
-      authenticateBearerToken: async () => ({ ok: false, code: 'MISSING_TOKEN' }),
-    });
+    const { app, rebuildSnapshotSpy } = createApp(
+      async () => ({ runId: 'r1', status: 'PENDING' }),
+      {
+        authenticateBearerToken: async () => ({ ok: false, code: 'MISSING_TOKEN' }),
+      }
+    );
 
     try {
       const response = await app.inject({
@@ -88,9 +95,12 @@ describe('adminRoutes', () => {
   });
 
   it('returns 403 when principal lacks explicit admin action', async () => {
-    const { app, rebuildSnapshotSpy } = createApp(async () => ({ runId: 'r1', status: 'PENDING' }), {
-      authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
-    });
+    const { app, rebuildSnapshotSpy } = createApp(
+      async () => ({ runId: 'r1', status: 'PENDING' }),
+      {
+        authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
+      }
+    );
 
     try {
       const response = await app.inject({
