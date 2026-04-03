@@ -5,6 +5,7 @@ import type {
   PlannerEnvironmentContext,
   PlannerGraphSourceV1,
   PlannerPolicyClassSet,
+  RunExecutionContextRef,
 } from '@dvt/contracts';
 
 export const START_RUN_TARGET_ADAPTER = {
@@ -37,6 +38,7 @@ export interface StartRunPlanRef {
 
 export interface StartRunCommand {
   readonly planRef?: StartRunPlanRef;
+  readonly runExecutionContextRef?: RunExecutionContextRef;
   readonly graphSource?: PlannerGraphSourceV1;
   readonly manifestRef?: DbtManifestRef;
   readonly manifest?: Record<string, unknown>;

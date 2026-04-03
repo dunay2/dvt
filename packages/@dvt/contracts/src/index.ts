@@ -5,6 +5,7 @@ export * from './adapters/IProviderAdapter.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/IStartRunIntentStore.v1.js';
 export * from './contracts/engine/StartRunIntentPolicy.v1.js';
+export * from './contracts/engine/RunExecutionContext.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,

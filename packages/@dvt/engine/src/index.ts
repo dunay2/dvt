@@ -23,6 +23,7 @@ export * from './ports/IRunStateStore.js';
 export * from './ports/IRunSnapshotStalenessQuery.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
+export * from './ports/IRunExecutionContextResolver.js';
 export * from './adapters/IProviderAdapter.js';
 
 export * from './services/RunMaintenanceService.js';

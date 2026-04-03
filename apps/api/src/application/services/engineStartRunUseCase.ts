@@ -1,6 +1,7 @@
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
+  RunExecutionContextRejectedError,
   RunAlreadyExistsError,
   UnsupportedPlanVersionError,
   type PlanRef,
@@ -18,6 +19,7 @@ import {
 } from '../ports/startRunEngineErrorContract.js';
 import {
   START_RUN_DUPLICATE_OF,
+  START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RATE_LIMIT_CODE,
   START_RUN_RESULT_KIND,
   type StartRunResult,
@@ -122,6 +124,16 @@ function mapEngineStartRunError(
     });
   }
 
+  if (error instanceof RunExecutionContextRejectedError) {
+    return ok({
+      kind: START_RUN_RESULT_KIND.planRejected,
+      accepted: false,
+      code: START_RUN_PLAN_REJECTION_CODE.rejected,
+      reason: error.message,
+      cause: 'run_execution_context',
+    });
+  }
+
   return null;
 }
 
@@ -155,16 +167,20 @@ function toEnginePlanRef(planRef: StartRunPlanRef): PlanRef {
 }
 
 function toEngineRunContext(
-  command: Pick<StartRunCommand, 'runId' | 'targetAdapter'>,
+  command: Pick<StartRunCommand, 'runId' | 'targetAdapter' | 'runExecutionContextRef'>,
   context: AuthorizedCommandExecutionContext
 ): RunContext {
-  return {
+  const runContext: RunContext = {
     tenantId: context.scope.tenantId.value,
     projectId: context.scope.projectId?.value ?? '',
     environmentId: context.scope.environmentId?.value ?? '',
     runId: command.runId,
     targetAdapter: command.targetAdapter,
   };
+  if (command.runExecutionContextRef !== undefined) {
+    runContext.runExecutionContextRef = command.runExecutionContextRef;
+  }
+  return runContext;
 }
 
 function ok(value: StartRunResult): StartRunUseCaseResult {
