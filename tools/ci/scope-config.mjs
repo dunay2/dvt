@@ -6,6 +6,35 @@ const execFileAsync = promisify(execFile);
 
 const ROOT_CONFIG_PATTERNS = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'];
 
+function readWorkflowScopePolicy() {
+  const policyPath = new URL('./policy/workflow-scope.json', import.meta.url);
+  const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
+  const requiredKeys = [
+    'any_code',
+    'docs_changed',
+    'docs_structure_changed',
+    'lane_yaml_changed',
+    'generated_status_relevant',
+    'generated_capability_relevant',
+    'workspace_global',
+    'workspace_api',
+    'workspace_web',
+    'workspace_contracts',
+    'workspace_engine',
+    'workspace_adapter_postgres',
+    'workspace_adapter_temporal',
+    'workspace_cli',
+  ];
+
+  for (const key of requiredKeys) {
+    if (!Array.isArray(policy[key])) {
+      throw new TypeError(`Invalid workflow scope policy: ${key} must be an array of patterns`);
+    }
+  }
+
+  return policy;
+}
+
 function readAdapterPostgresPolicy() {
   const policyPath = new URL('./policy/adapter-postgres-relevance.json', import.meta.url);
   const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
@@ -19,41 +48,50 @@ function readAdapterPostgresPolicy() {
   return policy;
 }
 
+const WORKFLOW_SCOPE_POLICY = readWorkflowScopePolicy();
 const ADAPTER_POSTGRES_POLICY = readAdapterPostgresPolicy();
 export const ADAPTER_POSTGRES_RELEVANT_PATTERNS = ADAPTER_POSTGRES_POLICY.adapter_postgres_relevant;
 
+export const WORKFLOW_SCOPE_PATTERNS = {
+  any_code: WORKFLOW_SCOPE_POLICY.any_code,
+  docs_changed: WORKFLOW_SCOPE_POLICY.docs_changed,
+  docs_structure_changed: WORKFLOW_SCOPE_POLICY.docs_structure_changed,
+  lane_yaml_changed: WORKFLOW_SCOPE_POLICY.lane_yaml_changed,
+  generated_status_relevant: WORKFLOW_SCOPE_POLICY.generated_status_relevant,
+  generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
+};
+
 export const WORKSPACE_ENTRIES = [
-  { key: 'api', name: 'api', pkg: 'dvt-api', patterns: ['apps/api/**'] },
-  { key: 'web', name: 'web', pkg: '@dvt/web', patterns: ['apps/web/**'] },
-  { key: 'contracts', name: 'contracts', pkg: '@dvt/contracts', patterns: ['packages/@dvt/contracts/**'] },
-  { key: 'engine', name: 'engine', pkg: '@dvt/engine', patterns: ['packages/@dvt/engine/**'] },
+  { key: 'api', name: 'api', pkg: 'dvt-api', patterns: WORKFLOW_SCOPE_POLICY.workspace_api },
+  { key: 'web', name: 'web', pkg: '@dvt/web', patterns: WORKFLOW_SCOPE_POLICY.workspace_web },
+  {
+    key: 'contracts',
+    name: 'contracts',
+    pkg: '@dvt/contracts',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_contracts,
+  },
+  {
+    key: 'engine',
+    name: 'engine',
+    pkg: '@dvt/engine',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_engine,
+  },
   {
     key: 'adapter_postgres',
     name: 'adapter-postgres',
     pkg: '@dvt/adapter-postgres',
-    patterns: ['packages/@dvt/adapter-postgres/**'],
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_adapter_postgres,
   },
   {
     key: 'adapter_temporal',
     name: 'adapter-temporal',
     pkg: '@dvt/adapter-temporal',
-    patterns: ['packages/@dvt/adapter-temporal/**'],
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_adapter_temporal,
   },
-  { key: 'cli', name: 'cli', pkg: '@dvt/cli', patterns: ['packages/@dvt/cli/**'] },
+  { key: 'cli', name: 'cli', pkg: '@dvt/cli', patterns: WORKFLOW_SCOPE_POLICY.workspace_cli },
 ];
 
-export const CI_GLOBAL_PATTERNS = [
-  '.github/workflows/**',
-  ...ROOT_CONFIG_PATTERNS,
-  'tsconfig*.json',
-  'eslint.config.cjs',
-  'commitlint.config.cjs',
-  '.prettierrc.json',
-  'scripts/**',
-  'packages/@dvt/traceability-service/**',
-  'traceability.config.json',
-  'docs/adr/**',
-];
+export const CI_GLOBAL_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_global;
 
 export const TEST_SCOPE_PATTERNS = {
   engine: ['packages/@dvt/engine/**'],
@@ -61,7 +99,12 @@ export const TEST_SCOPE_PATTERNS = {
   adapter_postgres: ['packages/@dvt/adapter-postgres/**'],
   adapter_temporal: ['packages/@dvt/adapter-temporal/**'],
   cli: ['packages/@dvt/cli/**'],
-  root_config: [...ROOT_CONFIG_PATTERNS, 'vitest.config.ts', 'tsconfig*.json', '.github/workflows/test.yml'],
+  root_config: [
+    ...ROOT_CONFIG_PATTERNS,
+    'vitest.config.ts',
+    'tsconfig*.json',
+    '.github/workflows/test.yml',
+  ],
 };
 
 export const CONTRACT_SCOPE_PATTERNS = {

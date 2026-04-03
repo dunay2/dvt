@@ -1,5 +1,5 @@
 #!/bin/sh
-# Regenerate planning views when switching to a branch with different agent-lane YAMLs.
+# Non-mutating hook: never write tracked files on checkout.
 # $3 == 1 means branch checkout (not file checkout).
 if [ "$3" != "1" ]; then exit 0; fi
 
@@ -8,6 +8,5 @@ CURR=$2
 CHANGED=$(git diff --name-only "$PREV" "$CURR" -- "docs/planning/state/agent-lane-*.yaml" 2>/dev/null || true)
 
 if [ -n "$CHANGED" ]; then
-  echo "[post-checkout] agent-lane YAML changed — regenerating workboard views..."
-  pnpm -s docs:workboard:generate
+  echo "[post-checkout] agent-lane YAML changed. Run: pnpm docs:workboard:generate"
 fi
