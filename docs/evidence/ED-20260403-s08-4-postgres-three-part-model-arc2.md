@@ -3,7 +3,7 @@ title: S08-4 Postgres three-part model ARC-2 evidence
 status: Accepted
 date: 2026-04-03
 owners:
-  - @dvt/adapter-postgres
+  - '@dvt/adapter-postgres'
 arc_level: ARC-2
 breaking: false
 code_refs:
