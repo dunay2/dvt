@@ -310,6 +310,110 @@ tasks:
       Feature flag alone is not a security gate — if DVT_ADMIN_ROUTES_ENABLED=true, any
       authenticated user can trigger snapshot rebuilds today.
     last_verified: '2026-04-02'
+  - task_id: AR-C1-T1
+    parent_task: AR-C1
+    priority: P0
+    status: queued
+    objective: >-
+      reduce duplication in admin route unit coverage by extracting reusable test builders for app
+      setup and route injection while preserving the current authorization matrix assertions.
+    dependency: none
+    target: >-
+      `adminRoutes.test.ts` uses shared `buildAuthorizedApp`/`injectRebuildSnapshot` helpers and
+      keeps behavior-equivalent assertions for 401/403/400/404/500/success paths.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - apps/api/test/entrypoints/http/adminRoutes.test.ts
+    status_reason: >-
+      The current test suite is behavior-correct but still has setup/injection duplication that
+      slows future policy changes.
+    last_verified: '2026-04-03'
+  - task_id: AR-C1-T2
+    parent_task: AR-C1
+    priority: P0
+    status: queued
+    objective: >-
+      add negative contract coverage for AdminRebuildSnapshotAccess schema so governance detects
+      invalid requiredAction/pipeline drift, not only happy-path constants.
+    dependency: AR-C1-T1
+    target: >-
+      Contract tests validate both positive invariants and at least one negative mutation (invalid
+      admin action or pipeline order) against `AdminRebuildSnapshotAccess.v1.schema.json`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.schema.json
+      - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
+    status_reason: >-
+      Current contract test coverage is positive-only and can miss schema regressions that still
+      parse as JSON.
+    last_verified: '2026-04-03'
+  - task_id: AR-C1-T3
+    parent_task: AR-C1
+    priority: P1
+    status: queued
+    objective: >-
+      add protected-runtime composition tests proving admin routes stay disabled when OIDC runtime
+      prerequisites are missing even if `DVT_ADMIN_ROUTES_ENABLED=true`.
+    dependency: AR-C1-T2
+    target: >-
+      Integration matrix covers OIDC-off + flag-on behavior and confirms no admin route execution
+      path is reachable without protected-runtime auth composition.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+      - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
+    status_reason: >-
+      Route-level RBAC is implemented, but composition-level activation semantics still need an
+      explicit integration guardrail.
+    last_verified: '2026-04-03'
+  - task_id: AR-C1-T4
+    parent_task: AR-C1
+    priority: P1
+    status: queued
+    objective: >-
+      extract a shared API-test snapshot fixture helper so admin/runtime tests stop embedding local
+      WorkflowSnapshot builders.
+    dependency: AR-C1-T3
+    target: >-
+      API tests use one shared snapshot fixture helper and remove duplicated inline snapshot object
+      construction in admin route coverage.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - apps/api/test/entrypoints/http/adminRoutes.test.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      Snapshot fixture duplication is small but recurring and creates avoidable maintenance drift.
+    last_verified: '2026-04-03'
+  - task_id: CFG-TS-T1
+    parent_task: AR-C1
+    priority: P2
+    status: queued
+    objective: >-
+      produce a staged migration plan for TypeScript `baseUrl` deprecation covering inventory,
+      compatibility risks, rollout waves, and rollback points before any config change lands.
+    dependency: AR-C1-T4
+    target: >-
+      A reviewed migration proposal exists with workspace-by-workspace impact analysis and explicit
+      validation baseline (`typecheck`, tests, `verify:prepush`) for each wave.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - tsconfig.node-runtime.base.json
+      - tsconfig.package-bundler.base.json
+      - apps/web/tsconfig.json
+    status_reason: >-
+      `baseUrl` deprecation warnings are visible in editor/runtime configs; implementation should be
+      gated behind an explicit migration plan to avoid module-resolution regressions.
+    last_verified: '2026-04-03'
   - task_id: AR-C2
     priority: P0
     status: queued
@@ -477,6 +581,10 @@ dependency_notes:
     `AR-C1` and `AR-C2` are P0 tasks from the 2026-04-02 deep review: admin route RBAC and formal
     SLA definitions.
   - >-
+    `AR-C1` is decomposed into `AR-C1-T1..T4` plus `CFG-TS-T1` to isolate test hardening, contract
+    negative coverage, runtime composition checks, fixture reuse, and `baseUrl` deprecation planning
+    without circular dependencies.
+  - >-
     `AR-C3` and `AR-C4` are P1 tasks: end-to-end adapter backpressure and activity-to-state-store
     circuit breaker.
   - >-
@@ -486,10 +594,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-01'
-  total_tasks: 21
-  total_effort_points: 83
+  total_tasks: 26
+  total_effort_points: 97
   completed_weighted_points: 45.5
-  lane_progress_pct: 55
+  lane_progress_pct: 47
   notes: >-
     Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
     parent umbrella tasks with subtasks carry coordination-only effort.
