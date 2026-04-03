@@ -53,15 +53,9 @@ export function validateArtifactIntegrity(
   actual: ArtifactIntegrityInput
 ): void {
   if (actual.sha256 !== expected.sha256) {
-    throw new ArtifactStoreError(
-      `Artifact digest mismatch: expected ${expected.sha256}, got ${actual.sha256}`,
-      'ARTIFACT_INTEGRITY_ERROR'
-    );
+    throw ArtifactStoreError.integrityDigestMismatch(expected.sha256, actual.sha256);
   }
   if (actual.sizeBytes !== expected.sizeBytes) {
-    throw new ArtifactStoreError(
-      `Artifact size mismatch: expected ${expected.sizeBytes}B, got ${actual.sizeBytes}B`,
-      'ARTIFACT_INTEGRITY_ERROR'
-    );
+    throw ArtifactStoreError.integritySizeMismatch(expected.sizeBytes, actual.sizeBytes);
   }
 }

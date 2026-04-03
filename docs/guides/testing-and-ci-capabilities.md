@@ -103,6 +103,7 @@ Relevant code and fixtures:
 | ----------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Docs sync                                 | `pnpm docs:sync`                                | [`package.json`](../../package.json)                                                         |
 | Docs sync drift check                     | `pnpm docs:sync:check`                          | [`package.json`](../../package.json)                                                         |
+| Planning generated artifact check         | `pnpm docs:planning:generated:check`            | [`package.json`](../../package.json)                                                         |
 | Planning workboard drift check            | `pnpm docs:workboard:check`                     | [`package.json`](../../package.json)                                                         |
 | Conditional workboard drift check         | `node scripts/docs-workboard-check-changed.cjs` | [`scripts/docs-workboard-check-changed.cjs`](../../scripts/docs-workboard-check-changed.cjs) |
 | Local docs PR fast preflight              | `pnpm docs:pr:fast`                             | [`package.json`](../../package.json)                                                         |
@@ -132,9 +133,22 @@ Local docs PR preflight usage:
 Command semantics:
 
 - `pnpm docs:ci` is the local-friendly docs validation flow. It regenerates derived docs surfaces first and then validates the resulting worktree.
-- `pnpm docs:sync:check`, `pnpm docs:workboard:check`, `pnpm docs:status:check`, and `pnpm docs:capability:check` are strict drift gates. They compare generated outputs against `HEAD` and are intended for explicit cleanliness enforcement.
+- `pnpm docs:sync:check` is the strict drift gate for tracked generated docs.
+- `pnpm docs:planning:generated:check` regenerates planning-only derived pages, verifies required sections, checks determinism, and fails if those files are tracked in git again.
+- `pnpm docs:workboard:check` is the planning-generated artifact gate and currently delegates to `pnpm docs:planning:generated:check`.
+- `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
+
+Planning-generated pages that are intentionally untracked:
+
+- `docs/planning/index.md`
+- `docs/planning/proposals/index.md`
+- `docs/planning/reviews/index.md`
+- `docs/planning/status/index.md`
+- `docs/planning/state/agent-lane-*.md`
+- `docs/planning/state/execution-workboard.md`
+- `docs/planning/state/open-task-route.md`
 
 ## GitHub Workflow Coverage
 

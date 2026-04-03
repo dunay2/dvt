@@ -1,11 +1,40 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
 
 const repoRoot = path.resolve(__dirname, '..');
-const stateDir = path.join(repoRoot, 'docs', 'planning', 'state');
+
+function parseArgs(argv) {
+  const args = {
+    outputRoot: repoRoot,
+    sourceStateDir: path.join(repoRoot, 'docs', 'planning', 'state'),
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (token === '--output-root') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --output-root');
+      }
+      args.outputRoot = path.resolve(repoRoot, next);
+      index += 1;
+      continue;
+    }
+    if (token === '--source-state-dir') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --source-state-dir');
+      }
+      args.sourceStateDir = path.resolve(repoRoot, next);
+      index += 1;
+    }
+  }
+
+  return args;
+}
 
 function readIfExists(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -15,6 +44,7 @@ function readIfExists(filePath) {
 }
 
 function writeIfChanged(filePath, next) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
   const current = readIfExists(filePath);
   const eol = current && current.includes('\r\n') ? '\r\n' : '\n';
   const normalizedNext = next.replace(/\r?\n/g, eol);
@@ -49,7 +79,9 @@ function formatStatus(status) {
 }
 
 function coerceComplexity(task) {
-  const complexity = String(task.complexity || '-').trim().toUpperCase();
+  const complexity = String(task.complexity || '-')
+    .trim()
+    .toUpperCase();
   return complexity.length > 0 ? complexity : '-';
 }
 
@@ -95,9 +127,10 @@ function summarizeTasks(tasks, lastVerified) {
 
 function normalizeVerificationSummary(spec) {
   const computed = summarizeTasks(spec.tasks, spec.last_reviewed);
-  const raw = spec.verification_summary && typeof spec.verification_summary === 'object'
-    ? spec.verification_summary
-    : {};
+  const raw =
+    spec.verification_summary && typeof spec.verification_summary === 'object'
+      ? spec.verification_summary
+      : {};
 
   return {
     status_model: raw.status_model || computed.status_model,
@@ -105,8 +138,7 @@ function normalizeVerificationSummary(spec) {
     verified_on: raw.verified_on || raw.last_verified || computed.verified_on,
     total_tasks: raw.total_tasks ?? computed.total_tasks,
     total_effort_points: raw.total_effort_points ?? computed.total_effort_points,
-    completed_weighted_points:
-      raw.completed_weighted_points ?? computed.completed_weighted_points,
+    completed_weighted_points: raw.completed_weighted_points ?? computed.completed_weighted_points,
     lane_progress_pct: raw.lane_progress_pct ?? computed.lane_progress_pct,
     notes: raw.notes || computed.notes,
   };
@@ -231,9 +263,9 @@ function renderLaneMarkdown(spec, yamlFileName) {
     .join('\n');
 }
 
-function updateLaneDoc(yamlFileName) {
-  const yamlPath = path.join(stateDir, yamlFileName);
-  const mdPath = yamlPath.replace(/\.yaml$/i, '.md');
+function updateLaneDoc(yamlFileName, sourceStateDir, targetStateDir) {
+  const yamlPath = path.join(sourceStateDir, yamlFileName);
+  const mdPath = path.join(targetStateDir, yamlFileName.replace(/\.yaml$/i, '.md'));
   const spec = loadYaml(yamlPath);
 
   if (!spec || typeof spec !== 'object') {
@@ -249,12 +281,16 @@ function updateLaneDoc(yamlFileName) {
 }
 
 function main() {
-  if (!fs.existsSync(stateDir)) {
+  const args = parseArgs(process.argv.slice(2));
+  const sourceStateDir = args.sourceStateDir;
+  const targetStateDir = path.join(args.outputRoot, 'docs', 'planning', 'state');
+
+  if (!fs.existsSync(sourceStateDir)) {
     throw new Error('Missing docs/planning/state directory.');
   }
 
   const laneFiles = fs
-    .readdirSync(stateDir)
+    .readdirSync(sourceStateDir)
     .filter((name) => /^agent-lane-[a-z]\.yaml$/i.test(name))
     .sort((a, b) => a.localeCompare(b));
 
@@ -264,7 +300,7 @@ function main() {
   }
 
   for (const yamlFileName of laneFiles) {
-    updateLaneDoc(yamlFileName);
+    updateLaneDoc(yamlFileName, sourceStateDir, targetStateDir);
   }
 }
 

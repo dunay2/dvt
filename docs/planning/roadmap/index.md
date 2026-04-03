@@ -25,11 +25,11 @@ Concept anchors for this page:
 - Roadmap of record: this page
 - Current implementation state:
   [System Delivery Status](../../architecture/system-delivery-status.md)
-- Current planning hub: [Planning](../index.md)
-- Current generated status:
-  [Planning Status](../status/index.md)
+- Current planning hub: [Planning Control Tower](../state/planning-control-tower.md)
+- Current planning status:
+  [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 - Current execution tracking:
-  [Execution Workboard](../state/execution-workboard.md)
+  [Planning Control Tower](../state/planning-control-tower.md)
 
 ## Document Classification
 
@@ -42,10 +42,10 @@ Concept anchors for this page:
 - `docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md`
   Classification: archived subsystem roadmap proposal
   Use it for: historical context only
-- `docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md`
+- `docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md`
   Classification: subsystem roadmap proposal
   Use it for: MVP backend operability baseline scope (`IN`/`OUT`) and consolidation lanes
-- `docs/planning/proposals/frontend-roadmap-20260219.md`
+- `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
   Classification: subsystem roadmap proposal
   Use it for: frontend convergence sequencing aligned with Lane E and the
   current UI architecture posture
@@ -83,14 +83,14 @@ Concept anchors for this page:
 Repository-wide planning should currently be read in this order:
 
 1. [System Delivery Status](../../architecture/system-delivery-status.md)
-2. [Execution Workboard](../state/execution-workboard.md)
-3. [Planning Status](../status/index.md)
-4. Relevant proposals under [Planning Proposals](../proposals/index.md)
+2. [Planning Control Tower](../state/planning-control-tower.md)
+3. [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
+4. Relevant proposals under [Proposal Portfolio Map](../proposals/portfolio-map-20260403.md)
 
 Current subsystem roadmaps worth consulting:
 
-- [MVP Backend Operability Baseline Roadmap](../proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
-- [Frontend Roadmap - Prototype To Operational UI](../proposals/frontend-roadmap-20260219.md)
+- [MVP Backend Operability Baseline Roadmap](../proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md)
+- [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Roadmap By Domain](roadmap-by-domain.md)
 - [Review Remediation Roadmap 2026-04](review-remediation-roadmap-20260402.md)
 
@@ -101,8 +101,11 @@ Use these surfaces for domain-first planning navigation and updated diagrams:
 - [Planning Control Tower](../state/planning-control-tower.md)
 - [Planning Domains](../domains/index.md)
 - [Planning State](../state/index.md)
-- [Open Task Route](../state/open-task-route.md)
-- [Execution Workboard](../state/execution-workboard.md)
+- [Agent Lane A YAML](../state/agent-lane-a.yaml)
+- [Agent Lane B YAML](../state/agent-lane-b.yaml)
+- [Agent Lane C YAML](../state/agent-lane-c.yaml)
+- [Agent Lane D YAML](../state/agent-lane-d.yaml)
+- [Agent Lane E YAML](../state/agent-lane-e.yaml)
 - [Planning Roadmap Diagrams](diagrams/index.md)
 - [Planning Domain Map](diagrams/planning-domain-map.md)
 

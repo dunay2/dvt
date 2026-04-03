@@ -14,8 +14,8 @@ This is the single active proposal for repository delivery-process hardening.
 It replaces the former audit prompt with an executable plan and absorbs the
 still-relevant work from prior CI/docs proposals and reviews, including:
 
-- [CI Performance Review And Action Plan](../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
-- [CI, Prepush & PR Process - Observations and Improvement Log](../reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
+- [CI Performance Review And Action Plan](../../../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
+- [CI, Prepush & PR Process - Observations and Improvement Log](../../../reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
 
 This document does not reopen already-closed fixes. It carries forward only the
 residual gaps that are still visible in the repository wiring on 2026-03-31.
@@ -64,7 +64,7 @@ as open proposals:
   `node_modules` caching.
 - PR title, size, description, and ARC evidence checks are already wired.
 - `docs:ci` already has local-friendly regenerate-and-validate semantics.
-- GitHub Actions updates are already covered by [Dependabot](../../../.github/dependabot.yml).
+- GitHub Actions updates are already covered by [Dependabot](../../../../../.github/dependabot.yml).
 
 The backlog below therefore focuses on residual drift, maintainability, and
 parallel-work safety.
@@ -75,14 +75,14 @@ parallel-work safety.
 
 Current scope decisions are distributed across:
 
-- inline `dorny/paths-filter` blocks in [`ci.yml`](../../../.github/workflows/ci.yml)
-- inline `dorny/paths-filter` blocks in [`test.yml`](../../../.github/workflows/test.yml)
-- inline `dorny/paths-filter` blocks in [`contracts.yml`](../../../.github/workflows/contracts.yml)
-- grep-based scope detection in [`.husky/pre-push`](../../../.husky/pre-push)
-- separate diff resolution in [`scripts/check-changed.cjs`](../../../scripts/check-changed.cjs)
-- partial centralization in [`tools/ci/scope-config.mjs`](../../../tools/ci/scope-config.mjs),
-  [`tools/ci/emit-scope.mjs`](../../../tools/ci/emit-scope.mjs), and
-  [`tools/ci/emit-workspace-matrix.mjs`](../../../tools/ci/emit-workspace-matrix.mjs)
+- inline `dorny/paths-filter` blocks in [`ci.yml`](../../../../../.github/workflows/ci.yml)
+- inline `dorny/paths-filter` blocks in [`test.yml`](../../../../../.github/workflows/test.yml)
+- inline `dorny/paths-filter` blocks in [`contracts.yml`](../../../../../.github/workflows/contracts.yml)
+- grep-based scope detection in [`.husky/pre-push`](../../../../../.husky/pre-push)
+- separate diff resolution in [`scripts/check-changed.cjs`](../../../../../scripts/check-changed.cjs)
+- partial centralization in [`tools/ci/scope-config.mjs`](../../../../../tools/ci/scope-config.mjs),
+  [`tools/ci/emit-scope.mjs`](../../../../../tools/ci/emit-scope.mjs), and
+  [`tools/ci/emit-workspace-matrix.mjs`](../../../../../tools/ci/emit-workspace-matrix.mjs)
 
 Why this matters:
 
@@ -108,7 +108,7 @@ Why this matters:
 
 ### CDG-3: The docs manifest capability exists but is not deterministic or enforced
 
-The repo already ships [`tools/docs/generate-docs-manifest.ts`](../../../tools/docs/generate-docs-manifest.ts)
+The repo already ships [`tools/docs/generate-docs-manifest.ts`](../../../../../tools/docs/generate-docs-manifest.ts)
 and `pnpm docs:gov:manifest`, but:
 
 - `docs:gov` does not call it
@@ -128,16 +128,17 @@ Why this matters:
 
 Several high-fan-in files are committed and regenerated from unrelated work:
 
-- [docs/index.md](../../index.md)
-- [docs/planning/proposals/index.md](index.md)
-- [docs/planning/reviews/index.md](../reviews/index.md)
-- [docs/planning/state/agent-lane-a.md](../state/agent-lane-a.md)
-- [docs/planning/state/agent-lane-b.md](../state/agent-lane-b.md)
-- [docs/planning/state/agent-lane-c.md](../state/agent-lane-c.md)
-- [docs/planning/state/agent-lane-d.md](../state/agent-lane-d.md)
-- [docs/planning/state/agent-lane-e.md](../state/agent-lane-e.md)
-- [docs/planning/status/generated-code-state.md](../status/generated-code-state.md)
-- [docs/planning/status/generated-capability-coverage.md](../status/generated-capability-coverage.md)
+- [docs/index.md](../../../../index.md)
+- [Proposal Portfolio Map](../../portfolio-map-20260403.md)
+- [Review Status Board](../../../reviews/review-status-board.md)
+- [Generated Planning Surfaces Extraction Plan](generated-planning-surfaces-extraction-plan-20260403.md)
+- [Agent Lane A YAML](../../../state/agent-lane-a.yaml)
+- [Agent Lane B YAML](../../../state/agent-lane-b.yaml)
+- [Agent Lane C YAML](../../../state/agent-lane-c.yaml)
+- [Agent Lane D YAML](../../../state/agent-lane-d.yaml)
+- [Agent Lane E YAML](../../../state/agent-lane-e.yaml)
+- [docs/planning/status/generated-code-state.md](../../../status/generated-code-state.md)
+- [docs/planning/status/generated-capability-coverage.md](../../../status/generated-capability-coverage.md)
 
 Why this matters:
 
@@ -147,7 +148,7 @@ Why this matters:
 
 ### CDG-5: Hook and changed-file coverage is incomplete for repo tooling
 
-The current `lint-staged` config in [`package.json`](../../../package.json) does
+The current `lint-staged` config in [`package.json`](../../../../../package.json) does
 not cover `scripts/**/*.{js,cjs,mjs}` or `tools/ci/**/*.{js,cjs,mjs}`.
 
 Why this matters:
@@ -161,8 +162,8 @@ Why this matters:
 
 The repository already has `pnpm test:ci-tools` and tests such as:
 
-- [`tools/ci/workflow-pattern-parity.test.mjs`](../../../tools/ci/workflow-pattern-parity.test.mjs)
-- [`tools/ci/check-run-guard.test.mjs`](../../../tools/ci/check-run-guard.test.mjs)
+- [`tools/ci/workflow-pattern-parity.test.mjs`](../../../../../tools/ci/workflow-pattern-parity.test.mjs)
+- [`tools/ci/check-run-guard.test.mjs`](../../../../../tools/ci/check-run-guard.test.mjs)
 
 But no current workflow invokes `pnpm test:ci-tools`.
 
@@ -324,20 +325,20 @@ This proposal is considered executed only when all of the following are true:
 
 This plan is grounded in the current tracked repo wiring, especially:
 
-- [`package.json`](../../../package.json)
-- [`.husky/pre-commit`](../../../.husky/pre-commit)
-- [`.husky/pre-push`](../../../.husky/pre-push)
-- [`.husky/commit-msg`](../../../.husky/commit-msg)
-- [`scripts/setup-git-hooks.cjs`](../../../scripts/setup-git-hooks.cjs)
-- [`scripts/check-changed.cjs`](../../../scripts/check-changed.cjs)
-- [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml)
-- [`.github/workflows/pr-quality-gate.yml`](../../../.github/workflows/pr-quality-gate.yml)
-- [`.github/workflows/test.yml`](../../../.github/workflows/test.yml)
-- [`.github/workflows/contracts.yml`](../../../.github/workflows/contracts.yml)
-- [`.github/workflows/release.yml`](../../../.github/workflows/release.yml)
-- [`tools/ci/scope-config.mjs`](../../../tools/ci/scope-config.mjs)
-- [`tools/ci/emit-scope.mjs`](../../../tools/ci/emit-scope.mjs)
-- [`tools/ci/emit-workspace-matrix.mjs`](../../../tools/ci/emit-workspace-matrix.mjs)
-- [`tools/ci/workflow-pattern-parity.test.mjs`](../../../tools/ci/workflow-pattern-parity.test.mjs)
-- [`tools/docs/generate-docs-manifest.ts`](../../../tools/docs/generate-docs-manifest.ts)
-- [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)
+- [`package.json`](../../../../../package.json)
+- [`.husky/pre-commit`](../../../../../.husky/pre-commit)
+- [`.husky/pre-push`](../../../../../.husky/pre-push)
+- [`.husky/commit-msg`](../../../../../.husky/commit-msg)
+- [`scripts/setup-git-hooks.cjs`](../../../../../scripts/setup-git-hooks.cjs)
+- [`scripts/check-changed.cjs`](../../../../../scripts/check-changed.cjs)
+- [`.github/workflows/ci.yml`](../../../../../.github/workflows/ci.yml)
+- [`.github/workflows/pr-quality-gate.yml`](../../../../../.github/workflows/pr-quality-gate.yml)
+- [`.github/workflows/test.yml`](../../../../../.github/workflows/test.yml)
+- [`.github/workflows/contracts.yml`](../../../../../.github/workflows/contracts.yml)
+- [`.github/workflows/release.yml`](../../../../../.github/workflows/release.yml)
+- [`tools/ci/scope-config.mjs`](../../../../../tools/ci/scope-config.mjs)
+- [`tools/ci/emit-scope.mjs`](../../../../../tools/ci/emit-scope.mjs)
+- [`tools/ci/emit-workspace-matrix.mjs`](../../../../../tools/ci/emit-workspace-matrix.mjs)
+- [`tools/ci/workflow-pattern-parity.test.mjs`](../../../../../tools/ci/workflow-pattern-parity.test.mjs)
+- [`tools/docs/generate-docs-manifest.ts`](../../../../../tools/docs/generate-docs-manifest.ts)
+- [Testing and CI Capabilities](../../../../guides/testing-and-ci-capabilities.md)

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { CONTRACTS_ERROR_CODE, DvtContractError } from '../../errorContract.js';
+
 import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 
 // ── Migration compatibility note ──────────────────────────────────────────────
@@ -139,14 +141,21 @@ export interface UnsupportedPlannerPolicyDetails<
  */
 export class UnsupportedPlannerPolicyError<
   TPolicy extends PlannerPolicyValue = PlannerPolicyValue,
-> extends Error {
-  readonly code = 'UNSUPPORTED_PLANNER_POLICY';
+> extends DvtContractError<'UNSUPPORTED_PLANNER_POLICY'> {
+  readonly code = CONTRACTS_ERROR_CODE.UNSUPPORTED_PLANNER_POLICY;
 
   constructor(readonly details: UnsupportedPlannerPolicyDetails<TPolicy>) {
-    super(
-      `${details.adapterId ?? 'adapter'} cannot map ${details.policyType} policy ${details.policy.kind}: ${details.reason}`
-    );
+    super(CONTRACTS_ERROR_CODE.UNSUPPORTED_PLANNER_POLICY, 'UNSUPPORTED_PLANNER_POLICY', {
+      messageParams: {
+        ...(details.adapterId === undefined ? {} : { adapterId: details.adapterId }),
+        policyType: details.policyType,
+        policyKind: details.policy.kind,
+        reason: details.reason,
+      },
+      details,
+    });
     this.name = 'UnsupportedPlannerPolicyError';
+    this.details = details;
   }
 }
 

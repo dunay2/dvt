@@ -54,3 +54,5 @@ After renaming or adding reviews, run:
 - `pnpm docs:sync`
 
 to regenerate `docs/planning/reviews/index.md`.
+
+That reviews index is a generated local/CI artifact and must not be committed.

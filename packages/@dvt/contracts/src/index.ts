@@ -107,6 +107,7 @@ export type {
   StepKindBridgeEntry,
 } from './contracts/planner/StepKindRegistry.v1.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
+export * from './errorContract.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';
 export * from './schemas.js';

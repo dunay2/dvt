@@ -10,6 +10,7 @@
  * Inputs:
  *  - ARC_JSON (env) path to arc.json (default: arc.json)
  *  - ARC_POLICY (env) path to .arc-policy.yaml (default: .arc-policy.yaml)
+ *  - DOCS_ONLY_SCOPE (env) set to "true" for docs-only PR scope
  *  - git base/head refs (GIT_BASE, GIT_HEAD)
  */
 
@@ -20,6 +21,7 @@ import yaml from 'js-yaml';
 
 const arcJsonPath = process.env.ARC_JSON || 'arc.json';
 const policyPath = process.env.ARC_POLICY || '.arc-policy.yaml';
+const docsOnlyScope = String(process.env.DOCS_ONLY_SCOPE || 'false').toLowerCase() === 'true';
 const base = process.env.GIT_BASE || 'origin/main';
 const head = process.env.GIT_HEAD || 'HEAD';
 
@@ -73,6 +75,7 @@ const arc = readJson(arcJsonPath);
 const policy = readPolicy(policyPath);
 
 if (!arc.isArc) process.exit(0);
+if (docsOnlyScope) process.exit(0);
 
 const evidenceDir = policy.artifacts?.evidence_dir || 'docs/evidence';
 const riskDir = policy.artifacts?.risk_dir || 'docs/risk-register';

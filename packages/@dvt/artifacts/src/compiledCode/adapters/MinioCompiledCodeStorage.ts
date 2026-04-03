@@ -58,22 +58,16 @@ export class MinioCompiledCodeStorage implements ICompiledCodeStorage {
     } catch (err: unknown) {
       const name = err instanceof Error ? err.name : '';
       if (name === 'NoSuchKey' || name === 'NotFound') {
-        throw new ArtifactStoreError(
-          `Artifact not found: tenant=${tenantId} sha256=${sha256}`,
-          'ARTIFACT_NOT_FOUND'
-        );
+        throw ArtifactStoreError.notFound(tenantId, sha256, err);
       }
-      throw new ArtifactStoreError(
+      throw ArtifactStoreError.uploadFailed(
         `MinIO read failed: ${err instanceof Error ? err.message : String(err)}`,
-        'ARTIFACT_UPLOAD_FAILED'
+        err
       );
     }
     const bytes = await response.Body?.transformToByteArray();
     if (!bytes) {
-      throw new ArtifactStoreError(
-        `Empty MinIO body: tenant=${tenantId} sha256=${sha256}`,
-        'ARTIFACT_NOT_FOUND'
-      );
+      throw ArtifactStoreError.notFound(tenantId, sha256);
     }
     return Buffer.from(bytes);
   }

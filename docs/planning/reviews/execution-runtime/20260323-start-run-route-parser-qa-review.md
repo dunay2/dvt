@@ -14,16 +14,16 @@ planning_type: review
 
 ## 1. Governing sources used
 
-- [AGENTS.md](../../../AGENTS.md)
-- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
-- [Execution Workboard](../state/execution-workboard.md)
-- [Open Task Route](../state/open-task-route.md)
-- [ExecutionPlan.v2 / PlannerInputEnvelopeV2](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
-- [Planner Input Envelope Validator](../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts)
-- [StartRun route](../../../apps/api/src/entrypoints/http/startRunRoute.ts)
-- [StartRun planner-backed use case](../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
-- [Workflow engine](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
-- [StartRun route tests](../../../apps/api/test/entrypoints/http/startRunRoute.test.ts)
+- [AGENTS.md](../../../../AGENTS.md)
+- [Governance Document And Rule Inventory](../../status/governance-document-rule-inventory.md)
+- [Planning Control Tower](../../state/planning-control-tower.md)
+- [Roadmap Of Record](../../roadmap/index.md)
+- [ExecutionPlan.v2 / PlannerInputEnvelopeV2](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+- [Planner Input Envelope Validator](../../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts)
+- [StartRun route](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
+- [StartRun planner-backed use case](../../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
+- [Workflow engine](../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+- [StartRun route tests](../../../../apps/api/test/entrypoints/http/startRunRoute.test.ts)
 
 ## 2. Executive summary
 

@@ -21,7 +21,7 @@ in [System Delivery Status](system-delivery-status.md).
 1. [Reference Architecture](reference-architecture.md)
 2. [System Delivery Status](system-delivery-status.md)
 3. [DVT Component Map](component-map.md)
-4. [Execution Workboard](../planning/state/execution-workboard.md)
+4. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Current Domain Relationships
 
@@ -70,4 +70,4 @@ flowchart LR
 - [DVT Component Map](component-map.md)
 - [Architecture Component Surfaces](components/index.md)
 - [DVT System Architecture](system-overview.md)
-- [Execution Workboard](../planning/state/execution-workboard.md)
+- [Planning Control Tower](../planning/state/planning-control-tower.md)

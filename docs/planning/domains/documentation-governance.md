@@ -15,14 +15,14 @@ gates.
 
 - [Governance Document and Rule Inventory](../status/governance-document-rule-inventory.md)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Planning Status](../status/index.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 
 ## Active Proposal Set
 
 - [Documentation Restructuring Diagnostic and Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)
-- [Documentation Usability Change Plan](../proposals/documentation-usability-change-plan-20260308.md)
+- [Documentation Usability Change Plan](../proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md)
 - [Repository Governance Proposal Set 2026-03-17](../archive/proposals/repository-governance-proposal-set-20260317.md)
-- [CI Delivery Governance Consolidated Action Plan](../proposals/ci-delivery-governance-consolidated-action-plan-20260331.md)
+- [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)
 
 ## Relevant Reviews And Closeouts
 

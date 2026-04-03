@@ -11,7 +11,8 @@ planning_type: proposal
 ## Context
 
 The execution of this roadmap is tracked in
-[Agent Lane E](../state/agent-lane-e.md) (`docs/planning/state/agent-lane-e.md`).
+[Agent Lane E](../../../state/agent-lane-e.yaml)
+(`docs/planning/state/agent-lane-e.yaml`).
 Lane E tasks (`MVP-E1`, `F-01` through `F-21`) are the canonical work units.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
@@ -178,10 +179,10 @@ the design direction, not the OpenLineage backend product.
 
 That direction is now documented in:
 
-- [Main Workspace Views And UX](../../architecture/frontend/main-workspace-views-and-ux.md)
-- [Screen Manuals And User Stories](../../architecture/frontend/screen-manuals-and-user-stories.md)
-- [UX Implementation Guide](../../architecture/frontend/ux-implementation-guide.md)
-- [Library And Open-Source Reference Stack](../../architecture/frontend/library-and-open-source-reference-stack.md)
+- [Main Workspace Views And UX](../../../../architecture/frontend/main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](../../../../architecture/frontend/screen-manuals-and-user-stories.md)
+- [UX Implementation Guide](../../../../architecture/frontend/ux-implementation-guide.md)
+- [Library And Open-Source Reference Stack](../../../../architecture/frontend/library-and-open-source-reference-stack.md)
 
 ### Source generation direction
 
@@ -233,8 +234,8 @@ but the UI still needs its own frontend-facing contract artifact that records:
 
 ## Related Files
 
-- [Agent Lane E](../state/agent-lane-e.md) - execution tracking
-- [Frontend Architecture](../../architecture/frontend/index.md)
-- [UI / Visualization Domain](../../architecture/domain-ui.md)
-- [`apps/web/src/`](../../../apps/web/src/) - frontend source
-- [`apps/api/`](../../../apps/api/) - backend source
+- [Agent Lane E](../../../state/agent-lane-e.yaml) - execution tracking
+- [Frontend Architecture](../../../../architecture/frontend/index.md)
+- [UI / Visualization Domain](../../../../architecture/domain-ui.md)
+- [`apps/web/src/`](../../../../../apps/web/src/) - frontend source
+- [`apps/api/`](../../../../../apps/api/) - backend source

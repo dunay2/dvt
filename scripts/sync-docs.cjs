@@ -469,6 +469,13 @@ function generatePlanningIndexes() {
     status: 'Review',
     owner: 'docs',
   });
+  if (
+    String(planningMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    planningMeta.owner = 'Product / Architecture / Docs';
+  }
   const planningLines = [
     renderFrontmatter(planningMeta),
     '# Planning',
@@ -550,6 +557,13 @@ function generatePlanningIndexes() {
     status: 'Draft',
     owner: 'docs',
   });
+  if (
+    String(proposalsMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    proposalsMeta.owner = 'Product / Architecture / Docs';
+  }
   const proposalsLines = [
     renderFrontmatter(proposalsMeta),
     '# Planning Proposals',
@@ -575,6 +589,13 @@ function generatePlanningIndexes() {
     status: 'Review',
     owner: 'docs',
   });
+  if (
+    String(reviewsMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    reviewsMeta.owner = 'Product / Architecture / Docs';
+  }
   const reviewsLines = [
     renderFrontmatter(reviewsMeta),
     '# Planning Reviews',
@@ -600,6 +621,13 @@ function generatePlanningIndexes() {
     status: 'Review',
     owner: 'docs',
   });
+  if (
+    String(statusMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    statusMeta.owner = 'Product / Architecture / Docs';
+  }
   const statusLines = [
     renderFrontmatter(statusMeta),
     '# Planning Status',
@@ -851,7 +879,7 @@ function renderConceptsIndex(meta, rows) {
     '3. [DVT System Map](system-map.md)',
     '4. [Repository Map](repository-map.md)',
     '5. [Architecture Index](../architecture/index.md)',
-    '6. [Planning Index](../planning/index.md)',
+    '6. [Planning Control Tower](../planning/state/planning-control-tower.md)',
     '',
     '## Index',
     '',

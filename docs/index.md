@@ -18,7 +18,8 @@ specifically about execution invariants or adapters.
   [Contracts](contracts/index.md)
 - See current implementation and delivery status:
   [System Delivery Status](architecture/system-delivery-status.md)
-- Follow active work, proposals, and gaps: [Planning](planning/index.md)
+- Follow active work, proposals, and gaps:
+  [Planning Control Tower](planning/state/planning-control-tower.md)
 - Operate or troubleshoot the system: [Runbooks](runbooks/index.md)
 - Review unresolved debt and acceptance posture: [Risk Register](risk-register/index.md)
 - Review decisions and decision history: [ADRs](adr/index.md)
@@ -37,7 +38,7 @@ specifically about execution invariants or adapters.
 - [Planning Control Tower](planning/state/planning-control-tower.md)
 - [Planning Gaps](planning/gaps/index.md)
 - [Current Delivery Status](architecture/system-delivery-status.md)
-- [Planning Status](planning/status/index.md)
+- [Planning Governance Inventory](planning/status/governance-document-rule-inventory.md)
 - [Evidence](evidence/index.md)
 
 ## Reading Paths
@@ -56,7 +57,7 @@ specifically about execution invariants or adapters.
 2. [Current Delivery Status](architecture/system-delivery-status.md)
 3. [Shared Package Architecture](architecture/shared/index.md)
 4. [Architecture Index](architecture/index.md)
-5. [Planning Index](planning/index.md)
+5. [Planning Control Tower](planning/state/planning-control-tower.md)
 6. [Risk Register](risk-register/index.md)
 7. [Evidence](evidence/index.md)
 
@@ -66,7 +67,7 @@ specifically about execution invariants or adapters.
 2. [Current Delivery Status](architecture/system-delivery-status.md)
 3. [Risk Register](risk-register/index.md)
 4. [Planning Gaps](planning/gaps/index.md)
-5. [Planning Status](planning/status/index.md)
+5. [Planning Governance Inventory](planning/status/governance-document-rule-inventory.md)
 
 ## Transitional Notes
 
@@ -75,7 +76,8 @@ specifically about execution invariants or adapters.
 - [System Delivery Status](architecture/system-delivery-status.md) remains the
   active status surface for current implementation truth.
 - Legacy aliases were removed from the active tree. Start from
-  [Concepts](concepts/index.md), [Planning](planning/index.md), and
+  [Concepts](concepts/index.md),
+  [Planning Control Tower](planning/state/planning-control-tower.md), and
   [ADRs](adr/index.md) for the active surface.
 
 ## Governance and Contribution

@@ -31,5 +31,6 @@ reference set, not the canonical home for ADRs or active execution tracking.
 ## Canonical Sources
 
 - ADRs: [`docs/adr/`](../../adr/index.md)
-- Active planning: [`docs/planning/`](../../planning/index.md)
+- Active planning:
+  [`docs/planning/state/planning-control-tower.md`](../../planning/state/planning-control-tower.md)
 - Normative architecture docs: [`docs/architecture/`](../index.md)

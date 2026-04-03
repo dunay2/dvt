@@ -32,5 +32,5 @@ flowchart TB
 
 ## Canonical References
 
-- [Execution Workboard](../../state/execution-workboard.md)
+- [Planning Control Tower](../../state/planning-control-tower.md)
 - [Roadmap By Domain](../roadmap-by-domain.md)

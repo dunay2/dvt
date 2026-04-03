@@ -27,6 +27,8 @@ boards, review status board, and active governance/docs tracks).
   Rationale: active domain-boundary and ownership alignment work.
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
   Rationale: active documentation governance and navigation hardening.
+- [Generated Planning Surfaces Extraction Plan](generated-planning-surfaces-extraction-plan-20260403.md)
+  Rationale: targeted plan to stop tracking the highest-conflict generated planning views while keeping CI fail-closed.
 - [Governance Startup Card Router Plan](governance-startup-card-router-plan-20260402.md)
   Rationale: active startup-governance enforcement and routing consistency.
 - [RC-C1 HTTP Error Envelope Normalization Plan](../runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
