@@ -31,6 +31,10 @@ boards, review status board, and active governance/docs tracks).
   Rationale: targeted plan to stop tracking the highest-conflict generated planning views while keeping CI fail-closed.
 - [Governance Startup Card Router Plan](governance-startup-card-router-plan-20260402.md)
   Rationale: active startup-governance enforcement and routing consistency.
+- [Doc-Driven Framework And Tooling Plan](doc-driven-framework-and-tooling-plan-20260404.md)
+  Rationale: the repo already has strong governance controls, but still lacks a unified
+  framework for document taxonomy, planning data, authoring scaffolds, and traceability
+  automation.
 - [RC-C1 HTTP Error Envelope Normalization Plan](../runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
   Rationale: active API contract normalization track.
 - [RC-C2 Shared Preflight And CI Log-First Triage Plan](../runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)

@@ -430,6 +430,29 @@ tasks:
       The startup card/router is now implemented in the canonical governance inventory and aligned
       with the AI work protocol.
     last_verified: '2026-04-02'
+  - task_id: GOV-S2
+    priority: P1
+    status: in_progress
+    objective: >-
+      formalize the repository's doc-driven operating model as a governed framework with information
+      architecture, planning-data rules, authoring scaffolds, and traceability automation.
+    dependency: GOV-S1, DOC-ARCH-01
+    target: >-
+      One canonical proposal defines the framework, rollout waves, lane ownership, and the
+      transition from isolated governance scripts to a coherent doc-driven operating system.
+    complexity: M
+    effort_points: 5
+    progress_pct: 15
+    evidence_refs:
+      - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+      - docs/planning/status/governance-document-rule-inventory.md
+      - docs/guides/ai-work-protocol.md
+      - docs/planning/state/planning-control-tower.md
+    status_reason: >-
+      Governance routing and generated-planning extraction are already in place, but the repo still
+      lacks a unified framework for authoring, planning-data validation, and traceability
+      automation. The proposal is now published and execution waves need decomposition.
+    last_verified: '2026-04-04'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -1213,6 +1236,10 @@ dependency_notes:
   - >-
     `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
     folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.
+  - >-
+    `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
+    planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
+    traceability waves instead of continuing script-by-script growth.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
