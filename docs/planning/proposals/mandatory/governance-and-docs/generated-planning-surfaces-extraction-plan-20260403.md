@@ -178,6 +178,14 @@ planning-state generated outputs first, then reassess."
 - make local docs commands render those views without requiring git-tracked
   files
 
+Wave 2 status (2026-04-03): implemented.
+
+- `generate-planning-lanes.cjs` and `generate-workboard.cjs` now support
+  `--output-root` while keeping lane YAML as the canonical input source.
+- local isolated generation command is available:
+  `pnpm docs:planning:preview:isolated`
+- isolated outputs are written under `.generated-docs/` (ignored by git).
+
 ### Wave 3 - Change CI gates
 
 - replace `docs:sync:check` and `docs:workboard:check` assumptions that those

@@ -119,6 +119,14 @@ Do not stage the generated planning-derived files after regeneration:
 - `docs/planning/state/execution-workboard.md`
 - `docs/planning/state/open-task-route.md`
 
+For isolated local previews that avoid touching tracked docs surfaces:
+
+```bash
+pnpm docs:planning:preview:isolated
+```
+
+This renders lane and workboard outputs under `.generated-docs/docs/planning/state/`.
+
 ## Field reference
 
 | Field           | Required | Values / Rule                                              |

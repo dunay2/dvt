@@ -59,6 +59,16 @@ That command regenerates the planning-derived pages, verifies the required
 files and sections exist, checks determinism across repeated runs, and fails if
 those pages are accidentally tracked in git again.
 
+For isolated local generation (useful with concurrent agents or long-lived
+branches):
+
+```bash
+pnpm docs:planning:preview:isolated
+```
+
+This writes generated planning lane/workboard outputs to
+`.generated-docs/docs/planning/state/` without modifying tracked docs files.
+
 ## Runtime authority
 
 - Primary docs runtime: `zensical`
