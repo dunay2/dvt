@@ -997,19 +997,21 @@ tasks:
       guide for keeping architecture docs aligned after runtime changes.
     complexity: M
     effort_points: 3
-    progress_pct: 90
+    progress_pct: 92
     evidence_refs:
       - docs/planning/proposals/architecture-doc-reconciliation-plan-20260402.md
       - docs/architecture/architecture-surface-inventory-20260402.md
       - docs/architecture/system-delivery-status.md
+      - docs/architecture/components/api/api-current-to-target-architecture.md
       - docs/architecture/atlas/architecture/architecture_atlas.md
       - docs/planning/execution-model/index.md
     status_reason: >-
       Waves 1 to 4 are now delivered: canonical reading order is published, planning-domain drift is
       corrected, the architecture atlas is historical, supporting architecture maps are
-      non-canonical, and the component subtree now routes through explicit supporting entrypoints,
-      but final archive consolidation and a contributor maintenance guide remain open.
-    last_verified: '2026-04-02'
+      non-canonical, the component subtree now routes through explicit supporting entrypoints, and
+      the API component now has a code-grounded current-to-target walkthrough, but final archive
+      consolidation and a contributor maintenance guide remain open.
+    last_verified: '2026-04-03'
   - task_id: WE-HX
     priority: P1
     status: in_progress
