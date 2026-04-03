@@ -66,9 +66,7 @@ const authorizerGranted: IExecutionScopeAuthorizer = {
   ) => {
     const scope = {
       tenantId: requestedScope.tenantId,
-      ...(requestedScope.projectId !== undefined
-        ? { projectId: requestedScope.projectId }
-        : {}),
+      ...(requestedScope.projectId !== undefined ? { projectId: requestedScope.projectId } : {}),
       ...(requestedScope.environmentId !== undefined
         ? { environmentId: requestedScope.environmentId }
         : {}),
