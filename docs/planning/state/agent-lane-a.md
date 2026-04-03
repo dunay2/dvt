@@ -34,7 +34,7 @@ Generated from the verified lane registry `agent-lane-a.yaml`. Use this file whe
 
 ## Goal
 
-Close the state-store boundary, retire contract ownership drift, and keep governance startup executable.
+Close the state-store boundary, retire contract ownership drift, and keep governance startup executable while making planner and execution contracts dbt-agnostic at the core.
 
 ## Verification Summary
 
@@ -114,6 +114,7 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - `plan-version-reset` is closed and remains independent.
 - `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address branded types (P0), stepTypeConfig validation (P0), enrichRunStatus extraction (P1), custom policy cleanup (P2), planId determinism (P2), snapshot concurrency contract (P2), and delivery package split (P2).
 - `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0), GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends on AR-A2; MW-A3 depends on MW-A1.
+- `MW-A2` is the architectural anchor for the dbt-agnostic product direction: dbt remains supported, but only as one graph-source adapter feeding a generic planner contract.
 
 ## Expected Outcome
 
@@ -124,3 +125,4 @@ Close the state-store boundary, retire contract ownership drift, and keep govern
 - optional maintenance ownership is explicit
 - migration recovery is defined
 - governance startup routing is explicit
+- planner inputs are dbt-agnostic and dbt is only one supported graph source
