@@ -18,3 +18,5 @@ mitigations:
   - Re-pinned hash verified with DVT_BOOTSTRAP_VECTOR=1 at HEAD.
   - CI determinism gate (Determinism Tests job) catches this class of failure on every PR.
   - BOOTSTRAP_MODE documents the re-pin procedure inline in the test.
+  - Added explicit determinism coverage for `createdAtIso` drift in planner unit tests so `planId`
+    invariance is enforced even when timestamp input changes across retries.
