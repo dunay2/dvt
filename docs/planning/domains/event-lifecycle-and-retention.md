@@ -16,13 +16,13 @@ flows, and operational lifecycle governance.
 - [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Execution Workboard](../state/execution-workboard.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 
 ## Active Planning Inputs
 
 - [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
 - [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
-- [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/architecture-doc-reconciliation-plan-20260402.md)
+- [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
 
 ## Historical Proposal Inputs
 

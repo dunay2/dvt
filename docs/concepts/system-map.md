@@ -49,7 +49,7 @@ reader go next?
 4. [Shared Package Architecture](../architecture/shared/index.md)
 5. [Architecture Index](../architecture/index.md)
 6. [Contracts Index](../contracts/index.md)
-7. [Planning Index](../planning/index.md)
+7. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Where To Go By Question
 
@@ -58,5 +58,6 @@ reader go next?
 - "What do the small shared packages do?" -> [Shared Package Architecture](../architecture/shared/index.md)
 - "What code area is responsible?" -> [Repository Map](repository-map.md)
 - "What is true in the current implementation?" -> [System Delivery Status](../architecture/system-delivery-status.md)
-- "What is planned or still open?" -> [Planning](../planning/index.md)
+- "What is planned or still open?" ->
+  [Planning Control Tower](../planning/state/planning-control-tower.md)
 - "What decision governs this?" -> [ADRs](../adr/index.md)

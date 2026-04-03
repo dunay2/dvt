@@ -23,7 +23,7 @@ three practical questions:
 1. [Reference Architecture](reference-architecture.md)
 2. [System Delivery Status](system-delivery-status.md)
 3. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
-4. [Execution Workboard](../planning/state/execution-workboard.md)
+4. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Current Topology
 
@@ -141,4 +141,4 @@ flowchart TB
 - [DVT Domain Map](domain-map.md)
 - [Architecture Component Surfaces](components/index.md)
 - [System Delivery Status](system-delivery-status.md)
-- [Execution Workboard](../planning/state/execution-workboard.md)
+- [Planning Control Tower](../planning/state/planning-control-tower.md)

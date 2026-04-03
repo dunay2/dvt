@@ -15,8 +15,7 @@ current operational planning path.
 
 ## Current Routing Surfaces
 
-- [Open Task Route](open-task-route.md)
-- [Execution Workboard](execution-workboard.md)
+- [Planning Control Tower](planning-control-tower.md)
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)

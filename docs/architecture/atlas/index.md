@@ -16,7 +16,7 @@ Code-aligned snapshot for architecture status, completion, and delivery planning
 - Intended use: onboarding, code-aligned status reading, roadmap context.
 - Not canonical for ADR governance: use [`docs/adr/`](../../adr/index.md).
 - Not canonical for active execution tracking: use
-  [`docs/planning/state/execution-workboard.md`](../../planning/state/execution-workboard.md)
+  [`docs/planning/state/planning-control-tower.md`](../../planning/state/planning-control-tower.md)
   and [`docs/planning/roadmap/index.md`](../../planning/roadmap/index.md).
 
 ## Recommended Flow

@@ -231,6 +231,6 @@ Blockers:
 
 ## Next Documents To Update
 
-- `docs/planning/state/open-task-route.md`
-- `docs/planning/state/execution-workboard.md`
-- `docs/planning/reviews/index.md` after review artifacts are produced
+- `docs/planning/state/planning-control-tower.md`
+- `docs/planning/state/agent-lane-*.yaml`
+- `docs/planning/reviews/review-status-board.md` after review artifacts are produced

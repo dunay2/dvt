@@ -17,13 +17,13 @@ plan-version compatibility.
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [Planner Current State Assessment](../status/planner-current-state-assessment-20260320.md)
 - [Planner Local Doc Triage](../status/planner-local-doc-triage-20260320.md)
-- [Execution Workboard](../state/execution-workboard.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 
 ## Active Planning Inputs
 
-- [S08 Plan Record / Plan Store Execution Plan 2026-04-02](../proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [S08 Plan Record / Plan Store Execution Plan 2026-04-02](../proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [S08 Plan Record / Plan Store Gap Review 2026-04-02](../reviews/20260402-s08-plan-record-plan-store-gap-review.md)
-- [Proposal Priority Triage 2026-04-02](../proposals/proposal-priority-triage-20260402.md)
+- [Proposal Priority Triage 2026-04-02](../proposals/mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 
 ## Historical Proposal Inputs
 
@@ -37,8 +37,8 @@ archived planning inputs rather than active proposal authorities.
 
 ## Stage 1.1 Canonicalization Artifacts
 
-- [Planner Stage 1.1 Canonicalization Manifest](../proposals/planner-stage-1-1-canonicalization.manifest.json)
-- [Planner Stage 1.1 Manifest Schema](../proposals/planner-stage-1-1-canonicalization.manifest.schema.json)
+- [Planner Stage 1.1 Canonicalization Manifest](../proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json)
+- [Planner Stage 1.1 Manifest Schema](../proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json)
 
 ## Relevant Reviews And Closeouts
 

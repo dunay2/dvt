@@ -15,8 +15,8 @@ status, and delivery artifacts.
 flowchart TB
   RR[Roadmap Of Record]
   SD[System Delivery Status]
-  WB[Execution Workboard]
-  PS[Planning Status]
+  PT[Planning Control Tower]
+  GI[Governance Inventory]
 
   RR --> EX[Execution Runtime]
   RR --> API[API And Admission]
@@ -27,11 +27,11 @@ flowchart TB
   SD --> EX
   SD --> API
   SD --> PLC
-  WB --> EX
-  WB --> API
-  WB --> EVT
-  PS --> PLC
-  PS --> DOC
+  PT --> EX
+  PT --> API
+  PT --> EVT
+  GI --> PLC
+  GI --> DOC
 
   EX --> EXR[Runtime boards and reviews]
   API --> APR[API proposals and reviews]

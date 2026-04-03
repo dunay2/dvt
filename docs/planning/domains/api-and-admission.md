@@ -16,7 +16,7 @@ and auth-runtime integration.
 - [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Execution Workboard](../state/execution-workboard.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 
 ## Active Planning Inputs
 

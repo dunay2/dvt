@@ -851,7 +851,7 @@ function renderConceptsIndex(meta, rows) {
     '3. [DVT System Map](system-map.md)',
     '4. [Repository Map](repository-map.md)',
     '5. [Architecture Index](../architecture/index.md)',
-    '6. [Planning Index](../planning/index.md)',
+    '6. [Planning Control Tower](../planning/state/planning-control-tower.md)',
     '',
     '## Index',
     '',

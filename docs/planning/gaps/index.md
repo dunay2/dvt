@@ -20,7 +20,7 @@ current authority reference.
 
 ## Active Planning Anchors
 
-- [Execution Workboard](../state/execution-workboard.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 - [Roadmap Of Record](../roadmap/index.md)
 - [Domain Status Board](../state/domain-status-board.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
