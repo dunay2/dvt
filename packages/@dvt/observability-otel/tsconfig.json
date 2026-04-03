@@ -8,8 +8,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
-      "@dvt/observability": ["packages/@dvt/observability/dist/index.d.ts"],
-      "@dvt/observability/*": ["packages/@dvt/observability/dist/*"]
+      "@dvt/observability": [
+        "../../../packages/@dvt/observability/dist/index.d.ts"
+      ],
+      "@dvt/observability/*": ["../../../packages/@dvt/observability/dist/*"]
     }
   },
   "include": ["src"],
