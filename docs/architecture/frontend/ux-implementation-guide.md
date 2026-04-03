@@ -59,6 +59,12 @@ Use the current stack and deepen it:
 | Monaco Editor             | SQL, JSON, generated DDL, stored procedure, and diff-heavy read or review panes |
 | xterm.js                  | live log or terminal-grade console surface when static panels stop being enough |
 
+Monaco is embedded infrastructure, not the owner of the shell:
+
+- first-class Monaco routes are `Diff`, `Artifacts`, and `Templates`;
+- Monaco v1 is read-only plus diff;
+- Canvas and Runs remain non-Monaco-centric.
+
 ## Workbench Contract
 
 Every route-level workbench must fit this shell contract:
@@ -191,7 +197,10 @@ Primary tasks:
 ### Phase 4. Upgrade dense surfaces
 
 - move runs and event-heavy views to TanStack Table when cards stop scaling;
-- move SQL, JSON, and diff panes to Monaco when basic viewers stop scaling;
+- move `Diff` and `Artifacts` to Monaco-backed review panes when basic viewers
+  stop scaling;
+- prepare `Templates` to reuse Monaco for preview and diff without turning the
+  frontend into a freeform IDE;
 - move console and log playback to xterm.js only if the product needs
   terminal-grade streaming.
 
@@ -256,7 +265,8 @@ Done when:
 Done when:
 
 - users can review SQL, JSON, and structural deltas without placeholder panes;
-- Monaco-backed viewers or diff panes are used where complexity justifies them;
+- `Diff` and `Artifacts` use Monaco-backed viewers or diff panes where
+  complexity justifies them;
 - review state stays route-driven and understandable.
 
 ### Console
@@ -273,7 +283,8 @@ Done when:
 
 - template catalog and provider-profile choice are explicit;
 - parameter capture is schema-driven instead of raw boilerplate editing;
-- generated source can be previewed and diffed before export or apply;
+- generated source can be previewed and diffed through a governed Monaco
+  surface before export or apply;
 - artifacts such as Snowflake tasks, procedures, and ETL scaffolds carry
   template provenance and workflow context;
 - provider semantics still live in governed backend services, not in React
@@ -284,4 +295,4 @@ Done when:
 - [Main Workspace Views And UX](main-workspace-views-and-ux.md)
 - [Screen Manuals And User Stories](screen-manuals-and-user-stories.md)
 - [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
-- [Frontend Roadmap - Prototype To Operational UI](../../planning/proposals/frontend-roadmap-20260219.md)
+- [Frontend Roadmap - Prototype To Operational UI](../../planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)

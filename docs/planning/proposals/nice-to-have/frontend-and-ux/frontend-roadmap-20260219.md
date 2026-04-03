@@ -16,6 +16,8 @@ The execution of this roadmap is tracked in
 Lane E tasks (`MVP-E1`, `F-01` through `F-21`) are the canonical work units.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
+The dedicated F-04 boundary pack is tracked here:
+[F-04 Frontend Data-Boundary Hexagonal Convergence Plan](f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md).
 
 Original analysis: 2026-02-19. Updated to reflect active state: 2026-04-03.
 
@@ -81,6 +83,8 @@ The sequence must be reality-first:
 
 - `F-04`: finish the `VITE_DATA_SOURCE` boundary so views stop owning mode
   decisions.
+- `F-04` implementation and task decomposition are defined in the F-04
+  convergence plan document.
 - `F-05`: finish store decomposition so shell, graph, run, and status concerns
   stop leaking through `appStore`.
 - `F-06`: standardize TanStack Query keys, mutation ownership, and invalidation
@@ -104,7 +108,8 @@ The sequence must be reality-first:
   stable VS Code-like shell grammar.
 - `F-16`: move dense operational views to TanStack Table where card layouts stop
   scaling.
-- `F-17`: adopt Monaco-based panes for SQL, JSON, and diff-heavy surfaces.
+- `F-17`: adopt Monaco as an embedded review and generation surface for Diff,
+  Artifacts, and Templates.
 - `F-18`: converge the shell console and run-log story, using xterm.js only if
   terminal-grade streaming is truly required.
 - `F-19`: formalize the `Marquez` visual direction for open-data and
@@ -114,6 +119,31 @@ The sequence must be reality-first:
 - `F-21`: add a governed execution-template and source-generation workbench for
   provider-facing artifacts such as Snowflake tasks, procedures, and ETL
   scaffolds.
+
+### Monaco adoption mini-roadmap
+
+This slice is not a shell rewrite.
+
+The governing decision is:
+
+- keep the persistent shell and route-level workbenches;
+- keep Canvas and Runs non-Monaco-centric;
+- use Monaco only as an embedded read-only or diff surface where text-heavy
+  review justifies it.
+
+Execution order:
+
+1. stabilize data and query boundaries through `F-04`, `F-05`, and `F-06`;
+2. adopt Monaco in `Diff`;
+3. adopt Monaco in `Artifacts`;
+4. adopt Monaco in `Templates`;
+5. add lazy loading and bundle guardrails;
+6. converge Monaco panes on real backend contracts and artifact truth.
+
+This sequence deliberately places Monaco after the current boundary cleanup and
+before broader `F-21` generation hardening. `F-17` provides preview and diff
+infrastructure to `F-21`; it does not own the route shell or the workbench
+topology.
 
 ---
 
@@ -171,6 +201,16 @@ dashboards:
 - governed source-generation surfaces instead of ad hoc boilerplate editing;
 - mature editor and diff primitives instead of bespoke viewers.
 
+The shell grammar stays route-first:
+
+- Canvas is the graph authoring workbench;
+- Runs is the operational monitoring workbench;
+- Diff and Artifacts are review workbenches;
+- Templates is the future source-generation workbench.
+
+Monaco supports review and generation inside those routes. It does not replace
+the shell and it does not become the center of Canvas.
+
 For open-data or public-data slices, the visual direction should not simply copy
 the operator workbench. That slice should use the named `Marquez` theme:
 editorial, curated, and explanatory, while still reusing the governed shell and
@@ -194,7 +234,8 @@ That surface should:
 
 - start from templates and provider profiles rather than empty editors;
 - support artifacts such as Snowflake tasks, procedures, and ETL scaffolds;
-- preview and diff generated source before export or apply;
+- preview and diff generated source through the same governed Monaco surface
+  used by `Diff` and `Artifacts`;
 - keep generation semantics in backend contracts and services, not in view-local
   string assembly.
 
