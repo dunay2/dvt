@@ -41,10 +41,10 @@ Stabilize event payload versioning and lineage wiring.
 - Status model: `evidence-backed lane registry`
 - Done rule: `done only with accepted evidence or equivalent verifiable closure`
 - Verified on: `2026-04-02`
-- Total tasks: `14`
-- Total effort points: `56`
+- Total tasks: `17`
+- Total effort points: `71`
 - Completed weighted points: `52.6`
-- Lane progress: `94%`
+- Lane progress: `74%`
 - Notes: Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.
 
 ## Tasks
@@ -63,6 +63,9 @@ Stabilize event payload versioning and lineage wiring.
 - [x] `P1` `RC-B5-F2` `done` `M` `3pt` `100%`: add real-Postgres integration tests for lineage claim-timeout and stale-claimer race semantics.
 - [x] `P1` `DLQ alerting + automated replay` `done` `M` `5pt` `100%`: surface and reduce lineage backlogs.
 - [x] `P2` `manifest S3 fetch cache` `done` `S` `3pt` `100%`: reduce planner egress and build latency.
+- [ ] `P0` `AR-B1` `queued` `L` `8pt` `0%`: add RunStatus state machine validation at the event append boundary in appendAndEnqueueTx so that invalid event sequences (e.g., StepCompleted before StepStarted) are rejected at write time, not discovered during snapshot projection.
+- [ ] `P1` `AR-B2` `queued` `M` `5pt` `0%`: document the distributed consistency model: map all eventual consistency windows (event append to snapshot, bootstrap to adapter start, outbox enqueue to delivery), their maximum expected durations, and failure modes when windows are exceeded.
+- [ ] `P1` `AR-B3` `queued` `S` `2pt` `0%`: verify that ManifestGraphDeriver sorts node keys before processing to prevent Object.keys() ordering variance across dbt versions from changing plan identity (planId hash).
 - [ ] `P2` `ADP-LINT-ORDER-01` `review` `S` `2pt` `80%`: upgrade eslint import-order toolchain and remove workaround-only inline type alias patterns in adapter-postgres.
 - [ ] `P2` `RC-F2` `review` `S` `3pt` `80%`: externalize adapter-postgres CI path patterns to tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and pr-quality-gate.yml; add path-matcher unit tests.
 
@@ -77,6 +80,8 @@ Stabilize event payload versioning and lineage wiring.
 - `RC-B5` and `RC-B5-F2` are closed with accepted evidence.
 - `DLQ alerting + automated replay` and `manifest S3 fetch cache` are now verified as delivered via accepted evidence dated 2026-03-30.
 - `ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.
+- `AR-B1` is the most critical gap from the 2026-04-02 deep architectural review: RunStatus state machine validation at event append boundary to prevent invalid sequences from corrupting the log.
+- `AR-B2` addresses the missing distributed consistency model documentation, and `AR-B3` verifies ManifestGraphDeriver key ordering for determinism safety.
 
 ## Expected Outcome
 

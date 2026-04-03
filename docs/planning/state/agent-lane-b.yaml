@@ -254,6 +254,66 @@ tasks:
       - docs/evidence/critical/ED-20260330-planner-manifest-ref-cache.md
     status_reason: Accepted evidence closes the repeated manifestRef fetch cache slice.
     last_verified: '2026-03-31'
+  - task_id: AR-B1
+    priority: P0
+    status: queued
+    objective: >-
+      add RunStatus state machine validation at the event append boundary in appendAndEnqueueTx so
+      that invalid event sequences (e.g., StepCompleted before StepStarted) are rejected at write
+      time, not discovered during snapshot projection.
+    dependency: none
+    target: >-
+      A formal state machine definition exists in code; appendAndEnqueueTx validates that each event
+      represents a legal transition from the current run/step state; invalid transitions are
+      rejected with a typed error before persisting.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Identified as most critical gap in deep architectural review — invalid event sequences
+      silently corrupt the event log today and fixing after the fact requires event log surgery.
+    last_verified: '2026-04-02'
+  - task_id: AR-B2
+    priority: P1
+    status: queued
+    objective: >-
+      document the distributed consistency model: map all eventual consistency windows (event append
+      to snapshot, bootstrap to adapter start, outbox enqueue to delivery), their maximum expected
+      durations, and failure modes when windows are exceeded.
+    dependency: none
+    target: >-
+      Cross-cutting architectural document lists every consistency boundary, expected max latency,
+      failure mode, and monitoring signal; referenced from operational runbooks.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Implicit consistency assumptions become production incidents at scale; no unified document
+      exists mapping all eventual consistency windows.
+    last_verified: '2026-04-02'
+  - task_id: AR-B3
+    priority: P1
+    status: queued
+    objective: >-
+      verify that ManifestGraphDeriver sorts node keys before processing to prevent Object.keys()
+      ordering variance across dbt versions from changing plan identity (planId hash).
+    dependency: none
+    target: >-
+      ManifestGraphDeriver explicitly sorts manifest node keys; golden vector test confirms
+      identical planId across different dbt manifest key orderings.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      If Object.keys() order changes between dbt versions, the topo sort input changes, and the plan
+      identity silently drifts — a determinism violation.
+    last_verified: '2026-04-02'
   - task_id: ADP-LINT-ORDER-01
     priority: P2
     status: review
@@ -315,14 +375,21 @@ dependency_notes:
     `DLQ alerting + automated replay` and `manifest S3 fetch cache` are now verified as delivered
     via accepted evidence dated 2026-03-30.
   - '`ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.'
+  - >-
+    `AR-B1` is the most critical gap from the 2026-04-02 deep architectural review: RunStatus state
+    machine validation at event append boundary to prevent invalid sequences from corrupting the
+    log.
+  - >-
+    `AR-B2` addresses the missing distributed consistency model documentation, and `AR-B3` verifies
+    ManifestGraphDeriver key ordering for determinism safety.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-02'
-  total_tasks: 14
-  total_effort_points: 56
+  total_tasks: 17
+  total_effort_points: 71
   completed_weighted_points: 52.6
-  lane_progress_pct: 94
+  lane_progress_pct: 74
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
