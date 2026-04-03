@@ -231,6 +231,19 @@ Initial delivery completed:
 
 - [Planning Generated Artifacts Operations Runbook](../../../../runbooks/planning-generated-artifacts-operations-20260403.md)
 
+### Wave 6 - Closure and acceptance
+
+- collect two-sprint operational metrics after rollout
+- confirm conflict-rate reduction on planning-derived pages
+- confirm docs CI stability for planning-generated checks
+- decide final acceptance and close this proposal with a closeout artifact
+
+Wave 6 status (2026-04-03): started.
+
+Active tracker:
+
+- [Wave 6 Closure Tracker](../../../status/planning-generated-extraction-wave6-tracker-20260403.md)
+
 ## Acceptance Criteria
 
 1. A PR that changes only `agent-lane-*.yaml` no longer needs to commit
