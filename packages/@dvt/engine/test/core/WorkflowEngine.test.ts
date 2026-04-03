@@ -8,7 +8,13 @@
  * @version 1.0.0
  * @date 2026-03-03
  */
-import type { EngineRunRef, RunId } from '@dvt/contracts';
+import {
+  CONTRACTS_ERROR_CODE,
+  CONTRACTS_ERROR_MESSAGE_KEY,
+  ContractValidationError,
+  type EngineRunRef,
+  type RunId,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
@@ -25,6 +31,24 @@ import {
 } from './WorkflowEngine.helpers.js';
 
 type StoreEventInput = Parameters<InMemoryTxStore['appendAndEnqueueTx']>[1][number];
+
+async function expectContractValidationFailure(
+  promise: Promise<unknown>
+): Promise<ContractValidationError> {
+  try {
+    await promise;
+    throw new Error('Expected ContractValidationError');
+  } catch (error) {
+    expect(error).toBeInstanceOf(ContractValidationError);
+    expect(error).toMatchObject({
+      code: CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED,
+      messageKey: CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED,
+      messageParams: {},
+      message: 'Validation failed',
+    });
+    return error as ContractValidationError;
+  }
+}
 
 function makeRunEventInput(args: {
   runId: string;
@@ -90,9 +114,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       targetAdapter: 'temporal',
     } as any;
 
-    await expect(engine.startRun(invalidPlanRef, validContext)).rejects.toThrow(
-      /Validation failed/
-    );
+    await expectContractValidationFailure(engine.startRun(invalidPlanRef, validContext));
 
     const invalidContext = {
       tenantId: 't',
@@ -102,9 +124,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       targetAdapter: 'unknown-provider',
     } as any;
 
-    await expect(engine.startRun(makePlanRef(), invalidContext)).rejects.toThrow(
-      /Validation failed/
-    );
+    await expectContractValidationFailure(engine.startRun(makePlanRef(), invalidContext));
 
     const callerOwnedAttemptContext = {
       tenantId: 't',
@@ -115,8 +135,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
       logicalAttemptId: 2,
     } as any;
 
-    await expect(engine.startRun(makePlanRef(), callerOwnedAttemptContext)).rejects.toThrow(
-      /Validation failed/
+    await expectContractValidationFailure(
+      engine.startRun(makePlanRef(), callerOwnedAttemptContext)
     );
   });
 
@@ -136,7 +156,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       type: 'INVALID_SIGNAL',
     } as any;
 
-    await expect(engine.signal(runRef, badSignal)).rejects.toThrow(/Validation failed/);
+    await expectContractValidationFailure(engine.signal(runRef, badSignal));
   });
 
   it('emits startRun success metrics via observability', async () => {

@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CONTRACTS_ERROR_CODE,
+  CONTRACTS_ERROR_MESSAGE_KEY,
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,
   PlannerPolicyClassSetSchema,
   RetryPolicySchema,
   TimeoutPolicySchema,
+  UnsupportedPlannerPolicyError,
 } from '../src/index.js';
 
 describe('contracts: planner policy vocabulary', () => {
@@ -70,5 +73,26 @@ describe('contracts: planner policy vocabulary', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('uses structured metadata for unsupported planner policy errors', () => {
+    const error = new UnsupportedPlannerPolicyError({
+      adapterId: 'temporal',
+      policyType: 'retry',
+      policy: { kind: 'at-most-N', maxAttempts: 3 },
+      reason: 'unsupported backoff strategy',
+    });
+
+    expect(error.code).toBe(CONTRACTS_ERROR_CODE.UNSUPPORTED_PLANNER_POLICY);
+    expect(error.messageKey).toBe(CONTRACTS_ERROR_MESSAGE_KEY.UNSUPPORTED_PLANNER_POLICY);
+    expect(error.messageParams).toEqual({
+      adapterId: 'temporal',
+      policyType: 'retry',
+      policyKind: 'at-most-N',
+      reason: 'unsupported backoff strategy',
+    });
+    expect(error.message).toBe(
+      'Unsupported planner policy for temporal: retry.at-most-N (unsupported backoff strategy)'
+    );
   });
 });

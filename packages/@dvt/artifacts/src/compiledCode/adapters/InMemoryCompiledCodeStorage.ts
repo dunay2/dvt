@@ -26,10 +26,7 @@ export class InMemoryCompiledCodeStorage implements ICompiledCodeStorage {
   async read(tenantId: string, sha256: string): Promise<Buffer> {
     const content = this.store.get(this.storeKey(tenantId, sha256));
     if (content === undefined) {
-      throw new ArtifactStoreError(
-        `Artifact not found: tenant=${tenantId} sha256=${sha256}`,
-        'ARTIFACT_NOT_FOUND'
-      );
+      throw ArtifactStoreError.notFound(tenantId, sha256);
     }
     return content;
   }

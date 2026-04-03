@@ -18,6 +18,13 @@ import {
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 import type { PlanRecord } from './contracts/planner/PlanRecord.v1.js';
 import {
+  CONTRACTS_ERROR_CODE,
+  CONTRACTS_ERROR_MESSAGE_KEY,
+  DvtContractError,
+  type ContractsErrorMessageParams,
+  defaultContractsErrorMessage,
+} from './errorContract.js';
+import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
   DbtManifestRefSchema,
@@ -76,17 +83,23 @@ export interface ValidationIssue {
 export interface ValidationErrorResponse {
   statusCode: 400;
   error: 'Bad Request';
-  message: 'Validation failed';
+  code: typeof CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED;
+  messageKey: typeof CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED;
+  messageParams: ContractsErrorMessageParams<'CONTRACT_VALIDATION_FAILED'>;
+  message: string;
   details: ValidationIssue[];
 }
 
-export class ContractValidationError extends Error {
+export class ContractValidationError extends DvtContractError<'CONTRACT_VALIDATION_FAILED'> {
+  readonly code = CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED;
   readonly statusCode: 400;
   readonly error: 'Bad Request';
   readonly details: ValidationIssue[];
 
   constructor(details: ValidationIssue[]) {
-    super('Validation failed');
+    super(CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED, 'CONTRACT_VALIDATION_FAILED', {
+      details,
+    });
     this.name = 'ContractValidationError';
     this.statusCode = 400;
     this.error = 'Bad Request';
@@ -97,7 +110,10 @@ export class ContractValidationError extends Error {
     return {
       statusCode: this.statusCode,
       error: this.error,
-      message: 'Validation failed',
+      code: this.code,
+      messageKey: this.messageKey,
+      messageParams: this.messageParams,
+      message: this.message,
       details: this.details,
     };
   }
@@ -112,7 +128,10 @@ export function toValidationErrorResponse(error: unknown): ValidationErrorRespon
     return {
       statusCode: 400,
       error: 'Bad Request',
-      message: 'Validation failed',
+      code: CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED,
+      messageKey: CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED,
+      messageParams: {},
+      message: defaultContractsErrorMessage('CONTRACT_VALIDATION_FAILED', {}),
       details: mapZodIssues(error),
     };
   }
@@ -120,8 +139,17 @@ export function toValidationErrorResponse(error: unknown): ValidationErrorRespon
   return {
     statusCode: 400,
     error: 'Bad Request',
-    message: 'Validation failed',
-    details: [{ path: '$', code: 'unknown', message: 'Unknown validation error' }],
+    code: CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED,
+    messageKey: CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED,
+    messageParams: {},
+    message: defaultContractsErrorMessage('CONTRACT_VALIDATION_FAILED', {}),
+    details: [
+      {
+        path: '$',
+        code: 'unknown',
+        message: 'Unknown validation error',
+      },
+    ],
   };
 }
 

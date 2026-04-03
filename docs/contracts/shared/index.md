@@ -11,6 +11,7 @@ Cross-cutting types and shared validation contracts.
 
 ## Repository-local documents
 
+- [ContractsErrorModel v1](ContractsErrorModel.v1.md)
 - [HttpErrorEnvelope v1](HttpErrorEnvelope.v1.md)
 
 ## Normative Sources (`@dvt/contracts`)
