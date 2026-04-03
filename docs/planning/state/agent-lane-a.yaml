@@ -618,10 +618,13 @@ tasks:
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
     status_reason: >-
       ADR-0043 is accepted, S08-2 contract hardening is implemented, and S08-3 artifacts-owned
-      read/write ports are now delivered. Postgres migration and admission cutover remain open.
+      read/write ports are now delivered. The 2026-04-03 hard QA review now records open
+      supersession, integrity, and SRP defects in the current Postgres migration slice, so Postgres
+      migration and admission cutover remain open.
     last_verified: '2026-04-03'
   - task_id: S08-3
     parent_task: S08
