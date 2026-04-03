@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.7.0](https://github.com/dunay2/dvt/compare/v5.6.0...v5.7.0) (2026-04-03)
+
+
+### Features
+
+* **adapters:** Add artifacts-owned S08 plan-store read-write ports ([#745](https://github.com/dunay2/dvt/issues/745)) ([6ae354a](https://github.com/dunay2/dvt/commit/6ae354ad5a91c7e1c2129564bec05c08d4b6c877))
+
 ## [5.6.0](https://github.com/dunay2/dvt/compare/v5.5.0...v5.6.0) (2026-04-02)
 
 
