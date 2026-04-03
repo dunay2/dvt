@@ -28,9 +28,10 @@ Reviewed scope:
 - `docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md`
 
 The PR is green. That proves merge-gate compatibility, not architectural
-closure. The current implementation is useful as a transition step, but it
-still contains correctness drift, contract ambiguity, and SRP violations that
-should be treated as open work before `S08` is considered structurally closed.
+closure. Current implementation has already closed the main correctness drifts
+found in the first audit pass; remaining work is focused on final SRP closure
+(blob repository + composer/lifecycle split), lineage FK hardening, and test
+posture.
 
 ## Re-audit delta (2026-04-03)
 
@@ -60,9 +61,9 @@ current state.
 - `S08-HQA-05` remains open: lineage columns
   (`derived_from_plan_id` / `supersedes_plan_id`) still have no FK-level
   referential integrity.
-- `S08-HQA-07` is partially closed: transaction/schema/repository concerns have
-  been extracted, but executable-blob persistence and lifecycle facade remain
-  in `PostgresPlanStore` and still need final decomposition.
+- `S08-HQA-07` is near closure: transaction/schema/repository/blob concerns are
+  now extracted; remaining work is composer-level assembly split if we decide
+  to remove facade composition from `PostgresPlanStore`.
 - `S08-HQA-09` remains open: highest-value integration tests still depend on
   `DVT_PG_INTEGRATION=1` and are not always-on in default local runs.
 
@@ -70,10 +71,24 @@ current state.
 
 Treat this file as a mixed artifact:
 
-- closed findings remain useful as audit history
-- open findings should drive the next remediation slices
-- closure claims must reference this re-audit delta, not only the original
-  findings text
+- the detailed findings below are historical baseline findings from the first
+  hard QA pass
+- current closure state is authoritative in the status matrix in this section
+- remediation planning must follow the status matrix, not the original severity
+  labels in the historical findings text
+
+### Current status matrix (authoritative)
+
+- `S08-HQA-01` Closed
+- `S08-HQA-02` Closed
+- `S08-HQA-03` Closed
+- `S08-HQA-04` Closed
+- `S08-HQA-05` Open
+- `S08-HQA-06` Closed
+- `S08-HQA-07` Partial
+  note: now near closure after blob repository extraction
+- `S08-HQA-08` Closed
+- `S08-HQA-09` Open
 
 ## Governing sources
 
@@ -91,40 +106,37 @@ Treat this file as a mixed artifact:
 
 ## Think-first analysis
 
-### Problem summary
+### Problem summary (updated)
 
 The new slice correctly introduces the `PlanRecord`,
 `PlanExecutabilityRecord`, and `PlanAdmissionLink` tables and wires
 `@dvt/artifacts` ports into `adapter-postgres`.
 
 The remaining problem is not "does it compile and pass CI". The real problem is
-that the current implementation still overloads one adapter class with:
+that the current implementation still keeps part of the lifecycle/blob
+responsibility in one facade and still lacks FK-level lineage enforcement.
 
-- schema lifecycle
-- compatibility migration
-- legacy lifecycle facade
-- artifact write/read behavior
-- executability write/read behavior
-- admission write/read behavior
-- lineage and archival behavior
+- lifecycle/blob read-write behavior in facade
+- lineage FK integrity not yet enforced at DB level
+- integration tests for this seam still mostly PG-gated
 
-That concentration has already produced at least one real correctness defect in
-supersession handling and several places where contract truth can drift without
-failing loudly.
+The previous correctness defects in supersession, create semantics, ref
+integrity, and row-corruption handling are now fixed in code and should not be
+treated as open defects.
 
-### Root cause
+### Root cause (updated)
 
-The slice optimized for migration speed and PR throughput:
+The initial slice optimized for migration speed and PR throughput:
 
 - keep the existing `PostgresPlanStore`
 - make it implement the new artifacts-owned ports
 - backfill new tables from the legacy `stored_plans` table
 - preserve the legacy validation facade in place
 
-That got the repo to a mergeable transitional state. It also preserved the
-monolith class shape that the target remediation doc explicitly says must be
-decomposed. Once all responsibilities remained in one class, correctness and
-architecture drift started to mix.
+That got the repo to a mergeable transitional state. Follow-up remediation
+already extracted transaction runner, schema manager, and three repositories.
+Residual drift is now primarily the final facade/blob split plus FK hardening
+and integration-test posture.
 
 ### Constraints and invariants
 
@@ -152,9 +164,13 @@ flowchart TD
   A --> B7[row mapping and parse fallback logic]
 ```
 
-## Findings
+## Findings (historical baseline)
 
-### `S08-HQA-01` Blocking - supersession semantics are internally inconsistent
+The detailed findings in this section capture the first hard QA baseline and
+are intentionally preserved as audit history. Use the status matrix above as
+the real current-state view.
+
+### `S08-HQA-01` Historical baseline - supersession semantics were internally inconsistent
 
 Evidence:
 
@@ -193,7 +209,7 @@ Code references:
 - `PostgresPlanStore.getSupersession` at line `522`
 - `PlanRecord.supersedesPlanId` at line `31`
 
-### `S08-HQA-02` High - `createPlanRecord` is implemented as a partial upsert that can hide immutable-record drift
+### `S08-HQA-02` Historical baseline - `createPlanRecord` was implemented as a partial upsert that could hide immutable-record drift
 
 Evidence:
 
@@ -229,7 +245,7 @@ Code references:
 - `PostgresPlanStore.createPlanRecord` at line `337`
 - `PostgresPlanStore.upsertPlanRecord` at line `697`
 
-### `S08-HQA-03` High - `getPlanRecordByRef` reduces `PlanRef` integrity to `planId` only
+### `S08-HQA-03` Historical baseline - `getPlanRecordByRef` reduced `PlanRef` integrity to `planId` only
 
 Evidence:
 
@@ -258,7 +274,7 @@ Code references:
 
 - `PostgresPlanStore.getPlanRecordByRef` at line `457`
 
-### `S08-HQA-04` High - row mapping fabricates executability data instead of surfacing corruption
+### `S08-HQA-04` Historical baseline - row mapping fabricated executability data instead of surfacing corruption
 
 Evidence:
 
@@ -390,7 +406,7 @@ Code references:
 
 - `PostgresPlanStore` declaration at line `60`
 
-### `S08-HQA-08` Medium - the new invariants are not protected by focused negative-path tests
+### `S08-HQA-08` Historical baseline - the new invariants were not protected by focused negative-path tests
 
 Evidence:
 
@@ -543,5 +559,6 @@ This slice is **merge-green but not architecture-closed**.
 
 The new three-part model is present and usable, and the main correctness drifts
 (`S08-HQA-01` to `S08-HQA-04`) are now closed in code. Remaining closure work
-is focused on FK-level lineage hardening, final blob/facade decomposition, and
-integration-test posture (`S08-HQA-05`, `S08-HQA-07` partial, `S08-HQA-09`).
+is focused on FK-level lineage hardening and integration-test posture
+(`S08-HQA-05`, `S08-HQA-09`), with optional final composer extraction for
+`S08-HQA-07`.

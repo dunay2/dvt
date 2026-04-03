@@ -107,8 +107,7 @@ stateDiagram-v2
 ## Current limitations to keep in mind
 
 1. Lineage fields in `plan_records` are not FK-constrained yet.
-2. Executable-blob persistence/fetch still belongs to the lifecycle facade and
-   has not been moved to a dedicated blob repository yet.
+2. Integration-heavy coverage remains gated by `DVT_PG_INTEGRATION=1`.
 
 ## Safe usage checklist
 

@@ -18,17 +18,17 @@ import { Pool, type PoolClient } from 'pg';
 
 import { PostgresPlanAdmissionRepository } from './PostgresPlanStore.admission-repository.js';
 import { PostgresPlanExecutabilityRepository } from './PostgresPlanStore.executability-repository.js';
+import { PostgresExecutableBlobRepository } from './PostgresPlanStore.executable-blob-repository.js';
 import {
   assertStoredPlanMatchesRequest,
   buildPlanRecord,
   buildPlanRef,
   buildPlanRefFromStoredRow,
-  type StoredPlanRow,
 } from './PostgresPlanStore.mappers.js';
 import { PostgresPlanRecordRepository } from './PostgresPlanStore.plan-record-repository.js';
 import { PostgresPlanStoreSchemaManager } from './PostgresPlanStore.schema-manager.js';
 import { PostgresPlanStoreTxRunner } from './PostgresPlanStore.tx.js';
-import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
+import { normalizeSchema } from './sqlUtils.js';
 
 export interface ExecutablePlanArtifact {
   readonly text: string;
@@ -60,6 +60,7 @@ export class PostgresPlanStore
   private readonly planRecordRepository: PostgresPlanRecordRepository;
   private readonly planExecutabilityRepository: PostgresPlanExecutabilityRepository;
   private readonly planAdmissionRepository: PostgresPlanAdmissionRepository;
+  private readonly executableBlobRepository: PostgresExecutableBlobRepository;
 
   public constructor(private readonly config: PostgresPlanStoreConfig) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
@@ -86,6 +87,7 @@ export class PostgresPlanStore
     this.planRecordRepository = new PostgresPlanRecordRepository(this.schema);
     this.planExecutabilityRepository = new PostgresPlanExecutabilityRepository(this.schema);
     this.planAdmissionRepository = new PostgresPlanAdmissionRepository(this.schema);
+    this.executableBlobRepository = new PostgresExecutableBlobRepository(this.schema);
   }
 
   public async migrate(): Promise<void> {
@@ -114,56 +116,22 @@ export class PostgresPlanStore
     });
 
     return this.withTransaction(async (client) => {
-      const insertResult = await client.query<StoredPlanRow>(
-        `
-          INSERT INTO ${quoteIdentifier(this.schema)}.stored_plans (
-            plan_id,
-            plan_version,
-            plan_uri,
-            plan_sha256,
-            schema_version,
-            size_bytes,
-            requires_capabilities,
-            canonical_plan_json,
-            executable_plan_json,
-            validation_state,
-            rejection_report_json,
-            stored_at,
-            updated_at
-          ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, 'PENDING_VALIDATION', NULL, NOW(), NOW()
-          )
-          ON CONFLICT (plan_id) DO NOTHING
-          RETURNING
-            plan_id,
-            plan_version,
-            plan_uri,
-            plan_sha256,
-            schema_version,
-            size_bytes,
-            requires_capabilities,
-            canonical_plan_json,
-            executable_plan_json,
-            validation_state,
-            stored_at::text AS stored_at_iso,
-            updated_at::text AS updated_at_iso,
-            rejection_report_json
-        `,
-        [
-          planId,
-          planRef.planVersion,
-          planRef.uri,
-          planRef.sha256,
-          planRef.schemaVersion,
-          planRef.sizeBytes,
-          JSON.stringify(planRef.requiresCapabilities ?? null),
-          buildResult.canonicalPlanJson,
-          executable.text,
-        ]
-      );
+      const persistedSizeBytes = planRef.sizeBytes ?? executableBytes.byteLength;
+      const inserted = await this.executableBlobRepository.insertPendingPlan(client, {
+        planId,
+        planVersion: planRef.planVersion,
+        planUri: planRef.uri,
+        planSha256: planRef.sha256,
+        schemaVersion: planRef.schemaVersion,
+        sizeBytes: persistedSizeBytes,
+        requiresCapabilitiesJson: JSON.stringify(planRef.requiresCapabilities ?? null),
+        canonicalPlanJson: buildResult.canonicalPlanJson,
+        executablePlanJson: executable.text,
+      });
 
       const persisted =
-        insertResult.rows[0] ?? (await this.readStoredPlanRowForUpdate(client, planId));
+        inserted ??
+        (await this.executableBlobRepository.readStoredPlanRowForUpdate(client, planId));
       if (!persisted) {
         throw new Error(`PLAN_STORE_PERSIST_FAILED: ${planId}`);
       }
@@ -284,27 +252,9 @@ export class PostgresPlanStore
   }
 
   public async getValidationRecord(planId: string): Promise<PlanValidationRecord | undefined> {
-    const row = await this.withClient(async (client) => {
-      const result = await client.query<StoredPlanRow>(
-        `
-          SELECT
-            plan_id,
-            plan_version,
-            plan_uri,
-            plan_sha256,
-            schema_version,
-            size_bytes,
-            validation_state,
-            stored_at::text AS stored_at_iso,
-            updated_at::text AS updated_at_iso,
-            rejection_report_json
-          FROM ${quoteIdentifier(this.schema)}.stored_plans
-          WHERE plan_id = $1
-        `,
-        [planId]
-      );
-      return result.rows[0];
-    });
+    const row = await this.withClient(async (client) =>
+      this.executableBlobRepository.getValidationRecordRow(client, planId)
+    );
 
     if (!row) {
       return undefined;
@@ -339,20 +289,9 @@ export class PostgresPlanStore
     validated: PlanRefSchemaT,
     allowedStates: ReadonlyArray<'PENDING_VALIDATION' | 'VALID' | 'INVALID'>
   ): Promise<Uint8Array> {
-    const row = await this.withClient(async (client) => {
-      const result = await client.query<{
-        executable_plan_json: string;
-        validation_state: 'PENDING_VALIDATION' | 'VALID' | 'INVALID';
-      }>(
-        `
-          SELECT executable_plan_json, validation_state
-          FROM ${quoteIdentifier(this.schema)}.stored_plans
-          WHERE plan_id = $1
-        `,
-        [validated.planId]
-      );
-      return result.rows[0];
-    });
+    const row = await this.withClient(async (client) =>
+      this.executableBlobRepository.getExecutablePlanRow(client, validated.planId)
+    );
 
     if (!row) {
       throw new Error(`PLAN_NOT_FOUND: ${validated.planId}`);
@@ -364,35 +303,6 @@ export class PostgresPlanStore
     return Buffer.from(row.executable_plan_json, 'utf8');
   }
 
-  private async readStoredPlanRowForUpdate(
-    client: PoolClient,
-    planId: string
-  ): Promise<StoredPlanRow | undefined> {
-    const result = await client.query<StoredPlanRow>(
-      `
-        SELECT
-          plan_id,
-          plan_version,
-          plan_uri,
-          plan_sha256,
-          schema_version,
-          size_bytes,
-          requires_capabilities,
-          canonical_plan_json,
-          executable_plan_json,
-          validation_state,
-          stored_at::text AS stored_at_iso,
-          updated_at::text AS updated_at_iso,
-          rejection_report_json
-        FROM ${quoteIdentifier(this.schema)}.stored_plans
-        WHERE plan_id = $1
-        FOR UPDATE
-      `,
-      [planId]
-    );
-    return result.rows[0];
-  }
-
   private async transition(
     planId: string,
     expectedState: 'PENDING_VALIDATION',
@@ -401,36 +311,12 @@ export class PostgresPlanStore
     onTransition?: (client: PoolClient) => Promise<void>
   ): Promise<void> {
     await this.withTransaction(async (client) => {
-      const current = await client.query<{ validation_state: string }>(
-        `
-          SELECT validation_state
-          FROM ${quoteIdentifier(this.schema)}.stored_plans
-          WHERE plan_id = $1
-          FOR UPDATE
-        `,
-        [planId]
-      );
-
-      const state = current.rows[0]?.validation_state;
-      if (!state) {
-        throw new Error(`PLAN_NOT_FOUND: ${planId}`);
-      }
-      if (state !== expectedState) {
-        throw new Error(
-          `PLAN_VALIDATION_STATE_INVALID_TRANSITION: ${planId}:${state}->${nextState}`
-        );
-      }
-
-      await client.query(
-        `
-          UPDATE ${quoteIdentifier(this.schema)}.stored_plans
-          SET validation_state = $2,
-              rejection_report_json = $3::jsonb,
-              updated_at = NOW()
-          WHERE plan_id = $1
-        `,
-        [planId, nextState, JSON.stringify(report)]
-      );
+      await this.executableBlobRepository.transitionValidationState(client, {
+        planId,
+        expectedState,
+        nextState,
+        report,
+      });
       if (onTransition) {
         await onTransition(client);
       }
