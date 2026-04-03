@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-02'
+last_reviewed: '2026-04-03'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -614,7 +614,7 @@ tasks:
       facade.
     complexity: L
     effort_points: 8
-    progress_pct: 40
+    progress_pct: 55
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/contracts/planner/PlanStoreRecords.v1.md
@@ -623,14 +623,13 @@ tasks:
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
       - docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
     status_reason: >-
-      ADR-0043 is now accepted and S08-2 contract hardening is implemented with schema-backed
-      records, parser invariants, tests, and contract docs. Artifacts-owned ports, Postgres
-      migration, and admission cutover remain open.
-    last_verified: '2026-04-02'
+      ADR-0043 is accepted, S08-2 contract hardening is implemented, and S08-3 artifacts-owned
+      read/write ports are now delivered. Postgres migration and admission cutover remain open.
+    last_verified: '2026-04-03'
   - task_id: S08-3
     parent_task: S08
     priority: P0
-    status: queued
+    status: done
     objective: >-
       introduce artifacts-owned plan-store read/write ports without reintroducing shared-kernel
       behavior-port drift.
@@ -640,12 +639,17 @@ tasks:
       behavior port is introduced in `@dvt/contracts`.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-    status_reason: Planned execution slice; implementation has not started.
-    last_verified: '2026-04-02'
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+    status_reason: >-
+      Artifacts-owned plan-store writer/reader ports are now implemented and exported from
+      `@dvt/artifacts`, with no new plan-storage behavior port added in `@dvt/contracts`.
+    last_verified: '2026-04-03'
   - task_id: S08-4
     parent_task: S08
     priority: P0
@@ -749,20 +753,20 @@ dependency_notes:
   - '`GOV-S1` is closed with the startup card/router now published in the governance inventory.'
   - >-
     `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary
-    workstream; the documentation truth-correction and ownership package are in progress while
-    implementation slices remain queued behind that baseline.
+    workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are
+    delivered while migration and admission slices remain open.
   - >-
-    `S08-3/4/5/6` are now explicit subtasks under `S08` with sequenced dependencies for ports,
-    Postgres migration, admission cutover, and supersession/archival closure.
+    `S08-3/4/5/6` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` is now the next
+    execution slice for Postgres migration compatibility.
   - '`plan-version-reset` is closed and remains independent.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-02'
+  verified_on: '2026-04-03'
   total_tasks: 37
   total_effort_points: 140
-  completed_weighted_points: 63.16
-  lane_progress_pct: 45
+  completed_weighted_points: 66.36
+  lane_progress_pct: 47
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
