@@ -42,6 +42,8 @@ pending evidence explicit.
 - [ ] `TODO-AR-C2-06` Attach alert-rule/routing evidence for all mapped thresholds (`AR-C2-T3`)
 - [ ] `TODO-AR-C2-07` Attach sustained validation evidence and close AR-C2 (`AR-C2-T4`)
 - [x] `TODO-AR-C2-08` Re-run QA artifact gate with tracked AR-C2 diffs (`AR-C2-QA-1`)
+  - risk tracking: `R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP` stays `Open`
+    until `TODO-AR-C2-05..07` are completed with immutable evidence.
 
 ### Execution notes
 
