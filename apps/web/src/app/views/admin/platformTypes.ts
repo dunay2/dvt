@@ -1,4 +1,7 @@
-import type { PlatformConnectionState, PlatformHealthSnapshot } from '../../../capabilities/platform-health';
+import type {
+  PlatformConnectionState,
+  PlatformHealthSnapshot,
+} from '../../../capabilities/platform-health';
 
 export type AdminCapabilitiesData =
   | {
@@ -15,4 +18,3 @@ export type AdminPlatformTabProps = {
   capabilitiesLoading: boolean;
   capabilitiesError: boolean;
 };
-

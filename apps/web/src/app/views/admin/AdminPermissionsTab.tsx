@@ -1,7 +1,14 @@
 import { CheckCircle2, XCircle } from 'lucide-react';
 import type { Role } from '../../types/dbt';
 import { Card } from '../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 import { adminViewCopy as copy } from './copy';
 
 export function AdminPermissionsTab({ roles }: Readonly<{ roles: Role[] }>) {
@@ -53,4 +60,3 @@ function PermissionCell({ enabled }: Readonly<{ enabled: boolean }>) {
     </TableCell>
   );
 }
-

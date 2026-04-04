@@ -73,9 +73,7 @@ function buildRunsService(overrides?: Partial<IRunsPort>): IRunsPort {
 }
 
 describe('CostView', () => {
-  let mounted:
-    | Awaited<ReturnType<typeof withTestQueryClient>>
-    | null;
+  let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
 
   beforeEach(() => {
     mounted = null;
@@ -100,17 +98,15 @@ describe('CostView', () => {
 
   it('renders the cost summary view', async () => {
     mounted = await withTestQueryClient(
-      (
-        <AppServicesProvider
-          overrides={{
-            mode: 'mock',
-            workspaceService: buildWorkspaceService(),
-            runsService: buildRunsService(),
-          }}
-        >
-          <CostView />
-        </AppServicesProvider>
-      )
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService(),
+          runsService: buildRunsService(),
+        }}
+      >
+        <CostView />
+      </AppServicesProvider>
     );
 
     await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_sales') === true, {
@@ -124,21 +120,19 @@ describe('CostView', () => {
 
   it('renders error state when services fail', async () => {
     mounted = await withTestQueryClient(
-      (
-        <AppServicesProvider
-          overrides={{
-            mode: 'api',
-            workspaceService: buildWorkspaceService({
-              getGraphSnapshot: async () => {
-                throw new Error('workspace unavailable');
-              },
-            }),
-            runsService: buildRunsService(),
-          }}
-        >
-          <CostView />
-        </AppServicesProvider>
-      )
+      <AppServicesProvider
+        overrides={{
+          mode: 'api',
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () => {
+              throw new Error('workspace unavailable');
+            },
+          }),
+          runsService: buildRunsService(),
+        }}
+      >
+        <CostView />
+      </AppServicesProvider>
     );
 
     await act(async () => {

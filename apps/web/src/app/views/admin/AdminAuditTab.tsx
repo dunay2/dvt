@@ -3,7 +3,14 @@ import type { AuditLogEntry } from '../../types/dbt';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 import { cn } from '../../components/ui/utils';
 import { adminViewCopy as copy } from './copy';
 
@@ -36,7 +43,9 @@ export function AdminAuditTab({
         <div className="p-2">
           <div className="mb-2 flex items-center gap-2 px-3 pt-2">
             <FileText className="size-4 text-violet-400" />
-            <span className="text-xs uppercase tracking-wide text-slate-400">{copy.tabs.audit}</span>
+            <span className="text-xs uppercase tracking-wide text-slate-400">
+              {copy.tabs.audit}
+            </span>
           </div>
           <Table>
             <TableHeader>
@@ -84,4 +93,3 @@ export function AdminAuditTab({
     </div>
   );
 }
-

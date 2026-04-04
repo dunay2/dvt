@@ -61,4 +61,3 @@ export function AdminRolesTab({ roles }: Readonly<{ roles: Role[] }>) {
     </div>
   );
 }
-

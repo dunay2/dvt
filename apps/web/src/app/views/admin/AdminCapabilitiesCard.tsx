@@ -52,7 +52,9 @@ export function AdminCapabilitiesCard({
                 >
                   <span className="font-mono text-sm text-slate-200">{pluginId}</span>
                   <div className="flex items-center gap-2">
-                    {info.reason ? <span className="text-xs text-slate-500">{info.reason}</span> : null}
+                    {info.reason ? (
+                      <span className="text-xs text-slate-500">{info.reason}</span>
+                    ) : null}
                     <AdminStatusBadge
                       ok={info.available}
                       label={info.available ? 'available' : 'blocked'}
@@ -71,4 +73,3 @@ export function AdminCapabilitiesCard({
     </Card>
   );
 }
-

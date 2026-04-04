@@ -44,4 +44,3 @@ export const adminViewCopy = {
     auditPlaceholder: 'Search audit log...',
   },
 } as const;
-

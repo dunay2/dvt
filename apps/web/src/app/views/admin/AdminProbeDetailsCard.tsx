@@ -68,19 +68,25 @@ export function AdminProbeDetailsCard({ platformHealthSnapshot }: Readonly<Probe
       <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">{copy.labels.apiBaseUrl}</div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              {copy.labels.apiBaseUrl}
+            </div>
             <div className="mt-2 break-all font-mono text-sm text-slate-200">
               {platformHealthSnapshot?.apiBaseUrl ?? 'not resolved'}
             </div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">{copy.labels.dataSourceMode}</div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              {copy.labels.dataSourceMode}
+            </div>
             <div className="mt-2 text-sm text-slate-200">
               {platformHealthSnapshot?.dataSourceMode ?? 'unknown'}
             </div>
           </div>
         </div>
-        <div className="mt-3 text-xs text-slate-500">fetched at {platformHealthSnapshot?.fetchedAt ?? 'n/a'}</div>
+        <div className="mt-3 text-xs text-slate-500">
+          fetched at {platformHealthSnapshot?.fetchedAt ?? 'n/a'}
+        </div>
       </div>
     </Card>
   );

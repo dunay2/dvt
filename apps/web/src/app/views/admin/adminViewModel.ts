@@ -1,4 +1,7 @@
-import type { PlatformConnectionState, PlatformHealthSnapshot } from '../../../capabilities/platform-health';
+import type {
+  PlatformConnectionState,
+  PlatformHealthSnapshot,
+} from '../../../capabilities/platform-health';
 import type { AuditLogEntry, Role } from '../../types/dbt';
 
 export function getBackendStatusLabel(restStatus: PlatformConnectionState['rest']): string {
@@ -52,4 +55,3 @@ export function getRolePermissionLabel(permissionKey: keyof Role['permissions'])
     .replaceAll(/([A-Z])/g, ' $1')
     .trim();
 }
-

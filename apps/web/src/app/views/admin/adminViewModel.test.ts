@@ -69,4 +69,3 @@ describe('adminViewModel', () => {
     expect(getRolePermissionLabel('canEditEdges')).toBe('Edit Edges');
   });
 });
-
