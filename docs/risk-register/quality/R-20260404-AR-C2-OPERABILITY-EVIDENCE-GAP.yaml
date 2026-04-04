@@ -1,0 +1,34 @@
+---
+id: R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP
+title: AR-C2 can be overstated as complete without dashboard and alert evidence
+status: Open
+date: 2026-04-04
+owners:
+  - dvt-api
+  - dvt-outbox-worker
+  - docs
+severity: High
+probability: Medium
+---
+summary: >
+  AR-C2 has canonical signal and threshold mapping, but operational closure remains incomplete while
+  dashboard wiring evidence, alert-rule evidence, and sustained validation windows are pending. This
+  creates a risk of declaring SLA readiness without enforceable monitor proof.
+
+mitigations:
+  - Require immutable dashboard evidence per mapped signal (`AR-C2-T2`).
+  - Require immutable alert-rule and routing evidence per mapped threshold (`AR-C2-T3`).
+  - Require sustained validation windows and operator outcome records before lane closure
+    (`AR-C2-T4`).
+  - Keep `AR-C2` status as `in_progress` until all evidence rows are complete.
+
+monitoring:
+  - Track completion of pending TODOs in
+    `docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md`.
+  - Run `pnpm qa:artifact:check` and `pnpm verify:prepush` on every AR-C2 iteration.
+  - Review evidence matrix completeness in
+    `docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md`.
+
+follow_up:
+  - Move risk to Closed only when AR-C2 evidence matrices are fully populated and lane task AR-C2 is
+    set to done with supporting closeout evidence.

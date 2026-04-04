@@ -34,8 +34,9 @@ import {
   restoreRetryLineageCheckpoint,
 } from './retryLineagePolicy.js';
 import {
+  assertEventTenantMatches,
   assertEventRunIdMatches,
-  assertEventsMatchRunId,
+  assertEventsMatchRunIdAndTenant,
   assertRunEventInput,
   assertRunSequenceWithinSafeRange,
   cloneWorkflowSnapshot,
@@ -114,7 +115,11 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       throw new RunAlreadyExistsError(input.metadata.runId);
     }
 
-    assertEventsMatchRunId(input.metadata.runId, input.firstEvents);
+    assertEventsMatchRunIdAndTenant(
+      input.metadata.runId,
+      input.metadata.tenantId,
+      input.firstEvents
+    );
     const retryLineageCheckpoint = captureRetryLineageCheckpoint(
       this.nextRetryAttemptByOriginRunId,
       input.metadata
@@ -150,6 +155,10 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
 
     const existingEvents = this.eventsByRunId.get(runId) ?? [];
     const baseRunSeq = existingEvents.length;
+    const tenantId = this.metadataByRunId.get(runId)?.tenantId;
+    if (tenantId === undefined) {
+      throw new RunNotFoundError(runId);
+    }
 
     if (eventsToAppend.length === 0) {
       return { appended: [], deduped: [], lastSeq: baseRunSeq };
@@ -165,6 +174,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     for (const [i, event] of eventsToAppend.entries()) {
       assertRunEventInput(event, i);
       assertEventRunIdMatches(runId, event, i);
+      assertEventTenantMatches(tenantId, event, i);
 
       const existing = idempotencyIndex.get(event.idempotencyKey);
       if (existing) {

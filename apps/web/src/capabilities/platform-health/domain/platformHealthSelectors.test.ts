@@ -99,6 +99,56 @@ describe('selectPlatformConnectionState', () => {
       liveEvents: 'polling',
     });
   });
+
+  it('returns degraded when an optional endpoint reports 401 or 403', () => {
+    const unauthorizedSnapshot = createPlatformHealthSnapshot({
+      version: createVersionProbe({
+        data: null,
+        error: createPlatformEndpointFailure({
+          kind: 'http',
+          message: '/version returned 401 Unauthorized',
+          statusCode: 401,
+        }),
+      }),
+    });
+    const forbiddenSnapshot = createPlatformHealthSnapshot({
+      dbReady: createDbReadyProbe({
+        data: null,
+        error: createPlatformEndpointFailure({
+          kind: 'http',
+          message: '/db/ready returned 403 Forbidden',
+          statusCode: 403,
+        }),
+      }),
+    });
+
+    expect(selectPlatformConnectionState(unauthorizedSnapshot, false)).toEqual({
+      rest: 'degraded',
+      liveEvents: 'polling',
+    });
+    expect(selectPlatformConnectionState(forbiddenSnapshot, false)).toEqual({
+      rest: 'degraded',
+      liveEvents: 'polling',
+    });
+  });
+
+  it('returns degraded when an optional endpoint reports 5xx', () => {
+    const snapshot = createPlatformHealthSnapshot({
+      readyz: createReadyzProbe({
+        data: null,
+        error: createPlatformEndpointFailure({
+          kind: 'http',
+          message: '/readyz returned 503 Service Unavailable',
+          statusCode: 503,
+        }),
+      }),
+    });
+
+    expect(selectPlatformConnectionState(snapshot, false)).toEqual({
+      rest: 'degraded',
+      liveEvents: 'polling',
+    });
+  });
 });
 
 describe('isPlatformReady', () => {

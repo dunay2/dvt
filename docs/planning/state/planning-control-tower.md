@@ -72,6 +72,27 @@ or closeouts.
   [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 - Implementation truth: [System Delivery Status](../../architecture/system-delivery-status.md)
 
+## Where To Look First (Current Work + Continuation)
+
+When there is confusion about "what is active now" vs "where to continue":
+
+1. [System Delivery Status](../../architecture/system-delivery-status.md)
+   (`last_reviewed: 2026-04-02`): current implementation truth.
+2. [Agent Lane YAML registry](agent-lane-a.yaml)
+   (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): active tasks, owners,
+   execution status, blockers, and next actions.
+3. [Review Status Board](../reviews/review-status-board.md)
+   (`last_reviewed: 2026-04-04`): which reviews are active/reference and which
+   tasks they feed.
+4. [Roadmap Of Record](../roadmap/index.md): ordering and sequencing of delivery.
+
+Interpretation rule:
+
+- `status` = truth now
+- `lane yaml` = execution now + next work
+- `roadmap` = sequence
+- `reviews` = rationale and intake for follow-up work
+
 ## Reviews Quick Access
 
 - [Review Status Board](../reviews/review-status-board.md)

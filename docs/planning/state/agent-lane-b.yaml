@@ -138,14 +138,18 @@ tasks:
     target: Merge PR
     complexity: L
     effort_points: 8
-    progress_pct: 70
+    progress_pct: 85
     evidence_refs:
+      - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md
+      - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md
     status_reason: >-
-      Payload-content validation landed, but the full envelope-level payloadVersion closure is still
-      not accepted.
-    last_verified: '2026-03-31'
+      Payload-content validation and in-memory write-boundary tenant/schema hardening are now in
+      place with passing targeted engine tests and prepush gate. Parent task closure rule is
+      explicit: keep `S05` in `review` until adapter-postgres integration evidence is refreshed in
+      an accepted evidence artifact; if that evidence is accepted, move `S05` to `done`.
+    last_verified: '2026-04-04'
   - task_id: S05-F1
     priority: P0
     status: done

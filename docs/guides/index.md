@@ -14,6 +14,8 @@ Developer guides, contribution guides, and quality standards.
 - [AI Work Protocol](ai-work-protocol.md)
 - [API Control-Plane Technical Manual](api-control-plane-technical-manual-20260404.md)
 - [API Control-Plane User Manual](api-control-plane-user-manual-20260404.md)
+- [AR-C2 Observability Technical Manual](ar-c2-observability-technical-manual-20260404.md)
+- [AR-C2 Observability User Manual](ar-c2-observability-user-manual-20260404.md)
 - [DVT+ Design Guide](dvt-code-style-solid-hexagonal-cqrs.md)
 - [F-04 Frontend Data Boundary User Manual](f04-frontend-data-boundary-user-manual-20260404.md)
 - [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
