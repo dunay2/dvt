@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-01'
+last_reviewed: '2026-04-04'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -416,7 +416,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: AR-C2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
@@ -427,13 +427,23 @@ tasks:
       configured against those targets; operational runbook references the SLA definitions.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/guides/api-control-plane-user-manual-20260404.md
+      - docs/guides/api-control-plane-technical-manual-20260404.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts
+      - apps/api/src/application/services/startRunAuthorizedFacade.ts
+      - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+      - apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
+      - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
     status_reason: >-
-      No formal SLA document exists — performance targets are embedded in scattered configuration
-      defaults with no measurable definition of 'healthy'.
-    last_verified: '2026-04-02'
+      Canonical SLA/manuals are delivered and all AR-C2 metrics are now emitted in code (API
+      start-run/plan-compile plus outbox drain/event-delivery in outbox-worker); remaining closure
+      is dashboard/alert wiring and sustained threshold validation evidence.
+    last_verified: '2026-04-04'
   - task_id: AR-C3
     priority: P1
     status: queued
@@ -581,6 +591,9 @@ dependency_notes:
     `AR-C1` and `AR-C2` are P0 tasks from the 2026-04-02 deep review: admin route RBAC and formal
     SLA definitions.
   - >-
+    `AR-C2` moved to in-progress with canonical SLA/manual artifacts delivered; closure still
+    requires dashboard and alert wiring evidence.
+  - >-
     `AR-C1` is decomposed into `AR-C1-T1..T4` plus `CFG-TS-T1` to isolate test hardening, contract
     negative coverage, runtime composition checks, fixture reuse, and `baseUrl` deprecation planning
     without circular dependencies.
@@ -593,11 +606,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-01'
+  verified_on: '2026-04-04'
   total_tasks: 26
   total_effort_points: 97
-  completed_weighted_points: 45.5
-  lane_progress_pct: 47
+  completed_weighted_points: 47.3
+  lane_progress_pct: 49
   notes: >-
     Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
     parent umbrella tasks with subtasks carry coordination-only effort.

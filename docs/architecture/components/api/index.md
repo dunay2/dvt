@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-04
 ---
 
 # apps/api
@@ -50,6 +50,9 @@ Use the main walkthrough below for the real current system, the target API
 shape, and the governed transition route:
 
 - [API Current To Target Architecture](api-current-to-target-architecture.md)
+- [API Control-Plane User Manual](../../../guides/api-control-plane-user-manual-20260404.md)
+- [API Control-Plane Technical Manual](../../../guides/api-control-plane-technical-manual-20260404.md)
+- [API Runtime SLA Canonical](../../../runbooks/api-runtime-sla-canonical-20260404.md)
 
 ## Planned Delta
 

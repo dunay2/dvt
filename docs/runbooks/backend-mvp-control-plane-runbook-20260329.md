@@ -2,7 +2,7 @@
 title: Backend MVP Control-Plane Runbook
 status: Review
 owner: API / Runtime / Docs
-last_reviewed: 2026-03-29
+last_reviewed: 2026-04-04
 ---
 
 # Backend MVP Control-Plane Runbook
@@ -200,3 +200,10 @@ pnpm --filter dvt-api test:integration
 pnpm --filter @dvt/engine test
 pnpm verify:prepush
 ```
+
+## Canonical SLA Reference
+
+For runtime latency, freshness, outbox drain, and alert thresholds, use:
+
+- [API Runtime SLA Canonical](api-runtime-sla-canonical-20260404.md)
+- [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)

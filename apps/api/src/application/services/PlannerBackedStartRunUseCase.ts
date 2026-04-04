@@ -16,17 +16,26 @@ import {
   START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
 } from '../ports/startRunResultContract.js';
+import type {
+  IPlanCompileLatencyTelemetry,
+  PlanCompileLatencyOutcome,
+} from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
+  private static readonly NOOP_TELEMETRY: IPlanCompileLatencyTelemetry = {
+    recordPlanCompileLatency() {},
+  };
+
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
       readonly planStore: IPlanValidationLifecycleStore;
       readonly validator: IPlanExecutabilityValidator;
       readonly delegate: IStartRunUseCase;
+      readonly compileTelemetry?: IPlanCompileLatencyTelemetry;
     }
   ) {}
 
@@ -39,14 +48,22 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     }
 
     let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
+    const compileStartMs = Date.now();
+    let compileOutcome: PlanCompileLatencyOutcome = 'error';
     try {
       buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+      compileOutcome = 'built';
     } catch (error) {
       const rejection = mapManifestResolutionFailure(error);
       if (rejection !== null) {
+        compileOutcome = 'manifest_resolution_error';
         return rejection;
       }
       throw error;
+    } finally {
+      (
+        this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
+      ).recordPlanCompileLatency(Date.now() - compileStartMs, compileOutcome);
     }
     const planRef = await this.deps.planStore.storePlan(buildResult);
     const validation = await this.deps.validator.validatePlan(planRef, command.targetAdapter);

@@ -47,6 +47,7 @@ const STORED_PLAN_REF = {
 
 describe('PlannerBackedStartRunUseCase', () => {
   it('builds, stores, validates and delegates with the stored planRef', async () => {
+    const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const planner = {
       buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
     };
@@ -74,6 +75,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: planStore as never,
       validator: validator as never,
       delegate: delegate as never,
+      compileTelemetry: compileTelemetry as never,
     });
 
     const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
@@ -105,6 +107,8 @@ describe('PlannerBackedStartRunUseCase', () => {
       },
       AUTHORIZED_CONTEXT
     );
+    expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
+    expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe('built');
   });
 
   it('marks the plan invalid and returns a rejection when validation fails', async () => {
@@ -158,6 +162,7 @@ describe('PlannerBackedStartRunUseCase', () => {
   });
 
   it('delegates directly when the command already carries a planRef', async () => {
+    const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const delegate = {
       execute: vi.fn(async () => ({
         ok: true as const,
@@ -183,6 +188,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         })),
       } as never,
       delegate: delegate as never,
+      compileTelemetry: compileTelemetry as never,
     });
 
     const command = {
@@ -201,6 +207,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     });
     expect(planner.buildPlan).not.toHaveBeenCalled();
     expect(delegate.execute).toHaveBeenCalledWith(command, AUTHORIZED_CONTEXT);
+    expect(compileTelemetry.recordPlanCompileLatency).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -237,6 +244,7 @@ describe('PlannerBackedStartRunUseCase', () => {
   ])(
     'maps predictable manifest resolution failure $kind to plan_rejected',
     async ({ kind, expectedReason, expectedCause }) => {
+      const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
       const planStore = {
         storePlan: vi.fn(async () => STORED_PLAN_REF),
         markValid: vi.fn(async () => {}),
@@ -271,6 +279,7 @@ describe('PlannerBackedStartRunUseCase', () => {
           })),
         } as never,
         delegate: delegate as never,
+        compileTelemetry: compileTelemetry as never,
       });
 
       await expect(useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT)).resolves.toEqual({
@@ -287,10 +296,15 @@ describe('PlannerBackedStartRunUseCase', () => {
       expect(planStore.markValid).not.toHaveBeenCalled();
       expect(planStore.markInvalid).not.toHaveBeenCalled();
       expect(delegate.execute).not.toHaveBeenCalled();
+      expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
+      expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe(
+        'manifest_resolution_error'
+      );
     }
   );
 
   it('rethrows unexpected planner errors', async () => {
+    const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const useCase = new PlannerBackedStartRunUseCase({
       planner: {
         buildPlan: vi.fn(async () => Promise.reject(new Error('s3 transport down'))),
@@ -313,11 +327,14 @@ describe('PlannerBackedStartRunUseCase', () => {
           value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
         })),
       } as never,
+      compileTelemetry: compileTelemetry as never,
     });
 
     await expect(useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT)).rejects.toThrow(
       's3 transport down'
     );
+    expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
+    expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe('error');
   });
 });
 
