@@ -1,99 +1,17 @@
 import type { EngineRunRef, RunStatusSnapshot } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
+import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
-import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { SequenceClock } from '../../src/utils/clock.js';
-
-function makeAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-  const base: IProviderAdapter = {
-    provider: 'temporal',
-    async startRun() {
-      throw new Error('unused in core tests');
-    },
-    async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
-    },
-    async signal() {},
-  };
-  return overrides ? { ...base, ...overrides } : base;
-}
-
-function makeCore(input?: { adapterOverrides?: Partial<IProviderAdapter> }): {
-  core: WorkflowEngineCoreService;
-  store: InMemoryTxStore;
-  adapter: IProviderAdapter;
-} {
-  const store = new InMemoryTxStore();
-  const adapter = makeAdapter(input?.adapterOverrides);
-  const core = new WorkflowEngineCoreService({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-    projector: new SnapshotProjector(),
-    idempotency: new IdempotencyKeyBuilder(),
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    adapters: new Map([['temporal', adapter]]),
-    observability: createNoopObservability(),
-    clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
-  });
-  return { core, store, adapter };
-}
-
-async function bootstrapRun(store: InMemoryTxStore, runId: string): Promise<EngineRunRef> {
-  await store.bootstrapRunTx({
-    metadata: {
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      runId,
-      planId: 'plan-1',
-      planVersion: '1.0',
-      logicalAttemptId: 1,
-      provider: 'temporal',
-      providerWorkflowId: `wf-${runId}`,
-      providerRunId: runId,
-    },
-    firstEvents: [
-      {
-        eventId: `${runId}:queued`,
-        eventType: 'RunQueued',
-        runId,
-        tenantId: 't',
-        projectId: 'p',
-        environmentId: 'dev',
-        planId: 'plan-1',
-        planVersion: '1.0',
-        logicalAttemptId: 1,
-        engineAttemptId: 1,
-        emittedAt: '2026-03-26T00:00:00.000Z',
-        idempotencyKey: `${runId}:queued`,
-        payloadVersion: 1,
-      },
-    ],
-  });
-  return {
-    provider: 'temporal',
-    tenantId: 't',
-    namespace: 'default',
-    workflowId: `wf-${runId}`,
-    runId,
-  };
-}
+import {
+  appendRunStarted,
+  bootstrapQueuedRun,
+  makeRunRef,
+} from '../helpers/runLifecycle.fixture.js';
+import { createWorkflowEngineCoreFixture } from '../helpers/workflowEngine.fixture.js';
 
 describe('WorkflowEngineCoreService', () => {
   it('cancel throws when run metadata is missing', async () => {
-    const { core } = makeCore();
+    const { core } = createWorkflowEngineCoreFixture();
     await expect(
       core.cancel({
         provider: 'temporal',
@@ -107,7 +25,7 @@ describe('WorkflowEngineCoreService', () => {
 
   it('getStatus returns projected state without calling adapter', async () => {
     let adapterCalled = false;
-    const { core, store } = makeCore({
+    const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         async getRunStatus() {
           adapterCalled = true;
@@ -115,7 +33,8 @@ describe('WorkflowEngineCoreService', () => {
         },
       },
     });
-    const ref = await bootstrapRun(store, 'core-status-1');
+    await bootstrapQueuedRun(store, 'core-status-1');
+    const ref: EngineRunRef = makeRunRef('core-status-1');
     const snapshot = await core.getStatus(ref);
 
     expect(adapterCalled).toBe(false);
@@ -124,7 +43,7 @@ describe('WorkflowEngineCoreService', () => {
   });
 
   it('enrichStatus merges adapter substatus and message over projected base', async () => {
-    const { core, store } = makeCore({
+    const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         async getRunStatus(runRef) {
           return {
@@ -136,7 +55,8 @@ describe('WorkflowEngineCoreService', () => {
         },
       },
     });
-    const ref = await bootstrapRun(store, 'core-enrich-1');
+    await bootstrapQueuedRun(store, 'core-enrich-1');
+    const ref: EngineRunRef = makeRunRef('core-enrich-1');
     const enriched = await core.enrichStatus(ref);
 
     expect(enriched.runId).toBe('core-enrich-1');
@@ -146,25 +66,27 @@ describe('WorkflowEngineCoreService', () => {
   });
 
   it('enrichStatus throws when adapter status fetch fails', async () => {
-    const { core, store } = makeCore({
+    const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         async getRunStatus() {
           throw new Error('provider unavailable');
         },
       },
     });
-    const ref = await bootstrapRun(store, 'core-enrich-err-1');
+    await bootstrapQueuedRun(store, 'core-enrich-err-1');
+    const ref: EngineRunRef = makeRunRef('core-enrich-err-1');
     await expect(core.enrichStatus(ref)).rejects.toThrow(/provider unavailable/);
   });
 
   it('cancel delegates to adapter without appending RunCancelRequested', async () => {
     const cancelRun = vi.fn(async () => {});
-    const { core, store } = makeCore({
+    const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         cancelRun,
       },
     });
-    const ref = await bootstrapRun(store, 'core-cancel-1');
+    await bootstrapQueuedRun(store, 'core-cancel-1');
+    const ref: EngineRunRef = makeRunRef('core-cancel-1');
 
     await core.cancel(ref);
 
@@ -177,12 +99,13 @@ describe('WorkflowEngineCoreService', () => {
 
   it('signal(CANCEL) delegates to adapter without appending RunCancelRequested', async () => {
     const signal = vi.fn(async () => {});
-    const { core, store } = makeCore({
+    const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         signal,
       },
     });
-    const ref = await bootstrapRun(store, 'core-signal-cancel-1');
+    await bootstrapQueuedRun(store, 'core-signal-cancel-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-cancel-1');
 
     await core.signal(ref, {
       signalId: 'sig-cancel-1',
@@ -203,12 +126,14 @@ describe('WorkflowEngineCoreService', () => {
 
   it('signal(PAUSE) then signal(RESUME) still append engine-owned lifecycle events', async () => {
     const signal = vi.fn(async () => {});
-    const { core, store } = makeCore({
+    const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         signal,
       },
     });
-    const ref = await bootstrapRun(store, 'core-signal-pause-resume-1');
+    await bootstrapQueuedRun(store, 'core-signal-pause-resume-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-resume-1');
+    await appendRunStarted(store, 'core-signal-pause-resume-1');
 
     await core.signal(ref, {
       signalId: 'sig-pause-1',
@@ -222,6 +147,57 @@ describe('WorkflowEngineCoreService', () => {
     expect(signal).toHaveBeenCalledTimes(2);
     expect(
       (await store.listEvents('t', 'core-signal-pause-resume-1')).map((event) => event.eventType)
-    ).toEqual(['RunQueued', 'RunPaused', 'RunResumed']);
+    ).toEqual(['RunQueued', 'RunStarted', 'RunPaused', 'RunResumed']);
+  });
+
+  it('signal(PAUSE) retry with same signalId is a no-op and does not call adapter again', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    await bootstrapQueuedRun(store, 'core-signal-pause-retry-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-retry-1');
+    await appendRunStarted(store, 'core-signal-pause-retry-1');
+
+    const pauseReq = { signalId: 'sig-pause-retry-1', type: 'PAUSE' as const };
+
+    // First call: transitions run to PAUSED
+    await core.signal(ref, pauseReq);
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-retry-1')).map((e) => e.eventType)
+    ).toEqual(['RunQueued', 'RunStarted', 'RunPaused']);
+
+    // Retry with same signalId: must be a no-op (no adapter call, no new events)
+    await core.signal(ref, pauseReq);
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-retry-1')).map((e) => e.eventType)
+    ).toEqual(['RunQueued', 'RunStarted', 'RunPaused']);
+  });
+
+  it('signal(PAUSE) on PENDING run rejects before adapter side effects', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    await bootstrapQueuedRun(store, 'core-signal-pause-invalid-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-invalid-1');
+
+    await expect(
+      core.signal(ref, {
+        signalId: 'sig-pause-invalid-1',
+        type: 'PAUSE',
+      })
+    ).rejects.toBeInstanceOf(InvalidStateTransitionError);
+
+    expect(signal).not.toHaveBeenCalled();
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-invalid-1')).map((event) => event.eventType)
+    ).toEqual(['RunQueued']);
   });
 });

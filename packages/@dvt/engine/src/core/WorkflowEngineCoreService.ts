@@ -1,5 +1,5 @@
+import type { EngineRunRef, EventType, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
 import { parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
-import type { EngineRunRef, RunStatusSnapshot, SignalRequest, EventType } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
@@ -7,6 +7,7 @@ import { SignalNotImplementedError } from '../contracts/errors.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { SignalTransitionGuard } from '../services/signal/SignalTransitionGuard.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import type { IdempotencyKeyBuilder } from './idempotency.js';
@@ -48,7 +49,15 @@ export interface WorkflowEngineCoreDeps {
 }
 
 export class WorkflowEngineCoreService implements IWorkflowEngineCore {
-  constructor(private readonly deps: WorkflowEngineCoreDeps) {}
+  private readonly signalTransitionGuard: SignalTransitionGuard;
+
+  constructor(private readonly deps: WorkflowEngineCoreDeps) {
+    this.signalTransitionGuard = new SignalTransitionGuard({
+      stateStoreRead: deps.stateStoreRead,
+      idempotency: deps.idempotency,
+      clock: deps.clock,
+    });
+  }
 
   async cancel(ref: EngineRunRef): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
@@ -210,13 +219,44 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         },
         async (span) => {
           try {
+            const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
+            if (mappedEventType) {
+              // Guard against idempotent retries: if the derived event was already
+              // persisted (same signalId redelivery), the current snapshot already
+              // reflects the transition. Running assertAllowed against the updated
+              // state would throw a false InvalidStateTransitionError.
+              // We short-circuit and return a no-op acknowledgement instead.
+              const idemKey = this.deps.idempotency.signalKey(
+                {
+                  runId: meta.runId,
+                  logicalAttemptId: meta.logicalAttemptId,
+                  planId: meta.planId,
+                  planVersion: meta.planVersion,
+                },
+                validatedRequest
+              );
+              const existingEvents = await this.deps.stateStoreRead.listEvents(
+                meta.tenantId,
+                meta.runId
+              );
+              if (existingEvents.some((e) => e.idempotencyKey === idemKey)) {
+                span.setStatus('ok');
+                return;
+              }
+
+              await this.signalTransitionGuard.assertAllowed(
+                meta,
+                validatedRequest,
+                mappedEventType
+              );
+            }
+
             await withTimeout(
               adapter.signal(validatedRunRef, validatedRequest),
               this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
               CORE_TIMEOUT_OPERATION.adapterSignal
             );
 
-            const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
             if (mappedEventType) {
               await emitSignalDerivedRunEvent({
                 stateStoreWrite: this.deps.stateStoreWrite,

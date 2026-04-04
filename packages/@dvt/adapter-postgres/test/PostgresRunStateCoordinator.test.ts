@@ -263,4 +263,62 @@ describe('PostgresRunStateCoordinator', () => {
     );
     expect(enqueueWithClient).not.toHaveBeenCalled();
   });
+
+  it('appendAndEnqueueTx does not enqueue when snapshot update fails', async () => {
+    const enqueueWithClient = vi.fn(async () => undefined);
+    const coordinator = new PostgresRunStateCoordinator({
+      metadataRepo: {
+        resolveTenantWithClient: async () => TEST_TENANT_ID,
+        insertWithClient: async () => undefined,
+      },
+      runEventRepository: {
+        append: async () => makeAppendResult(),
+      },
+      snapshotStore: {
+        updateWithClient: async () => {
+          throw new Error('snapshot update failed');
+        },
+      },
+      outboxStore: {
+        enqueueWithClient,
+      },
+      setTenantContext: async () => undefined,
+      withTransaction: async (fn) => fn({} as never),
+    });
+
+    await expect(coordinator.appendAndEnqueueTx(TEST_RUN_ID, EMPTY_EVENTS)).rejects.toThrow(
+      /snapshot update failed/
+    );
+    expect(enqueueWithClient).not.toHaveBeenCalled();
+  });
+
+  it('appendAndEnqueueTx does not update snapshot or enqueue when append fails', async () => {
+    const updateWithClient = vi.fn(async () => undefined);
+    const enqueueWithClient = vi.fn(async () => undefined);
+    const coordinator = new PostgresRunStateCoordinator({
+      metadataRepo: {
+        resolveTenantWithClient: async () => TEST_TENANT_ID,
+        insertWithClient: async () => undefined,
+      },
+      runEventRepository: {
+        append: async () => {
+          throw new Error('append failed');
+        },
+      },
+      snapshotStore: {
+        updateWithClient,
+      },
+      outboxStore: {
+        enqueueWithClient,
+      },
+      setTenantContext: async () => undefined,
+      withTransaction: async (fn) => fn({} as never),
+    });
+
+    await expect(coordinator.appendAndEnqueueTx(TEST_RUN_ID, EMPTY_EVENTS)).rejects.toThrow(
+      /append failed/
+    );
+    expect(updateWithClient).not.toHaveBeenCalled();
+    expect(enqueueWithClient).not.toHaveBeenCalled();
+  });
 });

@@ -36,10 +36,13 @@ Primary outcomes:
 
 - enforce typed contracts and reduce runtime coupling risk
 - establish execution boundary contracts required for scale work
+- execute `AR-B1` write-boundary state-machine hardening with docs-first TDD
+  (`AR-B1-A..E`)
 
 References:
 
 - [Sprint 2026-04B Board](../reviews/sprints/sprint-2026-04b/index.md)
+- [AR-B1 quality hardening roadmap 2026-04-04](ar-b1-quality-hardening-roadmap-20260404.md)
 
 ### Phase 3: Scale and operability follow-through (Sprint 2026-04C)
 

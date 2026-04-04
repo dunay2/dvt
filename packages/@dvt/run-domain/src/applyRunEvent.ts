@@ -10,10 +10,15 @@
  */
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 
-import { InvalidStateTransitionError } from './errors.js';
+import { InvalidRunEventShapeError, InvalidStateTransitionError } from './errors.js';
+import {
+  RUN_EVENT_ALLOWED_FROM,
+  STEP_EVENT_ALLOWED_FROM,
+  TERMINAL_RUN_STATUSES,
+  TERMINAL_STEP_STATUSES,
+} from './transitionPolicy.js';
 
-const TERMINAL_RUN_STATUSES = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
-const TERMINAL_STEP_STATUSES = new Set(['COMPLETED', 'SKIPPED']);
+type StepSnapshot = WorkflowSnapshot['steps'][string];
 
 export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
   switch (e.eventType) {
@@ -28,23 +33,33 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
     case 'RunPaused':
       assertRunNotTerminal(snap, e.eventType);
+      assertRunStatusIn(snap, e.eventType, RUN_EVENT_ALLOWED_FROM.RunPaused);
       snap.status = 'PAUSED';
       snap.paused = true;
       break;
 
     case 'RunResumed':
       assertRunNotTerminal(snap, e.eventType);
+      assertRunStatusIn(snap, e.eventType, RUN_EVENT_ALLOWED_FROM.RunResumed);
       snap.status = 'RUNNING';
       snap.paused = false;
       break;
 
     case 'RunCancelRequested':
       assertRunNotTerminal(snap, e.eventType);
+      assertRunStatusIn(snap, e.eventType, RUN_EVENT_ALLOWED_FROM.RunCancelRequested);
       snap.cancelling = true;
       break;
 
     case 'RunCancelled':
       assertRunNotTerminal(snap, e.eventType);
+      if (!snap.cancelling) {
+        throw new InvalidStateTransitionError({
+          runId: snap.runId,
+          fromStatus: snap.status,
+          eventType: e.eventType,
+        });
+      }
       snap.status = 'CANCELLED';
       snap.cancelling = false;
       snap.completedAt = e.emittedAt;
@@ -63,23 +78,20 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       break;
 
     case 'StepStarted': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'RUNNING';
-      s.startedAt = s.startedAt ?? e.emittedAt;
-      s.attempts += 1;
-      snap.steps[stepId] = s;
+      applyStepTransition(snap, e, STEP_EVENT_ALLOWED_FROM.StepStarted, (step, emittedAt) => {
+        step.status = 'RUNNING';
+        step.startedAt = step.startedAt ?? emittedAt;
+        step.attempts += 1;
+      });
       break;
     }
 
     case 'StepCompleted': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'COMPLETED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+      applyStepTransition(snap, e, STEP_EVENT_ALLOWED_FROM.StepCompleted, (step, emittedAt) => {
+        step.status = 'COMPLETED';
+        step.completedAt = emittedAt;
+      });
+      const stepId = getStepId(e);
       const decision = extractGatewayDecision(e);
       if (decision !== undefined) {
         snap.gatewayDecisions ??= {};
@@ -89,28 +101,50 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
     }
 
     case 'StepFailed': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'FAILED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+      applyStepTransition(snap, e, STEP_EVENT_ALLOWED_FROM.StepFailed, (step, emittedAt) => {
+        step.status = 'FAILED';
+        step.completedAt = emittedAt;
+      });
       break;
     }
 
     case 'StepSkipped': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'SKIPPED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+      applyStepTransition(snap, e, STEP_EVENT_ALLOWED_FROM.StepSkipped, (step, emittedAt) => {
+        step.status = 'SKIPPED';
+        step.completedAt = emittedAt;
+      });
       break;
     }
 
     default:
       break;
   }
+}
+
+function applyStepTransition(
+  snap: WorkflowSnapshot,
+  event: EventEnvelope,
+  allowedStatuses: WorkflowSnapshot['steps'][string]['status'][],
+  mutator: (step: StepSnapshot, emittedAt: string) => void
+): void {
+  const stepId = getStepId(event);
+  assertStepNotTerminal(snap, stepId, event.eventType);
+  const step = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  assertStepStatusIn(snap, stepId, event.eventType, step.status, allowedStatuses);
+  mutator(step, event.emittedAt);
+  snap.steps[stepId] = step;
+}
+
+function getStepId(event: EventEnvelope): string {
+  const maybeStepId = (event as { stepId?: unknown }).stepId;
+  if (typeof maybeStepId === 'string' && maybeStepId.length > 0) {
+    return maybeStepId;
+  }
+  throw new InvalidRunEventShapeError({
+    runId: event.runId,
+    eventType: event.eventType,
+    reason: 'stepId must be a non-empty string for step events',
+  });
 }
 
 function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
@@ -133,6 +167,39 @@ function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType
       stepId,
     });
   }
+}
+
+function assertRunStatusIn(
+  snap: WorkflowSnapshot,
+  eventType: string,
+  allowedStatuses: WorkflowSnapshot['status'][]
+): void {
+  if (allowedStatuses.includes(snap.status)) {
+    return;
+  }
+  throw new InvalidStateTransitionError({
+    runId: snap.runId,
+    fromStatus: snap.status,
+    eventType,
+  });
+}
+
+function assertStepStatusIn(
+  snap: WorkflowSnapshot,
+  stepId: string,
+  eventType: string,
+  currentStatus: WorkflowSnapshot['steps'][string]['status'],
+  allowedStatuses: WorkflowSnapshot['steps'][string]['status'][]
+): void {
+  if (allowedStatuses.includes(currentStatus)) {
+    return;
+  }
+  throw new InvalidStateTransitionError({
+    runId: snap.runId,
+    fromStatus: currentStatus,
+    eventType,
+    stepId,
+  });
 }
 
 function extractGatewayDecision(e: EventEnvelope): boolean | undefined {

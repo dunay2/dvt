@@ -143,7 +143,18 @@ export async function emitSignalDerivedRunEvent(input: {
   req: SignalRequest;
   eventType: EventType;
 }): Promise<void> {
-  const event: RunEventInput = {
+  const event = buildSignalDerivedRunEventInput(input);
+  await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [event]);
+}
+
+export function buildSignalDerivedRunEventInput(input: {
+  idempotency: IdempotencyKeyBuilder;
+  clock: { nowIsoUtc(): string };
+  meta: RunMetadata;
+  req: SignalRequest;
+  eventType: EventType;
+}): RunEventInput {
+  return {
     eventId: input.idempotency.eventId(),
     eventType: input.eventType,
     payloadVersion: RUN_EVENT_CONSTANTS.payloadVersion,
@@ -166,7 +177,6 @@ export async function emitSignalDerivedRunEvent(input: {
       input.req
     ),
   };
-  await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [event]);
 }
 
 export function buildRunEvents(
