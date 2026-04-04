@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-03'
+last_reviewed: '2026-04-04'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -1101,6 +1101,83 @@ tasks:
       Package currently mixes domain logic and application orchestration, violating hexagonal
       separation.
     last_verified: '2026-04-02'
+  - task_id: AR-A8
+    priority: P1
+    status: queued
+    objective: >-
+      remove the Conductor adapter illusion from runtime contracts by deleting
+      `ConductorAdapterStub`/`TemporalAdapterStub` and narrowing provider typing to implemented
+      runtime adapters.
+    dependency: WE-HX-2
+    target: >-
+      Runtime provider union and adapter registry expose only implemented providers by default, and
+      dead stubs are removed so portability claims match executable behavior.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      The review identified a type-level portability promise for Conductor with no runtime
+      implementation, which creates governance and product drift.
+    last_verified: '2026-04-04'
+  - task_id: AR-A9
+    priority: P1
+    status: queued
+    objective: >-
+      fail closed on cyclic planner inputs by adding explicit cycle detection after topological sort
+      and surfacing a typed `PlannerErrorCode.CYCLE_DETECTED` outcome.
+    dependency: MW-A2-C
+    target: >-
+      Planner rejects cyclic graphs with deterministic error payloads and negative tests cover
+      simple/multi-cycle inputs and partial-selection cycle cases.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      Current DAG analysis can return incomplete topological results for cyclic graphs without an
+      explicit error, which risks silent plan truncation.
+    last_verified: '2026-04-04'
+  - task_id: AR-A10
+    priority: P1
+    status: queued
+    objective: >-
+      formalize the API-to-engine start-run boundary in `@dvt/contracts` so API command/result
+      shapes cannot drift from engine expectations outside contract CI.
+    dependency: RC-G1-B
+    target: >-
+      Shared `StartRunCommand`/`StartRunResult` contracts exist with schema fixtures and contract
+      tests, and API composition uses the shared versions instead of app-local shadow types.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      The review found an impedance mismatch between app-local API contracts and engine runtime
+      contract expectations.
+    last_verified: '2026-04-04'
+  - task_id: AR-A11
+    priority: P1
+    status: queued
+    objective: >-
+      move retry/backoff policy from hardcoded Temporal activity defaults into governed plan
+      contracts with per-step override semantics.
+    dependency: S09, S08-5-C
+    target: >-
+      `ExecutionStep` supports explicit retry policy metadata, adapter policy mapping consumes it,
+      and negative tests fail when unsupported retry shape or invalid bounds are supplied.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      Retry semantics are currently static in adapter code, limiting step-kind-specific behavior and
+      hiding policy ownership from contracts.
+    last_verified: '2026-04-04'
   - task_id: DOC-ARCH-01
     priority: P1
     status: in_progress
@@ -1327,6 +1404,10 @@ dependency_notes:
     through `AR-A7`; the missing `AR-A2` placeholder is retired in favor of the live stepTypeConfig
     admission-hardening work under `S08-4`.
   - >-
+    The 2026-04-02 principal deep architectural review now feeds `AR-A8..AR-A11` for provider
+    truthfulness (Conductor removal), planner cycle fail-closed behavior, API-engine contract
+    formalization, and step-level retry policy governance.
+  - >-
     `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
     GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). `MW-A1`
     depends on `S08-5-C`; `MW-A2` is now decomposed into `MW-A2-A..E`; `MW-A3` depends on `MW-A1`.
@@ -1340,11 +1421,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-03'
-  total_tasks: 48
-  total_effort_points: 188
+  verified_on: '2026-04-04'
+  total_tasks: 52
+  total_effort_points: 198
   completed_weighted_points: 79.79
-  lane_progress_pct: 42
+  lane_progress_pct: 40
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
