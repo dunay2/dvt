@@ -3,8 +3,8 @@ title: MW-A2 graph source cardinality and planner boundary hardening
 status: Accepted
 date: 2026-04-04
 owners:
-  - @dvt/contracts
-  - @dvt/planner
+  - '@dvt/contracts'
+  - '@dvt/planner'
 arc_level: ARC-2
 breaking: false
 code_refs:
