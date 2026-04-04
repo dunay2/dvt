@@ -24,14 +24,17 @@ type AppServicesOverrides = {
 
 const AppServicesContext = createContext<AppServicesContextValue | null>(null);
 
-function buildAppServicesContextValue(overrides: AppServicesOverrides = {}): AppServicesContextValue {
+function buildAppServicesContextValue(
+  overrides: AppServicesOverrides = {}
+): AppServicesContextValue {
   const dataSourceMode = overrides.mode ?? resolveDataSource();
   const apiClient = overrides.apiClient ?? createApiClient();
 
   return {
     dataSourceMode,
     apiClient,
-    workspaceService: overrides.workspaceService ?? createWorkspaceService(dataSourceMode, apiClient),
+    workspaceService:
+      overrides.workspaceService ?? createWorkspaceService(dataSourceMode, apiClient),
     runsService: overrides.runsService ?? createRunsService(dataSourceMode, apiClient),
     plansService: overrides.plansService ?? createPlansService(dataSourceMode, apiClient),
   };

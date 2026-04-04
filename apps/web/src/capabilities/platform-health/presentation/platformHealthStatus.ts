@@ -1,4 +1,7 @@
-import type { PlatformConnectionState, PlatformHealthSnapshot } from '../domain/platformHealthTypes';
+import type {
+  PlatformConnectionState,
+  PlatformHealthSnapshot,
+} from '../domain/platformHealthTypes';
 
 const MAX_RETRY_BACKOFF_MS = 60_000;
 

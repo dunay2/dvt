@@ -192,7 +192,10 @@ function createImportedSourceNode(
   };
 }
 
-function buildImportResult(input: ImportSourcesInput, importedNodes: DbtNode[]): ImportSourcesResult {
+function buildImportResult(
+  input: ImportSourcesInput,
+  importedNodes: DbtNode[]
+): ImportSourcesResult {
   const yamlFiles = new Set<string>();
   for (const table of input.tables) {
     yamlFiles.add(buildYamlFileName(table, input.groupingStrategy));
@@ -222,7 +225,9 @@ function importMockSources(input: ImportSourcesInput): ImportSourcesResult {
       continue;
     }
 
-    importedNodes.push(createImportedSourceNode(table, input.groupingStrategy, input.includeColumns));
+    importedNodes.push(
+      createImportedSourceNode(table, input.groupingStrategy, input.includeColumns)
+    );
     existingNodeIds.add(nodeId);
   }
 

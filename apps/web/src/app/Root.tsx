@@ -58,11 +58,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     ? null
     : selectPlatformConnectionState(platformHealth.data, platformHealth.isError);
   const connectionDetail = connectionStateOverride
-    ? getPlatformConnectionDetail(
-        connectionStateOverride.rest,
-        platformHealth.data,
-        errorMessage
-      )
+    ? getPlatformConnectionDetail(connectionStateOverride.rest, platformHealth.data, errorMessage)
     : null;
   const lastSettledAtMs = Math.max(
     platformHealth.dataUpdatedAt ?? 0,
