@@ -21,8 +21,28 @@ function makeSnapshot(
   };
 }
 
-function createApp(rebuildSnapshot: RebuildSnapshot): ReturnType<typeof Fastify> {
+function createApp(
+  rebuildSnapshot: RebuildSnapshot,
+  options?: {
+    readonly authorize?: () => Promise<unknown>;
+  }
+): ReturnType<typeof Fastify> {
   const app = Fastify({ logger: false });
+  const authorize =
+    options?.authorize ??
+    (async () => ({
+      ok: true,
+      context: {
+        principal: {
+          principalId: 'user-1',
+          principalType: 'user',
+        },
+        scope: { tenantId: { value: 'tenant-a' } },
+        action: { kind: 'command', name: 'admin:rebuild-snapshot' },
+        requestId: 'req-1',
+        authorizedAt: new Date('2026-04-03T00:00:00Z'),
+      },
+    }));
   registerAdminRoutes(
     app,
     { rebuildSnapshot },
@@ -44,19 +64,7 @@ function createApp(rebuildSnapshot: RebuildSnapshot): ReturnType<typeof Fastify>
         }),
       } as never,
       authorizer: {
-        authorize: async () => ({
-          ok: true,
-          context: {
-            principal: {
-              principalId: 'user-1',
-              principalType: 'user',
-            },
-            scope: { tenantId: { value: 'tenant-a' } },
-            action: { kind: 'command', name: 'admin:rebuild-snapshot' },
-            requestId: 'req-1',
-            authorizedAt: new Date('2026-04-03T00:00:00Z'),
-          },
-        }),
+        authorize,
       } as never,
     }
   );
@@ -100,6 +108,30 @@ describe('AdminRebuildSnapshot access contract', () => {
           type: 'bad_request',
           reason: 'missing_tenant_id',
           target: 'tenantId',
+        },
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('exposes forbidden envelope for non-admin authorization', async () => {
+    const app = createApp(async (_tenantId, runId) => makeSnapshot(runId), {
+      authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
+    });
+
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/runs/r-2/rebuild-snapshot',
+        payload: { tenantId: 'tenant-a' },
+      });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'forbidden',
+          reason: 'action_not_granted',
         },
       });
     } finally {

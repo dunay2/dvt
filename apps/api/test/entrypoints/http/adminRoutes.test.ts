@@ -139,6 +139,46 @@ describe('adminRoutes', () => {
     }
   });
 
+  it('returns 403 when authorization context is not an admin action', async () => {
+    const { app, rebuildSnapshotSpy } = createApp(
+      async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+      {
+        authorize: async () => ({
+          ok: true,
+          context: {
+            principal: {
+              principalId: 'user-1',
+              principalType: 'user',
+            },
+            scope: { tenantId: { value: 'tenant-a' } },
+            action: { kind: 'command', name: 'run:cancel' },
+            requestId: 'req-1',
+            authorizedAt: new Date('2026-04-03T00:00:00Z'),
+          },
+        }),
+      }
+    );
+
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/runs/r1/rebuild-snapshot',
+        payload: { tenantId: 'tenant-a' },
+      });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'forbidden',
+          reason: 'action_not_granted',
+        },
+      });
+      expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
   it('returns 400 when tenantId is missing', async () => {
     const { app } = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 

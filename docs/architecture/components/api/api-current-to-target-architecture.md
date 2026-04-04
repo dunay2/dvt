@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-04
 ---
 
 # API Current To Target Architecture
@@ -124,17 +124,17 @@ flowchart TB
 
 ### Current Gaps
 
-| Gap                                                               | Why it matters                                                                                                             | Governed tasks                              |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Admin route RBAC is not explicit enough                           | A feature flag is not a security boundary. Admin repair routes need an admin authorization layer, not only authentication. | `AR-C1`, `AR-C1-T1..T4`                     |
-| SLA and consistency expectations are still implicit               | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.   | `AR-C2`                                     |
-| Admission does not yet see adapter saturation                     | The system can still accept work it cannot execute when Temporal capacity is the bottleneck.                               | `AR-C3`                                     |
-| Temporal activity writes depend directly on the state store       | State-store failures can cascade into execution stalls without an explicit breaker boundary.                               | `AR-C4`                                     |
-| Query purity is incomplete                                        | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                       | `AR-A3`                                     |
-| Snapshot rebuild concurrency is not yet a contract invariant      | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                    | `AR-A6`                                     |
-| Step-specific config is still too implicit                        | `stepTypeConfig` remains opaque at admission time, so failures can surface too late in adapter execution.                  | `S08-4`, `MW-A1`                            |
-| The API still inherits dbt-first assumptions upstream             | Planner input, artifact shape, and Temporal execution are not yet fully generalized for non-dbt workflows.                 | `MW-A2`, `MW-A3`, `MW-C1`, `MW-D1`, `MW-D2` |
-| Frontend-facing runtime contract is not yet canonically published | The backend route surface exists, but the web consumption contract is not yet frozen in one frontend-facing artifact.      | `MVP-E1`, `F-07`, `F-08`                    |
+| Gap                                                               | Why it matters                                                                                                                   | Governed tasks                              |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Admin route RBAC hardening follow-through remains                 | Explicit admin-scope RBAC is now wired in admin routes; remaining work is test-shape and composition hardening (`AR-C1-T1..T4`). | `AR-C1-T1..T4`                              |
+| SLA and consistency expectations are still implicit               | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.         | `AR-C2`                                     |
+| Admission does not yet see adapter saturation                     | The system can still accept work it cannot execute when Temporal capacity is the bottleneck.                                     | `AR-C3`                                     |
+| Temporal activity writes depend directly on the state store       | State-store failures can cascade into execution stalls without an explicit breaker boundary.                                     | `AR-C4`                                     |
+| Query purity is incomplete                                        | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                             | `AR-A3`                                     |
+| Snapshot rebuild concurrency is not yet a contract invariant      | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                          | `AR-A6`                                     |
+| Step-specific config is still too implicit                        | `stepTypeConfig` remains opaque at admission time, so failures can surface too late in adapter execution.                        | `S08-4`, `MW-A1`                            |
+| The API still inherits dbt-first assumptions upstream             | Planner input, artifact shape, and Temporal execution are not yet fully generalized for non-dbt workflows.                       | `MW-A2`, `MW-A3`, `MW-C1`, `MW-D1`, `MW-D2` |
+| Frontend-facing runtime contract is not yet canonically published | The backend route surface exists, but the web consumption contract is not yet frozen in one frontend-facing artifact.            | `MVP-E1`, `F-07`, `F-08`                    |
 
 ## Target System
 

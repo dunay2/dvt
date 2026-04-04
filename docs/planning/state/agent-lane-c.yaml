@@ -292,7 +292,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: AR-C1
     priority: P0
-    status: queued
+    status: review
     objective: >-
       add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
       admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
@@ -303,13 +303,18 @@ tasks:
       admin grant receives 403; test coverage includes negative path for non-admin principals.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - apps/api/src/entrypoints/http/authorizeAdminExecutionScope.ts
+      - apps/api/src/entrypoints/http/adminRoutes.ts
+      - apps/api/test/entrypoints/http/adminRoutes.test.ts
+      - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
     status_reason: >-
-      Feature flag alone is not a security gate — if DVT_ADMIN_ROUTES_ENABLED=true, any
-      authenticated user can trigger snapshot rebuilds today.
-    last_verified: '2026-04-02'
+      Explicit admin RBAC is now enforced through a dedicated admin-scope guard on the maintenance
+      route path; non-admin authorization outcomes return 403 and route + contract tests cover the
+      negative path. Remaining hardening is tracked in `AR-C1-T1..T4`.
+    last_verified: '2026-04-04'
   - task_id: AR-C1-T1
     parent_task: AR-C1
     priority: P0
@@ -709,6 +714,9 @@ dependency_notes:
     negative coverage, runtime composition checks, fixture reuse, and `baseUrl` deprecation planning
     without circular dependencies.
   - >-
+    `AR-C1` moved to review with explicit admin-scope RBAC wired in code and negative-path
+    route/contract coverage; remaining subtasks track post-hardening cleanup and composition tests.
+  - >-
     `AR-C3` and `AR-C4` are P1 tasks: end-to-end adapter backpressure and activity-to-state-store
     circuit breaker.
   - >-
@@ -723,8 +731,8 @@ verification_summary:
   verified_on: '2026-04-04'
   total_tasks: 27
   total_effort_points: 102
-  completed_weighted_points: 47.3
-  lane_progress_pct: 46
+  completed_weighted_points: 50.3
+  lane_progress_pct: 49
   notes: >-
     Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
     parent umbrella tasks with subtasks carry coordination-only effort.

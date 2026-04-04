@@ -15,7 +15,7 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { TenantId } from '../../domain/auth/types.js';
 
-import { authorizeExecutionScope } from './authorizeExecutionScope.js';
+import { authorizeAdminExecutionScope } from './authorizeAdminExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
@@ -71,7 +71,7 @@ export function registerAdminRoutes(
         return;
       }
 
-      const authz = await authorizeExecutionScope({
+      const authz = await authorizeAdminExecutionScope({
         authenticator: auth.authenticator,
         authorizer: auth.authorizer,
         token: extractBearerToken(request.headers.authorization),
