@@ -251,9 +251,13 @@ export function RunWorkspaceState({ workspace }: RunWorkspaceStateProps) {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-semibold">{event.eventType}</span>
-                      <span className="text-slate-400">{new Date(event.emittedAt).toLocaleString()}</span>
+                      <span className="text-slate-400">
+                        {new Date(event.emittedAt).toLocaleString()}
+                      </span>
                     </div>
-                    {event.stepId && <div className="mt-1 text-slate-400">Step: {event.stepId}</div>}
+                    {event.stepId && (
+                      <div className="mt-1 text-slate-400">Step: {event.stepId}</div>
+                    )}
                   </div>
                 ))}
               </div>

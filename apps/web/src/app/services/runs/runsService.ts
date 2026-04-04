@@ -7,12 +7,7 @@ import {
 import { mockRun } from '../../data/mockDbtData';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunEvent,
-} from '../../types/engine';
+import type { EngineRunRef, PlanRef, RunContext, RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient, createApiClient } from '../api/createApiClient';
 import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
 
@@ -194,7 +189,8 @@ function extractEventsPayload(payload: unknown): { events: unknown[]; nextAfterS
 
 function createMockRunsService(): RunsService {
   return {
-    listRunSummaries: async () => buildMockRunList().map(mapDbtRunToSnapshot).map(mapSnapshotToSummary),
+    listRunSummaries: async () =>
+      buildMockRunList().map(mapDbtRunToSnapshot).map(mapSnapshotToSummary),
     getRunSnapshot: async (runId) => {
       const run = buildMockRunList().find((candidate) => candidate.runId === runId) ?? null;
       return run ? mapDbtRunToSnapshot(run) : null;

@@ -1,16 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CSSProperties, ReactElement } from 'react';
-import {
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Code,
-  Info,
-  Loader2,
-  Settings,
-  Table,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
@@ -19,7 +10,12 @@ import { cn } from '../../components/ui/utils';
 import { resolveDataSource } from '../../services/config/dataSource';
 import { createRunsService } from '../../services/runs/runsService';
 import type { Run, RunEvent } from '../../types/dbt';
-import type { CanonicalRun, CanonicalRunStatus, CanonicalTask, CanonicalTaskStatus } from '../../types/canonical';
+import type {
+  CanonicalRun,
+  CanonicalRunStatus,
+  CanonicalTask,
+  CanonicalTaskStatus,
+} from '../../types/canonical';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';

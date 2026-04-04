@@ -65,7 +65,11 @@ function classifySnapshotError(error: unknown): RunWorkspaceLoadError {
       return new RunWorkspaceLoadError('forbidden', 'Access denied for this run', statusCode);
     }
     if ((statusCode ?? 0) >= 500) {
-      return new RunWorkspaceLoadError('runtime-unavailable', 'Runtime service is unavailable', statusCode);
+      return new RunWorkspaceLoadError(
+        'runtime-unavailable',
+        'Runtime service is unavailable',
+        statusCode
+      );
     }
   }
 
