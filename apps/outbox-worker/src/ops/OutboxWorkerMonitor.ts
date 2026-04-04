@@ -48,6 +48,8 @@ interface Counters {
   ticksTotal: number;
 }
 
+const DELIVERY_EVENT_LATENCY_BUCKETS_MS = [50, 100, 250, 500, 1000, 2500, 5000, 10000] as const;
+
 const RUNTIME_STATES: readonly OutboxRuntimeState[] = [
   'starting',
   'passive',
@@ -92,6 +94,12 @@ export class OutboxWorkerMonitor
   private retentionLastCycleDurationMs = 0;
   private retentionLastSuccessAtMs: number | null = null;
   private retentionLastFailureAtMs: number | null = null;
+  private readonly claimedAtByRecordId = new Map<string, number>();
+  private readonly eventDeliveryLatencyBucketCounts = DELIVERY_EVENT_LATENCY_BUCKETS_MS.map(
+    () => 0
+  );
+  private eventDeliveryLatencyCount = 0;
+  private eventDeliveryLatencySumMs = 0;
 
   constructor(options: OutboxWorkerMonitorOptions) {
     this.serviceName = options.serviceName;
@@ -160,6 +168,7 @@ export class OutboxWorkerMonitor
 
   onStopped(): void {
     this.owner = false;
+    this.claimedAtByRecordId.clear();
     this.transitionTo('stopped', 'runtime stopped');
   }
 
@@ -176,6 +185,11 @@ export class OutboxWorkerMonitor
   }
 
   onBatchClaimed(records: readonly OutboxRecord[]): void {
+    const claimedAtMs = this.nowMs();
+    for (const record of records) {
+      this.claimedAtByRecordId.set(record.id, claimedAtMs);
+    }
+
     const oldestRecord = resolveOldestRecord(records);
     const oldestLagSeconds =
       oldestRecord === null
@@ -193,10 +207,12 @@ export class OutboxWorkerMonitor
   }
 
   onRecordDelivered(record: OutboxRecord): void {
+    this.observeEventDeliveryLatency(record.id);
     this.logger.info(toRecordLog(record), 'outbox record delivered');
   }
 
   onRecordFailed(record: OutboxRecord, error: string, disposition: OutboxFailureDisposition): void {
+    this.observeEventDeliveryLatency(record.id);
     this.pendingDeliveryFailureMessage = error;
     this.pendingDeliveryFailureAtMs = this.nowMs();
     const data = {
@@ -282,6 +298,9 @@ export class OutboxWorkerMonitor
       '# HELP dvt_outbox_oldest_claimed_lag_seconds Age of the oldest record in the last claimed batch.',
       '# TYPE dvt_outbox_oldest_claimed_lag_seconds gauge',
       `dvt_outbox_oldest_claimed_lag_seconds ${this.lastClaimedLagSeconds}`,
+      '# HELP dvt_delivery_outbox_drain_lag_seconds Age of the oldest record in the last claimed batch (canonical delivery alias).',
+      '# TYPE dvt_delivery_outbox_drain_lag_seconds gauge',
+      `dvt_delivery_outbox_drain_lag_seconds ${this.lastClaimedLagSeconds}`,
       '# HELP dvt_outbox_last_claimed_batch_size Number of records claimed in the last completed tick.',
       '# TYPE dvt_outbox_last_claimed_batch_size gauge',
       `dvt_outbox_last_claimed_batch_size ${this.lastBatchClaimedCount}`,
@@ -312,6 +331,15 @@ export class OutboxWorkerMonitor
       '# HELP dvt_run_event_retention_last_failure_timestamp_seconds Unix timestamp of the last failed retention cycle.',
       '# TYPE dvt_run_event_retention_last_failure_timestamp_seconds gauge',
       `dvt_run_event_retention_last_failure_timestamp_seconds ${this.retentionLastFailureAtMs === null ? 0 : Math.floor(this.retentionLastFailureAtMs / 1000)}`,
+      '# HELP dvt_delivery_event_delivery_latency_ms End-to-end delivery attempt latency from claim to delivered/failed observer callback.',
+      '# TYPE dvt_delivery_event_delivery_latency_ms histogram',
+      ...DELIVERY_EVENT_LATENCY_BUCKETS_MS.map(
+        (le, index) =>
+          `dvt_delivery_event_delivery_latency_ms_bucket{le="${le}"} ${this.eventDeliveryLatencyBucketCounts[index]}`
+      ),
+      `dvt_delivery_event_delivery_latency_ms_bucket{le="+Inf"} ${this.eventDeliveryLatencyCount}`,
+      `dvt_delivery_event_delivery_latency_ms_sum ${roundToMillis(this.eventDeliveryLatencySumMs)}`,
+      `dvt_delivery_event_delivery_latency_ms_count ${this.eventDeliveryLatencyCount}`,
     ];
 
     return `${lines.join('\n')}\n`;
@@ -337,6 +365,23 @@ export class OutboxWorkerMonitor
     }
 
     return this.nowMs() - this.lastTickAtMs <= this.readyStaleAfterMs;
+  }
+
+  private observeEventDeliveryLatency(recordId: string): void {
+    const claimedAtMs = this.claimedAtByRecordId.get(recordId);
+    if (claimedAtMs === undefined) {
+      return;
+    }
+
+    this.claimedAtByRecordId.delete(recordId);
+    const elapsedMs = Math.max(0, this.nowMs() - claimedAtMs);
+    this.eventDeliveryLatencyCount += 1;
+    this.eventDeliveryLatencySumMs += elapsedMs;
+    for (const [index, bucketUpperBound] of DELIVERY_EVENT_LATENCY_BUCKETS_MS.entries()) {
+      if (elapsedMs <= bucketUpperBound) {
+        this.eventDeliveryLatencyBucketCounts[index] += 1;
+      }
+    }
   }
 }
 
