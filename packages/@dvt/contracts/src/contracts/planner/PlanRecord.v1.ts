@@ -6,7 +6,7 @@
  * - ADR-0042 canonical plan identity
  * - ADR-0043 plan record ownership
  */
-import type { ExecutionPlan } from './ExecutionPlan.v2.js';
+import type { ExecutionPlan } from './ExecutionPlan.v1.js';
 
 export type PlanRecordState = 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
 type HexSha256 = ExecutionPlan['metadata']['planId'];

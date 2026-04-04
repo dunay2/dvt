@@ -9,9 +9,10 @@ export * from './contracts/engine/RunExecutionContext.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+  GENERIC_GRAPH_SOURCE_KIND,
   GRAPH_SOURCE_COMPATIBILITY_POLICY,
   PLANNER_GRAPH_SOURCE_KIND,
-} from './contracts/planner/ExecutionPlan.v2.js';
+} from './contracts/planner/ExecutionPlan.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSION_REGISTRY,
@@ -24,19 +25,21 @@ export type {
   DbtManifestRef,
   ExecutionPlan,
   ExecutionStep,
-  ExecutionStepV2,
+  ExecutionStepV1,
+  GenericGraphNodeV1,
+  GenericGraphSourceV1,
   GraphNode,
   PlannerGraphSourceV1,
   PlanCore,
-  PlannerBuildResultV2,
+  PlannerBuildResultV1,
   PlannerEnvironmentContext,
   PlannerInputEnvelope,
-  PlannerInputEnvelopeV2,
+  PlannerInputEnvelopeV1,
   PlannerSelection,
   StepKind,
   VersionedExecutionPlan,
   VersionedPlanCore,
-} from './contracts/planner/ExecutionPlan.v2.js';
+} from './contracts/planner/ExecutionPlan.v1.js';
 export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,
@@ -62,7 +65,7 @@ export type {
   AdapterPolicyMappingTable,
   PolicyMappingEntry,
 } from './contracts/planner/PolicyMappingTable.v1.js';
-export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
+export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v1.js';
 export { EXECUTABILITY_REJECTION_CODES } from './contracts/planner/PlanExecutabilityValidation.v1.js';
 export type {
   ExecutabilityRejectionCode,

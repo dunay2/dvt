@@ -33,21 +33,23 @@ import {
   type EngineRunRefSchemaT,
   ExecutionPlanSchema,
   type ExecutionPlanSchemaT,
-  ExecutionStepV2Schema,
-  type ExecutionStepV2SchemaT,
+  ExecutionStepV1Schema,
+  type ExecutionStepV1SchemaT,
+  GenericGraphSourceV1Schema,
+  type GenericGraphSourceV1SchemaT,
   GraphNodeSchema,
   type GraphNodeSchemaT,
   PlannerGraphSourceV1Schema,
   type PlannerGraphSourceV1SchemaT,
-  PlannerBuildResultV2Schema,
-  type PlannerBuildResultV2SchemaT,
+  PlannerBuildResultV1Schema,
+  type PlannerBuildResultV1SchemaT,
   PlanAdmissionLinkSchema,
   PlanExecutabilityRecordSchema,
   PlanRecordSchema,
   PlannerEnvironmentContextSchema,
   type PlannerEnvironmentContextSchemaT,
-  PlannerInputEnvelopeV2Schema,
-  type PlannerInputEnvelopeV2SchemaT,
+  PlannerInputEnvelopeV1Schema,
+  type PlannerInputEnvelopeV1SchemaT,
   PlannerSelectionSchema,
   type PlannerSelectionSchemaT,
   PlanCoreSchema,
@@ -269,12 +271,16 @@ export function parsePlannerGraphSourceV1(input: unknown): PlannerGraphSourceV1S
   return parseWithSchema(PlannerGraphSourceV1Schema, input);
 }
 
+export function parseGenericGraphSourceV1(input: unknown): GenericGraphSourceV1SchemaT {
+  return parseWithSchema(GenericGraphSourceV1Schema, input);
+}
+
 export function parseDbtManifestRef(input: unknown): DbtManifestRefSchemaT {
   return parseWithSchema(DbtManifestRefSchema, input);
 }
 
-export function parseExecutionStepV2(input: unknown): ExecutionStepV2SchemaT {
-  return parseWithSchema(ExecutionStepV2Schema, input);
+export function parseExecutionStepV1(input: unknown): ExecutionStepV1SchemaT {
+  return parseWithSchema(ExecutionStepV1Schema, input);
 }
 
 export function parsePlanCore(input: unknown): PlanCoreSchemaT {
@@ -285,12 +291,12 @@ export function parseExecutionPlan(input: unknown): ExecutionPlanSchemaT {
   return parseWithSchema(ExecutionPlanSchema, input);
 }
 
-export function parsePlannerInputEnvelopeV2(input: unknown): PlannerInputEnvelopeV2SchemaT {
-  return parseWithSchema(PlannerInputEnvelopeV2Schema, input);
+export function parsePlannerInputEnvelopeV1(input: unknown): PlannerInputEnvelopeV1SchemaT {
+  return parseWithSchema(PlannerInputEnvelopeV1Schema, input);
 }
 
-export function parsePlannerBuildResultV2(input: unknown): PlannerBuildResultV2SchemaT {
-  return parseWithSchema(PlannerBuildResultV2Schema, input);
+export function parsePlannerBuildResultV1(input: unknown): PlannerBuildResultV1SchemaT {
+  return parseWithSchema(PlannerBuildResultV1Schema, input);
 }
 
 export function parsePlanRecord(input: unknown): PlanRecord {

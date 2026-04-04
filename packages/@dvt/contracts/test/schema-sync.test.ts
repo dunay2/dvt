@@ -22,9 +22,9 @@
 import Ajv from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
 
-import envelopeSchemaJson from '../src/contracts/planner/PlannerInputEnvelopeV2.schema.json' with { type: 'json' };
+import envelopeSchemaJson from '../src/contracts/planner/PlannerInputEnvelopeV1.schema.json' with { type: 'json' };
 import policySchemaJson from '../src/contracts/planner/PlannerPolicyClassSet.v2.schema.json' with { type: 'json' };
-import { PlannerInputEnvelopeV2Schema, PlannerPolicyClassSetSchema } from '../src/index.js';
+import { PlannerInputEnvelopeV1Schema, PlannerPolicyClassSetSchema } from '../src/index.js';
 
 // ── AJV setup ─────────────────────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ const POLICY_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }> 
   },
 ];
 
-// ── PlannerInputEnvelopeV2 fixtures ───────────────────────────────────────────
+// ── PlannerInputEnvelopeV1 fixtures ───────────────────────────────────────────
 
 const BASE_SELECTION = { selectedNodeIds: ['model.a'] };
 const BASE_NODES = [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }];
@@ -229,9 +229,9 @@ describe('schema-sync: PlannerPolicyClassSet', () => {
   });
 });
 
-describe('schema-sync: PlannerInputEnvelopeV2', () => {
+describe('schema-sync: PlannerInputEnvelopeV1', () => {
   it.each(ENVELOPE_FIXTURES)('$label → valid=$valid', ({ input, valid }) => {
-    const zResult = zodValid(PlannerInputEnvelopeV2Schema, input);
+    const zResult = zodValid(PlannerInputEnvelopeV1Schema, input);
     const jsonResult = validateEnvelope(input);
 
     expect(zResult).toBe(valid);

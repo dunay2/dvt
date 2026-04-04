@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { PlannerBuildResultV2 } from '@dvt/contracts';
+import type { PlannerBuildResultV1 } from '@dvt/contracts';
 import { Client } from 'pg';
 import { describe } from 'vitest';
 
@@ -61,7 +61,7 @@ export async function createPgClient(): Promise<Client> {
   return client;
 }
 
-export function makeBuildResult(planId: string): PlannerBuildResultV2 {
+export function makeBuildResult(planId: string): PlannerBuildResultV1 {
   return {
     plan: {
       metadata: {

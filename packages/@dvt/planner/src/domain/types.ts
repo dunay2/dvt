@@ -5,7 +5,7 @@
  * internal domain files get the authoritative definition without importing
  * directly from the contracts package at every call site.
  *
- * Only planner-internal types (PlannerInputEnvelopeV2 pre-normalization form,
+ * Only planner-internal types (PlannerInputEnvelopeV1 pre-normalization form,
  * NormalizedPlannerInput) are defined locally. ResolvedPolicies is now a
  * boundary type in @dvt/contracts — re-exported here for internal use.
  */
@@ -22,7 +22,7 @@ import type {
 export type {
   DbtManifestLike,
   ExecutionPlan,
-  ExecutionStepV2,
+  ExecutionStepV1,
   GraphNode,
   PlanCore,
   PlannerGraphSourceV1,
@@ -39,7 +39,7 @@ export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
 /**
  * Planner-internal raw input envelope (pre-normalization).
  *
- * Intentionally differs from the public PlannerInputEnvelopeV2 in @dvt/contracts:
+ * Intentionally differs from the public PlannerInputEnvelopeV1 in @dvt/contracts:
  * - `graphSource` is optional because direct `nodes` remains a compatibility path
  * - `manifestRef` and `manifest` are not present - the PlannerFacade resolves or normalizes them before hand-off
  * - `environment` is not present - stripped by PlannerFacade at the application boundary
@@ -47,7 +47,7 @@ export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
  * After InputEnvelopeValidator runs, the output is NormalizedPlannerInput where
  * `nodes` is always present.
  */
-export interface PlannerInputEnvelopeV2 {
+export interface PlannerInputEnvelopeV1 {
   graphSource?: PlannerGraphSourceV1;
   nodes?: readonly GraphNode[];
   selection: PlannerSelection;
@@ -63,6 +63,6 @@ export interface PlannerInputEnvelopeV2 {
  * Internal normalized form: nodes are always resolved (never undefined).
  * Produced after manifest derivation / validation.
  */
-export type NormalizedPlannerInput = Omit<PlannerInputEnvelopeV2, 'nodes'> & {
+export type NormalizedPlannerInput = Omit<PlannerInputEnvelopeV1, 'nodes'> & {
   nodes: readonly GraphNode[];
 };

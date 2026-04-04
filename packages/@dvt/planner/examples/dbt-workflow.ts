@@ -1,10 +1,10 @@
 import { Planner } from '../src/domain/Planner.js';
-import type { PlannerInputEnvelopeV2 } from '../src/domain/types.js';
+import type { PlannerInputEnvelopeV1 } from '../src/domain/types.js';
 
 async function main(): Promise<void> {
   const planner = new Planner();
 
-  const input: PlannerInputEnvelopeV2 = {
+  const input: PlannerInputEnvelopeV1 = {
     nodes: [
       { nodeId: 'model.stg_orders', resourceType: 'model', dependsOn: [] },
       { nodeId: 'model.fct_orders', resourceType: 'model', dependsOn: ['model.stg_orders'] },

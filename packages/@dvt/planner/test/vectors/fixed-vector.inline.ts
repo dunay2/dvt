@@ -1,6 +1,6 @@
-import type { PlannerInputEnvelopeV2 } from '../../src/domain/types.js';
+import type { PlannerInputEnvelopeV1 } from '../../src/domain/types.js';
 
-export const FIXED_VECTOR: PlannerInputEnvelopeV2 = {
+export const FIXED_VECTOR: PlannerInputEnvelopeV1 = {
   nodes: [
     { nodeId: 'model.a', resourceType: 'model', dependsOn: [] },
     { nodeId: 'model.b', resourceType: 'model', dependsOn: ['model.a'] },

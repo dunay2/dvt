@@ -312,7 +312,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   remain compatibility inputs. `MW-A2` now documents the target evolution from
   that minimal boundary to a first-class `GenericGraphSource` model.
 - Primary code:
-  [packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts),
+  [packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts),
   [packages/@dvt/contracts/src/schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts),
   [packages/@dvt/planner/src/application/PlannerFacade.ts](../../../packages/@dvt/planner/src/application/PlannerFacade.ts),
   [packages/@dvt/planner/src/ports/IArtifactResolver.ts](../../../packages/@dvt/planner/src/ports/IArtifactResolver.ts),
@@ -359,7 +359,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
 - Design note:
   `stepTypeConfig` remains `Record<string, unknown>` in
-  [ExecutionPlan.v2.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+  [ExecutionPlan.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
   and
   [schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts)
   **by design** - extensibility requires the shared contract to stay open.

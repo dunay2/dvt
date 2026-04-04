@@ -26,6 +26,16 @@ It answers one question only:
 It is not a runtime worker contract, not a provider adapter contract, and not a
 secret payload container.
 
+## Delivery policy for this arc
+
+This arc is delivered in two explicit stages:
+
+1. documentation gate (manuals + target model + invariants)
+2. TDD implementation waves (`MW-A2-B` to `MW-A2-E`)
+
+No implementation wave is considered valid if it is not traceable to the
+accepted documentation gate.
+
 ## What path to use
 
 ### Current supported inputs (today)
@@ -58,6 +68,29 @@ flowchart LR
   Graph --> Planner["@dvt/planner"]
   Planner --> Plan["ExecutionPlan"]
   Plan --> Runtime["Engine and adapters"]
+```
+
+## As-is vs to-be flow
+
+### As-is (current usage)
+
+```mermaid
+flowchart LR
+  Caller["Integrator"] --> Inputs["manifestRef | manifest | nodes | graphSource(legacy shape)"]
+  Inputs --> Facade["PlannerFacade"]
+  Facade --> DbtPath["dbt manifest derivation path is central"]
+  DbtPath --> Plan["ExecutionPlan"]
+```
+
+### To-be (target usage)
+
+```mermaid
+flowchart LR
+  Caller["Integrator"] --> Source["GenericGraphSourceV1 or graphSourceRef"]
+  Source --> Facade["PlannerFacade"]
+  Facade --> Validator["Generic graph validation"]
+  Validator --> Plan["ExecutionPlan"]
+  Plan --> Runtime["Runtime executes only supported StepKinds"]
 ```
 
 The graph source describes planning intent. Execution still depends on runtime
@@ -242,6 +275,17 @@ pnpm --filter @dvt/planner test
 pnpm --filter dvt-api test
 pnpm verify:prepush
 ```
+
+## Documentation traceability checklist
+
+Before requesting implementation or review, ensure:
+
+- this user manual and the technical manual are aligned
+- as-is/to-be diagrams match the current lane plan
+- invariants and common failures are not contradictory
+- every intended behavior change has a corresponding test expectation in the
+  technical manual
+- wave references (`MW-A2-B`..`MW-A2-E`) stay consistent with the proposal
 
 ## Related documents
 

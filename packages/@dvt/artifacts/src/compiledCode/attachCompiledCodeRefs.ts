@@ -1,4 +1,4 @@
-import type { CompiledCodeRef, ExecutionPlan, ExecutionStepV2 } from '@dvt/contracts';
+import type { CompiledCodeRef, ExecutionPlan, ExecutionStepV1 } from '@dvt/contracts';
 import { KNOWN_STEP_KINDS } from '@dvt/contracts';
 
 import type { ICompiledCodeStorage } from '../ports/ICompiledCodeStorage.js';
@@ -22,7 +22,7 @@ export interface AttachCompiledCodeRefsOptions {
   onUploadFailure?: (stepId: string, error: Error) => void;
 }
 
-function canAttach(step: ExecutionStepV2): boolean {
+function canAttach(step: ExecutionStepV1): boolean {
   return step.kind === KNOWN_STEP_KINDS.DBT_MODEL || step.kind === KNOWN_STEP_KINDS.DBT_TEST;
 }
 

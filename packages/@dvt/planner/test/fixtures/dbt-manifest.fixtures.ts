@@ -1,4 +1,4 @@
-import type { PlannerInputEnvelopeV2 } from '../../src/domain/types.js';
+import type { PlannerInputEnvelopeV1 } from '../../src/domain/types.js';
 
 type ManifestNodeRecord = Record<
   string,
@@ -34,7 +34,7 @@ function makeManifestNodes(count: number): ManifestNodeRecord {
   return nodes;
 }
 
-function makeManifestEnvelope(size: 10 | 100 | 500): PlannerInputEnvelopeV2 {
+function makeManifestEnvelope(size: 10 | 100 | 500): PlannerInputEnvelopeV1 {
   const manifestNodes = makeManifestNodes(size);
   const leaf = `model.analytics.n${(size - 1).toString().padStart(3, '0')}`;
   const graphNodes = Object.entries(manifestNodes).map(([nodeId, node]) => ({

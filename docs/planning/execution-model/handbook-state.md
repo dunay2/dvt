@@ -36,7 +36,7 @@ Overall handbook alignment is about 58%. The executable core remains much strong
 
 | Section    | Component                    | Status | Gap                                                                                                |
 | ---------- | ---------------------------- | ------ | -------------------------------------------------------------------------------------------------- |
-| Section 3  | Planner bounded context      | 30%    | `IExecutionPlanner.v2` exists, but the planner implementation is still incomplete.                 |
+| Section 3  | Planner bounded context      | 30%    | `IExecutionPlanner.v1` exists, but the planner implementation is still incomplete.                 |
 | Section 3  | Platform bounded context     | 60%    | Observability is strong; authz still relies on `AllowAllAuthorizer`.                               |
 | Section 6  | dbt runner                   | 40%    | `stepActivities.ts` exists, but result and failure mapping are incomplete.                         |
 | Section 8  | Metrics                      | 50%    | Core metrics exist, but `warehouse_cost` and `queue_latency` are missing.                          |

@@ -69,6 +69,17 @@ runtime rewrite.
 
 These documents are the canonical target description for the slice.
 
+## Docs-as-strong-gate rule
+
+`MW-A2` uses a hard documentation gate before implementation:
+
+- `MW-A2-A` must freeze target model, procedures, invariants, and negative
+  paths with as-is and to-be diagrams.
+- no implementation PR for `MW-A2-B/C/D/E` is accepted if it changes behavior
+  not described in the manuals and this proposal.
+
+TDD begins only after this gate is accepted.
+
 ## Target classes and procedures
 
 The target collaborator model is:
@@ -151,6 +162,11 @@ Outcome:
 - current `PlannerGraphSourceV1` becomes compatibility alias or migration seam
 - parser/schema/fixture coverage is updated
 
+TDD entry criteria:
+
+- failing contract tests exist first for node shape, refs, and negative paths
+- deterministic identity expectations are codified before contract mutation
+
 ### MW-A2-C Planner boundary evolution
 
 Outcome:
@@ -158,6 +174,11 @@ Outcome:
 - planner boundary accepts the generic graph source contract
 - graph-source translation is explicit and no longer dbt-centered
 - `ManifestGraphDeriver` is demoted to a dbt adapter path
+
+TDD entry criteria:
+
+- failing planner-boundary tests exist for translation failures, source
+  ambiguity, and graph invariants
 
 ### MW-A2-D API and ref-resolution alignment
 
@@ -167,6 +188,11 @@ Outcome:
   resolution
 - manifest-specific resolver naming is retired from the canonical story
 
+TDD entry criteria:
+
+- failing API and resolver tests exist for malformed refs, unsupported schemes,
+  and invalid resolved payloads
+
 ### MW-A2-E Determinism and integration hardening
 
 Outcome:
@@ -174,6 +200,11 @@ Outcome:
 - key-order determinism is tested
 - mixed-source and failure-path coverage is explicit
 - planner/API integration tests prove the new boundary
+
+TDD entry criteria:
+
+- failing determinism vectors exist before hardening changes
+- failing negative integration vectors exist for all frozen invariants
 
 ## Lane mapping
 

@@ -1,4 +1,4 @@
-import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
+import { parsePlannerInputEnvelopeV1 } from '@dvt/contracts';
 
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 
@@ -32,7 +32,7 @@ export function parseStartRunPlannerEnvelope(
   >
 > {
   try {
-    const parsed = parsePlannerInputEnvelopeV2({
+    const parsed = parsePlannerInputEnvelopeV1({
       ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
       ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
       ...(record.manifest === undefined ? {} : { manifest: record.manifest }),
@@ -53,7 +53,7 @@ export function parseStartRunPlannerEnvelope(
 }
 
 function toPlannerCommandFields(
-  parsed: ReturnType<typeof parsePlannerInputEnvelopeV2>
+  parsed: ReturnType<typeof parsePlannerInputEnvelopeV1>
 ): Pick<
   StartRunCommand,
   | 'graphSource'
@@ -89,7 +89,7 @@ function toPlannerCommandFields(
 }
 
 function mapGraphSource(
-  graphSource: ReturnType<typeof parsePlannerInputEnvelopeV2>['graphSource']
+  graphSource: ReturnType<typeof parsePlannerInputEnvelopeV1>['graphSource']
 ): StartRunCommand['graphSource'] | undefined {
   if (graphSource === undefined) return undefined;
 
@@ -104,7 +104,7 @@ function mapGraphSource(
 }
 
 function mapManifestRef(
-  manifestRef: ReturnType<typeof parsePlannerInputEnvelopeV2>['manifestRef']
+  manifestRef: ReturnType<typeof parsePlannerInputEnvelopeV1>['manifestRef']
 ): StartRunCommand['manifestRef'] | undefined {
   if (manifestRef === undefined) return undefined;
 
@@ -116,7 +116,7 @@ function mapManifestRef(
 }
 
 function mapNodes(
-  nodes: ReturnType<typeof parsePlannerInputEnvelopeV2>['nodes']
+  nodes: ReturnType<typeof parsePlannerInputEnvelopeV1>['nodes']
 ): StartRunCommand['nodes'] | undefined {
   if (nodes === undefined) return undefined;
 
@@ -128,7 +128,7 @@ function mapNodes(
 }
 
 function mapEnvironment(
-  environment: ReturnType<typeof parsePlannerInputEnvelopeV2>['environment']
+  environment: ReturnType<typeof parsePlannerInputEnvelopeV1>['environment']
 ): StartRunCommand['environment'] | undefined {
   if (environment === undefined) return undefined;
 
@@ -144,7 +144,7 @@ function mapEnvironment(
 }
 
 function mapObservability(
-  observability: ReturnType<typeof parsePlannerInputEnvelopeV2>['observability']
+  observability: ReturnType<typeof parsePlannerInputEnvelopeV1>['observability']
 ): StartRunCommand['observability'] | undefined {
   if (observability === undefined) return undefined;
 

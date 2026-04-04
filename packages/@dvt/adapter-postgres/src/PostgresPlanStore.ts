@@ -12,7 +12,7 @@ import {
   parsePlanExecutabilityRecord,
   parsePlanRecord,
   parsePlanRef,
-  type PlannerBuildResultV2,
+  type PlannerBuildResultV1,
 } from '@dvt/contracts';
 import { Pool, type PoolClient } from 'pg';
 
@@ -43,7 +43,7 @@ export interface PostgresPlanStoreConfig {
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
   assumeSchemaReady?: boolean;
-  toExecutablePlan: (buildResult: PlannerBuildResultV2) => ExecutablePlanArtifact;
+  toExecutablePlan: (buildResult: PlannerBuildResultV1) => ExecutablePlanArtifact;
 }
 
 const PLAN_URI_SCHEME = 'dvt-plan';
@@ -82,7 +82,7 @@ export class PostgresPlanStore
     }
   }
 
-  public async storePlan(buildResult: PlannerBuildResultV2): Promise<PlanRefSchemaT> {
+  public async storePlan(buildResult: PlannerBuildResultV1): Promise<PlanRefSchemaT> {
     const executable = this.config.toExecutablePlan(buildResult);
     const executableBytes = Buffer.from(executable.text, 'utf8');
     const planId = buildResult.plan.metadata.planId;

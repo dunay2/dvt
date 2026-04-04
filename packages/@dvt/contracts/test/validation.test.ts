@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { CONTRACTS_ERROR_CODE, CONTRACTS_ERROR_MESSAGE_KEY } from '../src/errorContract.js';
 import {
   ContractValidationError,
+  parseGenericGraphSourceV1,
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
   parsePlanRecord,
   parsePlannerGraphSourceV1,
-  parsePlannerInputEnvelopeV2,
+  parsePlannerInputEnvelopeV1,
   parsePlanRef,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
@@ -233,9 +234,46 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
+  it('parses GenericGraphSourceV1 with step-oriented nodes', () => {
+    const source = parseGenericGraphSourceV1({
+      kind: 'generic-graph-v1',
+      sourceFamily: 'integration-suite',
+      sourceVersion: '1.0',
+      nodes: [
+        {
+          nodeId: 'extract.iot-readings',
+          stepKind: 'API_CALL',
+          dependsOn: [],
+          stepTypeConfig: {
+            operationRef: 'artifacts://operations/iot-readings.json',
+          },
+        },
+      ],
+    });
+
+    expect(source.kind).toBe('generic-graph-v1');
+    expect(source.nodes[0]?.stepKind).toBe('API_CALL');
+  });
+
+  it('rejects GenericGraphSourceV1 when stepKind is missing', () => {
+    expect(() =>
+      parseGenericGraphSourceV1({
+        kind: 'generic-graph-v1',
+        sourceFamily: 'integration-suite',
+        sourceVersion: '1.0',
+        nodes: [
+          {
+            nodeId: 'extract.iot-readings',
+            dependsOn: [],
+          },
+        ],
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('throws ContractValidationError when planner input has no active source', () => {
     expect(() =>
-      parsePlannerInputEnvelopeV2({
+      parsePlannerInputEnvelopeV1({
         selection: {
           selectedNodeIds: ['model.analytics.orders'],
         },
@@ -245,7 +283,7 @@ describe('contracts: validation helpers', () => {
 
   it('throws ContractValidationError when planner input has more than one active source', () => {
     expect(() =>
-      parsePlannerInputEnvelopeV2({
+      parsePlannerInputEnvelopeV1({
         graphSource: {
           kind: 'normalized-graph-v1',
           nodes: [],

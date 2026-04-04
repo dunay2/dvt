@@ -32,22 +32,22 @@
 import {
   ContractValidationError,
   parsePlannerGraphSourceV1,
-  parsePlannerInputEnvelopeV2,
+  parsePlannerInputEnvelopeV1,
 } from '@dvt/contracts';
 
 import { PlannerError, PlannerErrorCode } from '../domain/errors.js';
 import { Planner, type PlannerOptions } from '../domain/Planner.js';
-import type { PlannerInputEnvelopeV2 as DomainEnvelope } from '../domain/types.js';
+import type { PlannerInputEnvelopeV1 as DomainEnvelope } from '../domain/types.js';
 import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
 
 import { derivePlannerGraphSourceFromManifest } from './derivePlannerGraphSourceFromManifest.js';
 type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
 type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type IPlanner = import('@dvt/contracts').IPlanner;
-type PlannerBuildResultV2 = import('@dvt/contracts').PlannerBuildResultV2;
+type PlannerBuildResultV1 = import('@dvt/contracts').PlannerBuildResultV1;
 type PlannerGraphSourceV1 = import('@dvt/contracts').PlannerGraphSourceV1;
-type ContractEnvelope = import('@dvt/contracts').PlannerInputEnvelopeV2;
-type PlannerInputEnvelopeV2SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV2SchemaT;
+type ContractEnvelope = import('@dvt/contracts').PlannerInputEnvelopeV1;
+type PlannerInputEnvelopeV1SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV1SchemaT;
 type PlannerSelection = import('@dvt/contracts').PlannerSelection;
 
 // ── Options ─────────────────────────────────────────────────────────────────
@@ -77,12 +77,12 @@ export class PlannerFacade implements IPlanner {
     this.manifestRefCacheSize = this.normalizeManifestRefCacheSize(manifestRefCacheSize);
   }
 
-  async buildPlan(input: ContractEnvelope): Promise<PlannerBuildResultV2> {
+  async buildPlan(input: ContractEnvelope): Promise<PlannerBuildResultV1> {
     const domainInput = await this.toDomainInput(this.validateEnvelope(input));
     return this.planner.buildPlan(domainInput);
   }
 
-  private async toDomainInput(input: PlannerInputEnvelopeV2SchemaT): Promise<DomainEnvelope> {
+  private async toDomainInput(input: PlannerInputEnvelopeV1SchemaT): Promise<DomainEnvelope> {
     const domainRest = this.toDomainBaseInput(input);
     const manifestRef = input.manifestRef;
     const graphSource = input.graphSource;
@@ -113,7 +113,7 @@ export class PlannerFacade implements IPlanner {
   }
 
   private toDomainBaseInput(
-    input: PlannerInputEnvelopeV2SchemaT
+    input: PlannerInputEnvelopeV1SchemaT
   ): Omit<DomainEnvelope, 'graphSource'> {
     const domainInput: Omit<DomainEnvelope, 'graphSource'> = {
       selection: this.toPlannerSelection(input.selection),
@@ -132,7 +132,7 @@ export class PlannerFacade implements IPlanner {
   }
 
   private toManifestRef(
-    manifestRef: NonNullable<PlannerInputEnvelopeV2SchemaT['manifestRef']>
+    manifestRef: NonNullable<PlannerInputEnvelopeV1SchemaT['manifestRef']>
   ): DbtManifestRef {
     const normalizedManifestRef: DbtManifestRef = {
       uri: manifestRef.uri,
@@ -147,7 +147,7 @@ export class PlannerFacade implements IPlanner {
   }
 
   private toPlannerSelection(
-    selection: PlannerInputEnvelopeV2SchemaT['selection']
+    selection: PlannerInputEnvelopeV1SchemaT['selection']
   ): PlannerSelection {
     const normalizedSelection: PlannerSelection = {
       selectedNodeIds: selection.selectedNodeIds,
@@ -164,7 +164,7 @@ export class PlannerFacade implements IPlanner {
   }
 
   private toObservability(
-    observability: NonNullable<PlannerInputEnvelopeV2SchemaT['observability']>
+    observability: NonNullable<PlannerInputEnvelopeV1SchemaT['observability']>
   ): NonNullable<ExecutionPlan['observability']> {
     const normalizedObservability: NonNullable<ExecutionPlan['observability']> = {};
 
@@ -179,9 +179,9 @@ export class PlannerFacade implements IPlanner {
     return normalizedObservability;
   }
 
-  private validateEnvelope(input: ContractEnvelope): PlannerInputEnvelopeV2SchemaT {
+  private validateEnvelope(input: ContractEnvelope): PlannerInputEnvelopeV1SchemaT {
     try {
-      return parsePlannerInputEnvelopeV2(input);
+      return parsePlannerInputEnvelopeV1(input);
     } catch (error) {
       const message =
         error instanceof ContractValidationError &&

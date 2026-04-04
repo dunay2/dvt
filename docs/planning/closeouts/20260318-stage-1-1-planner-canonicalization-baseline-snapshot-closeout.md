@@ -88,9 +88,9 @@ churn.
 - `AGENTS.md`
 - `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
-- `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts`
+- `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/planner/src/domain/types.ts`
-- `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v2.ts`
+- `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/planner/src/contracts/planner/ExecutionPlan.v2.ts`
 
 ## Docs synced
