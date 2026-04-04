@@ -15,6 +15,7 @@ Evidence documents that justify or validate relevant changes.
 - [Context](context/index.md)
 - [Critical](critical/index.md)
 - [Supporting](supporting/index.md)
+- [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)
