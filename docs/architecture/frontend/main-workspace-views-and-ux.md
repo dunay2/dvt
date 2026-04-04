@@ -81,16 +81,16 @@ Current routes: `/runs`, `/runs/:runId`
 Current composition:
 
 - run list state when no `runId` is present;
-- `RunHeader` on detail route;
-- `RunTabsContent` with `Timeline`, `Steps`, `Events`, `Metrics`, and
-  `Artifacts` tabs.
+- `RunWorkspaceState` on detail route;
+- snapshot card as primary authority view;
+- timeline card with available, empty, or degraded states.
 
 Current user jobs:
 
 - find active or failed runs;
-- inspect progress and step-level state;
-- review events and metrics;
-- jump from Canvas execution to full run detail.
+- inspect runtime snapshot truth for one run;
+- inspect event timeline evidence when available;
+- identify partial or degraded timeline without losing snapshot state.
 
 ### Lineage
 
@@ -215,6 +215,10 @@ flowchart TB
 
 - `/runs` is the operational list entry point;
 - `/runs/:runId` is the focused execution workspace;
+- `POST /runs/start` is the start authority and `GET /runs/:runId` is the
+  run-snapshot authority;
+- timeline is supplemental and comes from `GET /runs/:runId/events`;
+- the route does not fabricate step/artifact detail from snapshot-only payloads;
 - empty state must send the operator back to Canvas to create meaningful work.
 
 ### Common States
@@ -243,5 +247,7 @@ flowchart TB
 ## Related Pages
 
 - [UX Implementation Guide](ux-implementation-guide.md)
+- [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)
 - [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
 - [App Shell](appshell/app-shell.md)

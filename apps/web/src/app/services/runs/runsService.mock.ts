@@ -1,14 +1,14 @@
 import { mockRun } from '../../data/mockDbtData';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
+import type { RunContext, RunEvent } from '../../types/engine';
 import type {
-  EngineRunRef,
-  RunContext,
-  RunEvent,
-  RunEventsResponse,
-  RunStatusSnapshot,
-} from '../../types/engine';
-import type { RunsService, StartRunInput } from './runsService';
+  RunEventTimelinePage,
+  RunSnapshot,
+  RunSummaryItem,
+  RunsService,
+  StartRunInput,
+} from './runsService';
 
 function buildMockRunList(): Run[] {
   const completedRun: Run = {
@@ -33,36 +33,31 @@ function mapMockEventType(eventType: DbtRunEvent['type']): RunEvent['eventType']
   }
 }
 
-function buildMockRunRef(input: StartRunInput): EngineRunRef {
-  const base = {
-    tenantId: input.context.tenantId,
-    workflowId: `wf_${input.context.runId}`,
-    runId: input.context.runId,
-  };
-
-  if (input.context.targetAdapter === 'temporal') {
-    return {
-      provider: 'temporal',
-      namespace: 'default',
-      ...base,
-    };
-  }
-
-  if (input.context.targetAdapter === 'conductor') {
-    return {
-      provider: 'conductor',
-      conductorUrl: 'http://localhost:8080',
-      ...base,
-    };
-  }
-
+function mapDbtRunToSnapshot(run: Run): RunSnapshot {
   return {
-    provider: 'mock',
-    ...base,
+    runId: run.runId,
+    planId: run.planId,
+    status: run.status,
+    environment: run.environment,
+    gitSha: run.gitSha,
+    startedAt: run.startTime,
+    completedAt: run.endTime,
   };
 }
 
-function buildMockRunEvents(runId: string): RunEventsResponse {
+function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
+  return {
+    runId: snapshot.runId,
+    planId: snapshot.planId,
+    status: snapshot.status,
+    environment: snapshot.environment,
+    gitSha: snapshot.gitSha,
+    startedAt: snapshot.startedAt,
+    completedAt: snapshot.completedAt,
+  };
+}
+
+function buildMockRunEvents(runId: string): RunEventTimelinePage {
   const { tenantId, projectId, environmentId } = useSessionStore.getState();
   return {
     events: mockRun.events.map((event, index) => {
@@ -96,15 +91,40 @@ function buildMockRunEvents(runId: string): RunEventsResponse {
 
 export function createMockRunsService(): RunsService {
   return {
-    listRuns: async () => buildMockRunList(),
-    getRun: async (runId) => buildMockRunList().find((run) => run.runId === runId) ?? null,
-    startRun: async (input) => buildMockRunRef(input),
-    getRunStatus: async (runId): Promise<RunStatusSnapshot> => ({
-      runId,
-      status: 'RUNNING',
-      message: 'Mock run status',
-      startedAt: mockRun.startTime,
-    }),
+    listRunSummaries: async () =>
+      buildMockRunList().map(mapDbtRunToSnapshot).map(mapSnapshotToSummary),
+    getRunSnapshot: async (runId) => {
+      const run = buildMockRunList().find((candidate) => candidate.runId === runId) ?? null;
+      return run ? mapDbtRunToSnapshot(run) : null;
+    },
+    startRun: async (input) => {
+      const base = {
+        tenantId: input.context.tenantId,
+        workflowId: `wf_${input.context.runId}`,
+        runId: input.context.runId,
+      };
+
+      if (input.context.targetAdapter === 'temporal') {
+        return {
+          provider: 'temporal',
+          namespace: 'default',
+          ...base,
+        };
+      }
+
+      if (input.context.targetAdapter === 'conductor') {
+        return {
+          provider: 'conductor',
+          conductorUrl: 'http://localhost:8080',
+          ...base,
+        };
+      }
+
+      return {
+        provider: 'mock',
+        ...base,
+      };
+    },
     listRunEvents: async (runId) => buildMockRunEvents(runId),
   };
 }

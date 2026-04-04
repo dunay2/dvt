@@ -80,6 +80,8 @@ contract around it.
 
 - [apps/api](components/api/index.md)
 - [API Current To Target Architecture](components/api/api-current-to-target-architecture.md)
+- [Frontend Fowler Implementation Pattern](frontend/frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Contract Technical Manual](frontend/runs/frontend-runtime-contract-technical-manual.md)
 - [DVT Component Map](component-map.md)
 - [System Delivery Status](system-delivery-status.md)
 - [API and Admission planning view](../planning/domains/api-and-admission.md)

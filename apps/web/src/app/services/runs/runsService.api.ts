@@ -1,36 +1,25 @@
 import {
   parseEngineRunRef,
   parseRunEventRecord,
-  parseRunStatusSnapshot,
   type RunStatus as ContractRunStatus,
 } from '@dvt/contracts';
 
-import type { Run } from '../../types/dbt';
-import type { RunEvent, RunEventsResponse, RunStatusSnapshot } from '../../types/engine';
+import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
-import type { RunsService, StartRunInput } from './runsService';
+import type {
+  RunEventTimelinePage,
+  RunSnapshot,
+  RunSummaryItem,
+  RunsService,
+  StartRunInput,
+  UiRunStatus,
+} from './runsService';
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-function isDbtRunShape(value: unknown): value is Run {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-  const candidate = value as Partial<Run>;
-  return (
-    typeof candidate.runId === 'string' &&
-    typeof candidate.planId === 'string' &&
-    typeof candidate.environment === 'string' &&
-    typeof candidate.gitSha === 'string' &&
-    typeof candidate.startTime === 'string' &&
-    Array.isArray(candidate.steps) &&
-    Array.isArray(candidate.events)
-  );
-}
-
-function mapContractStatusToUi(status: ContractRunStatus | string | undefined): Run['status'] {
+function mapContractStatusToUi(status: ContractRunStatus | string | undefined): UiRunStatus {
   switch ((status ?? '').toUpperCase()) {
     case 'APPROVED':
     case 'PENDING':
@@ -49,11 +38,7 @@ function mapContractStatusToUi(status: ContractRunStatus | string | undefined): 
   }
 }
 
-function mapContractRecordToUiRun(record: unknown): Run | null {
-  if (isDbtRunShape(record)) {
-    return record;
-  }
-
+function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
   if (!record || typeof record !== 'object') {
     return null;
   }
@@ -66,82 +51,92 @@ function mapContractRecordToUiRun(record: unknown): Run | null {
 
   return {
     runId,
-    planId: asString(candidate.planId) ?? 'unknown-plan',
+    planId: asString(candidate.planId),
     status: mapContractStatusToUi(asString(candidate.status)),
-    environment: asString(candidate.environmentId) ?? asString(candidate.environment) ?? 'unknown',
-    gitSha: asString(candidate.gitSha) ?? 'unknown',
-    startTime:
+    environment: asString(candidate.environmentId) ?? asString(candidate.environment),
+    gitSha: asString(candidate.gitSha),
+    startedAt:
       asString(candidate.startedAt) ??
       asString(candidate.createdAt) ??
       asString(candidate.startTime) ??
       new Date().toISOString(),
-    events: [],
-    steps: [],
+    completedAt: asString(candidate.completedAt) ?? asString(candidate.endTime),
+    substatus: asString(candidate.substatus),
+    message: asString(candidate.message),
+    hash: asString(candidate.hash),
+    snapshotStaleness: asString(candidate.snapshotStaleness) as
+      | 'FRESH'
+      | 'STALE'
+      | 'UNKNOWN'
+      | undefined,
+  };
+}
+
+function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
+  return {
+    runId: snapshot.runId,
+    planId: snapshot.planId,
+    status: snapshot.status,
+    environment: snapshot.environment,
+    gitSha: snapshot.gitSha,
+    startedAt: snapshot.startedAt,
+    completedAt: snapshot.completedAt,
+    substatus: snapshot.substatus,
+    message: snapshot.message,
+    hash: snapshot.hash,
+    snapshotStaleness: snapshot.snapshotStaleness,
   };
 }
 
 function extractRunListPayload(payload: unknown): unknown[] {
-  if (Array.isArray(payload)) {
-    return payload;
+  if (!payload || typeof payload !== 'object') {
+    return [];
   }
-  if (
-    payload &&
-    typeof payload === 'object' &&
-    'runs' in payload &&
-    Array.isArray((payload as { runs?: unknown[] }).runs)
-  ) {
-    return (payload as { runs: unknown[] }).runs;
-  }
-  return [];
+
+  const record = payload as { items?: unknown[] };
+  return Array.isArray(record.items) ? record.items : [];
 }
 
 function extractEventsPayload(payload: unknown): { events: unknown[]; nextAfterSeq?: number } {
-  if (Array.isArray(payload)) {
-    return { events: payload };
+  if (!payload || typeof payload !== 'object') {
+    return { events: [] };
   }
 
-  if (payload && typeof payload === 'object') {
-    const record = payload as { events?: unknown[]; nextAfterSeq?: unknown };
-    if (Array.isArray(record.events)) {
-      return {
-        events: record.events,
-        nextAfterSeq: typeof record.nextAfterSeq === 'number' ? record.nextAfterSeq : undefined,
-      };
-    }
-  }
-
-  return { events: [] };
+  const record = payload as { items?: unknown[]; nextCursor?: unknown };
+  return {
+    events: Array.isArray(record.items) ? record.items : [],
+    nextAfterSeq: typeof record.nextCursor === 'number' ? record.nextCursor : undefined,
+  };
 }
 
 export function createApiRunsService(apiClient: ApiClient): RunsService {
+  async function getRunSnapshotById(runId: string): Promise<RunSnapshot | null> {
+    try {
+      const payload = await apiClient.getJson<unknown>(`/runs/${runId}`);
+      return mapUnknownRecordToSnapshot(payload);
+    } catch (error) {
+      if (error instanceof ApiError && error.statusCode === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   return {
-    listRuns: async () => {
+    listRunSummaries: async () => {
       const payload = await apiClient.getJson<unknown>('/runs');
       return extractRunListPayload(payload)
-        .map(mapContractRecordToUiRun)
-        .filter((run): run is Run => run !== null);
+        .map(mapUnknownRecordToSnapshot)
+        .filter((snapshot): snapshot is RunSnapshot => snapshot !== null)
+        .map(mapSnapshotToSummary);
     },
-    getRun: async (runId) => {
-      try {
-        const payload = await apiClient.getJson<unknown>(`/runs/${runId}`);
-        return mapContractRecordToUiRun(payload);
-      } catch (error) {
-        if (error instanceof ApiError && error.statusCode === 404) {
-          return null;
-        }
-        throw error;
-      }
-    },
+    getRunSnapshot: getRunSnapshotById,
     startRun: async (input: StartRunInput) => {
-      const payload = await apiClient.postJson<StartRunInput, unknown>('/runs', input);
+      const payload = await apiClient.postJson<StartRunInput, unknown>('/runs/start', input);
       return parseEngineRunRef(payload);
     },
-    getRunStatus: async (runId): Promise<RunStatusSnapshot> => {
-      const payload = await apiClient.getJson<unknown>(`/runs/${runId}/status`);
-      return parseRunStatusSnapshot(payload) as RunStatusSnapshot;
-    },
-    listRunEvents: async (runId, afterSeq): Promise<RunEventsResponse> => {
-      const query = afterSeq === undefined ? '' : `?after=${afterSeq}`;
+    listRunEvents: async (runId, afterSeq): Promise<RunEventTimelinePage> => {
+      const query = afterSeq === undefined ? '' : `?afterSeq=${afterSeq}`;
       const payload = await apiClient.getJson<unknown>(`/runs/${runId}/events${query}`);
       const normalized = extractEventsPayload(payload);
       return {

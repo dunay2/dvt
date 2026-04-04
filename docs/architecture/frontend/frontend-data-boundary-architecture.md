@@ -157,3 +157,11 @@ Expected cost:
 - repeatable pattern for future capabilities;
 - cleaner path for execution-template/source-generation workbench slices;
 - better CI hardening once frontend test lane is formalized.
+
+## Runtime Contract Baseline Link
+
+Runtime route truth for Runs is governed by the dedicated F-07 docs pack:
+
+- [Frontend Fowler Implementation Pattern](frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)

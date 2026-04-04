@@ -165,7 +165,7 @@ export function useCanvasController() {
     () => toRunStatusSnapshot(activeCanonicalRun),
     [activeCanonicalRun]
   );
-  const activeRunId = activeCanonicalRun?.runId ?? null;
+  const activeRunId = activeCanonicalRun?.runId ?? currentRun?.runId ?? null;
   const runStatusByNodeId = useMemo(
     () => buildRunStatusByNodeId(activeCanonicalRun),
     [activeCanonicalRun]
