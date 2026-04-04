@@ -151,8 +151,12 @@ async function waitForStartupOrAbort(
   }
 
   let detachAbortListener = (): void => {};
+  let startupCompleted = false;
   const abortPromise = new Promise<never>((_resolve, reject) => {
     const onAbort = (): void => {
+      if (startupCompleted) {
+        return;
+      }
       detachAbortListener();
       void interruptPendingTick(deps.stateStore, deps.eventBus);
       reject(createAbortError('outbox runtime startup aborted'));
@@ -170,6 +174,7 @@ async function waitForStartupOrAbort(
 
   try {
     await Promise.race([startup(), abortPromise]);
+    startupCompleted = true;
   } finally {
     detachAbortListener();
   }
