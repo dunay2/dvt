@@ -62,7 +62,12 @@ export function topoSort(graph: BuiltGraph, selected: readonly string[]): readon
   }
 
   if (out.length !== selected.length) {
-    throw new PlannerError(PlannerErrorCode.GRAPH_CYCLE, 'Cycle detected in selected subgraph.');
+    const resolved = new Set(out);
+    const stuckNodeIds = selected.filter((id) => !resolved.has(id)).sort(binaryCompare);
+    throw new PlannerError(
+      PlannerErrorCode.GRAPH_CYCLE,
+      `Cycle detected in selected subgraph; stuck nodeIds: ${stuckNodeIds.join(', ')}`
+    );
   }
   return out;
 }

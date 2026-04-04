@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-04
 planning_type: review
 ---
 
@@ -48,6 +48,16 @@ Sprint execution board:
 | [20260401 CI process review](ci-and-delivery/20260401-ci-process-review.md)                                                                     | `ci-and-delivery`                 | current CI process baseline review                     | `none`                                     | reference        | `n/a`              |
 | [20260401 Lane C RC-C2 efficiency institutionalization review](ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | `ci-and-delivery`                 | RC-C2 phase-2 institutionalization review              | `RC-C2`                                    | `review`         | `67%`              |
 | [20260402 RC-C2 operational friction intake review](ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
+
+## Newly Classified Review
+
+- Review:
+  [20260402 Deep architectural review - principal architect](architecture-and-governance/20260402-deep-architectural-review-principal-architect.md)
+- Domain folder: `architecture-and-governance`
+- Current review role: active principal review feeding new lane decomposition
+- Workboard task linkage: `AR-A8..AR-A11`, `AR-C5`, `AR-D7`, `AR-D8`
+- Execution status: `queued`
+- Execution progress: `0%`
 
 ## Archive Rule Applied
 

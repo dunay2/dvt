@@ -2,7 +2,7 @@
 title: Architecture And Governance Reviews
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-04
 planning_type: review
 ---
 
@@ -14,3 +14,8 @@ planning_type: review
 - [20260323 SOLID DDD hexagonal CI and adapters review](20260323-solid-ddd-hexagonal-ci-and-adapters-review.md)
 - [20260326 DVT principal architectural review](20260326-dvt-principal-architectural-review.md)
 - [20260331 Principal architecture deep review](20260331-principal-architecture-deep-review.md)
+- [20260402 Deep architectural review](20260402-deep-architectural-review.md)
+- [20260402 Deep architectural review - principal architect](20260402-deep-architectural-review-principal-architect.md)
+- [20260402 F03 shell health Fowler hard review](20260402-f03-shell-health-fowler-hard-review.md)
+- [20260403 Postgres plan store SRP remediation target](20260403-postgres-plan-store-srp-remediation-target.md)
+- [20260403 S08 Postgres plan store hard QA review](20260403-s08-postgres-plan-store-hard-qa-review.md)

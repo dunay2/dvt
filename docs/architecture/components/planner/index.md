@@ -13,7 +13,10 @@ last_reviewed: 2026-04-04
 2. [Planner contracts](../../../contracts/planner/index.md)
 3. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
 4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
-5. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+5. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
+6. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+7. [AR-A9 planner cycle fail-closed plan](../../../planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
+8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 

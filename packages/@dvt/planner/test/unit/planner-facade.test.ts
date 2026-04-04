@@ -36,6 +36,38 @@ async function expectInvalidInput(
 }
 
 describe('PlannerFacade - graph source routing', () => {
+  it('propagates GRAPH_CYCLE for cyclic selected nodes at public boundary', async () => {
+    const facade = new PlannerFacade();
+    await expect(
+      facade.buildPlan({
+        graphSource: {
+          ...BASE_GRAPH_SOURCE,
+          nodes: [
+            { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+            { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+          ],
+        },
+        selection: { selectedNodeIds: ['a', 'b'] },
+      })
+    ).rejects.toMatchObject({ code: PlannerErrorCode.GRAPH_CYCLE });
+  });
+
+  it('keeps success path for acyclic selection when unrelated cycle exists', async () => {
+    const facade = new PlannerFacade();
+    const result = await facade.buildPlan({
+      graphSource: {
+        ...BASE_GRAPH_SOURCE,
+        nodes: [
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+          { nodeId: 'x', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'y', stepKind: 'DBT_MODEL', dependsOn: ['x'] },
+        ],
+      },
+      selection: { selectedNodeIds: ['y'], includeUpstream: true },
+    });
+    expect(result.plan.steps.map((step) => step.stepId)).toEqual(['x', 'y']);
+  });
   it('accepts graphSource as sole graph source', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({

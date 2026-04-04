@@ -52,6 +52,11 @@ flowchart LR
 - drive selection into the Inspector panel;
 - allow plan and run actions from the current graph context.
 
+In the final workbench, Canvas remains the graph-authoring route. It may hand
+off context to Runs, Lineage, Diff, Artifacts, and the future Templates route,
+but it should not absorb their review-heavy, artifact-heavy, or
+source-generation responsibilities into the graph workspace itself.
+
 ## UX Rules
 
 - explorer and inspector are optional side surfaces, not required blockers for
@@ -76,6 +81,8 @@ concepts behind canonical types and mappers.
 
 - the app store still leaks too much shell and run state into the same global
   store;
+- `useCapabilitiesQuery` still bypasses the governed service boundary and
+  should align with the frontend data-boundary model;
 - `useCanvasController` still concentrates graph query, overlay policy,
   persistence rules, and route side effects in one hook and is being hardened
   as an `F-05` controller-boundary slice;
@@ -90,3 +97,4 @@ concepts behind canonical types and mappers.
 - [UX Implementation Guide](../ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
 - [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)
+- [Canvas Component Map And Modernization Review](canvas-component-map-and-modernization-review.md)
