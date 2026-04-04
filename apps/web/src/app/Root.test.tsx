@@ -240,9 +240,9 @@ describe('Root integration guard', () => {
 
     try {
       await waitFor(() => {
-        expect(
-          within(mounted.container).getByTestId('root-services-probe').textContent
-        ).toContain('mode:');
+        expect(within(mounted.container).getByTestId('root-services-probe').textContent).toContain(
+          'mode:'
+        );
       });
     } finally {
       await mounted.cleanup();
