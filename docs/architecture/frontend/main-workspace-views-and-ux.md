@@ -115,6 +115,12 @@ Current composition:
 - summary cards;
 - tabs for `Graph Diff`, `SQL Diff`, and `Catalog Diff`.
 
+Target Monaco posture:
+
+- Monaco `DiffEditor` for SQL review;
+- Monaco-backed structured viewers for large text deltas;
+- route ownership remains with `Diff`, not with Monaco.
+
 ### Artifacts
 
 Current route: `/artifacts`
@@ -124,6 +130,12 @@ Current composition:
 - local manifest import drop zone;
 - artifact list cards;
 - preview tabs for `manifest.json`, `run_results.json`, and `catalog.json`.
+
+Target Monaco posture:
+
+- Monaco read-only viewers for large JSON payloads;
+- search and structured inspection without introducing editing semantics;
+- route ownership remains with `Artifacts`, not with Monaco.
 
 ## Next Governed Workbench Slice
 
@@ -135,7 +147,8 @@ Planned composition:
 
 - template catalog and provider-profile selector;
 - schema-driven parameter form;
-- generated-source preview for task DDL, procedure bodies, and ETL scaffolds;
+- Monaco-backed generated-source preview for task DDL, procedure bodies, and
+  ETL scaffolds;
 - diff or review pane before export or apply;
 - explicit export, copy, or dispatch actions.
 
@@ -146,6 +159,19 @@ Current user jobs:
 - preview and review generated output before using it;
 - move from workflow design to executable scaffolding without manual
   copy-paste.
+
+## Monaco-Enabled Review Surfaces
+
+Monaco belongs to review and generation routes, not to the shell itself.
+
+Positioning rules:
+
+- Canvas stays graph-first and non-Monaco-centric;
+- Runs stays execution-first and non-Monaco-centric;
+- `Diff` is the first Monaco route for SQL and structured-text comparison;
+- `Artifacts` is the second Monaco route for read-only payload inspection;
+- `Templates` is the long-term Monaco route for generated-source preview and
+  before/after diff.
 
 ## View Relationships
 

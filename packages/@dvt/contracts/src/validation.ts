@@ -54,6 +54,10 @@ import {
   type PlanCoreSchemaT,
   PlanRefSchema,
   type PlanRefSchemaT,
+  RunExecutionContextRefSchema,
+  type RunExecutionContextRefSchemaT,
+  RunExecutionContextSchema,
+  type RunExecutionContextSchemaT,
   ResolvedRunContextSchema,
   type ResolvedRunContextSchemaT,
   RunContextSchema,
@@ -169,6 +173,14 @@ function mapZodIssues(error: ZodError): ValidationIssue[] {
 
 export function parsePlanRef(input: unknown): PlanRefSchemaT {
   return parseWithSchema(PlanRefSchema, input);
+}
+
+export function parseRunExecutionContextRef(input: unknown): RunExecutionContextRefSchemaT {
+  return parseWithSchema(RunExecutionContextRefSchema, input);
+}
+
+export function parseRunExecutionContext(input: unknown): RunExecutionContextSchemaT {
+  return parseWithSchema(RunExecutionContextSchema, input);
 }
 
 export function parseRunContext(input: unknown): RunContextSchemaT {

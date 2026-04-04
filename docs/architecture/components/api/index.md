@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-03
 ---
 
 # apps/api
@@ -15,7 +15,7 @@ process.
 
 ## Current Responsibilities
 
-- expose protected runtime routes for start, list, get, events, and signal;
+- expose protected runtime routes for start, list, get, events, signal, and cancel;
 - compose planner, engine, delivery, and operational dependencies;
 - surface readiness, health, version, and reconciler state;
 - keep auth and admission decisions at the entry boundary.
@@ -43,6 +43,13 @@ flowchart LR
 
 This component is active product code. The remaining work is about contract
 clarity and incremental hardening, not about inventing the API layer.
+
+## Current To Target
+
+Use the main walkthrough below for the real current system, the target API
+shape, and the governed transition route:
+
+- [API Current To Target Architecture](api-current-to-target-architecture.md)
 
 ## Planned Delta
 

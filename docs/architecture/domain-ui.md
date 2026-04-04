@@ -51,6 +51,8 @@ Open-source product references:
 ## Related Pages
 
 - [Frontend Architecture](frontend/index.md)
+- [Frontend Data-Boundary Architecture](frontend/frontend-data-boundary-architecture.md)
+- [Frontend Runtime Modes User Manual](frontend/frontend-runtime-modes-user-manual.md)
 - [Main Workspace Views And UX](frontend/main-workspace-views-and-ux.md)
 - [UX Implementation Guide](frontend/ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](frontend/library-and-open-source-reference-stack.md)

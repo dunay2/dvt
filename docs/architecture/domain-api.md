@@ -2,7 +2,7 @@
 title: API / Entry Domain
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-03
 ---
 
 # API / Entry Domain
@@ -56,6 +56,10 @@ bootstrap are all implemented. The main remaining limitation is not the
 existence of the surface, but the narrowness of the publicly consumable product
 contract around it.
 
+## Current To Target Walkthrough
+
+- [API Current To Target Architecture](components/api/api-current-to-target-architecture.md)
+
 ## Queued Delta
 
 - `MVP-E1`: publish the frontend-facing backend contract that matches the
@@ -75,6 +79,7 @@ contract around it.
 ## Related Pages
 
 - [apps/api](components/api/index.md)
+- [API Current To Target Architecture](components/api/api-current-to-target-architecture.md)
 - [DVT Component Map](component-map.md)
 - [System Delivery Status](system-delivery-status.md)
 - [API and Admission planning view](../planning/domains/api-and-admission.md)

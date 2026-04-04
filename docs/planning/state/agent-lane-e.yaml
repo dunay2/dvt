@@ -226,25 +226,192 @@ tasks:
     priority: P0
     status: in_progress
     objective: >-
-      finish the VITE_DATA_SOURCE mock-or-api split so views depend on typed services and
-      capabilities instead of mode-specific wiring.
+      converge frontend data boundaries to a capability-centered hexagonal model where mode
+      selection and adapter wiring are owned by one composition root.
     dependency: none
     target: >-
-      VITE_DATA_SOURCE remains the single mode switch. Mock data stays isolated behind service or
-      capability boundaries. Views no longer instantiate mode-aware services or import mock-backed
-      state directly. Both modes remain runnable without code changes.
+      Lane E delivers the full F-04 chain (A..F): current-state inventory, technical architecture
+      pack, runtime-modes user manual, defined ports/adapters, composition-root wiring, and removal
+      of direct mode or service factory ownership from route-level view code.
     complexity: M
     effort_points: 5
-    progress_pct: 40
+    progress_pct: 45
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
-      - apps/web/src/app/services/config/dataSource.ts
-      - apps/web/src/app/services/workspace/workspaceService.ts
-      - apps/web/src/app/services/runs/runsService.ts
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
     status_reason: >-
-      The environment flag and service factories exist, but several views still construct mode-aware
-      services directly and the UI boundary is not yet uniformly isolated from mock-backed paths.
+      The F-04 plan and architecture pack are now explicit and linked to Lane E; implementation
+      remains intentionally paused until TDD-first scaffolding is in place for D/E/F.
+    definition_of_done:
+      - F-04-A through F-04-F are all review or done with evidence refs
+      - route-level views no longer decide data-source mode directly
+      - frontend docs and roadmap entrypoints link to canonical F-04 pack
+    last_verified: '2026-04-03'
+  - task_id: F-04-A
+    parent_task: F-04
+    priority: P0
+    status: review
+    objective: >-
+      inventory current frontend data-boundary coupling, including direct mode reads, service
+      factory usage in views, raw fetch usage, and legacy store surfaces.
+    dependency: none
+    target: >-
+      A written inventory maps current coupling points and names required migration targets for
+      F-04-E and F-04-F.
+    complexity: S
+    effort_points: 2
+    progress_pct: 90
+    evidence_refs:
+      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/queries/useCapabilitiesQuery.ts
+      - apps/web/src/app/stores/index.ts
+    status_reason: >-
+      Inventory is captured in the technical architecture document and mapped to concrete code
+      anchors; remaining work is final acceptance during F-04 closeout.
+    definition_of_done:
+      - inventory lists direct resolveDataSource and create*Service usage by file
+      - inventory identifies raw fetch usage and legacy store parallel surfaces
+      - migration dependencies for F-04-E and F-04-F are explicit
+    last_verified: '2026-04-03'
+  - task_id: F-04-B
+    parent_task: F-04
+    priority: P0
+    status: review
+    objective: >-
+      produce the canonical technical architecture document for the frontend data-boundary
+      subsystem, including as-is and target hexagonal topology with Mermaid diagrams.
+    dependency: F-04-A
+    target: >-
+      A canonical architecture page documents subsystem context, ports/adapters, violations,
+      migration chain, and system-level improvements.
+    complexity: M
+    effort_points: 3
+    progress_pct: 80
+    evidence_refs:
+      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - docs/architecture/frontend/index.md
+      - docs/architecture/domain-ui.md
+    status_reason: >-
+      Core content and diagrams are written and linked from active entrypoints; review pass remains
+      open for final wording and contract alignment checks.
+    definition_of_done:
+      - as-is, target, ports, and migration diagrams render correctly
+      - document explicitly states frontend is not execution authority
+      - frontend and domain entrypoints link to this canonical page
+    last_verified: '2026-04-03'
+  - task_id: F-04-C
+    parent_task: F-04
+    priority: P0
+    status: review
+    objective: >-
+      deliver a runtime-modes user manual that explains shell behavior, route expectations, and
+      operator interpretation of capability and availability failures.
+    dependency: F-04-A
+    target: >-
+      An English user manual covers mock vs api meaning, shell state guarantees, and route-level
+      expectations under the target model.
+    complexity: S
+    effort_points: 2
+    progress_pct: 80
+    evidence_refs:
+      - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
+      - docs/architecture/frontend/index.md
+    status_reason: >-
+      The manual is drafted with target route journey and shell guarantees; final acceptance depends
+      on consistency checks with active route behavior.
+    definition_of_done:
+      - manual defines loading, empty, degraded, offline, and read-only shell states
+      - manual explains capability-unavailable vs backend-failure semantics
+      - manual is linked from frontend architecture entrypoint
+    last_verified: '2026-04-03'
+  - task_id: F-04-D
+    parent_task: F-04
+    priority: P0
+    status: queued
+    objective: >-
+      define explicit frontend ports and split hybrid service surfaces into domain ports, adapters,
+      and mapping boundaries.
+    dependency: F-04-B
+    target: >-
+      Workspace, Runs, Plans, Capabilities, SessionContext, and ShellFeedback ports are defined and
+      consumed by application facades rather than by route-local service factories.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    status_reason: >-
+      Port model is documented but implementation split has not been completed yet.
+    definition_of_done:
+      - named ports exist and are typed in frontend domain/application layers
+      - api and mock adapters implement the same port contracts
+      - route-level code depends on facades or hooks, not adapter factories
+      - failing port/adapter tests are introduced before implementation (TDD red phase)
+      - tests pass after implementation and refactor (green + refactor phases)
+    last_verified: '2026-04-03'
+  - task_id: F-04-E
+    parent_task: F-04
+    priority: P0
+    status: queued
+    objective: >-
+      introduce composition-root wiring so data-source mode and adapter selection happen at boot,
+      then expose route-safe service accessors.
+    dependency: F-04-D
+    target: >-
+      One composition module owns resolveDataSource and service construction; route-level views use
+      composition accessors.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/services/composition/appServices.ts
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+    status_reason: >-
+      Awaiting TDD-first start: composition-root tests must be defined before wiring changes.
+    definition_of_done:
+      - VITE_DATA_SOURCE is read in one composition boundary for route-facing services
+      - views/controllers no longer instantiate create*Service directly
+      - core routes build and typecheck with composition-root accessors
+      - failing composition-root tests exist before implementation (TDD red phase)
+      - composition tests pass after implementation and refactor (green + refactor phases)
+    last_verified: '2026-04-03'
+  - task_id: F-04-F
+    parent_task: F-04
+    priority: P0
+    status: queued
+    objective: >-
+      remove direct resolveDataSource, createRunsService, createWorkspaceService,
+      createPlansService, and raw fetch usage from route-level view and query surfaces.
+    dependency: F-04-E
+    target: >-
+      route-level views and query hooks use governed composition or capability adapters with no
+      direct mode/factory ownership.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/queries/useCapabilitiesQuery.ts
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/AdminView.tsx
+      - apps/web/src/app/views/DiffView.tsx
+      - apps/web/src/app/views/LineageView.tsx
+      - apps/web/src/app/views/CostView.tsx
+    status_reason: >-
+      Direct mode/factory usage is mapped; implementation is deferred until TDD-first checks are
+      authored for affected routes and query hooks.
+    definition_of_done:
+      - no route-level view or controller imports resolveDataSource
+      - no route-level view imports createRunsService/createWorkspaceService/createPlansService
+      - capabilities query uses governed client boundary instead of raw fetch
+      - failing guard tests are defined before code rewiring (TDD red phase)
+      - route/query tests and typecheck pass after implementation (green + refactor phases)
     last_verified: '2026-04-03'
   - task_id: F-04-RISK
     parent_task: F-04
@@ -649,25 +816,196 @@ tasks:
       operator workflows, and no delivery slice exists yet for the table upgrade.
     last_verified: '2026-04-03'
   - task_id: F-17
-    priority: P2
+    priority: P1
+    status: in_progress
+    objective: >-
+      adopt Monaco as an embedded review and generation surface for Diff, Artifacts, and Templates
+      without changing the persistent shell or making Canvas Monaco-centric.
+    dependency: F-13
+    target: >-
+      Diff, Artifacts, and the future Templates route use Monaco-backed read-only and diff surfaces
+      inside the existing route-level workbench model. Canvas remains graph-first, Runs remains
+      execution-first, Monaco is lazy-loaded before production hardening, and real backend-backed
+      panes arrive only after governed query and contract work is in place.
+    complexity: L
+    effort_points: 8
+    progress_pct: 15
+    evidence_refs:
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/frontend/library-and-open-source-reference-stack.md
+    status_reason: >-
+      The Monaco strategy has been realigned around route-level workbenches and embedded review
+      surfaces. Documentation and task decomposition are now in progress; implementation stays gated
+      behind the current frontend boundary and contract cleanup chain.
+    definition_of_done:
+      - F-17-A through F-17-F are linked to the same embedded-surface strategy
+      - no active task claims Canvas replacement or Monaco shell ownership
+      - Monaco is production-ready only after lazy loading and governed contract convergence land
+    last_verified: '2026-04-03'
+  - task_id: F-17-A
+    parent_task: F-17
+    priority: P1
+    status: review
+    objective: >-
+      align the proposal, roadmap, and architecture docs so Monaco is positioned only in Diff,
+      Artifacts, and Templates.
+    dependency: F-13
+    target: >-
+      Active docs agree that DVT uses a persistent shell with route-level workbenches and that
+      Monaco belongs to Diff, Artifacts, and Templates as read-only or diff infrastructure.
+    complexity: S
+    effort_points: 2
+    progress_pct: 90
+    evidence_refs:
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+    status_reason: >-
+      The canonical docs and roadmap are being rewritten around the embedded-surface model. Final
+      closure waits on full validation and regenerated planning outputs.
+    definition_of_done:
+      - docs and roadmap wording match each other
+      - no task or doc claims Canvas replacement by Monaco
+      - route-level shell topology remains unchanged in the architecture story
+      - F-21 is described as using Monaco only for preview and diff infrastructure
+    last_verified: '2026-04-03'
+  - task_id: F-17-B
+    parent_task: F-17
+    priority: P1
     status: queued
     objective: >-
-      adopt Monaco-based code and diff panes for SQL, JSON artifact, and review-heavy surfaces
-      instead of growing bespoke viewers.
-    dependency: F-11, F-13
+      integrate Monaco into Diff so SQL and structured-text comparison use a read-only Monaco
+      DiffEditor surface.
+    dependency: F-06
     target: >-
-      Diff and artifact review surfaces can render rich read-only and diff-capable editor panes
-      using Monaco behind DVT adapters, without leaking editor internals into product state.
+      Diff route renders Monaco-backed SQL and structured diff panes without changing the shell,
+      without introducing editing semantics, and without leaking route ownership to Monaco.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - apps/web/src/app/views/DiffView.tsx
+    status_reason: >-
+      Waiting for F-06 query-boundary standardization so Diff can consume governed data surfaces
+      instead of ad-hoc route logic.
+    definition_of_done:
+      - Diff uses Monaco in read-only and diff mode only
+      - route-level shell topology and navigation remain unchanged
+      - no task or implementation path treats Canvas as the Monaco host
+      - docs, code, and UX expectations for Diff stay aligned
+    last_verified: '2026-04-03'
+  - task_id: F-17-C
+    parent_task: F-17
+    priority: P1
+    status: queued
+    objective: >-
+      integrate Monaco into Artifacts so manifest, run_results, and catalog inspection use a
+      read-only structured viewer.
+    dependency: F-06
+    target: >-
+      Artifacts route renders Monaco-backed read-only panes for large payload inspection, search,
+      and structured formatting without introducing editing semantics.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - apps/web/src/app/views/ArtifactsView.tsx
+    status_reason: >-
+      Waiting for F-06 query-boundary standardization so Artifacts can converge on governed data
+      ownership before Monaco is introduced.
+    definition_of_done:
+      - Artifacts uses Monaco in read-only mode only
+      - route-level shell topology and navigation remain unchanged
+      - no task or implementation path treats Canvas as the Monaco host
+      - docs, code, and UX expectations for Artifacts stay aligned
+    last_verified: '2026-04-03'
+  - task_id: F-17-D
+    parent_task: F-17
+    priority: P2
+    status: blocked
+    objective: >-
+      integrate Monaco into the future Templates route so generated source preview and before or
+      after diff use the same governed review primitive.
+    dependency: F-21
+    target: >-
+      Templates route owns template selection, parameter capture, and provider context, while Monaco
+      supplies preview and diff only for generated source such as task DDL, procedures, and ETL
+      scaffolds.
     complexity: M
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/architecture/frontend/library-and-open-source-reference-stack.md
-      - docs/architecture/frontend/git/git-mode-architecture.md
-      - docs/architecture/frontend/artifacts/front-artifacts.md
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
     status_reason: >-
-      The architecture now names Monaco as the mature implementation target, but no tracked slice
-      exists yet to move Diff and Artifacts away from lightweight placeholder viewers.
+      Blocked until F-21 establishes the Templates route and its governed source-generation
+      contract. Monaco cannot own a route that does not exist yet.
+    definition_of_done:
+      - Templates remains the route owner and Monaco remains preview or diff infrastructure only
+      - generated-source preview and before or after diff are both supported
+      - route-level shell topology remains unchanged
+      - docs, contracts, and route expectations for Templates stay aligned
+    last_verified: '2026-04-03'
+  - task_id: F-17-E
+    parent_task: F-17
+    priority: P2
+    status: queued
+    objective: >-
+      add Monaco lazy loading and bundle isolation so editor weight is excluded from the initial
+      route bundle and loaded only when needed.
+    dependency: F-17-B, F-17-C, F-17-D
+    target: >-
+      Monaco is code-split behind explicit route or panel activation, initial route bundles stay
+      clean, and lazy loading is mandatory before the slice is treated as production-ready.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - apps/web/package.json
+    status_reason: >-
+      Ready for implementation once the first Monaco-backed routes exist. Lazy loading is a hard
+      gate before any Monaco slice can be called production-ready.
+    definition_of_done:
+      - lazy loading is implemented before the slice is called production-ready
+      - Monaco is absent from the initial route bundle until needed
+      - route-level shell topology remains unchanged
+      - bundle guardrails are documented with the Monaco route slices
+    last_verified: '2026-04-03'
+  - task_id: F-17-F
+    parent_task: F-17
+    priority: P2
+    status: blocked
+    objective: >-
+      converge Monaco-backed panes on real backend contracts and artifact truth instead of
+      placeholder payloads or provisional route-local data.
+    dependency: F-07, F-11, F-17-B, F-17-C, F-17-D
+    target: >-
+      Diff, Artifacts, and Templates consume governed query and contract surfaces when backend data
+      exists, and read-only Monaco panes stop depending on fabricated or placeholder content.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - apps/web/src/app/views/DiffView.tsx
+      - apps/web/src/app/views/ArtifactsView.tsx
+    status_reason: >-
+      Blocked on contract and artifact truth. Backend-backed Monaco panes must wait for F-07, F-11,
+      and the route slices that actually consume real data.
+    definition_of_done:
+      - backend-backed Monaco panes land only after route contracts are governed
+      - Diff and Artifacts stop depending on placeholder payloads where real data exists
+      - Templates uses Monaco against governed generation contracts, not view-local string assembly
+      - docs, code, and runtime expectations stay aligned
     last_verified: '2026-04-03'
   - task_id: F-18
     priority: P2
@@ -742,8 +1080,9 @@ tasks:
     dependency: F-15, F-17
     target: >-
       A route-level workbench supports template selection, schema-driven parameter capture, preview,
-      diff, and export for source artifacts such as Snowflake tasks, procedures, and ETL scaffolds,
-      while keeping provider semantics in governed backend services and contracts.
+      diff, and export for source artifacts such as Snowflake tasks, procedures, and ETL scaffolds.
+      `F-17` supplies Monaco preview and diff infrastructure only; the Templates route remains the
+      workbench owner and provider semantics stay in governed backend services and contracts.
     complexity: M
     effort_points: 5
     progress_pct: 20
@@ -751,10 +1090,12 @@ tasks:
       - docs/architecture/frontend/main-workspace-views-and-ux.md
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
       - docs/architecture/frontend/ux-implementation-guide.md
-      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
     status_reason: >-
       The frontend architecture and roadmap now name execution-template and source-generation UX as
       a governed workbench slice, but no route, template catalog, or service contract exists yet.
+      Monaco is now explicitly treated as future preview and diff infrastructure, not as the owner
+      of the route.
     last_verified: '2026-04-03'
 dependency_notes:
   - >-
@@ -777,14 +1118,23 @@ dependency_notes:
   - >-
     `F-14` can start once query and service boundaries are stable enough to lock a repeatable test
     lane into CI without codifying unstable view wiring.
+  - >-
+    `F-17` now describes Monaco embedded review surfaces, not a Canvas replacement. `F-17-A` aligns
+    docs and roadmap, `F-17-B` and `F-17-C` place Monaco in Diff and Artifacts after `F-06`,
+    `F-17-D` depends on `F-21` for the Templates route, `F-17-E` makes lazy loading mandatory, and
+    `F-17-F` delays backend-backed Monaco panes until `F-07` and `F-11` govern the contract and
+    artifact truth. See docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+    for the decision rationale and route-level diagrams.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-03'
-  total_tasks: 22
-  total_effort_points: 102
-  completed_weighted_points: 16.3
-  lane_progress_pct: 16
+  total_tasks: 34
+  total_effort_points: 147
+  completed_weighted_points: 25.4
+  lane_progress_pct: 17
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
-    frontend, even when the lane still lacks accepted closure for most slices.
+    frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
+    tasks (parent + 6 subtasks) for Monaco embedded review surfaces across Diff, Artifacts, and
+    Templates rather than a Canvas takeover.

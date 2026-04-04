@@ -430,6 +430,29 @@ tasks:
       The startup card/router is now implemented in the canonical governance inventory and aligned
       with the AI work protocol.
     last_verified: '2026-04-02'
+  - task_id: GOV-S2
+    priority: P1
+    status: in_progress
+    objective: >-
+      formalize the repository's doc-driven operating model as a governed framework with information
+      architecture, planning-data rules, authoring scaffolds, and traceability automation.
+    dependency: GOV-S1, DOC-ARCH-01
+    target: >-
+      One canonical proposal defines the framework, rollout waves, lane ownership, and the
+      transition from isolated governance scripts to a coherent doc-driven operating system.
+    complexity: M
+    effort_points: 5
+    progress_pct: 15
+    evidence_refs:
+      - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+      - docs/planning/status/governance-document-rule-inventory.md
+      - docs/guides/ai-work-protocol.md
+      - docs/planning/state/planning-control-tower.md
+    status_reason: >-
+      Governance routing and generated-planning extraction are already in place, but the repo still
+      lacks a unified framework for authoring, planning-data validation, and traceability
+      automation. The proposal is now published and execution waves need decomposition.
+    last_verified: '2026-04-04'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -618,12 +641,12 @@ tasks:
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
     status_reason: >-
-      ADR-0043 is accepted, S08-2 contract hardening is implemented, S08-3 artifacts-owned ports are
-      delivered, and the 2026-04-03 hard QA review is now closed for S08 defects. Remaining work is
-      governance hardening and follow-up architecture consolidation tasks.
+      ADR-0043 is accepted, S08-2 contract hardening is implemented, S08-3 artifacts-owned
+      read/write ports are now delivered, and the live S08-4 admission-hardening plan is frozen.
+      Postgres migration and admission cutover remain open.
     last_verified: '2026-04-03'
   - task_id: S08-3
     parent_task: S08
@@ -641,7 +664,7 @@ tasks:
     effort_points: 2
     progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
       - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
@@ -653,86 +676,164 @@ tasks:
   - task_id: S08-4
     parent_task: S08
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
-      add per-StepKind JSON Schema validation in @dvt/plan-verifier so that stepTypeConfig is
-      validated against a kind-specific schema before the plan reaches the adapter.
-    dependency: none
-    target: >-
-      Each registered StepKind has a corresponding JSON Schema; plan verification rejects plans with
-      invalid stepTypeConfig at admission, not at adapter execution time.
-    complexity: M
-    effort_points: 5
-    progress_pct: 0
-    evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-    status_reason: >-
-      Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
-      runtime failures as step kinds multiply.
-    last_verified: '2026-04-02'
-  - task_id: S08-5
-    parent_task: S08
-    priority: P1
-    status: queued
-    objective: >-
-      extract plan-store orchestration from `PostgresPlanStore` into a dedicated application service
-      so the adapter remains a thin infrastructure boundary.
+      harden stored-plan admission by validating `stepTypeConfig` semantically per `StepKind` in
+      `@dvt/plan-verifier` while keeping `ExecutionPlan.stepTypeConfig` extensible in
+      `@dvt/contracts`.
     dependency: S08-3
     target: >-
-      `PostgresPlanStore` delegates orchestration paths to a dedicated service and remains focused
-      on adapter-facing port implementation plus repository delegation.
+      Stored executable plans are parsed through a verifier-owned StepKind gate that rejects invalid
+      configs and unregistered kinds by default before adapter execution, while still allowing
+      injected registries for governed non-dbt extensions.
+    complexity: M
+    effort_points: 5
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+    status_reason: >-
+      Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
+      runtime failures as step kinds multiply; the live proposal now freezes a verifier-owned,
+      fail-closed admission plan with waves `S08-4-A/B/C`.
+    last_verified: '2026-04-03'
+  - task_id: S08-4-A
+    parent_task: S08-4
+    priority: P0
+    status: queued
     complexity: M
     effort_points: 3
     progress_pct: 0
-    evidence_refs:
-      - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
-    status_reason: >-
-      Composer extraction is complete, but facade-level orchestration concentration remains a
-      maintainability risk for future adapter evolution.
-    last_verified: '2026-04-03'
-  - task_id: S08-6
-    parent_task: S08
-    priority: P1
-    status: queued
-    objective: >-
-      add golden contract tests for `PLAN_*` error semantics to prevent drift in error-code and
-      failure-shape behavior during refactors.
+    objective:
+      add verifier-owned StepKind semantic validation APIs backed by an injectable registry.
     dependency: S08-3
     target: >-
-      Regression suite fails if plan-store invariant failures change canonical `PLAN_*` error
-      semantics without explicit contract update.
+      `@dvt/plan-verifier` exposes parse-plus-verify helpers that use `IStepTypeRegistry`, reject
+      unregistered kinds by default, and leave `@dvt/contracts` unchanged.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+    status_reason: The first execution wave is defined and ready for implementation.
+    last_verified: '2026-04-03'
+  - task_id: S08-4-B
+    parent_task: S08-4
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: cut the stored-plan executability gate over to the verifier-owned semantic boundary.
+    dependency: S08-4-A
+    target: >-
+      `parseStoredExecutablePlan` and `StoredPlanExecutabilityValidator` consume the verifier,
+      surface invalid kind/config outcomes before capability checks, and support optional registry
+      injection.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+    status_reason: The API cutover wave is sequenced behind verifier hardening.
+    last_verified: '2026-04-03'
+  - task_id: S08-4-C
+    parent_task: S08-4
+    priority: P0
+    status: queued
     complexity: S
     effort_points: 2
     progress_pct: 0
-    evidence_refs:
-      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
-    status_reason: >-
-      Invariants are covered, but there is no golden guardrail yet for long-term stability of
-      emitted `PLAN_*` error semantics.
-    last_verified: '2026-04-03'
-  - task_id: S08-7
-    parent_task: S08
-    priority: P2
-    status: queued
-    objective: >-
-      consolidate S08 state reporting into a single source-of-truth surface and remove duplicated
-      status narration across hard-QA and guides.
-    dependency: S08-3
+    objective: close fail-closed regression coverage and explicit handoff to `MW-A1`.
+    dependency: S08-4-B
     target: >-
-      One canonical S08 status source is referenced by manuals and review docs, preventing future
-      documentation drift.
+      Tests prove valid DBT, invalid config rejection, unregistered-kind default rejection, and
+      injected non-dbt registry acceptance, while planning surfaces keep full extension protocol
+      work in `MW-A1`.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+    status_reason:
+      The closure wave is defined to prevent `S08-4` from expanding silently into `MW-A1`.
+    last_verified: '2026-04-03'
+  - task_id: S08-5
+    parent_task: S08
+    priority: P0
+    status: in_progress
+    objective: >-
+      close the post-`S08-4` residual invariants: release-order contract versus claim timing, public
+      serialized `runExecutionContext` boundary, and plan-level plugin compatibility fingerprint.
+    dependency: S08-4-C
+    target: >-
+      A short three-wave closure arc (`S08-5-A/B/C`) retires documented ambiguity on assignment
+      determinism, runtime-context ownership/provenance, and replay compatibility pinning.
+    complexity: M
+    effort_points: 5
+    progress_pct: 40
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+    status_reason: >-
+      Post-`S08-4` invariant closure arc is active; `S08-5-A` is delivered and `S08-5-B` is now in
+      implementation with governed runExecutionContext contracts, resolver port, and admission-path
+      provenance checks.
+    last_verified: '2026-04-03'
+  - task_id: S08-5-A
+    parent_task: S08-5
+    priority: P0
+    status: done
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
+    objective: codify deterministic scheduler release order separately from worker claim timing.
+    dependency: S08-4-C
+    target: >-
+      Engine-facing boundary docs/tests distinguish deterministic release sequencing from
+      intentionally non-deterministic worker assignment.
     evidence_refs:
-      - docs/guides/postgres-plan-store-technical-manual-20260403.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
+      - docs/architecture/engine/contracts/engine/SchedulerReleaseAndClaimSemantics.v1.md
+      - packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts
+      - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts
     status_reason: >-
-      Current docs are aligned, but S08 status is still repeated in multiple surfaces and can drift
-      again without an explicit single-source policy.
+      Delivered with engine-facing contract, runtime execution-path guardrail emitting
+      `RELEASE_ORDER_CONTRACT_BROKEN`, and conformance tests for release stability, dependency
+      gating, claim-order variance, and outcome-equivalence.
+    last_verified: '2026-04-03'
+  - task_id: S08-5-B
+    parent_task: S08-5
+    priority: P0
+    status: in_progress
+    complexity: M
+    effort_points: 3
+    progress_pct: 60
+    objective: >-
+      promote `runExecutionContext` to a governed public serialized boundary with explicit ownership
+      and provenance validation.
+    dependency: S08-5-A
+    target: >-
+      Contract and runtime boundary for `runExecutionContext` are explicit, parseable, and covered
+      by negative-path provenance checks.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
+    status_reason: >-
+      In implementation: shared runExecutionContext contracts/parsers, artifacts read port, and
+      engine admission provenance checks are wired; remaining closeout is full validation and ARC
+      docs.
+    last_verified: '2026-04-03'
+  - task_id: S08-5-C
+    parent_task: S08-5
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: >-
+      add plan-level plugin compatibility fingerprinting so replay checks do not depend only on
+      active deployment policy.
+    dependency: S08-5-B
+    target: >-
+      Admission/replay compatibility can be evaluated from stored plan artifacts and fails early
+      with explicit diagnostics on mismatch.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
+    status_reason:
+      The third closure wave is sequenced behind public execution-context boundary work.
     last_verified: '2026-04-03'
   - task_id: MW-A1
     priority: P0
@@ -740,7 +841,7 @@ tasks:
     objective: >-
       create a StepKindRegistry with per-kind schema validation, adapter-to-kind mapping, and a
       documented extension protocol so that adding a new StepKind is a governed, testable operation.
-    dependency: AR-A2
+    dependency: S08-5-C
     target: >-
       Registry maps each StepKind to its JSON Schema, supported adapters, and required capabilities;
       adding a new kind follows a documented protocol with contract tests.
@@ -775,24 +876,25 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-A3
     priority: P1
-    status: queued
+    status: done
     objective: >-
       extract enrichRunStatus from IWorkflowEngine into a separate IRunEnrichmentService interface
       to keep the engine contract pure and remove adapter availability dependency from the read
       path.
-    dependency: none
+    dependency: WE-HX-4
     target: >-
       IWorkflowEngine has 4 methods (startRun, cancelRun, getRunStatus, signal); enrichment lives in
       a separate service behind a circuit breaker; no adapter call on the core status read path.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
-      enrichRunStatus contradicts the principle that the engine does not call the adapter for reads;
-      extraction preserves engine contract minimality.
-    last_verified: '2026-04-02'
+      Scope is no longer tracked as a standalone execution line; it is explicitly absorbed by
+      `WE-HX-4` query/command decomposition to avoid parallel architecture threads.
+    last_verified: '2026-04-03'
   - task_id: MW-A3
     priority: P1
     status: queued
@@ -918,19 +1020,160 @@ tasks:
       guide for keeping architecture docs aligned after runtime changes.
     complexity: M
     effort_points: 3
-    progress_pct: 90
+    progress_pct: 92
     evidence_refs:
       - docs/planning/proposals/architecture-doc-reconciliation-plan-20260402.md
       - docs/architecture/architecture-surface-inventory-20260402.md
       - docs/architecture/system-delivery-status.md
+      - docs/architecture/components/api/api-current-to-target-architecture.md
       - docs/architecture/atlas/architecture/architecture_atlas.md
       - docs/planning/execution-model/index.md
     status_reason: >-
       Waves 1 to 4 are now delivered: canonical reading order is published, planning-domain drift is
       corrected, the architecture atlas is historical, supporting architecture maps are
-      non-canonical, and the component subtree now routes through explicit supporting entrypoints,
-      but final archive consolidation and a contributor maintenance guide remain open.
-    last_verified: '2026-04-02'
+      non-canonical, the component subtree now routes through explicit supporting entrypoints, and
+      the API component now has a code-grounded current-to-target walkthrough, but final archive
+      consolidation and a contributor maintenance guide remain open.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX
+    priority: P1
+    status: in_progress
+    objective: >-
+      derive the full WorkflowEngine subsystem to a compatibility-first hexagonal architecture with
+      canonical docs and executable lane sequencing.
+    dependency: DOC-ARCH-01
+    target: >-
+      Canonical subsystem context and target architecture are published, stale engine navigation is
+      replaced, and execution-ready waves `WE-HX-0..6` are tracked in Lane A.
+    complexity: L
+    effort_points: 5
+    progress_pct: 20
+    evidence_refs:
+      - docs/architecture/engine/workflow-engine-subsystem-context.md
+      - docs/architecture/engine/workflow-engine-target-architecture.v1.md
+      - docs/guides/workflow-engine-user-manual.v1.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: >-
+      Canonical documentation and plan artifacts are being introduced as the active replacement
+      architecture narrative for WorkflowEngine.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-0
+    parent_task: WE-HX
+    priority: P1
+    status: in_progress
+    complexity: M
+    effort_points: 3
+    progress_pct: 70
+    objective: deliver canonical map and doc replacement for WorkflowEngine subsystem.
+    dependency: DOC-ARCH-01
+    target: >-
+      New subsystem context, target architecture spec, and user manual are canonical; engine and
+      component navigation route to them.
+    evidence_refs:
+      - docs/architecture/engine/workflow-engine-subsystem-context.md
+      - docs/architecture/engine/workflow-engine-target-architecture.v1.md
+      - docs/guides/workflow-engine-user-manual.v1.md
+      - docs/architecture/engine/index.md
+      - docs/architecture/components/engine/index.md
+      - docs/planning/status/canonical-doc-code-matrix.md
+    status_reason: Primary docs are drafted and replacement routing is in progress.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-1
+    parent_task: WE-HX
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: close boundary ownership mapping for WorkflowEngine external seams.
+    dependency: S08-5-B, RC-G1-B
+    target: >-
+      Ownership mapping is explicit for `PlanRef`, `runExecutionContextRef`, engine resolver seam,
+      and artifacts reader seam across contracts/engine/artifacts/api boundaries.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: Sequenced behind S08-5-B and RC-G1-B.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-2
+    parent_task: WE-HX
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: narrow WorkflowEngine to a compatibility facade over dedicated use-case services.
+    dependency: WE-HX-1
+    target: >-
+      WorkflowEngine responsibilities are reduced to contract normalization and delegation, with
+      semantic behavior hosted by explicit use-case services.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: Queued after ownership closure.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-3
+    parent_task: WE-HX
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: decompose start-run application flow into narrow collaborators.
+    dependency: WE-HX-2
+    target: >-
+      Admission, provider/capability resolution, intent creation, execution dispatch, and failure
+      policy are isolated and independently testable.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: Queued after compatibility facade narrowing.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-4
+    parent_task: WE-HX
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: split runtime query, command, signal, and enrichment paths.
+    dependency: WE-HX-2
+    target: >-
+      `WorkflowEngineCoreService` responsibilities are decomposed into dedicated services and
+      ADR-0015 read-path discipline is structurally explicit.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: Includes former AR-A3 objective as part of this wave.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-5
+    parent_task: WE-HX
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 2
+    progress_pct: 0
+    objective: standardize provider resolution and telemetry policy seams.
+    dependency: WE-HX-3, WE-HX-4
+    target: >-
+      Provider resolution and telemetry behavior are consolidated behind single seams to reduce
+      duplication in orchestration paths.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: Sequenced after decomposition waves.
+    last_verified: '2026-04-03'
+  - task_id: WE-HX-6
+    parent_task: WE-HX
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: harden test doubles and architecture fitness checks for subsystem boundaries.
+    dependency: WE-HX-5
+    target: >-
+      In-memory doubles and fixtures are narrowed, and regression checks enforce ownership and
+      boundary constraints.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: Final hardening wave to keep decomposition stable.
+    last_verified: '2026-04-03'
   - task_id: plan-version-reset
     priority: P1
     status: done
@@ -980,26 +1223,33 @@ dependency_notes:
     workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are
     delivered while migration and admission slices remain open.
   - >-
-    `S08-3/4/5/6/7` are explicit subtasks under `S08`; `S08-3` is closed and `S08-4` remains the
-    next execution slice, with `S08-5/6/7` queued as architecture/governance hardening follow-ups.
+    `S08-3` is closed. `S08-4` is decomposed into `S08-4-A/B/C` for fail-closed admission hardening,
+    and `S08-5` (`A/B/C`) is the explicit post-`S08-4` invariant-closure arc for release-order
+    semantics, `runExecutionContext` boundary ownership, and plan-level compatibility pinning.
   - '`plan-version-reset` is closed and remains independent.'
   - >-
-    `AR-A1` through `AR-A7` originate from the 2026-04-02 deep architectural review; they address
-    branded types (P0), stepTypeConfig validation (P0), enrichRunStatus extraction (P1), custom
-    policy cleanup (P2), planId determinism (P2), snapshot concurrency contract (P2), and delivery
-    package split (P2).
+    The 2026-04-02 deep architectural review now feeds the active `S08-4` tracker plus `AR-A3`
+    through `AR-A7`; the missing `AR-A2` placeholder is retired in favor of the live stepTypeConfig
+    admission-hardening work under `S08-4`.
   - >-
     `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
-    GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). MW-A1 depends
-    on AR-A2; MW-A3 depends on MW-A1.
+    GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). `MW-A1`
+    depends on `S08-5-C`; `MW-A3` depends on `MW-A1`.
+  - >-
+    `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
+    folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.
+  - >-
+    `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
+    planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
+    traceability waves instead of continuing script-by-script growth.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-03'
-  total_tasks: 40
-  total_effort_points: 147
-  completed_weighted_points: 66.36
-  lane_progress_pct: 45
+  total_tasks: 48
+  total_effort_points: 188
+  completed_weighted_points: 79.79
+  lane_progress_pct: 42
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

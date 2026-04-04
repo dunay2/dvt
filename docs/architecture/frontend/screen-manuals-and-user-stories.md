@@ -174,7 +174,9 @@ The user expects:
 
 - summary first;
 - severity first-class;
-- structured tabs instead of one raw blob.
+- structured tabs instead of one raw blob;
+- Monaco-backed diff and structured-text review where payload size and syntax
+  complexity justify it.
 
 ### Primary user stories
 
@@ -199,7 +201,8 @@ The user expects:
 
 - local import when useful;
 - stable preview panes;
-- no accidental editing path.
+- no accidental editing path;
+- Monaco-backed read-only inspection when payload size makes basic viewers weak.
 
 ### Primary user stories
 
@@ -224,7 +227,8 @@ The user expects to:
 
 - pick a template or provider profile;
 - provide parameters without editing raw boilerplate first;
-- preview generated source before exporting or dispatching it;
+- preview generated source through a Monaco-backed review surface before
+  exporting or dispatching it;
 - generate artifacts such as Snowflake tasks, procedures, or ETL scaffolds
   without losing traceability to the workflow context.
 
@@ -258,7 +262,7 @@ Current related tasks:
 - `F-20` per-screen user manuals and story coverage
 - `F-15` workbench UX contract
 - `F-16` dense operational tables
-- `F-17` Monaco adoption for review panes
+- `F-17` Monaco embedded review surfaces for Diff, Artifacts, and Templates
 - `F-18` console and live-log convergence
 - `F-19` Marquez open-data visual direction
 - `F-21` execution-template and source-generation workbench
