@@ -1,5 +1,5 @@
----
-title: DVT+ Prioritized Gap Register � March 2026
+﻿---
+title: DVT+ Prioritized Gap Register ï¿½ March 2026
 status: Active
 owner: Architecture
 date: 2026-03-19
@@ -10,25 +10,25 @@ source: Architectural Review 2026-03-19
 
 **Date:** 2026-03-19
 **Source:** [Architectural Review 2026-03-19](./DVT+_Architectural_Review_20260319.md)
-**Scope:** Gaps identified post G1�G10 closure. These are not delivery gaps in the sense of G1�G10 � they are architectural and operational gaps that will produce correctness failures, security incidents, or operational crises if not addressed before the phases that depend on them.
+**Scope:** Gaps identified post G1ï¿½G10 closure. These are not delivery gaps in the sense of G1ï¿½G10 ï¿½ they are architectural and operational gaps that will produce correctness failures, security incidents, or operational crises if not addressed before the phases that depend on them.
 
 Each gap is assigned a tier:
 
-- **T0 � Blocking:** Must be resolved before any dependent implementation begins. Proceeding without resolution produces irreversible damage (duplicate events, security incidents, data loss).
-- **T1 � Pre-Phase-2:** Must be resolved before Phase 2 begins. Proceeding without resolution creates a design crisis under delivery pressure.
-- **T2 � Pre-Phase-3:** Must be resolved before Phase 3 data or load arrives. Retroactive resolution at Phase 3 scale is an operational incident.
-- **T3 � Deferred-OK:** Can be deferred without blocking correctness or security, but has a defined trigger for re-evaluation.
+- **T0 ï¿½ Blocking:** Must be resolved before any dependent implementation begins. Proceeding without resolution produces irreversible damage (duplicate events, security incidents, data loss).
+- **T1 ï¿½ Pre-Phase-2:** Must be resolved before Phase 2 begins. Proceeding without resolution creates a design crisis under delivery pressure.
+- **T2 ï¿½ Pre-Phase-3:** Must be resolved before Phase 3 data or load arrives. Retroactive resolution at Phase 3 scale is an operational incident.
+- **T3 ï¿½ Deferred-OK:** Can be deferred without blocking correctness or security, but has a defined trigger for re-evaluation.
 
 ---
 
-## T0 � Blocking Gaps
+## T0 ï¿½ Blocking Gaps
 
 ### T0-1: `logicalAttemptId` authority is undefined
 
-**Problem:** The idempotency key formula (ADR-0008) includes `logicalAttemptId`. ADR-0016 implies the planner increments it on retry, but the planner does not observe in-flight run state � the engine does. This is a conceptual inconsistency. If Phase 2 retry logic is built without resolving this, either:
+**Problem:** The idempotency key formula (ADR-0008) includes `logicalAttemptId`. ADR-0016 implies the planner increments it on retry, but the planner does not observe in-flight run state ï¿½ the engine does. This is a conceptual inconsistency. If Phase 2 retry logic is built without resolving this, either:
 
-- The planner sends a new plan with `logicalAttemptId=2` and the engine treats it as a distinct run (wrong � it is a retry of the same business run).
-- The engine increments `logicalAttemptId` without updating the plan (wrong � idempotency keys derived from plan fields become incorrect).
+- The planner sends a new plan with `logicalAttemptId=2` and the engine treats it as a distinct run (wrong ï¿½ it is a retry of the same business run).
+- The engine increments `logicalAttemptId` without updating the plan (wrong ï¿½ idempotency keys derived from plan fields become incorrect).
 
 **Impact:** Duplicate events, orphaned attempts, corrupted audit log, silent idempotency key collision.
 
@@ -48,7 +48,7 @@ Each gap is assigned a tier:
 
 ### T0-2: `stepTypeConfig` validation gap at engine dispatch boundary
 
-**Problem:** The engine dispatches to `adapter.startRun()` without validating `step.stepTypeConfig` against the registered step kind schema. A plan that passes planner-side validation (at build time) but contains a malformed `stepTypeConfig` for the target environment produces a Temporal workflow that fails at the first activity � inside the deterministic sandbox, with a Temporal-level error, not a domain-level pre-flight rejection.
+**Problem:** The engine dispatches to `adapter.startRun()` without validating `step.stepTypeConfig` against the registered step kind schema. A plan that passes planner-side validation (at build time) but contains a malformed `stepTypeConfig` for the target environment produces a Temporal workflow that fails at the first activity ï¿½ inside the deterministic sandbox, with a Temporal-level error, not a domain-level pre-flight rejection.
 
 **Impact:** Undetectable at plan submission, only manifests at runtime. Produces confusing Temporal workflow failures. Wastes Temporal history quota. Cannot be pre-flight rejected by the API.
 
@@ -73,7 +73,7 @@ Each gap is assigned a tier:
 
 **Resolution approach:**
 
-**Option A � Tombstone event (recommended):**
+**Option A ï¿½ Tombstone event (recommended):**
 
 1. Define a new event type `RunDataRedacted` with fields: `runId`, `redactedFields: string[]`, `redactedAt`, `regulatoryBasis`.
 2. The SnapshotProjector, when it encounters `RunDataRedacted`, nullifies the specified fields in the projected snapshot.
@@ -81,7 +81,7 @@ Each gap is assigned a tier:
 4. The method requires an audit record in a separate `data_erasure_requests` table.
 5. Lineage records that reference the redacted run must be handled separately via `ILineageSink.redact()`.
 
-**Option B � Partition-level deletion:**
+**Option B ï¿½ Partition-level deletion:**
 Only viable if the tenant has been fully offboarded and all of their partitions can be dropped. Does not support granular per-run erasure.
 
 **Who decides:** Architecture + Legal/Compliance.
@@ -89,7 +89,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 ---
 
-## T1 � Pre-Phase-2 Gaps
+## T1 ï¿½ Pre-Phase-2 Gaps
 
 ### T1-1: Stuck CANCELLING state has no escalation path
 
@@ -133,20 +133,20 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 **Problem:** The delivery status says the planner is "Partial" with "not every product flow production-hardened." There are no defined exit criteria. Without them, the planner is in a permanent "partial" state.
 
-**Impact:** The planner is the input surface for the entire system. A structurally valid plan with incorrect step ordering or incorrect dependency edges causes incorrect execution. The engine does not re-validate the DAG � it trusts the plan.
+**Impact:** The planner is the input surface for the entire system. A structurally valid plan with incorrect step ordering or incorrect dependency edges causes incorrect execution. The engine does not re-validate the DAG; it trusts the plan.
 
 **Resolution approach:**
 
 1. Define "production-hardened" for the planner as a checklist:
-   - [ ] Golden fixture: `manifest.json` with 50 nodes ? known-good `ExecutionPlanV2` (all step kinds)
-   - [ ] Golden fixture: `manifest.json` with 500 nodes ? known-good plan with correct layer ordering
-   - [ ] Golden fixture: `manifest.json` with 1000 nodes ? plan generated in <2 seconds
-   - [ ] Cycle detection test: manifest with a circular dependency ? planner rejects with `CYCLE_DETECTED`
+   - [ ] Golden fixture: `manifest.json` with 50 nodes -> known-good `ExecutionPlanV2` (all step kinds)
+   - [ ] Golden fixture: `manifest.json` with 500 nodes -> known-good plan with correct layer ordering
+   - [ ] Golden fixture: `manifest.json` with 1000 nodes -> plan generated in <2 seconds
+   - [ ] Cycle detection test: manifest with a circular dependency -> planner rejects with `GRAPH_CYCLE`
    - [ ] Selection test: `includeUpstream: true` selects correct ancestor set
    - [ ] Selection test: `includeDownstream: true` selects correct descendant set
    - [ ] Cross-project dependency test: selected node depends on a node in a different dbt project
-   - [ ] One-active-source enforcement: envelope with both `manifest` and `manifestRef` ? rejected
-   - [ ] Invalid step kind: `stepTypeConfig` that fails `IStepTypeRegistry.validate()` ? rejected at planner boundary
+   - [ ] One-active-source enforcement: envelope with both `manifest` and `manifestRef` -> rejected
+   - [ ] Invalid step kind: `stepTypeConfig` that fails `IStepTypeRegistry.validate()` -> rejected at planner boundary
 2. These fixtures must be committed as `specs/fixtures/planner/` and run in CI.
 3. The planner is not "production-hardened" until all of the above pass.
 
@@ -167,7 +167,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 2. Define well-known signal types as exported constants: `const SIGNAL_CANCEL: SignalType = 'CANCEL' as SignalType`.
 3. Adapters validate unknown signal types and reject with `UNSUPPORTED_SIGNAL` rather than throwing.
 4. Engine passes through the signal without needing to know the full vocabulary.
-5. New signal types are additive � no contracts package major version bump required.
+5. New signal types are additive ï¿½ no contracts package major version bump required.
 
 **Who decides:** Engine team + Planner team.
 **Output:** Updated `SignalType` type, updated adapter signal handling, contract tests for unknown signal type behavior.
@@ -176,7 +176,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 ### T1-5: `planVersion` as string literal type blocks version evolution
 
-**Problem:** `PlanCore.metadata.planVersion` is typed as `'2.3'` � a string literal type. Any plan with a different version fails TypeScript compilation in the planner. When `planVersion: '3.0'` is needed, the contracts package must be bumped (breaking change for all consumers) and all planners must be updated simultaneously.
+**Problem:** `PlanCore.metadata.planVersion` is typed as `'2.3'` ï¿½ a string literal type. Any plan with a different version fails TypeScript compilation in the planner. When `planVersion: '3.0'` is needed, the contracts package must be bumped (breaking change for all consumers) and all planners must be updated simultaneously.
 
 **Impact:** Plan version rollouts require big-bang cutover. No rolling deployment is possible. A multi-version system (old planner + new engine, or vice versa) cannot be represented in the type system.
 
@@ -185,7 +185,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 1. Change to a discriminated union: `planVersion: '2.3' | '3.0'`.
 2. Or use a branded string type with runtime validation.
 3. The engine validates `planVersion` at runtime via a `SUPPORTED_PLAN_VERSIONS: Set<string>` constant, not via TypeScript types.
-4. Introduce `PlanVersionCompatibilityMatrix` � a registry of which engine versions support which plan versions.
+4. Introduce `PlanVersionCompatibilityMatrix` ï¿½ a registry of which engine versions support which plan versions.
 5. Write an ADR for the plan version compatibility policy before any `planVersion: '3.0'` work begins.
 
 **Who decides:** Architecture + Planner team + Engine team.
@@ -193,7 +193,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 ---
 
-## T2 � Pre-Phase-3 Gaps
+## T2 ï¿½ Pre-Phase-3 Gaps
 
 ### T2-1: PostgreSQL `run_events` table has no partitioning schema
 
@@ -207,7 +207,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 2. Automate partition creation: a cron job creates the next month's partition 7 days in advance.
 3. Define archival trigger: partitions older than 90 days are exported to S3 as Parquet (columnar, Snappy-compressed) and dropped from Postgres.
 4. Define Athena or BigQuery external table over the S3 archive for historical queries.
-5. Cold archive query path must be documented � no UI path hits the archive directly.
+5. Cold archive query path must be documented ï¿½ no UI path hits the archive directly.
 6. For GDPR erasure (T0-3), the archival strategy must support partition-level deletion.
 7. Implement in the migration scripts before any production data arrives.
 
@@ -252,7 +252,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 ### T2-4: Planner manifest caching not specified
 
-**Problem:** A 1000-node `manifest.json` is 10�50 MB. At 10K runs/day against the same manifest (e.g., scheduled triggers), the planner re-parses and re-analyzes the same bytes thousands of times. `inputHashSha256` enables plan caching, but no cache layer is specified.
+**Problem:** A 1000-node `manifest.json` is 10ï¿½50 MB. At 10K runs/day against the same manifest (e.g., scheduled triggers), the planner re-parses and re-analyzes the same bytes thousands of times. `inputHashSha256` enables plan caching, but no cache layer is specified.
 
 **Impact:** Planner CPU scales linearly with run submissions rather than unique manifests. At Phase 3 load, planner becomes a bottleneck.
 
@@ -262,7 +262,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 2. Implement with Redis as the backing store, keyed by `inputHashSha256`.
 3. TTL: 24 hours (configurable). A manifest that changes invalidates the cache because the hash changes.
 4. Cache hit rate metric: `dvt.planner.cache_hit_ratio`.
-5. The cache is not the source of truth � it accelerates, it does not replace.
+5. The cache is not the source of truth ï¿½ it accelerates, it does not replace.
 
 **Who decides:** Planner team.
 **Output:** `IPlanCache` port, Redis adapter, cache hit metric.
@@ -309,7 +309,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 ---
 
-## T3 � Deferred-OK Gaps
+## T3 ï¿½ Deferred-OK Gaps
 
 ### T3-1: Conductor adapter development
 
@@ -356,9 +356,9 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 | Gap                                        | Tier | Phase Dependency                        | Owner                     | Estimated Effort                                  |
 | ------------------------------------------ | ---- | --------------------------------------- | ------------------------- | ------------------------------------------------- |
-| T0-1: `logicalAttemptId` authority         | T0   | Blocks Phase 2 retries                  | Architecture + Engine     | 1 ADR + contract change + tests (1�2 days)        |
+| T0-1: `logicalAttemptId` authority         | T0   | Blocks Phase 2 retries                  | Architecture + Engine     | 1 ADR + contract change + tests (1ï¿½2 days)      |
 | T0-2: `stepTypeConfig` dispatch validation | T0   | Blocks correctness of all runs          | Engine                    | `IStepTypeRegistry` call + tests (1 day)          |
-| T0-3: GDPR erasure strategy                | T0   | Blocks first enterprise customer        | Architecture + Legal      | ADR + contract + migration (3�5 days)             |
+| T0-3: GDPR erasure strategy                | T0   | Blocks first enterprise customer        | Architecture + Legal      | ADR + contract + migration (3ï¿½5 days)           |
 | T1-1: Stuck CANCELLING escalation          | T1   | Blocks production operations            | Engine                    | Background job spec + implementation (2 days)     |
 | T1-2: `enrichRunStatus` circuit breaker    | T1   | Blocks API reliability at degradation   | Engine + API              | Contract update + fallback implementation (1 day) |
 | T1-3: Planner hardened exit criteria       | T1   | Blocks Phase 2 planning confidence      | Planner                   | Fixture set + CI suite (3 days)                   |
