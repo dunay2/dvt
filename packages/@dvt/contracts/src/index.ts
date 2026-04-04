@@ -10,8 +10,6 @@ export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GENERIC_GRAPH_SOURCE_KIND,
-  GRAPH_SOURCE_COMPATIBILITY_POLICY,
-  PLANNER_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -29,11 +27,9 @@ export type {
   GenericGraphNodeV1,
   GenericGraphSourceV1,
   GraphNode,
-  PlannerGraphSourceV1,
   PlanCore,
   PlannerBuildResultV1,
   PlannerEnvironmentContext,
-  PlannerInputEnvelope,
   PlannerInputEnvelopeV1,
   PlannerSelection,
   StepKind,
@@ -116,7 +112,6 @@ export * from './errors.js';
 export * from './ports/artifact-store.js';
 export * from './schemas.js';
 export * from './step-registry/StepTypeRegistry.js';
-export * from './planner-input.js';
 export * from './validation.js';
 export type {
   AppendResult,

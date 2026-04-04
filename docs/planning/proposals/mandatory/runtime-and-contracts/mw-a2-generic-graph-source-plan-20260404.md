@@ -24,8 +24,8 @@ The goal is not "replace dbt". The goal is:
 - `ADR-0003` requires DVT-owned semantics instead of provider-owned semantics.
 - `ADR-0012` keeps byte-level artifact retrieval out of the core planner and
   engine domains.
-- `ADR-0017` requires governed versioning and compatibility instead of silent
-  contract drift.
+- `ADR-0017` requires governed versioning with explicit major-line changes
+  instead of silent contract drift.
 - `ADR-0034` requires cross-context communication through shared contracts,
   refs, and application-layer orchestration rather than peer-domain imports.
 - `ADR-0035` requires planner public contract evolution to be explicit and
@@ -53,7 +53,7 @@ general workflow sources cleanly:
 The target model for `MW-A2` is:
 
 1. `GenericGraphSource` is the canonical planner input.
-2. dbt manifest ingestion becomes one compatibility adapter into that model.
+2. dbt manifest ingestion becomes one source adapter into that model.
 3. `PlannerFacade` remains the application boundary.
 4. The planner core remains deterministic and source-agnostic.
 5. Step-kind validation and runtime execution generalization stay sequenced
@@ -131,7 +131,7 @@ Planner boundary:
 - reject invalid selections
 - reject cycles before plan assembly
 
-Compatibility adapter:
+dbt source adapter:
 
 - reject malformed dbt manifests
 - reject integrity mismatch on ref resolution
@@ -158,9 +158,11 @@ Outcome:
 
 Outcome:
 
-- additive `GenericGraphSourceV1` contract lands in `@dvt/contracts`
-- current `PlannerGraphSourceV1` becomes compatibility alias or migration seam
-- parser/schema/fixture coverage is updated
+- `@dvt/contracts` publishes `GenericGraphSourceV1` as the only canonical
+  graph-source contract for planner ingestion
+- `PlannerGraphSourceV1` is removed from active planner input surfaces in this
+  wave (no alias, no legacy seam)
+- parser/schema/fixture coverage is updated for `GenericGraphSourceV1`
 
 TDD entry criteria:
 
@@ -209,7 +211,7 @@ TDD entry criteria:
 ## Lane mapping
 
 - `MW-A2-A`: docs and target freeze
-- `MW-A2-B`: contract additive evolution
+- `MW-A2-B`: contract clean swap to `GenericGraphSourceV1`
 - `MW-A2-C`: planner application refactor
 - `MW-A2-D`: API and resolver adoption
 - `MW-A2-E`: deterministic and negative-path coverage

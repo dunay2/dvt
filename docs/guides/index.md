@@ -24,6 +24,8 @@ Developer guides, contribution guides, and quality standards.
 - [PostgresPlanStore Technical Manual](postgres-plan-store-technical-manual-20260403.md)
 - [PostgresPlanStore User Manual](postgres-plan-store-user-manual-20260403.md)
 - [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md)
+- [Run-status write-boundary technical manual](run-status-write-boundary-technical-manual-20260404.md)
+- [Run-status write-boundary user manual](run-status-write-boundary-user-manual-20260404.md)
 - [Test Architecture](test-architecture.md)
 - [Testing and CI Capabilities](testing-and-ci-capabilities.md)
 - [WorkflowEngine user manual v1](workflow-engine-user-manual.v1.md)

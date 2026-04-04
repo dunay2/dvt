@@ -17,7 +17,6 @@ Cross-cutting types and shared validation contracts.
 ## Normative Sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`
-- `packages/@dvt/contracts/src/planner-input.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/types/artifacts.ts`
 - `packages/@dvt/contracts/src/types/contracts.ts`

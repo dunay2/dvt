@@ -9,47 +9,26 @@ const BASE_SELECTION = { selectedNodeIds: ['model.a'] };
 const BASE_NODES = [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }];
 const BASE_GRAPH_SOURCE = { kind: 'normalized-graph-v1' as const, nodes: BASE_NODES };
 
-describe('InputEnvelopeValidator — one-active-source rule', () => {
-  it('accepts nodes as sole graph source', () => {
-    expect(() =>
-      validator.validate({ nodes: BASE_NODES, selection: BASE_SELECTION })
-    ).not.toThrow();
-  });
-
+describe('InputEnvelopeValidator - source rule', () => {
   it('accepts graphSource as sole graph source', () => {
     expect(() =>
       validator.validate({ graphSource: BASE_GRAPH_SOURCE, selection: BASE_SELECTION })
     ).not.toThrow();
   });
 
-  it('rejects dual-source: graphSource + nodes', () => {
-    expect(() =>
-      validator.validate({
-        graphSource: BASE_GRAPH_SOURCE,
-        nodes: BASE_NODES,
-        selection: BASE_SELECTION,
-      })
-    ).toThrow(
-      expect.objectContaining({
-        code: PlannerErrorCode.INVALID_INPUT,
-        message: expect.stringContaining('One-active-source rule violation'),
-      })
-    );
-  });
-
-  it('rejects zero-source: neither manifest nor nodes', () => {
+  it('rejects missing graphSource', () => {
     expect(() => validator.validate({ selection: BASE_SELECTION } as never)).toThrow(
       expect.objectContaining({
         code: PlannerErrorCode.INVALID_INPUT,
-        message: expect.stringContaining('No graph source provided'),
+        message: expect.stringContaining('graphSource is required'),
       })
     );
   });
 });
 
-describe('InputEnvelopeValidator — selection shape', () => {
+describe('InputEnvelopeValidator - selection shape', () => {
   it('rejects missing selection', () => {
-    expect(() => validator.validate({ nodes: BASE_NODES } as never)).toThrow(
+    expect(() => validator.validate({ graphSource: BASE_GRAPH_SOURCE } as never)).toThrow(
       expect.objectContaining({ code: PlannerErrorCode.INVALID_INPUT })
     );
   });
@@ -57,7 +36,7 @@ describe('InputEnvelopeValidator — selection shape', () => {
   it('rejects non-array selectedNodeIds', () => {
     expect(() =>
       validator.validate({
-        nodes: BASE_NODES,
+        graphSource: BASE_GRAPH_SOURCE,
         selection: { selectedNodeIds: 'not-array' },
       } as never)
     ).toThrow(expect.objectContaining({ code: PlannerErrorCode.INVALID_INPUT }));
@@ -65,13 +44,16 @@ describe('InputEnvelopeValidator — selection shape', () => {
 
   it('rejects non-string entry in selectedNodeIds', () => {
     expect(() =>
-      validator.validate({ nodes: BASE_NODES, selection: { selectedNodeIds: [42] } } as never)
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: { selectedNodeIds: [42] },
+      } as never)
     ).toThrow(expect.objectContaining({ code: PlannerErrorCode.INVALID_INPUT }));
   });
 
   it('accepts empty selectedNodeIds array', () => {
     expect(() =>
-      validator.validate({ nodes: BASE_NODES, selection: { selectedNodeIds: [] } })
+      validator.validate({ graphSource: BASE_GRAPH_SOURCE, selection: { selectedNodeIds: [] } })
     ).not.toThrow();
   });
 });

@@ -1,0 +1,51 @@
+name: Adapter Postgres Integration Nightly
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adapter-postgres-integration-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  adapter-postgres-integration-nightly:
+    name: Nightly adapter-postgres integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: dvt_test
+          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_DB: dvt_test
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DVT_PG_INTEGRATION: '1'
+      DVT_PG_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Enforce adapter-postgres import alias guard
+        run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
+
+      - name: Build adapter-postgres dependency graph
+        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+
+      - name: Run adapter-postgres integration smoke
+        run: pnpm test:adapter-postgres:integration

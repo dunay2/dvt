@@ -1,0 +1,28 @@
+---
+id: R-20260404-MWA2-GRAPH-SOURCE-CARDINALITY-DRIFT
+title: Graph source cardinality drift between JSON schema and runtime parser
+status: Open
+date: 2026-04-04
+owners:
+  - '@dvt/contracts'
+  - '@dvt/planner'
+severity: Medium
+probability: Medium
+---
+summary: >
+  GenericGraphSource nodes accepted empty arrays in the shipped JSON schema while runtime parsing
+  required at least one node. This mismatch created avoidable integration failures for schema-valid
+  payloads rejected at runtime.
+
+mitigations:
+  - Align PlannerInputEnvelopeV1 schema with runtime validator using minItems: 1.
+  - Keep planner boundary tests on canonical graphSource path only.
+  - Preserve cycle-focused negative coverage during merge conflict resolution.
+
+monitoring:
+  - Track contract schema sync failures in @dvt/contracts test gates.
+  - Track planner invalid input rejections caused by malformed graph sources.
+
+follow_up:
+  - Keep schema/runtime sync checks in contract tests as merge gate.
+  - Keep ARC-2 evidence and risk updates mandatory for contracts/planner path changes.

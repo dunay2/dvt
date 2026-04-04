@@ -29,8 +29,10 @@ const AUTHORIZED_CONTEXT = {
 
 const PLANNER_COMMAND = {
   graphSource: {
-    kind: 'normalized-graph-v1' as const,
-    nodes: [{ nodeId: 'model.orders', resourceType: 'model', dependsOn: [] }],
+    kind: 'generic-graph-v1' as const,
+    sourceFamily: 'dbt',
+    sourceVersion: 'manifest-v10',
+    nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
   },
   runId: 'run-1',
   targetAdapter: 'mock' as const,

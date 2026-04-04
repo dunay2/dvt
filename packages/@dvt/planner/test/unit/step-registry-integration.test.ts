@@ -15,7 +15,7 @@ import { Planner } from '../../src/domain/Planner.js';
 import type { StepFactory } from '../../src/domain/stepFactory/StepFactory.js';
 
 const SINGLE_NODE_PLAN = {
-  nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: [] }],
+  graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: [] }] },
   selection: { selectedNodeIds: ['a'] },
 } as const;
 

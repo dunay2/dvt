@@ -1,12 +1,24 @@
-import { PLANNER_GRAPH_SOURCE_KIND, type PlannerGraphSourceV1 } from '@dvt/contracts';
+import { GENERIC_GRAPH_SOURCE_KIND, type GenericGraphSourceV1 } from '@dvt/contracts';
 
 import { DeriveNodesCommand, ManifestGraphDeriver } from '../domain/manifest.js';
 
 export function derivePlannerGraphSourceFromManifest(
   manifest: Record<string, unknown>
-): PlannerGraphSourceV1 {
+): GenericGraphSourceV1 {
+  const nodes = new ManifestGraphDeriver().execute(new DeriveNodesCommand(manifest));
   return {
-    kind: PLANNER_GRAPH_SOURCE_KIND,
-    nodes: new ManifestGraphDeriver().execute(new DeriveNodesCommand(manifest)),
+    kind: GENERIC_GRAPH_SOURCE_KIND,
+    sourceFamily: 'dbt',
+    sourceVersion: '1.0',
+    nodes: nodes.map((node) => ({
+      nodeId: node.nodeId,
+      stepKind:
+        node.resourceType === 'model'
+          ? 'DBT_MODEL'
+          : node.resourceType === 'test'
+            ? 'DBT_TEST'
+            : 'DBT_SNAPSHOT',
+      dependsOn: node.dependsOn,
+    })),
   };
 }
