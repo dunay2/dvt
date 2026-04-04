@@ -3,7 +3,7 @@ title: Alineación de guards de transición y shape-checking en run-domain y ada
 status: Accepted
 date: 2026-04-04
 owners:
-  - @dvt/adapter-postgres
+  - dvt/adapter-postgres
 arc_level: ARC-2
 breaking: false
 code_refs:
