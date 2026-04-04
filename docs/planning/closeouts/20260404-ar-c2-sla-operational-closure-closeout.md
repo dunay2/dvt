@@ -41,7 +41,7 @@ pending evidence explicit.
 - [ ] `TODO-AR-C2-05` Attach dashboard wiring evidence for all mapped signals (`AR-C2-T2`)
 - [ ] `TODO-AR-C2-06` Attach alert-rule/routing evidence for all mapped thresholds (`AR-C2-T3`)
 - [ ] `TODO-AR-C2-07` Attach sustained validation evidence and close AR-C2 (`AR-C2-T4`)
-- [ ] `TODO-AR-C2-08` Re-run QA artifact gate with tracked AR-C2 diffs (`AR-C2-QA-1`)
+- [x] `TODO-AR-C2-08` Re-run QA artifact gate with tracked AR-C2 diffs (`AR-C2-QA-1`)
 
 ### Execution notes
 
@@ -61,14 +61,15 @@ pending evidence explicit.
   dashboard/alert evidence can be attached row-by-row without redefining shape.
 - `TODO-AR-C2-05..07` cannot be marked done without immutable dashboard/alert
   references and sustained validation windows.
-- `TODO-AR-C2-08` remains pending until AR-C2 artifact files are tracked so
-  `pnpm qa:artifact:check` can run in non-skip mode.
-- `TODO-AR-C2-08` execution attempt (2026-04-04):
+- `TODO-AR-C2-08` execution attempts (2026-04-04):
   - command: `pnpm qa:artifact:check`
-  - result: `No changed files detected. Skipping.`
-  - blocker detail: current gate implementation computes changed files from
-    `origin/main..HEAD`, so local uncommitted artifact updates are not treated
-    as candidates for structural QA validation.
+  - sandbox result: `No changed files detected. Skipping.`
+  - root cause: in this agent sandbox, Node `git` subprocess calls returned
+    `EPERM`, causing the QA script to return no changed files.
+  - corrective action: hardened `scripts/qa-artifact-check.cjs` to use explicit
+    `git` binary resolution and deterministic diff fallback behavior; re-ran
+    gate outside sandbox.
+  - escalated result: `[qa:artifact:check] OK` (non-skip structural validation).
 
 ## Task checklist
 

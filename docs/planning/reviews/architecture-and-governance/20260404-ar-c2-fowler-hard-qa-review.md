@@ -39,17 +39,18 @@ qa_artifact: true
     source and require `AR-C2-T2/T3` evidence to reference it directly.
 
 - Severity: `Medium`
-  Short title: QA artifact gate is currently non-verifying in this worktree
+  Short title: QA artifact gate produced sandbox skip until execution-path hardening
   Why it matters: a skipped QA gate can create false confidence that artifact
   structure checks were enforced on this iteration.
   Exact evidence:
-  - `pnpm qa:artifact:check` output: `No changed files detected. Skipping.`
-  - `pnpm verify:prepush` output includes the same skip for the QA artifact step.
-    Real risk: malformed or incomplete QA artifacts can pass local readiness
-    without being structurally validated in this state.
-    Concrete recommendation: ensure AR-C2 artifact files are tracked/staged before
-    running QA gates and re-run `pnpm qa:artifact:check` to obtain a real
-    validation result.
+  - initial output: `pnpm qa:artifact:check` -> `No changed files detected. Skipping.`
+  - root cause confirmation: Node git subprocess in sandbox returned `EPERM`.
+  - fix applied: `scripts/qa-artifact-check.cjs` now resolves `git` explicitly and
+    retries deterministic diff baselines.
+  - verification result: escalated `pnpm qa:artifact:check` -> `[qa:artifact:check] OK`.
+    Real risk: if sandbox limits are ignored, local QA readiness can be overstated.
+    Concrete recommendation: keep the hardened script and treat escalated QA run
+    as the authoritative result in this agent environment.
 
 ### Low
 
@@ -141,7 +142,7 @@ qa_artifact: true
 ### Task Checklist
 
 - [x] `AR-C2-T1` Freeze canonical signal-to-threshold mapping
-- [ ] `AR-C2-QA-1` Re-run QA artifact gate with tracked AR-C2 artifact diffs
+- [x] `AR-C2-QA-1` Re-run QA artifact gate with tracked AR-C2 artifact diffs
 - [ ] `AR-C2-T2` Record dashboard coverage evidence per signal
 - [ ] `AR-C2-T3` Record alert-rule coverage evidence per threshold
 - [ ] `AR-C2-T4` Record sustained validation evidence and close AR-C2
@@ -157,6 +158,8 @@ qa_artifact: true
 - Comment with rationale: a skip-mode gate is observability, not enforcement.
 - Definition of Done: `pnpm qa:artifact:check` runs without skip and reports
   success (or actionable failures are fixed and re-run passes).
+- Iteration status: completed after execution-path hardening and escalated run
+  in this environment (`[qa:artifact:check] OK`).
 
 ### Task Details
 
