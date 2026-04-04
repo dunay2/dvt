@@ -29,6 +29,7 @@ planning_type: proposal
 
 - [Architecture](nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md)
 - [Frontend And UX](nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
+- [Canvas Controller Document First Hard Gate](nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md)
 - [Platform And AI](nice-to-have/platform-and-ai/propuesta-cli-dvt-ai.md)
 
 ## Superseded
