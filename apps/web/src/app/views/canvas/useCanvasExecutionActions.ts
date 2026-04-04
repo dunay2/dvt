@@ -1,17 +1,14 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import { toast } from 'sonner';
 
-import {
-  buildSessionRunContext,
-  buildPlanRefFromPlan,
-  type PlansService,
-} from '../../services/plans/plansService';
-import type { RunsService } from '../../services/runs/runsService';
+import type { IPlansPort } from '../../ports/plans';
+import type { IRunsPort } from '../../ports/runs';
+import { buildSessionRunContext, buildPlanRefFromPlan } from '../../services/plans/plansService';
 import type { ExecutionPlan } from '../../types/dbt';
 
 type UseCanvasExecutionActionsParams = {
-  plansService: PlansService;
-  runsService: RunsService;
+  plansService: IPlansPort;
+  runsService: IRunsPort;
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
   canPlan: boolean;

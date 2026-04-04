@@ -1,0 +1,16 @@
+---
+id: R-20260404-GUARDS-ALIGNMENT
+title:
+  Riesgo de inconsistencia en guards de transición y shape-checking entre run-domain y
+  adapter-postgres
+status: Open
+date: 2026-04-04
+owners:
+  - dvt/adapter-postgres
+severity: Medium
+probability: Low
+---
+La falta de alineación entre los guards de transición y shape-checking en run-domain y
+adapter-postgres podría causar divergencias en la validación de eventos y estados, afectando la
+integridad del sistema distribuido. Esta actualización mitiga el riesgo asegurando consistencia
+contractual y cobertura de tests.

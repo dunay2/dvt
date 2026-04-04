@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { resolveDataSource } from '../services/config/dataSource';
+import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import type { RunContext } from '../types/engine';
 
@@ -19,9 +19,10 @@ export interface SessionState {
   buildRunContext: (runId: string) => RunContext;
 }
 
-const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
+const runtimeDataSourceMode = getRuntimeDataSourceMode();
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig(runtimeDataSourceMode);
 const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] =
-  resolveDataSource() === 'api' ? 'temporal' : 'mock';
+  runtimeDataSourceMode === 'api' ? 'temporal' : 'mock';
 
 export const useSessionStore = create<SessionState>((set, get) => ({
   tenantId: workspaceBootstrap.tenantId,

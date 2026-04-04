@@ -141,8 +141,10 @@ describe('startRunRoute parser helpers', () => {
     const parsed = parseStartRunPlannerEnvelope(
       {
         graphSource: {
-          kind: 'normalized-graph-v1',
-          nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
       },
       ['model_a']
@@ -152,8 +154,10 @@ describe('startRunRoute parser helpers', () => {
       ok: true,
       value: {
         graphSource: {
-          kind: 'normalized-graph-v1',
-          nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
       },
     });
@@ -175,8 +179,10 @@ describe('startRunRoute parser helpers', () => {
         targetAdapter: 'mock',
         planRef: VALID_PLAN_REF,
         graphSource: {
-          kind: 'normalized-graph-v1',
-          nodes: [],
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
       })
     ).toEqual({

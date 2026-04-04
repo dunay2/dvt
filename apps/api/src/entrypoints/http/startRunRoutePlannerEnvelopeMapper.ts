@@ -9,8 +9,6 @@ type PlannerCommandFields = {
   -readonly [K in
     | 'graphSource'
     | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
     | 'policies'
     | 'environment'
     | 'observability']?: StartRunCommand[K];
@@ -22,21 +20,13 @@ export function parseStartRunPlannerEnvelope(
 ): RouteParseResult<
   Pick<
     StartRunCommand,
-    | 'graphSource'
-    | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
-    | 'policies'
-    | 'environment'
-    | 'observability'
+    'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
   >
 > {
   try {
     const parsed = parsePlannerInputEnvelopeV1({
       ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
       ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
-      ...(record.manifest === undefined ? {} : { manifest: record.manifest }),
-      ...(record.nodes === undefined ? {} : { nodes: record.nodes }),
       ...(record.policies === undefined ? {} : { policies: record.policies }),
       ...(record.environment === undefined ? {} : { environment: record.environment }),
       ...(record.observability === undefined ? {} : { observability: record.observability }),
@@ -56,13 +46,7 @@ function toPlannerCommandFields(
   parsed: ReturnType<typeof parsePlannerInputEnvelopeV1>
 ): Pick<
   StartRunCommand,
-  | 'graphSource'
-  | 'manifestRef'
-  | 'manifest'
-  | 'nodes'
-  | 'policies'
-  | 'environment'
-  | 'observability'
+  'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
 > {
   const result: PlannerCommandFields = {};
 
@@ -71,11 +55,6 @@ function toPlannerCommandFields(
 
   const manifestRef = mapManifestRef(parsed.manifestRef);
   if (manifestRef !== undefined) result.manifestRef = manifestRef;
-
-  if (parsed.manifest !== undefined) result.manifest = parsed.manifest;
-
-  const nodes = mapNodes(parsed.nodes);
-  if (nodes !== undefined) result.nodes = nodes;
 
   if (parsed.policies !== undefined) result.policies = parsed.policies;
 
@@ -93,14 +72,7 @@ function mapGraphSource(
 ): StartRunCommand['graphSource'] | undefined {
   if (graphSource === undefined) return undefined;
 
-  return {
-    kind: graphSource.kind,
-    nodes: graphSource.nodes.map((node) => ({
-      nodeId: node.nodeId,
-      resourceType: node.resourceType,
-      dependsOn: [...node.dependsOn],
-    })),
-  };
+  return graphSource;
 }
 
 function mapManifestRef(
@@ -113,18 +85,6 @@ function mapManifestRef(
     sha256: manifestRef.sha256,
     ...(manifestRef.artifactId === undefined ? {} : { artifactId: manifestRef.artifactId }),
   };
-}
-
-function mapNodes(
-  nodes: ReturnType<typeof parsePlannerInputEnvelopeV1>['nodes']
-): StartRunCommand['nodes'] | undefined {
-  if (nodes === undefined) return undefined;
-
-  return nodes.map((node) => ({
-    nodeId: node.nodeId,
-    resourceType: node.resourceType,
-    dependsOn: [...node.dependsOn],
-  }));
 }
 
 function mapEnvironment(

@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
-import type { RunSummaryItem } from '../../services/runs/runsService';
+import type { RunSummaryItem } from '../../ports/runs';
 
 type RunListStateProps = {
   runs: RunSummaryItem[];

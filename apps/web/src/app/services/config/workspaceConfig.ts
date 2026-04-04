@@ -1,4 +1,5 @@
-import { resolveDataSource } from './dataSource';
+import type { DataSourceMode } from './dataSource';
+import { getRuntimeDataSourceMode } from './runtimeDataSourceMode';
 
 type WorkspaceOption = {
   value: string;
@@ -105,12 +106,14 @@ function ensureOptionValue(options: WorkspaceOption[], value: string): Workspace
   return [{ value: normalizedValue, label: normalizedValue }, ...options];
 }
 
-function resolveBaseWorkspaceConfig(): WorkspaceBootstrapConfig {
-  return resolveDataSource() === 'mock' ? MOCK_WORKSPACE_EXAMPLE : GENERIC_WORKSPACE_DEFAULT;
+function resolveBaseWorkspaceConfig(mode: DataSourceMode): WorkspaceBootstrapConfig {
+  return mode === 'mock' ? MOCK_WORKSPACE_EXAMPLE : GENERIC_WORKSPACE_DEFAULT;
 }
 
-export function resolveWorkspaceBootstrapConfig(): WorkspaceBootstrapConfig {
-  const base = resolveBaseWorkspaceConfig();
+export function resolveWorkspaceBootstrapConfig(
+  mode: DataSourceMode = getRuntimeDataSourceMode()
+): WorkspaceBootstrapConfig {
+  const base = resolveBaseWorkspaceConfig(mode);
 
   const tenantId = readOptionalEnv(import.meta.env.VITE_DEFAULT_TENANT_ID) ?? base.tenantId;
   const projectId = readOptionalEnv(import.meta.env.VITE_DEFAULT_PROJECT_ID) ?? base.projectId;

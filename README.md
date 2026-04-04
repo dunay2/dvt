@@ -178,6 +178,27 @@ pnpm --filter @dvt/adapter-temporal test:integration
 
 > **[Documentation Index](docs/index.md)**
 
+### Estado Actual Y Trabajo A Continuar (Ruta Recomendada)
+
+Si necesitas saber rapido que sigue y donde esta el trabajo en curso, usa este
+orden:
+
+1. [System Delivery Status](docs/architecture/system-delivery-status.md)
+   (`last_reviewed: 2026-04-02`) para estado real de implementacion.
+2. [Planning Control Tower](docs/planning/state/planning-control-tower.md)
+   (`last_reviewed: 2026-04-02`) para reglas operativas y enrutado de trabajo.
+3. [Agent Lane YAMLs](docs/planning/state/index.md) para tareas activas,
+   ownership, bloqueos y siguiente trabajo por lane.
+4. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
+5. [Review Status Board](docs/planning/reviews/review-status-board.md)
+   (`last_reviewed: 2026-04-04`) para estado de reviews y su linkage a tareas.
+
+Regla practica:
+
+- `status` responde "que esta cierto hoy en codigo".
+- `state/lane yaml` responde "que se esta ejecutando ahora y que sigue".
+- `roadmap` responde "en que orden se entrega".
+
 ### Start Here
 
 - **Understand the system**:

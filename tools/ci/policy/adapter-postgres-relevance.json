@@ -2,6 +2,7 @@
   "adapter_postgres": ["packages/@dvt/adapter-postgres/**"],
   "adapter_postgres_integration": [
     "packages/@dvt/adapter-postgres/**",
+    "packages/@dvt/run-domain/**",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
@@ -11,6 +12,7 @@
     "packages/@dvt/adapter-postgres/**",
     "packages/@dvt/engine/**",
     "packages/@dvt/contracts/**",
+    "packages/@dvt/run-domain/**",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",

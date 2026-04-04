@@ -22,11 +22,13 @@ async function main(): Promise<void> {
   });
 
   const input: PlannerInputEnvelopeV1 = {
-    nodes: [
-      { nodeId: 'extract.s3', resourceType: 'EXTRACT', dependsOn: [] },
-      { nodeId: 'transform.clean', resourceType: 'TRANSFORM', dependsOn: ['extract.s3'] },
-      { nodeId: 'load.warehouse', resourceType: 'LOAD', dependsOn: ['transform.clean'] },
-    ],
+    graphSource: {
+      nodes: [
+        { nodeId: 'extract.s3', resourceType: 'EXTRACT', dependsOn: [] },
+        { nodeId: 'transform.clean', resourceType: 'TRANSFORM', dependsOn: ['extract.s3'] },
+        { nodeId: 'load.warehouse', resourceType: 'LOAD', dependsOn: ['transform.clean'] },
+      ],
+    },
     selection: { selectedNodeIds: ['load.warehouse'], includeUpstream: true },
     policies: {
       retry: { kind: 'at-most-N', maxAttempts: 2 },

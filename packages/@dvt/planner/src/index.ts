@@ -22,14 +22,13 @@ export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 // DO NOT add new contract re-exports here. Import from @dvt/contracts directly.
 //
 export type {
-  DbtManifestLike,
   ExecutionPlan,
   ExecutionStepV1,
+  GenericGraphSourceV1,
   GraphNode,
   IExecutionPlanner,
   IPlanner,
   PlanCore,
-  PlannerGraphSourceV1,
   PlannerBuildResultV1,
   PlannerInputEnvelopeV1,
   PlannerSelection,

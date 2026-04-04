@@ -1,7 +1,6 @@
-import type { ExecutionPlan } from '../../types/dbt';
-import type { PlanRef, RunContext } from '../../types/engine';
+import type { IPlansPort } from '../../ports/plans';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
-import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
+import type { DataSourceMode } from '../config/dataSource';
 import { createApiPlansService } from './plansService.api';
 import {
   buildPlanRefFromPlan,
@@ -9,21 +8,19 @@ import {
   createMockPlansService,
 } from './plansService.mock';
 
-export type PlanPreviewInput = {
-  selectedNodeIds: string[];
-  context: RunContext;
-  planName?: string;
-};
+// Re-export port types for backward compatibility - consumers should migrate
+// to importing from '../../ports/plans' or '../../ports' directly.
+export type { PlanPreviewInput } from '../../ports/plans';
 
-export interface PlansService {
-  previewPlan: (input: PlanPreviewInput) => Promise<ExecutionPlan>;
-  importPlan: (planRef: PlanRef, context: RunContext) => Promise<ExecutionPlan>;
-}
+/**
+ * @deprecated Use {@link IPlansPort} from `../../ports/plans` instead.
+ */
+export type PlansService = IPlansPort;
 
 export function createPlansService(
-  mode: DataSourceMode = resolveDataSource(),
+  mode: DataSourceMode,
   apiClient: ApiClient = createApiClient()
-): PlansService {
+): IPlansPort {
   if (mode === 'api') {
     return createApiPlansService(apiClient);
   }

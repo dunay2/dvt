@@ -2,11 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Outlet } from 'react-router';
 import {
-  PLATFORM_HEALTH_REFETCH_INTERVAL_MS,
-  getPlatformConnectionDetail,
-  getPlatformHealthErrorMessageFromQuery,
-  selectPlatformConnectionState,
-  type PlatformConnectionState,
+  buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
   usePlatformHealthSnapshotQuery,
 } from '../capabilities/platform-health';
@@ -17,7 +13,7 @@ import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
 import { AppServicesProvider } from './services/AppServicesContext';
-import { useAppStore } from './stores/appStore';
+import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
 
 const queryClient = new QueryClient({
@@ -29,55 +25,56 @@ const queryClient = new QueryClient({
   },
 });
 
-function getPlatformHealthErrorMessage(
-  platformHealth: ReturnType<typeof usePlatformHealthSnapshotQuery>
-): string | null {
-  return getPlatformHealthErrorMessageFromQuery(platformHealth.isError, platformHealth.error);
-}
-
 type RootShellProps = {
   readonly platformHealthCapability?: PlatformHealthCapabilityApi;
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
-  const { focusMode, consolePanelHeight, consolePanelVisible, setConnectionStatus } = useAppStore();
+  const focusMode = useUiLayoutStore((state) => state.focusMode);
+  const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
+  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
+  const setConnectionStatus = useUiLayoutStore((state) => state.setConnectionStatus);
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
+  const shellHealth = buildShellHealthPresentationModel({
+    data: platformHealth.data,
+    isError: platformHealth.isError,
+    error: platformHealth.error,
+    isPending: platformHealth.isPending,
+    isFetching: platformHealth.isFetching,
+    failureCount: platformHealth.failureCount,
+    dataUpdatedAt: platformHealth.dataUpdatedAt,
+    errorUpdatedAt: platformHealth.errorUpdatedAt,
+  });
 
   useEffect(() => {
-    if (platformHealth.isPending && !platformHealth.data && !platformHealth.isError) {
+    if (shellHealth.connectionState === null) {
       return;
     }
 
-    setConnectionStatus(selectPlatformConnectionState(platformHealth.data, platformHealth.isError));
-  }, [platformHealth.data, platformHealth.isError, platformHealth.isPending, setConnectionStatus]);
+    if (
+      connectionStatus.rest === shellHealth.connectionState.rest &&
+      connectionStatus.liveEvents === shellHealth.connectionState.liveEvents
+    ) {
+      return;
+    }
 
-  const errorMessage = getPlatformHealthErrorMessage(platformHealth);
-  const isInitialHealthCheckPending =
-    platformHealth.isPending && !platformHealth.data && !platformHealth.isError;
-  const connectionStateOverride: PlatformConnectionState | null = isInitialHealthCheckPending
-    ? null
-    : selectPlatformConnectionState(platformHealth.data, platformHealth.isError);
-  const connectionDetail = connectionStateOverride
-    ? getPlatformConnectionDetail(connectionStateOverride.rest, platformHealth.data, errorMessage)
-    : null;
-  const lastSettledAtMs = Math.max(
-    platformHealth.dataUpdatedAt ?? 0,
-    platformHealth.errorUpdatedAt ?? 0
-  );
+    setConnectionStatus(shellHealth.connectionState);
+  }, [connectionStatus, setConnectionStatus, shellHealth.connectionState]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">
       <TopAppBar
-        connectionDetail={connectionDetail}
-        connectionStateOverride={connectionStateOverride}
-        isConnectionChecking={isInitialHealthCheckPending}
+        connectionDetail={shellHealth.connectionDetail}
+        connectionStateOverride={shellHealth.connectionState}
+        isConnectionChecking={shellHealth.isInitialHealthCheckPending}
       />
       <ShellHealthBanner
-        autoRefreshIntervalMs={PLATFORM_HEALTH_REFETCH_INTERVAL_MS}
-        connectionState={connectionStateOverride}
-        detailMessage={connectionDetail}
-        isFetching={platformHealth.isFetching}
-        lastSettledAtMs={lastSettledAtMs}
+        autoRefreshIntervalMs={shellHealth.pollingIntervalMs}
+        connectionState={shellHealth.connectionState}
+        detailMessage={shellHealth.connectionDetail}
+        isFetching={shellHealth.isFetching}
+        lastSettledAtMs={shellHealth.lastSettledAtMs}
         onRetry={() => {
           void platformHealth.refetch();
         }}

@@ -209,7 +209,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: in_progress
+    status: review
     objective: wire real backend health state into the top bar and a global degraded/offline banner.
     dependency: F-02
     target: >-
@@ -217,14 +217,19 @@ tasks:
       offline states with retry and backoff. No mock connectivity state anywhere in the shell.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 90
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/closeouts/F-02-closeout.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
+      - apps/web/src/app/Root.tsx
+      - apps/web/src/capabilities/platform-health/presentation/platformHealthStatus.ts
+      - apps/web/src/capabilities/platform-health/presentation/platformHealthStatus.test.ts
+      - apps/web/src/capabilities/platform-health/domain/platformHealthSelectors.test.ts
+      - apps/web/src/app/Root.test.tsx
     status_reason: >-
-      TopAppBar and Admin now consume the real platform-health capability, but the persistent
-      degraded/offline banner and retry UX are still missing.
-    last_verified: '2026-03-31'
+      Shell now consumes one health capability seam with checking/degraded/offline behavior,
+      retry/backoff policy, and negative-path coverage. Pending final closure after full cross-slice
+      verification.
+    last_verified: '2026-04-04'
   - task_id: F-04
     priority: P0
     status: in_progress

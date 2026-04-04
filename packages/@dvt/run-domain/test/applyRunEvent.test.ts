@@ -9,7 +9,11 @@
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { applyRunEvent, InvalidStateTransitionError } from '../src/index.js';
+import {
+  applyRunEvent,
+  InvalidRunEventShapeError,
+  InvalidStateTransitionError,
+} from '../src/index.js';
 
 function makeSnap(status: WorkflowSnapshot['status']): WorkflowSnapshot {
   return {
@@ -141,11 +145,88 @@ describe('applyRunEvent - step terminal guard', () => {
 
   it('records gatewayDecision on StepCompleted', () => {
     const snap = makeSnap('RUNNING');
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-gw'));
     const event = {
       ...makeStepEvent('StepCompleted', 'step-gw'),
       payload: { gatewayDecision: true },
     } as unknown as EventEnvelope;
     applyRunEvent(snap, event);
     expect(snap.gatewayDecisions?.['step-gw']).toBe(true);
+  });
+});
+
+describe('applyRunEvent - explicit transition guards', () => {
+  it('rejects RunPaused when run is not RUNNING', () => {
+    expect(() => applyRunEvent(makeSnap('PENDING'), makeRunEvent('RunPaused'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects RunResumed when run is not PAUSED', () => {
+    expect(() => applyRunEvent(makeSnap('RUNNING'), makeRunEvent('RunResumed'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects RunCancelled without cancellation intent state', () => {
+    expect(() => applyRunEvent(makeSnap('RUNNING'), makeRunEvent('RunCancelled'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects StepCompleted when step is still PENDING', () => {
+    expect(() =>
+      applyRunEvent(makeSnap('RUNNING'), makeStepEvent('StepCompleted', 'step-p'))
+    ).toThrow(InvalidStateTransitionError);
+  });
+
+  it('rejects StepFailed when step is still PENDING', () => {
+    expect(() => applyRunEvent(makeSnap('RUNNING'), makeStepEvent('StepFailed', 'step-p'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects StepSkipped when step is already RUNNING', () => {
+    const snap = makeSnap('RUNNING');
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-running'));
+    expect(() => applyRunEvent(snap, makeStepEvent('StepSkipped', 'step-running'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects malformed step events without stepId', () => {
+    const malformed = {
+      ...makeRunEvent('StepStarted'),
+      stepId: undefined,
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
+  });
+
+  it('rejects malformed step events with empty stepId', () => {
+    const malformed = {
+      ...makeStepEvent('StepStarted', ''),
+      stepId: '',
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
   });
 });

@@ -26,7 +26,10 @@ const mocks = vi.hoisted(() => ({
   useWorkspaceService: vi.fn(),
   usePlansService: vi.fn(),
   useRunsService: vi.fn(),
-  useAppStore: vi.fn(),
+  useCanvasInteractionStore: vi.fn(),
+  useExecutionStore: vi.fn(),
+  useSessionStore: vi.fn(),
+  useUiLayoutStore: vi.fn(),
   useCapabilitiesQuery: vi.fn(),
   buildOverlayContext: vi.fn(),
   buildNodeDecorations: vi.fn(),
@@ -61,7 +64,12 @@ vi.mock('../../services/AppServicesContext', () => ({
   usePlansService: mocks.usePlansService,
   useRunsService: mocks.useRunsService,
 }));
-vi.mock('../../stores/appStore', () => ({ useAppStore: mocks.useAppStore }));
+vi.mock('../../stores/canvasInteractionStore', () => ({
+  useCanvasInteractionStore: mocks.useCanvasInteractionStore,
+}));
+vi.mock('../../stores/executionStore', () => ({ useExecutionStore: mocks.useExecutionStore }));
+vi.mock('../../stores/sessionStore', () => ({ useSessionStore: mocks.useSessionStore }));
+vi.mock('../../stores/uiLayoutStore', () => ({ useUiLayoutStore: mocks.useUiLayoutStore }));
 vi.mock('../../queries/useCapabilitiesQuery', () => ({
   useCapabilitiesQuery: mocks.useCapabilitiesQuery,
 }));

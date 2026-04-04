@@ -38,27 +38,18 @@ accepted documentation gate.
 
 ## What path to use
 
-### Current supported inputs (today)
+### Current supported input policy (implemented)
 
-Use one of these paths today:
+The currently implemented public planner-source paths are:
 
-| Path                 | Use when                                                   | Notes                                              |
-| -------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
-| `manifestRef`        | you already store dbt manifest artifacts immutably         | current production path for dbt                    |
-| inline `graphSource` | you already have a normalized graph in memory              | current typed inline path (`PlannerGraphSourceV1`) |
-| inline `manifest`    | legacy caller still sends raw dbt manifest payload         | compatibility path                                 |
-| inline `nodes`       | legacy caller already sends pre-normalized dbt-style nodes | compatibility path                                 |
+| Path                                                   | Use when                             | Notes                               |
+| ------------------------------------------------------ | ------------------------------------ | ----------------------------------- |
+| inline `graphSource` with `GenericGraphSourceV1` shape | caller has a non-dbt normalized DAG  | canonical typed inline source       |
+| `manifestRef`                                          | source graph comes from dbt artifact | adapter-backed source normalization |
 
-Do not send more than one active source in the same planner request.
+Planned but not yet implemented in this arc:
 
-### Target inputs (MW-A2 target, not shipped yet)
-
-These inputs are target-state, not current runtime behavior:
-
-| Path                                                   | Use when                                     | Notes                                                  |
-| ------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------ |
-| inline `graphSource` with `GenericGraphSourceV1` shape | caller has a non-dbt normalized DAG          | target canonical non-dbt path                          |
-| `graphSourceRef`                                       | source graph is stored immutably out of band | target ref-based path planned after contract evolution |
+- `graphSourceRef` (immutable generic graph ref path)
 
 ## Mental model
 
@@ -76,13 +67,13 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Caller["Integrator"] --> Inputs["manifestRef | manifest | nodes | graphSource(legacy shape)"]
+  Caller["Integrator"] --> Inputs["manifestRef | graphSource"]
   Inputs --> Facade["PlannerFacade"]
   Facade --> DbtPath["dbt manifest derivation path is central"]
   DbtPath --> Plan["ExecutionPlan"]
 ```
 
-### To-be (target usage)
+### To-be (target usage, planned)
 
 ```mermaid
 flowchart LR
@@ -135,23 +126,10 @@ The target authoring model is:
 }
 ```
 
-## Example 1: dbt path
+## Example 1: dbt source through graph-source adapter
 
-If your source of truth is still dbt, keep using the dbt path. The system will
-normalize that manifest into the canonical graph shape internally.
-
-```json
-{
-  "manifestRef": {
-    "uri": "s3://planner/manifests/project-a/manifest.json",
-    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  },
-  "selection": {
-    "selectedNodeIds": ["model.analytics.orders"],
-    "includeUpstream": true
-  }
-}
-```
+If your source of truth is dbt, convert it through the dbt source adapter and
+submit the resulting generic graph source.
 
 ## Example 2: mixed plan target
 
@@ -201,8 +179,7 @@ The planner boundary currently rejects:
 
 - requests with no active source
 - requests with more than one active source
-- malformed `manifestRef`
-- malformed `graphSource` payloads (`PlannerGraphSourceV1`)
+- malformed `graphSource` payloads
 
 Graph-level checks such as duplicate ids, missing dependencies, and cycle
 validation happen after source normalization in the planner pipeline.
@@ -232,8 +209,8 @@ Those concerns belong to later slices and other bounded contexts.
 
 ### `more than one active source`
 
-You sent more than one of `manifestRef`, inline `graphSource`, raw `manifest`,
-or `nodes`.
+You sent more than one active planner source (for example inline
+`graphSource` and `manifestRef` together).
 
 ### `missing dependency target`
 
@@ -249,11 +226,11 @@ yet.
 The graph uses a known `stepKind`, but `stepTypeConfig` does not match that
 kind's schema.
 
-### `graph source integrity mismatch`
+### `manifest integrity mismatch`
 
-Target-state (`graphSourceRef`) error.
+Current-state (`manifestRef`) error.
 
-The bytes resolved from a ref do not match the declared hash.
+The bytes resolved from the manifest ref do not match the declared hash.
 
 ## Determinism rules for authors
 

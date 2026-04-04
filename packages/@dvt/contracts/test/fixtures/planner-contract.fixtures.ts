@@ -9,16 +9,18 @@ export const HEX_64_B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 
 export const VALID_PLANNER_INPUT_FIXTURE = {
   graphSource: {
-    kind: 'normalized-graph-v1',
+    kind: 'generic-graph-v1',
+    sourceFamily: 'dbt',
+    sourceVersion: '1.0',
     nodes: [
       {
         nodeId: 'model.analytics.customers',
-        resourceType: 'model',
+        stepKind: 'DBT_MODEL',
         dependsOn: [],
       },
       {
         nodeId: 'model.analytics.orders',
-        resourceType: 'model',
+        stepKind: 'DBT_MODEL',
         dependsOn: ['model.analytics.customers'],
       },
     ],

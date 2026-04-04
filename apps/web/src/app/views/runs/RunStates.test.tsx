@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
 
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
-import type { RunSummaryItem } from '../../services/runs/runsService';
+import type { RunSummaryItem } from '../../ports/runs';
 import {
   RunDetailErrorState,
   RunListState,

@@ -39,8 +39,6 @@ import {
   type GenericGraphSourceV1SchemaT,
   GraphNodeSchema,
   type GraphNodeSchemaT,
-  PlannerGraphSourceV1Schema,
-  type PlannerGraphSourceV1SchemaT,
   PlannerBuildResultV1Schema,
   type PlannerBuildResultV1SchemaT,
   PlanAdmissionLinkSchema,
@@ -265,10 +263,6 @@ export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironme
 
 export function parseGraphNode(input: unknown): GraphNodeSchemaT {
   return parseWithSchema(GraphNodeSchema, input);
-}
-
-export function parsePlannerGraphSourceV1(input: unknown): PlannerGraphSourceV1SchemaT {
-  return parseWithSchema(PlannerGraphSourceV1Schema, input);
 }
 
 export function parseGenericGraphSourceV1(input: unknown): GenericGraphSourceV1SchemaT {

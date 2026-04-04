@@ -14,11 +14,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useWorkspaceService } from '../services/AppServicesContext';
-import type {
-  ImportSourcesResult,
-  WarehouseConnection,
-  WarehouseTable,
-} from '../services/workspace/workspaceService';
+import type { ImportSourcesResult, WarehouseConnection, WarehouseTable } from '../ports/workspace';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card } from './ui/card';

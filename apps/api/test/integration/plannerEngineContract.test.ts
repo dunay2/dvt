@@ -223,11 +223,20 @@ describe('planner -> engine contract', () => {
   it('full lifecycle with 3-step DAG', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
-      nodes: [
-        { nodeId: 'staging.orders', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'mart.revenue', resourceType: 'model', dependsOn: ['staging.orders'] },
-        { nodeId: 'test.revenue_not_null', resourceType: 'test', dependsOn: ['mart.revenue'] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'staging.orders', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'mart.revenue', stepKind: 'DBT_MODEL', dependsOn: ['staging.orders'] },
+          {
+            nodeId: 'test.revenue_not_null',
+            stepKind: 'DBT_TEST',
+            dependsOn: ['mart.revenue'],
+          },
+        ],
+      },
       selection: {
         selectedNodeIds: ['test.revenue_not_null'],
         includeUpstream: true,
@@ -311,10 +320,15 @@ describe('planner -> engine contract', () => {
   it('planner planId is deterministic for identical input', async () => {
     const planner = new PlannerFacade();
     const input = {
-      nodes: [
-        { nodeId: 'a', resourceType: 'model', dependsOn: [] as readonly string[] },
-        { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] as readonly string[] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1' as const,
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] as readonly string[] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] as readonly string[] },
+        ],
+      },
       selection: { selectedNodeIds: ['b'], includeUpstream: true },
     };
 
@@ -328,10 +342,15 @@ describe('planner -> engine contract', () => {
   it('planner step fields remain compatible with engine step consumption', async () => {
     const planner = new PlannerFacade();
     const { plan } = await planner.buildPlan({
-      nodes: [
-        { nodeId: 'step-a', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'step-b', resourceType: 'test', dependsOn: ['step-a'] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'step-a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'step-b', stepKind: 'DBT_TEST', dependsOn: ['step-a'] },
+        ],
+      },
       selection: { selectedNodeIds: ['step-b'], includeUpstream: true },
     });
 
@@ -364,11 +383,16 @@ describe('planner -> engine contract', () => {
   it('canonical plan preserves planner planId and step order without a bridge', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
-      nodes: [
-        { nodeId: 'x', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'y', resourceType: 'model', dependsOn: ['x'] },
-        { nodeId: 'z', resourceType: 'model', dependsOn: ['x', 'y'] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'x', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'y', stepKind: 'DBT_MODEL', dependsOn: ['x'] },
+          { nodeId: 'z', stepKind: 'DBT_MODEL', dependsOn: ['x', 'y'] },
+        ],
+      },
       selection: { selectedNodeIds: ['z'], includeUpstream: true },
     });
 
@@ -386,7 +410,12 @@ describe('planner -> engine contract', () => {
   it('planner output already satisfies the engine-visible canonical metadata', async () => {
     const planner = new PlannerFacade();
     const { plan } = await planner.buildPlan({
-      nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'solo', stepKind: 'DBT_MODEL', dependsOn: [] }],
+      },
       selection: { selectedNodeIds: ['solo'] },
     });
 

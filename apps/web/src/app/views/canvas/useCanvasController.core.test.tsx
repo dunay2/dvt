@@ -61,7 +61,7 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
     harness.getLatestResult()?.showInspectorPanel();
 
-    expect(harness.state.store.toggleExplorerPanel).toHaveBeenCalledTimes(1);
-    expect(harness.state.store.toggleInspectorPanel).toHaveBeenCalledTimes(1);
+    expect(harness.state.store.hideExplorerPanel).toHaveBeenCalledTimes(1);
+    expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
   });
 });

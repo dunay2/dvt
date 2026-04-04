@@ -427,9 +427,13 @@ tasks:
       configured against those targets; operational runbook references the SLA definitions.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 88
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+      - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/guides/api-control-plane-user-manual-20260404.md
       - docs/guides/api-control-plane-technical-manual-20260404.md
@@ -442,7 +446,95 @@ tasks:
     status_reason: >-
       Canonical SLA/manuals are delivered and all AR-C2 metrics are now emitted in code (API
       start-run/plan-compile plus outbox drain/event-delivery in outbox-worker); remaining closure
-      is dashboard/alert wiring and sustained threshold validation evidence.
+      is dashboard/alert wiring and sustained threshold validation evidence; decomposition now
+      tracked as `AR-C2-T1..T4` in the AR-C2 operational closure plan and reviewed in the AR-C2
+      Fowler hard QA artifact, with a single closeout checklist artifact for pending evidence
+      tracking.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T1
+    parent_task: AR-C2
+    priority: P0
+    status: done
+    objective: >-
+      freeze one canonical metric -> panel -> alert -> threshold mapping for AR-C2 signals to remove
+      naming drift before dashboard/alert closure.
+    dependency: none
+    target: >-
+      A governed mapping table exists and every canonical AR-C2 signal has a target panel and alert
+      owner with unambiguous metric identity.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
+    status_reason: >-
+      Canonical signal-to-threshold mapping is now frozen in a single governed source, including
+      panel keys and alert policy posture for all AR-C2 signals.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T2
+    parent_task: AR-C2
+    priority: P0
+    status: in_progress
+    objective: >-
+      complete dashboard wiring evidence for all mapped AR-C2 signals.
+    dependency: AR-C2-T1
+    target: >-
+      Each mapped AR-C2 signal is represented by a dashboard panel with evidence reference and owner
+      attribution.
+    complexity: S
+    effort_points: 2
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+    status_reason: >-
+      Signal-to-panel mapping is frozen, and governed evidence capture baseline now exists; final
+      dashboard wiring proof is still pending because monitor configuration evidence has not yet
+      been attached, but the dashboard evidence matrix is now preloaded for row-by-row execution.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T3
+    parent_task: AR-C2
+    priority: P0
+    status: in_progress
+    objective: >-
+      complete alert wiring evidence for AR-C2 SLA thresholds and routing posture.
+    dependency: AR-C2-T1
+    target: >-
+      Every mapped AR-C2 threshold has an active alert rule with documented severity and routing.
+    complexity: S
+    effort_points: 2
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+    status_reason: >-
+      Alert routing expectations are defined and evidence-capture requirements are now explicit;
+      final rule-level wiring proof remains pending, but the alert evidence matrix is now preloaded
+      for row-by-row execution.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T4
+    parent_task: AR-C2
+    priority: P0
+    status: queued
+    objective: >-
+      capture sustained threshold-validation evidence and update AR-C2 lane posture for closure.
+    dependency: AR-C2-T2, AR-C2-T3
+    target: >-
+      Governed evidence artifact records sustained validation outcomes and lane status can move to
+      done when closure criteria are met.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/planning/state/agent-lane-c.yaml
+      - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+    status_reason: >-
+      AR-C2 requires sustained operational proof, not one-shot checks; this subtask owns final
+      validation evidence and closure posture.
     last_verified: '2026-04-04'
   - task_id: AR-C3
     priority: P1

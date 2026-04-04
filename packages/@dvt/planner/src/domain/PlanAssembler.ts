@@ -17,12 +17,7 @@ import {
 import { sha256CanonicalJson } from './hashing.js';
 import { throwLimitExceeded } from './limits.js';
 import type { PlannerMetrics } from './metrics.js';
-import type {
-  ExecutionPlan,
-  NormalizedPlannerInput,
-  PlanCore,
-  PlannerInputEnvelopeV1,
-} from './types.js';
+import type { ExecutionPlan, NormalizedPlannerInput, PlanCore } from './types.js';
 
 // ── COMMAND ────────────────────────────────────────────────────────────────────
 
@@ -62,7 +57,7 @@ export class PlanAssembler {
     };
   }
 
-  private async computeInputHash(input: PlannerInputEnvelopeV1): Promise<string> {
+  private async computeInputHash(input: NormalizedPlannerInput): Promise<string> {
     const semantic = {
       nodes: input.nodes,
       selection: input.selection,

@@ -21,7 +21,12 @@ describe('evaluateStartRunPlanSource', () => {
   it('accepts planner-backed source with a single planner source', () => {
     expect(
       evaluateStartRunPlanSource({
-        graphSource: { kind: 'normalized-graph-v1', nodes: [] },
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
       })
     ).toEqual({
       ok: true,
@@ -33,7 +38,12 @@ describe('evaluateStartRunPlanSource', () => {
     expect(
       evaluateStartRunPlanSource({
         planRef: VALID_PLAN_REF,
-        graphSource: { kind: 'normalized-graph-v1', nodes: [] },
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
       })
     ).toEqual({
       ok: false,
@@ -51,8 +61,36 @@ describe('evaluateStartRunPlanSource', () => {
   it('rejects multiple planner sources when planRef is absent', () => {
     expect(
       evaluateStartRunPlanSource({
-        graphSource: { kind: 'normalized-graph-v1', nodes: [] },
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
         manifestRef: { uri: 's3://bucket/manifest.json', sha256: 'abc' },
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+  });
+
+  it('rejects legacy nodes payloads', () => {
+    expect(
+      evaluateStartRunPlanSource({
+        nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+  });
+
+  it('rejects legacy manifest payloads even when planRef is provided', () => {
+    expect(
+      evaluateStartRunPlanSource({
+        planRef: VALID_PLAN_REF,
+        manifest: { nodes: {} },
       })
     ).toEqual({
       ok: false,

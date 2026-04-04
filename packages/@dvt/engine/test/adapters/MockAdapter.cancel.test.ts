@@ -5,40 +5,11 @@ import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
-
-async function bootstrapRun(store: InMemoryTxStore, runId: string): Promise<void> {
-  await store.bootstrapRunTx({
-    metadata: {
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      runId,
-      planId: 'plan-1',
-      planVersion: '1.0',
-      logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: `mock_${runId}`,
-      providerRunId: runId,
-    },
-    firstEvents: [
-      {
-        eventId: `${runId}:queued`,
-        eventType: 'RunQueued',
-        runId,
-        tenantId: 't',
-        projectId: 'p',
-        environmentId: 'dev',
-        planId: 'plan-1',
-        planVersion: '1.0',
-        logicalAttemptId: 1,
-        engineAttemptId: 1,
-        payloadVersion: 1,
-        emittedAt: '2026-03-31T00:00:00.000Z',
-        idempotencyKey: `${runId}:queued`,
-      },
-    ],
-  });
-}
+import {
+  appendRunStarted,
+  bootstrapQueuedRun,
+  makeRunRef,
+} from '../helpers/runLifecycle.fixture.js';
 
 describe('MockAdapter cancellation lifecycle', () => {
   it('cancelRun emits RunCancelRequested before RunCancelled and replays deterministically', async () => {
@@ -52,19 +23,19 @@ describe('MockAdapter cancellation lifecycle', () => {
       idempotency: new IdempotencyKeyBuilder(),
     });
     const runId = 'mock-cancel-1';
-    await bootstrapRun(store, runId);
-    const runRef = {
-      provider: 'mock' as const,
-      tenantId: 't',
-      workflowId: `mock_${runId}`,
-      runId,
-    };
+    await bootstrapQueuedRun(store, runId, {
+      provider: 'mock',
+      emittedAt: '2026-03-31T00:00:00.000Z',
+    });
+    await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
+    const runRef = makeRunRef(runId, { provider: 'mock' });
 
     await adapter.cancelRun(runRef);
 
     const events = await store.listEvents('t', runId);
     expect(events.map((event) => event.eventType)).toEqual([
       'RunQueued',
+      'RunStarted',
       'RunCancelRequested',
       'RunCancelled',
     ]);
@@ -86,13 +57,12 @@ describe('MockAdapter cancellation lifecycle', () => {
       idempotency: new IdempotencyKeyBuilder(),
     });
     const runId = 'mock-cancel-signal-1';
-    await bootstrapRun(store, runId);
-    const runRef = {
-      provider: 'mock' as const,
-      tenantId: 't',
-      workflowId: `mock_${runId}`,
-      runId,
-    };
+    await bootstrapQueuedRun(store, runId, {
+      provider: 'mock',
+      emittedAt: '2026-03-31T00:00:00.000Z',
+    });
+    await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
+    const runRef = makeRunRef(runId, { provider: 'mock' });
 
     await adapter.signal(runRef, {
       signalId: 'sig-mock-cancel-1',
@@ -102,6 +72,7 @@ describe('MockAdapter cancellation lifecycle', () => {
 
     expect((await store.listEvents('t', runId)).map((event) => event.eventType)).toEqual([
       'RunQueued',
+      'RunStarted',
       'RunCancelRequested',
       'RunCancelled',
     ]);

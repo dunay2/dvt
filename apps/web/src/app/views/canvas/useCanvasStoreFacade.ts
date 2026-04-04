@@ -1,37 +1,39 @@
-import { useAppStore } from '../../stores/appStore';
 import { useCallback } from 'react';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import { useExecutionStore } from '../../stores/executionStore';
+import { useSessionStore } from '../../stores/sessionStore';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
-type AppStoreState = ReturnType<typeof useAppStore.getState>;
-
-type CanvasStoreFacade = Pick<
-  AppStoreState,
-  | '_hasHydrated'
-  | 'focusMode'
-  | 'selectedTenant'
-  | 'selectedProject'
-  | 'selectedEnvironment'
-  | 'selectedNodes'
-  | 'setSelectedNodes'
-  | 'inspectorNodeId'
-  | 'setInspectorNode'
-  | 'impactOverlayEnabled'
-  | 'toggleImpactOverlay'
-  | 'columnLevelLineageEnabled'
-  | 'toggleColumnLevelLineage'
-  | 'setCurrentPlan'
-  | 'currentPlan'
-  | 'currentRun'
-  | 'userPermissions'
-  | 'setConsolePanelHeight'
-  | 'consolePanelVisible'
-  | 'toggleConsolePanel'
-  | 'explorerPanelVisible'
-  | 'inspectorPanelVisible'
-  | 'gridSize'
-  | 'canvasLayouts'
-  | 'setCanvasViewport'
-  | 'setCanvasNodePositions'
->;
+type CanvasStoreFacade = {
+  _hasHydrated: boolean;
+  focusMode: boolean;
+  selectedTenant: string;
+  selectedProject: string;
+  selectedEnvironment: string;
+  selectedNodes: string[];
+  setSelectedNodes: (nodes: string[]) => void;
+  inspectorNodeId: string | null;
+  setInspectorNode: (nodeId: string | null) => void;
+  impactOverlayEnabled: boolean;
+  toggleImpactOverlay: () => void;
+  columnLevelLineageEnabled: boolean;
+  toggleColumnLevelLineage: () => void;
+  setCurrentPlan: (plan: ReturnType<typeof useExecutionStore.getState>['currentPlan']) => void;
+  currentPlan: ReturnType<typeof useExecutionStore.getState>['currentPlan'];
+  currentRun: ReturnType<typeof useExecutionStore.getState>['currentRun'];
+  userPermissions: ReturnType<typeof useExecutionStore.getState>['userPermissions'];
+  setConsolePanelHeight: (height: number) => void;
+  consolePanelVisible: boolean;
+  toggleConsolePanel: () => void;
+  explorerPanelVisible: boolean;
+  inspectorPanelVisible: boolean;
+  gridSize: number;
+  canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
+  setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
+  setCanvasNodePositions: ReturnType<
+    typeof useCanvasInteractionStore.getState
+  >['setCanvasNodePositions'];
+};
 
 export type CanvasStoreView = CanvasStoreFacade & {
   selectedNodeIds: string[];
@@ -46,61 +48,68 @@ export type CanvasStoreView = CanvasStoreFacade & {
 };
 
 export function useCanvasStoreFacade(): CanvasStoreView {
-  const _hasHydrated = useAppStore((state) => state._hasHydrated);
-  const focusMode = useAppStore((state) => state.focusMode);
-  const selectedTenant = useAppStore((state) => state.selectedTenant);
-  const selectedProject = useAppStore((state) => state.selectedProject);
-  const selectedEnvironment = useAppStore((state) => state.selectedEnvironment);
-  const selectedNodes = useAppStore((state) => state.selectedNodes);
-  const setSelectedNodes = useAppStore((state) => state.setSelectedNodes);
-  const inspectorNodeId = useAppStore((state) => state.inspectorNodeId);
-  const setInspectorNode = useAppStore((state) => state.setInspectorNode);
-  const impactOverlayEnabled = useAppStore((state) => state.impactOverlayEnabled);
-  const toggleImpactOverlay = useAppStore((state) => state.toggleImpactOverlay);
-  const columnLevelLineageEnabled = useAppStore((state) => state.columnLevelLineageEnabled);
-  const toggleColumnLevelLineage = useAppStore((state) => state.toggleColumnLevelLineage);
-  const setCurrentPlan = useAppStore((state) => state.setCurrentPlan);
-  const currentPlan = useAppStore((state) => state.currentPlan);
-  const currentRun = useAppStore((state) => state.currentRun);
-  const userPermissions = useAppStore((state) => state.userPermissions);
-  const setConsolePanelHeight = useAppStore((state) => state.setConsolePanelHeight);
-  const consolePanelVisible = useAppStore((state) => state.consolePanelVisible);
-  const toggleExplorerPanel = useAppStore((state) => state.toggleExplorerPanel);
-  const toggleInspectorPanel = useAppStore((state) => state.toggleInspectorPanel);
-  const toggleConsolePanel = useAppStore((state) => state.toggleConsolePanel);
-  const explorerPanelVisible = useAppStore((state) => state.explorerPanelVisible);
-  const inspectorPanelVisible = useAppStore((state) => state.inspectorPanelVisible);
-  const gridSize = useAppStore((state) => state.gridSize);
-  const canvasLayouts = useAppStore((state) => state.canvasLayouts);
-  const setCanvasViewport = useAppStore((state) => state.setCanvasViewport);
-  const setCanvasNodePositions = useAppStore((state) => state.setCanvasNodePositions);
+  const _hasHydrated = useCanvasInteractionStore((state) => state._hasHydrated);
+  const focusMode = useUiLayoutStore((state) => state.focusMode);
+  const selectedTenant = useSessionStore((state) => state.tenantId);
+  const selectedProject = useSessionStore((state) => state.projectId);
+  const selectedEnvironment = useSessionStore((state) => state.environmentId);
+  const selectedNodes = useCanvasInteractionStore((state) => state.selectedNodes);
+  const setSelectedNodes = useCanvasInteractionStore((state) => state.setSelectedNodes);
+  const inspectorNodeId = useCanvasInteractionStore((state) => state.inspectorNodeId);
+  const setInspectorNode = useCanvasInteractionStore((state) => state.setInspectorNode);
+  const impactOverlayEnabled = useCanvasInteractionStore((state) => state.impactOverlayEnabled);
+  const toggleImpactOverlay = useCanvasInteractionStore((state) => state.toggleImpactOverlay);
+  const columnLevelLineageEnabled = useCanvasInteractionStore(
+    (state) => state.columnLevelLineageEnabled
+  );
+  const toggleColumnLevelLineage = useCanvasInteractionStore(
+    (state) => state.toggleColumnLevelLineage
+  );
+  const setCurrentPlan = useExecutionStore((state) => state.setCurrentPlan);
+  const currentPlan = useExecutionStore((state) => state.currentPlan);
+  const currentRun = useExecutionStore((state) => state.currentRun);
+  const userPermissions = useExecutionStore((state) => state.userPermissions);
+  const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
+  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const showExplorerPanelStore = useUiLayoutStore((state) => state.showExplorerPanel);
+  const hideExplorerPanelStore = useUiLayoutStore((state) => state.hideExplorerPanel);
+  const showInspectorPanelStore = useUiLayoutStore((state) => state.showInspectorPanel);
+  const hideInspectorPanelStore = useUiLayoutStore((state) => state.hideInspectorPanel);
+  const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
+  const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
+  const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);
+  const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
+  const gridSize = useUiLayoutStore((state) => state.gridSize);
+  const canvasLayouts = useCanvasInteractionStore((state) => state.canvasLayouts);
+  const setCanvasViewport = useCanvasInteractionStore((state) => state.setCanvasViewport);
+  const setCanvasNodePositions = useCanvasInteractionStore((state) => state.setCanvasNodePositions);
 
   const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
   const workspaceCanvasLayout = canvasLayouts[workspaceLayoutKey];
 
   const hideExplorerPanel = useCallback(() => {
     if (explorerPanelVisible) {
-      toggleExplorerPanel();
+      hideExplorerPanelStore();
     }
-  }, [explorerPanelVisible, toggleExplorerPanel]);
+  }, [explorerPanelVisible, hideExplorerPanelStore]);
 
   const showExplorerPanel = useCallback(() => {
     if (!explorerPanelVisible) {
-      toggleExplorerPanel();
+      showExplorerPanelStore();
     }
-  }, [explorerPanelVisible, toggleExplorerPanel]);
+  }, [explorerPanelVisible, showExplorerPanelStore]);
 
   const hideInspectorPanel = useCallback(() => {
     if (inspectorPanelVisible) {
-      toggleInspectorPanel();
+      hideInspectorPanelStore();
     }
-  }, [inspectorPanelVisible, toggleInspectorPanel]);
+  }, [hideInspectorPanelStore, inspectorPanelVisible]);
 
   const showInspectorPanel = useCallback(() => {
     if (!inspectorPanelVisible) {
-      toggleInspectorPanel();
+      showInspectorPanelStore();
     }
-  }, [inspectorPanelVisible, toggleInspectorPanel]);
+  }, [inspectorPanelVisible, showInspectorPanelStore]);
 
   return {
     _hasHydrated,
