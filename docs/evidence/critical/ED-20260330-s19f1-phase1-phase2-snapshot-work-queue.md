@@ -10,6 +10,7 @@ breaking: false
 evidence_class: critical
 code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts
+  - packages/@dvt/adapter-postgres/src/PostgresSnapshotWorkQueue.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts
@@ -20,6 +21,7 @@ code_refs:
 evidence:
   tests:
     - pnpm exec vitest run packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts
+    - DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm exec vitest run packages/@dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts
     - pnpm verify:prepush
 ---
 
@@ -40,4 +42,8 @@ evidence:
 ## Validation
 
 - Updated unit/integration suites for runtime behavior, SQL wiring, and migrations are green.
+- Real Docker-backed PostgreSQL closure validation is now included for `S19-F1-C`:
+  - EXPLAIN-backed stale-selector run on dataset sized to 5000 runs.
+  - Concurrent snapshot-work claim validation without duplicate claims.
+  - Claim SQL lock-target hardening applied: `FOR UPDATE OF q SKIP LOCKED`.
 - Repository pre-push verification command executed in closeout.
