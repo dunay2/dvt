@@ -1,4 +1,4 @@
-import type { ExecutionPlan } from './ExecutionPlan.v2.js';
+import type { ExecutionPlan } from './ExecutionPlan.v1.js';
 
 /**
  * S08 admission relation between a persisted plan and a run.

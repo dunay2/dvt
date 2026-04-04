@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Planner } from '../../src/domain/Planner.js';
-import type { PlannerInputEnvelopeV2 } from '../../src/domain/types.js';
+import type { PlannerInputEnvelopeV1 } from '../../src/domain/types.js';
 import { FIXED_VECTOR } from '../vectors/fixed-vector.inline.js';
 
 /** Helper: sha256 sync for test verification (do not use in planner). */
@@ -19,7 +19,7 @@ describe('determinism', () => {
   it('produces stable planId for same semantic input, ignoring volatile fields and observability', async () => {
     const planner = new Planner();
 
-    const base: PlannerInputEnvelopeV2 = {
+    const base: PlannerInputEnvelopeV1 = {
       nodes: [
         { nodeId: 'model.a', resourceType: 'model', dependsOn: [] },
         { nodeId: 'model.b', resourceType: 'model', dependsOn: ['model.a'] },
@@ -73,7 +73,7 @@ describe('determinism', () => {
   it('keeps planId stable even when createdAtIso differs across build timestamps', async () => {
     vi.useFakeTimers();
     const planner = new Planner();
-    const input: PlannerInputEnvelopeV2 = {
+    const input: PlannerInputEnvelopeV1 = {
       nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
       selection: { selectedNodeIds: ['model.a'] },
     };

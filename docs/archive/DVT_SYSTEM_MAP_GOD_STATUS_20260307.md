@@ -58,7 +58,7 @@ stepFactory/ — dbtStepFactory, StepFactory — generación de steps
 manifest.ts — parsing de dbt manifest
 hashing.ts — content-addressing de planes
 policies.ts, limits.ts, metrics.ts, sorting.ts — políticas y validaciones
-IExecutionPlanner.v2 + ExecutionPlan.v2
+IExecutionPlanner.v1 + ExecutionPlan.v1
 compiledCode adapters: InMemoryCompiledCodeStorage, FileSystemCompiledCodeStorage, S3CompiledCodeStorage, MinioCompiledCodeStorage, NoopCompiledCodeStorage
 Y en paquetes relacionados:
 

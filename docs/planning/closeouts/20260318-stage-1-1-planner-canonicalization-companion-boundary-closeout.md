@@ -55,7 +55,7 @@ Deliver each gap as an independent contract file in
 Deleted planner-local re-export files that competed with `@dvt/contracts`:
 
 - `packages/@dvt/planner/src/contracts/planner/ExecutionPlan.v2.ts`
-- `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v2.ts`
+- `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v1.ts`
 
 `packages/@dvt/planner/src/index.ts` rewritten to source all canonical types
 from `@dvt/contracts`.

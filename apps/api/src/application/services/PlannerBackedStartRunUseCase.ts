@@ -2,7 +2,7 @@ import type {
   IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
-  PlannerInputEnvelopeV2,
+  PlannerInputEnvelopeV1,
 } from '@dvt/contracts';
 
 import {
@@ -90,7 +90,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
 function toPlannerInput(
   command: StartRunCommand,
   context: AuthorizedCommandExecutionContext
-): PlannerInputEnvelopeV2 {
+): PlannerInputEnvelopeV1 {
   return {
     ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
     ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),

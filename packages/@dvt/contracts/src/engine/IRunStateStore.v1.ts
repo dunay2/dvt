@@ -1,4 +1,4 @@
-import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v2.js';
+import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type { IsoUtcString, PlanRef, Provider, RunStatus } from '../types/contracts.js';
 
 export type EventType =

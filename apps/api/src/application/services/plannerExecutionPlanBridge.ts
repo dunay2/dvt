@@ -1,7 +1,7 @@
-import type { ExecutionPlan, PlannerBuildResultV2 } from '@dvt/contracts';
+import type { ExecutionPlan, PlannerBuildResultV1 } from '@dvt/contracts';
 
 export function bridgePlannerBuildToExecutablePlan(
-  buildResult: PlannerBuildResultV2
+  buildResult: PlannerBuildResultV1
 ): ExecutionPlan {
   return buildResult.plan;
 }

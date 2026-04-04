@@ -1,4 +1,4 @@
-import type { PlannerBuildResultV2 } from '@dvt/contracts';
+import type { PlannerBuildResultV1 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ManifestArtifactResolutionError } from '../../../src/application/errors/ManifestArtifactResolutionError.js';
@@ -338,7 +338,7 @@ describe('PlannerBackedStartRunUseCase', () => {
   });
 });
 
-function makeBuildResult(planId: string): PlannerBuildResultV2 {
+function makeBuildResult(planId: string): PlannerBuildResultV1 {
   return {
     plan: {
       metadata: {

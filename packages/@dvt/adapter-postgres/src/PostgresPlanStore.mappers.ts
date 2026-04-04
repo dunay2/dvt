@@ -6,7 +6,7 @@ import {
   type PlanRefSchemaT,
   type PlanRecord,
   parsePlanRecord,
-  type PlannerBuildResultV2,
+  type PlannerBuildResultV1,
 } from '@dvt/contracts';
 
 export type StoredPlanRow = {
@@ -28,7 +28,7 @@ export type StoredPlanRow = {
 export type ExecutabilityState = 'PENDING' | 'VALID' | 'INVALID';
 
 export function buildPlanRecord(
-  buildResult: PlannerBuildResultV2,
+  buildResult: PlannerBuildResultV1,
   planRef: PlanRefSchemaT
 ): PlanRecord {
   const nowIso = new Date().toISOString();

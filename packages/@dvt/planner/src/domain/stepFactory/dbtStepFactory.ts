@@ -9,7 +9,7 @@ import {
   DBT_MODEL,
   DBT_TEST,
   DBT_SNAPSHOT,
-  type ExecutionStepV2,
+  type ExecutionStepV1,
   type GraphNode,
   type ResolvedPolicies,
 } from '../types.js';
@@ -45,7 +45,7 @@ function policyConfig(resolved: ResolvedPolicies): DbtStepTypeConfig {
 export const dbtStepFactory: StepFactory = (
   node: GraphNode,
   resolvedPolicies: ResolvedPolicies
-): ExecutionStepV2 => {
+): ExecutionStepV1 => {
   const kind = kindForResourceType(node.resourceType);
   return {
     stepId: node.nodeId,

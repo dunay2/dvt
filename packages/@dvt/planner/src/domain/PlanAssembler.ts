@@ -21,7 +21,7 @@ import type {
   ExecutionPlan,
   NormalizedPlannerInput,
   PlanCore,
-  PlannerInputEnvelopeV2,
+  PlannerInputEnvelopeV1,
 } from './types.js';
 
 // ── COMMAND ────────────────────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ export class PlanAssembler {
     };
   }
 
-  private async computeInputHash(input: PlannerInputEnvelopeV2): Promise<string> {
+  private async computeInputHash(input: PlannerInputEnvelopeV1): Promise<string> {
     const semantic = {
       nodes: input.nodes,
       selection: input.selection,

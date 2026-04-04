@@ -1,6 +1,6 @@
 import { Planner } from '../src/domain/Planner.js';
 import type { StepFactory } from '../src/domain/stepFactory/StepFactory.js';
-import type { GraphNode, PlannerInputEnvelopeV2, ResolvedPolicies } from '../src/domain/types.js';
+import type { GraphNode, PlannerInputEnvelopeV1, ResolvedPolicies } from '../src/domain/types.js';
 
 const genericStepFactory: StepFactory = (node: GraphNode, resolved: ResolvedPolicies) => {
   // Example: use arbitrary kind and pass custom config
@@ -21,7 +21,7 @@ async function main(): Promise<void> {
     limits: { maxNodes: 10_000, timeoutMs: 10_000 },
   });
 
-  const input: PlannerInputEnvelopeV2 = {
+  const input: PlannerInputEnvelopeV1 = {
     nodes: [
       { nodeId: 'extract.s3', resourceType: 'EXTRACT', dependsOn: [] },
       { nodeId: 'transform.clean', resourceType: 'TRANSFORM', dependsOn: ['extract.s3'] },

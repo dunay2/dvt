@@ -20,11 +20,13 @@ import {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
 } from './contracts/engine/RunExecutionContext.v1.js';
-import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
+import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v1.js';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
-} from './contracts/planner/ExecutionPlan.v2.js';
+  GENERIC_GRAPH_SOURCE_KIND,
+  PLANNER_GRAPH_SOURCE_KIND,
+} from './contracts/planner/ExecutionPlan.v1.js';
 export {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
@@ -432,8 +434,34 @@ export const GraphNodeSchema = z
 
 export const PlannerGraphSourceV1Schema = z
   .object({
-    kind: z.literal('normalized-graph-v1'),
+    kind: z.literal(PLANNER_GRAPH_SOURCE_KIND),
     nodes: z.array(GraphNodeSchema),
+  })
+  .strict();
+
+export const GenericGraphNodeV1Schema = z
+  .object({
+    nodeId: z.string().min(1),
+    stepKind: z.string().min(1),
+    dependsOn: z.array(z.string().min(1)),
+    stepTypeConfig: z.record(z.string(), z.unknown()).optional(),
+    metadata: z
+      .object({
+        displayName: z.string().min(1).optional(),
+        sourceRef: z.string().min(1).optional(),
+        tags: z.record(z.string(), z.string()).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
+export const GenericGraphSourceV1Schema = z
+  .object({
+    kind: z.literal(GENERIC_GRAPH_SOURCE_KIND),
+    sourceFamily: z.string().min(1),
+    sourceVersion: z.string().min(1),
+    nodes: z.array(GenericGraphNodeV1Schema),
   })
   .strict();
 
@@ -451,7 +479,7 @@ export const DbtManifestRefSchema = z
  * delegated to IStepTypeRegistry at Planner build-time (G9).
  * For DBT_* kinds the canonical shape is DbtStepTypeConfig / DbtStepTypeConfigSchema.
  */
-export const ExecutionStepV2Schema = z
+export const ExecutionStepV1Schema = z
   .object({
     stepId: z.string().min(1),
     kind: z.string().min(1),
@@ -483,11 +511,11 @@ const CurrentPlanCoreSchema = z
         inputHashSha256: HexSha256Schema,
       })
       .strict(),
-    steps: z.array(ExecutionStepV2Schema),
+    steps: z.array(ExecutionStepV1Schema),
   })
   .strict();
 
-const CurrentExecutionPlanV2Schema = CurrentPlanCoreSchema.extend({
+const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
   metadata: z
     .object({
       planVersion: z.literal(CURRENT_EXECUTION_PLAN_VERSION),
@@ -511,14 +539,14 @@ export const PLAN_CORE_VERSIONED_SCHEMAS = {
 } as const;
 
 export const EXECUTION_PLAN_VERSIONED_SCHEMAS = {
-  [CURRENT_EXECUTION_PLAN_VERSION]: CurrentExecutionPlanV2Schema,
+  [CURRENT_EXECUTION_PLAN_VERSION]: CurrentExecutionPlanV1Schema,
 } as const;
 
 export const PlanCoreSchema = CurrentPlanCoreSchema as z.ZodType<PlanCore>;
 
-export const ExecutionPlanSchema = CurrentExecutionPlanV2Schema as z.ZodType<ExecutionPlan>;
+export const ExecutionPlanSchema = CurrentExecutionPlanV1Schema as z.ZodType<ExecutionPlan>;
 
-export const PlannerInputEnvelopeV2Schema = z
+export const PlannerInputEnvelopeV1Schema = z
   .object({
     graphSource: PlannerGraphSourceV1Schema.optional(),
     manifest: z.record(z.string(), z.unknown()).optional(),
@@ -544,13 +572,13 @@ export const PlannerInputEnvelopeV2Schema = z
       ctx.addIssue({
         code: 'custom',
         message:
-          'PlannerInputEnvelopeV2 requires exactly one active source: graphSource, manifest, manifestRef, or nodes.',
+          'PlannerInputEnvelopeV1 requires exactly one active source: graphSource, manifest, manifestRef, or nodes.',
       });
     }
   })
   .strict();
 
-export const PlannerBuildResultV2Schema = z
+export const PlannerBuildResultV1Schema = z
   .object({
     plan: ExecutionPlanSchema,
     canonicalPlanJson: z.string().min(1),
@@ -713,9 +741,11 @@ export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPo
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
 export type GraphNodeSchemaT = z.infer<typeof GraphNodeSchema>;
 export type PlannerGraphSourceV1SchemaT = z.infer<typeof PlannerGraphSourceV1Schema>;
+export type GenericGraphNodeV1SchemaT = z.infer<typeof GenericGraphNodeV1Schema>;
+export type GenericGraphSourceV1SchemaT = z.infer<typeof GenericGraphSourceV1Schema>;
 export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
-export type ExecutionStepV2SchemaT = z.infer<typeof ExecutionStepV2Schema>;
+export type ExecutionStepV1SchemaT = z.infer<typeof ExecutionStepV1Schema>;
 export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;
 export type ExecutionPlanSchemaT = z.infer<typeof ExecutionPlanSchema>;
-export type PlannerInputEnvelopeV2SchemaT = z.infer<typeof PlannerInputEnvelopeV2Schema>;
-export type PlannerBuildResultV2SchemaT = z.infer<typeof PlannerBuildResultV2Schema>;
+export type PlannerInputEnvelopeV1SchemaT = z.infer<typeof PlannerInputEnvelopeV1Schema>;
+export type PlannerBuildResultV1SchemaT = z.infer<typeof PlannerBuildResultV1Schema>;

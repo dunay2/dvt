@@ -49,7 +49,7 @@
 
 import type { PlanRefSchemaT } from '../../schemas.js';
 
-import type { ExecutionPlan, PlannerBuildResultV2 } from './ExecutionPlan.v2.js';
+import type { ExecutionPlan, PlannerBuildResultV1 } from './ExecutionPlan.v1.js';
 import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 
 // ── State type ─────────────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ export interface IPlanValidationLifecycleStore {
    *   canonical plan and its JSON representation.
    * @returns An immutable reference to the stored plan.
    */
-  storePlan(buildResult: PlannerBuildResultV2): Promise<PlanRefSchemaT>;
+  storePlan(buildResult: PlannerBuildResultV1): Promise<PlanRefSchemaT>;
 
   /**
    * Transition a `PENDING_VALIDATION` plan to `VALID`.
@@ -147,4 +147,4 @@ export interface IPlanValidationLifecycleStore {
 
 // Re-export ExecutionPlan locally so callers of this file have access to it
 // without a separate import when working with storePlan signatures.
-export type { ExecutionPlan, PlannerBuildResultV2 };
+export type { ExecutionPlan, PlannerBuildResultV1 };

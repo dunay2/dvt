@@ -17,6 +17,9 @@ It describes the target boundary, the intended collaborator split, the
 governing invariants, and the negative-path test plan needed before the slice
 can be considered closed.
 
+This manual also enforces the execution rule for this arc: documentation is a
+hard gate before TDD-based implementation waves.
+
 ## Governing sources
 
 - `AGENTS.md`
@@ -34,7 +37,7 @@ The repository already has a typed planner boundary, but it is still too thin
 to be the long-term generic source model:
 
 - `PlannerGraphSourceV1` exists in
-  `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
+  `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 - the current normalized shape is only:
   - `kind`
   - `nodes[{ nodeId, resourceType, dependsOn }]`
@@ -49,6 +52,18 @@ to be the long-term generic source model:
 That is enough for normalized dbt topology, but it is not enough to describe a
 general workflow source with explicit step semantics, stable provenance, and a
 clear source-family adaptation model.
+
+## Current architecture (as-is)
+
+```mermaid
+flowchart LR
+  Caller["API caller"] --> Facade["PlannerFacade"]
+  Facade --> Deriver["ManifestGraphDeriver (dbt-centered)"]
+  Facade --> Resolver["ManifestArtifactResolver or IArtifactResolver"]
+  Deriver --> Nodes["PlannerGraphSourceV1 nodes(resourceType, dependsOn)"]
+  Nodes --> Planner["Planner core"]
+  Planner --> Plan["ExecutionPlan"]
+```
 
 ## Target outcome
 
@@ -85,6 +100,21 @@ flowchart LR
 
   Caller --> DirectSource
   Caller --> RefResolver
+```
+
+## Target architecture (to-be)
+
+```mermaid
+flowchart LR
+  Caller["API or integrator"] --> Facade["PlannerFacade"]
+  Facade --> GResolver["IGraphSourceResolver"]
+  Facade --> GValidator["GenericGraphSourceValidator"]
+  Facade --> DbtAdapter["DbtManifestGraphSourceAdapter"]
+  GResolver --> GValidator
+  DbtAdapter --> GValidator
+  GValidator --> Translator["GraphSourceStepTranslator"]
+  Translator --> Planner["Planner core (source-agnostic)"]
+  Planner --> Plan["ExecutionPlan (deterministic)"]
 ```
 
 ## Target contract model
@@ -272,6 +302,32 @@ pnpm --filter @dvt/planner test
 pnpm --filter dvt-api test
 pnpm verify:prepush
 ```
+
+## Documentation gate before TDD
+
+### Gate rule
+
+No implementation PR for `MW-A2-B/C/D/E` is valid until these are aligned and
+accepted as the canonical source:
+
+- this technical manual
+- `docs/guides/generic-graph-source-user-manual-20260404.md`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
+
+### Documentation DoD
+
+- as-is and to-be diagrams are explicit and consistent
+- invariants are fully enumerated and testable
+- negative paths are mapped to test ownership
+- current-vs-target gaps are explicit and sequenced
+- `MW-A2-A..E` wave ordering is documented with no hidden scope
+
+### TDD sequence after gate
+
+1. `MW-A2-B`: write failing contract tests, then evolve parser/schema/contracts.
+2. `MW-A2-C`: write failing planner-boundary tests, then refactor facade and translator seams.
+3. `MW-A2-D`: write failing API/ref-resolution tests, then update composition-root wiring.
+4. `MW-A2-E`: write failing determinism and negative integration tests, then harden behavior.
 
 ## Current-to-target gap summary
 

@@ -37,14 +37,14 @@ import type {
   GraphNode,
   NormalizedPlannerInput,
   PlanCore,
-  PlannerInputEnvelopeV2,
+  PlannerInputEnvelopeV1,
 } from './types.js';
 
 // ── COMMAND ────────────────────────────────────────────────────────────────────
 // Immutable value object expressing the intent to build an execution plan.
 
 export class BuildPlanCommand {
-  constructor(readonly input: PlannerInputEnvelopeV2) {}
+  constructor(readonly input: PlannerInputEnvelopeV1) {}
 }
 
 // ── Options ────────────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ export class Planner {
    * Internally delegates to the CQRS collaborators.
    */
   public async buildPlan(
-    input: PlannerInputEnvelopeV2
+    input: PlannerInputEnvelopeV1
   ): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
     const started = nowMs();
     try {
@@ -167,7 +167,7 @@ export class Planner {
     }
   }
 
-  private normalizeInput(input: PlannerInputEnvelopeV2): NormalizedPlannerInput {
+  private normalizeInput(input: PlannerInputEnvelopeV1): NormalizedPlannerInput {
     let nodes: readonly GraphNode[];
     if (Array.isArray(input.nodes) && input.nodes.length > 0) {
       nodes = input.nodes;

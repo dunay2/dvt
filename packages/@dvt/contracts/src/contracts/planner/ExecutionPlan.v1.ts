@@ -1,5 +1,5 @@
 /**
- * Planner-side ExecutionPlan types (v2).
+ * Planner-side ExecutionPlan types (v1).
  *
  * This is the planner-side subset of the normative ExecutionPlan contract.
  * It uses `kind` and `stepTypeConfig` but does not include `gateway` or `dispatch`
@@ -59,13 +59,40 @@ export interface PlannerGraphSourceV1 {
   nodes: readonly GraphNode[];
 }
 
+/**
+ * Canonical generic graph-source boundary for multi-workflow planning.
+ *
+ * This is additive in MW-A2-B. Runtime execution support by step kind remains
+ * governed by planner/engine registry and adapter slices.
+ */
+export const GENERIC_GRAPH_SOURCE_KIND = 'generic-graph-v1' as const;
+
+export interface GenericGraphNodeV1 {
+  nodeId: string;
+  stepKind: StepKind;
+  dependsOn: readonly string[];
+  stepTypeConfig?: Record<string, unknown>;
+  metadata?: {
+    displayName?: string;
+    sourceRef?: string;
+    tags?: Record<string, string>;
+  };
+}
+
+export interface GenericGraphSourceV1 {
+  kind: typeof GENERIC_GRAPH_SOURCE_KIND;
+  sourceFamily: string;
+  sourceVersion: string;
+  nodes: readonly GenericGraphNodeV1[];
+}
+
 export interface PlannerSelection {
   selectedNodeIds: readonly string[];
   includeUpstream?: boolean;
   includeDownstream?: boolean;
 }
 
-export interface ExecutionStepV2 {
+export interface ExecutionStepV1 {
   stepId: string;
   kind: StepKind;
   dependsOn: readonly string[];
@@ -92,7 +119,7 @@ export interface ExecutionStepV2 {
   };
 }
 
-export type ExecutionStep = ExecutionStepV2;
+export type ExecutionStep = ExecutionStepV1;
 
 export const CURRENT_EXECUTION_PLAN_SCHEMA_VERSION = 'v1.2' as const;
 export const CURRENT_EXECUTION_PLAN_CONTRACT_VERSION = '1.0.0' as const;
@@ -102,7 +129,7 @@ export type VersionedPlanCore<TVersion extends SupportedPlanVersion> = {
     planVersion: TVersion;
     inputHashSha256: string;
   };
-  steps: readonly ExecutionStepV2[];
+  steps: readonly ExecutionStepV1[];
 };
 
 export type PlanCore = {
@@ -140,7 +167,7 @@ export type ExecutionPlan = {
  *
  * ## One-active-source rule
  *
- * `PlannerInputEnvelopeV2` accepts exactly **one** active graph source per
+ * `PlannerInputEnvelopeV1` accepts exactly **one** active graph source per
  * request. Envelopes that provide no source or more than one MUST be rejected
  * at the planner boundary before graph build or hashing.
  *
@@ -188,7 +215,7 @@ export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
 // ── Envelope ──────────────────────────────────────────────────────────────────
 
 /**
- * Normative public planner input for v2.
+ * Normative public planner input for v1.
  *
  * ## One-active-source rule
  *
@@ -211,7 +238,7 @@ export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
  * @see GRAPH_SOURCE_COMPATIBILITY_POLICY — retention and removal governance
  * @see docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json G-01.10
  */
-export interface PlannerInputEnvelopeV2 {
+export interface PlannerInputEnvelopeV1 {
   /**
    * Immutable reference to a manifest artifact stored out-of-band.
    *
@@ -261,11 +288,11 @@ export interface PlannerInputEnvelopeV2 {
   requestedAtIso?: string;
 }
 
-export interface PlannerBuildResultV2 {
+export interface PlannerBuildResultV1 {
   plan: ExecutionPlan;
   canonicalPlanJson: string;
 }
 
 /** Backward-compatible aliases for existing naming in consumers/docs. */
-export type PlannerInputEnvelope = PlannerInputEnvelopeV2;
-export type PlannerBuildResult = PlannerBuildResultV2;
+export type PlannerInputEnvelope = PlannerInputEnvelopeV1;
+export type PlannerBuildResult = PlannerBuildResultV1;

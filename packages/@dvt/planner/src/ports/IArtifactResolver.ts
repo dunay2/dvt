@@ -6,7 +6,7 @@ import type { DbtManifestRef, PlannerGraphSourceV1 } from '@dvt/contracts';
  * The planner uses this port to resolve a typed graph source from an opaque
  * storage location identified by a DbtManifestRef. Callers that already hold
  * a normalized graph in memory should pass it directly via
- * PlannerInputEnvelopeV2.graphSource rather than going through this port.
+ * PlannerInputEnvelopeV1.graphSource rather than going through this port.
  *
  * Implementations are responsible for:
  * - Fetching the payload at ref.uri
