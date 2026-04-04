@@ -7,6 +7,7 @@ import type { PlatformHealthCapabilityApi } from '../application/platformHealthC
 import { createPlatformHealthSnapshot } from '../testing/platformHealthFixtures';
 import {
   createPlatformHealthSnapshotQueryOptions,
+  PLATFORM_HEALTH_REFETCH_INTERVAL_MS,
   platformHealthQueryKey,
   usePlatformHealthSnapshotQuery,
 } from './usePlatformHealthSnapshotQuery';
@@ -24,11 +25,20 @@ describe('createPlatformHealthSnapshotQueryOptions', () => {
     const options = createPlatformHealthSnapshotQueryOptions(capability);
 
     expect(options.queryKey).toEqual(platformHealthQueryKey);
-    expect(options.refetchInterval).toBe(15_000);
+    expect(typeof options.refetchInterval).toBe('function');
     expect(options.staleTime).toBe(5_000);
     expect(options.retry).toBe(1);
     await expect(options.queryFn()).resolves.toEqual(snapshot);
     expect(capability.loadSnapshot).toHaveBeenCalledTimes(1);
+    expect(
+      options.refetchInterval({
+        state: {
+          data: snapshot,
+          status: 'success',
+          fetchFailureCount: 0,
+        },
+      })
+    ).toBe(PLATFORM_HEALTH_REFETCH_INTERVAL_MS);
   });
 });
 

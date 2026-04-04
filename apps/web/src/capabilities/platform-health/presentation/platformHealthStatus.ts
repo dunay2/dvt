@@ -2,8 +2,12 @@ import type {
   PlatformConnectionState,
   PlatformHealthSnapshot,
 } from '../domain/platformHealthTypes';
+import { selectPlatformConnectionState } from '../domain/platformHealthSelectors';
 
 const MAX_RETRY_BACKOFF_MS = 60_000;
+const BASE_POLL_INTERVAL_MS = 15_000;
+const OFFLINE_RETRY_BASE_MS = 5_000;
+const DEGRADED_RETRY_BASE_MS = 15_000;
 
 export function getPlatformHealthErrorMessageFromQuery(
   isError: boolean,
@@ -65,4 +69,57 @@ export function getPlatformConnectionDetail(
 
 export function getNextRetryDelayMs(currentDelayMs: number): number {
   return Math.min(currentDelayMs * 2, MAX_RETRY_BACKOFF_MS);
+}
+
+export function getShellHealthPollingIntervalMs(
+  snapshot: PlatformHealthSnapshot | undefined,
+  isError: boolean,
+  failureCount: number
+): number {
+  const connectionState = selectPlatformConnectionState(snapshot, isError);
+
+  if (connectionState.rest === 'ok') {
+    return BASE_POLL_INTERVAL_MS;
+  }
+
+  const attempt = Math.max(1, failureCount);
+  const baseIntervalMs =
+    connectionState.rest === 'offline' ? OFFLINE_RETRY_BASE_MS : DEGRADED_RETRY_BASE_MS;
+
+  return Math.min(baseIntervalMs * 2 ** (attempt - 1), MAX_RETRY_BACKOFF_MS);
+}
+
+type ShellHealthPresentationInput = {
+  data: PlatformHealthSnapshot | undefined;
+  isError: boolean;
+  error: unknown;
+  isPending: boolean;
+  isFetching: boolean;
+  failureCount: number;
+  dataUpdatedAt: number;
+  errorUpdatedAt: number;
+};
+
+export function buildShellHealthPresentationModel(input: ShellHealthPresentationInput) {
+  const isInitialHealthCheckPending = input.isPending && !input.data && !input.isError;
+  const connectionState = isInitialHealthCheckPending
+    ? null
+    : selectPlatformConnectionState(input.data, input.isError);
+  const errorMessage = getPlatformHealthErrorMessageFromQuery(input.isError, input.error);
+  const connectionDetail = connectionState
+    ? getPlatformConnectionDetail(connectionState.rest, input.data, errorMessage)
+    : null;
+
+  return {
+    connectionState,
+    connectionDetail,
+    isInitialHealthCheckPending,
+    isFetching: input.isFetching,
+    pollingIntervalMs: getShellHealthPollingIntervalMs(
+      input.data,
+      input.isError,
+      input.failureCount
+    ),
+    lastSettledAtMs: Math.max(input.dataUpdatedAt ?? 0, input.errorUpdatedAt ?? 0),
+  };
 }

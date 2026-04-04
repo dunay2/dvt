@@ -4,6 +4,8 @@ import {
   createPlatformHealthCapability,
   type PlatformHealthCapabilityApi,
 } from '../application/platformHealthCapability';
+import type { PlatformHealthSnapshot } from '../domain/platformHealthTypes';
+import { getShellHealthPollingIntervalMs } from './platformHealthStatus';
 
 const platformHealthCapability = createPlatformHealthCapability();
 
@@ -16,7 +18,14 @@ export function createPlatformHealthSnapshotQueryOptions(
   return {
     queryKey: platformHealthQueryKey,
     queryFn: () => capability.loadSnapshot(),
-    refetchInterval: PLATFORM_HEALTH_REFETCH_INTERVAL_MS,
+    refetchInterval: (query: {
+      state: { data: unknown; status: 'pending' | 'error' | 'success'; fetchFailureCount: number };
+    }) =>
+      getShellHealthPollingIntervalMs(
+        query.state.data as PlatformHealthSnapshot | undefined,
+        query.state.status === 'error',
+        query.state.fetchFailureCount
+      ),
     staleTime: 5_000,
     retry: 1,
   };
