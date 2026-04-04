@@ -294,5 +294,8 @@ Done when:
 
 - [Main Workspace Views And UX](main-workspace-views-and-ux.md)
 - [Screen Manuals And User Stories](screen-manuals-and-user-stories.md)
+- [Workbench UI Contract And Component Inventory](workbench-ui-contract-and-component-inventory.md)
+- [Iconography And Design Tokens Contract](iconography-and-design-tokens-contract.md)
+- [Screen Layout And Cross-Surface Behavior Rules](screen-layout-and-cross-surface-behavior-rules.md)
 - [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
 - [Frontend Roadmap - Prototype To Operational UI](../../planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)

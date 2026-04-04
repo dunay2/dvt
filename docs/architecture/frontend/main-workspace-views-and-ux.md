@@ -243,5 +243,6 @@ flowchart TB
 ## Related Pages
 
 - [UX Implementation Guide](ux-implementation-guide.md)
+- [Workbench UI Contract And Component Inventory](workbench-ui-contract-and-component-inventory.md)
 - [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
 - [App Shell](appshell/app-shell.md)
