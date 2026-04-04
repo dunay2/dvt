@@ -140,11 +140,12 @@ tasks:
     effort_points: 8
     progress_pct: 70
     evidence_refs:
+      - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md
     status_reason: >-
-      Payload-content validation landed, but the full envelope-level payloadVersion closure is still
-      not accepted.
+      Payload-content validation landed and the S05 execution plan review now defines closure gates,
+      but the full envelope-level payloadVersion closure is still not accepted.
     last_verified: '2026-03-31'
   - task_id: S05-F1
     priority: P0
