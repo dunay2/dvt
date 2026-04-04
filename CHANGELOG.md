@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.9.0](https://github.com/dunay2/dvt/compare/v5.8.0...v5.9.0) (2026-04-04)
+
+
+### Features
+
+* **adapters:** Alinea guards de transición y shape-checking en run-domain y adapter-postgres ([#779](https://github.com/dunay2/dvt/issues/779)) ([7c7986e](https://github.com/dunay2/dvt/commit/7c7986ee6e1537f3a0fcf5561e5db0729b163c35))
+* **api:** Emit lane C SLA telemetry and align canonical manuals ([#772](https://github.com/dunay2/dvt/issues/772)) ([d952763](https://github.com/dunay2/dvt/commit/d9527637cc4a872bd31a214278395a7e3337c4c3))
+* **engine:** Gobernanza y boundary público para runExecutionContextRef y StepKind ([#781](https://github.com/dunay2/dvt/issues/781)) ([2ecd044](https://github.com/dunay2/dvt/commit/2ecd044b369aa1357f58a48413022254fb5d614d))
+* **web:** Refactor canvas controller: modularización, hardening y pruebas negativas ([#780](https://github.com/dunay2/dvt/issues/780)) ([58acb0d](https://github.com/dunay2/dvt/commit/58acb0d20b04b0920f40cd36535a01e20c0e8c9c))
+
+
+### Bug Fixes
+
+* **web:** Close F-04 QA findings and publish manuals ([#785](https://github.com/dunay2/dvt/issues/785)) ([c94a437](https://github.com/dunay2/dvt/commit/c94a437a7dc8fff354da9f12d112513b65e061af))
+* **web:** Scope DBT run queries and mark snapshot-only focused run ([#774](https://github.com/dunay2/dvt/issues/774)) ([c3659a7](https://github.com/dunay2/dvt/commit/c3659a74d16b5f7ad9f025d729280b05d730f4eb))
+
 ## [5.8.0](https://github.com/dunay2/dvt/compare/v5.7.0...v5.8.0) (2026-04-04)
 
 
