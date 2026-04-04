@@ -29,6 +29,9 @@ Primary code anchors:
 
 Current route: `/canvas`
 
+Focused controller remediation and extraction planning is documented in
+[Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md).
+
 Current composition:
 
 ```mermaid
@@ -73,6 +76,9 @@ concepts behind canonical types and mappers.
 
 - the app store still leaks too much shell and run state into the same global
   store;
+- `useCanvasController` still concentrates graph query, overlay policy,
+  persistence rules, and route side effects in one hook and is being hardened
+  as an `F-05` controller-boundary slice;
 - the legacy `GraphCanvas` path still exists in the codebase and should be
   retired so the active graph stack is singular;
 - current graph maturity is strongest for dbt topology; broader multi-domain
@@ -83,3 +89,4 @@ concepts behind canonical types and mappers.
 - [Main Workspace Views And UX](../main-workspace-views-and-ux.md)
 - [UX Implementation Guide](../ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
+- [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)

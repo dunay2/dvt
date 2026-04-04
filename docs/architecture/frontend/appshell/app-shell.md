@@ -37,6 +37,17 @@ flowchart TB
   Main --> Console["Console drawer"]
 ```
 
+## Shell Service Composition
+
+The shell is also the composition boundary for frontend data source mode and
+service wiring.
+
+`Root` mounts `AppServicesProvider`, which resolves `VITE_DATA_SOURCE` once and
+composes typed service instances for views and plugins through hooks.
+
+This prevents route-level components from instantiating mode-aware services or
+reading `resolveDataSource()` directly.
+
 ## UX Rules
 
 - the top bar stays visible across all routed views;
@@ -64,4 +75,5 @@ flowchart TB
 
 - [Main Workspace Views And UX](../main-workspace-views-and-ux.md)
 - [UX Implementation Guide](../ux-implementation-guide.md)
+- [Data Source Service Boundary](data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)

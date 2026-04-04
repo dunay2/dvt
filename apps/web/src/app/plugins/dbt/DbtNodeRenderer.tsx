@@ -7,8 +7,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
-import { resolveDataSource } from '../../services/config/dataSource';
-import { createRunsService } from '../../services/runs/runsService';
+import { useRunsService } from '../../services/AppServicesContext';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
   CanonicalRun,
@@ -345,7 +344,7 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
 }
 
 function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
-  const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
+  const runsService = useRunsService();
 
   const { data: runSnapshot, isLoading } = useQuery({
     queryKey: ['runs', 'snapshot', activeRunId],

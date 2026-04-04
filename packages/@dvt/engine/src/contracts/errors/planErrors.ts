@@ -28,3 +28,16 @@ export class PlanUriNotAllowedError extends DvtError {
     this.name = 'PlanUriNotAllowedError';
   }
 }
+
+export class RunExecutionContextRejectedError extends DvtError {
+  constructor(reason: string) {
+    const messageKey = ENGINE_ERROR_MESSAGE_KEY.RUN_EXECUTION_CONTEXT_REJECTED;
+    const messageParams = { reason };
+    super(ENGINE_ERROR_CODE.RUN_EXECUTION_CONTEXT_REJECTED, messageKey, undefined, {
+      details: { reason },
+      messageKey,
+      messageParams,
+    });
+    this.name = 'RunExecutionContextRejectedError';
+  }
+}

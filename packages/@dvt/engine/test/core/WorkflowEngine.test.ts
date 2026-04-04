@@ -140,6 +140,84 @@ describe('WorkflowEngine (basic failure modes)', () => {
     );
   });
 
+  it('rejects runExecutionContextRef when no resolver is configured', async () => {
+    const { engine } = createEngine({ adapters: makeAdapters() });
+    const contextWithRunExecutionContextRef = {
+      ...makeContext('ctx-no-resolver-1'),
+      runExecutionContextRef: {
+        uri: 'dvt-runctx://t/ctx-no-resolver-1',
+        sha256: 'ctxsha',
+        schemaVersion: 'v1.0',
+        planId: 'p',
+        planVersion: '1.0',
+      },
+    };
+
+    await expect(
+      engine.startRun(makePlanRef(), contextWithRunExecutionContextRef)
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+  });
+
+  it('allows aligned runExecutionContextRef and forwards it to adapter context', async () => {
+    const seenContexts: unknown[] = [];
+    const { engine } = createEngine({
+      adapters: makeAdapters({
+        async startRun(_planRef, ctx) {
+          seenContexts.push(ctx);
+          return {
+            provider: 'temporal',
+            tenantId: ctx.tenantId,
+            namespace: 'default',
+            workflowId: `wf-${ctx.runId}`,
+            runId: ctx.runId,
+          } as EngineRunRef;
+        },
+      }),
+      runExecutionContextResolver: {
+        async resolve(ref) {
+          return {
+            schemaVersion: 'v1.0',
+            planId: ref.planId,
+            planVersion: ref.planVersion,
+            planSha256: 'deadbeef',
+            tenantId: 't',
+            projectId: 'p',
+            environmentId: 'dev',
+            targetAdapter: 'temporal',
+            createdAtIso: '2026-04-03T00:00:00.000Z',
+            createdBy: 'test',
+            pluginContexts: {
+              dbt: {
+                projectBundleRef: 'artifacts://run/project.tgz',
+              },
+            },
+          };
+        },
+      },
+    });
+
+    const contextWithRunExecutionContextRef = {
+      ...makeContext('ctx-ok-1'),
+      runExecutionContextRef: {
+        uri: 'dvt-runctx://t/ctx-ok-1',
+        sha256: 'ctxsha',
+        schemaVersion: 'v1.0',
+        planId: 'p',
+        planVersion: '1.0',
+      },
+    };
+
+    await expect(
+      engine.startRun(makePlanRef(), contextWithRunExecutionContextRef)
+    ).resolves.toBeTruthy();
+    expect(seenContexts).toHaveLength(1);
+    expect(seenContexts[0]).toMatchObject({
+      runExecutionContextRef: {
+        uri: 'dvt-runctx://t/ctx-ok-1',
+      },
+    });
+  });
+
   it('signal rejects invalid runtime boundary payloads', async () => {
     const { engine } = createEngine();
 

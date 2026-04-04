@@ -16,11 +16,19 @@
  */
 import { z } from 'zod';
 
+import {
+  RunExecutionContextRefSchema,
+  RunExecutionContextSchema,
+} from './contracts/engine/RunExecutionContext.v1.js';
 import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
 } from './contracts/planner/ExecutionPlan.v2.js';
+export {
+  RunExecutionContextRefSchema,
+  RunExecutionContextSchema,
+} from './contracts/engine/RunExecutionContext.v1.js';
 import type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
 import type {
   PlanExecutabilityRecord,
@@ -90,6 +98,7 @@ export const RunContextSchema = z
     environmentId: z.string().min(1),
     runId: NonBlankStringSchema,
     targetAdapter: ProviderSchema,
+    runExecutionContextRef: RunExecutionContextRefSchema.optional(),
   })
   .strict();
 
@@ -683,6 +692,8 @@ export const PlanAdmissionLinkSchema: z.ZodType<PlanAdmissionLink> = z
 // ─── Inferred types from schemas (B1) ────────────────────────────────────────
 
 export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
+export type RunExecutionContextRefSchemaT = z.infer<typeof RunExecutionContextRefSchema>;
+export type RunExecutionContextSchemaT = z.infer<typeof RunExecutionContextSchema>;
 export type RunContextSchemaT = z.infer<typeof RunContextSchema>;
 export type ResolvedRunContextSchemaT = z.infer<typeof ResolvedRunContextSchema>;
 export type SignalRequestSchemaT = z.infer<typeof SignalRequestSchema>;

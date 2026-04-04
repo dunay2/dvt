@@ -1,5 +1,23 @@
 # Changelog
 
+## [5.8.0](https://github.com/dunay2/dvt/compare/v5.7.0...v5.8.0) (2026-04-04)
+
+
+### Features
+
+* **adapters:** Evolve Postgres plan store to three-part compatibility model ([#747](https://github.com/dunay2/dvt/issues/747)) ([efebb75](https://github.com/dunay2/dvt/commit/efebb75406b9efe6cc2baa324f3be1cd51f94f41))
+* **contracts:** Adopt structured contract errors and SRP plan ([#749](https://github.com/dunay2/dvt/issues/749)) ([51b0918](https://github.com/dunay2/dvt/commit/51b091896cbb0b4f1e95b729b37fe0d7e32d4fab))
+* **engine:** Harden run execution context boundary and publish engine derivation docs ([#763](https://github.com/dunay2/dvt/issues/763)) ([f36f134](https://github.com/dunay2/dvt/commit/f36f13480d077f67a83bd2b83a758c9155dbfe74))
+* **web:** Harden F-04 data-source service boundary and track residual risks ([#768](https://github.com/dunay2/dvt/issues/768)) ([bc7ff66](https://github.com/dunay2/dvt/commit/bc7ff665826607d228d73cb44e5d52d5cf456a4b))
+
+
+### Bug Fixes
+
+* **api:** Enforce admin RBAC on rebuild snapshot route ([#762](https://github.com/dunay2/dvt/issues/762)) ([bf7bc08](https://github.com/dunay2/dvt/commit/bf7bc08de1c89a037af387484731d97665986c53))
+* **api:** Harden admin route contract coverage and task decomposition ([#764](https://github.com/dunay2/dvt/issues/764)) ([5250fcb](https://github.com/dunay2/dvt/commit/5250fcb660cc364942aff1a1570fc3e3834b1fcb))
+* **api:** Harden admin route test typing and schema contract coverage ([#759](https://github.com/dunay2/dvt/issues/759)) ([1659f12](https://github.com/dunay2/dvt/commit/1659f12348ef1ac686694f8d1461e7773a0f5a28))
+* **deps:** Remove deprecated baseUrl from tsconfig chain ([#760](https://github.com/dunay2/dvt/issues/760)) ([98b7a25](https://github.com/dunay2/dvt/commit/98b7a25457f44bd7f3edf02b5d506392cb6ee5db))
+
 ## [5.7.0](https://github.com/dunay2/dvt/compare/v5.6.0...v5.7.0) (2026-04-03)
 
 

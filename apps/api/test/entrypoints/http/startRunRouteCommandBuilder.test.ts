@@ -18,6 +18,7 @@ describe('startRun command builders', () => {
     expect(
       buildPlanRefStartRunCommand({
         rawPlanRef: VALID_PLAN_REF,
+        rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'mock',
         selection: ['model_a'],
@@ -42,6 +43,7 @@ describe('startRun command builders', () => {
             nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
           },
         },
+        rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'temporal',
         selection: ['model_a'],
@@ -64,6 +66,7 @@ describe('startRun command builders', () => {
     expect(
       buildPlanRefStartRunCommand({
         rawPlanRef: { uri: 'https://plans.example.com/p.json' },
+        rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'mock',
         selection: ['model_a'],
@@ -78,6 +81,7 @@ describe('startRun command builders', () => {
     expect(
       buildPlannerBackedStartRunCommand({
         record: { graphSource: { kind: 'bad' } },
+        rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'temporal',
         selection: ['model_a'],
@@ -85,6 +89,25 @@ describe('startRun command builders', () => {
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+  });
+
+  it('propagates runExecutionContextRef parse issues', () => {
+    expect(
+      buildPlanRefStartRunCommand({
+        rawPlanRef: VALID_PLAN_REF,
+        rawRunExecutionContextRef: { uri: 'dvt-runctx://x' },
+        runId: 'run-1',
+        targetAdapter: 'mock',
+        selection: ['model_a'],
+      })
+    ).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_execution_context_ref',
+        target: 'runExecutionContextRef',
+      },
     });
   });
 });

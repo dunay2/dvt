@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-04-04.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 581   |
-| Total test files             | 227   |
+| Total source files           | 593   |
+| Total test files             | 226   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
@@ -24,20 +24,20 @@ Generated automatically from repository code on 2026-04-04.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 125       | 57         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 126       | 57         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 19         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 133       | 13         | yes   | no   | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 48        | 23         | yes   | yes  | yes       | 22                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
-| @dvt/artifacts            | `packages/@dvt/artifacts`            | 11        | 1          | yes   | yes  | no        | 10                      |
+| @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 40        | 11         | yes   | yes  | no        | 36                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 41        | 11         | yes   | yes  | no        | 37                      |
 | packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 87        | 35         | yes   | yes  | no        | 31                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 89        | 36         | yes   | yes  | no        | 32                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |

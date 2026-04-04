@@ -10,15 +10,14 @@ import {
   FileJson,
   RadioTower,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { resolveDataSource } from '../services/config/dataSource';
-import {
-  createWorkspaceService,
-  type ImportSourcesResult,
-  type WarehouseConnection,
-  type WarehouseTable,
+import { useWorkspaceService } from '../services/AppServicesContext';
+import type {
+  ImportSourcesResult,
+  WarehouseConnection,
+  WarehouseTable,
 } from '../services/workspace/workspaceService';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -64,7 +63,7 @@ interface TableInfo {
 }
 
 export default function SourceImportWizard({ open, onClose, onComplete }: SourceImportWizardProps) {
-  const workspaceService = useMemo(() => createWorkspaceService(resolveDataSource()), []);
+  const workspaceService = useWorkspaceService();
   const [currentStep, setCurrentStep] = useState<WizardStep>('sourceType');
   const [selectedSourceType, setSelectedSourceType] = useState<DataObjectSourceType>('database');
   const [connections, setConnections] = useState<WarehouseConnection[]>([]);

@@ -9,6 +9,8 @@ import {
   parsePlannerGraphSourceV1,
   parsePlannerInputEnvelopeV2,
   parsePlanRef,
+  parseRunExecutionContext,
+  parseRunExecutionContextRef,
   parseResolvedRunContext,
   parseRunContext,
   parseSignalRequest,
@@ -86,6 +88,110 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(ctx.targetAdapter).toBe('temporal');
+  });
+
+  it('parses RunContext with optional runExecutionContextRef', () => {
+    const ctx = parseRunContext({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'prod',
+      runId: 'run-1',
+      targetAdapter: 'temporal',
+      runExecutionContextRef: {
+        uri: 'dvt-runctx://tenant-a/run-1/context.json',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      },
+    });
+
+    expect(ctx.runExecutionContextRef?.uri).toContain('dvt-runctx://');
+  });
+
+  it('parses RunExecutionContextRef with valid input', () => {
+    const ref = parseRunExecutionContextRef({
+      uri: 'dvt-runctx://tenant-a/run-1/context.json',
+      sha256: 'abc123',
+      schemaVersion: 'v1.0',
+      planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+      planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+    });
+
+    expect(ref.planId).toBe(VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId);
+  });
+
+  it('rejects malformed RunExecutionContextRef', () => {
+    expect(() =>
+      parseRunExecutionContextRef({
+        uri: '',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('parses RunExecutionContext with governed provenance fields', () => {
+    const runExecutionContext = parseRunExecutionContext({
+      schemaVersion: 'v1.0',
+      planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+      planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      planSha256: 'a'.repeat(64),
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'prod',
+      targetAdapter: 'temporal',
+      createdAtIso: '2026-04-03T10:00:00.000Z',
+      createdBy: 'planner-runtime',
+      pluginContexts: {
+        dbt: {
+          projectBundleRef: 'artifacts://runs/run-1/dbt-project.tgz',
+        },
+      },
+    });
+
+    expect(runExecutionContext.pluginContexts.dbt.projectBundleRef).toContain('artifacts://');
+  });
+
+  it('rejects RunExecutionContext when top-level provenance fields are missing', () => {
+    expect(() =>
+      parseRunExecutionContext({
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        targetAdapter: 'temporal',
+        createdAtIso: '2026-04-03T10:00:00.000Z',
+        createdBy: 'planner-runtime',
+        pluginContexts: { dbt: { projectBundleRef: 'artifacts://x' } },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionContext when plugin contexts include non-ref payload objects', () => {
+    expect(() =>
+      parseRunExecutionContext({
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        planSha256: 'a'.repeat(64),
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        targetAdapter: 'temporal',
+        createdAtIso: '2026-04-03T10:00:00.000Z',
+        createdBy: 'planner-runtime',
+        pluginContexts: {
+          dbt: {
+            varsRef: { secret: 'inline' },
+          },
+        },
+      })
+    ).toThrow(ContractValidationError);
   });
 
   it('rejects caller-owned logicalAttemptId on public RunContext', () => {

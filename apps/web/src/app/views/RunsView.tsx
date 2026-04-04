@@ -2,12 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
-import { resolveDataSource } from '../services/config/dataSource';
+import { useRunsService } from '../services/AppServicesContext';
 import {
   createRunWorkspaceFacade,
   RunWorkspaceLoadError,
 } from '../services/runs/runWorkspaceFacade';
-import { createRunsService } from '../services/runs/runsService';
 import {
   RunDetailErrorState,
   RunDetailLoadingState,
@@ -18,7 +17,7 @@ import {
 
 export default function RunsView() {
   const { runId } = useParams();
-  const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
+  const runsService = useRunsService();
   const runWorkspaceFacade = useMemo(() => createRunWorkspaceFacade(runsService), [runsService]);
 
   const runsQuery = useQuery({

@@ -10,6 +10,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidPlanRef: 'invalid_plan_ref',
   invalidPlanSource: 'invalid_plan_source',
   invalidProjectId: 'invalid_project_id',
+  invalidRunExecutionContextRef: 'invalid_run_execution_context_ref',
   invalidRunId: 'invalid_run_id',
   invalidSelection: 'invalid_selection',
   invalidSignalType: 'invalid_signal_type',

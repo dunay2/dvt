@@ -1,6 +1,6 @@
 import { Terminal, FileText, X } from 'lucide-react';
 
-import { resolveDataSource } from '../services/config/dataSource';
+import { useAppDataSourceMode } from '../services/AppServicesContext';
 import { useAppStore } from '../stores/appStore';
 
 import { Badge } from './ui/badge';
@@ -9,7 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 
 export default function Console() {
   const { setConsolePanelHeight, currentRun } = useAppStore();
-  const dataSourceMode = resolveDataSource();
+  const dataSourceMode = useAppDataSourceMode();
 
   const mockLogs = [
     { time: '10:35:14', level: 'INFO', message: 'Starting run step...' },
@@ -57,25 +57,32 @@ export default function Console() {
 
       <ScrollArea className="h-full">
         <div className="p-4 space-y-1 font-mono text-xs">
-          {mockLogs.map((log, idx) => (
-            <div key={idx} className="flex gap-3">
-              <span className="text-slate-400">{log.time}</span>
-              <span
-                className={
-                  log.level === 'SUCCESS'
-                    ? 'text-green-400'
-                    : log.level === 'ERROR'
-                      ? 'text-red-400'
-                      : log.level === 'WARN'
-                        ? 'text-yellow-400'
-                        : 'text-blue-400'
-                }
-              >
-                [{log.level}]
-              </span>
-              <span className="text-slate-200">{log.message}</span>
+          {dataSourceMode === 'mock' ? (
+            mockLogs.map((log, idx) => (
+              <div key={idx} className="flex gap-3">
+                <span className="text-slate-400">{log.time}</span>
+                <span
+                  className={
+                    log.level === 'SUCCESS'
+                      ? 'text-green-400'
+                      : log.level === 'ERROR'
+                        ? 'text-red-400'
+                        : log.level === 'WARN'
+                          ? 'text-yellow-400'
+                          : 'text-blue-400'
+                  }
+                >
+                  [{log.level}]
+                </span>
+                <span className="text-slate-200">{log.message}</span>
+              </div>
+            ))
+          ) : (
+            <div className="rounded border border-slate-700 bg-slate-950 px-3 py-4 text-slate-300">
+              Live console streaming is not wired yet in API mode. This shell slice only removed
+              mock wiring from views; real run-event and log convergence remains future work.
             </div>
-          ))}
+          )}
         </div>
       </ScrollArea>
     </div>

@@ -4,6 +4,7 @@ import { parseStartRunBodyRecord } from '../../../src/entrypoints/http/startRunR
 import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
 import { parseStartRunPlannerEnvelope } from '../../../src/entrypoints/http/startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from '../../../src/entrypoints/http/startRunRoutePlanRefParser.js';
+import { parseStartRunRunExecutionContextRef } from '../../../src/entrypoints/http/startRunRouteRunExecutionContextRefParser.js';
 import { parseStartRunScope } from '../../../src/entrypoints/http/startRunRouteScopeParser.js';
 
 const VALID_PLAN_REF = {
@@ -103,6 +104,36 @@ describe('startRunRoute parser helpers', () => {
     expect(parseStartRunPlanRef({})).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
+    });
+  });
+
+  it('parses runExecutionContextRef and validates shape', () => {
+    expect(
+      parseStartRunRunExecutionContextRef({
+        uri: ' dvt-runctx://tenant-a/run-1/context.json ',
+        sha256: ' abc123 ',
+        schemaVersion: ' v1.0 ',
+        planId: ' p1 ',
+        planVersion: ' 1.0 ',
+      })
+    ).toEqual({
+      ok: true,
+      value: {
+        uri: 'dvt-runctx://tenant-a/run-1/context.json',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: 'p1',
+        planVersion: '1.0',
+      },
+    });
+
+    expect(parseStartRunRunExecutionContextRef({ uri: 'dvt-runctx://x' })).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_execution_context_ref',
+        target: 'runExecutionContextRef',
+      },
     });
   });
 

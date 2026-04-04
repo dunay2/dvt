@@ -18,3 +18,8 @@ export {
   platformHealthQueryKey,
   usePlatformHealthSnapshotQuery,
 } from './presentation/usePlatformHealthSnapshotQuery';
+export {
+  getNextRetryDelayMs,
+  getPlatformConnectionDetail,
+  getPlatformHealthErrorMessageFromQuery,
+} from './presentation/platformHealthStatus';

@@ -413,6 +413,155 @@ tasks:
       - failing guard tests are defined before code rewiring (TDD red phase)
       - route/query tests and typecheck pass after implementation (green + refactor phases)
     last_verified: '2026-04-03'
+  - task_id: F-04-RISK
+    parent_task: F-04
+    priority: P1
+    status: queued
+    objective: >-
+      close the active risk findings from the hard QA pass of the data-source service boundary
+      implementation.
+    dependency: F-04
+    target: >-
+      No view-facing runtime path leaks mock-only plan identity into API mode and mock workspace
+      state is deterministic across provider instances and tests.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+      - apps/web/src/app/services/plans/plansService.mock.ts
+      - apps/web/src/app/services/workspace/workspaceService.mock.ts
+    status_reason: >-
+      Hard QA found active functional and determinism risks that are not yet represented as
+      executable lane tasks.
+    last_verified: '2026-04-04'
+  - task_id: F-04-RISK-A
+    parent_task: F-04-RISK
+    priority: P1
+    status: queued
+    objective: >-
+      remove mock-only PlanRef semantics from the shared start-run flow so API mode no longer
+      depends on placeholder plan identity fields.
+    dependency: F-04-RISK
+    target: >-
+      `useCanvasExecutionActions` no longer consumes `buildPlanRefFromPlan` from mock-only modules;
+      API mode emits a contract-safe plan reference path with explicit tests.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+      - apps/web/src/app/services/plans/plansService.mock.ts
+      - apps/web/src/app/services/plans/plansService.test.ts
+    status_reason: >-
+      The current implementation still leaks mock PlanRef defaults into a shared runtime path.
+    last_verified: '2026-04-04'
+  - task_id: F-04-RISK-B
+    parent_task: F-04-RISK
+    priority: P1
+    status: queued
+    objective: >-
+      isolate mock workspace graph state per service or per test seam to prevent cross-instance
+      mutation bleed.
+    dependency: F-04-RISK
+    target: >-
+      `createMockWorkspaceService` no longer mutates process-global graph state across provider
+      instances unless an explicit, tested shared-state policy is declared.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/services/workspace/workspaceService.mock.ts
+      - apps/web/src/app/services/workspace/workspaceService.test.ts
+    status_reason: >-
+      Hard QA identified global mutable state as a determinism and test isolation risk.
+    last_verified: '2026-04-04'
+  - task_id: F-04-RESIDUAL
+    parent_task: F-04
+    priority: P2
+    status: queued
+    objective: >-
+      close residual quality drifts after the boundary refactor, focused on test seam policy and
+      shell UX contract consistency.
+    dependency: F-04-RISK
+    target: >-
+      Shell composition is guarded by integration tests on `Root`, consumer tests use provider
+      override seams instead of global module mocking, and API-mode console copy is product-safe.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - apps/web/src/app/Root.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/components/Console.tsx
+    status_reason: >-
+      Residual drifts are non-blocking for compile/test green status but remain governance and UX
+      debt if left untracked.
+    last_verified: '2026-04-04'
+  - task_id: F-04-RESIDUAL-A
+    parent_task: F-04-RESIDUAL
+    priority: P2
+    status: queued
+    objective: >-
+      add a Root-level shell integration guard so provider wiring regressions fail fast.
+    dependency: F-04-RESIDUAL
+    target: >-
+      A dedicated test mounts `Root` and fails when `AppServicesProvider` is removed or bypassed.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/Root.tsx
+      - apps/web/src/app/Root.test.tsx
+      - apps/web/src/app/services/AppServicesContext.tsx
+    status_reason: >-
+      Current shell tests exercise `RootShell` directly and do not protect provider composition
+      ownership at the real root.
+    last_verified: '2026-04-04'
+  - task_id: F-04-RESIDUAL-B
+    parent_task: F-04-RESIDUAL
+    priority: P2
+    status: queued
+    objective: >-
+      refit canvas controller tests to provider overrides so test seams match the documented
+      boundary contract.
+    dependency: F-04-RESIDUAL
+    target: >-
+      `useCanvasController` tests stop mocking `AppServicesContext` module exports globally and use
+      provider-level injection helpers.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/services/AppServicesContext.test.tsx
+      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+    status_reason: >-
+      Hard QA found seam-policy drift between the documented provider-injection strategy and the
+      current consumer test implementation.
+    last_verified: '2026-04-04'
+  - task_id: F-04-RESIDUAL-C
+    parent_task: F-04-RESIDUAL
+    priority: P3
+    status: queued
+    objective: >-
+      normalize API-mode console copy to product language and remove process-internal roadmap
+      wording.
+    dependency: F-04-RESIDUAL
+    target: >-
+      API-mode console state communicates capability status clearly without exposing implementation
+      slices or internal planning terminology.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/components/Console.tsx
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+    status_reason: >-
+      Current fallback copy is operationally correct but includes internal delivery language.
+    last_verified: '2026-04-04'
   - task_id: F-05
     priority: P0
     status: in_progress
@@ -430,12 +579,117 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/stores/sessionStore.ts
       - apps/web/src/app/stores/appStore.ts
     status_reason: >-
       A dedicated sessionStore already exists, but appStore still concentrates shell layout, canvas
       interaction, run state, and permissions into one mutable surface.
     last_verified: '2026-04-03'
+  - task_id: F-05-CANVAS-CTRL-DOC
+    parent_task: F-05
+    priority: P0
+    status: review
+    objective: >-
+      freeze the current truth, target controller decomposition, and user-facing Canvas guarantees
+      for the `useCanvasController` hardening slice.
+    dependency: none
+    target: >-
+      Canonical technical and user-facing docs describe the current controller responsibilities,
+      target seams, invariants, non-goals, and hard-gate sequence without leaving design decisions
+      to the implementer.
+    complexity: S
+    effort_points: 2
+    progress_pct: 90
+    evidence_refs:
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+    status_reason: >-
+      The controller remediation now has a dedicated architecture page, user-manual update, and
+      proposal-level execution handoff; final closure depends on docs validation and acceptance.
+    definition_of_done:
+      - technical current-to-target doc is linked from the frontend architecture entrypoint
+      - Canvas user manual states current journey, guarantees, and non-promises
+      - the proposal freezes the hard-gate sequence and extracted seam names
+    last_verified: '2026-04-04'
+  - task_id: F-05-CANVAS-CTRL-TDD
+    parent_task: F-05
+    priority: P0
+    status: queued
+    objective: >-
+      add failing tests that freeze controller invariants before any code extraction starts.
+    dependency: F-05-CANVAS-CTRL-DOC
+    target: >-
+      Red tests cover pending and error graph-query behavior, deterministic persisted-position sync,
+      overlay fallback, guarded persistence, and isolated post-run navigation side effects.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+    status_reason: >-
+      The controller slice currently lacks invariant-driven tests and must enter a red phase before
+      implementation work starts.
+    definition_of_done:
+      - red tests fail for the intended controller invariants
+      - tests do not depend on fragile private implementation details
+      - provider or route seams remain testable after extraction
+    last_verified: '2026-04-04'
+  - task_id: F-05-CANVAS-CTRL-IMPL
+    parent_task: F-05
+    priority: P0
+    status: queued
+    objective: >-
+      extract the controller into focused graph, overlay, persistence, and navigation seams and
+      reduce `useCanvasController` to a composition facade.
+    dependency: F-05-CANVAS-CTRL-TDD
+    target: >-
+      `useCanvasGraphModel`, `useCanvasOverlayModel`, `useCanvasLayoutPersistence`, and
+      `useCanvasNavigationActions` exist with single declared responsibilities while the route-level
+      workflow remains unchanged.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+    status_reason: >-
+      Implementation is intentionally blocked behind the documentation and red-test hard gate.
+    definition_of_done:
+      - controller responsibilities match the documented seam model
+      - hot-path debug logging is removed
+      - graph sync uses stable identity-oriented lookup instead of repeated search
+      - route behavior for planning and run navigation remains intact
+    last_verified: '2026-04-04'
+  - task_id: F-05-CANVAS-CTRL-CLOSEOUT
+    parent_task: F-05
+    priority: P1
+    status: queued
+    objective: >-
+      reconcile docs, tests, and lane evidence after controller extraction lands.
+    dependency: F-05-CANVAS-CTRL-IMPL
+    target: >-
+      The controller slice closes with aligned docs, accepted evidence, updated lane state, and no
+      residual drift between the implemented seams and the canonical documentation.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - docs/planning/state/agent-lane-e.yaml
+    status_reason: >-
+      Final closure is intentionally separated so docs and evidence can be reconciled after the
+      extraction and TDD phases are complete.
+    definition_of_done:
+      - docs still match the implemented controller seams
+      - validation evidence is linked from the lane
+      - no controller-specific residual drift remains untracked
+    last_verified: '2026-04-04'
   - task_id: F-06
     priority: P0
     status: in_progress
@@ -1156,10 +1410,10 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-03'
-  total_tasks: 34
-  total_effort_points: 147
-  completed_weighted_points: 25.4
+  verified_on: '2026-04-04'
+  total_tasks: 38
+  total_effort_points: 157
+  completed_weighted_points: 27.2
   lane_progress_pct: 17
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the

@@ -69,12 +69,35 @@ export interface PlanRef {
   requiresCapabilities?: string[];
 }
 
+export interface RunExecutionContextRef {
+  uri: string;
+  sha256: string;
+  schemaVersion: string;
+  planId: string;
+  planVersion: string;
+}
+
+export interface RunExecutionContext {
+  schemaVersion: string;
+  planId: string;
+  planVersion: string;
+  planSha256: string;
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  createdAtIso: IsoUtcString;
+  createdBy: string;
+  pluginContexts: Record<string, Record<string, string>>;
+}
+
 export interface RunContext {
   tenantId: string;
   projectId: string;
   environmentId: string;
   runId: string;
   targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  runExecutionContextRef?: RunExecutionContextRef;
 }
 
 /**

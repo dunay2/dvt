@@ -1,86 +1,67 @@
 ---
 title: @dvt/planner
-status: Draft
-owner: Planning Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Planning Domain / Architecture / Docs
+last_reviewed: 2026-04-04
 ---
 
 # @dvt/planner
 
-## Component Map
+## Canonical reading order
+
+1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment-20260320.md)
+2. [Planner contracts](../../../contracts/planner/index.md)
+3. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
+4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+5. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+
+## Scope and location
+
+- package: `packages/@dvt/planner`
+- domain: [Planning domain](../../domain-planning.md)
+- shared contract surfaces: `packages/@dvt/contracts/src/contracts/planner/**`
+
+## Current truth
+
+- public boundary: `PlannerFacade`
+- public envelope: `PlannerInputEnvelopeV2`
+- canonical production ingress: `manifestRef`
+- typed inline ingress: `graphSource`
+- compatibility ingress: `manifest`, `nodes`
+- active dbt normalization seam: `derivePlannerGraphSourceFromManifest` plus API-side resolver wiring
+
+## Target truth (MW-A2)
+
+- canonical planner input evolves toward `GenericGraphSourceV1`
+- dbt manifest ingestion remains supported as a compatibility adapter path
+- non-dbt graph sources become first-class at planner ingress
+- runtime executability for non-dbt kinds remains sequenced behind `MW-A1`, `MW-A3`, and `MW-C1`
+
+## Component map (current)
 
 ```mermaid
 flowchart LR
-  planner
-  verifier
-  interpreter
-  dsl
-  planner --> verifier
-  planner --> interpreter
-  planner --> dsl
+  Caller["API or integrator"] --> Facade["PlannerFacade"]
+  Facade --> Resolver["IArtifactResolver"]
+  Facade --> Planner["Planner domain service"]
+  Planner --> Validator["InputEnvelopeValidator"]
+  Planner --> Graph["GraphBuilder"]
+  Planner --> Selector["NodeSelector"]
+  Planner --> Assembler["PlanAssembler"]
+  Planner --> Registry["IStepTypeRegistry"]
+  Assembler --> Plan["ExecutionPlan + canonicalPlanJson"]
 ```
 
-## Location
+## Primary code anchors
 
-- packages/@dvt/planner
+- [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
+- [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
+- [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)
+- [InputEnvelopeValidator.ts](../../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts)
+- [IArtifactResolver.ts](../../../../packages/@dvt/planner/src/ports/IArtifactResolver.ts)
+- [ExecutionPlan.v2.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
 
-## Domain
+## Notes
 
-- [Planning Domain](../domain-planning.md)
-
-## Main Responsibilities
-
-- Plan creation and editing
-- Root: [PlanAggregate](planner-aggregates.md#planaggregate) (central plan model)
-- Aggregates: [StepAggregate](planner-aggregates.md#stepaggregate), [ValidationAggregate](planner-aggregates.md#validationaggregate)
-- Ensures [plan structure](planner-aggregates.md#planaggregate), [dependencies](planner-aggregates.md#stepaggregate), and [constraints](planner-aggregates.md#constraints)
-- Coordinates [plan lifecycle](planner-aggregates.md#responsibilities) (draft, compiled, validated)
-
-## Explanation
-
-@dvt/planner is responsible for the lifecycle of plans in the DVT system:
-
-See detailed aggregates and interactions in [Planner Aggregates](planner-aggregates.md).
-
-**Interactions:**
-
-- [Verifier](verifier.md): Returns validation results for plans.
-- [Interpreter](interpreter.md): Compiles and interprets plans for execution.
-- [DSL](dsl.md): Provides domain-specific language for plan definition.
-
-- **Root:** [PlanAggregate](planner-aggregates.md#planaggregate) — represents the central plan model, owning all steps and dependencies.
-- **Aggregates:** [StepAggregate](planner-aggregates.md#stepaggregate) (individual steps), [ValidationAggregate](planner-aggregates.md#validationaggregate) (validation results).
-- **Responsibilities:**
-  - Create new plans and edit existing ones.
-  - Manage [plan structure](planner-aggregates.md#planaggregate), [dependencies](planner-aggregates.md#stepaggregate), and [constraints](planner-aggregates.md#constraints).
-  - Coordinate plan compilation and validation.
-  - Transition plans through [lifecycle states](planner-aggregates.md#responsibilities) (draft, compiled, validated).
-
-**Interactions:**
-
-- [Verifier](verifier.md): Receives plans from planner, checks integrity, returns validation results.
-- [Interpreter](interpreter.md): Receives compiled plans, interprets for execution, returns execution-ready artifacts.
-- [DSL](dsl.md): Provides domain-specific language for plan definition, used by planner to enable flexible plan creation.
-
-Planner orchestrates these interactions to ensure every plan is valid, executable, and compliant with system constraints.
-
-## Restrictions
-
-- Must comply with contract definitions in [PlannerContracts.v2.3.1.md](../../packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md)
-- Only interacts with Planning domain components
-
-## Related Documentation
-
-- [Component Map](../component-map.md)
-- [Planning Domain](../domain-planning.md)
-- [Planner Contracts](../../packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md)
-- [Plan Verifier](verifier.md)
-- [Plan Interpreter](interpreter.md)
-- [DSL](dsl.md)
-
-## Detailed Documentation
-
-- [DDD Structure](planner-ddd.md)
-- [Functionalities](planner-functional.md)
-- [Constraints & Invariants](planner-constraints.md)
-- [Sequence Diagrams](planner-sequence.md)
+- This page replaces stale aggregate-centric references that no longer match the shipped planner code.
+- If this page and another planner doc disagree, use the documents listed under "Canonical reading order" as source of truth.
