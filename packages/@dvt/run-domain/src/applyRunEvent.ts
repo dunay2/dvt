@@ -11,9 +11,12 @@
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 
 import { InvalidStateTransitionError } from './errors.js';
-
-const TERMINAL_RUN_STATUSES = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
-const TERMINAL_STEP_STATUSES = new Set(['COMPLETED', 'SKIPPED']);
+import {
+  RUN_EVENT_ALLOWED_FROM,
+  STEP_EVENT_ALLOWED_FROM,
+  TERMINAL_RUN_STATUSES,
+  TERMINAL_STEP_STATUSES,
+} from './transitionPolicy.js';
 
 export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
   switch (e.eventType) {
@@ -28,23 +31,37 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
     case 'RunPaused':
       assertRunNotTerminal(snap, e.eventType);
+      assertRunStatusIn(snap, e.eventType, RUN_EVENT_ALLOWED_FROM.RunPaused ?? ['RUNNING']);
       snap.status = 'PAUSED';
       snap.paused = true;
       break;
 
     case 'RunResumed':
       assertRunNotTerminal(snap, e.eventType);
+      assertRunStatusIn(snap, e.eventType, RUN_EVENT_ALLOWED_FROM.RunResumed ?? ['PAUSED']);
       snap.status = 'RUNNING';
       snap.paused = false;
       break;
 
     case 'RunCancelRequested':
       assertRunNotTerminal(snap, e.eventType);
+      assertRunStatusIn(
+        snap,
+        e.eventType,
+        RUN_EVENT_ALLOWED_FROM.RunCancelRequested ?? ['RUNNING', 'PAUSED']
+      );
       snap.cancelling = true;
       break;
 
     case 'RunCancelled':
       assertRunNotTerminal(snap, e.eventType);
+      if (!snap.cancelling) {
+        throw new InvalidStateTransitionError({
+          runId: snap.runId,
+          fromStatus: snap.status,
+          eventType: e.eventType,
+        });
+      }
       snap.status = 'CANCELLED';
       snap.cancelling = false;
       snap.completedAt = e.emittedAt;
@@ -66,6 +83,13 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       const stepId = (e as EventEnvelope & { stepId: string }).stepId;
       assertStepNotTerminal(snap, stepId, e.eventType);
       const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      assertStepStatusIn(
+        snap,
+        stepId,
+        e.eventType,
+        s.status,
+        STEP_EVENT_ALLOWED_FROM.StepStarted ?? ['PENDING', 'FAILED']
+      );
       s.status = 'RUNNING';
       s.startedAt = s.startedAt ?? e.emittedAt;
       s.attempts += 1;
@@ -77,6 +101,13 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       const stepId = (e as EventEnvelope & { stepId: string }).stepId;
       assertStepNotTerminal(snap, stepId, e.eventType);
       const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      assertStepStatusIn(
+        snap,
+        stepId,
+        e.eventType,
+        s.status,
+        STEP_EVENT_ALLOWED_FROM.StepCompleted ?? ['RUNNING']
+      );
       s.status = 'COMPLETED';
       s.completedAt = e.emittedAt;
       snap.steps[stepId] = s;
@@ -92,6 +123,13 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       const stepId = (e as EventEnvelope & { stepId: string }).stepId;
       assertStepNotTerminal(snap, stepId, e.eventType);
       const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      assertStepStatusIn(
+        snap,
+        stepId,
+        e.eventType,
+        s.status,
+        STEP_EVENT_ALLOWED_FROM.StepFailed ?? ['RUNNING']
+      );
       s.status = 'FAILED';
       s.completedAt = e.emittedAt;
       snap.steps[stepId] = s;
@@ -102,6 +140,13 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       const stepId = (e as EventEnvelope & { stepId: string }).stepId;
       assertStepNotTerminal(snap, stepId, e.eventType);
       const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      assertStepStatusIn(
+        snap,
+        stepId,
+        e.eventType,
+        s.status,
+        STEP_EVENT_ALLOWED_FROM.StepSkipped ?? ['PENDING']
+      );
       s.status = 'SKIPPED';
       s.completedAt = e.emittedAt;
       snap.steps[stepId] = s;
@@ -133,6 +178,39 @@ function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType
       stepId,
     });
   }
+}
+
+function assertRunStatusIn(
+  snap: WorkflowSnapshot,
+  eventType: string,
+  allowedStatuses: WorkflowSnapshot['status'][]
+): void {
+  if (allowedStatuses.includes(snap.status)) {
+    return;
+  }
+  throw new InvalidStateTransitionError({
+    runId: snap.runId,
+    fromStatus: snap.status,
+    eventType,
+  });
+}
+
+function assertStepStatusIn(
+  snap: WorkflowSnapshot,
+  stepId: string,
+  eventType: string,
+  currentStatus: WorkflowSnapshot['steps'][string]['status'],
+  allowedStatuses: WorkflowSnapshot['steps'][string]['status'][]
+): void {
+  if (allowedStatuses.includes(currentStatus)) {
+    return;
+  }
+  throw new InvalidStateTransitionError({
+    runId: snap.runId,
+    fromStatus: currentStatus,
+    eventType,
+    stepId,
+  });
 }
 
 function extractGatewayDecision(e: EventEnvelope): boolean | undefined {

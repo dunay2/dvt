@@ -16,9 +16,7 @@ export class InvalidStateTransitionError extends Error {
   constructor(params: { runId: string; fromStatus: string; eventType: string; stepId?: string }) {
     const { runId, fromStatus, eventType, stepId } = params;
     const subject = stepId === undefined ? 'run' : `step ${stepId}`;
-    super(
-      `Cannot apply ${eventType} to ${subject} already in terminal status ${fromStatus}: runId=${runId}`
-    );
+    super(`Cannot apply ${eventType} to ${subject} from status ${fromStatus}: runId=${runId}`);
     this.name = 'InvalidStateTransitionError';
     this.runId = runId;
     this.details = {

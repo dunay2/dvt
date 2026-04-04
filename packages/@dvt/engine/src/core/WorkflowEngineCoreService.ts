@@ -7,6 +7,7 @@ import { SignalNotImplementedError } from '../contracts/errors.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { SignalTransitionGuard } from '../services/signal/SignalTransitionGuard.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import type { IdempotencyKeyBuilder } from './idempotency.js';
@@ -48,7 +49,15 @@ export interface WorkflowEngineCoreDeps {
 }
 
 export class WorkflowEngineCoreService implements IWorkflowEngineCore {
-  constructor(private readonly deps: WorkflowEngineCoreDeps) {}
+  private readonly signalTransitionGuard: SignalTransitionGuard;
+
+  constructor(private readonly deps: WorkflowEngineCoreDeps) {
+    this.signalTransitionGuard = new SignalTransitionGuard({
+      stateStoreRead: deps.stateStoreRead,
+      idempotency: deps.idempotency,
+      clock: deps.clock,
+    });
+  }
 
   async cancel(ref: EngineRunRef): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
@@ -210,13 +219,21 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         },
         async (span) => {
           try {
+            const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
+            if (mappedEventType) {
+              await this.signalTransitionGuard.assertAllowed(
+                meta,
+                validatedRequest,
+                mappedEventType
+              );
+            }
+
             await withTimeout(
               adapter.signal(validatedRunRef, validatedRequest),
               this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
               CORE_TIMEOUT_OPERATION.adapterSignal
             );
 
-            const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
             if (mappedEventType) {
               await emitSignalDerivedRunEvent({
                 stateStoreWrite: this.deps.stateStoreWrite,
