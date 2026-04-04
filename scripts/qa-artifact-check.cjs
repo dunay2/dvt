@@ -67,12 +67,7 @@ function readFileIfExists(filePath) {
 }
 
 function looksLikeQaArtifact(raw) {
-  return (
-    /^qa_artifact:\s*true\s*$/im.test(raw) ||
-    /^##\s+Findings\s*$/m.test(raw) ||
-    /^##\s+Action Artifact\s*$/m.test(raw) ||
-    /^##\s+Final Verdict\s*$/m.test(raw)
-  );
+  return /^qa_artifact:\s*true\s*$/im.test(raw);
 }
 
 function validateArtifact(filePath, raw) {
