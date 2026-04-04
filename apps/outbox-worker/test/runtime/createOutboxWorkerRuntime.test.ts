@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
 import { isActiveEnv, loadEnv, type ActiveEnv } from '../../src/plugins/env.js';
 import { createOutboxWorkerRuntime } from '../../src/runtime/createOutboxWorkerRuntime.js';
+import type { RuntimeHandle } from '../../src/runtime/createOutboxWorkerRuntime.js';
 import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
 
@@ -82,7 +83,7 @@ function makeAbortError(): Error {
 function createTestRuntime(
   envOverrides: NodeJS.ProcessEnv = {},
   options: Parameters<typeof createOutboxWorkerRuntime>[2] = {}
-) {
+): Promise<RuntimeHandle> {
   return createOutboxWorkerRuntime(
     loadActiveTestEnv({
       ...BASE_ACTIVE_ENV,
