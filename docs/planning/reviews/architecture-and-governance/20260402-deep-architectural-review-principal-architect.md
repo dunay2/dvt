@@ -170,7 +170,7 @@ The `signal` method accepts typed `SignalRequest` with `type: 'PAUSE' | 'RESUME'
 
 **The DAG analyzer does not detect cycles.** `topoSort` will produce incomplete results for cyclic graphs (Kahn's algorithm naturally skips cycles), but there is no explicit cycle detection error. A cyclic input will silently produce a plan missing some steps.
 
-**Fix:** Add an explicit check: if `topo.length < selected.length`, there is a cycle. Throw `PlannerErrorCode.CYCLE_DETECTED`.
+**Fix:** Add an explicit check: if `topo.length < selected.length`, there is a cycle. Throw `PlannerErrorCode.GRAPH_CYCLE`.
 
 ### Partial Execution Guarantees
 
@@ -455,7 +455,7 @@ Change shard assignment from `md5(run_id)` to `md5(tenant_id)` or add a `tenant_
 
 1. After `topoSort`, compare `topo.length` against `selected.length`.
 2. If `topo.length < selected.length`, the missing nodes are in a cycle.
-3. Throw `PlannerErrorCode.CYCLE_DETECTED` with the list of missing nodeIds.
+3. Throw `PlannerErrorCode.GRAPH_CYCLE` with the list of missing nodeIds.
 4. Add tests with cyclic inputs.
 5. Effort: 1-2 hours. Impact: Prevents silent data loss in plans.
 

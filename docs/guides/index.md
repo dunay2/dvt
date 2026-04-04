@@ -19,6 +19,8 @@ Developer guides, contribution guides, and quality standards.
 - [Gap 5 User Reference](gap-5-user-reference-20260319.md)
 - [GenericGraphSource Technical Manual](generic-graph-source-technical-manual-20260404.md)
 - [GenericGraphSource User Manual](generic-graph-source-user-manual-20260404.md)
+- [Planner Cycle Detection Technical Manual](planner-cycle-detection-technical-manual-20260404.md)
+- [Planner Cycle Detection User Manual](planner-cycle-detection-user-manual-20260404.md)
 - [PostgresPlanStore Technical Manual](postgres-plan-store-technical-manual-20260403.md)
 - [PostgresPlanStore User Manual](postgres-plan-store-user-manual-20260403.md)
 - [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md)
