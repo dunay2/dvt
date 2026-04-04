@@ -66,6 +66,12 @@ sequenceDiagram
 4. If any row is missing, keep AR-C2 open and create follow-up issue.
 5. If all rows are present and pass, proceed to AR-C2 closure review.
 
+Command:
+
+```bash
+pnpm ops:ar-c2:evidence
+```
+
 ## Expected output fields
 
 - environment
