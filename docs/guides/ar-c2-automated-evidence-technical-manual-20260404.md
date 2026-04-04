@@ -85,6 +85,25 @@ sequenceDiagram
 - `window_end_utc`
 - `threshold_result`
 
+## Collector command and inputs
+
+Execution command:
+
+```bash
+pnpm ops:ar-c2:evidence
+```
+
+Supported input env vars:
+
+- `AR_C2_EVIDENCE_OUTPUT_PATH` (optional output markdown path)
+- `AR_C2_DASHBOARD_SNAPSHOT_FILE` (optional JSON file with `panelKeys`)
+- `AR_C2_ALERT_SNAPSHOT_FILE` (optional JSON file with `rules[]`)
+- `AR_C2_METRICS_SNAPSHOT_FILE` (optional JSON file with `windows[]`)
+
+For duplicate `signal_key` rows (for example stale ratio and unknown ratio that
+share the same source metric key), provide distinct `windows[]` entries with
+different `expected` values so T4 rows can be resolved independently.
+
 ## Invariants
 
 1. Generated artifact must be reproducible from same input window.
