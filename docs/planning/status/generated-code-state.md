@@ -15,10 +15,10 @@ Generated automatically from repository code on 2026-04-04.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 596   |
-| Total test files             | 231   |
+| Total source files           | 607   |
+| Total test files             | 239   |
 | Workspaces with build script | 22/23 |
-| Workspaces with test script  | 20/23 |
+| Workspaces with test script  | 21/23 |
 
 ## Workspace Matrix
 
@@ -28,23 +28,23 @@ Generated automatically from repository code on 2026-04-04.
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 19         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 140       | 15         | yes   | no   | yes       | -                       |
-| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 48        | 23         | yes   | yes  | yes       | 22                      |
+| @dvt/web                  | `apps/web`                           | 147       | 18         | yes   | yes  | yes       | -                       |
+| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 48        | 27         | yes   | yes  | yes       | 22                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 41        | 11         | yes   | yes  | no        | 37                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 40        | 11         | yes   | yes  | no        | 36                      |
 | packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 89        | 36         | yes   | yes  | no        | 32                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 90        | 37         | yes   | yes  | no        | 32                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/plan-verifier        | `packages/@dvt/plan-verifier`        | 5         | 2          | yes   | yes  | no        | 4                       |
-| @dvt/planner              | `packages/@dvt/planner`              | 23        | 17         | yes   | yes  | no        | 15                      |
+| @dvt/planner              | `packages/@dvt/planner`              | 26        | 17         | yes   | yes  | no        | 15                      |
 | @dvt/planner-contracts    | `packages/@dvt/planner-contracts`    | 0         | 0          | yes   | no   | no        | -                       |
-| @dvt/run-domain           | `packages/@dvt/run-domain`           | 3         | 1          | yes   | yes  | no        | 2                       |
+| @dvt/run-domain           | `packages/@dvt/run-domain`           | 4         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/state-store          | `packages/@dvt/state-store`          | 15        | 12         | yes   | yes  | no        | 19                      |
 | @dvt/traceability-service | `packages/@dvt/traceability-service` | 24        | 5          | yes   | yes  | yes       | 8                       |
 
