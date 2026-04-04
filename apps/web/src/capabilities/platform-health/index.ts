@@ -19,7 +19,9 @@ export {
   usePlatformHealthSnapshotQuery,
 } from './presentation/usePlatformHealthSnapshotQuery';
 export {
+  buildShellHealthPresentationModel,
   getNextRetryDelayMs,
+  getShellHealthPollingIntervalMs,
   getPlatformConnectionDetail,
   getPlatformHealthErrorMessageFromQuery,
 } from './presentation/platformHealthStatus';

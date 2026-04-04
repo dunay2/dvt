@@ -13,6 +13,18 @@ State-oriented planning views for quick portfolio inspection.
 Use this section to understand coverage, ownership, and current delivery lanes
 without replacing canonical status artifacts.
 
+## Fast Route (Status + Work In Progress)
+
+Use this decision order to avoid searching blindly:
+
+1. [System Delivery Status](../../architecture/system-delivery-status.md)
+   for "what is true now in code".
+2. [Planning Control Tower](planning-control-tower.md)
+   for "where planning execution is managed".
+3. `agent-lane-*.yaml` files for "what is active now, what is blocked,
+   and what continues next".
+4. [Roadmap Of Record](../roadmap/index.md) for "in which order it should ship".
+
 ## State Views
 
 - [Planning Control Tower](planning-control-tower.md)

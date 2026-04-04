@@ -1,6 +1,6 @@
 ---
 title: MVP-E1 and F-03 frontend backend contract and health state plan 2026-04-04
-status: Draft
+status: Review
 owner: Product / Frontend / Architecture
 last_reviewed: 2026-04-04
 planning_type: proposal
@@ -281,11 +281,11 @@ flowchart LR
 
 ### Task Checklist
 
-- [ ] `MVP-E1-A` Build baseline route inventory from real API surface
-- [ ] `MVP-E1-B` Define auth and access matrix for frontend-consumable routes
-- [ ] `MVP-E1-C` Freeze non-promises and out-of-scope backend assumptions
-- [ ] `MVP-E1-D` Publish canonical frontend-facing backend contract artifact
-- [ ] `MVP-E1-E` Sync lane state, roadmap links, and planning surfaces
+- [x] `MVP-E1-A` Build baseline route inventory from real API surface
+- [x] `MVP-E1-B` Define auth and access matrix for frontend-consumable routes
+- [x] `MVP-E1-C` Freeze non-promises and out-of-scope backend assumptions
+- [x] `MVP-E1-D` Publish canonical frontend-facing backend contract artifact
+- [x] `MVP-E1-E` Sync lane state, roadmap links, and planning surfaces
 - [ ] `F-03-A` Define canonical shell health-state semantic model
 - [ ] `F-03-B` Define deterministic retry and backoff policy contract
 - [ ] `F-03-C` Enforce single health presenter seam in shell architecture

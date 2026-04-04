@@ -1,0 +1,34 @@
+(() => {
+  const renderMermaid = async () => {
+    if (typeof mermaid === 'undefined') return;
+
+    const codeBlocks = document.querySelectorAll('pre > code.language-mermaid');
+    for (const codeBlock of codeBlocks) {
+      const pre = codeBlock.parentElement;
+      if (!pre || pre.dataset.mermaidProcessed === 'true') continue;
+
+      const container = document.createElement('div');
+      container.className = 'mermaid';
+      container.textContent = codeBlock.textContent ?? '';
+
+      pre.replaceWith(container);
+    }
+
+    document.querySelectorAll('.mermaid').forEach((el) => {
+      delete el.dataset.processed;
+    });
+
+    mermaid.initialize({ startOnLoad: false });
+    await mermaid.run({ querySelector: '.mermaid' });
+  };
+
+  if (globalThis.document$?.subscribe) {
+    globalThis.document$.subscribe(() => {
+      void renderMermaid();
+    });
+  } else {
+    globalThis.addEventListener('DOMContentLoaded', () => {
+      void renderMermaid();
+    });
+  }
+})();

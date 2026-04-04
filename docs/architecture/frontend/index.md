@@ -94,14 +94,15 @@ That future route-level workbench should cover:
 15. [Canvas Component Map And Modernization Review](graph/canvas-component-map-and-modernization-review.md)
 16. [Inspector](inspector/inspector-frontend-architecture.md)
 17. [Runs](runs/dvt-runs-frontend-architecture.md)
-18. [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
-19. [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)
-20. [Lineage](lineage/dvt-frontend-lineage.md)
-21. [Git Mode Architecture](git/git-mode-architecture.md)
-22. [Frontend Observability Architecture](observability/front-observability-architecture-dvt.md)
-23. [Frontend Artifacts](artifacts/front-artifacts.md)
-24. [apps/web](../components/web-app/index.md)
-25. [@dvt/web package surface](../components/web/index.md)
+18. [Frontend-Facing Backend MVP Contract (MVP-E1)](runs/frontend-backend-mvp-contract.md)
+19. [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
+20. [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)
+21. [Lineage](lineage/dvt-frontend-lineage.md)
+22. [Git Mode Architecture](git/git-mode-architecture.md)
+23. [Frontend Observability Architecture](observability/front-observability-architecture-dvt.md)
+24. [Frontend Artifacts](artifacts/front-artifacts.md)
+25. [apps/web](../components/web-app/index.md)
+26. [@dvt/web package surface](../components/web/index.md)
 
 ## Current Code Anchors
 

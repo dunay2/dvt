@@ -94,6 +94,10 @@ Canonical `F-07` baseline pack:
 - [Frontend Runtime Contract User Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-user-manual.md)
 - [F-07 Frontend Runtime Contract Baseline Plan](../../mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
 
+Canonical `MVP-E1` contract artifact:
+
+- [Frontend-Facing Backend MVP Contract (MVP-E1)](../../../../architecture/frontend/runs/frontend-backend-mvp-contract.md)
+
 ### Phase 1 - Data and state convergence
 
 - `F-04`: finish the `VITE_DATA_SOURCE` boundary so views stop owning mode

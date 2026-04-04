@@ -25,7 +25,6 @@ export default function TopAppBar({
   const setSelectedTenant = useSessionStore((state) => state.setTenantId);
   const setSelectedProject = useSessionStore((state) => state.setProjectId);
   const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
-
   const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
@@ -37,7 +36,6 @@ export default function TopAppBar({
   const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
-
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveTopAppBarCopy();
 

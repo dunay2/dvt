@@ -147,7 +147,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: S19-F1
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid
       O(N)-per-row behavior at high run concurrency.
@@ -159,14 +159,14 @@ tasks:
       performance coverage at the 5000-concurrent-runs target load.
     complexity: L
     effort_points: 2
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
       - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
     status_reason: >-
-      Phase 1 and 2 are delivered, but the original closure target still includes performance proof
-      and residual claim-semantics retirement.
-    last_verified: '2026-03-31'
+      Phase 1 and 2 were already delivered, and `S19-F1-C` is now closed with real Docker-backed
+      PostgreSQL evidence for EXPLAIN target-load coverage and concurrent claim semantics.
+    last_verified: '2026-04-04'
   - task_id: S19-F1-A
     parent_task: S19-F1
     priority: P2
@@ -203,10 +203,10 @@ tasks:
   - task_id: S19-F1-C
     parent_task: S19-F1
     priority: P2
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 20
+    progress_pct: 100
     objective: >-
       close the remaining performance proof and claim-semantics risk for the snapshot work queue
       path.
@@ -217,8 +217,11 @@ tasks:
     evidence_refs:
       - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-    status_reason: The remaining closure work is defined but not yet executed.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      Closure executed and verified on real PostgreSQL via Docker: EXPLAIN-backed target-load test
+      and concurrent `claimSnapshotWork` no-duplicate invariant are passing; residual risk entry is
+      now closed.
+    last_verified: '2026-04-04'
   - task_id: S18-F1
     priority: P2
     status: queued

@@ -1,512 +1,746 @@
 ---
-title: F-04 Frontend Data Boundary Hexagonal Convergence Plan
+title: F-04 Frontend Data Boundary Hexagonal Convergence Mandatory Plan
 status: Draft
 owner: Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-03
 planning_type: proposal
 ---
 
-# F-04 Frontend Data Boundary Hexagonal Convergence Plan
+# F-04 Frontend Data Boundary Hexagonal Convergence Mandatory Plan
 
 ## Summary
 
-This proposal defines the correction path for the DVT+ frontend so that two
-outcomes become non-optional:
-
-1. the frontend data boundary converges to a real hexagonal model with a single
-   composition root, explicit ports, and governed query/state ownership
-2. the presentation layer is refactored and unified so that monolithic views,
-   duplicated UI patterns, hardcoded copy, and inconsistent styling stop being
-   treated as acceptable drift
-
-This proposal does not treat refactorization and UI unification as "nice to
-have". They are mandatory closure criteria for F-04 because without them the
-frontend remains structurally non-hexagonal even if the service boundary looks
-clean on paper.
+This proposal defines the execution plan for converging the DVT+ frontend data
+boundaries to a hexagonal architecture model. The goal is to centralize mode
+selection and adapter wiring in a single composition root, enforce port-based
+service access throughout the view layer, and align the frontend data flow with
+the backend's hexagonal principles already established in the engine subsystem.
 
 ## Governing sources
 
-- `docs/architecture/reference-architecture.md`
-- `ADR-0003`
-- `ADR-0034`
-- `docs/guides/dvt-code-style-solid-hexagonal-cqrs.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/architecture/reference-architecture.md` — hexagonal architecture, ports
+  and adapters, replaceable infrastructure
+- `ADR-0003` — execution model sovereignty, adapter translation boundaries
+- `ADR-0034` — bounded context boundaries and communication rules
+- `docs/guides/dvt-code-style-solid-hexagonal-cqrs.md` — SOLID and hexagonal
+  code-style baseline
+- `docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md` — F-04
+  scope and slicing reference
+- `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md` — QA quality
+  bar
 
-## Problem statement
+## As-is findings
 
-The frontend has already started moving toward a hexagonal boundary, but the
-system is still split between:
+### What is already strong
 
-- real ports and composition-root wiring in some areas
-- inline orchestration, large view files, duplicated view patterns, and uneven
-  copy/style ownership in others
+- **Service adapter pattern exists**: `RunsService`, `PlansService`, and
+  `WorkspaceService` each define an abstract interface with `mock` and `api`
+  implementations selected by factory functions.
+- **Composition root partially in place**: `AppServicesProvider` in
+  `src/app/services/AppServicesContext.tsx` wires services via React Context and
+  exposes typed hooks (`useRunsService`, `usePlansService`,
+  `useWorkspaceService`).
+- **Mode selection centralized**: `resolveDataSource()` reads
+  `VITE_DATA_SOURCE` with a clean `mock | api` discriminant.
+- **Clean layered capability exists**: `src/capabilities/platform-health/` uses
+  explicit `domain → application → infrastructure → presentation` layers with
+  proper port isolation.
+- **Test override mechanism**: `AppServicesProvider` accepts `overrides` prop for
+  test-time dependency injection.
 
-That split creates two risks:
+### What is still drifting
 
-- architectural drift: the code claims hexagonal direction while the view layer
-  still owns too much policy and composition
-- product drift: similar screens behave and read differently because there is
-  no enforced presentation vocabulary, template system, or consistent copy
-  ownership
-
-## Reality snapshot
-
-### Already implemented or materially underway
-
-- explicit frontend ports exist under `apps/web/src/app/ports/`
-- `AppServicesProvider` is already the effective composition root for adapter
-  selection and service exposure
-- typed query-key registry already exists in `apps/web/src/app/queries/queryKeys.ts`
-- state is already partly decomposed into `sessionStore`, `uiLayoutStore`,
-  `canvasInteractionStore`, and `executionStore`
-- architecture checks already enforce some boundary rules
-- `TopAppBar` has now been moved to a composition-root plus subcomponent model,
-  with extracted copy and style tokens
-
-### Drift that still remains
-
-- some plan text still describes old `appStore` and ad hoc query ownership as
-  if they were current truth
-- large view files still mix data orchestration, transformations, business
-  rules, and deep JSX layout
-- view-level UI patterns are still duplicated instead of being encoded in a
-  shared domain composite layer
-- copy ownership and i18n readiness are still inconsistent across screens
-- style tokens and view templates are still unevenly applied
-- `useCanvasController` and related orchestration paths still carry too much
-  breadth
-- the anti-corruption layer decision is not yet justified enough to be treated
-  as unconditional mandatory work
-
-## Architectural position
-
-F-04 has two mandatory tracks, not one:
-
-### Track A: data-boundary convergence
-
-This is the hexagonal work:
-
-- ports are explicit
-- composition-root wiring is unique
-- views consume ports and query hooks, not adapters
-- state ownership is explicit
-- query ownership is explicit
-
-### Track B: presentation convergence
-
-This is also required architectural work, not cosmetics:
-
-- repeated UI patterns move into reusable domain composites
-- oversized views are decomposed
-- copy ownership becomes explicit and locale-ready
-- style tokens and templates stop being ad hoc
-
-If Track A is completed without Track B, the frontend remains structurally
-incoherent. If Track B is completed without Track A, the UI becomes cleaner but
-still non-hexagonal. F-04 requires both.
+- **Fat Zustand store mixes concerns**: `appStore.ts` blends UI layout state
+  (panel widths, focus mode, grid size), canvas interaction state (selected
+  nodes, overlays), session-derived context (tenant, project, environment), and
+  execution state (currentPlan, currentRun) into a single 260-line store with
+  persistence middleware.
+- **Session store duplication**: `sessionStore` and `appStore` both hold
+  `tenantId`, `projectId`, `environmentId` with manual sync in setters.
+- **Canvas controller as mega-hook**: `useCanvasController` orchestrates 8+
+  sub-hooks, 3 services, and the store facade in one function — blending data
+  fetching, UI state, graph model, overlay logic, execution actions, and layout
+  persistence.
+- **Views construct domain logic inline**: `RunsView` builds a
+  `RunWorkspaceFacade` instance inside the component via `useMemo`, mixes query
+  orchestration with store side effects (`setCurrentRun`), and maps DTOs to UI
+  models inline.
+- **No explicit outbound port layer**: Services call `ApiClient` directly
+  without an intermediate outbound port definition — the `ApiClient` type serves
+  as both HTTP infrastructure and port contract.
+- **Plugin data ports are declared but not wired**: `PluginContributions`
+  declares `produces` and `consumes` data ports, but no runtime data bus
+  connects them.
+- **Query key management is ad-hoc**: Each view defines its own query keys
+  inline (e.g., `['runs', 'summaries', workspaceLayoutKey]`) with no shared
+  registry or invalidation policy.
+- **Types re-export without boundary**: `src/app/types/engine.ts` re-exports
+  from `@dvt/contracts` without a frontend-specific anti-corruption layer.
 
 ```mermaid
-flowchart LR
-  subgraph A["Track A: Data boundary"]
-    A1["Ports"]
-    A2["Composition root"]
-    A3["Query ownership"]
-    A4["State ownership"]
+flowchart TD
+  subgraph Current["As-Is: Data Flow"]
+    direction TB
+    ENV["VITE_DATA_SOURCE"] --> DS["resolveDataSource()"]
+    DS --> FACTORY["createXxxService(mode, apiClient)"]
+    FACTORY --> MOCK["Mock Implementation"]
+    FACTORY --> API["API Implementation"]
+
+    ASP["AppServicesProvider"] --> CTX["React Context"]
+    CTX --> HOOKS["useXxxService() hooks"]
+
+    subgraph Views["Views (Consumers)"]
+      CV["CanvasView"]
+      RV["RunsView"]
+    end
+
+    HOOKS --> CV
+    HOOKS --> RV
+
+    subgraph Store["Zustand appStore (monolith)"]
+      UI["UI layout state"]
+      CANVAS["Canvas interaction"]
+      SESSION["Session context"]
+      EXEC["Execution state"]
+    end
+
+    CV --> Store
+    RV --> Store
   end
 
-  subgraph B["Track B: Presentation convergence"]
-    B1["Domain composites"]
-    B2["View decomposition"]
-    B3["Copy and i18n ownership"]
-    B4["Style tokens and templates"]
+  subgraph Drift["Drift Points"]
+    D1["Session duplication<br/>appStore ↔ sessionStore"]
+    D2["Inline facade construction<br/>in RunsView"]
+    D3["No outbound port layer<br/>ApiClient = port + infra"]
+    D4["Ad-hoc query keys<br/>no shared registry"]
   end
 
-  A --> C["F-04 closure"]
-  B --> C
-
-  style A fill:#dbeafe,stroke:#2563eb
-  style B fill:#fce7f3,stroke:#db2777
-  style C fill:#ecfdf5,stroke:#059669
+  style Drift fill:#fee2e2,stroke:#dc2626
+  style Current fill:#f0fdf4,stroke:#16a34a
 ```
 
 ## Target model
 
-### Data-boundary target
+### Hexagonal target architecture
 
-- one composition root owns runtime mode resolution and adapter wiring
-- ports define frontend needs without infrastructure leakage
-- query hooks and registries own server-state access rules
-- views and view subcomponents never construct adapters or resolve mode
-- stores have bounded ownership and do not duplicate session context
+The target model enforces three concentric boundaries:
 
-### Presentation target
+1. **Domain ports** — typed interfaces that define what the frontend needs from
+   external systems (read models, commands, queries), without knowledge of HTTP,
+   mocks, or infrastructure.
+2. **Adapters** — concrete implementations (mock, API, future: WebSocket,
+   gRPC) that satisfy port contracts.
+3. **Composition root** — a single wiring point (`AppServicesProvider`) that
+   selects adapters based on mode and injects them into the React tree.
 
-- `components/ui/` remains primitive-only
-- `components/domain/` becomes the reusable application vocabulary layer
-- `views/**` become thin screen compositors with extracted hooks and
-  subcomponents
-- shared copy lives in dedicated copy modules, not scattered JSX literals
-- repeated style decisions move to tokens/templates, not copy-paste class lists
+Views and hooks consume only ports (via typed context hooks). No view constructs
+services, selects modes, or imports infrastructure directly.
 
 ```mermaid
 flowchart TD
-  subgraph Root["Composition root"]
-    MODE["Mode resolution"]
-    WIRE["Adapter wiring"]
+  subgraph Target["Target: Hexagonal Data Boundary"]
+    direction TB
+
+    subgraph CompositionRoot["Composition Root (AppServicesProvider)"]
+      MODE["DataSourceMode resolution"]
+      WIRE["Adapter wiring"]
+    end
+
+    subgraph Ports["Domain Ports (interfaces)"]
+      P_WS["IWorkspacePort"]
+      P_RUNS["IRunsPort"]
+      P_PLANS["IPlansPort"]
+      P_HEALTH["IHealthPort"]
+    end
+
+    subgraph Adapters["Adapters"]
+      subgraph MockAdapters["Mock"]
+        M_WS["mockWorkspace"]
+        M_RUNS["mockRuns"]
+        M_PLANS["mockPlans"]
+      end
+      subgraph ApiAdapters["API"]
+        A_WS["apiWorkspace"]
+        A_RUNS["apiRuns"]
+        A_PLANS["apiPlans"]
+      end
+    end
+
+    subgraph Infrastructure["Infrastructure"]
+      HTTP["HttpClient (ApiClient)"]
+      STORAGE["localStorage"]
+    end
+
+    subgraph Presentation["Presentation Layer"]
+      subgraph StoreSlices["Store Slices"]
+        S_UI["uiLayoutStore"]
+        S_SESSION["sessionStore (single source)"]
+        S_CANVAS["canvasInteractionStore"]
+      end
+
+      subgraph QueryLayer["Query Layer"]
+        QR["Query key registry"]
+        QH["Domain query hooks"]
+      end
+
+      subgraph Views["Views"]
+        CV2["CanvasView"]
+        RV2["RunsView"]
+        AV2["AdminView"]
+      end
+    end
+
+    MODE --> WIRE
+    WIRE --> Ports
+    Ports --> Adapters
+    ApiAdapters --> HTTP
+    Views --> QH
+    QH --> Ports
+    Views --> StoreSlices
   end
 
-  subgraph Ports["Ports and query layer"]
-    PORTS["IWorkspacePort / IRunsPort / IPlansPort"]
-    QUERIES["Query hooks + query key registry"]
-  end
-
-  subgraph Stores["Owned state"]
-    SESSION["sessionStore"]
-    UILAYOUT["uiLayoutStore"]
-    CANVAS["canvasInteractionStore"]
-    EXEC["executionStore"]
-  end
-
-  subgraph Presentation["Presentation"]
-    DOMAIN["components/domain"]
-    VIEWS["views/* thin compositors"]
-    COPY["copy modules + i18n-ready text ownership"]
-    TOKENS["style tokens + templates"]
-  end
-
-  Root --> Ports
-  Ports --> Presentation
-  Stores --> Presentation
-  DOMAIN --> VIEWS
-  COPY --> VIEWS
-  TOKENS --> DOMAIN
-
-  style Root fill:#dbeafe,stroke:#2563eb
+  style CompositionRoot fill:#dbeafe,stroke:#2563eb
   style Ports fill:#fef3c7,stroke:#d97706
-  style Stores fill:#e0f2fe,stroke:#0284c7
+  style Adapters fill:#e0e7ff,stroke:#4f46e5
+  style Infrastructure fill:#f3e8ff,stroke:#7c3aed
   style Presentation fill:#ecfdf5,stroke:#059669
 ```
 
-## Planning corrections
-
-The previous version of this plan overstated some unfinished work and mixed it
-with work that is already in place. This corrected version applies these
-decisions:
-
-- `W0`, `W1`, `W2`, and `W4` are treated as tighten-and-verify waves, not
-  greenfield waves
-- refactorization and UI unification remain mandatory, not optional follow-up
-- anti-corruption layer work becomes a gated decision, not an automatic must
-- architecture fitness checks start before final closeout, not only at the end
-
-## Execution waves
-
-### `F04-W0` Current-truth correction
-
-Purpose:
-
-- align documentation and wave sequencing with the actual codebase state
-
-Deliverables:
-
-- correct the `as-is` section
-- mark already-implemented structures as baseline, not pending promises
-- split mandatory work into data-boundary and presentation tracks
-
-Validation:
-
-- `pnpm docs:sync`
-- `pnpm verify:prepush`
-
-### `F04-W1` Boundary hardening
-
-Purpose:
-
-- close remaining drift in composition-root ownership, port exposure, and
-  frontend service access rules
-
-Deliverables:
-
-- keep `AppServicesProvider` as the only runtime wiring owner
-- remove any remaining adapter or mode resolution leakage from views/plugins
-- tighten port ownership and tests around provider usage
-
-Validation:
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- architecture tests proving mode resolution ownership
-
-### `F04-W2` State and controller decomposition
-
-Purpose:
-
-- complete real ownership separation for session, UI layout, canvas
-  interaction, and execution state
-
-Deliverables:
-
-- remove residual duplication or legacy coupling
-- narrow broad orchestrators such as `useCanvasController`
-- ensure cross-store access happens through explicit facades where needed
-
-Validation:
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- negative tests for hydration and orchestration regression where applicable
-
-### `F04-W3` Presentation unification must
-
-Purpose:
-
-- establish a reusable presentation vocabulary and stop repeated one-off
-  markup, copy, and style drift
-
-Deliverables:
-
-- create `components/domain/` composites such as `ViewHeader`, `StatCard`,
-  `StatusIndicator`, and `ViewStateOverlay`
-- extract copy ownership into dedicated modules
-- introduce app-level style tokens/templates for repeated shell and view
-  structures
-- ensure new and touched screens consume these templates instead of duplicating
-  layout structures
-
-Validation:
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- render tests for domain composites
-
-### `F04-W4` View refactorization must
-
-Purpose:
-
-- enforce SRP at screen level by decomposing monolithic views and moving logic
-  to hooks/utilities/subcomponents
-
-Deliverables:
-
-- decompose the largest views and route panels
-- extract pure algorithms and parser logic to testable utilities
-- keep screen files as thin compositors
-- enforce the no-view-over-200-lines fitness rule for targeted view-level files
-- create a `W4 decomposition manifest` Markdown artifact that preserves the
-  execution baseline for each targeted view and repeated UI pattern
-
-The `W4 decomposition manifest` MUST include:
-
-- targeted view inventory with current line count, target line count, target
-  extracted files, and decomposition status
-- repeated-pattern inventory with concrete counts where known at execution
-  time, for example duplicated view headers, stat cards, status indicators, and
-  empty/loading/error states
-- ownership mapping from each extracted file to its final layer:
-  `components/domain`, `views/<feature>`, `hooks`, or pure utility module
-- explicit before/after traceability so the refactor cannot erase the original
-  rationale or success criteria
-
-Validation:
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- architecture fitness test for file-size and dependency rules
-
-### `F04-W5` Query and cache governance
-
-Purpose:
-
-- finish query-key normalization and invalidation ownership
-
-Deliverables:
-
-- expand the shared query-key registry where needed
-- forbid inline query keys outside the registry
-- document invalidation policy per domain
-
-Validation:
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- architecture test for inline-query-key prohibition
-
-### `F04-W6` Frontend anti-corruption layer decision gate
-
-Purpose:
-
-- decide whether a frontend-specific mapping layer is justified
-
-Decision rule:
-
-- implement only where frontend semantics genuinely diverge from shared
-  contracts or where shared contracts expose more instability than the frontend
-  should absorb
-- do not create blanket mapping boilerplate just to satisfy a pattern
-
-Deliverables:
-
-- decision note identifying which frontend types require mapping and why
-- if justified, narrow ACL implementations at the adapter boundary
-- if not justified, document the accepted direct-contract usage zones
-
-Validation:
-
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- architecture test for allowed import zones
-
-### `F04-W7` Fitness checks, manuals, and closure
-
-Purpose:
-
-- lock the architecture in place and close with evidence
-
-Deliverables:
-
-- architecture fitness checks for import direction, view-size policy, and
-  composition-root ownership
-- technical manual and user manual updated to current truth
-- closeout evidence and planning alignment
-
-Validation:
-
-- `pnpm docs:sync`
-- `pnpm --filter @dvt/web typecheck`
-- `pnpm --filter @dvt/web test`
-- `pnpm verify:prepush`
+### Store decomposition target
 
 ```mermaid
 flowchart LR
-  W0["W0 Truth sync"] --> W1["W1 Boundary hardening"]
-  W1 --> W2["W2 State and controller decomposition"]
-  W1 --> W5["W5 Query and cache governance"]
-  W2 --> W3["W3 Presentation unification must"]
-  W3 --> W4["W4 View refactorization must"]
-  W4 --> W6["W6 ACL decision gate"]
-  W5 --> W6
-  W6 --> W7["W7 Fitness, manuals, closure"]
+  subgraph Current["Current: Single appStore"]
+    MONO["appStore<br/>260 lines<br/>UI + Canvas + Session + Exec"]
+  end
 
-  style W3 fill:#fce7f3,stroke:#db2777
-  style W4 fill:#fce7f3,stroke:#db2777
-  style W7 fill:#ecfdf5,stroke:#059669
+  subgraph Target["Target: Sliced Stores"]
+    UI_S["uiLayoutStore<br/>panels, focus, grid"]
+    CANVAS_S["canvasInteractionStore<br/>selection, overlays, layouts"]
+    SESSION_S["sessionStore<br/>tenant, project, env<br/>(single source of truth)"]
+    EXEC_S["executionStore<br/>currentPlan, currentRun"]
+  end
+
+  MONO -->|decompose| UI_S
+  MONO -->|decompose| CANVAS_S
+  MONO -->|merge into| SESSION_S
+  MONO -->|decompose| EXEC_S
+
+  style Current fill:#fef2f2,stroke:#ef4444
+  style Target fill:#f0fdf4,stroke:#22c55e
 ```
 
-## Why refactorization and unification stay mandatory
+## Gap closure waves
 
-The user direction is correct here. In this repo, refactorization and
-unification are not optional polish because:
+### `F04-W0` Port contract extraction
 
-- oversized views hide mixed responsibilities
-- repeated UI patterns create product inconsistency and maintenance cost
-- missing copy ownership blocks credible multi-language support
-- style drift makes the product surface harder to evolve coherently
+**Depends on**: nothing (can start immediately)
 
-Therefore the plan locks these as must-have closure gates, not stretch goals.
+Deliverables:
+
+- Extract `IWorkspacePort`, `IRunsPort`, `IPlansPort` as pure TypeScript
+  interfaces in `src/app/ports/`.
+- Each port defines only the operations the presentation layer needs — no
+  HTTP details, no error classification internals.
+- Existing service interfaces (`RunsService`, etc.) become the adapter-side
+  implementation type that satisfies the port.
+- Add port-level JSDoc documenting each operation's contract.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- Existing tests remain green (no runtime change)
+
+### `F04-W1` Composition root hardening
+
+**Depends on**: `F04-W0`
+
+Deliverables:
+
+- Refactor `AppServicesProvider` to wire ports (not service implementations)
+  into context.
+- Remove `resolveDataSource()` calls from any location outside the composition
+  root.
+- Enforce that `buildAppServicesContextValue` is the single point where mode
+  resolution and adapter selection occur.
+- Update `AppServicesContext.test.tsx` to validate port-based wiring.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- `pnpm test --filter @dvt/web`
+- No import of `resolveDataSource` or `createXxxService` outside
+  `AppServicesContext.tsx` and adapter files.
+
+### `F04-W2` Store decomposition
+
+**Depends on**: `F04-W0` (can run in parallel with `F04-W1`)
+
+Deliverables:
+
+- Split `appStore.ts` into:
+  - `uiLayoutStore.ts` — panel widths, visibility, focus mode, grid size
+  - `canvasInteractionStore.ts` — selected nodes, overlays, canvas layouts
+  - `executionStore.ts` — currentPlan, currentRun
+- Merge session-related fields from `appStore` into `sessionStore` as single
+  source of truth — remove duplicate tenant/project/env fields.
+- Each store retains its own persistence partialize config.
+- Create `useCanvasStoreFacade` (already exists) as the canonical aggregation
+  point for canvas hooks that need cross-store data.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- `pnpm test --filter @dvt/web`
+- Persistence behavior verified (localStorage keys, hydration)
+
+### `F04-W3` View consumer migration
+
+**Depends on**: `F04-W1`, `F04-W2`
+
+Deliverables:
+
+- Refactor `RunsView` to consume `IRunsPort` via hook and delegate facade
+  construction to a domain-level use-case hook (not inline `useMemo`).
+- Refactor `useCanvasController` to reduce orchestration breadth:
+  - Extract `useCanvasDataModel` (graph + overlay) as a self-contained hook
+    that depends only on ports and the canvas interaction store.
+  - Extract `useCanvasExecutionBridge` (plan + run actions) that depends only
+    on ports and the execution store.
+  - `useCanvasController` becomes a thin composition of these two plus
+    layout/navigation hooks.
+- Remove any direct `createXxxService()` calls from views or plugins.
+- Any unsupported API path in `api` mode surfaces an explicit "not wired yet"
+  state instead of silently returning mock data.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- `pnpm test --filter @dvt/web`
+- Negative-path tests for "not wired yet" states
+
+### `F04-W4` Query infrastructure normalization
+
+**Depends on**: `F04-W3`
+
+Deliverables:
+
+- Create `src/app/queries/queryKeys.ts` with a typed query key registry.
+- Migrate all inline query key definitions to the registry.
+- Define invalidation policies per domain (runs, plans, workspace, health).
+- Document query key conventions in a short technical reference.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- `pnpm test --filter @dvt/web`
+- No inline query key arrays outside the registry
+
+### `F04-W5` Anti-corruption layer for contract types
+
+**Depends on**: `F04-W4`
+
+Deliverables:
+
+- Replace raw `@dvt/contracts` re-exports in `src/app/types/engine.ts` with
+  frontend-specific mapped types that serve as an anti-corruption layer.
+- Frontend types may be narrower than contract types (omitting fields the UI
+  never uses) or may add UI-specific computed properties.
+- Port interfaces use frontend types, not contract types directly.
+- Adapter implementations perform the mapping from contract DTOs to frontend
+  types.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- `pnpm test --filter @dvt/web`
+- No direct `@dvt/contracts` imports outside `src/app/ports/` and adapter files
+
+### `F04-W6` Documentation, fitness checks, and acceptance
+
+**Depends on**: `F04-W5`
+
+Deliverables:
+
+- Write `docs/architecture/frontend/frontend-hexagonal-boundary.md` describing
+  the achieved architecture with diagrams.
+- Update `DVT_FRONTEND_PLUGIN_ARCHITECTURE.md` to reflect the hexagonal data
+  flow.
+- Add an architecture fitness test that asserts:
+  - no view file imports from adapter or infrastructure directories
+  - no adapter file imports from view directories
+  - port interfaces have no infrastructure dependencies
+- Update the frontend user manual and frontend roadmap.
+- Create closeout evidence doc under `docs/evidence/`.
+
+Validation:
+
+- `pnpm typecheck --filter @dvt/web`
+- `pnpm test --filter @dvt/web`
+- `pnpm verify:prepush`
+- Architecture fitness test green
+
+## Wave dependency graph
+
+```mermaid
+flowchart LR
+  W0["F04-W0<br/>Port extraction"] --> W1["F04-W1<br/>Composition root"]
+  W0 --> W2["F04-W2<br/>Store decomposition"]
+  W1 --> W3["F04-W3<br/>View migration"]
+  W2 --> W3
+  W3 --> W4["F04-W4<br/>Query normalization"]
+  W4 --> W5["F04-W5<br/>Anti-corruption layer"]
+  W5 --> W6["F04-W6<br/>Docs and fitness"]
+
+  style W0 fill:#dbeafe,stroke:#2563eb
+  style W1 fill:#dbeafe,stroke:#2563eb
+  style W2 fill:#dbeafe,stroke:#2563eb
+  style W3 fill:#fef3c7,stroke:#d97706
+  style W4 fill:#fef3c7,stroke:#d97706
+  style W5 fill:#e0e7ff,stroke:#4f46e5
+  style W6 fill:#ecfdf5,stroke:#059669
+```
+
+## Lane mapping
+
+This proposal maps to **Lane E** (Frontend) or a new frontend-specific lane if
+one is created. Task structure:
+
+- Create umbrella task `F-04` with child tasks `F04-W0..W6`
+- Reference this proposal and:
+  - `docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md`
+  - `docs/architecture/reference-architecture.md`
+- `F04-W0` and `F04-W2` can execute in parallel
+- `F04-W3` is the critical convergence point requiring both `W1` and `W2`
 
 ## Risks and tradeoffs
 
-| Decision                                  | Benefit                                                            | Cost                                     |
-| ----------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------- |
-| Treat refactorization as mandatory        | Prevents structural drift from surviving under a "hexagonal" label | More up-front slicing and review effort  |
-| Introduce domain composites and templates | Consistent UX and less copy-paste                                  | New abstraction layer to maintain        |
-| Enforce line and dependency fitness tests | Stops regression automatically                                     | Requires disciplined decomposition       |
-| Make ACL conditional instead of automatic | Avoids unnecessary mapping busywork                                | Requires explicit decision and rationale |
+### Key tradeoffs
+
+| Decision                                         | Benefit                                      | Cost                                 |
+| ------------------------------------------------ | -------------------------------------------- | ------------------------------------ |
+| Port interfaces as separate files                | Clean dependency direction, testability      | Additional indirection layer         |
+| Store decomposition into 4 slices                | SRP, independent persistence                 | Cross-store coordination overhead    |
+| Anti-corruption layer for contracts              | Frontend insulated from backend schema drift | Mapping boilerplate per DTO          |
+| Keeping `useCanvasController` as thin compositor | Preserves existing test harness              | Requires careful sub-hook extraction |
+
+### Primary risks
+
+| Risk                                                   | Probability | Severity | Mitigation                                                                                  |
+| ------------------------------------------------------ | ----------- | -------- | ------------------------------------------------------------------------------------------- |
+| Store decomposition breaks persistence hydration       | Medium      | High     | Migrate localStorage keys with backward-compatible fallback; test hydration explicitly      |
+| Canvas controller extraction introduces regressions    | Medium      | Medium   | Existing negative-path and core test harness covers current behavior; extract incrementally |
+| Anti-corruption layer becomes stale mapping busywork   | Low         | Medium   | Start narrow (only types the UI actually uses); generate mappings where possible            |
+| Partial completion leaves two architectures coexisting | Medium      | High     | Wave sequencing enforces convergence; `F04-W6` fitness test blocks drift                    |
+
+### Mitigation strategy
+
+- Execute waves sequentially (except `W0` ∥ `W2`)
+- Each wave must pass `pnpm test --filter @dvt/web` before proceeding
+- `F04-W6` fitness test becomes a permanent CI guard against regression
 
 ## Non-goals
 
-- backend API redesign
-- engine-side refactors outside frontend consumption boundaries
-- replacing React Query
-- replacing shadcn/ui
-- introducing fake placeholder abstractions just to satisfy the plan
+- Changing the backend API contract or engine subsystem
+- Implementing a runtime plugin data bus (declared ports only; wiring is future
+  work)
+- Replacing React Query with a different server-state library
+- Introducing a new UI component library or design system
+- Real-time WebSocket adapter implementation (future wave beyond F-04)
+- Retirement of `GraphCanvas` legacy component (separate task)
 
-## Definition of Done
+## Quality bar and QA validation framework
 
-F-04 is only complete when all of the following are true:
+Reference templates:
 
-- composition-root ownership is explicit and enforced
-- ports, query ownership, and store ownership are aligned to current code
-- refactorization and unification have been applied to the targeted screens
-- no targeted view-level component file exceeds 200 lines
-- `W4 decomposition manifest` exists and preserves before/after traceability
-- shared domain composites exist for repeated patterns
-- copy ownership is extracted for targeted screens and is locale-ready
-- manuals describe current truth, not aspirational future state
-- architecture fitness checks run and stay green
-- `pnpm verify:prepush` passes
+- `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md`
+- `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`
+- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
 
-## Action artifact
+### Minimum quality bar per wave
 
-### Task checklist
+Every wave MUST satisfy:
 
-- [ ] `F04-W0` Correct the plan so it matches current code truth
-- [ ] `F04-W1` Harden composition-root and port ownership
-- [ ] `F04-W2` Finish state and controller decomposition
-- [ ] `F04-W3` Implement mandatory presentation unification
-- [ ] `F04-W4` Implement mandatory view refactorization
-- [ ] `F04-W5` Finish query and cache governance
-- [ ] `F04-W6` Resolve the anti-corruption layer decision with rationale
-- [ ] `F04-W7` Add fitness checks, manuals, and validated closeout evidence
+- Happy-path AND negative-path tests for new behavior
+- No `as any`, unjustified type assertions, or magic values
+- Lint and typecheck green in the `@dvt/web` workspace
+- `pnpm verify:prepush` green before wave is presented as ready
+- No behavior changed outside declared scope
+- Documentation reflects shipped behavior
+- No stubs, placeholders, fake implementations, or TODO markers
+- No hidden debt or silent rule downgrades
 
-### Task details
+### Mandatory review axes per wave
 
-#### `F04-W1` Harden composition-root and port ownership
+Each wave closeout review MUST evaluate the 7 QA axes defined in the global QA
+prompt. Reviewers MUST produce findings ordered by severity across:
 
-- Objective: keep all runtime data wiring under one owner
-- Scope: `AppServicesProvider`, port consumers, architecture tests
-- Dependencies: `F04-W0`
-- Documentation impact: architecture and manual updates
-- Comment with rationale: without a single owner, `mock` and `api` modes drift
-- DoD:
-  - no mode resolution outside approved modules
-  - no view constructs adapters directly
-  - provider and boundary tests are green
+#### 1. Documentation and system truth
 
-#### `F04-W3` Mandatory presentation unification
+- Documentation is correct, consistent, traceable, and aligned with real code
+- No documentation drift, promises without implementation, or implementation
+  without documentation
+- No aspirational claims presented as current truth
+- Evidence docs and risk-register updates exist when governance requires them
 
-- Objective: remove repeated view structures, copy sprawl, and style drift
-- Scope: `components/domain/`, copy modules, style tokens, templates
-- Dependencies: `F04-W2`
-- Documentation impact: technical manual and user manual
-- Comment with rationale: product consistency is a structural requirement
-- DoD:
-  - repeated patterns are encoded once
-  - targeted screens use shared composites/templates
-  - copy ownership is extracted for touched screens
+#### 2. Implementation vs promise
 
-#### `F04-W4` Mandatory view refactorization
+- Code implements exactly what the wave declares
+- No overpromising, under-implementation, or undocumented implicit behavior
+- No narrative claiming a bigger change than the actual code
+- Cases not covered are explicitly stated, not silently omitted
 
-- Objective: reduce view-level mixed responsibility and enforce SRP
-- Scope: high-line-count screens and controller chains
-- Dependencies: `F04-W3`
-- Documentation impact: decomposition map and closeout notes
-- Comment with rationale: without decomposition, hexagonal claims remain shallow
-- DoD:
-  - targeted view files are under 200 lines
-  - algorithms and transforms are extracted and tested
-  - subcomponents do not access stores/services directly
-  - a `W4 decomposition manifest` records targeted views, baseline size,
-    extracted modules, repeated-pattern counts, and final status
+#### 3. Architecture
 
-#### `F04-W6` Anti-corruption layer decision gate
+- SRP, SOLID, DDD, hexagonal architecture evaluated explicitly
+- Ports and adapters respect dependency direction
+- Separation between application, domain, infrastructure, and presentation
+- Clear ownership of invariants
+- No fake modularity — real boundaries, not renamed directories
 
-- Objective: make the ACL choice explicit and evidence-based
-- Scope: frontend type boundaries at adapter edges
-- Dependencies: `F04-W4`, `F04-W5`
-- Documentation impact: decision note in architecture docs or closeout
-- Comment with rationale: ACL is valuable only where it reduces real coupling
-- DoD:
-  - justified mapping zones are explicit
-  - unjustified blanket mapping is avoided
-  - import-boundary tests match the decision
+#### 4. Code quality
+
+- Readability, naming, modularization, cohesion, coupling
+- No accidental complexity or equivalent reimplementation
+- Correct use of types, value objects, and data flow
+- Passes prettier, lint, ESLint, and type-check
+
+#### 5. Tests
+
+- Happy paths, negative tests, edge cases, regressions
+- Public-boundary coverage and invariant coverage
+- No weak tests that only validate superficial shape
+- No tests coupled to incidental ordering or implementation details
+- Global system view applied, not just local file assertions
+- Evaluate whether a harness or shared fixtures are needed for boundary
+  behavior validation
+- Tests grouped by type (`unit`, `integration`, `contract`, `e2e`, regression)
+  when that improves clarity, confidence, or maintenance
+
+#### 6. Product quality
+
+- Behavior risks, UX and operational errors evaluated
+- Sufficient observability and diagnostics
+- No hidden debt, placeholders, or fake implementations
+- Runbook, manual, or closeout exists when the wave needs one
+
+#### 7. Comparison with mature systems
+
+- Compare with mature-system practices only when the comparison changes the
+  recommendation
+- Evaluate benefit of: test harnesses, test matrices, architecture tests,
+  seam-extraction patterns, golden fixtures, deterministic diagnostics
+
+### Wave closeout artifact requirements
+
+Each wave closeout MUST produce a reusable Markdown artifact following
+`TEMPLATE_QA_ARTIFACT_EXAMPLE.md` as the baseline output shape. The artifact
+MUST include:
+
+- **Findings** ordered by severity (Blocker / High / Medium / Low)
+- Each finding with: severity, short title, why it matters, exact evidence
+  (file and line or command), real risk, concrete recommendation
+- **Alignment section**: doc vs code, promise vs implementation, tests vs
+  claims, current truth vs planned truth, documentation update status, evidence
+  and risk-doc status
+- **Architecture assessment**: SRP, DDD, hexagonal, CQRS (if relevant),
+  complexity, modularity
+- **Test assessment**: negative paths present/missing, regression status,
+  determinism, harness/fixture needs, test grouping by type with rationale
+- **Quality gates**: commands executed, what passed, what failed, what could not
+  be verified
+- **Action artifact** with:
+  - Task checklist with GitHub-style checkboxes
+  - Per task: objective, scope, owner, dependencies, documentation impact,
+    evidence/risk-doc impact, comment with rationale, Definition of Done
+- **At least one Mermaid diagram** explaining the current state, risk, flow, or
+  remediation map
+- **Final verdict**: Ready / Ready with follow-ups / Not ready
+
+### Per-wave Definition of Done
+
+| Wave       | Definition of Done                                                                                                                                                                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F04-W0** | Port interfaces exist in `src/app/ports/`; no runtime change; existing tests green; port-level JSDoc present; no infrastructure types leak into port signatures                                                             |
+| **F04-W1** | `AppServicesProvider` wires ports; no `resolveDataSource` import outside composition root and adapters; context test validates port-based wiring; negative test for missing provider                                        |
+| **F04-W2** | `appStore` replaced by 4 sliced stores; session duplication eliminated; localStorage migration verified; hydration behavior tested with happy and negative paths; `useCanvasStoreFacade` aggregates cross-store access      |
+| **F04-W3** | No view or plugin constructs services locally; `RunsView` uses domain hook; `useCanvasController` is thin compositor; "not wired yet" states have explicit UI and negative tests; no mock data imported in `api` mode views |
+| **F04-W4** | Query key registry exists; no inline query key arrays outside registry; invalidation policies documented; domain query hooks use registry                                                                                   |
+| **F04-W5** | No direct `@dvt/contracts` import outside ports and adapters; frontend mapped types exist; adapter mapping tests cover happy and negative paths; anti-corruption boundary verified by architecture test                     |
+| **F04-W6** | Architecture doc written with diagrams; fitness tests green in CI; `pnpm verify:prepush` passes; closeout evidence doc created under `docs/evidence/`; portfolio map updated                                                |
+
+### Wave QA validation flow
+
+```mermaid
+flowchart TD
+  subgraph WaveExecution["Wave execution"]
+    IMPL["Implement wave deliverables"]
+    TESTS["Write happy + negative tests"]
+    DOCS["Update documentation"]
+  end
+
+  subgraph QAGates["QA validation gates"]
+    TC["pnpm typecheck --filter @dvt/web"]
+    UT["pnpm test --filter @dvt/web"]
+    LINT["pnpm verify:prepush"]
+    ARCH["Architecture fitness check<br/>(import boundaries)"]
+  end
+
+  subgraph QAReview["QA review (7 axes)"]
+    AX1["1. Docs and system truth"]
+    AX2["2. Implementation vs promise"]
+    AX3["3. Architecture"]
+    AX4["4. Code quality"]
+    AX5["5. Tests"]
+    AX6["6. Product quality"]
+    AX7["7. Mature-system comparison"]
+  end
+
+  subgraph Closeout["Wave closeout"]
+    ART["QA artifact (TEMPLATE_QA_ARTIFACT_EXAMPLE)"]
+    FIND["Findings by severity"]
+    DOD["Definition of Done verified"]
+    VERDICT["Final verdict"]
+  end
+
+  IMPL --> TESTS --> DOCS
+  DOCS --> TC --> UT --> LINT --> ARCH
+  ARCH --> QAReview
+  QAReview --> ART
+  ART --> FIND --> DOD --> VERDICT
+
+  style WaveExecution fill:#dbeafe,stroke:#2563eb
+  style QAGates fill:#fef3c7,stroke:#d97706
+  style QAReview fill:#e0e7ff,stroke:#4f46e5
+  style Closeout fill:#ecfdf5,stroke:#059669
+```
 
 ## Validation baseline
 
+Every wave closes with this command sequence:
+
 ```bash
-pnpm --filter @dvt/web typecheck
-pnpm --filter @dvt/web test
+pnpm typecheck --filter @dvt/web
+pnpm test --filter @dvt/web
 pnpm docs:sync
 pnpm verify:prepush
 ```
+
+Additionally, from `F04-W6` onward, the architecture fitness test becomes a
+permanent CI guard:
+
+```bash
+pnpm test --filter @dvt/web -- --grep "architecture fitness"
+```
+
+## Action Artifact
+
+### Task Details
+
+#### `F04-W0` Port contract extraction
+
+- Objective: Define explicit frontend outbound ports as the only consumer-facing service contracts.
+- Scope: `apps/web/src/app/ports/**` and service typing boundaries.
+- In current task scope: Yes.
+- Dependencies: None.
+- Documentation impact: Update architecture docs with port ownership references.
+- Evidence / risk-doc impact: None expected for this planning-first slice.
+- Comment with rationale: Hexagonal convergence is not credible without explicit ports.
+- Definition of Done:
+  - `IWorkspacePort`, `IRunsPort`, `IPlansPort` are defined and used by consumers.
+  - Port signatures are infrastructure-agnostic.
+  - Type-check and web tests remain green.
+
+#### `F04-W1` Composition root hardening
+
+- Objective: Centralize mode selection and adapter wiring in one composition root.
+- Scope: `AppServicesProvider` and data-source resolution ownership.
+- In current task scope: Yes.
+- Dependencies: `F04-W0`.
+- Documentation impact: Composition-root ownership diagrams and notes.
+- Evidence / risk-doc impact: None expected for this planning-first slice.
+- Comment with rationale: Multiple wiring points create drift between mock and API behavior.
+- Definition of Done:
+  - Only composition root resolves data source mode.
+  - Views do not call adapter factories directly.
+  - Provider wiring tests validate mode and adapter binding.
+
+#### `F04-W2` Store decomposition
+
+- Objective: Split monolithic store into bounded slices with explicit ownership.
+- Scope: UI, canvas, execution, and session state boundaries.
+- In current task scope: Yes.
+- Dependencies: `F04-W0`.
+- Documentation impact: Store-boundary map and ownership table.
+- Evidence / risk-doc impact: Evaluate if implementation touches governed ARC paths.
+- Comment with rationale: SRP and deterministic behavior require state ownership boundaries.
+- Definition of Done:
+  - Monolithic concerns are removed from `appStore`.
+  - Session duplication is removed.
+  - Hydration and persistence behavior is tested.
+
+#### `F04-W3` View consumer migration
+
+- Objective: Ensure views consume ports and facades, not infrastructure or mode logic.
+- Scope: `RunsView`, canvas controller chain, and route-level data consumption.
+- In current task scope: Yes.
+- Dependencies: `F04-W1`, `F04-W2`.
+- Documentation impact: Current-vs-target view dependency diagrams.
+- Evidence / risk-doc impact: Evaluate if behavior changes require evidence updates.
+- Comment with rationale: View-level orchestration of infrastructure breaks hexagonal boundaries.
+- Definition of Done:
+  - No route-level service factory creation.
+  - Canvas controller is reduced to thin composition.
+  - Unsupported API paths are explicit and tested.
+
+#### `F04-W4` Query infrastructure normalization
+
+- Objective: Normalize query key ownership and invalidation policies.
+- Scope: Query key registry, query hooks, invalidation policy.
+- In current task scope: Yes.
+- Dependencies: `F04-W3`.
+- Documentation impact: Query policy section and key naming conventions.
+- Evidence / risk-doc impact: None expected for planning slice.
+- Comment with rationale: Ad-hoc query keys hide cache bugs and invalidate confidence.
+- Definition of Done:
+  - Shared query key registry exists.
+  - Inline keys are removed from views.
+  - Invalidation policy is explicit and test-backed.
+
+#### `F04-W5` Frontend anti-corruption layer
+
+- Objective: Decouple UI domain types from raw shared-kernel contracts.
+- Scope: Frontend mapping layer between `@dvt/contracts` DTOs and UI models.
+- In current task scope: Yes.
+- Dependencies: `F04-W4`.
+- Documentation impact: Contract mapping table and ownership note.
+- Evidence / risk-doc impact: Evaluate ARC requirements if contracts package is touched.
+- Comment with rationale: Direct contract re-export increases cross-context coupling and drift risk.
+- Definition of Done:
+  - Frontend mapped types are canonical in presentation and application layers.
+  - Contract imports are limited to ports and adapter implementations.
+  - Mapping behavior has positive and negative tests.
+
+#### `F04-W6` Fitness checks and closure
+
+- Objective: Lock architecture boundaries with automated checks and close with evidence.
+- Scope: Architecture fitness tests, docs alignment, closeout evidence.
+- In current task scope: Yes.
+- Dependencies: `F04-W5`.
+- Documentation impact: Architecture and manual updates aligned to shipped model.
+- Evidence / risk-doc impact: Create evidence/risk docs if governance requires.
+- Comment with rationale: Without fitness tests, boundary drift reappears after first refactor.
+- Definition of Done:
+  - Import-boundary fitness checks run in CI for web workspace.
+  - Docs reflect current truth, not target-only claims.
+  - Validation baseline is green and closure evidence is recorded.
+
+### Task Checklist
+
+- [ ] `F04-W0` Extract and adopt port contracts for workspace, runs, and plans
+- [ ] `F04-W1` Harden composition root as single mode and adapter wiring owner
+- [ ] `F04-W2` Decompose monolithic store into bounded ownership slices
+- [ ] `F04-W3` Migrate views and controllers to port-driven consumption only
+- [ ] `F04-W4` Normalize query keys and invalidation policy with shared registry
+- [ ] `F04-W5` Introduce anti-corruption mapping layer for frontend domain types
+- [ ] `F04-W6` Add architecture fitness checks and close with validated evidence
