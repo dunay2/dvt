@@ -13,6 +13,7 @@ theme:
 
 markdown_extensions:
   - admonition
+  - pymdownx.superfences
   - toc:
       permalink: true
 
@@ -21,6 +22,10 @@ plugins:
 
 # Zensical-native navigation mode. The repo no longer keeps a legacy explicit nav.
 nav: []
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
 
 extra:
   language: en
