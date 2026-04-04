@@ -1,5 +1,5 @@
 ---
-title: QA Closeout Plan - Tareas críticas MVP
+title: 20260404 QA Closeout Plan Tareas Criticas MVP
 status: Draft
 owner: Product / Architecture / QA / Docs
 last_reviewed: 2026-04-04
@@ -7,228 +7,240 @@ planning_type: closeout-qa
 qa_artifact: true
 ---
 
-# Planificación QA: Tareas de alto valor para MVP
+# 20260404 QA Closeout Plan Tareas Criticas MVP
 
-Este documento sigue el estándar de `TEMPLATE_QA_ARTIFACT_EXAMPLE.md` y utiliza los elementos de validación de los templates QA actuales. Se planifican las siguientes tareas:
+## Summary
 
-## Tareas Seleccionadas
+This artifact defines a QA execution plan for critical MVP tasks and follows
+`docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md` as baseline shape.
 
-1. **S19-F1: Optimización de snapshots para alta concurrencia**
-2. **S19-F1-C: Prueba de performance y cierre de riesgos en snapshot work queue**
-3. **run_events partitioning: Particionamiento del event log**
-4. **S18-F1: Endurecer el bundle de roles explícitos del state-store**
+Canonical execution tracking remains in:
 
----
+- `docs/planning/state/agent-lane-b.yaml`
+- `docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md`
 
-# QA Closeout Plan: Tareas críticas abiertas para MVP
+## Governing Sources
+
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `AGENTS.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`
+
+## Findings
+
+### High
+
+- Title: Prior closeout draft was structurally invalid as QA artifact
+  Why it matters: invalid structure blocks `qa:artifact:check` and prevents governed closeout.
+  Evidence: previous file state failed required sections and malformed Mermaid blocks.
+  Risk: CI/prepush failures and non-auditable QA posture.
+  Recommendation: keep this document in strict template shape with required sections and executable checklist.
+
+### Medium
+
+- Title: Task list lacked deterministic DoD mapping
+  Why it matters: without per-task DoD and rationale, execution tracking drifts.
+  Evidence: prior draft mixed duplicated headings and incomplete task metadata.
+  Risk: partial closures presented as complete.
+  Recommendation: bind each task to one objective, dependencies, rationale, and DoD.
+
+### Low
+
+- Title: Ownership and scope boundaries were ambiguous
+  Why it matters: cross-slice work can get mixed with unrelated tasks.
+  Evidence: prior draft mixed multiple scopes without explicit in-scope labels.
+  Risk: review noise and commit contamination.
+  Recommendation: keep explicit task ownership and scope labels.
+
+## Alignment
+
+- Doc vs code: this artifact is planning-only; no runtime code claims.
+- Promise vs implementation: defines execution QA path, not implementation closure.
+- Tests vs claims: validation steps are listed; no test execution claimed in this document.
+- Current truth vs planned truth: current state is planning-ready, execution pending.
+- Documentation update status: closeout artifact normalized to governed QA template.
+- Evidence and risk-doc status when applicable: to be evaluated per implementation slice and ARC trigger.
+
+## Architecture Assessment
+
+- SRP: preserved at artifact level (one task per purpose).
+- DDD: not directly modified in this planning slice.
+- Hexagonal: not directly modified in this planning slice.
+- CQRS if relevant: not directly modified in this planning slice.
+- Complexity: reduced by normalized structure.
+- Modularity: explicit task partitioning by topic.
+
+## Test Assessment
+
+- Negative paths present: not applicable (planning artifact only).
+- Negative paths missing: execution tasks must add them per slice.
+- Regression status: not verified.
+- Determinism: artifact structure deterministic.
+- Local suite vs meaningful global confidence: not applicable in this document.
+- Global system view applied: yes, at planning/checklist level.
+- Harness or shared fixture need: to be decided in each implementation task.
+- Test grouping by type (`unit` / `integration` / `contract` / `e2e` / regression) and rationale: required in downstream execution artifacts.
+
+## Quality Gates
+
+- Commands executed: none yet in this normalization step.
+- What passed: not verified.
+- What failed: not verified.
+- What could not be verified: runtime/test outcomes for referenced MVP tasks.
+
+## Unblock Roadmap
+
+### Wave 0 - Truth and documentation baseline
+
+Tasks: `MVP-QA-1`, `MVP-QA-2`
+
+Target:
+
+- QA artifact structure is valid and checkable;
+- task scope and ownership are explicit.
+
+### Wave 1 - Boundary and ownership hardening
+
+Tasks: `MVP-QA-3`, `MVP-QA-4`
+
+Target:
+
+- each task has deterministic DoD and rationale;
+- dependency order is explicit.
+
+### Wave 2 - Runtime and regression closure
+
+Tasks: `MVP-QA-5`, `MVP-QA-6`
+
+Target:
+
+- validation evidence is command-backed;
+- closure verdict is auditable.
+
+## Action Artifact
+
+### Markdown Artifact Path Suggestion
+
+- `docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md`
+
+### Task Checklist
+
+- [ ] `MVP-QA-1` Normalize QA artifact structure
+- [ ] `MVP-QA-2` Map critical MVP tasks to explicit scope and owner
+- [ ] `MVP-QA-3` Define per-task DoD and dependency chain
+- [ ] `MVP-QA-4` Add per-task QA validation expectations
+- [ ] `MVP-QA-5` Execute slice validations and capture evidence
+- [ ] `MVP-QA-6` Publish closeout verdict with synchronized planning surfaces
+
+### Task Details
+
+#### `MVP-QA-1` Normalize QA artifact structure
+
+- Objective: ensure the closeout file passes QA artifact structural checks.
+- Scope: this document only.
+- Recommended owner: Docs + QA owner.
+- Dependencies: None.
+- Documentation impact: direct.
+- Evidence / risk-doc impact: none.
+- Comment with rationale: structure validity is a prerequisite for any governed execution.
+- Definition of Done:
+  - required sections exist;
+  - Mermaid blocks are syntactically valid;
+  - no duplicated malformed sections remain.
+
+#### `MVP-QA-2` Map critical MVP tasks to explicit scope and owner
+
+- Objective: establish clear accountability for each critical task.
+- Scope: planning metadata and task inventory references.
+- Recommended owner: Product + lane owners.
+- Dependencies: `MVP-QA-1`.
+- Documentation impact: updates in planning/task surfaces.
+- Evidence / risk-doc impact: none.
+- Comment with rationale: ownership ambiguity delays closure.
+- Definition of Done:
+  - each task has an owner and explicit scope label.
+
+#### `MVP-QA-3` Define per-task DoD and dependency chain
+
+- Objective: make execution order and closure conditions deterministic.
+- Scope: selected critical MVP tasks.
+- Recommended owner: Lane owners.
+- Dependencies: `MVP-QA-2`.
+- Documentation impact: review/closeout task details.
+- Evidence / risk-doc impact: none.
+- Comment with rationale: deterministic DoD prevents soft closures.
+- Definition of Done:
+  - every task has measurable DoD;
+  - dependency sequence is explicit.
+
+#### `MVP-QA-4` Add per-task QA validation expectations
+
+- Objective: define the command-level validation baseline for each task.
+- Scope: task-level QA plans.
+- Recommended owner: QA owner.
+- Dependencies: `MVP-QA-3`.
+- Documentation impact: validation sections in related artifacts.
+- Evidence / risk-doc impact: may require evidence docs per slice.
+- Comment with rationale: no task should close without executable validation plan.
+- Definition of Done:
+  - each task lists required commands and acceptance criteria.
+
+#### `MVP-QA-5` Execute slice validations and capture evidence
+
+- Objective: run validations for implementation slices and record results.
+- Scope: touched packages and repo gates.
+- Recommended owner: Slice owner.
+- Dependencies: `MVP-QA-4`.
+- Documentation impact: evidence/closeout updates.
+- Evidence / risk-doc impact: direct when ARC applies.
+- Comment with rationale: evidence converts claims into auditable truth.
+- Definition of Done:
+  - commands executed;
+  - pass/fail results documented;
+  - non-verified items explicitly listed.
+
+#### `MVP-QA-6` Publish closeout verdict with synchronized planning surfaces
+
+- Objective: finalize one governed verdict per task set.
+- Scope: closeout + lane/review status surfaces.
+- Recommended owner: Product + lane owners.
+- Dependencies: `MVP-QA-5`.
+- Documentation impact: synchronized status updates.
+- Evidence / risk-doc impact: references updated.
+- Comment with rationale: completion requires status and evidence consistency.
+- Definition of Done:
+  - one final verdict is published;
+  - planning surfaces reflect the same verdict.
+
+## Mermaid Diagram
+
+### Current-state dependency map
 
 ```mermaid
-
-## Tareas incluidas
-
-1. **S19-F1**: Optimización de snapshots para alta concurrencia
-    - S19-F1-A: Reemplazo de polling correlacionado (completada)
-    - S19-F1-B: Descubrimiento projector push-based (completada)
-    - S19-F1-C: Prueba de performance y cierre de riesgos (en progreso)
-2. **run_events partitioning**: Particionamiento del event log (en cola)
-3. **S18-F1**: Endurecer el bundle de roles explícitos del state-store (en cola)
-    - S18-F1-A: Bloqueo estricto del bundle en root (en cola)
-
----
-
-## Rationale y contexto
-
-Estas tareas son críticas para la escalabilidad, robustez y visibilidad de producto. Su cierre elimina cuellos de botella, previene regresiones arquitectónicas y habilita escenarios de uso real para el MVP y clientes enterprise. Todas tienen dependencias y sub-tareas explícitas, y requieren evidencia y validación QA formal.
-
----
-
-## Checklist de cierre y Definition of Done
-
-- [ ] S19-F1: Optimización de snapshots para alta concurrencia
-  - [ ] S19-F1-C: Prueba de performance y cierre de riesgos
-- [ ] run_events partitioning: Particionamiento del event log
-- [ ] S18-F1: Endurecer el bundle de roles explícitos del state-store
-  - [ ] S18-F1-A: Bloqueo estricto del bundle en root
-
-**Para cada tarea/sub-tarea:**
-- Evidencia de cierre (docs/evidence/ED-*.md)
-- Actualización de documentación y riesgos
-- Diagrama Mermaid de estado actual y solución
-- Validación QA según plantilla QA
-- Definition of Done explícita
-
----
-
-## 1. S19-F1: Optimización de snapshots para alta concurrencia
-
-**Objetivo:**
-graph TD
-
-**Sub-tareas:**
-- S19-F1-A: Reemplazo de polling correlacionado por run_event_heads (completada)
-- S19-F1-B: Descubrimiento projector push-based y queue claim wiring (completada)
-- S19-F1-C: Prueba de performance y cierre de riesgos de semántica de reclamo (en progreso)
-
-**Rationale:**
-    A[Correlated MAX(run_seq) scan] --> B[O(N) per row]
-
-**Dependencias:** S19, S19-F1-A, S19-F1-B
-
-**Riesgos:**
-
-**Definition of Done:**
-
-**Mermaid - Estado actual:**
-    A[run_event_heads table] --> B[Direct lookup]
-    B --> C[O(1) per row]
-    C --> D[Escalabilidad garantizada]
-```
-
----
-
-**Mermaid - Solución propuesta:**
-
-### 2. S19-F1-C: Prueba de performance y cierre de riesgos en snapshot work queue
-
-**Objetivo:** Cerrar la prueba de performance y riesgos de semántica de reclamo para el snapshot work queue.
-
-**Definition of Done:**
-
----
-
-## 2. S19-F1-C: Prueba de performance y cierre de riesgos en snapshot work queue
-
-**Objetivo:**
-
-**Rationale:**
-
-- EXPLAIN-backed evidence de performance.
-
-**Dependencias:** S19-F1-B
-
-**Riesgos:**
-
-**Definition of Done:**
-
-**Mermaid - Validación:**
 flowchart LR
-A[Snapshot work queue] --> B[Simulación 5000 runs]
-B --> C[EXPLAIN y métricas]
-C --> D[Validación de claim-semantics]
-
-````
-
----
-
----
-
-## 3. run_events partitioning: Particionamiento del event log
-
-**Objetivo:**
-
-
-**Rationale:**
-### 3. run_events partitioning: Particionamiento del event log
-
-**Dependencias:** Ninguna directa, pero bloquea read replica query path y otras tareas de escalabilidad.
-
-**Riesgos:**
-
-**Definition of Done:**
-
-**Mermaid - Estado actual:**
-- Pruebas de carga y migración exitosas.
-- Documentación y riesgos actualizados.
-
-**Mermaid - Estado actual:**
-
-
-**Mermaid - Solución propuesta:**
-```mermaid
-graph TD
-    A[Event log único] --> B[Storage pressure]
-    B --> C[Escalabilidad limitada]
-````
-
----
-
-## 4. S18-F1: Endurecer el bundle de roles explícitos del state-store
-
-**Objetivo:**
-
-**Sub-tareas:**
-
-**Rationale:**
-
-**Dependencias:** S18
-
-**Riesgos:**
-
-**Definition of Done:**
-
-## **Mermaid - Estado actual:**
-
-### 4. S18-F1: Endurecer el bundle de roles explícitos del state-store
-
-**Objetivo:** Fortalecer el boundary root-owned y prevenir drift.
-
-**Mermaid - Solución propuesta:**
-
-**Definition of Done:**
-
-- Bundle de roles bloqueado en root.
-- Pruebas de regresión y validación de límites.
-
----
-
-## Validación QA y Evidencia
-
-**Mermaid - Estado actual:**
-
-```mermaid
-graph TD
-    A[Role bundle explícito] --> B[Posible drift por convenience]
+  Draft["QA closeout draft"] --> Normalize["Template normalization"]
+  Normalize --> Tasks["Deterministic task map"]
+  Tasks --> Validate["Command-backed validation"]
+  Validate --> Verdict["Closeout verdict"]
 ```
 
----
-
-## Próximos pasos
-
-1. Asignar responsables y fechas objetivo
-2. Desglosar sub-tareas técnicas y de QA
-3. Iniciar ejecución y seguimiento semanal
-
----
-
-> Documento generado siguiendo los estándares de calidad y QA del repositorio. Revisar y actualizar según avance de cada tarea.
-
-**Mermaid - Solución propuesta:**
+### Unblock sequence
 
 ```mermaid
-graph TD
-    A[Role bundle root-owned] --> B[Sin drift fuera de boundary]
+flowchart LR
+  Wave0["Wave 0: Structure + scope"] --> Wave1["Wave 1: DoD + validation plan"]
+  Wave1 --> Wave2["Wave 2: Evidence + verdict"]
 ```
 
----
+## Validation Baseline For Each Execution Slice
 
-## Validación QA y Evidencia
+1. touched-package or touched-route checks for the affected scope
+2. `pnpm docs:sync` when docs structure changes
+3. `pnpm docs:workboard:generate` when planning state changes
+4. evidence and risk-doc validation when governance requires them
+5. `pnpm verify:prepush`
 
-- Se usaron los templates QA oficiales.
-- Cada tarea requiere:
-  - Artifacto Markdown de cierre
-  - Checklist de cierre y riesgos
-  - Diagrama Mermaid de estado y solución
-  - Evidencia de performance o migración
-  - Actualización de documentación y riesgos
+## Final Verdict
 
----
-
-## Próximos pasos
-
-1. Asignar responsables y fechas objetivo.
-2. Desglosar sub-tareas técnicas y de QA.
-3. Iniciar ejecución y seguimiento semanal.
-
----
-
-> Documento generado siguiendo los estándares de calidad y QA del repositorio. Revisar y actualizar según avance de cada tarea.
+Ready with follow-ups

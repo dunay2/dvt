@@ -8,39 +8,61 @@ planning_type: review
 
 # 20260404 S05 Envelope Boundary Hardening Plan Review
 
+## Summary
+
+This artifact converts S05 review findings into an execution-ready QA plan for
+event-envelope boundary hardening, with concrete tasks, rationale, DoD, and
+validation evidence.
+
+Canonical execution tracking remains in:
+
+- `docs/planning/state/agent-lane-b.yaml`
+- `docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md`
+
+## Governing Sources
+
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `AGENTS.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/adr/ADR-0004-event-sourcing-strategy.md`
+- `docs/adr/ADR-0005-contract-formalization-tooling.md`
+- `docs/adr/ADR-0010-run-event-envelope-split.md`
+- `docs/architecture/engine/contracts/engine/RunEvents.v2.0.md`
+
 ## Findings
 
 ### High
 
 - Title: S05 remains partially closed at envelope boundary
-  Why it matters: Lane B still marks S05 in `review` with 70% progress, so the contractual boundary is not fully hardened.
+  Why it matters: Lane B still marks S05 in `review` with 85% progress, so the contractual boundary is not fully hardened.
   Evidence: `docs/planning/state/agent-lane-b.yaml` (task `S05` status, progress, and status_reason).
   Risk: Event producers can still bypass full envelope guarantees in paths not uniformly validated.
   Recommendation: Close S05 with a single write-boundary guard that enforces payloadVersion presence, supported value, and eventType payload schema in one deterministic path.
 
-- Title: Missing explicit task-level QA execution artifact for S05
-  Why it matters: S05 has references to architectural reviews, but no dedicated execution artifact that maps findings to DoD + commands.
-  Evidence: `docs/planning/state/agent-lane-b.yaml` task `S05` `evidence_refs` only points to architecture reviews.
-  Risk: Scope drift and ambiguous "done" criteria during implementation and QA.
-  Recommendation: Use this review as canonical S05 execution artifact and keep it linked from lane/task tracking.
+- Title: Parent S05 evidence chain is still incomplete for closure
+  Why it matters: task execution evidence exists, but final parent closure still depends on refreshed accepted adapter-postgres integration evidence.
+  Evidence: `docs/planning/state/agent-lane-b.yaml` keeps `S05` in `review` with explicit evidence trigger.
+  Risk: closing parent S05 early would weaken confidence in cross-store boundary equivalence.
+  Recommendation: keep the current review gate and transition only when the evidence trigger is satisfied.
 
 ### Medium
 
-- Title: Validation baseline for S05 is not yet codified as a task checklist
-  Why it matters: QA templates require command-backed closeout criteria and explicit not-verified reporting.
-  Evidence: `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`, `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md`.
-  Risk: Task can be marked as done without equivalent confidence across contracts, adapter runtime, and repo gates.
-  Recommendation: Execute task checklist below and require `pnpm verify:prepush` before S05 is closed.
+- Title: Parent S05 closure remains conditionally blocked by integration evidence gate
+  Why it matters: checklist execution is complete for this slice, but parent `S05` closure is explicitly conditional on refreshed accepted adapter-postgres integration evidence.
+  Evidence: `docs/planning/state/agent-lane-b.yaml` `status_reason` and this artifact `S05-T6` progress update.
+  Risk: closing parent `S05` without refreshed evidence weakens contractual confidence across write boundaries.
+  Recommendation: keep `S05` in `review` until the evidence trigger is met, then transition to `done`.
 
 ### Low
 
-- Title: Review board does not yet surface a dedicated S05 planning review
-  Why it matters: Active review visibility helps routing and avoids re-opening the same planning question.
-  Evidence: `docs/planning/reviews/review-status-board.md` active table currently has no S05-specific review row.
-  Risk: Discoverability and governance traceability friction.
-  Recommendation: Add this document to the active review board linked to `S05`.
+- Title: S05 remains visible as review-only across status surfaces
+  Why it matters: review-board visibility is now correct, but this can be misread as implementation incompleteness rather than an explicit governance gate.
+  Evidence: `docs/planning/reviews/review-status-board.md` lists both S05 artifacts as `review` at `85%`.
+  Risk: status interpretation drift during handoff.
+  Recommendation: keep the conditional-closure rationale explicit in both lane status and review artifacts.
 
-## Task Alignment
+## Alignment
 
 - Declared task vs actual changes: This slice now includes runtime code changes in `@dvt/engine` in-memory write boundaries plus new negative tests; adapter-postgres boundary was already enforcing schema at append-time.
 - Doc vs code: Current code has payload schema and payloadVersion checks in contracts and adapter tests, but lane-level acceptance says envelope-level closure is still pending.
@@ -74,9 +96,45 @@ planning_type: review
   - `pnpm --filter @dvt/engine test -- bootstrapRunTx.atomicity.test.ts`
   - `pnpm --filter @dvt/engine test -- InMemoryTxStore.outbox.test.ts`
   - `pnpm verify:prepush`
-- What passed: pending execution.
-- What failed: pending execution.
+- What passed:
+  - `InMemoryRunStateStore.appendInvariants.test.ts` -> 2 passed, 0 failed.
+  - `bootstrapRunTx.atomicity.test.ts` -> 5 passed, 0 failed.
+  - `InMemoryTxStore.outbox.test.ts` -> 8 passed, 0 failed.
+  - `pnpm verify:prepush` -> passed.
+- What failed: none in this slice.
 - What could not be verified: adapter-postgres full integration suite in this pass (requires integration environment).
+
+## Unblock Roadmap
+
+### Wave 0 - Truth and documentation baseline
+
+Tasks: `S05-T1`, `S05-T2`
+
+Target:
+
+- current-state behavior and acceptance criteria are explicit in one governed artifact;
+- write-boundary contract expectations are mapped to real code paths;
+- closure criteria are testable and command-backed.
+
+### Wave 1 - Boundary and ownership hardening
+
+Tasks: `S05-T3`, `S05-T4`
+
+Target:
+
+- in-memory and adapter write boundaries enforce consistent envelope invariants;
+- negative-path and regression coverage proves pre-persist rejection behavior;
+- rationale and DoD stay traceable per task.
+
+### Wave 2 - Runtime and regression closure
+
+Tasks: `S05-T5`, `S05-T6`
+
+Target:
+
+- governed validations pass and are documented;
+- lane/review surfaces reflect true execution status;
+- parent S05 closure posture is decided with explicit evidence scope.
 
 ## Opportunities
 
@@ -96,8 +154,8 @@ planning_type: review
 - [x] `S05-T2` Define canonical envelope validation contract for write boundary
 - [x] `S05-T3` Implement write-boundary guard unification for payloadVersion and eventType schema
 - [x] `S05-T4` Add negative and regression tests grouped by type
-- [ ] `S05-T5` Run governed validation baseline and publish evidence
-- [ ] `S05-T6` Close planning and lane tracking surfaces
+- [x] `S05-T5` Run governed validation baseline and publish evidence
+- [x] `S05-T6` Close planning and lane tracking surfaces
 
 ### Task Details
 
@@ -105,6 +163,7 @@ planning_type: review
 
 - Objective: Record current boundary behavior before additional code changes.
 - Scope: Lane B task metadata, this review artifact, and current contract references.
+- Recommended owner: Docs + Lane B owner.
 - In current task scope: Yes.
 - Dependencies: None.
 - Documentation impact: Review/lane docs updated.
@@ -119,6 +178,7 @@ planning_type: review
 
 - Objective: Specify one contract-level rule set for payloadVersion and eventType payload schema gating.
 - Scope: Contracts docs + validator entrypoints used by write boundary.
+- Recommended owner: Contracts owner.
 - In current task scope: Yes (planning/spec alignment).
 - Dependencies: `S05-T1`.
 - Documentation impact: Contract references and review acceptance criteria updated.
@@ -133,6 +193,7 @@ planning_type: review
 
 - Objective: Enforce envelope + payload schema checks in a single write-boundary path.
 - Scope: `@dvt/contracts`, `@dvt/adapter-postgres`, and possibly `@dvt/engine` integration points.
+- Recommended owner: Engine + adapters owners.
 - In current task scope: Yes (execution phase).
 - Dependencies: `S05-T2`.
 - Documentation impact: Update review/closeout and any affected contract docs.
@@ -153,6 +214,7 @@ planning_type: review
 
 - Objective: Prove boundary hardening with explicit negative coverage.
 - Scope: Contract tests, adapter integration tests, regression scenarios.
+- Recommended owner: Owning package test maintainers.
 - In current task scope: Yes.
 - Dependencies: `S05-T3`.
 - Documentation impact: Test-to-invariant mapping documented in closeout/evidence.
@@ -174,7 +236,9 @@ planning_type: review
 - 2026-04-04:
   - Completed planning baseline (`S05-T1`, `S05-T2`).
   - Completed implementation and negative tests for the in-memory boundary (`S05-T3`, `S05-T4`).
-  - Remaining: run governed validation (`S05-T5`) and then sync lane/review closure surfaces (`S05-T6`).
+  - Completed governed validation (`S05-T5`) with passing results.
+  - Completed lane/review closure sync (`S05-T6`) with explicit conditional closure rule.
+  - Decision captured: parent `S05` remains in `review` until adapter-postgres integration evidence is refreshed and accepted.
 
 ## Situations Requiring More Information
 
@@ -182,10 +246,17 @@ planning_type: review
 - Information that will be required only for final closure:
   - decision on whether this slice should close S05 parent directly, or close as an incremental S05 phase and keep parent in `review` until adapter-postgres integration evidence is explicitly refreshed in a dedicated evidence doc.
 
-#### `S05-T5` Run governed validation baseline and publish evidence
+## Out-Of-Scope Worktree Observations
+
+- This S05 artifact does not include closure decisions for:
+  - `docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md`
+  - `docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md`
+
+### `S05-T5` Run governed validation baseline and publish evidence
 
 - Objective: Execute required checks and capture results.
 - Scope: Touched-package checks + repo gate.
+- Recommended owner: Slice owner.
 - In current task scope: Yes.
 - Dependencies: `S05-T4`.
 - Documentation impact: Closeout/evidence validation section updated.
@@ -195,11 +266,18 @@ planning_type: review
   - touched package lint/type/test commands pass;
   - `pnpm verify:prepush` passes;
   - command outputs are summarized in artifact.
+- Progress update 2026-04-04:
+  - Completed and passed:
+    - `pnpm --filter @dvt/engine test -- InMemoryRunStateStore.appendInvariants.test.ts`
+    - `pnpm --filter @dvt/engine test -- bootstrapRunTx.atomicity.test.ts`
+    - `pnpm --filter @dvt/engine test -- InMemoryTxStore.outbox.test.ts`
+    - `pnpm verify:prepush`
 
-#### `S05-T6` Close planning and lane tracking surfaces
+### `S05-T6` Close planning and lane tracking surfaces
 
 - Objective: Move S05 from `review` to `done` only if evidence is accepted.
 - Scope: `agent-lane-b.yaml`, review status board, closeout/evidence links.
+- Recommended owner: Lane B owner + docs owner.
 - In current task scope: Yes.
 - Dependencies: `S05-T5`.
 - Documentation impact: Lane and review status synchronized.
@@ -209,6 +287,11 @@ planning_type: review
   - lane status updated with accepted evidence refs;
   - review status board reflects final role;
   - no unresolved blocker remains undocumented.
+- Progress update 2026-04-04:
+  - Synced status surfaces:
+    - `docs/planning/state/agent-lane-b.yaml` keeps `S05` in `review` with explicit evidence trigger.
+    - `docs/planning/reviews/review-status-board.md` keeps both S05 review artifacts at `85%` in `review`.
+  - Rationale: closure is conditional by governance rule; this task closes by synchronizing the rule and status surfaces, not by forcing parent `S05` to `done`.
 
 ## Mermaid Diagram
 

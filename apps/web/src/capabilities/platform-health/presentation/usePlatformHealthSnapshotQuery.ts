@@ -5,12 +5,15 @@ import {
   type PlatformHealthCapabilityApi,
 } from '../application/platformHealthCapability';
 import type { PlatformHealthSnapshot } from '../domain/platformHealthTypes';
-import { getShellHealthPollingIntervalMs } from './platformHealthStatus';
+import {
+  getShellHealthPollingIntervalMs,
+  PLATFORM_HEALTH_BASE_POLL_INTERVAL_MS,
+} from './platformHealthStatus';
 
 const platformHealthCapability = createPlatformHealthCapability();
 
 export const platformHealthQueryKey = ['platform-health', 'snapshot'] as const;
-export const PLATFORM_HEALTH_REFETCH_INTERVAL_MS = 15_000;
+export const PLATFORM_HEALTH_REFETCH_INTERVAL_MS = PLATFORM_HEALTH_BASE_POLL_INTERVAL_MS;
 
 export function createPlatformHealthSnapshotQueryOptions(
   capability: PlatformHealthCapabilityApi = platformHealthCapability

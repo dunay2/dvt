@@ -5,7 +5,7 @@ import type {
 import { selectPlatformConnectionState } from '../domain/platformHealthSelectors';
 
 const MAX_RETRY_BACKOFF_MS = 60_000;
-const BASE_POLL_INTERVAL_MS = 15_000;
+export const PLATFORM_HEALTH_BASE_POLL_INTERVAL_MS = 15_000;
 const OFFLINE_RETRY_BASE_MS = 5_000;
 const DEGRADED_RETRY_BASE_MS = 15_000;
 
@@ -79,7 +79,7 @@ export function getShellHealthPollingIntervalMs(
   const connectionState = selectPlatformConnectionState(snapshot, isError);
 
   if (connectionState.rest === 'ok') {
-    return BASE_POLL_INTERVAL_MS;
+    return PLATFORM_HEALTH_BASE_POLL_INTERVAL_MS;
   }
 
   const attempt = Math.max(1, failureCount);
