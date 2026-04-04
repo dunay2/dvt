@@ -29,7 +29,7 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
       ? Math.max(0, (completedAtMs - startedAtMs) / 1000)
       : undefined;
 
-  return {
+  const focusedRun: Run = {
     runId: snapshot.runId,
     planId: snapshot.planId ?? 'unknown-plan',
     status: snapshot.status,
@@ -41,6 +41,13 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
     events: [],
     steps: [],
   };
+
+  // Explicitly mark this as snapshot-level runtime data so plugin mappers
+  // that require step/event detail can skip canonical conversion.
+  return {
+    ...focusedRun,
+    runtimeDetail: { level: 'snapshot' },
+  } as Run;
 }
 
 export default function RunsView() {
