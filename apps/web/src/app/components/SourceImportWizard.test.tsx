@@ -80,15 +80,15 @@ describe('SourceImportWizard', () => {
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   });
 
-  const findNextButton = () =>
+  const findNextButton = (): HTMLButtonElement | undefined =>
     Array.from(document.querySelectorAll('button')).find((button) =>
       button.textContent?.trim().startsWith('Next')
-    );
+    ) as HTMLButtonElement | undefined;
 
-  const findClickableDivByText = (text: string) =>
+  const findClickableDivByText = (text: string): HTMLDivElement | undefined =>
     Array.from(document.querySelectorAll('div.cursor-pointer')).find((node) =>
       node.textContent?.includes(text)
-    );
+    ) as HTMLDivElement | undefined;
 
   it('navigates from source type to connection and selection steps', async () => {
     const onClose = vi.fn();
@@ -148,7 +148,7 @@ describe('SourceImportWizard', () => {
       );
     });
 
-    const clickNext = async () => {
+    const clickNext = async (): Promise<void> => {
       const button = findNextButton();
       expect(button).toBeTruthy();
       await act(async () => {
