@@ -319,6 +319,30 @@ The user expects to:
   provenance and target profile.
 - Read-only: allow review and export while mutation or dispatch is gated.
 
+## Execution Acceptance Matrix (F-20 kickoff)
+
+This matrix is the active acceptance baseline for route-level workbench slices.
+Each route keeps one primary job and hands off to another route explicitly.
+
+| Route       | Primary job                              | Allowed handoff targets     | Required acceptance states                      |
+| ----------- | ---------------------------------------- | --------------------------- | ----------------------------------------------- |
+| `Canvas`    | graph authoring and graph-context intent | `Runs`, `Diff`, `Templates` | loading, empty, error, degraded, read-only      |
+| `Runs`      | execution operations and run evidence    | `Artifacts`                 | loading, empty, error, degraded, missing run    |
+| `Lineage`   | dependency and impact analysis           | `Canvas`                    | loading, empty, error, missing metadata         |
+| `Diff`      | structural and SQL review                | `Templates`                 | loading, empty, error                           |
+| `Artifacts` | immutable artifact inspection            | none                        | loading, empty, error, invalid import           |
+| `Templates` | governed source generation               | none                        | loading, empty, validation error, preview ready |
+
+```mermaid
+flowchart TB
+  Canvas -->|"run"| Runs
+  Canvas -->|"review"| Diff
+  Canvas -->|"generate"| Templates
+  Runs -->|"inspect"| Artifacts
+  Lineage -->|"authoring follow-up"| Canvas
+  Diff -->|"generated-source review"| Templates
+```
+
 ## Tracking Stories As Work
 
 These manuals should be translated into implementation work through Lane E task

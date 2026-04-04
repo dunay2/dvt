@@ -142,8 +142,9 @@ That future route-level workbench should cover:
 - The shell and workbench are real, but some capability docs were still
   describing target architecture instead of current behavior.
 - Several feature views still rely on placeholder or mock-backed data paths.
-- The workspace has local frontend tests, but no governed `test` script or
-  dedicated CI lane yet.
+- The workspace now has a governed local frontend test command (`pnpm test:web`
+  and `pnpm --filter @dvt/web test`), but still needs a dedicated CI lane to
+  enforce it consistently.
 - The frontend still needs stricter contract alignment with the protected API
   runtime surface, especially around run start and richer run diagnostics.
 - The frontend still lacks a first-class execution-template and code-generation

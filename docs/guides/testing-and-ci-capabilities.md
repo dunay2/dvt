@@ -48,6 +48,7 @@ See also:
 
 | Capability                         | Command                                                                    | Scope                                | Source                                                                             |
 | ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
+| Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web`                           | [`apps/web/package.json`](../../apps/web/package.json)                             |
 | Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json)                                               |
 | Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
 | Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
