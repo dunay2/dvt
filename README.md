@@ -49,6 +49,13 @@ pnpm docs:build
 pnpm docs:ci
 ```
 
+Useful local URLs after startup:
+
+- The Zensical server URL is printed in the terminal when `pnpm docs:serve`
+  starts.
+- In the observed local run for this workspace, Zensical served on
+  `http://localhost:8000/`.
+
 ### Frontend
 
 ```bash
@@ -62,6 +69,14 @@ pnpm --filter @dvt/web dev
 pnpm --filter @dvt/web typecheck
 pnpm --filter @dvt/web build
 ```
+
+Useful local URL after startup:
+
+- The Vite dev server URL is printed in the terminal when `pnpm dev:web` starts.
+- In this workspace, the observed local URL was `http://localhost:5174/`
+  because `5173` was already in use.
+- When the frontend is configured against the local API, use
+  `VITE_API_BASE_URL=http://localhost:3000`.
 
 ### Backend
 
@@ -79,6 +94,15 @@ pnpm --filter dvt-api test
 pnpm --filter dvt-api test:integration
 ```
 
+Useful local URLs after startup:
+
+- Default API bind from the repo env config: `http://localhost:3000`
+- API health: `http://localhost:3000/healthz`
+- API version: `http://localhost:3000/version`
+- API readiness when enabled: `http://localhost:3000/readyz`
+- Example query route:
+  `http://localhost:3000/runs?tenantId=<tenant-id>&projectId=<project-id>&environmentId=<environment-id>`
+
 ### Workers
 
 ```bash
@@ -94,6 +118,14 @@ pnpm --filter dvt-projector-worker start
 pnpm --filter dvt-lineage-worker dev
 pnpm --filter dvt-lineage-worker start
 ```
+
+Useful local URLs after startup:
+
+- Outbox worker health: `http://127.0.0.1:9464/healthz`
+- Outbox worker readiness: `http://127.0.0.1:9464/readyz`
+- Outbox worker metrics: `http://127.0.0.1:9464/metrics`
+- Projector worker admin endpoint base: `http://127.0.0.1:9465/`
+- Lineage worker admin endpoint base: `http://127.0.0.1:9466/`
 
 ### Repo-Wide Validation
 
