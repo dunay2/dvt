@@ -9,7 +9,11 @@ async function main(): Promise<void> {
       nodes: [
         { nodeId: 'model.stg_orders', resourceType: 'model', dependsOn: [] },
         { nodeId: 'model.fct_orders', resourceType: 'model', dependsOn: ['model.stg_orders'] },
-        { nodeId: 'test.fct_orders_not_null', resourceType: 'test', dependsOn: ['model.fct_orders'] },
+        {
+          nodeId: 'test.fct_orders_not_null',
+          resourceType: 'test',
+          dependsOn: ['model.fct_orders'],
+        },
       ],
     },
     selection: { selectedNodeIds: ['test.fct_orders_not_null'], includeUpstream: true },

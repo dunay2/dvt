@@ -20,11 +20,7 @@ export function parseStartRunPlannerEnvelope(
 ): RouteParseResult<
   Pick<
     StartRunCommand,
-    | 'graphSource'
-    | 'manifestRef'
-    | 'policies'
-    | 'environment'
-    | 'observability'
+    'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
   >
 > {
   try {
@@ -50,11 +46,7 @@ function toPlannerCommandFields(
   parsed: ReturnType<typeof parsePlannerInputEnvelopeV1>
 ): Pick<
   StartRunCommand,
-  | 'graphSource'
-  | 'manifestRef'
-  | 'policies'
-  | 'environment'
-  | 'observability'
+  'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
 > {
   const result: PlannerCommandFields = {};
 
