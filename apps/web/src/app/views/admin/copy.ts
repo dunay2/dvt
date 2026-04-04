@@ -1,0 +1,47 @@
+export const adminViewCopy = {
+  title: 'Admin & RBAC',
+  tabs: {
+    platform: 'Platform',
+    roles: 'Roles',
+    permissions: 'Permissions',
+    audit: 'Audit Log',
+  },
+  sections: {
+    backendProbeTitle: 'Backend probe details',
+    backendProbeSubtitle: 'What is up, what responded, and which base URL the shell is using.',
+    capabilitiesTitle: 'Capabilities in use',
+    capabilitiesSubtitle: 'What the backend reports as available for this frontend.',
+    rolesSubtitle: 'Manage user roles and permissions',
+    permissionMatrixTitle: 'Permission Matrix',
+  },
+  labels: {
+    backendStatus: 'Backend status',
+    version: 'Version',
+    readiness: 'Readiness',
+    dataSourceMode: 'Data source mode',
+    frontendCompatibility: 'Frontend compatibility',
+    pluginAvailability: 'Plugin availability',
+    apiBaseUrl: 'API base URL',
+    role: 'Role',
+    timestamp: 'Timestamp',
+    user: 'User',
+    action: 'Action',
+    resource: 'Resource',
+    details: 'Details',
+    status: 'Status',
+  },
+  states: {
+    capabilitiesLoading: 'Loading capabilities...',
+    capabilitiesError: 'Capabilities endpoint unavailable.',
+    capabilitiesEmpty: 'No capability data.',
+    readyzHealthy: 'readyz endpoint healthy',
+  },
+  actions: {
+    createRole: 'Create Role',
+    edit: 'Edit',
+  },
+  filters: {
+    auditPlaceholder: 'Search audit log...',
+  },
+} as const;
+

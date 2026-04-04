@@ -26,6 +26,10 @@ planning_type: proposal
 - [S08-5 post S08-4 invariant closure plan](mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md)
 - [WorkflowEngine hexagonal derivation plan](mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
 
+## Mandatory (continued)
+
+- [F-04 Frontend Data Boundary Hexagonal Convergence](mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
+
 ## Nice To Have
 
 - [Architecture](nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md)

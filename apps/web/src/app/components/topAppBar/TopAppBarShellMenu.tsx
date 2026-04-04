@@ -70,20 +70,33 @@ export function TopAppBarShellMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>{copy.workspaceControls}</DropdownMenuLabel>
-        <DropdownMenuCheckboxItem checked={explorerPanelVisible} onCheckedChange={toggleExplorerPanel}>
+        <DropdownMenuCheckboxItem
+          checked={explorerPanelVisible}
+          onCheckedChange={toggleExplorerPanel}
+        >
           <PanelLeftClose className="size-4 mr-2" />
           {copy.explorerPanel}
         </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem checked={inspectorPanelVisible} onCheckedChange={toggleInspectorPanel}>
+        <DropdownMenuCheckboxItem
+          checked={inspectorPanelVisible}
+          onCheckedChange={toggleInspectorPanel}
+        >
           <PanelRightClose className="size-4 mr-2" />
           {copy.inspectorPanel}
         </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem checked={consolePanelVisible} onCheckedChange={toggleConsolePanel}>
+        <DropdownMenuCheckboxItem
+          checked={consolePanelVisible}
+          onCheckedChange={toggleConsolePanel}
+        >
           <TerminalSquare className="size-4 mr-2" />
           {copy.consolePanel}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
-          {focusMode ? <Minimize2 className="size-4 mr-2" /> : <Maximize2 className="size-4 mr-2" />}
+          {focusMode ? (
+            <Minimize2 className="size-4 mr-2" />
+          ) : (
+            <Maximize2 className="size-4 mr-2" />
+          )}
           {copy.focusMode}
         </DropdownMenuCheckboxItem>
         <DropdownMenuSub>
