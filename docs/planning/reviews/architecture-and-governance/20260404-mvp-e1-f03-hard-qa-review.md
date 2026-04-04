@@ -116,7 +116,7 @@ No critical findings.
 - Deliverable: Lane E reflects current execution truth and generated planning surfaces are synchronized.
 - Definition of Done: lane entries updated, generated views deterministic, no drift in planning outputs.
 
-2. `MVP-E1-D-INDEX` Make MVP-E1 contract discoverable from canonical frontend entrypoints
+1. `MVP-E1-D-INDEX` Make MVP-E1 contract discoverable from canonical frontend entrypoints
 
 - Priority: High
 - Steps:
@@ -126,7 +126,7 @@ No critical findings.
 - Deliverable: Contract is reachable from the frontend architecture reading path.
 - Definition of Done: canonical frontend index includes contract artifact and links resolve.
 
-3. `MVP-E1-D-ENVELOPES` Add canonical success/error payload examples
+1. `MVP-E1-D-ENVELOPES` Add canonical success/error payload examples
 
 - Priority: Medium
 - Steps:
@@ -138,7 +138,7 @@ No critical findings.
 - Deliverable: Executable contract examples instead of narrative-only envelope text.
 - Definition of Done: examples are present, coherent, and match implemented route/health behavior.
 
-4. `F03-TEST-MATRIX` Add grouped health UX matrix and missing negative paths
+1. `F03-TEST-MATRIX` Add grouped health UX matrix and missing negative paths
 
 - Priority: Medium
 - Steps:
@@ -149,7 +149,7 @@ No critical findings.
 - Deliverable: Explicit test matrix with behavior-oriented negative coverage.
 - Definition of Done: matrix and tests prove degraded/offline/auth/server behavior at the correct layer.
 
-5. `MVP-E1-F03-ISOLATE` Isolate slice from unrelated worktree changes
+1. `MVP-E1-F03-ISOLATE` Isolate slice from unrelated worktree changes
 
 - Priority: Low
 - Steps:
