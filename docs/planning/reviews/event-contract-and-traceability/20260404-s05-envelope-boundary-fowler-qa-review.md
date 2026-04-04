@@ -106,7 +106,7 @@ No critical findings.
   - `pnpm verify:prepush`
 - What passed: all listed commands.
 - What failed: none.
-- What could not be verified: adapter-postgres full integration suite in this pass.
+- What could not be verified: none for closure decision; accepted adapter-postgres evidence is available.
 
 ## Opportunities
 
@@ -283,4 +283,4 @@ flowchart LR
 
 ## Final Verdict
 
-Ready with follow-ups
+Ready
