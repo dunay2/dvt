@@ -59,9 +59,7 @@ export function GroupingStep({ groupingStrategy, onGroupingChange }: GroupingSte
               <Label htmlFor="custom" className="cursor-pointer font-medium">
                 Custom Grouping
               </Label>
-              <p className="mt-1 text-xs text-slate-300">
-                Manually organize sources (advanced)
-              </p>
+              <p className="mt-1 text-xs text-slate-300">Manually organize sources (advanced)</p>
             </div>
           </div>
         </Card>

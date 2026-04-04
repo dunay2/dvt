@@ -48,7 +48,9 @@ export function SelectionStep({
         <ScrollArea className="h-96">
           <div className="space-y-4">
             {Object.entries(schemaGroups).length === 0 ? (
-              <Card className="border-slate-600 p-4 text-sm text-slate-300">{copy.selection.empty}</Card>
+              <Card className="border-slate-600 p-4 text-sm text-slate-300">
+                {copy.selection.empty}
+              </Card>
             ) : (
               Object.entries(schemaGroups).map(([schema, schemaTables]) => (
                 <div key={schema}>

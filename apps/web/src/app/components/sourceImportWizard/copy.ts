@@ -11,8 +11,7 @@ export const sourceImportWizardCopy = {
   importError: 'Failed to register data objects.',
   sourceType: {
     title: 'Choose data source type',
-    description:
-      'Select which kind of DataObject you want to discover and register into the graph',
+    description: 'Select which kind of DataObject you want to discover and register into the graph',
     availabilityNote:
       'This slice supports real registration only for Database. File, API, and Stream remain visible to establish the DataObject Registry boundary.',
   },
@@ -31,24 +30,20 @@ export const sourceImportWizardCopy = {
   },
   grouping: {
     title: 'Grouping Strategy',
-    description:
-      'Choose how discovered tables should be grouped into registered data objects',
+    description: 'Choose how discovered tables should be grouped into registered data objects',
   },
   options: {
     title: 'Metadata Options',
-    description:
-      'Configure what metadata to include when registering data objects',
+    description: 'Configure what metadata to include when registering data objects',
   },
   review: {
     title: 'Review & Confirm',
-    description:
-      'Review your DataObject Registry configuration before proceeding',
+    description: 'Review your DataObject Registry configuration before proceeding',
     previewTitle: 'Registry preview',
   },
   result: {
     title: 'Registry update complete',
-    description:
-      'Your selected tables have been registered into the workspace graph',
+    description: 'Your selected tables have been registered into the workspace graph',
     filesTitle: 'Registry files created',
     warning:
       'The workspace graph has been refreshed locally. Persisted backend registry writes require a dedicated API endpoint in `api` mode.',

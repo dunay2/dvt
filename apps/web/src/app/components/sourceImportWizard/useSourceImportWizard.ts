@@ -10,16 +10,8 @@ import {
   getPreviousStep,
   getSelectedCount,
 } from './sourceImportWizardModel';
-import {
-  useConnectionsLoader,
-  useTablesLoader,
-} from './useSourceImportWizardDataLoaders';
-import type {
-  DataObjectSourceType,
-  SourceImportWizardState,
-  TableInfo,
-  WizardStep,
-} from './types';
+import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
+import type { DataObjectSourceType, SourceImportWizardState, TableInfo, WizardStep } from './types';
 
 interface UseSourceImportWizardParams {
   open: boolean;
@@ -66,16 +58,19 @@ export function useSourceImportWizard({
     setState,
   });
 
-  const setCurrentStep = (currentStep: WizardStep) => setState((prev) => ({ ...prev, currentStep }));
+  const setCurrentStep = (currentStep: WizardStep) =>
+    setState((prev) => ({ ...prev, currentStep }));
   const setSelectedSourceType = (selectedSourceType: DataObjectSourceType) =>
     setState((prev) => ({ ...prev, selectedSourceType }));
   const setSelectedConnection = (selectedConnection: string | null) =>
     setState((prev) => ({ ...prev, selectedConnection }));
   const setGroupingStrategy = (groupingStrategy: 'schema' | 'database' | 'custom') =>
     setState((prev) => ({ ...prev, groupingStrategy }));
-  const setIncludeColumns = (includeColumns: boolean) => setState((prev) => ({ ...prev, includeColumns }));
+  const setIncludeColumns = (includeColumns: boolean) =>
+    setState((prev) => ({ ...prev, includeColumns }));
   const setAddTests = (addTests: boolean) => setState((prev) => ({ ...prev, addTests }));
-  const setAddFreshness = (addFreshness: boolean) => setState((prev) => ({ ...prev, addFreshness }));
+  const setAddFreshness = (addFreshness: boolean) =>
+    setState((prev) => ({ ...prev, addFreshness }));
 
   const handleNext = () => {
     if (state.currentStep === 'sourceType' && state.selectedSourceType !== 'database') {

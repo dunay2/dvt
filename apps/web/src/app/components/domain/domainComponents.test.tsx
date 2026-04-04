@@ -18,7 +18,9 @@ describe('domain components', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   afterEach(() => {

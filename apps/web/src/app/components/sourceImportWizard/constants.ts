@@ -1,10 +1,4 @@
-import {
-  Blocks,
-  Database,
-  FileJson,
-  RadioTower,
-  type LucideIcon,
-} from 'lucide-react';
+import { Blocks, Database, FileJson, RadioTower, type LucideIcon } from 'lucide-react';
 
 import type { DataObjectSourceType, WizardStep } from './types';
 

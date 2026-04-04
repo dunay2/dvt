@@ -79,18 +79,20 @@ export function ReviewStep({
             {Array.from(previewGroups.entries()).map(([key, groupTables]) => (
               <div key={key} className="rounded border border-slate-600 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <code className="text-sm text-blue-400">data-object-group: {key.toLowerCase()}</code>
+                  <code className="text-sm text-blue-400">
+                    data-object-group: {key.toLowerCase()}
+                  </code>
                   <Badge variant="secondary" className="text-xs">
                     {groupTables.length} tables
                   </Badge>
                 </div>
                 <div className="space-y-1 text-xs text-slate-400">
                   {groupTables.slice(0, 3).map((table) => (
-                    <div key={`${table.database}.${table.schema}.${table.table}`}>-&gt; {table.table}</div>
+                    <div key={`${table.database}.${table.schema}.${table.table}`}>
+                      -&gt; {table.table}
+                    </div>
                   ))}
-                  {groupTables.length > 3 ? (
-                    <div>... and {groupTables.length - 3} more</div>
-                  ) : null}
+                  {groupTables.length > 3 ? <div>... and {groupTables.length - 3} more</div> : null}
                 </div>
               </div>
             ))}

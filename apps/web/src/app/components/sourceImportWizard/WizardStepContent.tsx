@@ -67,7 +67,9 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
           tables={state.tables}
           selectedCount={controller.selectedCount}
           groupingStrategy={state.groupingStrategy}
-          selectedConnectionName={controller.selectedConnectionObject?.name ?? copy.selectConnectionError}
+          selectedConnectionName={
+            controller.selectedConnectionObject?.name ?? copy.selectConnectionError
+          }
           includeColumns={state.includeColumns}
           addTests={state.addTests}
           addFreshness={state.addFreshness}
