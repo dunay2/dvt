@@ -1,6 +1,6 @@
 ---
 title: MVP-E1 and F-03 frontend backend contract and health state plan 2026-04-04
-status: Draft
+status: Review
 owner: Product / Frontend / Architecture
 last_reviewed: 2026-04-04
 planning_type: proposal
@@ -122,69 +122,6 @@ The frontend contract artifact produced by `MVP-E1-D` must contain:
 | Health state drift in shell               | Operator confusion and false runtime perception | `F-03-A` plus `F-03-D` negative tests as mandatory gate                          |
 | Retry behavior regresses to fixed polling | Degraded UX and stale status                    | `F-03-B` explicit backoff contract and presenter tests                           |
 | Planning drift                            | Proposal not reflected in execution registry    | Mandatory lane update in `agent-lane-e.yaml` and `docs:workboard:generate`       |
-
-## Incident Resolution Frame
-
-Use this section as the operational guide when the incident is open.
-
-- Incident type: Frontend/backend contract drift + shell health-state drift.
-- Severity rule:
-  - `SEV-1` if operators cannot trust shell state for runtime availability.
-  - `SEV-2` if contract drift is limited to non-critical routes with fallback UX.
-- Entry condition:
-  - Any mismatch between documented frontend promises and current protected API.
-  - Any mismatch between shell health state and backend health endpoint reality.
-- Exit condition:
-  - `MVP-E1-A..E` and `F-03-A..F` completed with evidence and validated.
-
-## Triage and Execution Order
-
-1. Confirm affected surface:
-   - API protected routes (`apps/api`).
-   - Shell health presenter (`apps/web` TopBar + global banner).
-2. Freeze product promises:
-   - Block new frontend route assumptions until `MVP-E1-D` is published.
-3. Restore trust in health UX:
-   - Execute `F-03-A..D` before any UX copy/guide closure.
-4. Synchronize planning surfaces:
-   - Update Lane E and regenerate planning views before closure claim.
-
-## Mandatory Evidence Bundle
-
-Before moving incident status to resolved, attach all:
-
-- Contract artifact produced by `MVP-E1-D` (canonical `docs/` location).
-- Route inventory and auth matrix evidence (`MVP-E1-A`, `MVP-E1-B`).
-- Negative-path test evidence for `F-03-D`:
-  - timeout
-  - network down
-  - 401/403
-  - 5xx
-  - partial endpoint failures
-- Lane synchronization evidence (`MVP-E1-E`):
-  - `agent-lane-e.yaml` updated
-  - `pnpm docs:workboard:generate` output synchronized
-- Final quality gate evidence (`F-03-F`):
-  - `pnpm verify:prepush` pass output
-
-## Operational Command Sequence
-
-Run in this exact order for incident resolution:
-
-```bash
-pnpm --filter dvt-api build
-pnpm --filter dvt-api test
-pnpm --filter @dvt/web build
-pnpm --filter @dvt/web test
-pnpm docs:workboard:generate
-pnpm docs:sync
-pnpm verify:prepush
-```
-
-Failure policy:
-
-- Any red command keeps the incident open.
-- Do not reclassify scope to "resolved" without a fully green sequence.
 
 ## Definition of Done (DoD)
 
@@ -344,15 +281,14 @@ flowchart LR
 
 ### Task Checklist
 
-- [ ] `MVP-E1-A` Build baseline route inventory from real API surface
-- [ ] `MVP-E1-B` Define auth and access matrix for frontend-consumable routes
-- [ ] `MVP-E1-C` Freeze non-promises and out-of-scope backend assumptions
-- [ ] `MVP-E1-D` Publish canonical frontend-facing backend contract artifact
-- [ ] `MVP-E1-E` Sync lane state, roadmap links, and planning surfaces
+- [x] `MVP-E1-A` Build baseline route inventory from real API surface
+- [x] `MVP-E1-B` Define auth and access matrix for frontend-consumable routes
+- [x] `MVP-E1-C` Freeze non-promises and out-of-scope backend assumptions
+- [x] `MVP-E1-D` Publish canonical frontend-facing backend contract artifact
+- [x] `MVP-E1-E` Sync lane state, roadmap links, and planning surfaces
 - [ ] `F-03-A` Define canonical shell health-state semantic model
 - [ ] `F-03-B` Define deterministic retry and backoff policy contract
 - [ ] `F-03-C` Enforce single health presenter seam in shell architecture
 - [ ] `F-03-D` Add negative-path and resilience test matrix
 - [ ] `F-03-E` Align user manual and UX copy with real health behavior
 - [ ] `F-03-F` Run closure checks and complete quality-gate validation
-- [ ] Incident evidence bundle attached and traceable from Lane E
