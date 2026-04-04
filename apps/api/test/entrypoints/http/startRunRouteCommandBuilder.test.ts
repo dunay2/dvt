@@ -39,8 +39,10 @@ describe('startRun command builders', () => {
       buildPlannerBackedStartRunCommand({
         record: {
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
         },
         rawRunExecutionContextRef: undefined,
@@ -52,8 +54,10 @@ describe('startRun command builders', () => {
       ok: true,
       value: {
         graphSource: {
-          kind: 'normalized-graph-v1',
-          nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
         runId: 'run-1',
         targetAdapter: 'temporal',

@@ -25,7 +25,6 @@ import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GENERIC_GRAPH_SOURCE_KIND,
-  PLANNER_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v1.js';
 export {
   RunExecutionContextRefSchema,
@@ -432,13 +431,6 @@ export const GraphNodeSchema = z
   })
   .strict();
 
-export const PlannerGraphSourceV1Schema = z
-  .object({
-    kind: z.literal(PLANNER_GRAPH_SOURCE_KIND),
-    nodes: z.array(GraphNodeSchema),
-  })
-  .strict();
-
 export const GenericGraphNodeV1Schema = z
   .object({
     nodeId: z.string().min(1),
@@ -461,7 +453,7 @@ export const GenericGraphSourceV1Schema = z
     kind: z.literal(GENERIC_GRAPH_SOURCE_KIND),
     sourceFamily: z.string().min(1),
     sourceVersion: z.string().min(1),
-    nodes: z.array(GenericGraphNodeV1Schema),
+    nodes: z.array(GenericGraphNodeV1Schema).min(1),
   })
   .strict();
 
@@ -548,10 +540,8 @@ export const ExecutionPlanSchema = CurrentExecutionPlanV1Schema as z.ZodType<Exe
 
 export const PlannerInputEnvelopeV1Schema = z
   .object({
-    graphSource: PlannerGraphSourceV1Schema.optional(),
-    manifest: z.record(z.string(), z.unknown()).optional(),
+    graphSource: GenericGraphSourceV1Schema.optional(),
     manifestRef: DbtManifestRefSchema.optional(),
-    nodes: z.array(GraphNodeSchema).optional(),
     selection: PlannerSelectionSchema,
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
@@ -561,18 +551,15 @@ export const PlannerInputEnvelopeV1Schema = z
     requestedAtIso: z.string().min(1).optional(),
   })
   .superRefine((input, ctx) => {
-    const activeSources = [
-      input.graphSource,
-      input.manifest,
-      input.manifestRef,
-      input.nodes,
-    ].filter((value) => value !== undefined).length;
+    const activeSources = [input.graphSource, input.manifestRef].filter(
+      (value) => value !== undefined
+    ).length;
 
     if (activeSources !== 1) {
       ctx.addIssue({
         code: 'custom',
         message:
-          'PlannerInputEnvelopeV1 requires exactly one active source: graphSource, manifest, manifestRef, or nodes.',
+          'PlannerInputEnvelopeV1 requires exactly one active source: graphSource or manifestRef.',
       });
     }
   })
@@ -740,7 +727,6 @@ export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
 export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
 export type GraphNodeSchemaT = z.infer<typeof GraphNodeSchema>;
-export type PlannerGraphSourceV1SchemaT = z.infer<typeof PlannerGraphSourceV1Schema>;
 export type GenericGraphNodeV1SchemaT = z.infer<typeof GenericGraphNodeV1Schema>;
 export type GenericGraphSourceV1SchemaT = z.infer<typeof GenericGraphSourceV1Schema>;
 export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;

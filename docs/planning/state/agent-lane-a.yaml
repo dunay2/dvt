@@ -862,9 +862,9 @@ tasks:
       planner can accept workflow definitions from any source (Spark, Python, API, custom ETL).
     dependency: none
     target: >-
-      A documented, schema-validated graph source format exists alongside ManifestGraphDeriver;
-      PlannerFacade accepts both dbt manifests and generic graph sources without code changes to the
-      core planner.
+      A documented, schema-validated GenericGraphSource boundary becomes the canonical planner
+      ingress; dbt ingestion remains only as an adapter-to-generic translation path, not as a
+      parallel public planner contract.
     complexity: L
     effort_points: 8
     progress_pct: 20
@@ -905,15 +905,16 @@ tasks:
     effort_points: 3
     progress_pct: 0
     objective: >-
-      evolve the shared planner contract from PlannerGraphSourceV1 toward an additive
-      GenericGraphSourceV1 boundary.
+      replace planner graph-source contracts with GenericGraphSourceV1 as the single canonical
+      boundary, with no compatibility aliases or legacy planner input shapes.
     dependency: MW-A2-A
     target: >-
-      `@dvt/contracts` exposes the additive GenericGraphSource contract, compatibility alias,
-      parser, schema, and fixtures needed for planner adoption without silent breakage.
+      `@dvt/contracts` exposes GenericGraphSourceV1 parser/schema/fixtures as the only active
+      planner graph-source surface; PlannerGraphSourceV1 and legacy planner input aliases are
+      removed from active ingestion paths.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
-    status_reason: Sequenced after the target model freeze.
+    status_reason: Sequenced after the target model freeze and locked to clean-swap execution.
     last_verified: '2026-04-04'
   - task_id: MW-A2-C
     parent_task: MW-A2
@@ -931,7 +932,7 @@ tasks:
       planner steps is explicit, and dbt normalization is isolated behind an adapter seam.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
-    status_reason: Queued behind the additive contract slice.
+    status_reason: Queued behind the clean-swap contract slice.
     last_verified: '2026-04-04'
   - task_id: MW-A2-D
     parent_task: MW-A2

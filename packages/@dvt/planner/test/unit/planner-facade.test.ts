@@ -6,14 +6,11 @@ import type { IArtifactResolver } from '../../src/ports/IArtifactResolver.js';
 
 const BASE_SELECTION = { selectedNodeIds: ['model.project.a'] };
 
-const BASE_NODES = [{ nodeId: 'model.project.a', resourceType: 'model', dependsOn: [] }];
-
-const BASE_GRAPH_SOURCE = { kind: 'normalized-graph-v1' as const, nodes: BASE_NODES };
-
-const BASE_MANIFEST = {
-  nodes: {
-    'model.project.a': { resource_type: 'model', depends_on: { nodes: [] } },
-  },
+const BASE_GRAPH_SOURCE = {
+  kind: 'generic-graph-v1' as const,
+  sourceFamily: 'dbt',
+  sourceVersion: '1.0',
+  nodes: [{ nodeId: 'model.project.a', stepKind: 'DBT_MODEL', dependsOn: [] }],
 };
 
 const BASE_MANIFEST_REF = { uri: 's3://bucket/manifest.json', sha256: 'a'.repeat(64) };
@@ -39,12 +36,6 @@ async function expectInvalidInput(
 }
 
 describe('PlannerFacade - graph source routing', () => {
-  it('accepts nodes as sole graph source', async () => {
-    const facade = new PlannerFacade();
-    const result = await facade.buildPlan({ nodes: BASE_NODES, selection: BASE_SELECTION });
-    expect(result.plan).toBeDefined();
-  });
-
   it('accepts graphSource as sole graph source', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({
@@ -60,18 +51,14 @@ describe('PlannerFacade - graph source routing', () => {
       facade.buildPlan({
         graphSource: {
           kind: 'legacy-graph',
-          nodes: BASE_NODES,
+          sourceFamily: 'dbt',
+          sourceVersion: '1.0',
+          nodes: [{ nodeId: 'model.project.a', stepKind: 'DBT_MODEL', dependsOn: [] }],
         } as unknown as typeof BASE_GRAPH_SOURCE,
         selection: BASE_SELECTION,
       }),
       'graphSource failed contract validation'
     );
-  });
-
-  it('accepts manifest as sole graph source', async () => {
-    const facade = new PlannerFacade();
-    const result = await facade.buildPlan({ manifest: BASE_MANIFEST, selection: BASE_SELECTION });
-    expect(result.plan).toBeDefined();
   });
 
   it('resolves manifestRef via IArtifactResolver and builds plan', async () => {
@@ -88,11 +75,57 @@ describe('PlannerFacade - graph source routing', () => {
   it('strips environment context before delegating', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({
-      nodes: BASE_NODES,
+      graphSource: BASE_GRAPH_SOURCE,
       selection: BASE_SELECTION,
       environment: { environmentId: 'prod', targetProfile: 'prod-profile' },
     });
     expect(result.plan).toBeDefined();
+  });
+
+  it('supports non-DBT translation when step-kind mapper and stepFactory are injected', async () => {
+    const facade = new PlannerFacade({
+      stepKindToResourceType: (stepKind) => {
+        if (stepKind === 'API_CALL') return 'service';
+        throw new Error(`unexpected stepKind: ${stepKind}`);
+      },
+      stepFactory: (node) => ({
+        stepId: node.nodeId,
+        kind: 'API_CALL',
+        dependsOn: [...node.dependsOn],
+      }),
+    });
+
+    const result = await facade.buildPlan({
+      graphSource: {
+        ...BASE_GRAPH_SOURCE,
+        nodes: [{ nodeId: 'service.notify', stepKind: 'API_CALL', dependsOn: [] }],
+      },
+      selection: { selectedNodeIds: ['service.notify'] },
+    });
+
+    expect(result.plan.steps[0]).toMatchObject({
+      stepId: 'service.notify',
+      kind: 'API_CALL',
+      dependsOn: [],
+    });
+  });
+
+  it('normalizes mapper failures into INVALID_INPUT planner errors', async () => {
+    const facade = new PlannerFacade({
+      stepKindToResourceType: () => {
+        throw new Error('mapper exploded');
+      },
+    });
+
+    await expect(
+      facade.buildPlan({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: BASE_SELECTION,
+      })
+    ).rejects.toMatchObject({
+      code: PlannerErrorCode.INVALID_INPUT,
+      message: expect.stringContaining('stepKind to resourceType mapping failed'),
+    });
   });
 });
 
@@ -101,63 +134,6 @@ describe('PlannerFacade - one-active-source rule', () => {
     const facade = new PlannerFacade();
     await expectInvalidInput(
       facade.buildPlan({ selection: BASE_SELECTION } as never),
-      'Planner input failed contract validation'
-    );
-  });
-
-  it('rejects manifestRef + manifest', async () => {
-    const facade = new PlannerFacade({ resolver: makeResolver() });
-    await expectInvalidInput(
-      facade.buildPlan({
-        manifestRef: BASE_MANIFEST_REF,
-        manifest: BASE_MANIFEST,
-        selection: BASE_SELECTION,
-      }),
-      'Planner input failed contract validation'
-    );
-  });
-
-  it('rejects manifestRef + nodes', async () => {
-    const facade = new PlannerFacade({ resolver: makeResolver() });
-    await expectInvalidInput(
-      facade.buildPlan({
-        manifestRef: BASE_MANIFEST_REF,
-        nodes: BASE_NODES,
-        selection: BASE_SELECTION,
-      }),
-      'Planner input failed contract validation'
-    );
-  });
-
-  it('rejects graphSource + nodes', async () => {
-    const facade = new PlannerFacade();
-    await expectInvalidInput(
-      facade.buildPlan({
-        graphSource: BASE_GRAPH_SOURCE,
-        nodes: BASE_NODES,
-        selection: BASE_SELECTION,
-      }),
-      'Planner input failed contract validation'
-    );
-  });
-
-  it('rejects manifest + nodes', async () => {
-    const facade = new PlannerFacade();
-    await expectInvalidInput(
-      facade.buildPlan({ manifest: BASE_MANIFEST, nodes: BASE_NODES, selection: BASE_SELECTION }),
-      'Planner input failed contract validation'
-    );
-  });
-
-  it('rejects all three sources simultaneously', async () => {
-    const facade = new PlannerFacade({ resolver: makeResolver() });
-    await expectInvalidInput(
-      facade.buildPlan({
-        manifestRef: BASE_MANIFEST_REF,
-        manifest: BASE_MANIFEST,
-        nodes: BASE_NODES,
-        selection: BASE_SELECTION,
-      }),
       'Planner input failed contract validation'
     );
   });
@@ -176,6 +152,12 @@ describe('PlannerFacade - one-active-source rule', () => {
 });
 
 describe('PlannerFacade - resolver requirements', () => {
+  it('validates manifestRefCacheSize even when resolver is not configured', () => {
+    expect(() => new PlannerFacade({ manifestRefCacheSize: -1 })).toThrow(
+      'manifestRefCacheSize must be a non-negative integer.'
+    );
+  });
+
   it('rejects manifestRef when no resolver is configured', async () => {
     const facade = new PlannerFacade();
     await expect(
@@ -197,7 +179,12 @@ describe('PlannerFacade - resolver requirements', () => {
   });
 
   it('rejects malformed graphSource returned by resolver', async () => {
-    const resolver = makeResolver({ kind: 'legacy-graph', nodes: BASE_NODES });
+    const resolver = makeResolver({
+      kind: 'generic-graph-v1',
+      sourceFamily: 'dbt',
+      sourceVersion: '1.0',
+      nodes: [{ nodeId: 'x', resourceType: 'model', dependsOn: [] }],
+    });
     const facade = new PlannerFacade({ resolver });
     await expectInvalidInput(
       facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION }),

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   type ExecutionPlan,
-  PLANNER_GRAPH_SOURCE_KIND,
+  GENERIC_GRAPH_SOURCE_KIND,
   type PlannerBuildResultV1,
   type PlannerInputEnvelopeV1,
 } from '../src/contracts/planner/ExecutionPlan.v1.js';
@@ -60,7 +60,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     const input = PlannerInputEnvelopeV1Schema.parse(VALID_PLANNER_INPUT_FIXTURE);
     const typed: PlannerInputEnvelopeV1SchemaT = input;
 
-    expect(typed.graphSource?.kind).toBe(PLANNER_GRAPH_SOURCE_KIND);
+    expect(typed.graphSource?.kind).toBe(GENERIC_GRAPH_SOURCE_KIND);
     expect(typed.selection.selectedNodeIds).toContain('model.analytics.orders');
   });
 

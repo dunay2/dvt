@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath, URL } from 'node:url';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import type { DbtManifestRef, PlannerGraphSourceV1 } from '@dvt/contracts';
+import type { DbtManifestRef, GenericGraphSourceV1 } from '@dvt/contracts';
 import {
   PlannerErrorCode,
   derivePlannerGraphSourceFromManifest,
@@ -32,7 +32,7 @@ export class ManifestArtifactResolver implements IArtifactResolver {
     this.s3Client = options?.s3Client ?? new S3Client({});
   }
 
-  public async resolveGraphSource(ref: DbtManifestRef): Promise<PlannerGraphSourceV1> {
+  public async resolveGraphSource(ref: DbtManifestRef): Promise<GenericGraphSourceV1> {
     const uri = this.parseUri(ref.uri);
     const bytes = await this.readArtifactBytes(uri);
     this.assertSha256(bytes, ref.sha256);
@@ -191,7 +191,7 @@ export class ManifestArtifactResolver implements IArtifactResolver {
     }
   }
 
-  private parseGraphSource(bytes: Uint8Array): PlannerGraphSourceV1 {
+  private parseGraphSource(bytes: Uint8Array): GenericGraphSourceV1 {
     let parsed: unknown;
 
     try {

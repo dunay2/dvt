@@ -8,7 +8,7 @@ describe('graph', () => {
     const planner = new Planner();
     await expect(
       planner.buildPlan({
-        nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: ['missing'] }],
+        graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: ['missing'] }] },
         selection: { selectedNodeIds: ['a'] },
       })
     ).rejects.toMatchObject({ code: PlannerErrorCode.INVALID_INPUT });
@@ -18,10 +18,12 @@ describe('graph', () => {
     const planner = new Planner();
     await expect(
       planner.buildPlan({
-        nodes: [
-          { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
-          { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
-        ],
+        graphSource: {
+          nodes: [
+            { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
+            { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
+          ],
+        },
         selection: { selectedNodeIds: ['a', 'b'] },
       })
     ).rejects.toMatchObject({ code: PlannerErrorCode.GRAPH_CYCLE });

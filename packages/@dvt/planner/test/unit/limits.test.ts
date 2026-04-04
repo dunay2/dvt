@@ -8,10 +8,12 @@ describe('limits', () => {
     const planner = new Planner({ limits: { maxNodes: 1 } });
 
     const p = planner.buildPlan({
-      nodes: [
-        { nodeId: 'a', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'b', resourceType: 'model', dependsOn: [] },
-      ],
+      graphSource: {
+        nodes: [
+          { nodeId: 'a', resourceType: 'model', dependsOn: [] },
+          { nodeId: 'b', resourceType: 'model', dependsOn: [] },
+        ],
+      },
       selection: { selectedNodeIds: ['a'] },
     });
 
@@ -23,7 +25,7 @@ describe('limits', () => {
     const planner = new Planner({ limits: { maxPlanSizeBytes: 10 } }); // absurdly small
 
     const p = planner.buildPlan({
-      nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: [] }],
+      graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: [] }] },
       selection: { selectedNodeIds: ['a'] },
     });
 

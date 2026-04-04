@@ -18,16 +18,18 @@ const BASE_MANIFEST = {
 describe('derivePlannerGraphSourceFromManifest', () => {
   it('derives a typed graph source from a dbt manifest payload', () => {
     expect(derivePlannerGraphSourceFromManifest(BASE_MANIFEST)).toEqual({
-      kind: 'normalized-graph-v1',
+      kind: 'generic-graph-v1',
+      sourceFamily: 'dbt',
+      sourceVersion: '1.0',
       nodes: [
         {
           nodeId: 'model.analytics.orders',
-          resourceType: 'model',
+          stepKind: 'DBT_MODEL',
           dependsOn: [],
         },
         {
           nodeId: 'test.analytics.orders_not_null',
-          resourceType: 'test',
+          stepKind: 'DBT_TEST',
           dependsOn: ['model.analytics.orders'],
         },
       ],

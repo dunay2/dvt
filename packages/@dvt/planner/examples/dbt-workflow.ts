@@ -5,11 +5,13 @@ async function main(): Promise<void> {
   const planner = new Planner();
 
   const input: PlannerInputEnvelopeV1 = {
-    nodes: [
-      { nodeId: 'model.stg_orders', resourceType: 'model', dependsOn: [] },
-      { nodeId: 'model.fct_orders', resourceType: 'model', dependsOn: ['model.stg_orders'] },
-      { nodeId: 'test.fct_orders_not_null', resourceType: 'test', dependsOn: ['model.fct_orders'] },
-    ],
+    graphSource: {
+      nodes: [
+        { nodeId: 'model.stg_orders', resourceType: 'model', dependsOn: [] },
+        { nodeId: 'model.fct_orders', resourceType: 'model', dependsOn: ['model.stg_orders'] },
+        { nodeId: 'test.fct_orders_not_null', resourceType: 'test', dependsOn: ['model.fct_orders'] },
+      ],
+    },
     selection: { selectedNodeIds: ['test.fct_orders_not_null'], includeUpstream: true },
     policies: {
       retry: { kind: 'at-most-N', maxAttempts: 3 },

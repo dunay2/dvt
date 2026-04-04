@@ -30,21 +30,23 @@ describe('ManifestArtifactResolver', () => {
     await expect(
       resolver.resolveGraphSource({ uri: FIXTURE_URL.href, sha256: FIXTURE_SHA256 })
     ).resolves.toEqual({
-      kind: 'normalized-graph-v1',
+      kind: 'generic-graph-v1',
+      sourceFamily: 'dbt',
+      sourceVersion: '1.0',
       nodes: [
         {
           nodeId: 'model.analytics.orders',
-          resourceType: 'model',
+          stepKind: 'DBT_MODEL',
           dependsOn: [],
         },
         {
           nodeId: 'model.analytics.order_items',
-          resourceType: 'model',
+          stepKind: 'DBT_MODEL',
           dependsOn: ['model.analytics.orders'],
         },
         {
           nodeId: 'test.analytics.orders_not_null',
-          resourceType: 'test',
+          stepKind: 'DBT_TEST',
           dependsOn: ['model.analytics.orders'],
         },
       ],
@@ -81,7 +83,7 @@ describe('ManifestArtifactResolver', () => {
       sha256: FIXTURE_SHA256,
     });
 
-    expect(result.kind).toBe('normalized-graph-v1');
+    expect(result.kind).toBe('generic-graph-v1');
     expect(client.commands).toHaveLength(1);
     expect(client.commands[0]).toMatchObject({
       input: {
@@ -109,7 +111,7 @@ describe('ManifestArtifactResolver', () => {
       sha256: FIXTURE_SHA256,
     });
 
-    expect(result.kind).toBe('normalized-graph-v1');
+    expect(result.kind).toBe('generic-graph-v1');
     expect(client.commands).toHaveLength(1);
     expect(client.commands[0]).toMatchObject({
       input: {

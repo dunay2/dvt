@@ -19,7 +19,7 @@ describe('load', () => {
     const planner = new Planner({ limits: { timeoutMs: 15_000, maxNodes: 2_000 } });
     const nodes = buildLinearNodes(1_000);
     const { plan } = await planner.buildPlan({
-      nodes,
+      graphSource: { nodes },
       selection: { selectedNodeIds: [`model.${999}`], includeUpstream: true },
     });
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
@@ -30,7 +30,7 @@ describe('load', () => {
     const nodes = buildLinearNodes(5_000);
     await expect(
       planner.buildPlan({
-        nodes,
+        graphSource: { nodes },
         selection: { selectedNodeIds: ['model.4999'], includeUpstream: true },
       })
     ).rejects.toBeDefined();

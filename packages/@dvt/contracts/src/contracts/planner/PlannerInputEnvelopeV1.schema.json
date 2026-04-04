@@ -3,36 +3,48 @@
   "$id": "dvt:contracts:planner:PlannerInputEnvelopeV1:v1.0.0",
   "type": "object",
   "required": ["selection"],
-  "oneOf": [
-    { "required": ["graphSource"] },
-    { "required": ["manifest"] },
-    { "required": ["manifestRef"] },
-    { "required": ["nodes"] }
-  ],
+  "oneOf": [{ "required": ["graphSource"] }, { "required": ["manifestRef"] }],
   "additionalProperties": false,
   "properties": {
     "graphSource": {
       "type": "object",
-      "required": ["kind", "nodes"],
+      "required": ["kind", "sourceFamily", "sourceVersion", "nodes"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "const": "normalized-graph-v1" },
+        "kind": { "const": "generic-graph-v1" },
+        "sourceFamily": { "type": "string", "minLength": 1 },
+        "sourceVersion": { "type": "string", "minLength": 1 },
         "nodes": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["nodeId", "resourceType", "dependsOn"],
+            "required": ["nodeId", "stepKind", "dependsOn"],
             "additionalProperties": false,
             "properties": {
               "nodeId": { "type": "string" },
-              "resourceType": { "type": "string" },
-              "dependsOn": { "type": "array", "items": { "type": "string" } }
+              "stepKind": { "type": "string" },
+              "dependsOn": { "type": "array", "items": { "type": "string" } },
+              "stepTypeConfig": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "displayName": { "type": "string" },
+                  "sourceRef": { "type": "string" },
+                  "tags": {
+                    "type": "object",
+                    "additionalProperties": { "type": "string" }
+                  }
+                }
+              }
             }
           }
         }
       }
     },
-    "manifest": { "type": "object", "additionalProperties": true },
     "manifestRef": {
       "type": "object",
       "required": ["uri", "sha256"],
@@ -41,19 +53,6 @@
         "uri": { "type": "string" },
         "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "artifactId": { "type": "string" }
-      }
-    },
-    "nodes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["nodeId", "resourceType", "dependsOn"],
-        "additionalProperties": false,
-        "properties": {
-          "nodeId": { "type": "string" },
-          "resourceType": { "type": "string" },
-          "dependsOn": { "type": "array", "items": { "type": "string" } }
-        }
       }
     },
     "selection": {

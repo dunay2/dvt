@@ -191,7 +191,7 @@ describe('startRunRoute', () => {
     );
   });
 
-  it('accepts empty selection', async () => {
+  it('accepts empty selection when graph source contains nodes', async () => {
     const reply = createReply();
 
     let received: Record<string, unknown> | undefined;
@@ -212,8 +212,10 @@ describe('startRunRoute', () => {
           environmentId: 'e1',
           selection: [],
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
           runId: 'run-empty-selection',
           targetAdapter: 'mock',
@@ -227,8 +229,10 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual({ runId: 'r-empty-selection', accepted: true });
     expect(received?.command).toEqual({
       graphSource: {
-        kind: 'normalized-graph-v1',
-        nodes: [],
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
       runId: 'run-empty-selection',
       targetAdapter: 'mock',
@@ -684,8 +688,10 @@ describe('startRunRoute', () => {
           environmentId: 'e1',
           selection: ['model_a'],
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
           runId: 'run-graph',
           targetAdapter: 'mock',
@@ -698,8 +704,10 @@ describe('startRunRoute', () => {
     expect(reply.statusCode).toBe(202);
     expect(received?.command).toEqual({
       graphSource: {
-        kind: 'normalized-graph-v1',
-        nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
       runId: 'run-graph',
       targetAdapter: 'mock',
@@ -727,8 +735,10 @@ describe('startRunRoute', () => {
           selection: ['model_a'],
           planRef: VALID_PLAN_REF,
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
           runId: 'run-conflict',
           targetAdapter: 'mock',
@@ -777,7 +787,7 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
-  it('returns 400 when nodes and planRef are both supplied', async () => {
+  it('returns 400 when legacy nodes payload is supplied', async () => {
     const reply = createReply();
 
     const facade = {
@@ -806,10 +816,10 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
-  it('returns 400 when manifest and planRef are both supplied', async () => {
+  it('returns 400 when legacy manifest payload is supplied', async () => {
     const reply = createReply();
 
     const facade = {
@@ -838,7 +848,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
   it('accepts lowercase bearer scheme', async () => {
