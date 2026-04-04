@@ -29,6 +29,10 @@ flowchart LR
 
 These are the only SLA signals safe to treat as active today.
 
+Canonical signal-to-threshold mapping source for AR-C2 wiring:
+
+- [AR-C2 SLA signal threshold mapping](ar-c2-sla-signal-threshold-mapping-20260404.md)
+
 | Status                         | Logical signal                           | Exported metric(s)                                             | Threshold (SLO)                         | Alert policy                                            |
 | ------------------------------ | ---------------------------------------- | -------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------- |
 | `implemented`                  | Start-run latency p50/p99                | `dvt.api.run_start.latency_ms`                                 | p50 <= 500ms, p99 <= 2500ms (15m)       | warning p99 > 2000ms (10m), critical p99 > 2500ms (15m) |
