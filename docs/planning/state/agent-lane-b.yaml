@@ -66,7 +66,7 @@ tasks:
     status_reason: >-
       Phase-3 folder migration is complete with class-aware evidence paths and linked planning
       references updated to the moved artifacts.
-    last_verified: '2026-04-02'
+    last_verified: '2026-04-04'
   - task_id: EVD-IA-02
     priority: P2
     status: done
@@ -86,7 +86,7 @@ tasks:
     status_reason: >-
       Phase 2 classification is complete with one-class-per-file metadata and a deterministic
       migration matrix; file moves remain phase-3 work.
-    last_verified: '2026-04-02'
+    last_verified: '2026-04-04'
   - task_id: EVD-IA-01
     priority: P2
     status: done
@@ -256,7 +256,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: AR-B1
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       add RunStatus state machine validation at the event append boundary in appendAndEnqueueTx so
       that invalid event sequences (e.g., StepCompleted before StepStarted) are rejected at write
@@ -268,13 +268,108 @@ tasks:
       rejected with a typed error before persisting.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
+      - docs/guides/run-status-write-boundary-technical-manual-20260404.md
+      - docs/guides/run-status-write-boundary-user-manual-20260404.md
+      - docs/planning/roadmap/ar-b1-quality-hardening-roadmap-20260404.md
     status_reason: >-
-      Identified as most critical gap in deep architectural review — invalid event sequences
-      silently corrupt the event log today and fixing after the fact requires event log surgery.
-    last_verified: '2026-04-02'
+      Docs-first TDD now includes transition policy modularization, signal precheck extraction,
+      fixture modularization, and nightly postgres integration scheduling; final closeout artifact
+      publication remains.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-A
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: freeze AR-B1 target model in canonical proposal and manuals.
+    dependency: none
+    target: >-
+      One canonical proposal plus technical and user manuals define scope, transition rules, Mermaid
+      diagrams, and DoD for AR-B1.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
+      - docs/guides/run-status-write-boundary-technical-manual-20260404.md
+      - docs/guides/run-status-write-boundary-user-manual-20260404.md
+    status_reason: Canonical docs are in place and linked to AR-B1 execution.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-B
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: add red tests that prove illegal transition rejection at append boundary.
+    dependency: AR-B1-A
+    target: >-
+      Failing tests cover invalid run-level and step-level transition sequences in run-domain and
+      store append paths before implementation hardening.
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/run-domain/test/applyRunEvent.test.ts
+      - packages/@dvt/engine/test/state/InMemoryRunStateStore.appendInvariants.test.ts
+      - packages/@dvt/adapter-postgres/test/smoke.test.ts
+    status_reason: Red tests were authored and exercised for invalid transition rejection coverage.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-C
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: codify explicit legal run and step transition rules in @dvt/run-domain.
+    dependency: AR-B1-B
+    target: >-
+      Transition policy is explicit in code, not inferred from projection side effects, and produces
+      stable typed invalid-transition errors.
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/run-domain/src/applyRunEvent.ts
+      - packages/@dvt/run-domain/src/errors.ts
+    status_reason: Explicit run/step transition guards are now codified in run-domain.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-D
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: wire write-boundary validation across in-memory and Postgres append paths.
+    dependency: AR-B1-C
+    target: >-
+      appendAndEnqueueTx rejects illegal transitions before write effects while preserving dedupe
+      replay semantics and transactional guarantees.
+    complexity: M
+    effort_points: 1
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
+      - packages/@dvt/engine/src/state/InMemoryTxStore.ts
+      - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
+      - packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts
+    status_reason:
+      Write-boundary guards are wired with signal precheck and adapter side-effect prevention.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-E
+    parent_task: AR-B1
+    priority: P0
+    status: in_progress
+    objective: close AR-B1 with validation evidence, docs sync, and planning and status alignment.
+    dependency: AR-B1-D
+    target: >-
+      Required package tests and prepush gates pass, docs and planning surfaces are synchronized,
+      and closeout evidence is recorded.
+    complexity: S
+    effort_points: 1
+    progress_pct: 70
+    evidence_refs:
+      - docs/planning/closeouts
+      - docs/evidence
+    status_reason: Validation baselines are green; pending formal closeout/evidence publication.
+    last_verified: '2026-04-04'
   - task_id: AR-B2
     priority: P1
     status: queued
