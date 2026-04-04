@@ -63,10 +63,36 @@ export function assertEventRunIdMatches(runId: string, event: RunEventInput, ind
   }
 }
 
+export function assertEventTenantMatches(
+  tenantId: string,
+  event: RunEventInput,
+  index: number
+): void {
+  if (event.tenantId !== tenantId) {
+    throw new InvalidRunEventInputError({
+      reason: 'tenant_id_mismatch',
+      index,
+      runId: event.runId,
+    });
+  }
+}
+
 export function assertEventsMatchRunId(runId: string, events: RunEventInput[]): void {
   for (const [index, event] of events.entries()) {
     assertRunEventInput(event, index);
     assertEventRunIdMatches(runId, event, index);
+  }
+}
+
+export function assertEventsMatchRunIdAndTenant(
+  runId: string,
+  tenantId: string,
+  events: RunEventInput[]
+): void {
+  for (const [index, event] of events.entries()) {
+    assertRunEventInput(event, index);
+    assertEventRunIdMatches(runId, event, index);
+    assertEventTenantMatches(tenantId, event, index);
   }
 }
 

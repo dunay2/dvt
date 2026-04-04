@@ -108,6 +108,40 @@ function makeWhitespaceRunIdBootstrap(runId: string): RunBootstrapInput {
   };
 }
 
+function makeTenantMismatchBootstrap(runId: string): RunBootstrapInput {
+  return {
+    metadata: {
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId,
+      planId: 'plan-minimal',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: `wf-${runId}`,
+      providerRunId: `pr-${runId}`,
+    },
+    firstEvents: [
+      {
+        eventId: `${runId}:queued`,
+        eventType: 'RunQueued',
+        runId,
+        tenantId: 't2',
+        projectId: 'p1',
+        environmentId: 'dev',
+        planId: 'plan-minimal',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+        emittedAt: '2026-03-26T00:00:00.000Z',
+        idempotencyKey: `${runId}:queued`,
+        payloadVersion: 1,
+      },
+    ],
+  };
+}
+
 describe('bootstrapRunTx atomicity', () => {
   it('InMemoryTxStore does not persist metadata/events/snapshot when first event validation fails', async () => {
     const store = new InMemoryTxStore();
@@ -183,6 +217,31 @@ describe('bootstrapRunTx atomicity', () => {
     });
     await expect(
       runStateStore.bootstrapRunTx(makeWhitespaceRunIdBootstrap(stateRunId))
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+
+    await expect(txStore.getRunMetadataByRunId('t1', txRunId)).resolves.toBeNull();
+    await expect(txStore.listEvents('t1', txRunId)).resolves.toEqual([]);
+    await expect(runStateStore.getRunMetadataByRunId('t1', stateRunId)).resolves.toBeNull();
+    await expect(runStateStore.listEvents('t1', stateRunId)).resolves.toEqual([]);
+  });
+
+  it('rejects bootstrap events whose tenantId does not match metadata tenantId before persisting any state', async () => {
+    const txStore = new InMemoryTxStore();
+    const runStateStore = new InMemoryRunStateStore();
+    const txRunId = 'run-tenant-mismatch-bootstrap-tx';
+    const stateRunId = 'run-tenant-mismatch-bootstrap-rs';
+
+    await expect(
+      txStore.bootstrapRunTx(makeTenantMismatchBootstrap(txRunId))
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+    await expect(
+      runStateStore.bootstrapRunTx(makeTenantMismatchBootstrap(stateRunId))
     ).rejects.toMatchObject({
       name: 'InvalidRunEventInputError',
       code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,

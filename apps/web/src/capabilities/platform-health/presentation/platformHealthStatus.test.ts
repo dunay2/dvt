@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { createPlatformHealthSnapshot } from '../testing/platformHealthFixtures';
 import {
+  buildShellHealthPresentationModel,
   getNextRetryDelayMs,
+  getShellHealthPollingIntervalMs,
   getPlatformConnectionDetail,
   getPlatformHealthErrorMessageFromQuery,
 } from './platformHealthStatus';
@@ -46,5 +48,28 @@ describe('platformHealthStatus', () => {
     expect(getNextRetryDelayMs(5_000)).toBe(10_000);
     expect(getNextRetryDelayMs(60_000)).toBe(60_000);
     expect(getNextRetryDelayMs(120_000)).toBe(60_000);
+  });
+
+  it('uses exponential polling backoff for offline health failures', () => {
+    expect(getShellHealthPollingIntervalMs(undefined, true, 1)).toBe(5_000);
+    expect(getShellHealthPollingIntervalMs(undefined, true, 2)).toBe(10_000);
+    expect(getShellHealthPollingIntervalMs(undefined, true, 5)).toBe(60_000);
+  });
+
+  it('builds a checking model before the first settled query', () => {
+    const model = buildShellHealthPresentationModel({
+      data: undefined,
+      isError: false,
+      error: null,
+      isPending: true,
+      isFetching: true,
+      failureCount: 0,
+      dataUpdatedAt: 0,
+      errorUpdatedAt: 0,
+    });
+
+    expect(model.connectionState).toBeNull();
+    expect(model.isInitialHealthCheckPending).toBe(true);
+    expect(model.connectionDetail).toBeNull();
   });
 });

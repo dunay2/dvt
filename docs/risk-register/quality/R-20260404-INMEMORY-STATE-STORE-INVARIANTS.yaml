@@ -1,0 +1,13 @@
+---
+id: R-20260404-INMEMORY-STATE-STORE-INVARIANTS
+title: In-memory engine state-store invariant drift on snapshot and outbox paths
+status: Open
+date: 2026-04-04
+owners:
+  - dvt/engine
+severity: Medium
+probability: Low
+---
+Without explicit invariant hardening, in-memory state-store behavior can drift from run-event write
+policy and bootstrap atomicity expectations. This risk is mitigated by strengthening guards and
+tests on append invariants, outbox path integrity, and transaction-level atomic behavior.
