@@ -92,6 +92,7 @@ describe('RootShell platform health UX', () => {
       await waitFor(() => {
         expect(view.getByText('Backend offline')).toBeTruthy();
       });
+      expect(view.getByText('Offline')).toBeTruthy();
 
       const retryButton = view.getByRole('button', { name: /retry now/i });
       const initialCallCount = loadSnapshot.mock.calls.length;
@@ -137,6 +138,7 @@ describe('RootShell platform health UX', () => {
         }
       );
 
+      expect(view.getByText('Degraded')).toBeTruthy();
       expect(view.getByText('Intent reconciler degraded: runtime_unavailable.')).toBeTruthy();
       expect(view.getByRole('button', { name: /retry now/i })).toBeTruthy();
     } finally {

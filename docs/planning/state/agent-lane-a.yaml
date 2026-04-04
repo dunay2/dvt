@@ -221,7 +221,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: S18-F1
     priority: P2
-    status: queued
+    status: done
     objective: >-
       harden the explicit state-store role bundle into a root-owned boundary and prevent convenience
       rewiring drift.
@@ -231,7 +231,7 @@ tasks:
       regression guard.
     complexity: M
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
       - docs/planning/proposals/todo.md
@@ -688,22 +688,25 @@ tasks:
       injected registries for governed non-dbt extensions.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+      - packages/@dvt/plan-verifier/src/stepTypeConfig.ts
+      - packages/@dvt/plan-verifier/test/verify.test.ts
     status_reason: >-
       Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
-      runtime failures as step kinds multiply; the live proposal now freezes a verifier-owned,
-      fail-closed admission plan with waves `S08-4-A/B/C`.
-    last_verified: '2026-04-03'
+      runtime failures as step kinds multiply; wave `S08-4-A` is now implemented in
+      `@dvt/plan-verifier` with parse-plus-verify helpers and fail-closed rejection for unregistered
+      kinds. `S08-4-B/C` remain for admissions cutover and closure coverage.
+    last_verified: '2026-04-04'
   - task_id: S08-4-A
     parent_task: S08-4
     priority: P0
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective:
       add verifier-owned StepKind semantic validation APIs backed by an injectable registry.
     dependency: S08-3
@@ -712,8 +715,13 @@ tasks:
       unregistered kinds by default, and leave `@dvt/contracts` unchanged.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
-    status_reason: The first execution wave is defined and ready for implementation.
-    last_verified: '2026-04-03'
+      - packages/@dvt/plan-verifier/src/stepTypeConfig.ts
+      - packages/@dvt/plan-verifier/test/verify.test.ts
+    status_reason: >-
+      `@dvt/plan-verifier` now exposes verifier-owned parse-plus-verify helpers backed by
+      `IStepTypeRegistry`, rejects unregistered kinds by default, and supports injected registries
+      for governed extensions.
+    last_verified: '2026-04-04'
   - task_id: S08-4-B
     parent_task: S08-4
     priority: P0
