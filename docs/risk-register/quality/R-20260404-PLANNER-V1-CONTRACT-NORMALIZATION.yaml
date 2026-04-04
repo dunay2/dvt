@@ -1,0 +1,29 @@
+---
+id: R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION
+title: Planner boundary contract naming drift across V2 and V1 symbols
+status: Open
+date: 2026-04-04
+owners:
+  - '@dvt/contracts'
+  - '@dvt/planner'
+  - '@dvt/adapter-postgres'
+  - 'dvt-api'
+severity: Medium
+probability: Medium
+---
+summary: >
+  Active runtime boundaries used a mixed V2/V1 planner contract vocabulary. This created integration
+  ambiguity and ARC-governed drift risk between contracts, planner, API, and adapter consumers.
+
+mitigations:
+  - Normalize active contract filenames and exported symbols to V1.
+  - Align parser and schema helper names to the same public contract line.
+  - Validate with package build/test plus repository pre-push quality gates.
+
+monitoring:
+  - Track PR/CI comments that report unresolved V2 symbols in active runtime paths.
+  - Watch contract schema sync tests and changed-file checks for regressions.
+
+follow_up:
+  - Continue cleanup of legacy historical/local docs that still mention V2 labels where those
+    surfaces remain intentionally archival.
