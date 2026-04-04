@@ -150,6 +150,34 @@ describe('WorkflowEngineCoreService', () => {
     ).toEqual(['RunQueued', 'RunStarted', 'RunPaused', 'RunResumed']);
   });
 
+  it('signal(PAUSE) retry with same signalId is a no-op and does not call adapter again', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    await bootstrapQueuedRun(store, 'core-signal-pause-retry-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-retry-1');
+    await appendRunStarted(store, 'core-signal-pause-retry-1');
+
+    const pauseReq = { signalId: 'sig-pause-retry-1', type: 'PAUSE' as const };
+
+    // First call: transitions run to PAUSED
+    await core.signal(ref, pauseReq);
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-retry-1')).map((e) => e.eventType)
+    ).toEqual(['RunQueued', 'RunStarted', 'RunPaused']);
+
+    // Retry with same signalId: must be a no-op (no adapter call, no new events)
+    await core.signal(ref, pauseReq);
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-retry-1')).map((e) => e.eventType)
+    ).toEqual(['RunQueued', 'RunStarted', 'RunPaused']);
+  });
+
   it('signal(PAUSE) on PENDING run rejects before adapter side effects', async () => {
     const signal = vi.fn(async () => {});
     const { core, store } = createWorkflowEngineCoreFixture({
