@@ -61,8 +61,9 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       }
       throw error;
     } finally {
-      (this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY)
-        .recordPlanCompileLatency(Date.now() - compileStartMs, compileOutcome);
+      (
+        this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
+      ).recordPlanCompileLatency(Date.now() - compileStartMs, compileOutcome);
     }
     const planRef = await this.deps.planStore.storePlan(buildResult);
     const validation = await this.deps.validator.validatePlan(planRef, command.targetAdapter);
