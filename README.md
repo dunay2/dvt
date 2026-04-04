@@ -32,6 +32,148 @@ migrations), Vitest (testing).
 
 ---
 
+## Useful Commands
+
+Run these commands from the repository root.
+
+### Documentation And Zensical
+
+```bash
+# Serve the docs locally with zensical
+pnpm docs:serve
+
+# Build the docs site
+pnpm docs:build
+
+# Run the docs governance and quality baseline
+pnpm docs:ci
+```
+
+Useful local URLs after startup:
+
+- The Zensical server URL is printed in the terminal when `pnpm docs:serve`
+  starts.
+- In the observed local run for this workspace, Zensical served on
+  `http://localhost:8000/`.
+
+### Frontend
+
+```bash
+# Start the web app in local dev mode
+pnpm dev:web
+
+# Alternative explicit filter form
+pnpm --filter @dvt/web dev
+
+# Type-check or build only the frontend app
+pnpm --filter @dvt/web typecheck
+pnpm --filter @dvt/web build
+```
+
+Useful local URL after startup:
+
+- The Vite dev server URL is printed in the terminal when `pnpm dev:web` starts.
+- In this workspace, the observed local URL was `http://localhost:5174/`
+  because `5173` was already in use.
+- When the frontend is configured against the local API, use
+  `VITE_API_BASE_URL=http://localhost:3000`.
+
+### Backend
+
+```bash
+# Start the API in watch mode
+pnpm --filter dvt-api dev
+
+# Start the compiled API build
+pnpm --filter dvt-api start
+
+# Validate or build only the API
+pnpm --filter dvt-api typecheck
+pnpm --filter dvt-api build
+pnpm --filter dvt-api test
+pnpm --filter dvt-api test:integration
+```
+
+Useful local URLs after startup:
+
+- Default API bind from the repo env config: `http://localhost:3000`
+- API health: `http://localhost:3000/healthz`
+- API version: `http://localhost:3000/version`
+- API readiness when enabled: `http://localhost:3000/readyz`
+- Example query route:
+  `http://localhost:3000/runs?tenantId=<tenant-id>&projectId=<project-id>&environmentId=<environment-id>`
+
+### Workers
+
+```bash
+# Outbox worker
+pnpm --filter dvt-outbox-worker dev
+pnpm --filter dvt-outbox-worker start
+
+# Projector worker
+pnpm --filter dvt-projector-worker dev
+pnpm --filter dvt-projector-worker start
+
+# Lineage worker
+pnpm --filter dvt-lineage-worker dev
+pnpm --filter dvt-lineage-worker start
+```
+
+Useful local URLs after startup:
+
+- Outbox worker health: `http://127.0.0.1:9464/healthz`
+- Outbox worker readiness: `http://127.0.0.1:9464/readyz`
+- Outbox worker metrics: `http://127.0.0.1:9464/metrics`
+- Projector worker admin endpoint base: `http://127.0.0.1:9465/`
+- Lineage worker admin endpoint base: `http://127.0.0.1:9466/`
+
+### Repo-Wide Validation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build and test the workspace
+pnpm build
+pnpm test
+
+# Type-check the repository baseline
+pnpm type-check
+
+# Type-check and build the app layer only
+pnpm type-check:apps
+pnpm build:apps
+
+# Contracts, golden paths, and pre-push gate
+pnpm validate:contracts
+pnpm golden:validate
+pnpm verify:prepush
+```
+
+### Package-Focused Examples
+
+```bash
+# Engine
+pnpm --filter @dvt/engine build
+pnpm --filter @dvt/engine test
+
+# Planner
+pnpm --filter @dvt/planner build
+pnpm --filter @dvt/planner test
+
+# Postgres adapter
+pnpm --filter @dvt/adapter-postgres build
+pnpm --filter @dvt/adapter-postgres test
+pnpm --filter @dvt/adapter-postgres test:integration
+
+# Temporal adapter
+pnpm --filter @dvt/adapter-temporal build
+pnpm --filter @dvt/adapter-temporal test
+pnpm --filter @dvt/adapter-temporal test:integration
+```
+
+---
+
 ## Documentation
 
 > **[Documentation Index](docs/index.md)**

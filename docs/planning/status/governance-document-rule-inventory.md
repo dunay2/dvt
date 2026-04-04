@@ -214,6 +214,9 @@ Usage rules already declared in the ADR index:
 - [scripts/check-changed.cjs](../../../scripts/check-changed.cjs)
   Role: `changed-file gate`
   Enforces: ESLint and Prettier checks on changed files.
+- [scripts/qa-artifact-check.cjs](../../../scripts/qa-artifact-check.cjs)
+  Role: `QA artifact gate`
+  Enforces: required structure for changed QA artifact docs in governed paths.
 - [scripts/docs-pr-create.cjs](../../../scripts/docs-pr-create.cjs)
   Role: `deterministic docs PR wrapper`
   Enforces: ordered local docs validation, PR title/body validation, and the

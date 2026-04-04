@@ -33,6 +33,12 @@ The agent MUST:
 - keep docs, config, code, tests, and CI behavior aligned
 - work on the real affected system, not on a reduced local story that hides
   integration impact
+- work doc-driven first when the slice changes behavior, architecture,
+  contracts, workflows, or planning posture
+- produce diagrams of the current state and solution-rationale material before
+  implementation when the slice needs design clarification
+- start TDD only after the governing documentation, diagrams, and solution
+  rationale are materially in place for the active slice
 
 The agent MUST NOT:
 
