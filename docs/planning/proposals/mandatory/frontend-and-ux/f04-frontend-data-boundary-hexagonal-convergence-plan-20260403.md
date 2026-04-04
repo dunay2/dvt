@@ -1,12 +1,12 @@
 ---
-title: F-04 Frontend Data Boundary Hexagonal Convergence Plan
+title: F-04 Frontend Data Boundary Hexagonal Convergence Mandatory Plan
 status: Draft
 owner: Frontend / Architecture
 last_reviewed: 2026-04-03
 planning_type: proposal
 ---
 
-# F-04 Frontend Data Boundary Hexagonal Convergence Plan
+# F-04 Frontend Data Boundary Hexagonal Convergence Mandatory Plan
 
 ## Summary
 
