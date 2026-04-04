@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-03-31'
+last_reviewed: '2026-04-04'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -368,6 +368,44 @@ tasks:
       Triple versioning is justified as pre-investment but should be re-evaluated if only one
       version exists after 6 months.
     last_verified: '2026-04-02'
+  - task_id: AR-D7
+    priority: P1
+    status: queued
+    objective: >-
+      implement tenant-aware outbox shard assignment so high-volume tenants cannot starve unrelated
+      tenants through shared run_id hash distribution.
+    dependency: AR-C3
+    target: >-
+      Outbox shard strategy includes tenant-aware partitioning, fairness tests validate noisy-tenant
+      isolation, and operational docs define shard rebalance and migration rollout.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      Principal deep review flagged shared shard assignment by run_id as a multi-tenant fairness
+      risk under sustained load.
+    last_verified: '2026-04-04'
+  - task_id: AR-D8
+    priority: P1
+    status: queued
+    objective: >-
+      enforce default retention policy wiring (archive and purge) as a mandatory runtime baseline
+      with explicit health alerts when retention jobs are not active.
+    dependency: run event log retention + TTL
+    target: >-
+      Deployments ship default retention windows and retention worker scheduling by default, and
+      health checks alert on stale terminal-run backlog beyond policy thresholds.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      Review evidence shows retention tooling exists but remains optional in operations, leaving
+      unbounded growth risk when operators omit scheduling.
+    last_verified: '2026-04-04'
   - task_id: first enterprise pilot
     priority: P3
     status: blocked
@@ -441,16 +479,19 @@ dependency_notes:
     snapshot projection (P1), continueAsNew governance (P2), worker scaling docs (P2), zero-downtime
     rollback (P2), tenant-configurable retention (P2), and triple versioning assessment (P2).
   - >-
+    The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
+    and `AR-D8` (default retention policy plus retention health alerting) as scale hardening tasks.
+  - >-
     `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2)
     and worker routing model by step kind (P2, depends on MW-C1).
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
-  total_tasks: 23
-  total_effort_points: 124
+  verified_on: '2026-04-04'
+  total_tasks: 25
+  total_effort_points: 132
   completed_weighted_points: 30
-  lane_progress_pct: 24
+  lane_progress_pct: 23
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
