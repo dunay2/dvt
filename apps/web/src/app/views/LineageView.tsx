@@ -10,6 +10,7 @@ import { Label } from '../components/ui/label';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Switch } from '../components/ui/switch';
 import { resolveCanvasGraphStrategy } from '../plugins/graphStrategyRegistry';
+import { queryKeys } from '../queries/queryKeys';
 import { useWorkspaceService } from '../services/AppServicesContext';
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 
@@ -136,7 +137,7 @@ export default function LineageView() {
   const workspaceService = useWorkspaceService();
 
   const { data: snapshot, isLoading } = useQuery({
-    queryKey: ['workspace', 'graph'],
+    queryKey: queryKeys.workspace.graphForView('lineage'),
     queryFn: () => workspaceService.getGraphSnapshot(),
     staleTime: 60_000,
   });

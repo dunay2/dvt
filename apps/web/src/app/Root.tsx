@@ -17,7 +17,7 @@ import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
 import { AppServicesProvider } from './services/AppServicesContext';
-import { useAppStore } from './stores/appStore';
+import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
 
 const queryClient = new QueryClient({
@@ -40,7 +40,10 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
-  const { focusMode, consolePanelHeight, consolePanelVisible, setConnectionStatus } = useAppStore();
+  const focusMode = useUiLayoutStore((state) => state.focusMode);
+  const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
+  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const setConnectionStatus = useUiLayoutStore((state) => state.setConnectionStatus);
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
 
   useEffect(() => {

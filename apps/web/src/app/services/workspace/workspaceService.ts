@@ -1,74 +1,30 @@
-import type { AuditLogEntry, DbtEdge, DbtNode, DiffChange, Plugin, Role } from '../../types/dbt';
+import type { IWorkspacePort } from '../../ports/workspace';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
-import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
+import type { DataSourceMode } from '../config/dataSource';
 import { createApiWorkspaceService } from './workspaceService.api';
 import { createMockWorkspaceService } from './workspaceService.mock';
 
-export type WorkspaceGraphSnapshot = {
-  nodes: DbtNode[];
-  edges: DbtEdge[];
-};
+// Re-export port types for backward compatibility — consumers should migrate
+// to importing from '../../ports/workspace' or '../../ports' directly.
+export type {
+  WorkspaceGraphSnapshot,
+  WarehouseConnection,
+  WarehouseColumn,
+  WarehouseTable,
+  SourceImportGrouping,
+  ImportSourcesInput,
+  ImportSourcesResult,
+} from '../../ports/workspace';
 
-export type WarehouseConnection = {
-  id: string;
-  name: string;
-  type: 'snowflake' | 'bigquery' | 'redshift' | 'postgres';
-  database: string;
-};
-
-export type WarehouseColumn = {
-  name: string;
-  type: string;
-  nullable: boolean;
-};
-
-export type WarehouseTable = {
-  database: string;
-  schema: string;
-  table: string;
-  rowCount?: number;
-  columns?: WarehouseColumn[];
-};
-
-export type SourceImportGrouping = 'schema' | 'database' | 'custom';
-
-export type ImportSourcesInput = {
-  connectionId: string;
-  tables: WarehouseTable[];
-  groupingStrategy: SourceImportGrouping;
-  includeColumns: boolean;
-  addTests: boolean;
-  addFreshness: boolean;
-};
-
-export type ImportSourcesResult = {
-  success: true;
-  sourcesCreated: number;
-  tablesImported: number;
-  yamlFiles: string[];
-  grouping: SourceImportGrouping;
-  options: {
-    includeColumns: boolean;
-    addTests: boolean;
-    addFreshness: boolean;
-  };
-};
-
-export interface WorkspaceService {
-  getGraphSnapshot: () => Promise<WorkspaceGraphSnapshot>;
-  getDiffChanges: () => Promise<DiffChange[]>;
-  getPlugins: () => Promise<Plugin[]>;
-  getRoles: () => Promise<Role[]>;
-  getAuditLog: () => Promise<AuditLogEntry[]>;
-  listWarehouseConnections: () => Promise<WarehouseConnection[]>;
-  listWarehouseTables: (connectionId: string) => Promise<WarehouseTable[]>;
-  importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;
-}
+/**
+ * @deprecated Use {@link IWorkspacePort} from `../../ports/workspace` instead.
+ */
+export type WorkspaceService = IWorkspacePort;
 
 export function createWorkspaceService(
-  mode: DataSourceMode = resolveDataSource(),
+  mode: DataSourceMode,
   apiClient: ApiClient = createApiClient()
-): WorkspaceService {
+): IWorkspacePort {
   if (mode === 'api') {
     return createApiWorkspaceService(apiClient);
   }

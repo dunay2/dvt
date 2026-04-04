@@ -18,7 +18,7 @@ import type {
   ImportSourcesResult,
   WarehouseConnection,
   WarehouseTable,
-} from '../services/workspace/workspaceService';
+} from '../ports/workspace';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card } from './ui/card';

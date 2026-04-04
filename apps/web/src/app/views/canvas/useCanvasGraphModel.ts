@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEdgesState, useNodesState, type Edge, type Node } from '@xyflow/react';
 import { useEffect, useMemo } from 'react';
 
+import { queryKeys } from '../../queries/queryKeys';
 import { mapCanonicalEdgeToCanvasEdge, mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
@@ -37,7 +38,7 @@ export function useCanvasGraphModel({
   persistedNodePositions,
 }: UseCanvasGraphModelArgs) {
   const graphSnapshotQuery = useQuery({
-    queryKey: ['workspace', 'graph', workspaceLayoutKey],
+    queryKey: queryKeys.workspace.graph(workspaceLayoutKey),
     queryFn: () => workspaceService.getGraphSnapshot(),
   });
 

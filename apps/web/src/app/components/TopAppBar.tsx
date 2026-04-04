@@ -17,7 +17,8 @@ import {
 import type { PlatformConnectionState } from '../../capabilities/platform-health';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
-import { useAppStore } from '../stores/appStore';
+import { useSessionStore } from '../stores/sessionStore';
+import { useUiLayoutStore } from '../stores/uiLayoutStore';
 
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -57,28 +58,26 @@ export default function TopAppBar({
   connectionStateOverride,
   isConnectionChecking = false,
 }: TopAppBarProps) {
-  const {
-    selectedTenant,
-    selectedProject,
-    selectedEnvironment,
-    gitBranch,
-    gitSha,
-    connectionStatus,
-    focusMode,
-    toggleFocusMode,
-    setSelectedTenant,
-    setSelectedProject,
-    setSelectedEnvironment,
-    explorerPanelVisible,
-    inspectorPanelVisible,
-    consolePanelVisible,
-    toggleExplorerPanel,
-    toggleInspectorPanel,
-    toggleConsolePanel,
-    gridSize,
-    setGridSize,
-  } = useAppStore();
+  const selectedTenant = useSessionStore((state) => state.tenantId);
+  const selectedProject = useSessionStore((state) => state.projectId);
+  const selectedEnvironment = useSessionStore((state) => state.environmentId);
+  const setSelectedTenant = useSessionStore((state) => state.setTenantId);
+  const setSelectedProject = useSessionStore((state) => state.setProjectId);
+  const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
+  const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
+  const focusMode = useUiLayoutStore((state) => state.focusMode);
+  const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
+  const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);
+  const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
+  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const toggleExplorerPanel = useUiLayoutStore((state) => state.toggleExplorerPanel);
+  const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
+  const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
+  const gridSize = useUiLayoutStore((state) => state.gridSize);
+  const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
+  const gitBranch = workspaceBootstrap.gitBranch;
+  const gitSha = workspaceBootstrap.gitSha;
 
   return (
     <TooltipProvider>

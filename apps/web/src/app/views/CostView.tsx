@@ -17,8 +17,9 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { queryKeys } from '../queries/queryKeys';
 import { useRunsService, useWorkspaceService } from '../services/AppServicesContext';
-import { useAppStore } from '../stores/appStore';
+import { useExecutionStore } from '../stores/executionStore';
 
 function formatCurrency(value: number): string {
   return `$${value.toFixed(2)}`;
@@ -27,15 +28,15 @@ function formatCurrency(value: number): string {
 export default function CostView() {
   const workspaceService = useWorkspaceService();
   const runsService = useRunsService();
-  const { currentRun } = useAppStore();
+  const currentRun = useExecutionStore((state) => state.currentRun);
 
   const graphSnapshotQuery = useQuery({
-    queryKey: ['workspace', 'graph', 'cost-view'],
+    queryKey: queryKeys.workspace.graphForView('cost-view'),
     queryFn: () => workspaceService.getGraphSnapshot(),
   });
 
   const runsQuery = useQuery({
-    queryKey: ['runs', 'list', 'cost-view'],
+    queryKey: queryKeys.runs.list('cost-view'),
     queryFn: () => runsService.listRunSummaries(),
   });
 

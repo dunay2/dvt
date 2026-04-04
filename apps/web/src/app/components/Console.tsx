@@ -1,14 +1,16 @@
 import { Terminal, FileText, X } from 'lucide-react';
 
 import { useAppDataSourceMode } from '../services/AppServicesContext';
-import { useAppStore } from '../stores/appStore';
+import { useExecutionStore } from '../stores/executionStore';
+import { useUiLayoutStore } from '../stores/uiLayoutStore';
 
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 
 export default function Console() {
-  const { setConsolePanelHeight, currentRun } = useAppStore();
+  const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
+  const currentRun = useExecutionStore((state) => state.currentRun);
   const dataSourceMode = useAppDataSourceMode();
 
   const mockLogs = [

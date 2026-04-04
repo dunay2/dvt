@@ -1,25 +1,29 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
+import type { IPlansPort } from '../ports/plans';
+import type { IRunsPort } from '../ports/runs';
+import type { IWorkspacePort } from '../ports/workspace';
 import { createApiClient, type ApiClient } from './api/createApiClient';
 import { resolveDataSource, type DataSourceMode } from './config/dataSource';
-import { createPlansService, type PlansService } from './plans/plansService';
-import { createRunsService, type RunsService } from './runs/runsService';
-import { createWorkspaceService, type WorkspaceService } from './workspace/workspaceService';
+import { setRuntimeDataSourceMode } from './config/runtimeDataSourceMode';
+import { createPlansService } from './plans/plansService';
+import { createRunsService } from './runs/runsService';
+import { createWorkspaceService } from './workspace/workspaceService';
 
 type AppServicesContextValue = {
   readonly dataSourceMode: DataSourceMode;
   readonly apiClient: ApiClient;
-  readonly workspaceService: WorkspaceService;
-  readonly runsService: RunsService;
-  readonly plansService: PlansService;
+  readonly workspaceService: IWorkspacePort;
+  readonly runsService: IRunsPort;
+  readonly plansService: IPlansPort;
 };
 
 type AppServicesOverrides = {
   readonly mode?: DataSourceMode;
   readonly apiClient?: ApiClient;
-  readonly workspaceService?: WorkspaceService;
-  readonly runsService?: RunsService;
-  readonly plansService?: PlansService;
+  readonly workspaceService?: IWorkspacePort;
+  readonly runsService?: IRunsPort;
+  readonly plansService?: IPlansPort;
 };
 
 const AppServicesContext = createContext<AppServicesContextValue | null>(null);
@@ -28,6 +32,7 @@ function buildAppServicesContextValue(
   overrides: AppServicesOverrides = {}
 ): AppServicesContextValue {
   const dataSourceMode = overrides.mode ?? resolveDataSource();
+  setRuntimeDataSourceMode(dataSourceMode);
   const apiClient = overrides.apiClient ?? createApiClient();
 
   return {
@@ -73,14 +78,14 @@ export function useAppDataSourceMode(): DataSourceMode {
   return useRequiredAppServicesContext().dataSourceMode;
 }
 
-export function useWorkspaceService(): WorkspaceService {
+export function useWorkspaceService(): IWorkspacePort {
   return useRequiredAppServicesContext().workspaceService;
 }
 
-export function useRunsService(): RunsService {
+export function useRunsService(): IRunsPort {
   return useRequiredAppServicesContext().runsService;
 }
 
-export function usePlansService(): PlansService {
+export function usePlansService(): IPlansPort {
   return useRequiredAppServicesContext().plansService;
 }
