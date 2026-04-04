@@ -130,7 +130,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: S05
     priority: P0
-    status: review
+    status: done
     objective: >-
       S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level
       write-boundary schema gating.
@@ -138,17 +138,18 @@ tasks:
     target: Merge PR
     complexity: L
     effort_points: 8
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
+      - docs/evidence/ED-20260404-guards-alignment-adapter-postgres.md
+      - docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md
       - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md
       - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md
     status_reason: >-
-      Payload-content validation and in-memory write-boundary tenant/schema hardening are now in
-      place with passing targeted engine tests and prepush gate. Parent task closure rule is
-      explicit: keep `S05` in `review` until adapter-postgres integration evidence is refreshed in
-      an accepted evidence artifact; if that evidence is accepted, move `S05` to `done`.
+      Payload-content validation, in-memory write-boundary tenant/schema hardening, and
+      adapter-postgres integration evidence are accepted. Parent task `S05` is now closed with
+      accepted evidence artifacts for both in-memory and adapter-postgres boundary equivalence.
     last_verified: '2026-04-04'
   - task_id: S05-F1
     priority: P0
@@ -466,8 +467,8 @@ dependency_notes:
     `MVP-B1` is now closed because the traceability matrix still matches the reviewed `MVP-A1`
     contractual scope and command baseline.
   - >-
-    `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review
-    until envelope-level payloadVersion closure is accepted.
+    `S05-F1` remains closed as the payload-content schema slice, and parent task `S05` is now closed
+    with accepted adapter-postgres integration evidence.
   - '`RC-B1` and `RC-B2` are verified against mainline code and proposal artifacts.'
   - '`RC-B5` and `RC-B5-F2` are closed with accepted evidence.'
   - >-

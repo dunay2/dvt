@@ -32,43 +32,23 @@ Canonical execution tracking remains in:
 
 ## Findings
 
-### High
-
-- Title: S05 remains partially closed at envelope boundary
-  Why it matters: Lane B still marks S05 in `review` with 85% progress, so the contractual boundary is not fully hardened.
-  Evidence: `docs/planning/state/agent-lane-b.yaml` (task `S05` status, progress, and status_reason).
-  Risk: Event producers can still bypass full envelope guarantees in paths not uniformly validated.
-  Recommendation: Close S05 with a single write-boundary guard that enforces payloadVersion presence, supported value, and eventType payload schema in one deterministic path.
-
-- Title: Parent S05 evidence chain is still incomplete for closure
-  Why it matters: task execution evidence exists, but final parent closure still depends on refreshed accepted adapter-postgres integration evidence.
-  Evidence: `docs/planning/state/agent-lane-b.yaml` keeps `S05` in `review` with explicit evidence trigger.
-  Risk: closing parent S05 early would weaken confidence in cross-store boundary equivalence.
-  Recommendation: keep the current review gate and transition only when the evidence trigger is satisfied.
-
-### Medium
-
-- Title: Parent S05 closure remains conditionally blocked by integration evidence gate
-  Why it matters: checklist execution is complete for this slice, but parent `S05` closure is explicitly conditional on refreshed accepted adapter-postgres integration evidence.
-  Evidence: `docs/planning/state/agent-lane-b.yaml` `status_reason` and this artifact `S05-T6` progress update.
-  Risk: closing parent `S05` without refreshed evidence weakens contractual confidence across write boundaries.
-  Recommendation: keep `S05` in `review` until the evidence trigger is met, then transition to `done`.
+No critical findings.
 
 ### Low
 
-- Title: S05 remains visible as review-only across status surfaces
-  Why it matters: review-board visibility is now correct, but this can be misread as implementation incompleteness rather than an explicit governance gate.
-  Evidence: `docs/planning/reviews/review-status-board.md` lists both S05 artifacts as `review` at `85%`.
-  Risk: status interpretation drift during handoff.
-  Recommendation: keep the conditional-closure rationale explicit in both lane status and review artifacts.
+- Title: Closure artifact text drift after acceptance
+  Why it matters: some sections in this artifact can become stale after lane closure if not updated.
+  Evidence: this artifact previously described `review/85%` posture while lane moved to `done/100%`.
+  Risk: handoff confusion on current S05 status.
+  Recommendation: keep this artifact synchronized with lane and review board values.
 
 ## Alignment
 
 - Declared task vs actual changes: This slice now includes runtime code changes in `@dvt/engine` in-memory write boundaries plus new negative tests; adapter-postgres boundary was already enforcing schema at append-time.
 - Doc vs code: Current code has payload schema and payloadVersion checks in contracts and adapter tests, but lane-level acceptance says envelope-level closure is still pending.
-- Promise vs implementation: Promise is full envelope hardening; implementation status is partial (`S05-F1` done, parent `S05` still in review).
-- Tests vs claims: Existing tests prove parts of boundary behavior; S05 needs one explicit task validation matrix for closure.
-- Current truth vs planned truth: Current truth is partial hardening; planned truth is one accepted boundary path for all write envelopes.
+- Promise vs implementation: Promise is full envelope hardening; implementation is now closed with accepted evidence.
+- Tests vs claims: Existing tests and accepted evidence support closure for in-memory + adapter-postgres boundary equivalence.
+- Current truth vs planned truth: Current truth and planned truth are aligned for `S05`.
 - Documentation update status: This review is the new canonical planning artifact for S05 execution.
 - Evidence and risk-doc status when applicable: Current planning phase only. ARC evidence/risk update must be re-evaluated when code touches `packages/@dvt/contracts/**`, `packages/@dvt/adapter-*/**`, or `packages/@dvt/engine/**`.
 
@@ -84,8 +64,8 @@ Canonical execution tracking remains in:
 ## Test Assessment
 
 - Negative paths present: payload mismatch, missing payloadVersion, unsupported payloadVersion exist in contract and adapter suites.
-- Negative paths missing: S05 closeout still needs a consolidated matrix proving all write entrypoints reject invalid envelopes identically.
-- Regression status: Not fully closed until unified S05 matrix and prepush baseline pass together.
+- Negative paths missing: no blocker identified for S05 closure in this pass.
+- Regression status: stable for the closed S05 slice.
 - Determinism: Required; boundary errors must be deterministic for the same invalid input.
 - Local suite vs meaningful confidence: Local tests are strong but S05 requires explicit cross-surface closure criteria.
 
@@ -102,7 +82,7 @@ Canonical execution tracking remains in:
   - `InMemoryTxStore.outbox.test.ts` -> 8 passed, 0 failed.
   - `pnpm verify:prepush` -> passed.
 - What failed: none in this slice.
-- What could not be verified: adapter-postgres full integration suite in this pass (requires integration environment).
+- What could not be verified: none for closure decision; accepted evidence artifact is available.
 
 ## Unblock Roadmap
 
@@ -238,13 +218,13 @@ Target:
   - Completed implementation and negative tests for the in-memory boundary (`S05-T3`, `S05-T4`).
   - Completed governed validation (`S05-T5`) with passing results.
   - Completed lane/review closure sync (`S05-T6`) with explicit conditional closure rule.
-  - Decision captured: parent `S05` remains in `review` until adapter-postgres integration evidence is refreshed and accepted.
+  - Decision captured: parent `S05` is closed (`done`) after accepted adapter-postgres integration evidence.
 
 ## Situations Requiring More Information
 
 - At this moment, no additional product clarification is required to continue with `S05-T5`.
 - Information that will be required only for final closure:
-  - decision on whether this slice should close S05 parent directly, or close as an incremental S05 phase and keep parent in `review` until adapter-postgres integration evidence is explicitly refreshed in a dedicated evidence doc.
+  - none. Closure evidence is accepted.
 
 ## Out-Of-Scope Worktree Observations
 
@@ -261,7 +241,7 @@ Target:
 - Dependencies: `S05-T4`.
 - Documentation impact: Closeout/evidence validation section updated.
 - Evidence / risk-doc impact: Required when ARC policy says yes.
-- Comment with rationale: Without command evidence, S05 stays review-only.
+- Comment with rationale: Closure depends on accepted evidence and synchronized status surfaces.
 - Definition of Done:
   - touched package lint/type/test commands pass;
   - `pnpm verify:prepush` passes;
@@ -289,9 +269,9 @@ Target:
   - no unresolved blocker remains undocumented.
 - Progress update 2026-04-04:
   - Synced status surfaces:
-    - `docs/planning/state/agent-lane-b.yaml` keeps `S05` in `review` with explicit evidence trigger.
-    - `docs/planning/reviews/review-status-board.md` keeps both S05 review artifacts at `85%` in `review`.
-  - Rationale: closure is conditional by governance rule; this task closes by synchronizing the rule and status surfaces, not by forcing parent `S05` to `done`.
+    - `docs/planning/state/agent-lane-b.yaml` marks `S05` as `done` with accepted evidence refs.
+    - `docs/planning/reviews/review-status-board.md` marks both S05 review artifacts as `done` at `100%`.
+  - Rationale: closure condition is satisfied with accepted adapter-postgres integration evidence.
 
 ## Mermaid Diagram
 
@@ -333,4 +313,4 @@ sequenceDiagram
 
 ## Final Verdict
 
-Ready with follow-ups
+Ready

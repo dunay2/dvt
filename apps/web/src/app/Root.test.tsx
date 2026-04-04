@@ -11,7 +11,8 @@ import {
   createPlatformHealthSnapshot,
 } from '../capabilities/platform-health/testing/platformHealthFixtures';
 import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHarness';
-import { RootShell } from './Root';
+import Root, { RootShell } from './Root';
+import { useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
 
 function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
@@ -33,6 +34,11 @@ function resetAppStore(): void {
     consolePanelVisible: false,
     focusMode: false,
   });
+}
+
+function RootServicesProbe(): JSX.Element {
+  const mode = useAppDataSourceMode();
+  return <div data-testid="root-services-probe">mode:{mode}</div>;
 }
 
 describe('RootShell platform health UX', () => {
@@ -214,6 +220,30 @@ describe('RootShell platform health UX', () => {
       );
 
       expect(view.getByText('Auto-refresh in 10s.')).toBeTruthy();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+});
+
+describe('Root integration guard', () => {
+  it('keeps AppServicesProvider wired at the real Root entrypoint', async () => {
+    const mounted = await withTestQueryClient(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route element={<Root />} path="/">
+            <Route element={<RootServicesProbe />} index />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
+
+    try {
+      await waitFor(() => {
+        expect(
+          within(mounted.container).getByTestId('root-services-probe').textContent
+        ).toContain('mode:');
+      });
     } finally {
       await mounted.cleanup();
     }
