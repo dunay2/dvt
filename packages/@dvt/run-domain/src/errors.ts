@@ -27,3 +27,21 @@ export class InvalidStateTransitionError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
+
+export class InvalidRunEventShapeError extends Error {
+  readonly code = 'INVALID_RUN_EVENT_SHAPE' as const;
+  readonly details: Record<string, unknown>;
+  readonly runId: string;
+
+  constructor(params: { runId: string; eventType: string; reason: string }) {
+    const { runId, eventType, reason } = params;
+    super(`Invalid event shape for ${eventType}: ${reason} (runId=${runId})`);
+    this.name = 'InvalidRunEventShapeError';
+    this.runId = runId;
+    this.details = {
+      eventType,
+      reason,
+    };
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}

@@ -9,7 +9,11 @@
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { applyRunEvent, InvalidStateTransitionError } from '../src/index.js';
+import {
+  applyRunEvent,
+  InvalidRunEventShapeError,
+  InvalidStateTransitionError,
+} from '../src/index.js';
 
 function makeSnap(status: WorkflowSnapshot['status']): WorkflowSnapshot {
   return {
@@ -188,5 +192,41 @@ describe('applyRunEvent - explicit transition guards', () => {
     expect(() => applyRunEvent(snap, makeStepEvent('StepSkipped', 'step-running'))).toThrow(
       InvalidStateTransitionError
     );
+  });
+
+  it('rejects malformed step events without stepId', () => {
+    const malformed = {
+      ...makeRunEvent('StepStarted'),
+      stepId: undefined,
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
+  });
+
+  it('rejects malformed step events with empty stepId', () => {
+    const malformed = {
+      ...makeStepEvent('StepStarted', ''),
+      stepId: '',
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
   });
 });

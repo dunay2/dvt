@@ -10,7 +10,8 @@ last_reviewed: 2026-04-04
 ## Purpose
 
 Define the canonical transition rules enforced at event append boundary so
-invalid sequences are rejected before persistence.
+invalid sequences are rejected without persisted side effects (transaction
+rollback).
 
 ## Scope
 
@@ -89,7 +90,7 @@ sequenceDiagram
   Store->>FSM: validate candidates in-order against ephemeral state
   alt invalid transition
     FSM-->>Store: INVALID_STATE_TRANSITION
-    Store-->>Caller: reject, no write side effects
+    Store-->>Caller: reject, transaction rollback, no persisted side effects
   else valid
     FSM-->>Store: ok
     Store->>DB: append events + update snapshot
