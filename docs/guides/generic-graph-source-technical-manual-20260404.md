@@ -40,14 +40,11 @@ to be the long-term generic source model:
   `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 - the current normalized shape is only:
   - `kind`
-  - `nodes[{ nodeId, resourceType, dependsOn }]`
-- `PlannerFacade` already accepts four source paths:
-  - `manifestRef`
-  - `graphSource`
-  - `manifest`
-  - `nodes`
+  - `nodes[{ nodeId, stepKind, dependsOn, stepTypeConfig? }]`
+- `PlannerFacade` currently accepts dbt and graph-source paths that must be
+  converged into a single canonical graph-source contract
 - `ManifestGraphDeriver` and `ManifestArtifactResolver` are the active dbt
-  compatibility seams
+  source seams
 
 That is enough for normalized dbt topology, but it is not enough to describe a
 general workflow source with explicit step semantics, stable provenance, and a
@@ -60,7 +57,7 @@ flowchart LR
   Caller["API caller"] --> Facade["PlannerFacade"]
   Facade --> Deriver["ManifestGraphDeriver (dbt-centered)"]
   Facade --> Resolver["ManifestArtifactResolver or IArtifactResolver"]
-  Deriver --> Nodes["PlannerGraphSourceV1 nodes(resourceType, dependsOn)"]
+  Deriver --> Nodes["Current graph nodes(stepKind, dependsOn)"]
   Nodes --> Planner["Planner core"]
   Planner --> Plan["ExecutionPlan"]
 ```
@@ -119,8 +116,7 @@ flowchart LR
 
 ## Target contract model
 
-The current `PlannerGraphSourceV1` is the compatibility starting point. The
-target contract for `MW-A2` is the richer, explicit model below.
+`GenericGraphSourceV1` is the canonical target contract for `MW-A2`.
 
 ```ts
 export interface GenericGraphSourceV1 {
@@ -216,9 +212,12 @@ sequenceDiagram
   Planner-->>Caller: ExecutionPlan + canonicalPlanJson
 ```
 
-### Procedure 3: dbt manifest compatibility path
+Status: planned target path. The current implementation still resolves
+`manifestRef` via `IArtifactResolver` in API/planner wiring.
 
-1. Caller provides `manifestRef` or inline `manifest`.
+### Procedure 3: dbt manifest source-adapter path
+
+1. Caller provides dbt manifest input through the dbt adapter boundary.
 2. The dbt-specific adapter reads and validates the raw manifest artifact.
 3. The adapter converts that payload into `GenericGraphSourceV1`.
 4. `PlannerFacade` forwards only the normalized graph source into the planner
@@ -331,9 +330,10 @@ accepted as the canonical source:
 
 ## Current-to-target gap summary
 
-1. The public name is still `PlannerGraphSourceV1`, not `GenericGraphSourceV1`.
-2. The node shape is still dbt-shaped (`resourceType`) instead of
-   step-oriented (`stepKind`, `stepTypeConfig`).
+1. The planner input contract is not yet cleanly swapped to
+   `GenericGraphSourceV1` across all entry points.
+2. Step translation in planner core is still dbt-centered (`stepKind` is mapped
+   through DBT-only resource types in this wave).
 3. The resolver port is still manifest-specific.
 4. The active dbt normalization path is still the semantic center for graph
    derivation.

@@ -1,4 +1,4 @@
-import type { DbtManifestRef, PlannerGraphSourceV1 } from '@dvt/contracts';
+import type { DbtManifestRef, GenericGraphSourceV1 } from '@dvt/contracts';
 
 /**
  * Port for resolving immutable manifest artifacts from external storage.
@@ -17,5 +17,5 @@ import type { DbtManifestRef, PlannerGraphSourceV1 } from '@dvt/contracts';
  * @see G-01.2 — artifact resolver port gap in Stage 1.1 gap register
  */
 export interface IArtifactResolver {
-  resolveGraphSource(ref: DbtManifestRef): Promise<PlannerGraphSourceV1>;
+  resolveGraphSource(ref: DbtManifestRef): Promise<GenericGraphSourceV1>;
 }

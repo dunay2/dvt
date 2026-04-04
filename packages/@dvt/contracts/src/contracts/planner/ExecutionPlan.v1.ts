@@ -46,23 +46,9 @@ export interface GraphNode {
 }
 
 /**
- * Canonical typed inline graph-source boundary for planner ingestion.
- *
- * This keeps the public planner edge generic while allowing callers to pass
- * a fully normalized dependency graph without exposing DBT artifact structure
- * as the long-term semantic contract.
- */
-export const PLANNER_GRAPH_SOURCE_KIND = 'normalized-graph-v1' as const;
-
-export interface PlannerGraphSourceV1 {
-  kind: typeof PLANNER_GRAPH_SOURCE_KIND;
-  nodes: readonly GraphNode[];
-}
-
-/**
  * Canonical generic graph-source boundary for multi-workflow planning.
  *
- * This is additive in MW-A2-B. Runtime execution support by step kind remains
+ * Runtime execution support by step kind remains
  * governed by planner/engine registry and adapter slices.
  */
 export const GENERIC_GRAPH_SOURCE_KIND = 'generic-graph-v1' as const;
@@ -160,58 +146,6 @@ export type ExecutionPlan = {
   [TVersion in SupportedPlanVersion]: VersionedExecutionPlan<TVersion>;
 }[SupportedPlanVersion];
 
-// ── Graph-source compatibility policy ────────────────────────────────────────
-
-/**
- * Canonical governance note for graph source compatibility paths (Stage 1.1, G-01.10).
- *
- * ## One-active-source rule
- *
- * `PlannerInputEnvelopeV1` accepts exactly **one** active graph source per
- * request. Envelopes that provide no source or more than one MUST be rejected
- * at the planner boundary before graph build or hashing.
- *
- * ## Lifecycle of each source
- *
- * | Source        | Status                 | Notes |
- * |---------------|------------------------|-------|
- * | `manifestRef` | Canonical primary path | Preferred for all new callers. Immutable artifact-first planning. |
- * | `manifest`    | Compatibility-only     | Retained for callers that cannot yet supply a `manifestRef`. Subject to review. |
- * | `nodes`       | Compatibility-only     | Retained for callers that pre-normalize the graph. Subject to review. |
- *
- * ## Retention justification
- *
- * `manifest` and `nodes` are retained in Stage 1.1 to enable migration.
- * They do NOT have permanent equal-citizen status with `manifestRef`.
- * New planner capabilities MUST be defined against `manifestRef` first.
- *
- * ## Removal rule
- *
- * Either compatibility path (`manifest` or `nodes`) may be removed when ALL
- * of the following are true:
- * 1. An explicit deprecation ADR has been filed and merged.
- * 2. A review confirms no active production callers remain on the path.
- * 3. A migration guide is published pointing callers to `manifestRef`.
- * 4. The contracts package version is bumped to reflect the breaking change.
- *
- * ## Review trigger
- *
- * Each compatibility path MUST be reviewed at every major planner boundary
- * version bump. Absence of active callers at that review is the primary
- * removal signal.
- */
-export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
-  canonicalSource: 'manifestRef' as const,
-  preferredInlineSource: 'graphSource' as const,
-  compatibilityPaths: ['manifest', 'nodes'] as const,
-  retentionJustification:
-    'Required for migration and interop with callers that pre-date manifestRef support.',
-  removalRule:
-    'Requires deprecation ADR, no-active-callers review, migration guide, and contracts major version bump.',
-  reviewTrigger:
-    'Review at every major planner boundary version bump. Absence of active callers is the primary removal signal.',
-} as const;
-
 // ── Envelope ──────────────────────────────────────────────────────────────────
 
 /**
@@ -219,7 +153,7 @@ export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
  *
  * ## One-active-source rule
  *
- * Exactly **one** of `manifestRef`, `graphSource`, `manifest`, or `nodes` may be active in a
+ * Exactly **one** of `manifestRef` or `graphSource` may be active in a
  * single request. The planner MUST reject envelopes with:
  * - no graph source provided
  * - more than one graph source provided
@@ -227,57 +161,23 @@ export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
  *
  * ## Graph source lifecycle
  *
- * - `manifestRef` is the **canonical production path** — immutable, integrity-
- *   verified, preferred for all new callers.
- * - `graphSource` is the **canonical typed inline path** - preferred over raw
- *   manifest payloads when the caller already has a normalized graph.
- * - `manifest` and `nodes` are **compatibility-only** paths retained for
- *   migration. They do not have permanent equal-citizen status. See
- *   `GRAPH_SOURCE_COMPATIBILITY_POLICY` for the removal rule.
- *
- * @see GRAPH_SOURCE_COMPATIBILITY_POLICY — retention and removal governance
- * @see docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json G-01.10
+ * - `manifestRef` is the artifact-ref path.
+ * - `graphSource` is the canonical typed inline path.
  */
 export interface PlannerInputEnvelopeV1 {
   /**
    * Immutable reference to a manifest artifact stored out-of-band.
    *
-   * **Canonical production path.** Preferred for all new callers.
-   * When provided, `graphSource`, `manifest`, and `nodes` MUST NOT also be provided.
+   * When provided, `graphSource` MUST NOT also be provided.
    */
   manifestRef?: DbtManifestRef;
 
   /**
    * Typed inline graph source.
    *
-   * Preferred for callers that already hold a normalized graph in memory and
-   * do not need artifact resolution.
-   *
-   * When provided, `manifestRef`, `manifest`, and `nodes` MUST NOT also be provided.
+   * When provided, `manifestRef` MUST NOT also be provided.
    */
-  graphSource?: PlannerGraphSourceV1;
-
-  /**
-   * Raw dbt manifest payload passed inline.
-   *
-   * **Compatibility path.** Retained for callers that cannot yet supply a
-   * `manifestRef`. Subject to deprecation review. New callers SHOULD use
-   * `manifestRef` instead.
-   *
-   * When provided, `manifestRef`, `graphSource`, and `nodes` MUST NOT also be provided.
-   */
-  manifest?: DbtManifestLike;
-
-  /**
-   * Pre-normalized graph nodes.
-   *
-   * **Compatibility path.** Retained for callers that pre-normalize the graph
-   * before planning. Subject to deprecation review. New callers SHOULD use
-   * `manifestRef` instead.
-   *
-   * When provided, `manifestRef`, `graphSource`, and `manifest` MUST NOT also be provided.
-   */
-  nodes?: readonly GraphNode[];
+  graphSource?: GenericGraphSourceV1;
 
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
@@ -292,7 +192,3 @@ export interface PlannerBuildResultV1 {
   plan: ExecutionPlan;
   canonicalPlanJson: string;
 }
-
-/** Backward-compatible aliases for existing naming in consumers/docs. */
-export type PlannerInputEnvelope = PlannerInputEnvelopeV1;
-export type PlannerBuildResult = PlannerBuildResultV1;

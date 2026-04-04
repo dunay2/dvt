@@ -126,19 +126,19 @@ const POLICY_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }> 
 // ── PlannerInputEnvelopeV1 fixtures ───────────────────────────────────────────
 
 const BASE_SELECTION = { selectedNodeIds: ['model.a'] };
-const BASE_NODES = [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }];
+const BASE_GRAPH_NODES = [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }];
 
 const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }> = [
   // Valid cases
   {
-    label: 'nodes + selection',
-    input: { nodes: BASE_NODES, selection: BASE_SELECTION },
-    valid: true,
-  },
-  {
     label: 'graphSource + selection',
     input: {
-      graphSource: { kind: 'normalized-graph-v1', nodes: BASE_NODES },
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: BASE_GRAPH_NODES,
+      },
       selection: BASE_SELECTION,
     },
     valid: true,
@@ -155,14 +155,14 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
     valid: true,
   },
   {
-    label: 'manifest + selection',
-    input: { manifest: { nodes: {} }, selection: BASE_SELECTION },
-    valid: true,
-  },
-  {
-    label: 'nodes + selection + valid policy',
+    label: 'graphSource + selection + valid policy',
     input: {
-      nodes: BASE_NODES,
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: BASE_GRAPH_NODES,
+      },
       selection: BASE_SELECTION,
       policies: { retry: { kind: 'at-most-once' } },
     },
@@ -174,22 +174,31 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
     valid: false,
   },
   {
-    label: 'graphSource + nodes',
-    input: {
-      graphSource: { kind: 'normalized-graph-v1', nodes: BASE_NODES },
-      nodes: BASE_NODES,
-      selection: BASE_SELECTION,
-    },
-    valid: false,
-  },
-  {
     label: 'manifestRef + graphSource',
     input: {
       manifestRef: {
         uri: 's3://bucket/manifest.json',
         sha256: 'a'.repeat(64),
       },
-      graphSource: { kind: 'normalized-graph-v1', nodes: BASE_NODES },
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: BASE_GRAPH_NODES,
+      },
+      selection: BASE_SELECTION,
+    },
+    valid: false,
+  },
+  {
+    label: 'legacy manifest + selection',
+    input: { manifest: { nodes: {} }, selection: BASE_SELECTION },
+    valid: false,
+  },
+  {
+    label: 'legacy nodes + selection',
+    input: {
+      nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
       selection: BASE_SELECTION,
     },
     valid: false,
@@ -198,18 +207,39 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
   // Invalid cases
   {
     label: 'missing selection',
-    input: { nodes: BASE_NODES },
+    input: {
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: BASE_GRAPH_NODES,
+      },
+    },
     valid: false,
   },
   {
     label: 'unknown top-level field',
-    input: { nodes: BASE_NODES, selection: BASE_SELECTION, extra: true },
+    input: {
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: BASE_GRAPH_NODES,
+      },
+      selection: BASE_SELECTION,
+      extra: true,
+    },
     valid: false,
   },
   {
     label: 'invalid policy nested inside envelope',
     input: {
-      nodes: BASE_NODES,
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: BASE_GRAPH_NODES,
+      },
       selection: BASE_SELECTION,
       policies: { retry: { kind: 'unknown-kind' } },
     },

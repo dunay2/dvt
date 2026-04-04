@@ -168,18 +168,11 @@ export class Planner {
   }
 
   private normalizeInput(input: PlannerInputEnvelopeV1): NormalizedPlannerInput {
-    let nodes: readonly GraphNode[];
-    if (Array.isArray(input.nodes) && input.nodes.length > 0) {
-      nodes = input.nodes;
-    } else if (input.graphSource !== undefined) {
-      nodes = input.graphSource.nodes;
-    } else {
-      nodes = [];
-    }
+    const nodes: readonly GraphNode[] = input.graphSource.nodes;
     if (nodes.length === 0) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        'Planner requires non-empty nodes (directly or derived from graphSource).'
+        'Planner requires non-empty nodes from graphSource.'
       );
     }
     return { ...input, nodes };

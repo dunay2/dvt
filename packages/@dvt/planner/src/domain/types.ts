@@ -13,19 +13,16 @@
 import type {
   ExecutionPlan,
   GraphNode,
-  PlannerGraphSourceV1,
   PlannerPolicyClassSet,
   PlannerSelection,
 } from '@dvt/contracts';
 
 // Canonical types — re-exported from @dvt/contracts (single source of truth).
 export type {
-  DbtManifestLike,
   ExecutionPlan,
   ExecutionStepV1,
   GraphNode,
   PlanCore,
-  PlannerGraphSourceV1,
   PlannerSelection,
   ResolvedPolicies,
   StepKind,
@@ -40,7 +37,6 @@ export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
  * Planner-internal raw input envelope (pre-normalization).
  *
  * Intentionally differs from the public PlannerInputEnvelopeV1 in @dvt/contracts:
- * - `graphSource` is optional because direct `nodes` remains a compatibility path
  * - `manifestRef` and `manifest` are not present - the PlannerFacade resolves or normalizes them before hand-off
  * - `environment` is not present - stripped by PlannerFacade at the application boundary
  *
@@ -48,8 +44,9 @@ export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
  * `nodes` is always present.
  */
 export interface PlannerInputEnvelopeV1 {
-  graphSource?: PlannerGraphSourceV1;
-  nodes?: readonly GraphNode[];
+  graphSource: {
+    nodes: readonly GraphNode[];
+  };
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
   observability?: ExecutionPlan['observability'];

@@ -20,10 +20,12 @@ describe('determinism', () => {
     const planner = new Planner();
 
     const base: PlannerInputEnvelopeV1 = {
-      nodes: [
-        { nodeId: 'model.a', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'model.b', resourceType: 'model', dependsOn: ['model.a'] },
-      ],
+      graphSource: {
+        nodes: [
+          { nodeId: 'model.a', resourceType: 'model', dependsOn: [] },
+          { nodeId: 'model.b', resourceType: 'model', dependsOn: ['model.a'] },
+        ],
+      },
       selection: { selectedNodeIds: ['model.b'], includeUpstream: true },
       policies: { retry: { kind: 'at-most-once' } },
       observability: { tags: { t: '1' }, extra: { y: 'z' } },
@@ -45,7 +47,7 @@ describe('determinism', () => {
   it('planId equals sha256(canonicalPlanJson) — caller-verifiable', async () => {
     const planner = new Planner();
     const { plan, canonicalPlanJson } = await planner.buildPlan({
-      nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
+      graphSource: { nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     });
 
@@ -57,7 +59,7 @@ describe('determinism', () => {
   it('canonicalPlanJson does NOT contain planId, createdAtIso, schemaVersion, or contractVersion', async () => {
     const planner = new Planner();
     const { canonicalPlanJson } = await planner.buildPlan({
-      nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
+      graphSource: { nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     });
 
@@ -74,7 +76,7 @@ describe('determinism', () => {
     vi.useFakeTimers();
     const planner = new Planner();
     const input: PlannerInputEnvelopeV1 = {
-      nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }],
+      graphSource: { nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     };
 

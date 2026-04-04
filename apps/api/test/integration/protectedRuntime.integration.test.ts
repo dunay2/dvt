@@ -259,8 +259,10 @@ describeIfPg('protected runtime integration', () => {
         environmentId: ENVIRONMENT_ID,
         selection: ['model.orders'],
         graphSource: {
-          kind: 'normalized-graph-v1',
-          nodes: [{ nodeId: 'model.orders', resourceType: 'model', dependsOn: [] }],
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
         runId,
         targetAdapter: 'mock',

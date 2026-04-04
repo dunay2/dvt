@@ -2,6 +2,7 @@ import type {
   IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
+  GenericGraphSourceV1,
   PlannerInputEnvelopeV1,
 } from '@dvt/contracts';
 
@@ -92,10 +93,10 @@ function toPlannerInput(
   context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV1 {
   return {
-    ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
+    ...(command.graphSource === undefined
+      ? {}
+      : { graphSource: toPlannerGraphSource(command.graphSource) }),
     ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
-    ...(command.manifest === undefined ? {} : { manifest: command.manifest }),
-    ...(command.nodes === undefined ? {} : { nodes: command.nodes }),
     ...(command.policies === undefined ? {} : { policies: command.policies }),
     ...(command.environment === undefined ? {} : { environment: command.environment }),
     ...(command.observability === undefined ? {} : { observability: command.observability }),
@@ -103,6 +104,34 @@ function toPlannerInput(
     requestedBy: context.principal.principalId,
     requestId: context.requestId,
     requestedAtIso: context.authorizedAt.toISOString(),
+  };
+}
+
+function toPlannerGraphSource(graphSource: StartRunCommand['graphSource']): GenericGraphSourceV1 {
+  const source = graphSource!;
+  return {
+    kind: source.kind,
+    sourceFamily: source.sourceFamily,
+    sourceVersion: source.sourceVersion,
+    nodes: source.nodes.map((node) => ({
+      nodeId: node.nodeId,
+      stepKind: node.stepKind,
+      dependsOn: [...node.dependsOn],
+      ...(node.stepTypeConfig === undefined ? {} : { stepTypeConfig: node.stepTypeConfig }),
+      ...(node.metadata === undefined
+        ? {}
+        : {
+            metadata: {
+              ...(node.metadata.displayName === undefined
+                ? {}
+                : { displayName: node.metadata.displayName }),
+              ...(node.metadata.sourceRef === undefined
+                ? {}
+                : { sourceRef: node.metadata.sourceRef }),
+              ...(node.metadata.tags === undefined ? {} : { tags: node.metadata.tags }),
+            },
+          }),
+    })),
   };
 }
 
