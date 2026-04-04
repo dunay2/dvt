@@ -170,8 +170,7 @@ export function configureDefaultCanvasHarnessMocks(
   mocks.usePlansService.mockReturnValue({ previewPlan: vi.fn() });
   mocks.useRunsService.mockReturnValue({ listRuns: vi.fn() });
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
-    typeof selector === 'function' ? selector(state.store) : state.store
-  ;
+    typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
   mocks.useExecutionStore.mockImplementation(selectFromStore);
   mocks.useSessionStore.mockImplementation(selectFromStore);

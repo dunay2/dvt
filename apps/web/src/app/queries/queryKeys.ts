@@ -18,10 +18,8 @@ export const queryKeys = {
   // Workspace
   // -------------------------------------------------------------------------
   workspace: {
-    graph: (workspaceLayoutKey: string) =>
-      ['workspace', 'graph', workspaceLayoutKey] as const,
-    graphForView: (viewId: string) =>
-      ['workspace', 'graph', viewId] as const,
+    graph: (workspaceLayoutKey: string) => ['workspace', 'graph', workspaceLayoutKey] as const,
+    graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
     diffChanges: () => ['workspace', 'diff-changes'] as const,
     roles: () => ['workspace', 'roles'] as const,
     audit: () => ['workspace', 'audit'] as const,
@@ -31,13 +29,11 @@ export const queryKeys = {
   // Runs
   // -------------------------------------------------------------------------
   runs: {
-    summaries: (workspaceLayoutKey: string) =>
-      ['runs', 'summaries', workspaceLayoutKey] as const,
+    summaries: (workspaceLayoutKey: string) => ['runs', 'summaries', workspaceLayoutKey] as const,
     workspace: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'workspace', workspaceLayoutKey, runId] as const,
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
-    list: (viewId: string) =>
-      ['runs', 'list', viewId] as const,
+    list: (viewId: string) => ['runs', 'list', viewId] as const,
   },
 } as const;
