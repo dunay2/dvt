@@ -256,8 +256,12 @@ Done when:
 Done when:
 
 - `/runs` supports real list and filter behavior;
-- `/runs/:runId` behaves like one run workspace;
-- status, events, and artifacts feel coherent;
+- `/runs/:runId` behaves like one run workspace composed from explicit read
+  models;
+- runtime authority is aligned to `POST /runs/start`, `GET /runs/:runId`, and
+  `GET /runs/:runId/events`;
+- snapshot and timeline states are truthful and no fake aggregate detail is
+  shown;
 - dense tables replace cards where required by scale.
 
 ### Diff And Artifacts
@@ -297,5 +301,7 @@ Done when:
 - [Workbench UI Contract And Component Inventory](workbench-ui-contract-and-component-inventory.md)
 - [Iconography And Design Tokens Contract](iconography-and-design-tokens-contract.md)
 - [Screen Layout And Cross-Surface Behavior Rules](screen-layout-and-cross-surface-behavior-rules.md)
+- [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)
 - [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
 - [Frontend Roadmap - Prototype To Operational UI](../../planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)

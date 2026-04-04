@@ -32,6 +32,7 @@ import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
 import { ManifestArtifactResolver } from '../infrastructure/planner/ManifestArtifactResolver.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
+import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
@@ -204,6 +205,7 @@ export async function buildProtectedRuntimeModule(
       algorithms: env.OIDC_ALGORITHMS.split(',').map((a) => a.trim()),
     })
   );
+  const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
   const facade = new StartRunAuthorizedFacade(
     authenticator,
     commandAuthorizer,
@@ -222,9 +224,11 @@ export async function buildProtectedRuntimeModule(
           fetcher: planStore,
           adapters,
         }),
+        compileTelemetry: startRunSlaTelemetry,
         delegate: new EngineStartRunUseCase(engine),
       }),
-    })
+    }),
+    startRunSlaTelemetry
   );
 
   return {

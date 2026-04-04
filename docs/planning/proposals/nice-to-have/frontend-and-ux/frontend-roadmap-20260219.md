@@ -41,8 +41,8 @@ What is still drifting:
 
 - mock-backed services still shape large parts of the UI surface;
 - `appStore` still mixes shell, canvas, run, and permission state;
-- the frontend `startRun` path still posts to `/runs`, while the protected API
-  route map advertises `POST /runs/start`;
+- active route consumers still need broader read-model convergence beyond the
+  new `F-07` snapshot/timeline baseline;
 - `GraphCanvas.tsx` still exists as a dead legacy path;
 - detailed frontend docs still contain target-state-only wording, stale route
   claims, and encoding drift;
@@ -77,7 +77,22 @@ The sequence must be reality-first:
   actually allowed to rely on.
 - `F-03`: finish real degraded or offline health visibility in the shell.
 - `F-07`: remove the current `/runs` versus `/runs/start` drift and align
-  runtime DTOs to the protected route set.
+  runtime DTOs to the protected route set using Fowler read-model composition
+  with no legacy frontend aggregate in active route consumers.
+
+`F-07` execution order is fixed:
+
+1. docs-first baseline (technical manual + user manual + convergence plan);
+2. TDD red phase for route and error behavior;
+3. service alignment and consumer updates;
+4. refactor and verification for handoff to `F-08..F-11`.
+
+Canonical `F-07` baseline pack:
+
+- [Frontend Fowler Implementation Pattern](../../../../architecture/frontend/frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Contract Technical Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-user-manual.md)
+- [F-07 Frontend Runtime Contract Baseline Plan](../../mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
 
 ### Phase 1 - Data and state convergence
 

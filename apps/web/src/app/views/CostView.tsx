@@ -36,7 +36,7 @@ export default function CostView() {
 
   const runsQuery = useQuery({
     queryKey: ['runs', 'list', 'cost-view'],
-    queryFn: () => runsService.listRuns(),
+    queryFn: () => runsService.listRunSummaries(),
   });
 
   const workspaceNodes = graphSnapshotQuery.data?.nodes ?? [];
@@ -46,9 +46,7 @@ export default function CostView() {
   const totalDuration = nodesWithCost.reduce((sum, node) => sum + (node.lastDuration ?? 0), 0);
   const averageCostPerRun = runs.length > 0 ? totalCost / runs.length : totalCost;
   const expensiveNodes = nodesWithCost.filter((node) => (node.lastCost ?? 0) >= 0.4);
-  const currentRunCost = currentRun
-    ? currentRun.steps.reduce((sum, step) => sum + step.nodes.length, 0) * averageCostPerRun * 0.15
-    : null;
+  const currentRunCost = currentRun ? averageCostPerRun * 0.15 : null;
 
   const costByModel = useMemo(
     () =>
@@ -67,12 +65,7 @@ export default function CostView() {
     () =>
       runs.map((run, index) => ({
         name: `Run ${index + 1}`,
-        cost:
-          run.steps.reduce(
-            (sum, step) =>
-              sum + step.nodes.reduce((accumulator) => accumulator + averageCostPerRun * 0.15, 0),
-            0
-          ) || averageCostPerRun,
+        cost: averageCostPerRun,
       })),
     [averageCostPerRun, runs]
   );

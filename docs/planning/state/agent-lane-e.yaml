@@ -716,26 +716,203 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-07
     priority: P0
-    status: blocked
+    status: review
     objective: >-
-      define the typed frontend runtime contract baseline and remove the current run-start route
-      drift.
+      deliver the first frontend Fowler pilot for runtime contracts: align routes, split run read
+      models, and remove legacy overloaded run aggregation from active Runs consumers.
     dependency: MVP-E1
     target: >-
-      A frontend-facing contract artifact defines the currently governed runtime DTOs and routes,
-      including POST /runs/start, GET /runs, GET /runs/:id, and GET /runs/:id/events. runsService
-      and related view code align to the protected API route set.
+      Lane E delivers the full F-07 chain (A..F): docs-first runtime contract baseline, TDD-first
+      route and error tests, route alignment in runsService and route facade consumers, and
+      verification-ready handoff for F-08 through F-11.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 90
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
+      - docs/architecture/frontend/frontend-fowler-implementation-pattern.md
+      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/frontend/runs/frontend-runtime-contract-user-manual.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/web/src/app/services/runs/runsService.ts
+      - apps/web/src/app/services/runs/runWorkspaceFacade.ts
     status_reason: >-
-      The frontend still posts to /runs for startRun while the protected API route map advertises
-      /runs/start, and no canonical frontend runtime contract document exists yet.
-    last_verified: '2026-04-03'
+      The docs-first baseline and Fowler pattern are now explicit. The active Runs route consumes
+      explicit read models through a route facade with no legacy status endpoint or fake aggregate
+      fallback.
+    definition_of_done:
+      - F-07-A through F-07-F are all review or done with evidence refs
+      - frontend run-start route aligns to POST /runs/start
+      - frontend no longer depends on GET /runs/:runId/status as status authority
+      - active Runs route consumers use explicit read models and RunWorkspaceViewModel composition
+      - no compatibility aggregate mapping is used in active Runs route flow
+      - lane docs, architecture docs, and roadmap wording are aligned
+      - F-08 through F-11 handoff is explicit and governed
+    last_verified: '2026-04-04'
+  - task_id: F-07-A
+    parent_task: F-07
+    priority: P0
+    status: review
+    objective: >-
+      publish the docs-first runtime contract baseline with canonical as-is and to-be route truth.
+    dependency: MVP-E1
+    target: >-
+      Technical manual, user manual, and mandatory plan are published and linked from frontend and
+      planning entrypoints.
+    complexity: S
+    effort_points: 2
+    progress_pct: 90
+    evidence_refs:
+      - docs/architecture/frontend/frontend-fowler-implementation-pattern.md
+      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/frontend/runs/frontend-runtime-contract-user-manual.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
+      - docs/architecture/frontend/runs/dvt-runs-frontend-architecture.md
+      - docs/architecture/frontend/index.md
+      - docs/architecture/domain-ui.md
+      - docs/architecture/domain-api.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+    status_reason: >-
+      Baseline docs and entrypoint alignment are in place; final closure depends on docs gates and
+      generated planning outputs.
+    definition_of_done:
+      - docs are English-only and consistent on as-is and to-be runtime routes
+      - required Mermaid diagrams render without syntax errors
+      - Fowler service-layer and gateway rules are explicit and linked from frontend entrypoints
+      - roadmap and lane wording match the same F-07 order and handoff chain
+      - no runtime route claims outside protected route truth
+    last_verified: '2026-04-04'
+  - task_id: F-07-B
+    parent_task: F-07
+    priority: P0
+    status: review
+    objective: >-
+      create failing service tests that codify the runtime route and error expectations before
+      implementation changes.
+    dependency: F-07-A
+    target: >-
+      Red-phase tests fail for legacy route behavior and encode accepted runtime route and error
+      semantics.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/services/runs/runsService.ts
+    status_reason: >-
+      Service tests now codify the non-legacy route behavior and snapshot-field preservation for the
+      aligned runtime contract.
+    definition_of_done:
+      - startRun test expects POST /runs/start
+      - getRunSnapshot test validates GET /runs/:runId authority
+      - listRunEvents test validates GET /runs/:runId/events
+      - legacy /runs/:runId/status behavior is rejected or absent from accepted API tests
+      - error tests cover 401, 403, 404, 409, 422, and 5xx categories
+    last_verified: '2026-04-04'
+  - task_id: F-07-C
+    parent_task: F-07
+    priority: P0
+    status: review
+    objective: >-
+      align runsService runtime endpoints to the protected route map and update consumers to the new
+      contract behavior.
+    dependency: F-07-B
+    target: >-
+      startRun, getRunSnapshot, and listRunEvents behaviors match protected route truth and consumer
+      code no longer depends on status-route drift or overloaded aggregate mapping.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - apps/web/src/app/services/runs/runsService.ts
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+    status_reason: >-
+      runsService now starts runs through `/runs/start` and reads runtime snapshot authority from
+      `GET /runs/:runId` without depending on the removed `/status` route.
+    definition_of_done:
+      - runsService.startRun posts to /runs/start
+      - runsService status truth is sourced from /runs/:runId
+      - no active consumer depends on /runs/:runId/status
+      - runs route composes snapshot plus timeline via facade without fake detail fields
+      - route ownership and shell topology remain unchanged
+    last_verified: '2026-04-04'
+  - task_id: F-07-D
+    parent_task: F-07
+    priority: P1
+    status: review
+    objective: >-
+      refactor runtime-service mapping and behavior to remove route-drift duplication while
+      preserving mock/api mode boundaries.
+    dependency: F-07-C
+    target: >-
+      Mapping and parse behavior are cleanly structured without reintroducing route drift.
+    complexity: S
+    effort_points: 2
+    progress_pct: 90
+    evidence_refs:
+      - apps/web/src/app/services/runs/runsService.ts
+      - apps/web/src/app/services/api/createApiClient.ts
+    status_reason: >-
+      The status-route replacement no longer fabricates snapshots from the lossy UI model; route
+      drift cleanup now preserves the contract payload instead.
+    definition_of_done:
+      - mapping duplication tied to old status route is removed
+      - mock and api behavior remain behind governed service boundary
+      - no route-level view reads runtime route strings directly
+    last_verified: '2026-04-04'
+  - task_id: F-07-E
+    parent_task: F-07
+    priority: P1
+    status: review
+    objective: >-
+      validate docs and planning outputs for the F-07 docs-first baseline and keep generated views
+      in sync.
+    dependency: F-07-A
+    target: >-
+      docs sync and workboard gates pass with aligned F-07 entrypoints and lane metadata.
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    evidence_refs:
+      - docs/architecture/frontend/index.md
+      - docs/planning/state/agent-lane-e.yaml
+    status_reason: >-
+      Docs sync and planning-generation checks now pass with the F-07 entrypoints and lane
+      decomposition in place.
+    definition_of_done:
+      - pnpm docs:sync passes
+      - pnpm docs:workboard:generate passes
+      - pnpm docs:workboard:check passes
+      - pnpm docs:sync:check passes
+    last_verified: '2026-04-04'
+  - task_id: F-07-F
+    parent_task: F-07
+    priority: P1
+    status: review
+    objective: >-
+      complete the TDD implementation verification baseline and hand off to F-08 through F-11.
+    dependency: F-07-C, F-07-D, F-07-E
+    target: >-
+      runtime service tests, web typecheck, and prepush baseline pass with no new runtime route
+      drift.
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    evidence_refs:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/services/runs/runsService.ts
+      - docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
+    status_reason: >-
+      Targeted runsService tests, `@dvt/web` typecheck, and `verify:prepush` have all passed for
+      this slice.
+    definition_of_done:
+      - targeted runsService tests pass
+      - pnpm --filter @dvt/web typecheck passes
+      - pnpm verify:prepush passes
+      - F-08 through F-11 dependencies reference the updated F-07 baseline
+    last_verified: '2026-04-04'
   - task_id: F-08
     priority: P1
     status: blocked
@@ -1204,9 +1381,9 @@ tasks:
     last_verified: '2026-04-03'
 dependency_notes:
   - >-
-    `MVP-E1` and `F-07` now define the frontend runtime contract baseline. No core-flow task should
-    assume POST /runs for startRun until that baseline is written and aligned to the protected API
-    route map.
+    `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in
+    docs-first/TDD-first order through `F-07-A..F-07-F`. No core-flow task should assume POST /runs
+    for startRun until that baseline is implemented and aligned to the protected API route map.
   - >-
     `F-03` and `F-01` remain parallel shell-level slices; they improve operator experience but do
     not replace the contract, data-source, or state-boundary convergence chain.

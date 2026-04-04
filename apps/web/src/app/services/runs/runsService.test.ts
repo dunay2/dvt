@@ -1,49 +1,197 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ApiClient } from '../api/createApiClient';
-import { createRunsService } from './runsService';
+import { ApiError, type ApiClient } from '../api/createApiClient';
+import { createRunsService, type StartRunInput } from './runsService';
 
-function buildApiClientStub(overrides: Partial<ApiClient> = {}): ApiClient {
-  const base: ApiClient = {
+function createApiClientMock(): ApiClient {
+  return {
     baseUrl: 'http://localhost:3000',
     requestRaw: vi.fn(),
     getJson: vi.fn(),
     postJson: vi.fn(),
   };
+}
 
+function createStartRunInput(runId = 'run_123'): StartRunInput {
   return {
-    ...base,
-    ...overrides,
+    planRef: {
+      uri: 's3://plans/plan.json',
+      sha256: 'abc123',
+      schemaVersion: '1.0.0',
+      planId: 'plan_123',
+      planVersion: '1.0.0',
+    },
+    context: {
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      runId,
+      targetAdapter: 'mock',
+    },
   };
 }
 
-describe('createRunsService', () => {
-  it('uses mock implementation in mock mode', async () => {
-    const service = createRunsService('mock');
+function createApiError(statusCode: number, endpoint = '/runs/start'): ApiError {
+  return new ApiError({
+    message: `HTTP ${statusCode}`,
+    endpoint,
+    statusCode,
+    category: statusCode >= 500 ? 'server' : 'client',
+  });
+}
 
-    const runs = await service.listRuns();
+describe('runsService runtime contract', () => {
+  it('uses POST /runs/start for startRun', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson).mockResolvedValue({
+      provider: 'mock',
+      tenantId: 'tenant-1',
+      workflowId: 'wf_run_123',
+      runId: 'run_123',
+    });
 
-    expect(runs.length).toBeGreaterThan(0);
-    expect(runs[0]?.runId).toBeTypeOf('string');
+    const service = createRunsService('api', apiClient);
+    await service.startRun(createStartRunInput('run_123'));
+
+    expect(apiClient.postJson).toHaveBeenCalledWith('/runs/start', expect.any(Object));
   });
 
-  it('routes to api implementation in api mode', async () => {
-    const getJsonMock = vi.fn(async () => [{ runId: 'run-api', planId: 'plan-api' }]);
-    const service = createRunsService(
-      'api',
-      buildApiClientStub({
-        getJson: getJsonMock as ApiClient['getJson'],
-      })
-    );
+  it('uses GET /runs/:runId for getRunSnapshot', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_abc',
+      planId: 'plan_abc',
+      status: 'RUNNING',
+      environmentId: 'dev',
+      gitSha: 'abc',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      substatus: 'WAITING_APPROVAL',
+      message: 'Approval required',
+      hash: 'snapshot-hash',
+      snapshotStaleness: 'FRESH',
+    });
 
-    const runs = await service.listRuns();
+    const service = createRunsService('api', apiClient);
+    const snapshot = await service.getRunSnapshot('run_abc');
 
-    expect(getJsonMock).toHaveBeenCalledWith('/runs');
+    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc');
+    expect(snapshot).toEqual({
+      runId: 'run_abc',
+      planId: 'plan_abc',
+      status: 'running',
+      environment: 'dev',
+      gitSha: 'abc',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: undefined,
+      substatus: 'WAITING_APPROVAL',
+      message: 'Approval required',
+      hash: 'snapshot-hash',
+      snapshotStaleness: 'FRESH',
+    });
+  });
+
+  it('maps missing snapshots to null for getRunSnapshot', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockRejectedValue(createApiError(404, '/runs/missing'));
+
+    const service = createRunsService('api', apiClient);
+    const snapshot = await service.getRunSnapshot('missing');
+
+    expect(snapshot).toBeNull();
+  });
+
+  it('uses GET /runs/:runId/events for listRunEvents', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      items: [],
+      nextCursor: 10,
+    });
+
+    const service = createRunsService('api', apiClient);
+    await service.listRunEvents('run_abc', 5);
+
+    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc/events?afterSeq=5');
+  });
+
+  it('maps listRunSummaries from runtime list result items', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      items: [
+        {
+          runId: 'run_1',
+          planId: 'plan_1',
+          status: 'RUNNING',
+          environmentId: 'dev',
+          gitSha: 'abc',
+          createdAt: '2026-04-04T00:00:00.000Z',
+          substatus: 'WAITING_APPROVAL',
+          message: 'Approval required',
+        },
+      ],
+      nextCursor: null,
+    });
+
+    const service = createRunsService('api', apiClient);
+    const runs = await service.listRunSummaries();
+
+    expect(apiClient.getJson).toHaveBeenCalledWith('/runs');
     expect(runs).toEqual([
-      expect.objectContaining({
-        runId: 'run-api',
-        planId: 'plan-api',
-      }),
+      {
+        runId: 'run_1',
+        planId: 'plan_1',
+        status: 'running',
+        environment: 'dev',
+        gitSha: 'abc',
+        startedAt: '2026-04-04T00:00:00.000Z',
+        completedAt: undefined,
+        substatus: 'WAITING_APPROVAL',
+        message: 'Approval required',
+        hash: undefined,
+        snapshotStaleness: undefined,
+      },
     ]);
+  });
+
+  it('maps listRunEvents from runtime events result items and nextCursor', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      items: [],
+      nextCursor: 11,
+    });
+
+    const service = createRunsService('api', apiClient);
+    const result = await service.listRunEvents('run_abc');
+
+    expect(result).toEqual({
+      events: [],
+      nextAfterSeq: 11,
+    });
+  });
+
+  it.each([401, 403, 404, 409, 422, 500])(
+    'propagates runtime API error for startRun (%s)',
+    async (statusCode) => {
+      const apiClient = createApiClientMock();
+      const apiError = createApiError(statusCode);
+      vi.mocked(apiClient.postJson).mockRejectedValue(apiError);
+      const service = createRunsService('api', apiClient);
+
+      await expect(service.startRun(createStartRunInput())).rejects.toBe(apiError);
+    }
+  );
+
+  it('does not call legacy GET /runs/:runId/status route', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_abc',
+      status: 'RUNNING',
+      startedAt: '2026-04-04T00:00:00.000Z',
+    });
+
+    const service = createRunsService('api', apiClient);
+    await service.getRunSnapshot('run_abc');
+
+    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc');
+    expect(apiClient.getJson).not.toHaveBeenCalledWith('/runs/run_abc/status');
   });
 });
