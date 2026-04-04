@@ -86,6 +86,8 @@ These are design and maintainability issues first, not new feature work.
   incomplete
 - route navigation remains an explicit side effect owned outside graph
   projection
+- the route-facing workbench contract stays explicit and readable instead of
+  being hidden behind opaque command bags
 - graph query, overlay projection, and layout persistence stay separable enough
   to test independently
 - graph handlers and execution actions remain reusable hooks rather than being

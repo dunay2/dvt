@@ -247,6 +247,7 @@ flowchart TB
 ## Related Pages
 
 - [UX Implementation Guide](ux-implementation-guide.md)
+- [Workbench UI Contract And Component Inventory](workbench-ui-contract-and-component-inventory.md)
 - [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)
 - [Library And Open-Source Reference Stack](library-and-open-source-reference-stack.md)
