@@ -13,6 +13,12 @@ It covers planner orchestration, graph-source derivation, execution-plan
 assembly, verification, deterministic interpretation, DSL evaluation, and the
 artifact helpers that attach compiled-code references.
 
+Current target reading for graph-source generalization:
+
+- `docs/guides/generic-graph-source-technical-manual-20260404.md`
+- `docs/guides/generic-graph-source-user-manual-20260404.md`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
+
 ## Scope
 
 - `@dvt/planner`
@@ -63,6 +69,8 @@ kernel.
   artifacts or storage ownership correctly.
 - `RC-G1-D`: keep planner-private ports private while preserving the shared
   planner contracts that are intentionally public.
+- `MW-A2`: make `GenericGraphSource` the canonical planner input and demote dbt
+  manifest ingestion to a compatibility adapter path.
 
 ## Domain Rules
 

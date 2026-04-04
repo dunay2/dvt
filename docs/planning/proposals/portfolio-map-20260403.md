@@ -21,6 +21,7 @@ planning_type: proposal
 - [Governance And Docs](mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 - [Doc-Driven Framework And Tooling Plan](mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [Runtime And Contracts](mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [MW-A2 GenericGraphSource plan](mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 - [S08-4 StepKind stepTypeConfig hardening plan](mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md)
 - [S08-5 post S08-4 invariant closure plan](mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md)
 - [WorkflowEngine hexagonal derivation plan](mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)

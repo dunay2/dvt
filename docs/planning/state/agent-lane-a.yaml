@@ -203,10 +203,10 @@ tasks:
   - task_id: S19-F1-C
     parent_task: S19-F1
     priority: P2
-    status: queued
+    status: in_progress
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 20
     objective: >-
       close the remaining performance proof and claim-semantics risk for the snapshot work queue
       path.
@@ -337,7 +337,7 @@ tasks:
     status_reason: >-
       `RC-G1` is now registered in Lane A and the ownership matrix freeze is delivered, but the
       engine, delivery/traceability/artifacts, and planner cleanup slices remain queued.
-    last_verified: '2026-04-02'
+    last_verified: '2026-04-04'
   - task_id: RC-G1-A
     parent_task: RC-G1
     priority: P1
@@ -856,7 +856,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: MW-A2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       create a GenericGraphSource format that allows defining DAGs without dbt manifests, so the
       planner can accept workflow definitions from any source (Spark, Python, API, custom ETL).
@@ -867,13 +867,108 @@ tasks:
       core planner.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 20
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+      - docs/guides/generic-graph-source-technical-manual-20260404.md
+      - docs/guides/generic-graph-source-user-manual-20260404.md
     status_reason: >-
       The single biggest blocker for multi-workflow support — today the only entry to the planner is
       dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
-    last_verified: '2026-04-02'
+    last_verified: '2026-04-04'
+  - task_id: MW-A2-A
+    parent_task: MW-A2
+    priority: P0
+    status: done
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      publish the canonical technical manual, user manual, and execution proposal for the
+      GenericGraphSource target.
+    dependency: none
+    target: >-
+      Contributors and integrators have one canonical target description for GenericGraphSource,
+      including diagrams, class responsibilities, procedures, invariants, and negative-path tests.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+      - docs/guides/generic-graph-source-technical-manual-20260404.md
+      - docs/guides/generic-graph-source-user-manual-20260404.md
+    status_reason: The target boundary is now documented before contract or runtime changes begin.
+    last_verified: '2026-04-04'
+  - task_id: MW-A2-B
+    parent_task: MW-A2
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: >-
+      evolve the shared planner contract from PlannerGraphSourceV1 toward an additive
+      GenericGraphSourceV1 boundary.
+    dependency: MW-A2-A
+    target: >-
+      `@dvt/contracts` exposes the additive GenericGraphSource contract, compatibility alias,
+      parser, schema, and fixtures needed for planner adoption without silent breakage.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+    status_reason: Sequenced after the target model freeze.
+    last_verified: '2026-04-04'
+  - task_id: MW-A2-C
+    parent_task: MW-A2
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: >-
+      refactor the planner boundary so dbt manifest handling becomes a source adapter instead of the
+      semantic center.
+    dependency: MW-A2-B
+    target: >-
+      PlannerFacade accepts the generic graph source contract, translation from normalized nodes to
+      planner steps is explicit, and dbt normalization is isolated behind an adapter seam.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+    status_reason: Queued behind the additive contract slice.
+    last_verified: '2026-04-04'
+  - task_id: MW-A2-D
+    parent_task: MW-A2
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: >-
+      align API and ref-resolution wiring with the generic graph-source boundary.
+    dependency: MW-A2-C
+    target: >-
+      Application wiring accepts direct generic graph sources and ref-based resolution without
+      presenting manifest-specific seams as the canonical product story.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+    status_reason: Queued after planner boundary adoption.
+    last_verified: '2026-04-04'
+  - task_id: MW-A2-E
+    parent_task: MW-A2
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 2
+    progress_pct: 0
+    objective: >-
+      harden determinism, invariant coverage, and negative-path tests for the new graph-source
+      boundary.
+    dependency: MW-A2-D
+    target: >-
+      Contract, planner, and API tests fail on duplicate nodes, broken dependencies, malformed refs,
+      dbt key-order drift, provenance-only metadata identity drift, and other canonical negative
+      paths for GenericGraphSource.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+    status_reason: Final hardening wave after the boundary is wired.
+    last_verified: '2026-04-04'
   - task_id: AR-A3
     priority: P1
     status: done
@@ -1234,7 +1329,7 @@ dependency_notes:
   - >-
     `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
     GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). `MW-A1`
-    depends on `S08-5-C`; `MW-A3` depends on `MW-A1`.
+    depends on `S08-5-C`; `MW-A2` is now decomposed into `MW-A2-A..E`; `MW-A3` depends on `MW-A1`.
   - >-
     `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
     folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.
