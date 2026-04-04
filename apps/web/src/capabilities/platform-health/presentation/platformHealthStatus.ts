@@ -1,7 +1,7 @@
 import type {
   PlatformConnectionState,
   PlatformHealthSnapshot,
-} from '../capabilities/platform-health';
+} from '../domain/platformHealthTypes';
 
 const MAX_RETRY_BACKOFF_MS = 60_000;
 
@@ -16,33 +16,32 @@ export function getPlatformHealthErrorMessageFromQuery(
   return error instanceof Error ? error.message : 'Unknown platform health query error';
 }
 
-export function getDegradedReason(snapshot: PlatformHealthSnapshot | undefined): string {
+function getDegradedReason(snapshot: PlatformHealthSnapshot | undefined): string {
   if (!snapshot) {
     return 'Platform probes are unavailable.';
   }
 
   if (snapshot.healthz.data.status === 'degraded') {
-    const reconciler = snapshot.healthz.data.components.intentReconciler;
-    if (reconciler.status === 'degraded') {
-      return `Intent reconciler degraded (${reconciler.reasonCode}).`;
-    }
-    return 'Health endpoint reports degraded state.';
+    const intentReconciler = snapshot.healthz.data.components.intentReconciler;
+    return intentReconciler.status === 'degraded'
+      ? `Intent reconciler degraded: ${intentReconciler.reasonCode}.`
+      : 'The /healthz endpoint reports degraded platform status.';
   }
 
   if (snapshot.readyz.availability === 'available' && snapshot.readyz.data?.ok === false) {
-    return `Readiness is not ready (${snapshot.readyz.data.reasonCode}).`;
+    return `Readiness not satisfied: ${snapshot.readyz.data.reasonCode}.`;
   }
 
   if (snapshot.dbReady.availability === 'available' && snapshot.dbReady.data?.ok === false) {
-    return snapshot.dbReady.data.reason
-      ? `Database readiness failed (${snapshot.dbReady.data.reason}).`
-      : 'Database readiness failed.';
+    return `Database readiness failed: ${snapshot.dbReady.data.reason ?? 'unknown reason'}.`;
   }
 
-  const optionalProbeError =
-    snapshot.readyz.error ?? snapshot.version.error ?? snapshot.dbReady.error;
-  if (optionalProbeError) {
-    return optionalProbeError.message;
+  const failedOptionalProbe = [snapshot.readyz, snapshot.version, snapshot.dbReady].find(
+    (probe) => probe.error !== null
+  );
+
+  if (failedOptionalProbe?.error) {
+    return `${failedOptionalProbe.endpoint} probe failed: ${failedOptionalProbe.error.message}`;
   }
 
   return 'Platform is degraded.';

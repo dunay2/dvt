@@ -37,10 +37,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
 import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
-import { resolveDataSource } from '../services/config/dataSource';
-import { createWorkspaceService } from '../services/workspace/workspaceService';
-
-const workspaceService = createWorkspaceService(resolveDataSource());
+import { useWorkspaceService } from '../services/AppServicesContext';
 
 function getBackendStatusLabel(restStatus: PlatformConnectionState['rest']): string {
   switch (restStatus) {
@@ -110,6 +107,7 @@ function StatusBadge({
 
 export default function AdminView() {
   const [searchQuery, setSearchQuery] = useState('');
+  const workspaceService = useWorkspaceService();
   const platformHealth = usePlatformHealthSnapshotQuery();
   const capabilities = useCapabilitiesQuery();
   const rolesQuery = useQuery({

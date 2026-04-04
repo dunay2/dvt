@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createPlatformHealthSnapshot } from '../capabilities/platform-health/testing/platformHealthFixtures';
+
+import { createPlatformHealthSnapshot } from '../testing/platformHealthFixtures';
 import {
   getNextRetryDelayMs,
   getPlatformConnectionDetail,

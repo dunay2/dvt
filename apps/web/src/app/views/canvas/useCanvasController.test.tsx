@@ -163,8 +163,9 @@ function buildExecutionActionsResult(): MockExecutionActionsResult {
 
 const mockUseQuery = vi.hoisted(() => vi.fn());
 const mockResolveCanvasGraphStrategy = vi.hoisted(() => vi.fn());
-const mockCreateWorkspaceService = vi.hoisted(() => vi.fn());
-const mockCreatePlansService = vi.hoisted(() => vi.fn());
+const mockUseWorkspaceService = vi.hoisted(() => vi.fn());
+const mockUsePlansService = vi.hoisted(() => vi.fn());
+const mockUseRunsService = vi.hoisted(() => vi.fn());
 const mockUseAppStore = vi.hoisted(() => vi.fn());
 const mockUseCapabilitiesQuery = vi.hoisted(() => vi.fn());
 const mockBuildOverlayContext = vi.hoisted(() => vi.fn());
@@ -204,16 +205,10 @@ vi.mock('../../plugins/graphStrategyRegistry', () => ({
   resolveCanvasGraphStrategy: mockResolveCanvasGraphStrategy,
 }));
 
-vi.mock('../../services/config/dataSource', () => ({
-  resolveDataSource: () => 'mock',
-}));
-
-vi.mock('../../services/plans/plansService', () => ({
-  createPlansService: mockCreatePlansService,
-}));
-
-vi.mock('../../services/workspace/workspaceService', () => ({
-  createWorkspaceService: mockCreateWorkspaceService,
+vi.mock('../../services/AppServicesContext', () => ({
+  useWorkspaceService: mockUseWorkspaceService,
+  usePlansService: mockUsePlansService,
+  useRunsService: mockUseRunsService,
 }));
 
 vi.mock('../../stores/appStore', () => ({
@@ -329,8 +324,9 @@ describe('useCanvasController', () => {
     state.executionActionsResult = buildExecutionActionsResult();
 
     mockUseQuery.mockReturnValue({ data: state.graphData });
-    mockCreateWorkspaceService.mockReturnValue({ getGraphSnapshot: vi.fn() });
-    mockCreatePlansService.mockReturnValue({ previewPlan: vi.fn() });
+    mockUseWorkspaceService.mockReturnValue({ getGraphSnapshot: vi.fn() });
+    mockUsePlansService.mockReturnValue({ previewPlan: vi.fn() });
+    mockUseRunsService.mockReturnValue({ listRuns: vi.fn() });
     mockUseAppStore.mockImplementation(() => state.store);
     mockUseCapabilitiesQuery.mockReturnValue({ data: undefined });
     mockResolveCanvasGraphStrategy.mockReturnValue({

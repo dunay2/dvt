@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
-import { resolveDataSource } from '../services/config/dataSource';
-import { createRunsService } from '../services/runs/runsService';
+import { useRunsService } from '../services/AppServicesContext';
 import { useAppStore } from '../stores/appStore';
 import RunHeader from './runs/RunHeader';
 import { RunListState, RunNotFoundState } from './runs/RunStates';
@@ -13,7 +12,7 @@ export default function RunsView() {
   const { runId } = useParams();
   const [activeTab, setActiveTab] = useState('timeline');
   const { setCurrentRun, selectedTenant, selectedProject, selectedEnvironment } = useAppStore();
-  const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
+  const runsService = useRunsService();
   const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
 
   const runsQuery = useQuery({

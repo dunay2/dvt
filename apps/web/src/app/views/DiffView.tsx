@@ -15,12 +15,10 @@ import {
 } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
-import { resolveDataSource } from '../services/config/dataSource';
-import { createWorkspaceService } from '../services/workspace/workspaceService';
-
-const workspaceService = createWorkspaceService(resolveDataSource());
+import { useWorkspaceService } from '../services/AppServicesContext';
 
 export default function DiffView() {
+  const workspaceService = useWorkspaceService();
   const [compareMode, setCompareMode] = useState<'git' | 'run'>('git');
   const [filterSeverity, setFilterSeverity] = useState<'all' | 'breaking' | 'warning'>('all');
   const tabTriggerClassName =
