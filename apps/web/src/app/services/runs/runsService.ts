@@ -1,60 +1,28 @@
-import type { EngineRunRef, PlanRef, RunContext, RunEvent } from '../../types/engine';
+import type { IRunsPort } from '../../ports/runs';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
-import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
+import type { DataSourceMode } from '../config/dataSource';
 import { createApiRunsService } from './runsService.api';
 import { createMockRunsService } from './runsService.mock';
 
-export type StartRunInput = {
-  planRef: PlanRef;
-  context: RunContext;
-};
+// Re-export port types for backward compatibility — consumers should migrate
+// to importing from '../../ports/runs' or '../../ports' directly.
+export type {
+  StartRunInput,
+  UiRunStatus,
+  RunSummaryItem,
+  RunSnapshot,
+  RunEventTimelinePage,
+} from '../../ports/runs';
 
-export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-
-export type RunSummaryItem = {
-  runId: string;
-  planId?: string;
-  status: UiRunStatus;
-  environment?: string;
-  gitSha?: string;
-  startedAt: string;
-  completedAt?: string;
-  substatus?: string;
-  message?: string;
-  hash?: string;
-  snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
-};
-
-export type RunSnapshot = {
-  runId: string;
-  planId?: string;
-  status: UiRunStatus;
-  environment?: string;
-  gitSha?: string;
-  startedAt: string;
-  completedAt?: string;
-  substatus?: string;
-  message?: string;
-  hash?: string;
-  snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
-};
-
-export type RunEventTimelinePage = {
-  events: RunEvent[];
-  nextAfterSeq?: number;
-};
-
-export interface RunsService {
-  listRunSummaries: () => Promise<RunSummaryItem[]>;
-  getRunSnapshot: (runId: string) => Promise<RunSnapshot | null>;
-  startRun: (input: StartRunInput) => Promise<EngineRunRef>;
-  listRunEvents: (runId: string, afterSeq?: number) => Promise<RunEventTimelinePage>;
-}
+/**
+ * @deprecated Use {@link IRunsPort} from `../../ports/runs` instead.
+ */
+export type RunsService = IRunsPort;
 
 export function createRunsService(
-  mode: DataSourceMode = resolveDataSource(),
+  mode: DataSourceMode,
   apiClient: ApiClient = createApiClient()
-): RunsService {
+): IRunsPort {
   if (mode === 'api') {
     return createApiRunsService(apiClient);
   }

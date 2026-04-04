@@ -7,6 +7,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
+import { queryKeys } from '../../queries/queryKeys';
 import { useRunsService } from '../../services/AppServicesContext';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent } from '../../types/dbt';
@@ -350,16 +351,17 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   const projectId = useSessionStore((state) => state.projectId);
   const environmentId = useSessionStore((state) => state.environmentId);
   const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
+  const activeRunIdOrUndefined = activeRunId ?? undefined;
 
   const { data: runSnapshot, isLoading } = useQuery({
-    queryKey: ['runs', 'snapshot', workspaceLayoutKey, activeRunId],
-    queryFn: () => runsService.getRunSnapshot(activeRunId!),
+    queryKey: queryKeys.runs.snapshot(workspaceLayoutKey, activeRunIdOrUndefined),
+    queryFn: () => runsService.getRunSnapshot(activeRunIdOrUndefined!),
     enabled: Boolean(activeRunId),
     staleTime: 5_000,
   });
 
   const { data: runSummaries, isLoading: isLoadingList } = useQuery({
-    queryKey: ['runs', 'summaries', workspaceLayoutKey],
+    queryKey: queryKeys.runs.summaries(workspaceLayoutKey),
     queryFn: () => runsService.listRunSummaries(),
     enabled: !activeRunId,
     staleTime: 30_000,

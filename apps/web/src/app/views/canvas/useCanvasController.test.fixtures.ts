@@ -32,7 +32,10 @@ export type CanvasHarnessMocks = {
   useWorkspaceService: MockFn;
   usePlansService: MockFn;
   useRunsService: MockFn;
-  useAppStore: MockFn;
+  useCanvasInteractionStore: MockFn;
+  useExecutionStore: MockFn;
+  useSessionStore: MockFn;
+  useUiLayoutStore: MockFn;
   useCapabilitiesQuery: MockFn;
   buildOverlayContext: MockFn;
   buildNodeDecorations: MockFn;
@@ -95,6 +98,9 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
     store: {
       _hasHydrated: true,
       focusMode: false,
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
       selectedTenant: 'tenant-a',
       selectedProject: 'project-a',
       selectedEnvironment: 'dev',
@@ -117,7 +123,11 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       },
       setConsolePanelHeight: vi.fn(),
       consolePanelVisible: false,
+      showExplorerPanel: vi.fn(),
+      hideExplorerPanel: vi.fn(),
       toggleExplorerPanel: vi.fn(),
+      showInspectorPanel: vi.fn(),
+      hideInspectorPanel: vi.fn(),
       toggleInspectorPanel: vi.fn(),
       toggleConsolePanel: vi.fn(),
       explorerPanelVisible: true,
@@ -126,6 +136,7 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       canvasLayouts: {},
       setCanvasViewport: vi.fn(),
       setCanvasNodePositions: vi.fn(),
+      currentRun: null,
     },
     graphHandlersResult: {
       confirmEdgeModal: { open: false, edge: null },
@@ -158,9 +169,12 @@ export function configureDefaultCanvasHarnessMocks(
   mocks.useWorkspaceService.mockReturnValue({ getGraphSnapshot: vi.fn() });
   mocks.usePlansService.mockReturnValue({ previewPlan: vi.fn() });
   mocks.useRunsService.mockReturnValue({ listRuns: vi.fn() });
-  mocks.useAppStore.mockImplementation((selector?: (value: typeof state.store) => unknown) =>
-    typeof selector === 'function' ? selector(state.store) : state.store
-  );
+  const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
+    typeof selector === 'function' ? selector(state.store) : state.store;
+  mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
+  mocks.useExecutionStore.mockImplementation(selectFromStore);
+  mocks.useSessionStore.mockImplementation(selectFromStore);
+  mocks.useUiLayoutStore.mockImplementation(selectFromStore);
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
   mocks.resolveCanvasGraphStrategy.mockReturnValue({
     mapNodeToCanonical: vi.fn(

@@ -4,7 +4,8 @@ import {
   createApiClient,
   resolveApiBaseUrl,
 } from '../../../app/services/api/createApiClient';
-import { resolveDataSource } from '../../../app/services/config/dataSource';
+import type { DataSourceMode } from '../../../app/services/config/dataSource';
+import { getRuntimeDataSourceMode } from '../../../app/services/config/runtimeDataSourceMode';
 import type {
   DbReadyDto,
   HealthzDto,
@@ -224,7 +225,8 @@ export type HttpPlatformHealthClient = {
 };
 
 export function createHttpPlatformHealthClient(
-  apiClient: ApiClient = createApiClient(resolveApiBaseUrl())
+  apiClient: ApiClient = createApiClient(resolveApiBaseUrl()),
+  dataSourceMode: DataSourceMode = getRuntimeDataSourceMode()
 ): HttpPlatformHealthClient {
   const requestRaw = (path: string) =>
     apiClient.requestRaw(path, {
@@ -252,7 +254,7 @@ export function createHttpPlatformHealthClient(
       return {
         fetchedAt: new Date().toISOString(),
         apiBaseUrl: apiClient.baseUrl,
-        dataSourceMode: resolveDataSource(),
+        dataSourceMode,
         healthz,
         readyz,
         version,

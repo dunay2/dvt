@@ -1,13 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router';
 
-import { useRunsService } from '../services/AppServicesContext';
-import {
-  createRunWorkspaceFacade,
-  RunWorkspaceLoadError,
-  type RunWorkspaceViewModel,
-} from '../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../services/runs/runWorkspaceFacade';
 import {
   RunDetailErrorState,
   RunDetailLoadingState,
@@ -15,9 +9,9 @@ import {
   RunNotFoundState,
   RunWorkspaceState,
 } from './runs/RunStates';
-import { useSessionStore } from '../stores/sessionStore';
-import { useAppStore } from '../stores/appStore';
+import { useExecutionStore } from '../stores/executionStore';
 import type { Run } from '../types/dbt';
+import { useRunWorkspace } from './runs/useRunWorkspace';
 
 function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
   const { snapshot } = workspace;
@@ -42,8 +36,6 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
     steps: [],
   };
 
-  // Explicitly mark this as snapshot-level runtime data so plugin mappers
-  // that require step/event detail can skip canonical conversion.
   return {
     ...focusedRun,
     runtimeDetail: { level: 'snapshot' },
@@ -52,26 +44,16 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
 
 export default function RunsView() {
   const { runId } = useParams();
-  const runsService = useRunsService();
-  const { setCurrentRun } = useAppStore();
-  const runWorkspaceFacade = useMemo(() => createRunWorkspaceFacade(runsService), [runsService]);
-  const tenantId = useSessionStore((state) => state.tenantId);
-  const projectId = useSessionStore((state) => state.projectId);
-  const environmentId = useSessionStore((state) => state.environmentId);
-  const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
+  const setCurrentRun = useExecutionStore((state) => state.setCurrentRun);
+  const {
+    runs,
+    isLoadingRuns,
+    workspace,
+    isLoadingWorkspace,
+    workspaceError,
+    workspaceErrorMessage,
+  } = useRunWorkspace(runId);
 
-  const runsQuery = useQuery({
-    queryKey: ['runs', 'summaries', workspaceLayoutKey],
-    queryFn: () => runsService.listRunSummaries(),
-  });
-
-  const runWorkspaceQuery = useQuery({
-    queryKey: ['runs', 'workspace', workspaceLayoutKey, runId],
-    queryFn: () => runWorkspaceFacade.loadRunWorkspace(runId ?? ''),
-    enabled: Boolean(runId),
-  });
-
-  const workspace = runWorkspaceQuery.data;
   const focusedRunModel = runId && workspace ? toFocusedRunModel(workspace) : null;
 
   useEffect(() => {
@@ -85,19 +67,15 @@ export default function RunsView() {
   }, [setCurrentRun]);
 
   if (!runId) {
-    return <RunListState runs={runsQuery.data ?? []} isLoading={runsQuery.isLoading} />;
+    return <RunListState runs={runs} isLoading={isLoadingRuns} />;
   }
 
-  if (runWorkspaceQuery.isLoading) {
+  if (isLoadingWorkspace) {
     return <RunDetailLoadingState runId={runId} />;
   }
 
-  if (runWorkspaceQuery.isError) {
-    const errorMessage =
-      runWorkspaceQuery.error instanceof RunWorkspaceLoadError
-        ? runWorkspaceQuery.error.message
-        : 'Run workspace could not be loaded.';
-    return <RunDetailErrorState runId={runId} message={errorMessage} />;
+  if (workspaceError) {
+    return <RunDetailErrorState runId={runId} message={workspaceErrorMessage} />;
   }
 
   if (!workspace) {

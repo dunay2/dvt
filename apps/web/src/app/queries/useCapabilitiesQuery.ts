@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { queryKeys } from './queryKeys';
+
 export type CapabilitiesResponse = {
   apiVersion: string;
   minFrontendVersion: string;
@@ -14,7 +16,7 @@ async function fetchCapabilities(): Promise<CapabilitiesResponse> {
 
 export function useCapabilitiesQuery() {
   return useQuery({
-    queryKey: ['shell', 'capabilities'],
+    queryKey: queryKeys.shell.capabilities(),
     queryFn: fetchCapabilities,
     retry: false,
     staleTime: 60_000,

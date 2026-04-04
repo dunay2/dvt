@@ -15,6 +15,7 @@ import {
 } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
+import { queryKeys } from '../queries/queryKeys';
 import { useWorkspaceService } from '../services/AppServicesContext';
 
 export default function DiffView() {
@@ -24,7 +25,7 @@ export default function DiffView() {
   const tabTriggerClassName =
     'text-slate-200 data-[state=active]:bg-[#101724] data-[state=active]:text-white';
   const diffChangesQuery = useQuery({
-    queryKey: ['workspace', 'diff-changes'],
+    queryKey: queryKeys.workspace.diffChanges(),
     queryFn: () => workspaceService.getDiffChanges(),
   });
   const diffChanges = diffChangesQuery.data ?? [];

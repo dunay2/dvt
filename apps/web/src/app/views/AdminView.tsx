@@ -36,6 +36,7 @@ import {
 } from '../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
+import { queryKeys } from '../queries/queryKeys';
 import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
 import { useWorkspaceService } from '../services/AppServicesContext';
 
@@ -111,11 +112,11 @@ export default function AdminView() {
   const platformHealth = usePlatformHealthSnapshotQuery();
   const capabilities = useCapabilitiesQuery();
   const rolesQuery = useQuery({
-    queryKey: ['workspace', 'roles'],
+    queryKey: queryKeys.workspace.roles(),
     queryFn: () => workspaceService.getRoles(),
   });
   const auditQuery = useQuery({
-    queryKey: ['workspace', 'audit'],
+    queryKey: queryKeys.workspace.audit(),
     queryFn: () => workspaceService.getAuditLog(),
   });
   const roles = rolesQuery.data ?? [];
