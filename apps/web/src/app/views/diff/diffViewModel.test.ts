@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DiffChange } from '../../types/dbt';
-import {
-  buildDiffSummary,
-  filterDiffChanges,
-  getComparePreset,
-} from './diffViewModel';
+import { buildDiffSummary, filterDiffChanges, getComparePreset } from './diffViewModel';
 
 function buildChange(overrides?: Partial<DiffChange>): DiffChange {
   return {

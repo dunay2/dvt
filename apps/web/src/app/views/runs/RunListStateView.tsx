@@ -42,8 +42,12 @@ export function RunListStateView({ runs, isLoading }: RunListStateProps) {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <h3 className="font-semibold">Run {runRecord.runId}</h3>
-                  <Badge className={cn(getRunStatusTone(runRecord.status))}>{runRecord.status}</Badge>
-                  {runRecord.substatus ? <Badge variant="outline">{runRecord.substatus}</Badge> : null}
+                  <Badge className={cn(getRunStatusTone(runRecord.status))}>
+                    {runRecord.status}
+                  </Badge>
+                  {runRecord.substatus ? (
+                    <Badge variant="outline">{runRecord.substatus}</Badge>
+                  ) : null}
                 </div>
                 <div className="flex gap-4 text-sm text-slate-300">
                   {isKnownRunField(runRecord.gitSha) ? (

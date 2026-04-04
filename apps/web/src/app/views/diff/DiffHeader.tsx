@@ -36,7 +36,10 @@ export function DiffHeader({
         subtitle={copy.subtitle}
         icon={<GitCompare className="size-6 text-blue-400" />}
         actions={
-          <Select value={compareMode} onValueChange={(value) => onCompareModeChange(value as DiffCompareMode)}>
+          <Select
+            value={compareMode}
+            onValueChange={(value) => onCompareModeChange(value as DiffCompareMode)}
+          >
             <SelectTrigger className="w-[150px] border-slate-600 bg-slate-950 text-slate-50">
               <SelectValue />
             </SelectTrigger>

@@ -15,7 +15,9 @@ export function CostAlertsList({ alerts, copy }: CostAlertsListProps) {
     <Card className="border-slate-700 bg-slate-900 p-4">
       <h3 className="mb-4 font-semibold">{copy.alerts}</h3>
       <div className="space-y-2">
-        {alerts.length === 0 ? <p className="text-sm text-slate-400">{copy.noActiveAlerts}</p> : null}
+        {alerts.length === 0 ? (
+          <p className="text-sm text-slate-400">{copy.noActiveAlerts}</p>
+        ) : null}
         {alerts.map((alert) => (
           <div
             key={alert.id}

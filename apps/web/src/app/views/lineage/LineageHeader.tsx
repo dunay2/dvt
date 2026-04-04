@@ -31,7 +31,9 @@ export function LineageHeader({
         title={copy.title}
         icon={<GitGraph className="size-6 text-purple-400" />}
         subtitle={
-          isLoading ? <span className="text-xs text-slate-400">{copy.loading}</span> : (
+          isLoading ? (
+            <span className="text-xs text-slate-400">{copy.loading}</span>
+          ) : (
             <span className="text-xs text-slate-500">
               {nodeCount} {copy.nodesSuffix}
             </span>

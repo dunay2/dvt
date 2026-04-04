@@ -42,7 +42,9 @@ export function RunDetailErrorStateView({ runId, message }: RunDetailErrorStateP
   return (
     <RunStateFrame title={`Run ${runId}`}>
       <Card className="mx-auto max-w-xl border-red-900 bg-red-950/30 p-5">
-        <h2 className="mb-2 text-base font-semibold text-red-200">{copy.runWorkspaceUnavailable}</h2>
+        <h2 className="mb-2 text-base font-semibold text-red-200">
+          {copy.runWorkspaceUnavailable}
+        </h2>
         <p className="text-sm text-red-100">{message}</p>
       </Card>
     </RunStateFrame>

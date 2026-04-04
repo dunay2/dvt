@@ -5,12 +5,7 @@ import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry'
 import { queryKeys } from '../../queries/queryKeys';
 import { useWorkspaceService } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  assignLevels,
-  bfsReachable,
-  buildColumnLineage,
-  groupNodesByLevel,
-} from './lineageModel';
+import { assignLevels, bfsReachable, buildColumnLineage, groupNodesByLevel } from './lineageModel';
 
 export function useLineageViewData() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,10 +62,7 @@ export function useLineageViewData() {
     return canonicalNodes.filter((node) => ids.has(node.id));
   }, [canonicalNodes, downstream, focusNode, upstream]);
 
-  const nodesByLevel = useMemo(
-    () => groupNodesByLevel(scopeNodes, levels),
-    [scopeNodes, levels]
-  );
+  const nodesByLevel = useMemo(() => groupNodesByLevel(scopeNodes, levels), [scopeNodes, levels]);
 
   const columnLineage = useMemo(
     () => (focusNode ? buildColumnLineage(focusNode, canonicalNodes, canonicalEdges) : []),
