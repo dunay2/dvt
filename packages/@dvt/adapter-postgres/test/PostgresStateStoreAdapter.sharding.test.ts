@@ -29,7 +29,7 @@ class RecordingPoolClient {
     if (
       statement.includes('snapshot_work_queue') &&
       statement.includes('RETURNING q.run_id') &&
-      statement.includes('FOR UPDATE SKIP LOCKED')
+      statement.includes('FOR UPDATE OF q SKIP LOCKED')
     ) {
       return {
         rows: [
@@ -236,7 +236,7 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     const claimQuery = client.queries.find(
       (entry) =>
         entry.sql.includes('FROM "DvtOps".snapshot_work_queue') &&
-        entry.sql.includes('FOR UPDATE SKIP LOCKED')
+        entry.sql.includes('FOR UPDATE OF q SKIP LOCKED')
     );
     expect(claimQuery).toBeDefined();
     expect(claimQuery?.sql).toContain('UPDATE "DvtOps".snapshot_work_queue q');
