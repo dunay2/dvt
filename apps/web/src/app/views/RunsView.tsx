@@ -1,77 +1,58 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
 import { resolveDataSource } from '../services/config/dataSource';
+import {
+  createRunWorkspaceFacade,
+  RunWorkspaceLoadError,
+} from '../services/runs/runWorkspaceFacade';
 import { createRunsService } from '../services/runs/runsService';
-import { useAppStore } from '../stores/appStore';
-import RunHeader from './runs/RunHeader';
-import { RunListState, RunNotFoundState } from './runs/RunStates';
-import RunTabsContent from './runs/RunTabsContent';
+import {
+  RunDetailErrorState,
+  RunDetailLoadingState,
+  RunListState,
+  RunNotFoundState,
+  RunWorkspaceState,
+} from './runs/RunStates';
 
 export default function RunsView() {
   const { runId } = useParams();
-  const [activeTab, setActiveTab] = useState('timeline');
-  const { setCurrentRun, selectedTenant, selectedProject, selectedEnvironment } = useAppStore();
   const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
-  const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
+  const runWorkspaceFacade = useMemo(() => createRunWorkspaceFacade(runsService), [runsService]);
 
   const runsQuery = useQuery({
-    queryKey: ['runs', 'list', workspaceLayoutKey],
-    queryFn: () => runsService.listRuns(),
+    queryKey: ['runs', 'summaries'],
+    queryFn: () => runsService.listRunSummaries(),
   });
 
-  const runDetailQuery = useQuery({
-    queryKey: ['runs', 'detail', workspaceLayoutKey, runId],
-    queryFn: () => runsService.getRun(runId ?? ''),
+  const runWorkspaceQuery = useQuery({
+    queryKey: ['runs', 'workspace', runId],
+    queryFn: () => runWorkspaceFacade.loadRunWorkspace(runId ?? ''),
     enabled: Boolean(runId),
   });
 
-  const runs = runsQuery.data ?? [];
-  // /runs always shows the list; /runs/:runId shows the detail
-  const run = runId ? (runDetailQuery.data ?? null) : null;
-
-  useEffect(() => {
-    setCurrentRun(run);
-
-    return () => {
-      setCurrentRun(null);
-    };
-  }, [run, setCurrentRun]);
-
   if (!runId) {
-    return <RunListState runs={runs} isLoading={runsQuery.isLoading} />;
+    return <RunListState runs={runsQuery.data ?? []} isLoading={runsQuery.isLoading} />;
   }
 
-  if (!run) {
-    return <RunNotFoundState runId={runId ?? 'unknown'} />;
+  if (runWorkspaceQuery.isLoading) {
+    return <RunDetailLoadingState runId={runId} />;
   }
 
-  const totalSteps = run.steps.length;
-  const completedSteps = run.steps.filter((step) => step.status === 'success').length;
-  const progress = (completedSteps / totalSteps) * 100;
-  const totalDuration = run.steps.reduce((sum, step) => sum + (step.duration ?? 0), 0);
-  const runningSteps = run.steps.filter((step) => step.status === 'running').length;
-  const totalNodes = run.steps.reduce((sum, step) => sum + step.nodes.length, 0);
+  if (runWorkspaceQuery.isError) {
+    const errorMessage =
+      runWorkspaceQuery.error instanceof RunWorkspaceLoadError
+        ? runWorkspaceQuery.error.message
+        : 'Run workspace could not be loaded.';
+    return <RunDetailErrorState runId={runId} message={errorMessage} />;
+  }
 
-  return (
-    <div className="h-full bg-slate-950 flex flex-col">
-      <RunHeader
-        run={run}
-        completedSteps={completedSteps}
-        totalSteps={totalSteps}
-        progress={progress}
-      />
-      <RunTabsContent
-        run={run}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        completedSteps={completedSteps}
-        totalSteps={totalSteps}
-        totalDuration={totalDuration}
-        runningSteps={runningSteps}
-        totalNodes={totalNodes}
-      />
-    </div>
-  );
+  const workspace = runWorkspaceQuery.data;
+
+  if (!workspace) {
+    return <RunNotFoundState runId={runId} />;
+  }
+
+  return <RunWorkspaceState workspace={workspace} />;
 }

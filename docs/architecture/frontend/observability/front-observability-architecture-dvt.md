@@ -43,7 +43,8 @@ exist yet.
   [usePlatformHealthSnapshotQuery.ts](../../../../apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts)
 - runs detail:
   [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx),
-  [RunTabsContent.tsx](../../../../apps/web/src/app/views/runs/RunTabsContent.tsx)
+  [RunStates.tsx](../../../../apps/web/src/app/views/runs/RunStates.tsx),
+  [runWorkspaceFacade.ts](../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - cost prototype:
   [CostView.tsx](../../../../apps/web/src/app/views/CostView.tsx)
 

@@ -77,6 +77,11 @@ The user expects to:
 The runs landing screen shows past and current executions and acts as the entry
 point for execution investigation.
 
+Contract authority:
+
+- list source: `GET /runs`
+- run start source: `POST /runs/start`
+
 ### Primary user stories
 
 - As an operator, I want to find a failed or active run quickly so I can inspect
@@ -100,16 +105,22 @@ Run detail behaves like one operational workspace, not several unrelated tabs.
 
 The user expects:
 
-- a stable header;
-- progress visibility;
-- timeline, steps, events, metrics, and artifacts inside one coherent route.
+- a stable run workspace state;
+- truthful snapshot authority;
+- timeline evidence when available;
+- explicit partial or degraded signaling when detail is missing.
+
+Contract authority:
+
+- run snapshot source: `GET /runs/:runId`
+- event timeline source: `GET /runs/:runId/events`
 
 ### Primary user stories
 
 - As an operator, I want to understand where a run is or failed without
   reconstructing execution state myself.
-- As an operator, I want events, metrics, and artifacts to stay tied to the same
-  run context.
+- As an operator, I want snapshot and timeline to stay tied to the same run
+  context.
 - As an operator, I want degraded or partial data to be obvious so I do not
   mistake stale state for canonical truth.
 
@@ -117,7 +128,8 @@ The user expects:
 
 - Loading: preserve route frame while detail loads.
 - Missing: explicit run-not-found state.
-- Degraded: stale or partial evidence labeled clearly.
+- Snapshot-only: route remains operational without fake step or artifact detail.
+- Degraded: timeline failure does not erase a valid snapshot state.
 
 ## Lineage
 
@@ -246,3 +258,8 @@ Current related tasks:
 - `F-18` console and live-log convergence
 - `F-19` Marquez open-data visual direction
 - `F-21` execution-template and source-generation workbench
+
+Runtime contract baseline references:
+
+- [Frontend Runtime Contract Technical Manual](runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](runs/frontend-runtime-contract-user-manual.md)

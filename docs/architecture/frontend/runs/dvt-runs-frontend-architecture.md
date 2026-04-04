@@ -21,8 +21,7 @@ Primary code anchors:
 
 - [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx)
 - [RunStates.tsx](../../../../apps/web/src/app/views/runs/RunStates.tsx)
-- [RunHeader.tsx](../../../../apps/web/src/app/views/runs/RunHeader.tsx)
-- [RunTabsContent.tsx](../../../../apps/web/src/app/views/runs/RunTabsContent.tsx)
+- [runWorkspaceFacade.ts](../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts)
 
 Current routes:
@@ -33,16 +32,16 @@ Current routes:
 Current composition:
 
 - list state when no `runId` is selected;
-- detail header when a run is selected;
-- tabbed detail content for timeline, steps, events, metrics, and artifacts.
+- workspace detail state when a run is selected;
+- snapshot card is always present;
+- timeline card is available, empty, or degraded based on runtime events.
 
 ## UX Rules
 
 - `/runs` is the operational landing state;
 - `/runs/:runId` is the focused execution workspace;
 - empty state must send the user back to Canvas to create meaningful work;
-- event, metrics, and artifact views should feel like one run workspace rather
-  than unrelated pages.
+- the route must never fabricate step/artifact detail from snapshot-only data.
 
 ## Mature Libraries And References
 
@@ -59,6 +58,31 @@ Current composition:
   diagnostics workbench;
 - the frontend contract around run start and richer diagnostics still needs
   tightening with the protected API route map.
+
+## Runtime Contract Baseline (F-07)
+
+The route-level runtime drift addressed by `F-07` is now fixed in the service
+layer:
+
+- frontend runtime routes now align to protected route truth:
+  - `POST /runs/start`
+  - `GET /runs`
+  - `GET /runs/:runId`
+  - `GET /runs/:runId/events`
+
+Current residual constraint after that fix:
+
+- `/runs/:runId` is backed by runtime snapshot authority, not by a full
+  event-enriched and step-enriched run aggregate;
+- timeline is route-composed when available, but step/artifact/node detail
+  still need the later `F-09` through `F-11` convergence work.
+
+Canonical runtime contract baseline docs:
+
+- [Frontend Runtime Contract Technical Manual](frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](frontend-runtime-contract-user-manual.md)
+- [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
+- [F-07 Frontend Runtime Contract Baseline Plan](../../../planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
 
 ## Related Pages
 
