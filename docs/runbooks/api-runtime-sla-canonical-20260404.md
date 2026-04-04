@@ -15,6 +15,11 @@ Truth-first rule for this document:
 - `derived from existing metric`: SLO is computed from currently emitted metric(s)
 - `planned`: target metric/SLO not emitted yet; cannot be treated as active alert policy
 
+Companion manuals for end-to-end interpretation:
+
+- [AR-C2 Observability User Manual](../guides/ar-c2-observability-user-manual-20260404.md)
+- [AR-C2 Observability Technical Manual](../guides/ar-c2-observability-technical-manual-20260404.md)
+
 ## SLA Model
 
 ```mermaid
@@ -28,6 +33,10 @@ flowchart LR
 ## Current Observability Baseline
 
 These are the only SLA signals safe to treat as active today.
+
+Canonical signal-to-threshold mapping source for AR-C2 wiring:
+
+- [AR-C2 SLA signal threshold mapping](ar-c2-sla-signal-threshold-mapping-20260404.md)
 
 | Status                         | Logical signal                           | Exported metric(s)                                             | Threshold (SLO)                         | Alert policy                                            |
 | ------------------------------ | ---------------------------------------- | -------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------- |

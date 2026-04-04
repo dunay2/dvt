@@ -1,6 +1,18 @@
 #!/usr/bin/env node
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const fs = require('node:fs');
+
+const WINDOWS_GIT_PATH = 'C:\\Program Files\\Git\\cmd\\git.exe';
+
+function resolveGitBinary() {
+  if (process.env.GIT_BINARY) return process.env.GIT_BINARY;
+  if (process.platform === 'win32' && fs.existsSync(WINDOWS_GIT_PATH)) {
+    return WINDOWS_GIT_PATH;
+  }
+  return 'git';
+}
+
+const gitBinary = resolveGitBinary();
 
 function parseChangedFiles(output) {
   return output
@@ -9,8 +21,8 @@ function parseChangedFiles(output) {
     .filter(Boolean);
 }
 
-function runGit(command) {
-  return execSync(command, {
+function runGit(args) {
+  return execFileSync(gitBinary, args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
   });
@@ -18,9 +30,7 @@ function runGit(command) {
 
 function hasUpstream() {
   try {
-    execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
+    runGit(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']);
     return true;
   } catch {
     return false;
@@ -29,27 +39,31 @@ function hasUpstream() {
 
 function hasRef(ref) {
   try {
-    execSync(`git rev-parse --verify ${ref}`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
+    runGit(['rev-parse', '--verify', ref]);
     return true;
   } catch {
     return false;
   }
 }
 
-function resolveDiffCommand() {
-  if (hasRef('origin/main')) return 'git diff --name-only origin/main..HEAD';
-  if (hasUpstream()) return 'git diff --name-only @{u}..HEAD';
-  return 'git diff --name-only HEAD~1..HEAD';
+function resolveDiffRanges() {
+  const commands = [];
+  if (hasRef('origin/main')) commands.push('origin/main..HEAD');
+  if (hasUpstream()) commands.push('@{u}..HEAD');
+  commands.push('HEAD~1..HEAD');
+  return commands;
 }
 
 function gitChangedFiles() {
-  try {
-    return parseChangedFiles(runGit(resolveDiffCommand()));
-  } catch {
-    return [];
+  for (const range of resolveDiffRanges()) {
+    try {
+      const files = parseChangedFiles(runGit(['diff', '--name-only', range]));
+      if (files.length > 0) return files;
+    } catch {
+      // Try the next diff baseline.
+    }
   }
+  return [];
 }
 
 function isGovernedQaArtifactPath(filePath) {
