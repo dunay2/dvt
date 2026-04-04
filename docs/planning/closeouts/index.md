@@ -2,7 +2,7 @@
 title: Planning Closeouts
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-03
 ---
 
 # Planning Closeouts
@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260403 API Current To Target Architecture Closeout](20260403-api-current-to-target-architecture-closeout.md)
 - [20260331 MVP-A1 Contractual Inventory Closeout](20260331-mvp-a1-contractual-inventory-closeout.md)
 - [20260324 S12 Remove Deprecated State-Store Methods Closeout](20260324-s12-remove-deprecated-state-store-methods-closeout.md)
 - [20260324 Schema Migration Rollback Closeout](20260324-schema-migration-rollback-closeout.md)
