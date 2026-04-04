@@ -100,6 +100,10 @@ Supported input env vars:
 - `AR_C2_ALERT_SNAPSHOT_FILE` (optional JSON file with `rules[]`)
 - `AR_C2_METRICS_SNAPSHOT_FILE` (optional JSON file with `windows[]`)
 
+For duplicate `signal_key` rows (for example stale ratio and unknown ratio that
+share the same source metric key), provide distinct `windows[]` entries with
+different `expected` values so T4 rows can be resolved independently.
+
 ## Invariants
 
 1. Generated artifact must be reproducible from same input window.

@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import prettier from 'prettier';
 
 const ROOT = process.cwd();
 const MAPPING_PATH = path.join(
@@ -125,12 +126,14 @@ function normalizeMetricsSnapshot(snapshot) {
   for (const item of windows) {
     const signalKey = String(item.signalKey ?? '').trim();
     if (!signalKey) continue;
-    bySignal.set(signalKey, {
+    const existing = bySignal.get(signalKey) ?? [];
+    existing.push({
       status: item.status === 'pass' ? 'pass' : 'insufficient_window_data',
       observed: item.observed ?? 'unknown',
       expected: item.expected ?? 'unknown',
       window: item.window ?? 'unknown',
     });
+    bySignal.set(signalKey, existing);
   }
   return bySignal;
 }
@@ -173,8 +176,24 @@ function renderArtifact({
     };
   });
 
+  const consumedMetricIdx = new Map();
   const sustainedRows = mappingRows.map((row) => {
-    const metricWindow = metricsBySignal.get(row.logicalMetricId);
+    const candidates = metricsBySignal.get(row.logicalMetricId) ?? [];
+    const consumed = consumedMetricIdx.get(row.logicalMetricId) ?? new Set();
+
+    let metricIdx = candidates.findIndex(
+      (entry, idx) => !consumed.has(idx) && String(entry.expected) === row.sloThreshold
+    );
+    if (metricIdx < 0) {
+      metricIdx = candidates.findIndex((_, idx) => !consumed.has(idx));
+    }
+
+    const metricWindow = metricIdx >= 0 ? candidates[metricIdx] : null;
+    if (metricIdx >= 0) {
+      consumed.add(metricIdx);
+      consumedMetricIdx.set(row.logicalMetricId, consumed);
+    }
+
     if (!metricWindow) {
       return {
         signalKey: row.logicalMetricId,
@@ -261,9 +280,14 @@ async function main() {
     metricsBySignal: normalizeMetricsSnapshot(metricsSnapshot),
     generatedAt: utcNowIso(),
   });
+  const prettierConfig = (await prettier.resolveConfig(outputPath)) ?? {};
+  const formattedMarkdown = await prettier.format(markdown, {
+    ...prettierConfig,
+    parser: 'markdown',
+  });
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  await fs.writeFile(outputPath, markdown, 'utf8');
+  await fs.writeFile(outputPath, formattedMarkdown, 'utf8');
   process.stdout.write(`[ar-c2:evidence] Generated ${path.relative(ROOT, outputPath)}\n`);
 }
 
