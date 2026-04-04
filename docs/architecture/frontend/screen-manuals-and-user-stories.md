@@ -74,6 +74,37 @@ The user expects to:
 - start a run;
 - understand visual overlays without changing graph truth accidentally.
 
+### Current user journey
+
+Today the Canvas route behaves as one graph workbench with:
+
+- explorer on the left when needed;
+- viewport in the center as the main interaction surface;
+- inspector on the right for selection-driven detail;
+- overlay toggles for impact, runtime, and lineage-oriented projection;
+- planning and run-start actions tied to the current graph context.
+
+This remediation does not change that journey. It hardens the route so loading,
+error, and persistence behavior become more deterministic without changing how
+the user moves through the workbench.
+
+```mermaid
+flowchart LR
+  Entry["Open /canvas"] --> Shell["Shell frame stays visible"]
+  Shell --> Explorer["Explorer optional"]
+  Shell --> Viewport["Viewport primary surface"]
+  Shell --> Inspector["Inspector optional"]
+
+  Viewport --> Overlay["Visual overlays only"]
+  Viewport --> Plan["Plan from current selection"]
+  Plan --> Run["Start run from graph context"]
+  Run --> RunsRoute["Navigate to /runs/:runId"]
+
+  Shell --> Loading["Loading state"]
+  Shell --> Error["Error state"]
+  Shell --> ReadOnly["Read-only or gated state"]
+```
+
 ### Primary user stories
 
 - As an author, I want to inspect graph topology in one primary surface so I can
@@ -86,9 +117,33 @@ The user expects to:
 ### Expected states
 
 - Empty: explain that no graph content is loaded yet.
-- Loading: graph shell visible while data arrives.
-- Error: keep shell and route context visible, with retry if meaningful.
+- Loading: graph load keeps the shell and route frame stable while local canvas
+  state resolves.
+- Error: keep shell and route context visible, with safe canvas state and retry
+  if meaningful.
 - Read-only: overlays and inspection remain available while mutation is gated.
+
+### Hardening direction
+
+This route is moving toward a stricter controller boundary with these
+user-facing guarantees:
+
+- graph load state must not make layout persistence behave unpredictably during
+  hydration or query startup;
+- overlay toggles stay visual projections only and do not rewrite graph truth;
+- plan and run actions remain graph-contextual and close to the graph surface;
+- route-side navigation after run start remains explicit instead of being hidden
+  inside unrelated graph state updates.
+
+### Explicit non-promises
+
+This remediation does not promise:
+
+- new canvas features;
+- a new route or panel;
+- console or live-log convergence;
+- a visible workflow change for planning or run-start beyond more deterministic
+  route behavior.
 
 ## Runs List
 

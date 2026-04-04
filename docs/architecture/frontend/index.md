@@ -86,14 +86,15 @@ That future route-level workbench should cover:
 7. [App Shell](appshell/app-shell.md)
 8. [Data Source Service Boundary](appshell/data-source-service-boundary.md)
 9. [Graph Frontend Architecture](graph/graph-frontend-architecture.md)
-10. [Inspector](inspector/inspector-frontend-architecture.md)
-11. [Runs](runs/dvt-runs-frontend-architecture.md)
-12. [Lineage](lineage/dvt-frontend-lineage.md)
-13. [Git Mode Architecture](git/git-mode-architecture.md)
-14. [Frontend Observability Architecture](observability/front-observability-architecture-dvt.md)
-15. [Frontend Artifacts](artifacts/front-artifacts.md)
-16. [apps/web](../components/web-app/index.md)
-17. [@dvt/web package surface](../components/web/index.md)
+10. [Canvas Controller Current To Target Architecture](graph/canvas-controller-current-to-target-architecture.md)
+11. [Inspector](inspector/inspector-frontend-architecture.md)
+12. [Runs](runs/dvt-runs-frontend-architecture.md)
+13. [Lineage](lineage/dvt-frontend-lineage.md)
+14. [Git Mode Architecture](git/git-mode-architecture.md)
+15. [Frontend Observability Architecture](observability/front-observability-architecture-dvt.md)
+16. [Frontend Artifacts](artifacts/front-artifacts.md)
+17. [apps/web](../components/web-app/index.md)
+18. [@dvt/web package surface](../components/web/index.md)
 
 ## Current Code Anchors
 

@@ -579,12 +579,117 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/stores/sessionStore.ts
       - apps/web/src/app/stores/appStore.ts
     status_reason: >-
       A dedicated sessionStore already exists, but appStore still concentrates shell layout, canvas
       interaction, run state, and permissions into one mutable surface.
     last_verified: '2026-04-03'
+  - task_id: F-05-CANVAS-CTRL-DOC
+    parent_task: F-05
+    priority: P0
+    status: review
+    objective: >-
+      freeze the current truth, target controller decomposition, and user-facing Canvas guarantees
+      for the `useCanvasController` hardening slice.
+    dependency: none
+    target: >-
+      Canonical technical and user-facing docs describe the current controller responsibilities,
+      target seams, invariants, non-goals, and hard-gate sequence without leaving design decisions
+      to the implementer.
+    complexity: S
+    effort_points: 2
+    progress_pct: 90
+    evidence_refs:
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+    status_reason: >-
+      The controller remediation now has a dedicated architecture page, user-manual update, and
+      proposal-level execution handoff; final closure depends on docs validation and acceptance.
+    definition_of_done:
+      - technical current-to-target doc is linked from the frontend architecture entrypoint
+      - Canvas user manual states current journey, guarantees, and non-promises
+      - the proposal freezes the hard-gate sequence and extracted seam names
+    last_verified: '2026-04-04'
+  - task_id: F-05-CANVAS-CTRL-TDD
+    parent_task: F-05
+    priority: P0
+    status: queued
+    objective: >-
+      add failing tests that freeze controller invariants before any code extraction starts.
+    dependency: F-05-CANVAS-CTRL-DOC
+    target: >-
+      Red tests cover pending and error graph-query behavior, deterministic persisted-position sync,
+      overlay fallback, guarded persistence, and isolated post-run navigation side effects.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+    status_reason: >-
+      The controller slice currently lacks invariant-driven tests and must enter a red phase before
+      implementation work starts.
+    definition_of_done:
+      - red tests fail for the intended controller invariants
+      - tests do not depend on fragile private implementation details
+      - provider or route seams remain testable after extraction
+    last_verified: '2026-04-04'
+  - task_id: F-05-CANVAS-CTRL-IMPL
+    parent_task: F-05
+    priority: P0
+    status: queued
+    objective: >-
+      extract the controller into focused graph, overlay, persistence, and navigation seams and
+      reduce `useCanvasController` to a composition facade.
+    dependency: F-05-CANVAS-CTRL-TDD
+    target: >-
+      `useCanvasGraphModel`, `useCanvasOverlayModel`, `useCanvasLayoutPersistence`, and
+      `useCanvasNavigationActions` exist with single declared responsibilities while the route-level
+      workflow remains unchanged.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+    status_reason: >-
+      Implementation is intentionally blocked behind the documentation and red-test hard gate.
+    definition_of_done:
+      - controller responsibilities match the documented seam model
+      - hot-path debug logging is removed
+      - graph sync uses stable identity-oriented lookup instead of repeated search
+      - route behavior for planning and run navigation remains intact
+    last_verified: '2026-04-04'
+  - task_id: F-05-CANVAS-CTRL-CLOSEOUT
+    parent_task: F-05
+    priority: P1
+    status: queued
+    objective: >-
+      reconcile docs, tests, and lane evidence after controller extraction lands.
+    dependency: F-05-CANVAS-CTRL-IMPL
+    target: >-
+      The controller slice closes with aligned docs, accepted evidence, updated lane state, and no
+      residual drift between the implemented seams and the canonical documentation.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - docs/planning/state/agent-lane-e.yaml
+    status_reason: >-
+      Final closure is intentionally separated so docs and evidence can be reconciled after the
+      extraction and TDD phases are complete.
+    definition_of_done:
+      - docs still match the implemented controller seams
+      - validation evidence is linked from the lane
+      - no controller-specific residual drift remains untracked
+    last_verified: '2026-04-04'
   - task_id: F-06
     priority: P0
     status: in_progress
@@ -1128,10 +1233,10 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-03'
-  total_tasks: 34
-  total_effort_points: 147
-  completed_weighted_points: 25.4
+  verified_on: '2026-04-04'
+  total_tasks: 38
+  total_effort_points: 157
+  completed_weighted_points: 27.2
   lane_progress_pct: 17
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
