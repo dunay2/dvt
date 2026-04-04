@@ -3,9 +3,10 @@ import { useEffect } from 'react';
 import { Outlet } from 'react-router';
 import {
   PLATFORM_HEALTH_REFETCH_INTERVAL_MS,
+  getPlatformConnectionDetail,
+  getPlatformHealthErrorMessageFromQuery,
   selectPlatformConnectionState,
   type PlatformConnectionState,
-  type PlatformHealthSnapshot,
   type PlatformHealthCapabilityApi,
   usePlatformHealthSnapshotQuery,
 } from '../capabilities/platform-health';
@@ -15,6 +16,7 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
+import { AppServicesProvider } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
 import '@xyflow/react/dist/style.css';
 
@@ -30,51 +32,7 @@ const queryClient = new QueryClient({
 function getPlatformHealthErrorMessage(
   platformHealth: ReturnType<typeof usePlatformHealthSnapshotQuery>
 ): string | null {
-  if (!platformHealth.isError) {
-    return null;
-  }
-
-  return platformHealth.error instanceof Error
-    ? platformHealth.error.message
-    : 'Unknown platform health query error';
-}
-
-function getPlatformHealthDetailMessage(
-  snapshot: PlatformHealthSnapshot | undefined,
-  errorMessage: string | null
-): string | null {
-  if (errorMessage) {
-    return errorMessage;
-  }
-
-  if (!snapshot) {
-    return null;
-  }
-
-  if (snapshot.healthz.data.status === 'degraded') {
-    const intentReconciler = snapshot.healthz.data.components.intentReconciler;
-    return intentReconciler.status === 'degraded'
-      ? `Intent reconciler degraded: ${intentReconciler.reasonCode}.`
-      : 'The /healthz endpoint reports degraded platform status.';
-  }
-
-  if (snapshot.readyz.availability === 'available' && snapshot.readyz.data?.ok === false) {
-    return `Readiness not satisfied: ${snapshot.readyz.data.reasonCode}.`;
-  }
-
-  if (snapshot.dbReady.availability === 'available' && snapshot.dbReady.data?.ok === false) {
-    return `Database readiness failed: ${snapshot.dbReady.data.reason ?? 'unknown reason'}.`;
-  }
-
-  const failedOptionalProbe = [snapshot.readyz, snapshot.version, snapshot.dbReady].find(
-    (probe) => probe.error !== null
-  );
-
-  if (failedOptionalProbe?.error) {
-    return `${failedOptionalProbe.endpoint} probe failed: ${failedOptionalProbe.error.message}`;
-  }
-
-  return null;
+  return getPlatformHealthErrorMessageFromQuery(platformHealth.isError, platformHealth.error);
 }
 
 type RootShellProps = {
@@ -94,12 +52,18 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   }, [platformHealth.data, platformHealth.isError, platformHealth.isPending, setConnectionStatus]);
 
   const errorMessage = getPlatformHealthErrorMessage(platformHealth);
-  const connectionDetail = getPlatformHealthDetailMessage(platformHealth.data, errorMessage);
   const isInitialHealthCheckPending =
     platformHealth.isPending && !platformHealth.data && !platformHealth.isError;
   const connectionStateOverride: PlatformConnectionState | null = isInitialHealthCheckPending
     ? null
     : selectPlatformConnectionState(platformHealth.data, platformHealth.isError);
+  const connectionDetail = connectionStateOverride
+    ? getPlatformConnectionDetail(
+        connectionStateOverride.rest,
+        platformHealth.data,
+        errorMessage
+      )
+    : null;
   const lastSettledAtMs = Math.max(
     platformHealth.dataUpdatedAt ?? 0,
     platformHealth.errorUpdatedAt ?? 0
@@ -157,7 +121,9 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 export default function Root() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RootShell />
+      <AppServicesProvider>
+        <RootShell />
+      </AppServicesProvider>
     </QueryClientProvider>
   );
 }

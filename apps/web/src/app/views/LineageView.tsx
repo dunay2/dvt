@@ -10,8 +10,7 @@ import { Label } from '../components/ui/label';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Switch } from '../components/ui/switch';
 import { resolveCanvasGraphStrategy } from '../plugins/graphStrategyRegistry';
-import { resolveDataSource } from '../services/config/dataSource';
-import { createWorkspaceService } from '../services/workspace/workspaceService';
+import { useWorkspaceService } from '../services/AppServicesContext';
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 
 // ---------------------------------------------------------------------------
@@ -134,7 +133,7 @@ export default function LineageView() {
   const [columnLevel, setColumnLevel] = useState(false);
 
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const workspaceService = useMemo(() => createWorkspaceService(resolveDataSource()), []);
+  const workspaceService = useWorkspaceService();
 
   const { data: snapshot, isLoading } = useQuery({
     queryKey: ['workspace', 'graph'],

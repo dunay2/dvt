@@ -6,10 +6,11 @@ import { useNavigate } from 'react-router';
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
-import { resolveDataSource } from '../../services/config/dataSource';
-import { createPlansService } from '../../services/plans/plansService';
-import { createRunsService } from '../../services/runs/runsService';
-import { createWorkspaceService } from '../../services/workspace/workspaceService';
+import {
+  usePlansService,
+  useRunsService,
+  useWorkspaceService,
+} from '../../services/AppServicesContext';
 import { useAppStore } from '../../stores/appStore';
 import type { CanonicalEdge, CanonicalNode, CanonicalRun } from '../../types/canonical';
 import type { ExecutionPlan } from '../../types/dbt';
@@ -87,11 +88,10 @@ function areViewportsEqual(
 export function useCanvasController() {
   const navigate = useNavigate();
   const { data: capabilities } = useCapabilitiesQuery();
-  const dataSourceMode = resolveDataSource();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const workspaceService = useMemo(() => createWorkspaceService(dataSourceMode), [dataSourceMode]);
-  const plansService = useMemo(() => createPlansService(dataSourceMode), [dataSourceMode]);
-  const runsService = useMemo(() => createRunsService(dataSourceMode), [dataSourceMode]);
+  const workspaceService = useWorkspaceService();
+  const plansService = usePlansService();
+  const runsService = useRunsService();
 
   const {
     _hasHydrated,

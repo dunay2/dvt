@@ -40,6 +40,26 @@ The user always understands:
 - Degraded: health banner explains degraded or offline state.
 - Error: route-level errors do not destroy the shell frame.
 
+### F-04 Data source behavior
+
+- Users should not see route-specific wiring differences between `mock` and
+  `api`.
+- Main routes remain operable in both modes.
+- When an API-only capability is not implemented yet, the user gets an explicit
+  service error instead of silent fallback behavior.
+- Source import remains mock-capable, while API mode reports unimplemented
+  backend import support explicitly.
+- The console no longer pretends mock log lines are real in `api` mode.
+
+```mermaid
+flowchart LR
+  User["User action"] --> Shell["Shell route"]
+  Shell --> View["Active view"]
+  View --> Service["Typed service hook"]
+  Service --> Adapter["mock or api adapter"]
+  Adapter --> Outcome["Data or explicit error"]
+```
+
 ## Canvas
 
 ### User expectation

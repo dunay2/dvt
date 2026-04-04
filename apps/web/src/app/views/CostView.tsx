@@ -17,9 +17,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { resolveDataSource } from '../services/config/dataSource';
-import { createRunsService } from '../services/runs/runsService';
-import { createWorkspaceService } from '../services/workspace/workspaceService';
+import { useRunsService, useWorkspaceService } from '../services/AppServicesContext';
 import { useAppStore } from '../stores/appStore';
 
 function formatCurrency(value: number): string {
@@ -27,9 +25,8 @@ function formatCurrency(value: number): string {
 }
 
 export default function CostView() {
-  const dataSourceMode = resolveDataSource();
-  const workspaceService = useMemo(() => createWorkspaceService(dataSourceMode), [dataSourceMode]);
-  const runsService = useMemo(() => createRunsService(dataSourceMode), [dataSourceMode]);
+  const workspaceService = useWorkspaceService();
+  const runsService = useRunsService();
   const { currentRun } = useAppStore();
 
   const graphSnapshotQuery = useQuery({
