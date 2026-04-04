@@ -14,6 +14,11 @@ It is intentionally truth-first:
 - do not mark dashboard or alert wiring as complete without immutable evidence
 - do not treat SLA threshold text as equivalent to wired monitor configuration
 
+Companion manuals:
+
+- [AR-C2 Observability User Manual](../guides/ar-c2-observability-user-manual-20260404.md)
+- [AR-C2 Observability Technical Manual](../guides/ar-c2-observability-technical-manual-20260404.md)
+
 ## Governing sources
 
 - `docs/planning/state/agent-lane-c.yaml`
