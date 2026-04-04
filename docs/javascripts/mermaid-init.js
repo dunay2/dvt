@@ -15,19 +15,19 @@
     }
 
     document.querySelectorAll('.mermaid').forEach((el) => {
-      el.removeAttribute('data-processed');
+      delete el.dataset.processed;
     });
 
     mermaid.initialize({ startOnLoad: false });
     await mermaid.run({ querySelector: '.mermaid' });
   };
 
-  if (window.document$?.subscribe) {
-    window.document$.subscribe(() => {
+  if (globalThis.document$?.subscribe) {
+    globalThis.document$.subscribe(() => {
       void renderMermaid();
     });
   } else {
-    window.addEventListener('DOMContentLoaded', () => {
+    globalThis.addEventListener('DOMContentLoaded', () => {
       void renderMermaid();
     });
   }
