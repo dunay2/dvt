@@ -14,6 +14,8 @@ Developer guides, contribution guides, and quality standards.
 - [AI Work Protocol](ai-work-protocol.md)
 - [API Control-Plane Technical Manual](api-control-plane-technical-manual-20260404.md)
 - [API Control-Plane User Manual](api-control-plane-user-manual-20260404.md)
+- [AR-C2 Automated Evidence Technical Manual](ar-c2-automated-evidence-technical-manual-20260404.md)
+- [AR-C2 Automated Evidence User Manual](ar-c2-automated-evidence-user-manual-20260404.md)
 - [AR-C2 Observability Technical Manual](ar-c2-observability-technical-manual-20260404.md)
 - [AR-C2 Observability User Manual](ar-c2-observability-user-manual-20260404.md)
 - [DVT+ Design Guide](dvt-code-style-solid-hexagonal-cqrs.md)
