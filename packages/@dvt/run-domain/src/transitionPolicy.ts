@@ -18,7 +18,7 @@ export type GuardedStepEventType = 'StepStarted' | 'StepCompleted' | 'StepFailed
 export const RUN_EVENT_ALLOWED_FROM: Record<GuardedRunEventType, WorkflowSnapshot['status'][]> = {
   RunPaused: ['RUNNING'],
   RunResumed: ['PAUSED'],
-  RunCancelRequested: ['RUNNING', 'PAUSED'],
+  RunCancelRequested: ['PENDING', 'RUNNING', 'PAUSED'],
 };
 
 export const STEP_EVENT_ALLOWED_FROM: Record<

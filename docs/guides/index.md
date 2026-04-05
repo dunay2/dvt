@@ -11,6 +11,8 @@ Developer guides, contribution guides, and quality standards.
 
 ## Index
 
+- [Admin Rebuild Snapshot Technical Manual](admin-rebuild-snapshot-technical-manual-20260405.md)
+- [Admin Rebuild Snapshot User Manual](admin-rebuild-snapshot-user-manual-20260405.md)
 - [AI Work Protocol](ai-work-protocol.md)
 - [API Control-Plane Technical Manual](api-control-plane-technical-manual-20260404.md)
 - [API Control-Plane User Manual](api-control-plane-user-manual-20260404.md)
