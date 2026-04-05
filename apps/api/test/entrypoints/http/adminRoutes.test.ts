@@ -1,3 +1,4 @@
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
@@ -13,7 +14,7 @@ function makeSnapshot(
   status: WorkflowSnapshotResult['status'] = 'PENDING'
 ): WorkflowSnapshotResult {
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
     runId,
     status,
     paused: false,
@@ -83,9 +84,80 @@ function createApp(
   return { app, rebuildSnapshotSpy };
 }
 
+function buildAuthorizedApp(
+  rebuildSnapshot: RebuildSnapshot,
+  options?: {
+    readonly authenticateBearerToken?: (token: string | undefined) => Promise<unknown>;
+    readonly authorize?: () => Promise<unknown>;
+    readonly auth?: {
+      readonly tenantId?: string;
+      readonly actionName?: string;
+      readonly principalId?: string;
+      readonly principalType?: string;
+      readonly requestId?: string;
+    };
+  }
+): {
+  app: ReturnType<typeof Fastify>;
+  rebuildSnapshotSpy: ReturnType<typeof vi.fn>;
+} {
+  const auth = options?.auth;
+  const principalId = auth?.principalId ?? 'user-1';
+  const principalType = auth?.principalType ?? 'user';
+  const tenantId = auth?.tenantId ?? 'tenant-a';
+  const actionName = auth?.actionName ?? 'admin:rebuild-snapshot';
+  const requestId = auth?.requestId ?? 'req-1';
+
+  return createApp(rebuildSnapshot, {
+    authenticateBearerToken:
+      options?.authenticateBearerToken ??
+      (async () => ({
+        ok: true,
+        principal: {
+          principalId,
+          subjectId: principalId,
+          issuer: 'issuer',
+          audience: 'audience',
+          principalType,
+          expiresAt: new Date('2030-01-01T00:00:00Z'),
+          rawScopes: [],
+          assertedTenantIds: [tenantId],
+          assertedProjectIds: [],
+        },
+      })),
+    authorize:
+      options?.authorize ??
+      (async () => ({
+        ok: true,
+        context: {
+          principal: {
+            principalId,
+            principalType,
+          },
+          scope: { tenantId: { value: tenantId } },
+          action: { kind: 'command', name: actionName },
+          requestId,
+          authorizedAt: new Date('2026-04-03T00:00:00Z'),
+        },
+      })),
+  });
+}
+
+async function injectRebuildSnapshot(
+  app: ReturnType<typeof Fastify>,
+  runId: string,
+  payload: unknown
+): Promise<Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>> {
+  return app.inject({
+    method: 'POST',
+    url: `/admin/runs/${runId}/rebuild-snapshot`,
+    payload,
+  });
+}
+
 describe('adminRoutes', () => {
   it('returns 401 when token is missing or invalid', async () => {
-    const { app, rebuildSnapshotSpy } = createApp(
+    const { app, rebuildSnapshotSpy } = buildAuthorizedApp(
       async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
       {
         authenticateBearerToken: async () => ({ ok: false, code: 'MISSING_TOKEN' }),
@@ -93,11 +165,7 @@ describe('adminRoutes', () => {
     );
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r1/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r1', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(401);
       expect(response.json()).toEqual({
@@ -113,7 +181,7 @@ describe('adminRoutes', () => {
   });
 
   it('returns 403 when principal lacks explicit admin action', async () => {
-    const { app, rebuildSnapshotSpy } = createApp(
+    const { app, rebuildSnapshotSpy } = buildAuthorizedApp(
       async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
       {
         authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
@@ -121,11 +189,7 @@ describe('adminRoutes', () => {
     );
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r1/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r1', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(403);
       expect(response.json()).toEqual({
@@ -141,31 +205,15 @@ describe('adminRoutes', () => {
   });
 
   it('returns 403 when authorization context is not an admin action', async () => {
-    const { app, rebuildSnapshotSpy } = createApp(
+    const { app, rebuildSnapshotSpy } = buildAuthorizedApp(
       async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
       {
-        authorize: async () => ({
-          ok: true,
-          context: {
-            principal: {
-              principalId: 'user-1',
-              principalType: 'user',
-            },
-            scope: { tenantId: { value: 'tenant-a' } },
-            action: { kind: 'command', name: 'run:cancel' },
-            requestId: 'req-1',
-            authorizedAt: new Date('2026-04-03T00:00:00Z'),
-          },
-        }),
+        auth: { actionName: 'run:cancel' },
       }
     );
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r1/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r1', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(403);
       expect(response.json()).toEqual({
@@ -181,14 +229,10 @@ describe('adminRoutes', () => {
   });
 
   it('returns 400 when tenantId is missing', async () => {
-    const { app } = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
+    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r1/rebuild-snapshot',
-        payload: {},
-      });
+      const response = await injectRebuildSnapshot(app, 'r1', {});
 
       expect(response.statusCode).toBe(400);
       expect(response.json()).toEqual({
@@ -204,14 +248,10 @@ describe('adminRoutes', () => {
   });
 
   it('returns 400 when body is not an object', async () => {
-    const { app } = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
+    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r1/rebuild-snapshot',
-        payload: ['tenant-a'],
-      });
+      const response = await injectRebuildSnapshot(app, 'r1', ['tenant-a']);
 
       expect(response.statusCode).toBe(400);
       expect(response.json()).toEqual({
@@ -229,14 +269,10 @@ describe('adminRoutes', () => {
     ['tenantId has invalid type', { tenantId: 123 }],
     ['tenantId is blank', { tenantId: '   ' }],
   ])('returns 400 when %s', async (_desc, payload) => {
-    const { app } = createApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
+    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r1/rebuild-snapshot',
-        payload,
-      });
+      const response = await injectRebuildSnapshot(app, 'r1', payload);
 
       expect(response.statusCode).toBe(400);
       expect(response.json()).toEqual({
@@ -252,14 +288,10 @@ describe('adminRoutes', () => {
   });
 
   it('returns 200 with rebuilt snapshot status', async () => {
-    const { app } = createApp(async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'));
+    const { app } = buildAuthorizedApp(async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'));
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r42/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r42', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ runId: 'r42', status: 'RUNNING' });
@@ -269,16 +301,12 @@ describe('adminRoutes', () => {
   });
 
   it('returns 404 when the run does not exist for the tenant', async () => {
-    const { app } = createApp(async (_tenantId, _runId) => {
+    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => {
       throw new RunNotFoundError('r404');
     });
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r404/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r404', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(404);
       expect(response.json()).toEqual({
@@ -294,16 +322,12 @@ describe('adminRoutes', () => {
   });
 
   it('returns 500 for legacy stringly not-found errors', async () => {
-    const { app } = createApp(async (_tenantId, _runId) => {
+    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => {
       throw new Error('RUN_NOT_FOUND: r404');
     });
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r404/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r404', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(500);
       expect(response.json()).toEqual({
@@ -318,16 +342,12 @@ describe('adminRoutes', () => {
   });
 
   it('returns 500 on unexpected rebuild failure', async () => {
-    const { app } = createApp(async (_tenantId, _runId) => {
+    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => {
       throw new Error('db down');
     });
 
     try {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/admin/runs/r500/rebuild-snapshot',
-        payload: { tenantId: 'tenant-a' },
-      });
+      const response = await injectRebuildSnapshot(app, 'r500', { tenantId: 'tenant-a' });
 
       expect(response.statusCode).toBe(500);
       expect(response.json()).toEqual({

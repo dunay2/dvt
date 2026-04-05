@@ -52,6 +52,10 @@ const TENANT_ACTIONS_FULL = [
   'run:signal',
   'run:cancel',
 ] as const;
+const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [
+  ...TENANT_ACTIONS_FULL,
+  'admin:rebuild-snapshot',
+] as const;
 
 type JwksServerHandle = {
   readonly server: Server;
@@ -97,6 +101,7 @@ describeIfPg('protected runtime integration', () => {
       'OIDC_ISSUER',
       'OIDC_AUDIENCE',
       'OIDC_ALGORITHMS',
+      'DVT_ADMIN_ROUTES_ENABLED',
     ]);
 
     process.env.NODE_ENV = 'test';
@@ -107,6 +112,7 @@ describeIfPg('protected runtime integration', () => {
     process.env.OIDC_ISSUER = ISSUER;
     process.env.OIDC_AUDIENCE = AUDIENCE;
     process.env.OIDC_ALGORITHMS = 'RS256';
+    process.env.DVT_ADMIN_ROUTES_ENABLED = 'true';
 
     const built = await buildApp();
     app = built.app;
@@ -532,6 +538,147 @@ describeIfPg('protected runtime integration', () => {
 
       expect(response.statusCode).toBe(403);
       expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
+  });
+
+  it('rebuilds snapshot through admin route with valid token and explicit admin action grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_WITH_ADMIN_REBUILD,
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+      const runId = 'api-integration-admin-rebuild-success-1';
+
+      const startResponse = await app!.inject({
+        method: 'POST',
+        url: '/runs/start',
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          tenantId: TENANT_ID,
+          projectId: PROJECT_ID,
+          environmentId: ENVIRONMENT_ID,
+          selection: ['model.orders'],
+          planRef: VALID_PLAN_REF,
+          runId,
+          targetAdapter: 'mock',
+        },
+      });
+      expect(startResponse.statusCode).toBe(202);
+
+      const rebuildResponse = await app!.inject({
+        method: 'POST',
+        url: `/admin/runs/${runId}/rebuild-snapshot`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: { tenantId: TENANT_ID },
+      });
+
+      expect(rebuildResponse.statusCode).toBe(200);
+      expect(rebuildResponse.json()).toMatchObject({
+        runId,
+        status: 'PENDING',
+      });
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
+  });
+
+  it('returns forbidden on admin rebuild route when principal lacks explicit admin action grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_FULL,
+    });
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/admin/runs/api-integration-admin-forbidden/rebuild-snapshot',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { tenantId: TENANT_ID },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
+  });
+
+  it('returns not_found on admin rebuild route for unknown run with valid admin grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_WITH_ADMIN_REBUILD,
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+
+      const response = await app!.inject({
+        method: 'POST',
+        url: '/admin/runs/api-integration-admin-missing-run/rebuild-snapshot',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { tenantId: TENANT_ID },
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        httpError('not_found', 'run_not_found', {
+          details: { runId: 'api-integration-admin-missing-run' },
+        })
+      );
     } finally {
       await upsertPrincipalGrant(adminClient!, {
         schema: SCHEMA,
