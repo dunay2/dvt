@@ -15,10 +15,11 @@ function makeSnapshot(
   return {
     runId,
     status,
+    schemaVersion: 'v1.2',
     paused: false,
     cancelling: false,
     steps: {},
-  };
+  } as WorkflowSnapshotResult;
 }
 
 function createApp(
