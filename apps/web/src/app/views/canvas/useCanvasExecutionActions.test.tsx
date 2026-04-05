@@ -114,7 +114,12 @@ describe('resolvePlanRefForStartRun', () => {
     const runsService: IRunsPort = {
       listRunSummaries: vi.fn(async () => []),
       getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({ provider: 'mock' as const, runId: 'run', tenantId: 't', workflowId: 'w' })),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
       listRunEvents: vi.fn(async () => ({ events: [] })),
     };
     const plansService: IPlansPort = {

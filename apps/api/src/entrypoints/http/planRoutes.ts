@@ -155,10 +155,12 @@ export async function importPlanRoute(
 
 function parseScopeFromContextRecord(
   record: Record<string, unknown>
-):
-  | ReturnType<typeof parseStartRunScope>
-  | ReturnType<typeof badRequestResult> {
-  if (record.context === undefined || record.context === null || typeof record.context !== 'object') {
+): ReturnType<typeof parseStartRunScope> | ReturnType<typeof badRequestResult> {
+  if (
+    record.context === undefined ||
+    record.context === null ||
+    typeof record.context !== 'object'
+  ) {
     return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
