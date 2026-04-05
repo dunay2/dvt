@@ -11,11 +11,11 @@ import { extractBearerToken } from './extractBearerToken.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { badRequestResult } from './routeParseIssue.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
 import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
-import { parseStartRunScope } from './startRunRouteScopeParser.js';
+import { parseStartRunScope, type ParsedStartRunScope } from './startRunRouteScopeParser.js';
 import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 
 const START_RUN_ACTION = { kind: 'command', name: 'run:start' } as const;
@@ -155,13 +155,13 @@ export async function importPlanRoute(
 
 function parseScopeFromContextRecord(
   record: Record<string, unknown>
-): ReturnType<typeof parseStartRunScope> | ReturnType<typeof badRequestResult> {
+): RouteParseResult<ParsedStartRunScope> {
   if (
     record.context === undefined ||
     record.context === null ||
     typeof record.context !== 'object'
   ) {
-    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
+    return badRequestResult<ParsedStartRunScope>(HTTP_ERROR_REASON.invalidBody);
   }
 
   try {
@@ -172,6 +172,6 @@ function parseScopeFromContextRecord(
       environmentId: context.environmentId,
     });
   } catch {
-    return badRequestResult(HTTP_ERROR_REASON.invalidBody);
+    return badRequestResult<ParsedStartRunScope>(HTTP_ERROR_REASON.invalidBody);
   }
 }
