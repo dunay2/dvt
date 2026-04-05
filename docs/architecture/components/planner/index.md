@@ -1,4 +1,4 @@
----
+﻿---
 title: @dvt/planner
 status: Active
 owner: Planning Domain / Architecture / Docs
@@ -15,7 +15,7 @@ last_reviewed: 2026-04-04
 4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
 5. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
 6. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-7. [AR-A9 planner cycle fail-closed plan](../../../planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
+7. [AR-A9 planner cycle fail-closed plan](../../../planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
 8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
@@ -63,6 +63,13 @@ flowchart LR
 - [InputEnvelopeValidator.ts](../../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts)
 - [IArtifactResolver.ts](../../../../packages/@dvt/planner/src/ports/IArtifactResolver.ts)
 - [ExecutionPlan.v2.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+
+## Invariant catalog
+
+| Invariant          | Rule                                                                                                                                                 | Code anchor                                                                                           | Test anchor                                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Policy precedence  | Governance policy values (`retry`, `timeout`, `concurrency`) MUST override node-provided `stepTypeConfig` values in dbt step materialization.        | `packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`                                      | `packages/@dvt/planner/test/unit/dbt-step-factory.test.ts`, `apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts` |
+| StepKind authority | Planner internal graph and step creation MUST be driven by `stepKind`; no local re-mapping back to legacy `resourceType` is allowed in planner core. | `packages/@dvt/planner/src/domain/types.ts`, `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts` | `packages/@dvt/planner/test/unit/graph.test.ts`, `packages/@dvt/planner/test/unit/planner-facade.test.ts`                             |
 
 ## Notes
 

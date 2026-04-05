@@ -1,5 +1,5 @@
-/**
- * Integration tests for Planner ↔ IStepTypeRegistry (G9).
+﻿/**
+ * Integration tests for Planner â†” IStepTypeRegistry (G9).
  *
  * Covers the validateStepConfigs() path added in Planner.ts:
  *  - INVALID_STEP_CONFIG is thrown for known kinds with invalid config
@@ -15,7 +15,7 @@ import { Planner } from '../../src/domain/Planner.js';
 import type { StepFactory } from '../../src/domain/stepFactory/StepFactory.js';
 
 const SINGLE_NODE_PLAN = {
-  graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: [] }] },
+  graphSource: { nodes: [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
   selection: { selectedNodeIds: ['a'] },
 } as const;
 
@@ -50,11 +50,11 @@ const invalidStepConfigExpectation = (
   message: expect.stringContaining(kind),
 });
 
-// ── INVALID_STEP_CONFIG rejection ─────────────────────────────────────────────
+// â”€â”€ INVALID_STEP_CONFIG rejection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('Planner → IStepTypeRegistry: known-kind rejection', () => {
+describe('Planner â†’ IStepTypeRegistry: known-kind rejection', () => {
   it('rejects DBT_MODEL step with unknown field in stepTypeConfig (strict schema)', async () => {
-    // DbtStepTypeConfigSchema is .strict() — unrecognized fields are rejected
+    // DbtStepTypeConfigSchema is .strict() â€” unrecognized fields are rejected
     const buildPlanPromise = buildPlanWithSingleStep('DBT_MODEL', { rogueField: true });
 
     await expect(buildPlanPromise).rejects.toBeInstanceOf(PlannerError);
@@ -76,9 +76,9 @@ describe('Planner → IStepTypeRegistry: known-kind rejection', () => {
   });
 });
 
-// ── Fail-open for unknown kinds ───────────────────────────────────────────────
+// â”€â”€ Fail-open for unknown kinds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('Planner → IStepTypeRegistry: unknown-kind fail-open', () => {
+describe('Planner â†’ IStepTypeRegistry: unknown-kind fail-open', () => {
   it('accepts any stepTypeConfig for an unregistered kind', async () => {
     const { plan } = await buildPlanWithSingleStep('FUTURE_SPARK_JOB', {
       arbitraryField: 'anything',
@@ -96,9 +96,9 @@ describe('Planner → IStepTypeRegistry: unknown-kind fail-open', () => {
   });
 });
 
-// ── Custom registry injection ─────────────────────────────────────────────────
+// â”€â”€ Custom registry injection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('Planner → PlannerOptions.stepTypeRegistry injection', () => {
+describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
   const SparkJobSchema = z.object({ sparkVersion: z.string() }).strict();
   const customRegistry = new StepTypeRegistry(new Map([['SPARK_JOB', SparkJobSchema]]));
 
@@ -115,7 +115,7 @@ describe('Planner → PlannerOptions.stepTypeRegistry injection', () => {
   });
 
   it('fails-open for DBT_MODEL when custom registry does not register it', async () => {
-    // customRegistry only knows SPARK_JOB, so DBT_MODEL is unknown → fail-open
+    // customRegistry only knows SPARK_JOB, so DBT_MODEL is unknown â†’ fail-open
     await expect(
       buildPlanWithSingleStep('DBT_MODEL', { rogueField: 'ignored by registry' }, customRegistry)
     ).resolves.toBeDefined();

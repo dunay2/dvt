@@ -1,8 +1,8 @@
----
+﻿---
 title: G4-PR4: Admission Control Operability - Implementation Plan
-status: Draft
+status: Superseded
 owner: Architecture / API
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-05
 planning_type: proposal
 ---
 

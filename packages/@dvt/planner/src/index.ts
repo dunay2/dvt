@@ -25,7 +25,6 @@ export type {
   ExecutionPlan,
   ExecutionStepV1,
   GenericGraphSourceV1,
-  GraphNode,
   IExecutionPlanner,
   IPlanner,
   PlanCore,

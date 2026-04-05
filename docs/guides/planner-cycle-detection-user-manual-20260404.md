@@ -1,4 +1,4 @@
----
+﻿---
 title: Planner cycle detection user manual
 status: Draft
 owner: Planning Domain / Docs
@@ -62,5 +62,5 @@ Result: request fails with `GRAPH_CYCLE`.
 ## Related docs
 
 - `docs/guides/planner-cycle-detection-technical-manual-20260404.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
+- `docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
 - `docs/architecture/components/planner/index.md`

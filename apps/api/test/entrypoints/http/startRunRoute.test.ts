@@ -851,6 +851,68 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
+  it('returns 400 when legacy nodes payload is supplied without planRef', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-legacy-nodes-no-plan-ref',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          runId: 'run-legacy-nodes-no-plan-ref',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
+  });
+
+  it('returns 400 when legacy manifest payload is supplied without planRef', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-legacy-manifest-no-plan-ref',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          manifest: { nodes: [] },
+          runId: 'run-legacy-manifest-no-plan-ref',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
+  });
+
   it('accepts lowercase bearer scheme', async () => {
     const reply = createReply();
 

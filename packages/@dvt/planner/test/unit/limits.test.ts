@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 
 import { PlannerError, PlannerErrorCode } from '../../src/domain/errors.js';
 import { Planner } from '../../src/domain/Planner.js';
@@ -10,8 +10,8 @@ describe('limits', () => {
     const p = planner.buildPlan({
       graphSource: {
         nodes: [
-          { nodeId: 'a', resourceType: 'model', dependsOn: [] },
-          { nodeId: 'b', resourceType: 'model', dependsOn: [] },
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: [] },
         ],
       },
       selection: { selectedNodeIds: ['a'] },
@@ -25,7 +25,7 @@ describe('limits', () => {
     const planner = new Planner({ limits: { maxPlanSizeBytes: 10 } }); // absurdly small
 
     const p = planner.buildPlan({
-      graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: [] }] },
+      graphSource: { nodes: [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
       selection: { selectedNodeIds: ['a'] },
     });
 

@@ -1,4 +1,5 @@
 import type { PlannerBuildResultV1 } from '@dvt/contracts';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ManifestArtifactResolutionError } from '../../../src/application/errors/ManifestArtifactResolutionError.js';
@@ -48,6 +49,146 @@ const STORED_PLAN_REF = {
 };
 
 describe('PlannerBackedStartRunUseCase', () => {
+  it('keeps policy-first precedence through planner-backed flow', async () => {
+    let capturedBuildResult: PlannerBuildResultV1 | undefined;
+    const planStore = {
+      storePlan: vi.fn(async (buildResult: PlannerBuildResultV1) => {
+        capturedBuildResult = buildResult;
+        return STORED_PLAN_REF;
+      }),
+      markValid: vi.fn(async () => {}),
+      markInvalid: vi.fn(async () => {}),
+    };
+
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: new PlannerFacade() as never,
+      planStore: planStore as never,
+      validator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK' as const,
+          planId: 'plan-1',
+          adapterId: 'mock',
+        })),
+      } as never,
+      delegate: {
+        execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+      } as never,
+    });
+
+    await useCase.execute(
+      {
+        ...PLANNER_COMMAND,
+        policies: {
+          retry: { kind: 'at-most-N', maxAttempts: 2 },
+          timeout: { kind: 'budget', maxSeconds: 30 },
+          concurrency: { kind: 'bounded', maxParallel: 4 },
+        },
+        graphSource: {
+          ...PLANNER_COMMAND.graphSource,
+          nodes: [
+            {
+              nodeId: 'model.orders',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+              stepTypeConfig: {
+                retries: 99,
+                stepTimeoutMs: 900000,
+                concurrency: 128,
+              },
+            },
+          ],
+        },
+      },
+      AUTHORIZED_CONTEXT
+    );
+
+    expect(capturedBuildResult).toBeDefined();
+    expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
+      kind: 'DBT_MODEL',
+      stepTypeConfig: {
+        retries: {
+          maxAttempts: 2,
+        },
+        stepTimeoutMs: 30000,
+        concurrency: {
+          maxInFlight: 4,
+        },
+      },
+    });
+  });
+
+  it('clears node timeout and concurrency when policies are unbounded', async () => {
+    let capturedBuildResult: PlannerBuildResultV1 | undefined;
+    const planStore = {
+      storePlan: vi.fn(async (buildResult: PlannerBuildResultV1) => {
+        capturedBuildResult = buildResult;
+        return STORED_PLAN_REF;
+      }),
+      markValid: vi.fn(async () => {}),
+      markInvalid: vi.fn(async () => {}),
+    };
+
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: new PlannerFacade() as never,
+      planStore: planStore as never,
+      validator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK' as const,
+          planId: 'plan-1',
+          adapterId: 'mock',
+        })),
+      } as never,
+      delegate: {
+        execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+      } as never,
+    });
+
+    await useCase.execute(
+      {
+        ...PLANNER_COMMAND,
+        policies: {
+          retry: { kind: 'at-most-once' },
+          timeout: { kind: 'unbounded' },
+          concurrency: { kind: 'unbounded' },
+        },
+        graphSource: {
+          ...PLANNER_COMMAND.graphSource,
+          nodes: [
+            {
+              nodeId: 'model.orders',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+              stepTypeConfig: {
+                stepTimeoutMs: 900000,
+                concurrency: { maxInFlight: 128 },
+              },
+            },
+          ],
+        },
+      },
+      AUTHORIZED_CONTEXT
+    );
+
+    expect(capturedBuildResult).toBeDefined();
+    expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
+      kind: 'DBT_MODEL',
+      stepTypeConfig: {
+        retries: {
+          maxAttempts: 1,
+          backoffMs: 0,
+        },
+      },
+    });
+    expect(capturedBuildResult?.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
+    expect(capturedBuildResult?.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('concurrency');
+  });
+
   it('builds, stores, validates and delegates with the stored planRef', async () => {
     const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const planner = {

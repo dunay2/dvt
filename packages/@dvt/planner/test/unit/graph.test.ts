@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 
 import { PlannerErrorCode } from '../../src/domain/errors.js';
 import { Planner } from '../../src/domain/Planner.js';
@@ -8,7 +8,7 @@ describe('graph', () => {
     const planner = new Planner();
     await expect(
       planner.buildPlan({
-        graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: ['missing'] }] },
+        graphSource: { nodes: [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['missing'] }] },
         selection: { selectedNodeIds: ['a'] },
       })
     ).rejects.toMatchObject({ code: PlannerErrorCode.INVALID_INPUT });
@@ -20,8 +20,8 @@ describe('graph', () => {
       planner.buildPlan({
         graphSource: {
           nodes: [
-            { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
-            { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
+            { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+            { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
           ],
         },
         selection: { selectedNodeIds: ['a', 'b'] },
@@ -33,7 +33,7 @@ describe('graph', () => {
     const planner = new Planner();
     await expect(
       planner.buildPlan({
-        graphSource: { nodes: [{ nodeId: 'a', resourceType: 'model', dependsOn: ['a'] }] },
+        graphSource: { nodes: [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['a'] }] },
         selection: { selectedNodeIds: ['a'] },
       })
     ).rejects.toMatchObject({ code: PlannerErrorCode.GRAPH_CYCLE });
@@ -45,10 +45,10 @@ describe('graph', () => {
       planner.buildPlan({
         graphSource: {
           nodes: [
-            { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
-            { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
-            { nodeId: 'x', resourceType: 'model', dependsOn: [] },
-            { nodeId: 'y', resourceType: 'model', dependsOn: ['x'] },
+            { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+            { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+            { nodeId: 'x', stepKind: 'DBT_MODEL', dependsOn: [] },
+            { nodeId: 'y', stepKind: 'DBT_MODEL', dependsOn: ['x'] },
           ],
         },
         selection: { selectedNodeIds: ['a', 'b'] },
@@ -62,11 +62,11 @@ describe('graph', () => {
       planner.buildPlan({
         graphSource: {
           nodes: [
-            { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
-            { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
-            { nodeId: 'c', resourceType: 'model', dependsOn: ['d'] },
-            { nodeId: 'd', resourceType: 'model', dependsOn: ['c'] },
-            { nodeId: 'x', resourceType: 'model', dependsOn: [] },
+            { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+            { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+            { nodeId: 'c', stepKind: 'DBT_MODEL', dependsOn: ['d'] },
+            { nodeId: 'd', stepKind: 'DBT_MODEL', dependsOn: ['c'] },
+            { nodeId: 'x', stepKind: 'DBT_MODEL', dependsOn: [] },
           ],
         },
         selection: { selectedNodeIds: ['a', 'b', 'c', 'd'] },
@@ -79,10 +79,10 @@ describe('graph', () => {
     const result = await planner.buildPlan({
       graphSource: {
         nodes: [
-          { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
-          { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
-          { nodeId: 'x', resourceType: 'model', dependsOn: [] },
-          { nodeId: 'y', resourceType: 'model', dependsOn: ['x'] },
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+          { nodeId: 'x', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'y', stepKind: 'DBT_MODEL', dependsOn: ['x'] },
         ],
       },
       selection: { selectedNodeIds: ['y'], includeUpstream: true },
@@ -95,8 +95,8 @@ describe('graph', () => {
     const input = {
       graphSource: {
         nodes: [
-          { nodeId: 'a', resourceType: 'model', dependsOn: ['b'] },
-          { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] },
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: ['b'] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
         ],
       },
       selection: { selectedNodeIds: ['a', 'b'] },

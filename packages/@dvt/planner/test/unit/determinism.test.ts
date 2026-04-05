@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+﻿import { createHash } from 'node:crypto';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -22,8 +22,8 @@ describe('determinism', () => {
     const base: PlannerInputEnvelopeV1 = {
       graphSource: {
         nodes: [
-          { nodeId: 'model.a', resourceType: 'model', dependsOn: [] },
-          { nodeId: 'model.b', resourceType: 'model', dependsOn: ['model.a'] },
+          { nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'model.b', stepKind: 'DBT_MODEL', dependsOn: ['model.a'] },
         ],
       },
       selection: { selectedNodeIds: ['model.b'], includeUpstream: true },
@@ -44,10 +44,10 @@ describe('determinism', () => {
     expect(a.plan.metadata.planId).toEqual(c.plan.metadata.planId);
   });
 
-  it('planId equals sha256(canonicalPlanJson) — caller-verifiable', async () => {
+  it('planId equals sha256(canonicalPlanJson) â€” caller-verifiable', async () => {
     const planner = new Planner();
     const { plan, canonicalPlanJson } = await planner.buildPlan({
-      graphSource: { nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }] },
+      graphSource: { nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     });
 
@@ -59,7 +59,7 @@ describe('determinism', () => {
   it('canonicalPlanJson does NOT contain planId, createdAtIso, schemaVersion, or contractVersion', async () => {
     const planner = new Planner();
     const { canonicalPlanJson } = await planner.buildPlan({
-      graphSource: { nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }] },
+      graphSource: { nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     });
 
@@ -76,7 +76,7 @@ describe('determinism', () => {
     vi.useFakeTimers();
     const planner = new Planner();
     const input: PlannerInputEnvelopeV1 = {
-      graphSource: { nodes: [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }] },
+      graphSource: { nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     };
 
@@ -108,7 +108,7 @@ describe('determinism', () => {
       return;
     }
 
-    const expectedPlanId = '8afb02826ebe1e7c6262d3e35af7e342feb405e40949ad37cdb0e1aa5e26aef1';
+    const expectedPlanId = 'a554dbfa21eae1fa1e57e9ec9260b92c9c278dcce42ff6c713d6dc87d67dfc5d';
     expect(plan.metadata.planId).toBe(expectedPlanId);
   });
 });
