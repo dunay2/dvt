@@ -47,7 +47,7 @@ export interface BuiltGraph {
 class GraphNodeValidator {
   validate(node: GraphNode): void {
     this.assertNodeId(node);
-    this.assertResourceType(node);
+    this.assertStepKind(node);
     this.assertDependsOnShape(node);
   }
 
@@ -60,11 +60,11 @@ class GraphNodeValidator {
     }
   }
 
-  private assertResourceType(node: GraphNode): void {
-    if (typeof node.resourceType !== 'string' || node.resourceType.length === 0) {
+  private assertStepKind(node: GraphNode): void {
+    if (typeof node.stepKind !== 'string' || node.stepKind.length === 0) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        'Every node.resourceType must be a non-empty string.'
+        'Every node.stepKind must be a non-empty string.'
       );
     }
   }

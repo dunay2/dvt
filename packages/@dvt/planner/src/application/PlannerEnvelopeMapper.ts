@@ -1,23 +1,12 @@
-import { PlannerError, PlannerErrorCode } from '../domain/errors.js';
-import type { PlannerInputEnvelopeV1 as DomainEnvelope } from '../domain/types.js';
-
-import {
-  mapDbtStepKindToResourceType,
-  type StepKindResourceTypeMapper,
-} from './StepKindResourceTypeMapper.js';
+import type { GraphNode, PlannerInputEnvelopeV1 as DomainEnvelope } from '../domain/types.js';
 
 type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
 type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type GenericGraphSourceV1 = import('@dvt/contracts').GenericGraphSourceV1SchemaT;
 type PlannerInputEnvelopeV1SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV1SchemaT;
 type PlannerSelection = import('@dvt/contracts').PlannerSelection;
-type GraphNode = import('@dvt/contracts').GraphNode;
 
 export class PlannerEnvelopeMapper {
-  constructor(
-    private readonly stepKindToResourceType: StepKindResourceTypeMapper = mapDbtStepKindToResourceType
-  ) {}
-
   toDomainBaseInput(input: PlannerInputEnvelopeV1SchemaT): Omit<DomainEnvelope, 'graphSource'> {
     const domainInput: Omit<DomainEnvelope, 'graphSource'> = {
       selection: this.toPlannerSelection(input.selection),
@@ -53,8 +42,22 @@ export class PlannerEnvelopeMapper {
     return {
       nodes: graphSource.nodes.map((node) => ({
         nodeId: node.nodeId,
-        resourceType: this.toResourceType(node.stepKind),
+        stepKind: node.stepKind,
         dependsOn: node.dependsOn,
+        ...(node.stepTypeConfig === undefined ? {} : { stepTypeConfig: node.stepTypeConfig }),
+        ...(node.metadata === undefined
+          ? {}
+          : {
+              metadata: {
+                ...(node.metadata.displayName === undefined
+                  ? {}
+                  : { displayName: node.metadata.displayName }),
+                ...(node.metadata.sourceRef === undefined
+                  ? {}
+                  : { sourceRef: node.metadata.sourceRef }),
+                ...(node.metadata.tags === undefined ? {} : { tags: node.metadata.tags }),
+              },
+            }),
       })),
     };
   }
@@ -90,18 +93,5 @@ export class PlannerEnvelopeMapper {
     if (observability.extra !== undefined) normalizedObservability.extra = observability.extra;
 
     return normalizedObservability;
-  }
-
-  private toResourceType(stepKind: string): string {
-    try {
-      return this.stepKindToResourceType(stepKind);
-    } catch (error) {
-      if (error instanceof PlannerError) throw error;
-      throw new PlannerError(
-        PlannerErrorCode.INVALID_INPUT,
-        `stepKind to resourceType mapping failed for stepKind "${stepKind}".`,
-        error
-      );
-    }
   }
 }

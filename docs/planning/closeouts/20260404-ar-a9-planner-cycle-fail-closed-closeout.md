@@ -1,4 +1,4 @@
----
+﻿---
 slice: ar-a9-planner-cycle-fail-closed
 date: 2026-04-04
 author: AI (GPT-5)
@@ -55,7 +55,7 @@ status: Accepted
 ## Implementation
 
 - Added canonical AR-A9 proposal:
-  `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
+  `docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
 - Added user manual:
   `docs/guides/planner-cycle-detection-user-manual-20260404.md`
 - Added technical manual:

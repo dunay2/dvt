@@ -1,4 +1,4 @@
-lane_id: A
+﻿lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
@@ -66,7 +66,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md
+      - docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md
       - docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
       - docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
@@ -862,7 +862,7 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Required for multi-workflow generalization — without a registry, adding step kinds is an act
+      Required for multi-workflow generalization â€” without a registry, adding step kinds is an act
       of faith with no validation or adapter routing guarantee.
     last_verified: '2026-04-02'
   - task_id: MW-A2
@@ -885,8 +885,8 @@ tasks:
       - docs/guides/generic-graph-source-technical-manual-20260404.md
       - docs/guides/generic-graph-source-user-manual-20260404.md
     status_reason: >-
-      The single biggest blocker for multi-workflow support — today the only entry to the planner is
-      dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
+      The single biggest blocker for multi-workflow support â€” today the only entry to the planner
+      is dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
     last_verified: '2026-04-04'
   - task_id: MW-A2-A
     parent_task: MW-A2
@@ -911,10 +911,10 @@ tasks:
   - task_id: MW-A2-B
     parent_task: MW-A2
     priority: P0
-    status: queued
+    status: in_progress
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 35
     objective: >-
       replace planner graph-source contracts with GenericGraphSourceV1 as the single canonical
       boundary, with no compatibility aliases or legacy planner input shapes.
@@ -925,15 +925,28 @@ tasks:
       removed from active ingestion paths.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
-    status_reason: Sequenced after the target model freeze and locked to clean-swap execution.
-    last_verified: '2026-04-04'
+      - packages/@dvt/contracts/src/index.ts
+      - packages/@dvt/contracts/src/schemas.ts
+      - packages/@dvt/contracts/src/validation.ts
+      - packages/@dvt/contracts/test/planner.contract.test.ts
+      - packages/@dvt/planner/src/domain/types.ts
+      - packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
+      - apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts
+      - apps/api/test/entrypoints/http/startRunRoute.test.ts
+      - apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts
+    status_reason: >-
+      Legacy GraphNode contract surface was removed from @dvt/contracts public exports/schemas/
+      validators and planner keeps that shape as internal-only model; API ingress rejects legacy
+      nodes/manifest payloads in both planRef and planner-backed paths with passing route-policy and
+      route tests.
+    last_verified: '2026-04-05'
   - task_id: MW-A2-C
     parent_task: MW-A2
     priority: P0
-    status: queued
+    status: in_progress
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 30
     objective: >-
       refactor the planner boundary so dbt manifest handling becomes a source adapter instead of the
       semantic center.
@@ -943,8 +956,18 @@ tasks:
       planner steps is explicit, and dbt normalization is isolated behind an adapter seam.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
-    status_reason: Queued behind the clean-swap contract slice.
-    last_verified: '2026-04-04'
+      - packages/@dvt/planner/src/domain/types.ts
+      - packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
+      - packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts
+      - packages/@dvt/planner/src/domain/graph/GraphBuilder.ts
+      - packages/@dvt/planner/src/application/PlannerFacade.ts
+      - packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts
+      - packages/@dvt/planner/test/unit/planner-facade.test.ts
+      - packages/@dvt/planner/test/unit/determinism.test.ts
+    status_reason: >-
+      Planner internal node model now uses stepKind as the semantic center, facade no longer maps
+      stepKind to legacy resourceType, and planner build+tests pass with the updated boundary shape.
+    last_verified: '2026-04-05'
   - task_id: MW-A2-D
     parent_task: MW-A2
     priority: P0
@@ -1006,7 +1029,7 @@ tasks:
     priority: P1
     status: queued
     objective: >-
-      generalize compiledCodeRef to StepArtifactRef — not every step produces SQL; the artifact
+      generalize compiledCodeRef to StepArtifactRef â€” not every step produces SQL; the artifact
       model must be step-kind-agnostic to support Python scripts, Spark jobs, API calls, etc.
     dependency: MW-A1
     target: >-
@@ -1037,7 +1060,7 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Without this guide, extensibility is theoretical — a third party cannot add a step kind
+      Without this guide, extensibility is theoretical â€” a third party cannot add a step kind
       without reverse-engineering the system.
     last_verified: '2026-04-02'
   - task_id: AR-A4
@@ -1148,7 +1171,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md
+      - docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md
       - docs/guides/planner-cycle-detection-technical-manual-20260404.md
       - docs/guides/planner-cycle-detection-user-manual-20260404.md
       - docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md
@@ -1175,7 +1198,7 @@ tasks:
     effort_points: 1
     progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md
+      - docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md
       - docs/guides/planner-cycle-detection-technical-manual-20260404.md
       - docs/guides/planner-cycle-detection-user-manual-20260404.md
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
