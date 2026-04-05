@@ -40,6 +40,33 @@ describe('createPlatformHealthSnapshotQueryOptions', () => {
       })
     ).toBe(PLATFORM_HEALTH_REFETCH_INTERVAL_MS);
   });
+
+  it('applies exponential polling backoff when the latest health query is in error', () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn(),
+    };
+    const options = createPlatformHealthSnapshotQueryOptions(capability);
+
+    expect(
+      options.refetchInterval({
+        state: {
+          data: undefined,
+          status: 'error',
+          fetchFailureCount: 1,
+        },
+      })
+    ).toBe(5_000);
+
+    expect(
+      options.refetchInterval({
+        state: {
+          data: undefined,
+          status: 'error',
+          fetchFailureCount: 5,
+        },
+      })
+    ).toBe(60_000);
+  });
 });
 
 describe('usePlatformHealthSnapshotQuery', () => {

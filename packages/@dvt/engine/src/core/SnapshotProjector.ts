@@ -8,7 +8,7 @@
  * @version 1.1.0
  * @date 2026-02-21
  */
-import type { RunStatusSnapshot } from '@dvt/contracts';
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, type RunStatusSnapshot } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { applyRunEvent as applyCanonicalRunEvent } from '@dvt/run-domain';
 
@@ -65,6 +65,7 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
 export class SnapshotProjector {
   rebuild(runId: string, events: EventEnvelope[]): RunStatusSnapshot {
     const snap: WorkflowSnapshot = {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId,
       status: 'PENDING',
       paused: false,

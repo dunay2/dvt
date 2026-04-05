@@ -1,4 +1,4 @@
-import { parseRunEventWrite } from '@dvt/contracts';
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, parseRunEventWrite } from '@dvt/contracts';
 import type { RunEventWriteSchemaT } from '@dvt/contracts';
 
 import { InvalidRunEventInputError, RunSequenceOverflowError } from '../contracts/errors.js';
@@ -8,6 +8,7 @@ export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 
 export function createDefaultWorkflowSnapshot(runId: string): WorkflowSnapshot {
   return {
+    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
     runId,
     status: 'PENDING',
     paused: false,

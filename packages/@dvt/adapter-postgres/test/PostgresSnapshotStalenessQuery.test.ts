@@ -1,3 +1,4 @@
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { PostgresSnapshotStalenessQuery } from '../src/PostgresSnapshotStalenessQuery.js';
@@ -86,6 +87,9 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries[0]?.sql).toContain('h.run_id IS NULL');
     expect(client.queries[0]?.sql).toContain('AND EXISTS (');
     expect(client.queries[0]?.sql).toContain('e.run_seq > COALESCE(s.last_run_seq, 0)');
+    expect(client.queries[0]?.sql).toContain(
+      `COALESCE(s.snapshot->>'schemaVersion', '') <> '${CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION}'`
+    );
     expect(client.queries[0]?.params).toEqual([MAX_STALE_BATCH_SIZE]);
   });
 
@@ -107,6 +111,9 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries[0]?.sql).toContain('m.tenant_id = $1');
     expect(client.queries[0]?.sql).toContain('m.run_id = $2');
     expect(client.queries[0]?.sql).toContain('s.run_id IS NULL AND le.run_seq IS NOT NULL');
+    expect(client.queries[0]?.sql).toContain(
+      `COALESCE(s.snapshot->>'schemaVersion', '') <> '${CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION}'`
+    );
     expect(client.queries[0]?.params).toEqual([TEST_TENANT_ID, TEST_RUN_ID]);
   });
 });

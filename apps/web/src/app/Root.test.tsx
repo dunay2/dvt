@@ -12,7 +12,7 @@ import {
 } from '../capabilities/platform-health/testing/platformHealthFixtures';
 import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHarness';
 import Root, { RootShell } from './Root';
-import { useAppDataSourceMode } from './services/AppServicesContext';
+import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
 
 function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
@@ -92,6 +92,7 @@ describe('RootShell platform health UX', () => {
       await waitFor(() => {
         expect(view.getByText('Backend offline')).toBeTruthy();
       });
+      expect(view.getByText('Offline')).toBeTruthy();
 
       const retryButton = view.getByRole('button', { name: /retry now/i });
       const initialCallCount = loadSnapshot.mock.calls.length;
@@ -137,6 +138,7 @@ describe('RootShell platform health UX', () => {
         }
       );
 
+      expect(view.getByText('Degraded')).toBeTruthy();
       expect(view.getByText('Intent reconciler degraded: runtime_unavailable.')).toBeTruthy();
       expect(view.getByRole('button', { name: /retry now/i })).toBeTruthy();
     } finally {
@@ -227,15 +229,17 @@ describe('RootShell platform health UX', () => {
 });
 
 describe('Root integration guard', () => {
-  it('keeps AppServicesProvider wired at the real Root entrypoint', async () => {
+  it('keeps service wiring available when Root is mounted under AppServicesProvider', async () => {
     const mounted = await withTestQueryClient(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route element={<Root />} path="/">
-            <Route element={<RootServicesProbe />} index />
-          </Route>
-        </Routes>
-      </MemoryRouter>
+      <AppServicesProvider overrides={{ mode: 'mock' }}>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route element={<Root />} path="/">
+              <Route element={<RootServicesProbe />} index />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
     );
 
     try {

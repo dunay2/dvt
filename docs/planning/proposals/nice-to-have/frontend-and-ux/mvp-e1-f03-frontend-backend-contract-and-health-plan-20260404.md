@@ -286,9 +286,9 @@ flowchart LR
 - [x] `MVP-E1-C` Freeze non-promises and out-of-scope backend assumptions
 - [x] `MVP-E1-D` Publish canonical frontend-facing backend contract artifact
 - [x] `MVP-E1-E` Sync lane state, roadmap links, and planning surfaces
-- [ ] `F-03-A` Define canonical shell health-state semantic model
-- [ ] `F-03-B` Define deterministic retry and backoff policy contract
-- [ ] `F-03-C` Enforce single health presenter seam in shell architecture
+- [x] `F-03-A` Define canonical shell health-state semantic model
+- [x] `F-03-B` Define deterministic retry and backoff policy contract
+- [x] `F-03-C` Enforce single health presenter seam in shell architecture
 - [ ] `F-03-D` Add negative-path and resilience test matrix
 - [ ] `F-03-E` Align user manual and UX copy with real health behavior
 - [ ] `F-03-F` Run closure checks and complete quality-gate validation

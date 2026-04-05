@@ -123,17 +123,84 @@ Shell health state is derived from platform-health capability selectors:
   or optional probe failures are present.
 - `offline`: no snapshot or query-level failure against required `/healthz`.
 
+### Canonical state machine (F-03-A)
+
+```mermaid
+stateDiagram-v2
+  [*] --> offline: no snapshot yet or health query error
+  offline --> ok: /healthz healthy and no degrade signals
+  offline --> degraded: /healthz reachable with degrade signals
+  ok --> degraded: healthz/readyz/db/probe failure signals degrade
+  degraded --> ok: health and optional probes recover
+  ok --> offline: required /healthz unreachable
+  degraded --> offline: required /healthz unreachable
+```
+
+Deterministic transition rules:
+
+| Current    | Condition                                      | Next       |
+| ---------- | ---------------------------------------------- | ---------- |
+| `offline`  | query error is true OR snapshot missing        | `offline`  |
+| `offline`  | snapshot exists and any degrade signal is true | `degraded` |
+| `offline`  | snapshot exists and no degrade signal is true  | `ok`       |
+| `ok`       | required `/healthz` request fails              | `offline`  |
+| `ok`       | any degrade signal becomes true                | `degraded` |
+| `degraded` | required `/healthz` request fails              | `offline`  |
+| `degraded` | all degrade signals clear                      | `ok`       |
+
+Degrade signals are exactly:
+
+- `/healthz` reports `status: degraded`
+- `/readyz` is available and reports `ok: false`
+- `/db/ready` is available and reports `ok: false`
+- optional probe error present on `/readyz`, `/version`, or `/db/ready`
+
 Banner behavior contract in shell:
 
 - show persistent banner for `degraded` and `offline`
 - show retry action (`Retry now`) wired to query `refetch`
 - show auto-refresh countdown tied to query interval
 
+### Single presenter seam contract (F-03-C)
+
+Top bar and banner must consume the same derived shell-health model from one
+composition seam:
+
+- `RootShell` is the composition owner for shell-health presentation.
+- `buildShellHealthPresentationModel(...)` is the only presenter-level mapper
+  used to project query state into shell UX state.
+- `TopAppBar` receives `connectionStateOverride`, `connectionDetail`, and
+  `isConnectionChecking` from that presenter model.
+- `ShellHealthBanner` receives `connectionState`, `detailMessage`, polling
+  cadence, and retry action from that same presenter model.
+- `TopAppBar` and `ShellHealthBanner` must not call platform-health query hooks
+  or selectors directly.
+
+Implementation anchors:
+
+- `apps/web/src/app/Root.tsx`
+- `apps/web/src/capabilities/platform-health/presentation/platformHealthStatus.ts`
+- `apps/web/src/app/components/TopAppBar.tsx`
+- `apps/web/src/app/components/ShellHealthBanner.tsx`
+
 Retry/backoff contract:
 
-- query polling interval: `15_000ms`
-- query retries per failed fetch cycle: `1`
-- exponential backoff helper is capped at `60_000ms`
+- base polling:
+  - `ok`: `15_000ms`
+  - `degraded`: exponential from `15_000ms`
+  - `offline`: exponential from `5_000ms`
+- retry envelope:
+  - query retries per failed fetch cycle: `1`
+  - max backoff cap: `60_000ms`
+  - formula: `min(base * 2^(attempt-1), 60_000)`
+- deterministic reset rules:
+  - manual retry (`Retry now`) always triggers immediate `refetch`
+  - successful settled fetch returns polling to `15_000ms`
+  - pending first check keeps shell in checking posture (no false offline)
+- cancellation rules:
+  - banner countdown timer runs only in `degraded` or `offline`
+  - timer is cleared when connection returns to `ok` or shell is unmounted
+  - no additional route-local retry loop is allowed outside the health capability/query seam
 
 ## Out Of Scope For MVP-E1
 
