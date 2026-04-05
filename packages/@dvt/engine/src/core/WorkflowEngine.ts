@@ -63,8 +63,6 @@ export interface WorkflowEngineDeps {
   requiredProviders?: EngineRunRef['provider'][];
   observability: IObservability;
   startRunApplicationService?: IStartRunApplicationService;
-  /** @deprecated Use startRunApplicationService. */
-  startRunCoordinator?: IStartRunApplicationService;
   core?: IWorkflowEngineCore;
   timeouts?: {
     adapterCallMs?: number;
@@ -88,16 +86,14 @@ interface HealthCheckable {
 
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
-  private readonly startRunCoordinator: IStartRunApplicationService;
+  private readonly startRunApplicationService: IStartRunApplicationService;
   private readonly core: IWorkflowEngineCore;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
     this.observability = deps.observability;
-    this.startRunCoordinator =
-      deps.startRunApplicationService ??
-      deps.startRunCoordinator ??
-      this.buildStartRunApplicationService();
+    this.startRunApplicationService =
+      deps.startRunApplicationService ?? this.buildStartRunApplicationService();
     this.core = deps.core ?? this.buildCoreService();
   }
 
@@ -119,7 +115,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         },
         async (span) => {
           try {
-            const runRef = await this.startRunCoordinator.startRun(
+            const runRef = await this.startRunApplicationService.startRun(
               validatedPlanRef,
               resolvedContext,
               traceContext
@@ -197,10 +193,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     for (const [name, value] of requiredDeps) {
       if (!value) throw new Error(`${name} is required`);
     }
-    if (
-      this.deps.startRunApplicationService === undefined &&
-      this.deps.startRunCoordinator === undefined
-    ) {
+    if (this.deps.startRunApplicationService === undefined) {
       if (this.deps.policy === undefined) throw new Error('policy is required');
       if (this.deps.intentStore === undefined) throw new Error('intentStore is required');
     }

@@ -1,7 +1,20 @@
-import type { WorkflowEngine, WorkflowEngineDeps } from '@dvt/engine';
+import {
+  AllowAllAuthorizer,
+  StartRunApplicationService,
+  type IProviderAdapter,
+  type ResolvedRunContext,
+  type RunStatusSnapshot,
+  type SignalRequest,
+  type WorkflowEngine,
+  type WorkflowEngineDeps,
+} from '@dvt/engine';
+import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
-import { createWorkflowEngine } from '../../../src/application/services/WorkflowEngineFactory.js';
+import {
+  buildWorkflowEngine,
+  createWorkflowEngine,
+} from '../../../src/application/services/WorkflowEngineFactory.js';
 
 class FakeWorkflowEngine {
   constructor(readonly deps: WorkflowEngineDeps) {}
@@ -31,5 +44,51 @@ describe('createWorkflowEngine', () => {
 
     expect(engine instanceof FakeWorkflowEngine).toBe(true);
     expect(engine.deps).toBe(deps);
+  });
+});
+
+describe('buildWorkflowEngine', () => {
+  it('wires StartRunApplicationService and not the deprecated alias', () => {
+    const adapter: IProviderAdapter = {
+      provider: 'temporal',
+      async startRun(_planRef, context: ResolvedRunContext) {
+        return {
+          provider: 'temporal',
+          tenantId: context.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${context.runId}`,
+          runId: context.runId,
+        };
+      },
+      async cancelRun(_engineRunRef) {},
+      async getRunStatus(_engineRunRef): Promise<RunStatusSnapshot> {
+        throw new Error('not used');
+      },
+      async signal(_engineRunRef, _request: SignalRequest) {},
+    };
+
+    const engine = buildWorkflowEngine({
+      security: {
+        authorizer: new AllowAllAuthorizer(),
+        planRefAllowedSchemes: ['https'],
+      },
+      persistence: {
+        stateStoreRead: {} as never,
+        stateStoreWrite: {} as never,
+        intentStore: {} as never,
+      },
+      runtime: {
+        adapters: new Map([['temporal', adapter]]),
+      },
+      infrastructure: {
+        clock: { nowIsoUtc: () => '2026-04-05T00:00:00.000Z' },
+        observability: createNoopObservability(),
+      },
+    });
+
+    const startRunService = (
+      engine as unknown as { startRunApplicationService: unknown }
+    ).startRunApplicationService;
+    expect(startRunService).toBeInstanceOf(StartRunApplicationService);
   });
 });

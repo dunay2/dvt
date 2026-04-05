@@ -247,4 +247,73 @@ describe('StartRunApplicationService', () => {
       })
     );
   });
+
+  it('emits start metrics with expected tags on successful startRun', async () => {
+    const counterCalls: Array<{ name: string; tags: Record<string, string> }> = [];
+    const histogramCalls: Array<{ name: string; tags: Record<string, string>; value: number }> = [];
+    const base = createNoopObservability();
+    const observability = {
+      ...base,
+      metrics: {
+        ...base.metrics,
+        counter(name: string, tags?: Record<string, string>) {
+          counterCalls.push({ name, tags: tags ?? {} });
+          return { add() {} };
+        },
+        histogram(name: string, tags?: Record<string, string>) {
+          return {
+            record(value: number) {
+              histogramCalls.push({ name, tags: tags ?? {}, value });
+            },
+          };
+        },
+      },
+    };
+
+    const policy = {
+      async assertTenantAccess() {},
+      validatePlanRef() {},
+      checkRateLimit() {},
+    };
+    const service = new StartRunApplicationService({
+      policy,
+      guard: new StartRunAdmissionGuard({
+        policy,
+        stateStoreRead: new InMemoryTxStore(),
+        adapters: new Map([['temporal', makeTemporalAdapter()]]),
+      }),
+      stateStoreRead: new InMemoryTxStore(),
+      stateStoreWrite: new InMemoryTxStore(),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability,
+    });
+
+    await service.startRun(
+      makePlanRef(),
+      makeResolvedContext('s03-metrics-success-1'),
+      makeTraceContext('s03-metrics-success-1')
+    );
+
+    expect(counterCalls).toContainEqual({
+      name: 'dvt.run.started_total',
+      tags: {
+        provider: 'temporal',
+        tenantId: 't',
+        operation: 'startRun',
+      },
+    });
+    expect(histogramCalls).toContainEqual(
+      expect.objectContaining({
+        name: 'dvt.run.start.duration_ms',
+        tags: {
+          provider: 'temporal',
+          tenantId: 't',
+          operation: 'startRun',
+        },
+      })
+    );
+    expect(histogramCalls[0]?.value).toBeGreaterThanOrEqual(0);
+  });
 });

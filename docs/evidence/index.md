@@ -22,6 +22,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)
 - [ED-20260403 Structured contracts error model rollout](ED-20260403-structured-contracts-error-model.md)
+- [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)
 - [Summary](ED-20260403-s08-4-ci-regression-fix.md)
 - [Summary](ED-20260403-s08-4-postgres-three-part-model-arc2.md)
 - [Summary](ED-20260403-s08-5-b-run-execution-context-boundary.md)
