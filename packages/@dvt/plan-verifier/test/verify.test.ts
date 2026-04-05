@@ -8,6 +8,7 @@ import {
 import { describe, it, expect } from 'vitest';
 
 import { sha256Hex, utf8Encode } from '../src/crypto.js';
+import { PlanVerifierError } from '../src/errors.js';
 import {
   parseAndVerifyStepTypeConfigsOrThrow,
   verifyStepTypeConfigsOrThrow,
@@ -202,5 +203,16 @@ describe('@dvt/plan-verifier stepTypeConfig admission', () => {
         input: parsedInput,
       })
     ).toThrow(/INVALID_STEP_KIND|Unregistered step kind/);
+  });
+
+  it('parse+verify helper normalizes parse errors to PlanVerifierError', () => {
+    try {
+      parseAndVerifyStepTypeConfigsOrThrow({ input: { not: 'an execution plan' } });
+      throw new Error('expected parseAndVerifyStepTypeConfigsOrThrow to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(PlanVerifierError);
+      expect((error as PlanVerifierError).code).toBe('INVALID_STEP_TYPE_CONFIG');
+      expect((error as PlanVerifierError).message).toMatch(/Invalid ExecutionPlan payload/);
+    }
   });
 });

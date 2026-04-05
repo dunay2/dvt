@@ -47,7 +47,16 @@ export function verifyStepTypeConfigsOrThrow(params: StepTypeConfigVerificationP
 export function parseAndVerifyStepTypeConfigsOrThrow(
   params: ParseAndVerifyStepTypeConfigParams
 ): ExecutionPlan {
-  const plan = parseExecutionPlan(params.input);
+  let plan: ExecutionPlan;
+  try {
+    plan = parseExecutionPlan(params.input);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new PlanVerifierError(
+      'INVALID_STEP_TYPE_CONFIG',
+      `Invalid ExecutionPlan payload. ${reason}`
+    );
+  }
   const verificationParams: StepTypeConfigVerificationParams = {
     plan,
     ...(params.stepTypeRegistry === undefined ? {} : { stepTypeRegistry: params.stepTypeRegistry }),
