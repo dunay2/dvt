@@ -1,3 +1,4 @@
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
@@ -13,6 +14,7 @@ function makeSnapshot(
   status: WorkflowSnapshotResult['status'] = 'PENDING'
 ): WorkflowSnapshotResult {
   return {
+    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
     runId,
     status,
     paused: false,
@@ -145,7 +147,7 @@ async function injectRebuildSnapshot(
   app: ReturnType<typeof Fastify>,
   runId: string,
   payload: unknown
-): ReturnType<ReturnType<typeof Fastify>['inject']> {
+): Promise<Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>> {
   return app.inject({
     method: 'POST',
     url: `/admin/runs/${runId}/rebuild-snapshot`,
