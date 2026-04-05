@@ -38,6 +38,21 @@ flowchart TB
 - `queryKey` inline arrays are blocked by architecture test.
 - direct import of `stores/appStore` in runtime source is blocked by architecture test.
 - mode-resolution leakage outside owner modules is blocked by architecture test.
+- `startRun` must use `ExecutionPlan.planRef`; runtime start is rejected in UI when `planRef` is missing.
+
+## StartRun PlanRef Boundary
+
+`ExecutionPlan` in the web app now carries optional `planRef` metadata for run-start.
+The runtime boundary is fail-closed:
+
+1. `useCanvasExecutionActions` resolves `planRef` from `currentPlan`.
+2. If `planRef` is absent, the hook must:
+   - not call `runsService.startRun`,
+   - emit an explicit user error,
+   - reopen the plan modal.
+3. If `planRef` exists, start-run continues through `IRunsPort`.
+
+This keeps runtime behavior aligned with the engine contract boundary where run execution is `PlanRef`-driven.
 
 ## Required Test Layers
 

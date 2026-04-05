@@ -1,7 +1,7 @@
 import type {
   DbtManifestRef,
   ExecutionPlan,
-  GenericGraphSourceV1SchemaT,
+  GenericGraphSourceV1,
   PlannerEnvironmentContext,
   PlannerPolicyClassSet,
   RunExecutionContextRef,
@@ -38,7 +38,7 @@ export interface StartRunPlanRef {
 export interface StartRunCommand {
   readonly planRef?: StartRunPlanRef;
   readonly runExecutionContextRef?: RunExecutionContextRef;
-  readonly graphSource?: GenericGraphSourceV1SchemaT;
+  readonly graphSource?: GenericGraphSourceV1;
   readonly manifestRef?: DbtManifestRef;
   readonly policies?: PlannerPolicyClassSet;
   readonly environment?: PlannerEnvironmentContext;

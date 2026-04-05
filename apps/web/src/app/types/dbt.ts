@@ -1,3 +1,5 @@
+import type { PlanRef } from './engine';
+
 // DBT Artifact Types
 
 export type DbtNodeType =
@@ -46,6 +48,7 @@ export interface DbtEdge {
 export interface ExecutionPlan {
   planId: string;
   planVersion: string;
+  planRef?: PlanRef;
   generatedAt: string;
   adapter: string;
   target: string;
