@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-04'
+last_reviewed: '2026-04-05'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -1478,6 +1478,74 @@ tasks:
       - docs/evidence/critical/ED-20260328-planner-version-reset-signal-policy-wiring.md
     status_reason: Accepted evidence proves the canonical planVersion reset and its runtime wiring.
     last_verified: '2026-03-31'
+  - task_id: TF-A1
+    priority: P0
+    status: queued
+    objective: >-
+      formalize the SQL-first transformation contract pack for the v1 design graph, preview-persist
+      boundary, and graph-to-plan compiler so execution-first work starts from a stable doc set
+      rather than UI-local assumptions.
+    dependency: F-22
+    target: >-
+      Shared contract and planner boundary define `DesignGraphDraft`, `GitArtifactRef`,
+      `PlanPreviewPersistRequest/Response`, v1 `source -> sql_transform -> sink` invariants, and the
+      deterministic compiler mapping into a persisted immutable plan with `PlanRef`.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/contracts/planner/index.md
+      - docs/architecture/components/planner/index.md
+    status_reason: >-
+      The proposal set now freezes the SQL-first execution model, but the contracts and compiler
+      boundary still need executable Lane A slices.
+    last_verified: '2026-04-05'
+  - task_id: TF-A1-A
+    priority: P0
+    status: queued
+    objective: >-
+      freeze the design-graph contract, node vocabulary, invariants, and preview request or response
+      surface for the first SQL-first vertical.
+    dependency: F-22
+    target: >-
+      Lane A publishes the governed `DesignGraphDraft` contract, `source -> sql_transform -> sink`
+      invariants, negative-path rules, and preview surface expected by downstream API, runtime, and
+      UI work.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/contracts/planner/index.md
+    status_reason: >-
+      The graph and preview contract are now described, but not yet separated into an executable
+      Lane A implementation slice with explicit negative-path expectations.
+    last_verified: '2026-04-05'
+  - task_id: TF-A1-B
+    priority: P0
+    status: queued
+    objective: >-
+      define the deterministic compiler mapping from the three-node design graph into canonical
+      execution steps and persisted plan metadata.
+    dependency: TF-A1-A
+    target: >-
+      Lane A freezes the ordered step kinds, step configs, plan identity fields, and compiler rules
+      that convert the design graph into a persisted immutable plan consumed by runtime.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/architecture/components/planner/index.md
+    status_reason: >-
+      The delivery plan now names the ordered step model, but the compiler boundary is not yet
+      isolated as a concrete Lane A task.
+    last_verified: '2026-04-05'
 dependency_notes:
   - >-
     `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
@@ -1538,14 +1606,18 @@ dependency_notes:
     `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
     planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
     traceability waves instead of continuing script-by-script growth.
+  - >-
+    `TF-A1` is now decomposed into `TF-A1-A` and `TF-A1-B` so the design-graph and preview surface
+    freeze before the graph-to-step compiler mapping lands; downstream runtime and UI work should
+    depend on those narrower tasks instead of treating Lane A as one opaque block.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-04'
-  total_tasks: 57
-  total_effort_points: 203
+  verified_on: '2026-04-05'
+  total_tasks: 60
+  total_effort_points: 214
   completed_weighted_points: 86.79
-  lane_progress_pct: 43
+  lane_progress_pct: 41
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-02'
+last_reviewed: '2026-04-05'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -453,6 +453,71 @@ tasks:
       The shared policy and tests exist in code, but this pass did not find a dedicated accepted
       closeout artifact for final closure.
     last_verified: '2026-03-31'
+  - task_id: TF-B1
+    priority: P1
+    status: queued
+    objective: >-
+      define Git-first provenance and execution evidence linkage for the transformation flow so the
+      design graph, SQL artifact, persisted plan, and runtime outcome remain traceable end to end.
+    dependency: TF-A1
+    target: >-
+      One governed provenance contract links Git-tracked graph and SQL artifacts to the persisted
+      immutable plan and the emitted run evidence, with explicit rules for what runtime may persist
+      versus what remains Git-owned authoring truth.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/index.md
+    status_reason: >-
+      Git-first is now a locked product decision in the roadmap, but no Lane B provenance contract
+      or evidence chain has yet been formalized for implementation.
+    last_verified: '2026-04-05'
+  - task_id: TF-B1-A
+    priority: P0
+    status: queued
+    objective: >-
+      formalize the Git artifact reference and preview-time provenance rules for graph and SQL
+      inputs.
+    dependency: TF-A1-A
+    target: >-
+      Lane B freezes `GitArtifactRef`, required hash and ref fields, and the rules that say which
+      authoring artifacts must travel through preview and into the persisted plan record.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/evidence/index.md
+    status_reason: >-
+      Git-first is now frozen as a product rule, but the concrete artifact-ref contract and capture
+      rules are not yet isolated as a Lane B slice.
+    last_verified: '2026-04-05'
+  - task_id: TF-B1-B
+    priority: P0
+    status: queued
+    objective: >-
+      define the evidence model that links runtime outcome, sink materialization, and failure events
+      back to the persisted plan and Git-tracked authoring inputs.
+    dependency: TF-B1-A, TF-C2-A
+    target: >-
+      Lane B publishes the caller-visible provenance and evidence chain from Git artifacts to plan
+      record to run outcome, including sink evidence and failure-event attribution.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/index.md
+    status_reason: >-
+      The roadmap now requires caller-visible provenance and evidence, but the result-side linkage
+      is not yet broken into a concrete Lane B execution slice.
+    last_verified: '2026-04-05'
 dependency_notes:
   - >-
     `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
@@ -482,14 +547,17 @@ dependency_notes:
   - >-
     `AR-B2` addresses the missing distributed consistency model documentation, and `AR-B3` verifies
     ManifestGraphDeriver key ordering for determinism safety.
+  - >-
+    `TF-B1` is now decomposed into `TF-B1-A` and `TF-B1-B` so preview-time provenance and
+    result-time evidence linkage can move independently while remaining under one Git-first policy.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-02'
-  total_tasks: 17
-  total_effort_points: 71
+  verified_on: '2026-04-05'
+  total_tasks: 20
+  total_effort_points: 79
   completed_weighted_points: 52.6
-  lane_progress_pct: 74
+  lane_progress_pct: 67
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

@@ -2,7 +2,7 @@
 title: Roadmap Of Record
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-05
 ---
 
 # Roadmap Of Record
@@ -49,6 +49,15 @@ Concept anchors for this page:
   Classification: subsystem roadmap proposal
   Use it for: frontend convergence sequencing aligned with Lane E and the
   current UI architecture posture
+- `docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md`
+  Classification: proposal-set overview for the transformation execution-first
+  product slice
+  Use it for: entrypoint into the decisions, architecture, and delivery docs
+  that govern the SQL-first transformation vertical
+- `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md`
+  Classification: subsystem delivery plan
+  Use it for: phase sequencing and cross-lane execution for the transformation
+  vertical
 - `docs/planning/roadmap/review-remediation-roadmap-20260402.md`
   Classification: subsystem roadmap
   Use it for: sprint-based execution sequencing of review findings and blockers
@@ -91,6 +100,8 @@ Current subsystem roadmaps worth consulting:
 
 - [MVP Backend Operability Baseline Roadmap](../proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
+- [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
+- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [Roadmap By Domain](roadmap-by-domain.md)
 - [Review Remediation Roadmap 2026-04](review-remediation-roadmap-20260402.md)
 
