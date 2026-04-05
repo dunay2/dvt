@@ -17,7 +17,6 @@ function makeSnapshot(
     schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
     runId,
     status,
-    schemaVersion: 'v1.2',
     paused: false,
     cancelling: false,
     steps: {},
