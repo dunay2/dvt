@@ -423,14 +423,6 @@ export const PlannerEnvironmentContextSchema = z
   })
   .strict();
 
-export const GraphNodeSchema = z
-  .object({
-    nodeId: z.string().min(1),
-    resourceType: z.string().min(1),
-    dependsOn: z.array(z.string().min(1)),
-  })
-  .strict();
-
 export const GenericGraphNodeV1Schema = z
   .object({
     nodeId: z.string().min(1),
@@ -726,7 +718,6 @@ export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
 export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
-export type GraphNodeSchemaT = z.infer<typeof GraphNodeSchema>;
 export type GenericGraphNodeV1SchemaT = z.infer<typeof GenericGraphNodeV1Schema>;
 export type GenericGraphSourceV1SchemaT = z.infer<typeof GenericGraphSourceV1Schema>;
 export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;

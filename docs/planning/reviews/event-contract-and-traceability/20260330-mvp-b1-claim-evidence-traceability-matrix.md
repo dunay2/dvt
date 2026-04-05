@@ -1,4 +1,4 @@
----
+﻿---
 title: MVP-B1 Claim-To-Evidence Traceability Matrix
 status: Review
 owner: Product / Architecture / Delivery / Docs
@@ -61,7 +61,7 @@ pnpm verify:prepush
 ## Constraints
 
 - `MVP-A1` is now locked by the reviewed proposal
-  `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`
+  `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
   plus accepted evidence
   `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`.
 - This matrix now inherits the stable `MVP-A1` claim boundary and no longer

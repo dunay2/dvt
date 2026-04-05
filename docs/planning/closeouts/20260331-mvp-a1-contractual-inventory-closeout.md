@@ -1,4 +1,4 @@
----
+﻿---
 slice: mvp-a1-contractual-inventory
 date: 2026-03-31
 author: AI (GPT-5)
@@ -19,7 +19,7 @@ and synchronized the dependent MVP lane states.
 
 ## Implementation
 
-- moved `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`
+- moved `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
   from `Proposed` to `Review`
 - added a code-grounded review at
   `docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md`

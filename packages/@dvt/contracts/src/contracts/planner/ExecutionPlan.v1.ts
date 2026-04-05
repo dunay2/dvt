@@ -39,12 +39,6 @@ export interface PlannerEnvironmentContext {
   vars?: Record<string, unknown>;
 }
 
-export interface GraphNode {
-  nodeId: string;
-  resourceType: string;
-  dependsOn: readonly string[];
-}
-
 /**
  * Canonical generic graph-source boundary for multi-workflow planning.
  *
