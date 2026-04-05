@@ -4,7 +4,7 @@
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
  * @decision WorkflowEngine is an application-facing facade that delegates
- *   startRun to StartRunCoordinator and lifecycle operations to WorkflowEngineCoreService.
+ *   startRun to StartRunApplicationService and lifecycle operations to WorkflowEngineCoreService.
  * @consequence Runtime orchestration responsibilities are split into focused collaborators.
  */
 import { parsePlanRef, parseRunContext } from '@dvt/contracts';
@@ -20,7 +20,7 @@ import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { StartRunAdmissionGuard } from '../application/StartRunAdmissionGuard.js';
-import { StartRunCoordinator } from '../application/StartRunCoordinator.js';
+import { StartRunApplicationService } from '../application/StartRunApplicationService.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
@@ -35,18 +35,37 @@ import { IdempotencyKeyBuilder } from './idempotency.js';
 import { SnapshotProjector } from './SnapshotProjector.js';
 import { WorkflowEngineCoreService } from './WorkflowEngineCoreService.js';
 
+export interface IStartRunApplicationService {
+  startRun(
+    planRef: PlanRef,
+    resolvedContext: ResolvedRunContext,
+    traceContext: {
+      tenantId: string;
+      projectId: string;
+      environmentId: string;
+      runId: string;
+      planId?: string;
+      adapter?: 'temporal' | 'conductor' | 'local';
+    }
+  ): Promise<EngineRunRef>;
+}
+
 export interface WorkflowEngineDeps {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
-  policy: IRunAccessPolicy;
-  intentStore: IStartRunIntentStore;
+  policy?: IRunAccessPolicy;
+  intentStore?: IStartRunIntentStore;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
   observability: IObservability;
+  startRunApplicationService?: IStartRunApplicationService;
+  /** @deprecated Use startRunApplicationService. */
+  startRunCoordinator?: IStartRunApplicationService;
+  core?: IWorkflowEngineCore;
   timeouts?: {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
@@ -69,46 +88,17 @@ interface HealthCheckable {
 
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
-  private readonly startRunCoordinator: StartRunCoordinator;
+  private readonly startRunCoordinator: IStartRunApplicationService;
   private readonly core: IWorkflowEngineCore;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
     this.observability = deps.observability;
-
-    const startRunAdmissionGuard = new StartRunAdmissionGuard({
-      policy: deps.policy,
-      stateStoreRead: deps.stateStoreRead,
-      adapters: deps.adapters,
-      ...(deps.runExecutionContextResolver === undefined
-        ? {}
-        : { runExecutionContextResolver: deps.runExecutionContextResolver }),
-    });
-    this.startRunCoordinator = new StartRunCoordinator({
-      policy: deps.policy,
-      guard: startRunAdmissionGuard,
-      stateStoreRead: deps.stateStoreRead,
-      stateStoreWrite: deps.stateStoreWrite,
-      idempotency: deps.idempotency,
-      clock: deps.clock,
-      intentStore: deps.intentStore,
-      observability: deps.observability,
-      ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
-      ...(deps.observabilityFallbackThrottleMs === undefined
-        ? {}
-        : { observabilityFallbackThrottleMs: deps.observabilityFallbackThrottleMs }),
-    });
-    this.core = new WorkflowEngineCoreService({
-      stateStoreRead: deps.stateStoreRead,
-      stateStoreWrite: deps.stateStoreWrite,
-      projector: deps.projector,
-      idempotency: deps.idempotency,
-      policy: deps.policy,
-      adapters: deps.adapters,
-      observability: deps.observability,
-      ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
-      clock: deps.clock,
-    });
+    this.startRunCoordinator =
+      deps.startRunApplicationService ??
+      deps.startRunCoordinator ??
+      this.buildStartRunApplicationService();
+    this.core = deps.core ?? this.buildCoreService();
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
@@ -129,7 +119,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         },
         async (span) => {
           try {
-            const runRef = await this.startRunCoordinator.execute(
+            const runRef = await this.startRunCoordinator.startRun(
               validatedPlanRef,
               resolvedContext,
               traceContext
@@ -200,14 +190,22 @@ export class WorkflowEngine implements IWorkflowEngine {
       ['projector', this.deps.projector],
       ['idempotency', this.deps.idempotency],
       ['clock', this.deps.clock],
-      ['policy', this.deps.policy],
-      ['intentStore', this.deps.intentStore],
       ['adapters', this.deps.adapters],
       ['observability', this.deps.observability],
     ];
 
     for (const [name, value] of requiredDeps) {
       if (!value) throw new Error(`${name} is required`);
+    }
+    if (
+      this.deps.startRunApplicationService === undefined &&
+      this.deps.startRunCoordinator === undefined
+    ) {
+      if (this.deps.policy === undefined) throw new Error('policy is required');
+      if (this.deps.intentStore === undefined) throw new Error('intentStore is required');
+    }
+    if (this.deps.core === undefined && this.deps.policy === undefined) {
+      throw new Error('policy is required');
     }
     this.assertRequiredProvidersRegistered(this.deps.requiredProviders ?? []);
   }
@@ -216,6 +214,59 @@ export class WorkflowEngine implements IWorkflowEngine {
     for (const provider of requiredProviders) {
       if (this.deps.adapters.has(provider) === false) throw new AdapterNotRegisteredError(provider);
     }
+  }
+
+  private buildStartRunApplicationService(): IStartRunApplicationService {
+    const policy = this.requirePolicy();
+    const intentStore = this.requireIntentStore();
+    const startRunAdmissionGuard = new StartRunAdmissionGuard({
+      policy,
+      stateStoreRead: this.deps.stateStoreRead,
+      adapters: this.deps.adapters,
+      ...(this.deps.runExecutionContextResolver === undefined
+        ? {}
+        : { runExecutionContextResolver: this.deps.runExecutionContextResolver }),
+    });
+    return new StartRunApplicationService({
+      policy,
+      guard: startRunAdmissionGuard,
+      stateStoreRead: this.deps.stateStoreRead,
+      stateStoreWrite: this.deps.stateStoreWrite,
+      idempotency: this.deps.idempotency,
+      clock: this.deps.clock,
+      intentStore,
+      observability: this.deps.observability,
+      ...(this.deps.timeouts ? { timeouts: this.deps.timeouts } : {}),
+      ...(this.deps.observabilityFallbackThrottleMs === undefined
+        ? {}
+        : { observabilityFallbackThrottleMs: this.deps.observabilityFallbackThrottleMs }),
+    });
+  }
+
+  private buildCoreService(): IWorkflowEngineCore {
+    return new WorkflowEngineCoreService({
+      stateStoreRead: this.deps.stateStoreRead,
+      stateStoreWrite: this.deps.stateStoreWrite,
+      projector: this.deps.projector,
+      idempotency: this.deps.idempotency,
+      policy: this.requirePolicy(),
+      adapters: this.deps.adapters,
+      observability: this.deps.observability,
+      ...(this.deps.timeouts ? { timeouts: this.deps.timeouts } : {}),
+      clock: this.deps.clock,
+    });
+  }
+
+  private requirePolicy(): IRunAccessPolicy {
+    const policy = this.deps.policy;
+    if (policy === undefined) throw new Error('policy is required');
+    return policy;
+  }
+
+  private requireIntentStore(): IStartRunIntentStore {
+    const intentStore = this.deps.intentStore;
+    if (intentStore === undefined) throw new Error('intentStore is required');
+    return intentStore;
   }
 }
 

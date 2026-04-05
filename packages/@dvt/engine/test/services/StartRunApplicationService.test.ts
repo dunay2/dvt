@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
-import { StartRunCoordinator } from '../../src/application/StartRunCoordinator.js';
+import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import type { StartRunTraceContext } from '../../src/services/startRun/StartRunTypes.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
@@ -64,7 +64,7 @@ function makeTemporalAdapter(): IProviderAdapter {
   };
 }
 
-describe('StartRunCoordinator', () => {
+describe('StartRunApplicationService', () => {
   it('checks tenant access before planRef validation', async () => {
     const calls: string[] = [];
     const unauthorizedError = new Error('UNAUTHORIZED');
@@ -82,7 +82,7 @@ describe('StartRunCoordinator', () => {
       },
     };
 
-    const coordinator = new StartRunCoordinator({
+    const service = new StartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,
@@ -98,7 +98,7 @@ describe('StartRunCoordinator', () => {
     });
 
     await expect(
-      coordinator.execute(
+      service.startRun(
         makePlanRef('ftp://not-allowed.example/plan'),
         makeResolvedContext('s03-auth-first-1'),
         makeTraceContext('s03-auth-first-1')
@@ -110,7 +110,7 @@ describe('StartRunCoordinator', () => {
 
   it('starts a run directly through coordinator seam and persists metadata', async () => {
     const store = new InMemoryTxStore();
-    const coordinator = new StartRunCoordinator({
+    const service = new StartRunApplicationService({
       policy: {
         async assertTenantAccess() {},
         validatePlanRef() {},
@@ -134,7 +134,7 @@ describe('StartRunCoordinator', () => {
     });
 
     const runId = 's03-direct-seam-1';
-    const runRef = await coordinator.execute(
+    const runRef = await service.startRun(
       makePlanRef(),
       makeResolvedContext(runId),
       makeTraceContext(runId)
@@ -173,7 +173,7 @@ describe('StartRunCoordinator', () => {
       validatePlanRef() {},
       checkRateLimit() {},
     };
-    const coordinator = new StartRunCoordinator({
+    const service = new StartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,
@@ -189,7 +189,7 @@ describe('StartRunCoordinator', () => {
     });
 
     await expect(
-      coordinator.execute(
+      service.startRun(
         makePlanRef(),
         makeResolvedContext('s03-log-fail-soft-1'),
         makeTraceContext('s03-log-fail-soft-1')
@@ -219,7 +219,7 @@ describe('StartRunCoordinator', () => {
       validatePlanRef() {},
       checkRateLimit() {},
     };
-    const coordinator = new StartRunCoordinator({
+    const service = new StartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,
@@ -235,7 +235,7 @@ describe('StartRunCoordinator', () => {
     });
 
     await expect(
-      coordinator.execute(
+      service.startRun(
         makePlanRef(),
         makeResolvedContext('s03-metric-fail-soft-1'),
         makeTraceContext('s03-metric-fail-soft-1')
