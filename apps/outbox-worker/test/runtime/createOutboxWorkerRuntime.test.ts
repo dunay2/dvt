@@ -22,7 +22,10 @@ import {
 } from './runtimeTestUtils.js';
 
 async function withRuntimePool(
-  run: (pool: ReturnType<typeof getPgPool>, patches: ReturnType<typeof createPatchScope>) => Promise<void>
+  run: (
+    pool: ReturnType<typeof getPgPool>,
+    patches: ReturnType<typeof createPatchScope>
+  ) => Promise<void>
 ): Promise<void> {
   await withClosedPgPool(async () => {
     const pool = getPgPool(POOL_CONFIG);
@@ -42,13 +45,9 @@ describe('createOutboxWorkerRuntime', () => {
       let adapterCloseCalls = 0;
       let migrateCalls = 0;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(
         PostgresStateStoreAdapter.prototype,
         'migrate',
@@ -75,13 +74,9 @@ describe('createOutboxWorkerRuntime', () => {
       let endCalls = 0;
       let adapterCloseCalls = 0;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {
         adapterCloseCalls += 1;
       });
@@ -99,7 +94,7 @@ describe('createOutboxWorkerRuntime', () => {
   it('runs migrations when explicitly enabled', async () => {
     await withRuntimePool(async (pool, patches) => {
       let migrateCalls = 0;
-      patches.patch(pool, 'end', (async function end(): Promise<void> {}) as typeof pool.end);
+      patches.patch(pool, 'end', async function end(): Promise<void> {} as typeof pool.end);
       patches.patch(
         PostgresStateStoreAdapter.prototype,
         'migrate',
@@ -122,13 +117,9 @@ describe('createOutboxWorkerRuntime', () => {
   it('releases the shared pool lease even when stop cleanup fails', async () => {
     await withRuntimePool(async (pool, patches) => {
       let endCalls = 0;
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {
         throw new Error('synthetic adapter close failure');
       });
@@ -147,13 +138,9 @@ describe('createOutboxWorkerRuntime', () => {
       let endCalls = 0;
       let adapterCloseCalls = 0;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {
         adapterCloseCalls += 1;
       });
@@ -174,13 +161,9 @@ describe('createOutboxWorkerRuntime', () => {
   it('releases the shared pool lease when startup fails', async () => {
     await withRuntimePool(async (pool, patches) => {
       let endCalls = 0;
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(
         PostgresStateStoreAdapter.prototype,
         'migrate',
@@ -209,13 +192,9 @@ describe('createOutboxWorkerRuntime', () => {
       const originalAbortPendingOperations =
         PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(
         PostgresStateStoreAdapter.prototype,
         'migrate',
@@ -263,13 +242,9 @@ describe('createOutboxWorkerRuntime', () => {
       const originalAbortPendingOperations =
         PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(
         PostgresStateStoreAdapter.prototype,
         'migrate',
@@ -319,13 +294,9 @@ describe('createOutboxWorkerRuntime', () => {
       const originalAbortPendingOperations =
         PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(
         PostgresStateStoreAdapter.prototype,
         'abortPendingOperations',
@@ -385,13 +356,9 @@ describe('createOutboxWorkerRuntime', () => {
   it('keeps a shared pool alive until the last runtime stops', async () => {
     await withRuntimePool(async (pool, patches) => {
       let endCalls = 0;
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {});
 
       const env = loadActiveTestEnv(BASE_ACTIVE_ENV);
@@ -508,13 +475,9 @@ describe('createOutboxWorkerRuntime', () => {
           }
         | undefined;
 
-      patches.patch(
-        pool,
-        'end',
-        (async function end(): Promise<void> {
-          endCalls += 1;
-        }) as typeof pool.end
-      );
+      patches.patch(pool, 'end', async function end(): Promise<void> {
+        endCalls += 1;
+      } as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {});
       patches.patch(
         PostgresStateStoreAdapter.prototype,
@@ -555,7 +518,7 @@ describe('createOutboxWorkerRuntime', () => {
   it('starts run-event retention runtime when enabled', async () => {
     await withRuntimePool(async (pool, patches) => {
       let archiveCalls = 0;
-      patches.patch(pool, 'end', (async function end(): Promise<void> {}) as typeof pool.end);
+      patches.patch(pool, 'end', async function end(): Promise<void> {} as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {});
       patches.patch(
         PostgresStateStoreAdapter.prototype,
@@ -598,7 +561,7 @@ describe('createOutboxWorkerRuntime', () => {
   it('does not start run-event retention runtime when disabled', async () => {
     await withRuntimePool(async (pool, patches) => {
       let archiveCalls = 0;
-      patches.patch(pool, 'end', (async function end(): Promise<void> {}) as typeof pool.end);
+      patches.patch(pool, 'end', async function end(): Promise<void> {} as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {});
       patches.patch(
         PostgresStateStoreAdapter.prototype,
