@@ -145,7 +145,7 @@ async function injectRebuildSnapshot(
   app: ReturnType<typeof Fastify>,
   runId: string,
   payload: unknown
-) {
+): ReturnType<ReturnType<typeof Fastify>['inject']> {
   return app.inject({
     method: 'POST',
     url: `/admin/runs/${runId}/rebuild-snapshot`,
