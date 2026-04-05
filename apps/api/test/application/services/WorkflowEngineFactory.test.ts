@@ -86,9 +86,8 @@ describe('buildWorkflowEngine', () => {
       },
     });
 
-    const startRunService = (
-      engine as unknown as { startRunApplicationService: unknown }
-    ).startRunApplicationService;
+    const startRunService = (engine as unknown as { startRunApplicationService: unknown })
+      .startRunApplicationService;
     expect(startRunService).toBeInstanceOf(StartRunApplicationService);
   });
 });
