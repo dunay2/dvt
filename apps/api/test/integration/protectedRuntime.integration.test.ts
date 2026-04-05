@@ -52,7 +52,10 @@ const TENANT_ACTIONS_FULL = [
   'run:signal',
   'run:cancel',
 ] as const;
-const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [...TENANT_ACTIONS_FULL, 'admin:rebuild-snapshot'] as const;
+const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [
+  ...TENANT_ACTIONS_FULL,
+  'admin:rebuild-snapshot',
+] as const;
 
 type JwksServerHandle = {
   readonly server: Server;
