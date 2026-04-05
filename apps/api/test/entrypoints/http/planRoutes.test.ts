@@ -29,7 +29,7 @@ function createReply(): {
   };
 }
 
-function okAuthDeps() {
+function okAuthDeps(): Record<string, unknown> {
   return {
     authenticator: {
       authenticateBearerToken: vi.fn(async () => ({

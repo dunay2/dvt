@@ -41,7 +41,7 @@ function HookHost({
   runsService: IRunsPort;
   currentPlan: typeof mockExecutionPlan | null;
   onRunStarted: (runId: string) => void;
-}>) {
+}>): React.JSX.Element {
   const hook = useCanvasExecutionActions({
     plansService,
     runsService,

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../api/createApiClient';
 import { createPlansService } from './plansService';
 
-function buildValidContractPlan() {
+function buildValidContractPlan(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
@@ -23,7 +23,7 @@ function buildValidContractPlan() {
   } as const;
 }
 
-function buildValidPlanRef() {
+function buildValidPlanRef(): Readonly<Record<string, string>> {
   return {
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     sha256: 'b'.repeat(64),
