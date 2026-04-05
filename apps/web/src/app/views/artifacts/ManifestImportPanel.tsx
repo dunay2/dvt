@@ -86,10 +86,12 @@ export function ManifestImportPanel({
                 </p>
                 <div className="flex flex-wrap gap-3 text-xs text-slate-300">
                   <span>
-                    <span className="font-mono text-white">{importedStats?.models ?? 0}</span> models
+                    <span className="font-mono text-white">{importedStats?.models ?? 0}</span>{' '}
+                    models
                   </span>
                   <span>
-                    <span className="font-mono text-white">{importedStats?.sources ?? 0}</span> sources
+                    <span className="font-mono text-white">{importedStats?.sources ?? 0}</span>{' '}
+                    sources
                   </span>
                   <span>
                     <span className="font-mono text-white">{importedStats?.tests ?? 0}</span> tests

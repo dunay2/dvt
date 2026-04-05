@@ -1,4 +1,9 @@
-import type { ManifestImportResult, ManifestNodeRecord, ManifestRoot, ParsedManifestNodeType } from './types';
+import type {
+  ManifestImportResult,
+  ManifestNodeRecord,
+  ManifestRoot,
+  ParsedManifestNodeType,
+} from './types';
 
 const RESOURCE_TYPE_TO_NODE_TYPE: Record<string, ParsedManifestNodeType> = {
   model: 'MODEL',

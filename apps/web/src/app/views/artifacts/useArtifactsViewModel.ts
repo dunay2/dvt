@@ -7,15 +7,13 @@ import { formatFileSize } from './utils';
 type ArtifactsViewModel = {
   manifestPreview: unknown;
   artifacts: ArtifactPreview[];
-  importedStats:
-    | {
-        models: number;
-        sources: number;
-        tests: number;
-        edges: number;
-        dbtVersion: string | null;
-      }
-    | null;
+  importedStats: {
+    models: number;
+    sources: number;
+    tests: number;
+    edges: number;
+    dbtVersion: string | null;
+  } | null;
 };
 
 function buildImportedArtifact(state: ImportState): ArtifactPreview | null {
