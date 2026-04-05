@@ -1,0 +1,15 @@
+---
+id: R-20260405-START-RUN-ALIAS-DEPRECATION
+title: Start-run alias deprecation drift during migration to StartRunApplicationService
+status: Closed
+date: 2026-04-05
+owners:
+  - dvt/engine
+  - dvt/api
+severity: Low
+probability: Medium
+---
+The temporary `StartRunCoordinator` alias could have been reintroduced in composition wiring or
+remain beyond its planned removal window, creating naming drift and slowing migration closure. This
+risk is now closed because the alias was removed from the engine surface and dependency seam, and
+composition-root anti-alias tests protect against regression.

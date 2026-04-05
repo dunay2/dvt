@@ -11,8 +11,11 @@ import {
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
+  StartRunAdmissionGuard,
+  StartRunApplicationService,
   SnapshotProjector,
   WorkflowEngine,
+  WorkflowEngineCoreService,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
@@ -93,15 +96,44 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
       ? { outboxRateLimiter: config.security.outboxRateLimiter }
       : {}),
   });
+  const projector = new SnapshotProjector();
+  const idempotency = new IdempotencyKeyBuilder();
 
   return new WorkflowEngine({
+    startRunApplicationService: new StartRunApplicationService({
+      policy,
+      guard: new StartRunAdmissionGuard({
+        policy,
+        stateStoreRead: config.persistence.stateStoreRead,
+        adapters: config.runtime.adapters,
+        ...(config.persistence.runExecutionContextResolver !== undefined
+          ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+          : {}),
+      }),
+      stateStoreRead: config.persistence.stateStoreRead,
+      stateStoreWrite: config.persistence.stateStoreWrite,
+      idempotency,
+      clock: config.infrastructure.clock,
+      intentStore: config.persistence.intentStore,
+      observability: config.infrastructure.observability,
+      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    }),
+    core: new WorkflowEngineCoreService({
+      stateStoreRead: config.persistence.stateStoreRead,
+      stateStoreWrite: config.persistence.stateStoreWrite,
+      projector,
+      idempotency,
+      policy,
+      adapters: config.runtime.adapters,
+      observability: config.infrastructure.observability,
+      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+      clock: config.infrastructure.clock,
+    }),
     stateStoreRead: config.persistence.stateStoreRead,
     stateStoreWrite: config.persistence.stateStoreWrite,
-    projector: new SnapshotProjector(),
-    idempotency: new IdempotencyKeyBuilder(),
+    projector,
+    idempotency,
     clock: config.infrastructure.clock,
-    policy,
-    intentStore: config.persistence.intentStore,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
     ...(config.persistence.runExecutionContextResolver !== undefined

@@ -20,7 +20,7 @@ function makeSnapshot(
     paused: false,
     cancelling: false,
     steps: {},
-  };
+  } as WorkflowSnapshotResult;
 }
 
 function createApp(

@@ -17,7 +17,7 @@ import type { IClock } from '../utils/clock.js';
 
 import { StartRunAdmissionGuard } from './StartRunAdmissionGuard.js';
 
-export interface StartRunCoordinatorDeps {
+export interface StartRunApplicationServiceDeps {
   policy: IRunAccessPolicy;
   guard: StartRunAdmissionGuard;
   stateStoreRead: IRunStateStoreRead;
@@ -34,14 +34,14 @@ export interface StartRunCoordinatorDeps {
 }
 
 /**
- * Application-layer start-run use case coordinator.
- * Keeps start-run admission and execution orchestration out of WorkflowEngine core.
+ * Application-layer start-run use case.
+ * Owns authorization/admission, intent log, adapter dispatch, and compensation.
  */
-export class StartRunCoordinator {
+export class StartRunApplicationService {
   private readonly failurePolicy: StartRunFailurePolicy;
   private readonly executionService: StartRunExecutionService;
 
-  constructor(private readonly deps: StartRunCoordinatorDeps) {
+  constructor(private readonly deps: StartRunApplicationServiceDeps) {
     const eventFactory = new StartRunEventFactory({
       idempotency: deps.idempotency,
       clock: deps.clock,
@@ -68,7 +68,7 @@ export class StartRunCoordinator {
     });
   }
 
-  async execute(
+  async startRun(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext
@@ -93,7 +93,7 @@ export class StartRunCoordinator {
     }
 
     try {
-      const runRef = await this.executeCore(planRef, resolvedContext, traceContext, errorContext);
+      const runRef = await this.startRunCore(planRef, resolvedContext, traceContext, errorContext);
       try {
         this.deps.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
         this.deps.observability.metrics
@@ -114,7 +114,7 @@ export class StartRunCoordinator {
     }
   }
 
-  private async executeCore(
+  private async startRunCore(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext,
