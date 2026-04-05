@@ -1,0 +1,20 @@
+---
+id: R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT
+title: Plan-store canonical JSON shape may drift from contract schema
+status: Open
+date: 2026-04-05
+owners:
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/contracts
+severity: High
+probability: Medium
+---
+context: >
+  PlanRecord contract requires canonicalPlanJson to validate as ExecutionPlan. Planner canonical
+  JSON is optimized for deterministic hashing and can omit execution metadata fields. Adapter
+  persistence paths can drift if these responsibilities are changed independently.
+
+mitigation:
+  - Persist contract-compatible canonical JSON in plan store.
+  - Keep integration coverage for planner-backed /runs/start paths.
+  - Keep schema hardening checks in contracts package and pre-push gates.

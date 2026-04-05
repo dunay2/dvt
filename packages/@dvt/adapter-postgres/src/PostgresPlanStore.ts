@@ -24,6 +24,7 @@ import {
   buildPlanRecord,
   buildPlanRef,
   buildPlanRefFromStoredRow,
+  toPersistedCanonicalPlanJson,
 } from './PostgresPlanStore.mappers.js';
 import { PostgresPlanRecordRepository } from './PostgresPlanStore.plan-record-repository.js';
 import { PostgresPlanStoreSchemaManager } from './PostgresPlanStore.schema-manager.js';
@@ -86,6 +87,7 @@ export class PostgresPlanStore
     const executable = this.config.toExecutablePlan(buildResult);
     const executableBytes = Buffer.from(executable.text, 'utf8');
     const planId = buildResult.plan.metadata.planId;
+    const canonicalPlanJson = toPersistedCanonicalPlanJson(buildResult);
     const planRef = buildPlanRef({
       planId,
       planVersion: buildResult.plan.metadata.planVersion,
@@ -107,7 +109,7 @@ export class PostgresPlanStore
         schemaVersion: planRef.schemaVersion,
         sizeBytes: persistedSizeBytes,
         requiresCapabilitiesJson: JSON.stringify(planRef.requiresCapabilities ?? null),
-        canonicalPlanJson: buildResult.canonicalPlanJson,
+        canonicalPlanJson,
         executablePlanJson: executable.text,
       });
 
@@ -120,7 +122,7 @@ export class PostgresPlanStore
 
       assertStoredPlanMatchesRequest(persisted, {
         planRef,
-        canonicalPlanJson: buildResult.canonicalPlanJson,
+        canonicalPlanJson,
         executablePlanJson: executable.text,
       });
 
