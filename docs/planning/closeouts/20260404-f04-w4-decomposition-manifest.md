@@ -19,7 +19,7 @@ criteria.
 | View                     | Baseline lines | Current lines | Target lines | Planned extracted modules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Status                |
 | ------------------------ | -------------: | ------------: | -----------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | `AdminView.tsx`          |            600 |            85 |           80 | `admin/useAdminViewData.ts`, `admin/adminViewModel.ts`, `admin/copy.ts`, `admin/AdminPlatformTab.tsx`, `admin/AdminPlatformSummaryCards.tsx`, `admin/AdminProbeDetailsCard.tsx`, `admin/AdminCapabilitiesCard.tsx`, `admin/AdminRolesTab.tsx`, `admin/AdminPermissionsTab.tsx`, `admin/AdminAuditTab.tsx`, `admin/AdminStatusBadge.tsx`, `admin/platformTypes.ts`                                                                                                                                                                                                                               | Partially implemented |
-| `ArtifactsView.tsx`      |            576 |           576 |           60 | `artifacts/types.ts`, `artifacts/manifestParser.ts`, `artifacts/ManifestImportPanel`, `artifacts/ArtifactList`, `artifacts/ArtifactPreviewTabs`                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Planned               |
+| `ArtifactsView.tsx`      |            576 |            59 |           60 | `artifacts/types.ts`, `artifacts/constants.ts`, `artifacts/copy.ts`, `artifacts/utils.ts`, `artifacts/manifestParser.ts`, `artifacts/useLocalManifestImport.ts`, `artifacts/useArtifactsViewModel.ts`, `artifacts/ManifestImportPanel.tsx`, `artifacts/ArtifactsList.tsx`, `artifacts/ArtifactPreviewTabs.tsx`, `artifacts/ArtifactsInfoCard.tsx`                                                                                                                                                                                                                                               | Implemented           |
 | `LineageView.tsx`        |            398 |            64 |           80 | `lineage/useLineageViewData.ts`, `lineage/lineageModel.ts`, `lineage/LineageHeader.tsx`, `lineage/LineageBreadcrumb.tsx`, `lineage/LineageGraphPanel.tsx`, `lineage/LineageImpactSummary.tsx`, `lineage/LineageColumnPanel.tsx`, `lineage/copy.ts`                                                                                                                                                                                                                                                                                                                                              | Partially implemented |
 | `CostView.tsx`           |            306 |            90 |           60 | `cost/useCostData.ts`, `cost/costViewModel.ts`, `cost/CostCharts.tsx`, `cost/CostDriverList.tsx`, `cost/CostAlertsList.tsx`, `cost/CostCoverageCard.tsx`, `cost/CostStatGrid.tsx`, `cost/copy.ts`                                                                                                                                                                                                                                                                                                                                                                                               | Partially implemented |
 | `DiffView.tsx`           |            287 |            35 |           70 | `diff/useDiffData.ts`, `diff/diffViewModel.ts`, `diff/DiffHeader.tsx`, `diff/DiffSummaryCards.tsx`, `diff/GraphDiffPanel.tsx`, `diff/SqlDiffPanel.tsx`, `diff/CatalogDiffPanel.tsx`, `diff/DiffTabs.tsx`, `diff/copy.ts`                                                                                                                                                                                                                                                                                                                                                                        | Partially implemented |
@@ -354,6 +354,68 @@ Current implemented ratio for `AdminView` slice:
 - unit/component tests: `5`
 - integration tests: `2`
 - minimum required by rule `ceil(5 / 3) = 2`
+- status: `Compliant`
+
+## ArtifactsView slice component diagram
+
+```mermaid
+flowchart TD
+  ArtifactsView["ArtifactsView.tsx<br/>thin compositor"]
+  ImportHook["useLocalManifestImport"]
+  VM["useArtifactsViewModel"]
+  Parser["manifestParser.ts"]
+  ImportPanel["ManifestImportPanel"]
+  List["ArtifactsList"]
+  Tabs["ArtifactPreviewTabs"]
+  Info["ArtifactsInfoCard"]
+  Constants["constants.ts / copy.ts"]
+
+  ArtifactsView --> ImportHook
+  ArtifactsView --> VM
+  ImportHook --> Parser
+  ArtifactsView --> ImportPanel
+  ArtifactsView --> List
+  ArtifactsView --> Tabs
+  ArtifactsView --> Info
+  VM --> Constants
+  Tabs --> Constants
+```
+
+## ArtifactsView data-flow diagram
+
+```mermaid
+sequenceDiagram
+  participant User as User
+  participant View as ArtifactsView
+  participant Hook as useLocalManifestImport
+  participant Parser as parseManifest
+  participant VM as useArtifactsViewModel
+  participant Panels as UI panels
+
+  User->>View: open artifacts screen
+  View->>Hook: initialize import state
+  View->>VM: derive manifest preview and artifact list
+  VM-->>Panels: initial server artifacts + default previews
+  User->>Panels: drop/import manifest.json
+  Panels->>Hook: file selected
+  Hook->>Parser: parse and validate JSON
+  Parser-->>Hook: success/error state
+  Hook->>VM: new import state
+  VM-->>Panels: imported manifest stats + local artifact preview
+```
+
+## ArtifactsView test inventory and ratio check
+
+| Layer         | File                                                      | Test count | Purpose                                                 |
+| ------------- | --------------------------------------------------------- | ---------: | ------------------------------------------------------- |
+| `unit`        | `apps/web/src/app/views/artifacts/manifestParser.test.ts` |          3 | manifest validation, node extraction, edge generation   |
+| `integration` | `apps/web/src/app/views/ArtifactsView.test.tsx`           |          1 | composed render for import area, artifacts and previews |
+
+Current implemented ratio for `ArtifactsView` slice:
+
+- unit/component tests: `3`
+- integration tests: `1`
+- minimum required by rule `ceil(3 / 3) = 1`
 - status: `Compliant`
 
 ## Before/after traceability rule
