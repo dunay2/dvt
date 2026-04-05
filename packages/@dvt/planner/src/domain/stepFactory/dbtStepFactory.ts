@@ -30,8 +30,27 @@ export const dbtStepFactory: StepFactory = (
 ): ExecutionStepV1 => {
   const mergedStepTypeConfig: Record<string, unknown> = {
     ...(node.stepTypeConfig ?? {}),
-    ...policyConfig(resolvedPolicies),
   };
+  const resolvedConfig = policyConfig(resolvedPolicies);
+
+  if ('stepTimeoutMs' in resolvedConfig) {
+    mergedStepTypeConfig['stepTimeoutMs'] = resolvedConfig['stepTimeoutMs'];
+  } else {
+    delete mergedStepTypeConfig['stepTimeoutMs'];
+  }
+
+  if ('retries' in resolvedConfig) {
+    mergedStepTypeConfig['retries'] = resolvedConfig['retries'];
+  } else {
+    delete mergedStepTypeConfig['retries'];
+  }
+
+  if ('concurrency' in resolvedConfig) {
+    mergedStepTypeConfig['concurrency'] = resolvedConfig['concurrency'];
+  } else {
+    delete mergedStepTypeConfig['concurrency'];
+  }
+
   return {
     stepId: node.nodeId,
     kind: node.stepKind,

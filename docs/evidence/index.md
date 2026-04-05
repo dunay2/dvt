@@ -16,6 +16,7 @@ Evidence documents that justify or validate relevant changes.
 - [Critical](critical/index.md)
 - [Supporting](supporting/index.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
+- [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
 - [ED 20260404 Guards Alignment Adapter Postgres](ED-20260404-guards-alignment-adapter-postgres.md)
 - [ED 20260404 Inmemory State Store Invariants Hardening](ED-20260404-inmemory-state-store-invariants-hardening.md)
 - [ED 20260405 Workflow Snapshot Schema Versioning](ED-20260405-workflow-snapshot-schema-versioning.md)

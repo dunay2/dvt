@@ -10,89 +10,127 @@ task_id: MW-A2-B, MW-A2-C
 
 # MW-A2 Policy-First Fowler QA Review
 
+## Summary
+
+This artifact converts the MW-A2 QA review into executable closure tasks for policy precedence and planner boundary hardening.
+
+Canonical execution tracking remains in:
+
+- `docs/planning/state/agent-lane-a.yaml`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
+
+## Governing Sources
+
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `AGENTS.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/architecture/components/planner/index.md`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
+
 ## Findings
-
-### Blocker
-
-- No critical findings.
 
 ### High
 
-- No high findings.
+- Title: policy precedence drift for `unbounded` timeout/concurrency in `dbtStepFactory` (resolved)
+  Why it matters: unbounded policy intent was violated by leaked node caps.
+  Evidence: `packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`.
+  Risk: planner can enforce stricter runtime limits than declared policy classes.
+  Recommendation: use explicit overwrite/delete semantics for policy-owned fields and keep regression tests at planner + API boundary.
 
 ### Medium
 
-- Title: `dbtStepFactory` policy precedence drift (fixed in this slice)
-  Why it matters: policy bypass risk if node-provided step config overrides resolved policy.
-  Evidence: `packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`.
-  Risk: retry/timeout/concurrency values could drift from governed policy.
-  Recommendation: keep `policy first` precedence locked by unit test.
+- Title: cross-boundary precedence confidence gap before API assertion (resolved)
+  Why it matters: unit-only confidence leaves planner-backed run-start path underprotected.
+  Evidence: `apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts`.
+  Risk: regressions can pass planner package tests while failing at API orchestration boundary.
+  Recommendation: keep planner-backed start-run assertion as permanent regression guard.
 
 ### Low
 
-- Title: test vector planId drift after semantic model shift (resolved)
-  Why it matters: deterministic vector mismatches can hide real regressions.
-  Evidence: `packages/@dvt/planner/test/unit/determinism.test.ts`.
-  Risk: false negatives in deterministic CI gates.
-  Recommendation: maintain vector refresh discipline when canonical hash input changes.
+- Title: QA artifact was not fully aligned to template sections (resolved)
+  Why it matters: review artifacts lose execution consistency when section contract drifts.
+  Evidence: this file now includes full template sections.
+  Risk: inconsistent QA closeout and weaker handoff quality.
+  Recommendation: enforce template sections (`Summary`, `Governing Sources`, `Unblock Roadmap`, `Validation Baseline`) in future updates.
 
-## Task Alignment
+## Alignment
 
-- Declared task vs actual changes:
-  `MW-A2-B/C` targeted contract clean swap and planner boundary evolution; implementation now centers internal nodes on `stepKind`.
-- Doc vs code:
-  aligned for this slice; lane status updated in `agent-lane-a.yaml`.
-- Promise vs implementation:
-  partial completion; core boundary seams done, wider API/resolver adoption remains for later waves.
-- Tests vs claims:
-  claims are backed by planner suite + new policy-precedence unit test.
-- Current truth vs planned truth:
-  current truth matches `policy first` direction and stepKind-centered planner seam.
-- Documentation update status:
-  this review artifact added; lane updated.
-- Evidence and risk-doc status:
-  no ARC-triggering paths touched in this slice.
+- Doc vs code: aligned after fixing unbounded precedence behavior and documenting invariants.
+- Promise vs implementation: policy-first is now explicit for bounded and unbounded classes.
+- Tests vs claims: claims are covered by planner unit tests and planner-backed API regression.
+- Current truth vs planned truth: current code matches MW-A2 policy-first direction.
+- Documentation update status: planner component docs, QA review, evidence, and risk surfaces updated.
+- Evidence and risk-doc status when applicable: ARC-2 obligations satisfied with new `ED-20260405-*` and `R-20260405-*`.
 
 ## Architecture Assessment
 
-- SRP: improved; removed `stepKind -> resourceType` translation from planner facade seam.
-- DDD: improved; planner internal node model now reflects domain step semantics.
-- Hexagonal: improved; fewer boundary translation artifacts in application layer.
-- CQRS: unchanged, still coherent.
-- Complexity: reduced in facade mapper path.
-- Modularity: improved; legacy mapper seam removed.
+- SRP: improved at step factory seam; policy ownership remains localized.
+- DDD: improved; policy semantics are enforced where step config is materialized.
+- Hexagonal: improved; boundary behavior is now contract-faithful from planner to API.
+- CQRS if relevant: unchanged.
+- Complexity: slightly increased in merge code, justified by correctness.
+- Modularity: improved due to explicit ownership of policy-owned keys.
 
 ## Test Assessment
 
-- Negative paths present:
-  malformed graph source at facade boundary, cycle handling, invalid step config.
-- Negative paths missing:
-  none critical found for this sub-slice.
-- Regression status:
-  green after policy precedence fix and vector update.
-- Determinism:
-  fixed vector test updated and passing.
-- Local suite vs meaningful confidence:
-  planner package confidence is strong for this seam; one cross-package API assertion now covers policy precedence through planner-backed start-run.
+- Negative paths present: invalid graph and cycle paths remain covered; unbounded policy regression now covered.
+- Negative paths missing: none critical in this slice.
+- Regression status: green on targeted planner/API runs.
+- Determinism: existing determinism suite remains passing for touched scope.
+- Local suite vs meaningful global confidence: good for this slice, full repo runtime matrix remains out of scope.
+- Global system view applied: yes, with API planner-backed path assertion.
+- Harness or shared fixture need: no new harness needed; existing test setup sufficient.
+- Test grouping by type (`unit` / `integration` / `contract` / `e2e` / regression) and rationale:
+  - `unit`: `dbt-step-factory.test.ts` for local precedence logic.
+  - `integration` (application boundary): `PlannerBackedStartRunUseCase.test.ts` for end-to-end planner-backed merge behavior.
+  - `contract/e2e`: unchanged in this fix slice.
 
 ## Quality Gates
 
 - Commands executed:
   - `pnpm --filter @dvt/planner test`
   - `pnpm --filter dvt-api test -- PlannerBackedStartRunUseCase`
+  - `pnpm docs:sync`
   - `pnpm verify:prepush`
 - What passed:
-  - planner tests: `15 files`, `68 tests`.
-  - API targeted tests: `1 file`, `11 tests`.
-  - pre-push gate (`type-check`, docs/governance checks, changed-file checks).
+  - planner package tests
+  - targeted API planner-backed suite
+  - docs index sync
+  - pre-push gate
 - What failed:
   - none in latest run.
 - What could not be verified:
-  - full repo end-to-end behavior outside affected scope not re-executed here.
+  - full end-to-end production topology with external services.
 
-## Opportunities
+## Unblock Roadmap
 
-- No open opportunities in this slice; both identified improvements were applied.
+### Wave 0 - Truth and documentation baseline
+
+Tasks: `MW-A2-C-QA-05`, `MW-A2-C-QA-06`
+
+Target:
+
+- ARC evidence and risk surfaces aligned with planner/contracts changes;
+- QA artifact shape aligned with governed template.
+
+### Wave 1 - Boundary and ownership hardening
+
+Tasks: `MW-A2-C-QA-01`, `MW-A2-C-QA-02`
+
+Target:
+
+- policy-owned fields behave as policy-first for bounded and unbounded classes;
+- ownership of merge behavior is explicit and regression-protected.
+
+### Wave 2 - Runtime and regression closure
+
+Tasks: `MW-A2-C-QA-03`, `MW-A2-C-QA-04`
+
+Target:
+
+- runtime-facing boundary behavior is verified at planner and API layers;
+- slice closes with governed validation evidence.
 
 ## Action Artifact
 
@@ -106,72 +144,116 @@ task_id: MW-A2-B, MW-A2-C
 - [x] `MW-A2-C-QA-02` Add regression unit test for policy precedence
 - [x] `MW-A2-C-QA-03` Re-run planner validation suite
 - [x] `MW-A2-C-QA-04` Add cross-boundary API integration assertion for policy precedence
+- [x] `MW-A2-C-QA-05` Add ARC-2 evidence and risk artifacts for planner/contracts touch set
+- [x] `MW-A2-C-QA-06` Align QA review artifact with governed template sections
 
 ### Task Details
 
 #### `MW-A2-C-QA-01` Enforce policy-first precedence in dbt step factory
 
-- Objective: prevent policy bypass by node step config.
+- Objective: prevent node-level caps from overriding unbounded policy intent.
 - Scope: `packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`.
-- In current task scope: Yes.
+- Recommended owner: `@dvt/planner`.
 - Dependencies: none.
-- Documentation impact: reflected in this QA artifact.
-- Evidence / risk-doc impact: none.
-- Comment with rationale: policy is governance authority and must win over caller payload.
+- Documentation impact: reflected in QA artifact and planner component docs.
+- Evidence / risk-doc impact: covered by `ED-20260405-mwa2-policy-unbounded-precedence.md` and `R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml`.
+- Comment with rationale: policy vocabulary is governance authority; omitted keys for unbounded must clear node caps.
 - Definition of Done:
-  - merged config applies policy after node config;
-  - retries/timeout/concurrency from policy remain authoritative.
+  - `stepTimeoutMs` removed when policy timeout is unbounded;
+  - `concurrency` removed when policy concurrency is unbounded;
+  - bounded policies still overwrite node values.
 
 #### `MW-A2-C-QA-02` Add regression unit test for policy precedence
 
-- Objective: freeze policy-first behavior against regressions.
+- Objective: lock merge semantics at step-factory boundary.
 - Scope: `packages/@dvt/planner/test/unit/dbt-step-factory.test.ts`.
-- In current task scope: Yes.
+- Recommended owner: `@dvt/planner`.
 - Dependencies: `MW-A2-C-QA-01`.
-- Documentation impact: none.
+- Documentation impact: QA evidence section updated.
 - Evidence / risk-doc impact: test evidence only.
-- Comment with rationale: without explicit test, precedence drift is easy to reintroduce.
+- Comment with rationale: unbounded policy behavior must be asserted explicitly.
 - Definition of Done:
-  - test fails when node config overrides policy;
-  - test passes in current implementation.
+  - test covers bounded overwrite;
+  - test covers unbounded key removal.
 
 #### `MW-A2-C-QA-03` Re-run planner validation suite
 
-- Objective: confirm no regression in planner boundary and determinism tests.
+- Objective: validate no planner regressions after merge-behavior change.
 - Scope: `@dvt/planner` test suite.
-- In current task scope: Yes.
+- Recommended owner: `@dvt/planner`.
 - Dependencies: `MW-A2-C-QA-01`, `MW-A2-C-QA-02`.
-- Documentation impact: recorded in review artifact.
-- Evidence / risk-doc impact: command evidence.
-- Comment with rationale: policy fix must be validated in full package context.
+- Documentation impact: quality gates updated.
+- Evidence / risk-doc impact: evidence command list updated.
+- Comment with rationale: correctness fix must prove no collateral break in planner domain.
 - Definition of Done:
-  - `pnpm --filter @dvt/planner test` passes.
+  - planner suite passes.
 
 #### `MW-A2-C-QA-04` Add cross-boundary API integration assertion for policy precedence
 
-- Objective: verify behavior through planner-backed start-run path.
-- Scope: `apps/api` integration/route tests.
-- In current task scope: Yes.
-- Dependencies: completion of current planner seam refactor.
-- Documentation impact: review checklist updated.
+- Objective: verify planner-backed start-run path preserves policy-first semantics.
+- Scope: `apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts`.
+- Recommended owner: `dvt-api`.
+- Dependencies: `MW-A2-C-QA-01`.
+- Documentation impact: QA review and evidence docs updated.
 - Evidence / risk-doc impact: test evidence only.
-- Comment with rationale: local domain confidence is strong; boundary confidence improves with one higher-layer check.
+- Comment with rationale: this is the public boundary where merged step config is consumed.
 - Definition of Done:
-  - planner-backed API flow includes assertion that policy fields remain authoritative.
+  - API test asserts bounded overwrite and unbounded removal behavior.
+
+#### `MW-A2-C-QA-05` Add ARC-2 evidence and risk artifacts for planner/contracts touch set
+
+- Objective: satisfy mandatory ARC policy for this PR scope.
+- Scope: `docs/evidence/**`, `docs/risk-register/quality/**`.
+- Recommended owner: slice owner.
+- Dependencies: ARC check classification.
+- Documentation impact: direct.
+- Evidence / risk-doc impact: direct.
+- Comment with rationale: ARC-2 requires both evidence and risk update; skipping leads to governance drift and CI failure.
+- Definition of Done:
+  - ARC check indicates required artifacts are present and valid.
+
+#### `MW-A2-C-QA-06` Align QA review artifact with governed template sections
+
+- Objective: make review output executable and consistent.
+- Scope: this artifact.
+- Recommended owner: QA/doc owner.
+- Dependencies: none.
+- Documentation impact: direct.
+- Evidence / risk-doc impact: none.
+- Comment with rationale: template alignment enables repeatable QA execution across slices.
+- Definition of Done:
+  - all required template sections present and populated with task-specific content.
 
 ## Mermaid Diagram
 
-### Current-state to target-state policy flow
+### Current-state dependency map
 
 ```mermaid
 flowchart LR
-  A["GraphSource node.stepTypeConfig"] --> M["dbtStepFactory merge"]
-  B["Resolved policy set"] --> M
-  M --> C["ExecutionStep.stepTypeConfig"]
-  C --> D["Registry validation"]
-  D --> E["Plan assembly"]
-  M -.target.-> T["Policy fields override node fields"]
+  Node["node.stepTypeConfig"] --> Merge["dbtStepFactory merge seam"]
+  Policy["resolvedPolicies"] --> Merge
+  Merge --> Step["ExecutionStep.stepTypeConfig"]
+  Step --> API["PlannerBackedStartRunUseCase path"]
+  Merge -.unbounded timeout/concurrency.-> Clear["Delete node caps for policy-owned keys"]
 ```
+
+### Unblock sequence
+
+```mermaid
+flowchart LR
+  Wave0["Wave 0: ARC docs + QA template alignment"] --> Wave1["Wave 1: Merge seam hardening"]
+  Wave1 --> Wave2["Wave 2: Planner/API regression closure"]
+```
+
+## Validation Baseline For Each Execution Slice
+
+Every correction slice under this artifact closes with:
+
+1. touched-package checks (`pnpm --filter @dvt/planner test`);
+2. boundary regression checks (`pnpm --filter dvt-api test -- PlannerBackedStartRunUseCase`);
+3. `pnpm docs:sync` when docs were added or moved;
+4. ARC evidence/risk checks for planner/contracts touch sets;
+5. `pnpm verify:prepush`.
 
 ## Final Verdict
 
