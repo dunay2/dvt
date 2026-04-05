@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
 import { createOutboxWorkerRuntime } from '../../src/runtime/createOutboxWorkerRuntime.js';
 import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
+
 import {
   BASE_ACTIVE_ENV,
   POOL_CONFIG,
