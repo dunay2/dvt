@@ -209,6 +209,10 @@ export async function buildProtectedRuntimeModule(
   const planner = new PlannerFacade({
     resolver: new ManifestArtifactResolver({ nodeEnv: env.NODE_ENV }),
   });
+  const planValidator = new StoredPlanExecutabilityValidator({
+    fetcher: planStore,
+    adapters,
+  });
   const facade = new StartRunAuthorizedFacade(
     authenticator,
     commandAuthorizer,
@@ -221,10 +225,7 @@ export async function buildProtectedRuntimeModule(
       delegate: new PlannerBackedStartRunUseCase({
         planner,
         planStore,
-        validator: new StoredPlanExecutabilityValidator({
-          fetcher: planStore,
-          adapters,
-        }),
+        validator: planValidator,
         compileTelemetry: startRunSlaTelemetry,
         delegate: new EngineStartRunUseCase(engine),
       }),
@@ -242,6 +243,7 @@ export async function buildProtectedRuntimeModule(
     stateStore: stateStoreRoles,
     planner,
     planStore,
+    planValidator,
     executablePlanResolver,
     migrate: async () => {
       await accessRepo.migrate();

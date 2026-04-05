@@ -213,6 +213,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         authorizer: protectedModule.authorizer,
         planner: protectedModule.planner,
         planStore: protectedModule.planStore,
+        planValidator: protectedModule.planValidator,
         planResolver: protectedModule.executablePlanResolver,
       })
     );
@@ -222,6 +223,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         authorizer: protectedModule.authorizer,
         planner: protectedModule.planner,
         planStore: protectedModule.planStore,
+        planValidator: protectedModule.planValidator,
         planResolver: protectedModule.executablePlanResolver,
       })
     );

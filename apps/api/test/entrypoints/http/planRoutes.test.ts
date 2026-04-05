@@ -63,7 +63,8 @@ describe('planRoutes', () => {
     const deps = {
       ...okAuthDeps(),
       planner: { buildPlan: vi.fn() },
-      planStore: { storePlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
       planResolver: { fetch: vi.fn() },
     };
 
@@ -98,10 +99,18 @@ describe('planRoutes', () => {
       canonicalPlanJson: '{}',
     }));
     const storePlan = vi.fn(async () => VALID_PLAN_REF);
+    const markValid = vi.fn(async () => undefined);
+    const markInvalid = vi.fn(async () => undefined);
+    const validatePlan = vi.fn(async () => ({
+      status: 'OK',
+      planId: VALID_PLAN_REF.planId,
+      adapterId: 'mock',
+    }));
     const deps = {
       ...okAuthDeps(),
       planner: { buildPlan },
-      planStore: { storePlan },
+      planStore: { storePlan, markValid, markInvalid },
+      planValidator: { validatePlan },
       planResolver: { fetch: vi.fn() },
     };
 
@@ -148,6 +157,9 @@ describe('planRoutes', () => {
     });
     expect(buildPlan).toHaveBeenCalledOnce();
     expect(storePlan).toHaveBeenCalledOnce();
+    expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'mock');
+    expect(markValid).toHaveBeenCalledWith(VALID_PLAN_REF);
+    expect(markInvalid).not.toHaveBeenCalled();
   });
 
   it('returns 400 on import when planRef is invalid', async () => {
@@ -155,7 +167,8 @@ describe('planRoutes', () => {
     const deps = {
       ...okAuthDeps(),
       planner: { buildPlan: vi.fn() },
-      planStore: { storePlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
       planResolver: { fetch: vi.fn() },
     };
 
@@ -184,6 +197,76 @@ describe('planRoutes', () => {
     });
   });
 
+  it('returns 422 when previewed plan is not executable for target adapter', async () => {
+    const reply = createReply();
+    const storePlan = vi.fn(async () => VALID_PLAN_REF);
+    const markInvalid = vi.fn(async () => undefined);
+    const deps = {
+      ...okAuthDeps(),
+      planner: {
+        buildPlan: vi.fn(async () => ({
+          plan: {
+            metadata: {
+              planId: VALID_PLAN_REF.planId,
+              planVersion: VALID_PLAN_REF.planVersion,
+              schemaVersion: VALID_PLAN_REF.schemaVersion,
+              contractVersion: '1.0.0',
+              inputHashSha256: VALID_PLAN_REF.sha256,
+              createdAtIso: '2026-04-05T00:00:00.000Z',
+            },
+            steps: [],
+          },
+          canonicalPlanJson: '{}',
+        })),
+      },
+      planStore: { storePlan, markValid: vi.fn(), markInvalid },
+      planValidator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'ERROR',
+          code: 'REJECTED',
+          adapterId: 'mock',
+          planId: VALID_PLAN_REF.planId,
+          degradable: false,
+          reason: 'Adapter is not configured: mock',
+          cause: 'adapter',
+        })),
+      },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-rejected',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(markInvalid).toHaveBeenCalledWith(
+      VALID_PLAN_REF,
+      expect.objectContaining({ status: 'ERROR', code: 'REJECTED' })
+    );
+  });
+
   it('returns plan and planRef from import route', async () => {
     const reply = createReply();
     const fetch = vi.fn(async () => ({
@@ -196,11 +279,19 @@ describe('planRoutes', () => {
         createdAtIso: '2026-04-05T00:00:00.000Z',
       },
       steps: [],
+      observability: {
+        tags: {
+          'dvt.scope.tenantId': 'tenant-1',
+          'dvt.scope.projectId': 'project-1',
+          'dvt.scope.environmentId': 'env-1',
+        },
+      },
     }));
     const deps = {
       ...okAuthDeps(),
       planner: { buildPlan: vi.fn() },
-      planStore: { storePlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
       planResolver: { fetch },
     };
 
@@ -236,9 +327,75 @@ describe('planRoutes', () => {
           createdAtIso: '2026-04-05T00:00:00.000Z',
         },
         steps: [],
+        observability: {
+          tags: {
+            'dvt.scope.tenantId': 'tenant-1',
+            'dvt.scope.projectId': 'project-1',
+            'dvt.scope.environmentId': 'env-1',
+          },
+        },
       },
       planRef: VALID_PLAN_REF,
     });
     expect(fetch).toHaveBeenCalledWith(VALID_PLAN_REF);
+  });
+
+  it('returns 403 on import when fetched plan scope tags do not match authorized context', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: {
+        fetch: vi.fn(async () => ({
+          metadata: {
+            planId: VALID_PLAN_REF.planId,
+            planVersion: VALID_PLAN_REF.planVersion,
+            schemaVersion: VALID_PLAN_REF.schemaVersion,
+            contractVersion: '1.0.0',
+            inputHashSha256: VALID_PLAN_REF.sha256,
+            createdAtIso: '2026-04-05T00:00:00.000Z',
+          },
+          steps: [],
+          observability: {
+            tags: {
+              'dvt.scope.tenantId': 'tenant-X',
+              'dvt.scope.projectId': 'project-X',
+              'dvt.scope.environmentId': 'env-X',
+            },
+          },
+        })),
+      },
+    };
+
+    await importPlanRoute(
+      {
+        id: 'req-import-forbidden',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          planRef: VALID_PLAN_REF,
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(403);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'forbidden',
+        reason: 'tenant_access_denied',
+        details: { cause: 'plan_scope_mismatch' },
+      },
+    });
   });
 });

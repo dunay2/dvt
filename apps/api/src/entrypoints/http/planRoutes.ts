@@ -1,6 +1,12 @@
-import type { IPlanValidationLifecycleStore, IPlanner, PlanRef } from '@dvt/contracts';
+import type {
+  ExecutionPlan,
+  IPlanExecutabilityValidator,
+  IPlanValidationLifecycleStore,
+  IPlanner,
+  PlanRef,
+  RunContextSchemaT,
+} from '@dvt/contracts';
 import { parseRunContext } from '@dvt/contracts';
-import type { ExecutionPlan } from '@dvt/engine';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
@@ -25,6 +31,7 @@ type PlanRoutesDeps = {
   readonly authorizer: AuthorizeCommandScopeService;
   readonly planner: IPlanner;
   readonly planStore: IPlanValidationLifecycleStore;
+  readonly planValidator: IPlanExecutabilityValidator;
   readonly planResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
 };
 
@@ -39,11 +46,12 @@ export async function previewPlanRoute(
     return;
   }
 
-  const scopeResult = parseScopeFromContextRecord(parsedBody.value);
-  if (!scopeResult.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(scopeResult.issue));
+  const routeContextResult = parseRouteContextRecord(parsedBody.value);
+  if (!routeContextResult.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(routeContextResult.issue));
     return;
   }
+  const routeContext = routeContextResult.value;
 
   const authz = await authorizeExecutionScope({
     authenticator: deps.authenticator,
@@ -51,9 +59,9 @@ export async function previewPlanRoute(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: scopeResult.value.tenantId,
-      projectId: scopeResult.value.projectId,
-      environmentId: scopeResult.value.environmentId,
+      tenantId: routeContext.tenantId,
+      projectId: routeContext.projectId,
+      environmentId: routeContext.environmentId,
       action: START_RUN_ACTION,
     },
   });
@@ -76,14 +84,34 @@ export async function previewPlanRoute(
   }
 
   try {
+    const requestedAtIso = authz.context.authorizedAt.toISOString();
     const buildResult = await deps.planner.buildPlan({
-      ...plannerEnvelope.value,
+      ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext),
       selection: { selectedNodeIds: selection.value },
       requestedBy: authz.context.principal.principalId,
       requestId: request.id,
-      requestedAtIso: authz.context.authorizedAt.toISOString(),
+      requestedAtIso,
     });
     const planRef = await deps.planStore.storePlan(buildResult);
+    const validation = await deps.planValidator.validatePlan(planRef, routeContext.targetAdapter);
+    if (validation.status === 'ERROR') {
+      await deps.planStore.markInvalid(planRef, validation);
+      sendHttpResponse(
+        reply,
+        createHttpErrorResponse({
+          type: HTTP_ERROR_TYPE.unprocessable,
+          reason: HTTP_ERROR_REASON.planRejected,
+          details: {
+            code: validation.code,
+            adapterId: validation.adapterId,
+            ...(validation.cause === undefined ? {} : { cause: validation.cause }),
+            rejectionReason: validation.reason,
+          },
+        })
+      );
+      return;
+    }
+    await deps.planStore.markValid(planRef);
     reply.code(200).send({ plan: buildResult.plan, planRef });
   } catch (error) {
     request.log.error({ err: error }, 'plan preview failed');
@@ -108,11 +136,12 @@ export async function importPlanRoute(
     return;
   }
 
-  const scopeResult = parseScopeFromContextRecord(parsedBody.value);
-  if (!scopeResult.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(scopeResult.issue));
+  const routeContextResult = parseRouteContextRecord(parsedBody.value);
+  if (!routeContextResult.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(routeContextResult.issue));
     return;
   }
+  const routeContext = routeContextResult.value;
 
   const authz = await authorizeExecutionScope({
     authenticator: deps.authenticator,
@@ -120,9 +149,9 @@ export async function importPlanRoute(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: scopeResult.value.tenantId,
-      projectId: scopeResult.value.projectId,
-      environmentId: scopeResult.value.environmentId,
+      tenantId: routeContext.tenantId,
+      projectId: routeContext.projectId,
+      environmentId: routeContext.environmentId,
       action: START_RUN_ACTION,
     },
   });
@@ -140,6 +169,17 @@ export async function importPlanRoute(
   try {
     const planRef = planRefResult.value;
     const plan = await deps.planResolver.fetch(planRef);
+    if (!isPlanOwnedByScope(plan, routeContext)) {
+      sendHttpResponse(
+        reply,
+        createHttpErrorResponse({
+          type: HTTP_ERROR_TYPE.forbidden,
+          reason: HTTP_ERROR_REASON.tenantAccessDenied,
+          details: { cause: 'plan_scope_mismatch' },
+        })
+      );
+      return;
+    }
     reply.code(200).send({ plan, planRef });
   } catch (error) {
     request.log.error({ err: error }, 'plan import failed');
@@ -153,25 +193,74 @@ export async function importPlanRoute(
   }
 }
 
-function parseScopeFromContextRecord(
+function parseRouteContextRecord(
   record: Record<string, unknown>
-): RouteParseResult<ParsedStartRunScope> {
+): RouteParseResult<ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>> {
   if (
     record.context === undefined ||
     record.context === null ||
     typeof record.context !== 'object'
   ) {
-    return badRequestResult<ParsedStartRunScope>(HTTP_ERROR_REASON.invalidBody);
+    return badRequestResult<ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>>(
+      HTTP_ERROR_REASON.invalidBody
+    );
   }
 
   try {
     const context = parseRunContext(record.context);
-    return parseStartRunScope({
+    const scopeResult = parseStartRunScope({
       tenantId: context.tenantId,
       projectId: context.projectId,
       environmentId: context.environmentId,
     });
+    if (!scopeResult.ok) {
+      return scopeResult;
+    }
+    return {
+      ok: true,
+      value: {
+        ...scopeResult.value,
+        targetAdapter: context.targetAdapter,
+      },
+    };
   } catch {
-    return badRequestResult<ParsedStartRunScope>(HTTP_ERROR_REASON.invalidBody);
+    return badRequestResult<ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>>(
+      HTTP_ERROR_REASON.invalidBody
+    );
   }
+}
+
+function bindScopeToPlannerEnvelope(
+  envelope: ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T>
+    ? T
+    : never,
+  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>
+): ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T> ? T : never {
+  return {
+    ...envelope,
+    observability: {
+      ...(envelope.observability ?? {}),
+      tags: {
+        ...(envelope.observability?.tags ?? {}),
+        'dvt.scope.tenantId': context.tenantId.value,
+        'dvt.scope.projectId': context.projectId.value,
+        'dvt.scope.environmentId': context.environmentId.value,
+      },
+    },
+  };
+}
+
+function isPlanOwnedByScope(
+  plan: ExecutionPlan,
+  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>
+): boolean {
+  const tags = plan.observability?.tags;
+  if (tags === undefined) {
+    return false;
+  }
+  return (
+    tags['dvt.scope.tenantId'] === context.tenantId.value &&
+    tags['dvt.scope.projectId'] === context.projectId.value &&
+    tags['dvt.scope.environmentId'] === context.environmentId.value
+  );
 }

@@ -1,5 +1,6 @@
 import type {
   ExecutionPlan,
+  IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
   PlanRef,
@@ -23,6 +24,7 @@ export interface ProtectedRuntimeModule {
   stateStore: StateStoreRoleBindings;
   planner: IPlanner;
   planStore: IPlanValidationLifecycleStore;
+  planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
   migrate: () => Promise<void>;
   close: () => Promise<void>;
