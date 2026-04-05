@@ -452,7 +452,7 @@ tasks:
   - task_id: F-04-RISK-A
     parent_task: F-04-RISK
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
       remove mock-only PlanRef semantics from the shared start-run flow so API mode no longer
       depends on placeholder plan identity fields.
@@ -462,14 +462,43 @@ tasks:
       API mode emits a contract-safe plan reference path with explicit tests.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 75
     evidence_refs:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/services/plans/plansService.mock.ts
       - apps/web/src/app/services/plans/plansService.test.ts
     status_reason: >-
-      The current implementation still leaks mock PlanRef defaults into a shared runtime path.
-    last_verified: '2026-04-04'
+      QA-01 and QA-02 are closed in code and tests, and QA-04 documentation alignment is closed. The
+      remaining blocker is QA-03: API mode still synthesizes PlanRef client-side because backend
+      preview/import payload does not yet expose canonical planRef.
+    last_verified: '2026-04-05'
+  - task_id: F-04-RISK-A-QA-03
+    parent_task: F-04-RISK-A
+    priority: P1
+    status: in_progress
+    objective: >-
+      move planRef ownership to backend plan preview/import payload and remove frontend PlanRef
+      synthesis from the API plans adapter.
+    dependency: MVP-E1, F-04-RISK-A
+    target: >-
+      `plansService.api` maps backend-owned planRef directly and no longer constructs
+      `uri`/`sha256`/`schemaVersion` locally from metadata fields.
+    complexity: M
+    effort_points: 3
+    progress_pct: 10
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - apps/web/src/app/services/plans/plansService.api.ts
+      - apps/api/src/entrypoints/http/startRunRoute.ts
+    status_reason: >-
+      Opened from hard QA as the remaining high-severity contract-drift risk: frontend synthesis of
+      PlanRef can diverge from backend canonical identity rules.
+    definition_of_done:
+      - backend plan payload used by web includes canonical `planRef`
+      - frontend API adapter does not synthesize PlanRef
+      - start-run path remains fail-closed when planRef is absent
+      - '`@dvt/web` tests and typecheck pass and `pnpm verify:prepush` is green'
+    last_verified: '2026-04-05'
   - task_id: F-04-RISK-B
     parent_task: F-04-RISK
     priority: P1

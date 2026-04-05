@@ -1,4 +1,5 @@
 import { parsePlannerInputEnvelopeV1 } from '@dvt/contracts';
+import type { GenericGraphNodeV1, GenericGraphSourceV1 } from '@dvt/contracts';
 
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 
@@ -72,7 +73,42 @@ function mapGraphSource(
 ): StartRunCommand['graphSource'] | undefined {
   if (graphSource === undefined) return undefined;
 
-  return graphSource;
+  const nodes: GenericGraphNodeV1[] = graphSource.nodes.map((node) => {
+    const mappedNode: GenericGraphNodeV1 = {
+      nodeId: node.nodeId,
+      stepKind: node.stepKind,
+      dependsOn: node.dependsOn,
+    };
+
+    if (node.stepTypeConfig !== undefined) {
+      mappedNode.stepTypeConfig = node.stepTypeConfig;
+    }
+
+    if (node.metadata !== undefined) {
+      const metadata: NonNullable<GenericGraphNodeV1['metadata']> = {};
+      if (node.metadata.displayName !== undefined) {
+        metadata.displayName = node.metadata.displayName;
+      }
+      if (node.metadata.sourceRef !== undefined) {
+        metadata.sourceRef = node.metadata.sourceRef;
+      }
+      if (node.metadata.tags !== undefined) {
+        metadata.tags = node.metadata.tags;
+      }
+      if (Object.keys(metadata).length > 0) {
+        mappedNode.metadata = metadata;
+      }
+    }
+
+    return mappedNode;
+  });
+
+  return {
+    kind: graphSource.kind,
+    sourceFamily: graphSource.sourceFamily,
+    sourceVersion: graphSource.sourceVersion,
+    nodes,
+  } satisfies GenericGraphSourceV1;
 }
 
 function mapManifestRef(

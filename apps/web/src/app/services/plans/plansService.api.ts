@@ -1,4 +1,8 @@
-import { parseExecutionPlan, type ExecutionPlan as ContractExecutionPlan } from '@dvt/contracts';
+import {
+  parseExecutionPlan,
+  parsePlanRef,
+  type ExecutionPlan as ContractExecutionPlan,
+} from '@dvt/contracts';
 
 import type { ExecutionPlan, ExecutionStep } from '../../types/dbt';
 import type { PlanRef, RunContext } from '../../types/engine';
@@ -31,20 +35,26 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-function parseContractPlanPayload(payload: unknown): ContractExecutionPlan {
-  if (
-    payload !== null &&
-    typeof payload === 'object' &&
-    'plan' in payload &&
-    (payload as { plan?: unknown }).plan !== undefined
-  ) {
-    return parseExecutionPlan((payload as { plan: unknown }).plan);
+function parseContractPlanPayload(payload: unknown): {
+  contractPlan: ContractExecutionPlan;
+  planRef: PlanRef;
+} {
+  if (payload === null || typeof payload !== 'object') {
+    throw new Error('Invalid plans payload: expected object envelope');
   }
 
-  return parseExecutionPlan(payload);
+  const envelope = payload as { plan?: unknown; planRef?: unknown };
+  if (envelope.plan === undefined || envelope.planRef === undefined) {
+    throw new Error('Invalid plans payload: expected { plan, planRef }');
+  }
+
+  return {
+    contractPlan: parseExecutionPlan(envelope.plan),
+    planRef: parsePlanRef(envelope.planRef),
+  };
 }
 
-function mapContractPlanToUi(contractPlan: ContractExecutionPlan): ExecutionPlan {
+function mapContractPlanToUi(contractPlan: ContractExecutionPlan, planRef: PlanRef): ExecutionPlan {
   const tags = contractPlan.observability?.tags ?? {};
   const extra = contractPlan.observability?.extra ?? {};
   const adapter = asString(tags.adapter) ?? 'unknown';
@@ -56,6 +66,7 @@ function mapContractPlanToUi(contractPlan: ContractExecutionPlan): ExecutionPlan
   return {
     planId: contractPlan.metadata.planId,
     planVersion: contractPlan.metadata.planVersion,
+    planRef,
     generatedAt: contractPlan.metadata.createdAtIso,
     adapter,
     target,
@@ -95,8 +106,8 @@ export function createApiPlansService(apiClient: ApiClient): PlansService {
   return {
     previewPlan: async (input: PlanPreviewInput) => {
       const payload = await apiClient.postJson<PlanPreviewInput, unknown>('/plans/preview', input);
-      const contractPlan = parseContractPlanPayload(payload);
-      return mapContractPlanToUi(contractPlan);
+      const { contractPlan, planRef } = parseContractPlanPayload(payload);
+      return mapContractPlanToUi(contractPlan, planRef);
     },
     importPlan: async (planRef: PlanRef, context: RunContext) => {
       const payload = await apiClient.postJson<{ planRef: PlanRef; context: RunContext }, unknown>(
@@ -106,8 +117,8 @@ export function createApiPlansService(apiClient: ApiClient): PlansService {
           context,
         }
       );
-      const contractPlan = parseContractPlanPayload(payload);
-      return mapContractPlanToUi(contractPlan);
+      const { contractPlan, planRef: importedPlanRef } = parseContractPlanPayload(payload);
+      return mapContractPlanToUi(contractPlan, importedPlanRef);
     },
   };
 }
