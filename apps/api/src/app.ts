@@ -14,6 +14,7 @@ import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
+import { importPlanRoute, previewPlanRoute } from './entrypoints/http/planRoutes.js';
 import {
   PROTECTED_RUNTIME_ROUTE_SUMMARY,
   RUNTIME_ROUTE_PATH,
@@ -205,6 +206,24 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
           protectedModule.facade,
           protectedModule.startRunTargetAdapterRegistry
         )
+    );
+    app.post(RUNTIME_ROUTE_PATH.plansPreview, async (request, reply) =>
+      previewPlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        planner: protectedModule.planner,
+        planStore: protectedModule.planStore,
+        planResolver: protectedModule.executablePlanResolver,
+      })
+    );
+    app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
+      importPlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        planner: protectedModule.planner,
+        planStore: protectedModule.planStore,
+        planResolver: protectedModule.executablePlanResolver,
+      })
     );
 
     app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>

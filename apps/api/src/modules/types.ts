@@ -1,4 +1,6 @@
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
+import type { IPlanValidationLifecycleStore, IPlanner, PlanRef } from '@dvt/contracts';
+import type { ExecutionPlan } from '@dvt/engine';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
@@ -15,6 +17,9 @@ export interface ProtectedRuntimeModule {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;
+  planner: IPlanner;
+  planStore: IPlanValidationLifecycleStore;
+  executablePlanResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
   migrate: () => Promise<void>;
   close: () => Promise<void>;
 }

@@ -204,6 +204,13 @@ export const mockEdges: DbtEdge[] = [
 export const mockExecutionPlan: ExecutionPlan = {
   planId: 'plan_abc123',
   planVersion: '1.0.0',
+  planRef: {
+    uri: 'mock://plans/plan_abc123',
+    sha256: 'mock-plan-abc123',
+    schemaVersion: 'mock-v1',
+    planId: 'plan_abc123',
+    planVersion: '1.0.0',
+  },
   generatedAt: '2026-02-13T10:30:00Z',
   adapter: 'snowflake',
   target: 'dev',
