@@ -13,6 +13,7 @@ function makeSnapshot(
   status: WorkflowSnapshotResult['status'] = 'PENDING'
 ): WorkflowSnapshotResult {
   return {
+    schemaVersion: 1,
     runId,
     status,
     paused: false,
