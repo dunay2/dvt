@@ -6,11 +6,14 @@
  * @version 1.0.0
  * @date 2026-03-28
  */
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
+
 import { quoteIdentifier } from './sqlUtils.js';
 
 export const IS_SNAPSHOT_STALE_ALIAS = 'is_snapshot_stale' as const;
 
 export function listStaleSnapshotRunsSql(schema: string): string {
+  const snapshotSchemaVersion = String(CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION);
   return `
     SELECT m.run_id, m.tenant_id
     FROM ${quoteIdentifier(schema)}.run_metadata m
@@ -34,6 +37,8 @@ export function listStaleSnapshotRunsSql(schema: string): string {
     OR (
       s.run_id IS NOT NULL
       AND (
+        COALESCE(s.snapshot->>'schemaVersion', '') <> '${snapshotSchemaVersion}'
+        OR
         s.last_run_seq < COALESCE(h.latest_run_seq, 0)
         OR (
           h.run_id IS NULL
@@ -66,6 +71,7 @@ export function listStaleSnapshotRunsSql(schema: string): string {
  * — without the heads cache that would require a run_events scan per row.
  */
 export function isSnapshotStaleSql(schema: string): string {
+  const snapshotSchemaVersion = String(CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION);
   return `
     SELECT EXISTS (
       SELECT 1
@@ -81,7 +87,11 @@ export function isSnapshotStaleSql(schema: string): string {
       ) le ON TRUE
       WHERE m.tenant_id = $1
         AND m.run_id = $2
-        AND ((s.run_id IS NULL AND le.run_seq IS NOT NULL) OR s.last_run_seq < COALESCE(le.run_seq, 0))
+        AND (
+          (s.run_id IS NULL AND le.run_seq IS NOT NULL)
+          OR COALESCE(s.snapshot->>'schemaVersion', '') <> '${snapshotSchemaVersion}'
+          OR s.last_run_seq < COALESCE(le.run_seq, 0)
+        )
     ) AS ${IS_SNAPSHOT_STALE_ALIAS}
   `;
 }

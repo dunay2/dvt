@@ -130,7 +130,14 @@ export interface ListEventsOptions {
   limit?: number;
 }
 
+/**
+ * Version marker for persisted WorkflowSnapshot shape.
+ * Bump this value whenever the WorkflowSnapshot contract changes.
+ */
+export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 1 as const;
+
 export interface WorkflowSnapshot {
+  schemaVersion: number;
   runId: string;
   status: RunStatus;
   startedAt?: IsoUtcString;

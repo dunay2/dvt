@@ -1,4 +1,10 @@
-import type { EventType, RunMetadata, SignalRequest, WorkflowSnapshot } from '@dvt/contracts';
+import {
+  CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+  type EventType,
+  type RunMetadata,
+  type SignalRequest,
+  type WorkflowSnapshot,
+} from '@dvt/contracts';
 
 import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { buildSignalDerivedRunEventInput } from '../../core/lifecycle/coreRuntime.js';
@@ -39,6 +45,7 @@ export class SignalTransitionGuard {
   ): Promise<WorkflowSnapshot> {
     const events = await this.deps.stateStoreRead.listEvents(tenantId, runId);
     const snapshot: WorkflowSnapshot = {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId,
       status: 'PENDING',
       paused: false,
