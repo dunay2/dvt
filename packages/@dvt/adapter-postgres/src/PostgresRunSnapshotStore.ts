@@ -8,6 +8,7 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import { RunNotFoundError } from '@dvt/engine';
 import { applyRunEvent } from '@dvt/run-domain';
 import {
@@ -73,7 +74,15 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         [tenantId, runId]
       )
     );
-    return result.rows[0]?.snapshot ?? null;
+    const snapshot = result.rows[0]?.snapshot ?? null;
+    if (snapshot === null) return null;
+    if (snapshot.schemaVersion === CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION) {
+      return snapshot;
+    }
+
+    // Schema-version mismatch means the stored read model shape is stale.
+    // Rebuild from canonical event history before serving.
+    return this.rebuildSnapshot(tenantId, runId);
   }
 
   async pinTerminalSnapshot(
@@ -243,6 +252,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       );
 
       const snap: WorkflowSnapshot = {
+        schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
         runId,
         status: 'PENDING',
         paused: false,
@@ -342,6 +352,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     }
 
     return {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId,
       status: 'PENDING',
       paused: false,

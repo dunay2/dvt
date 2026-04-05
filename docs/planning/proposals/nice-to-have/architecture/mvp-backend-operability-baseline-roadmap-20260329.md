@@ -1,4 +1,4 @@
----
+﻿---
 title: MVP Backend Operability Baseline Roadmap
 status: Proposed
 owner: Product / Architecture / API / Docs
@@ -78,7 +78,7 @@ Not included in MVP definition:
 
 - `MVP-A1` (Lane A): contractual inventory of backend runtime surface and
   invariants. Artifact:
-  `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`.
+  `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`.
 - `MVP-B1` (Lane B): traceability matrix linking each MVP claim to evidence and
   tests.
 - `MVP-C1` (Lane C): minimal operational runbook (start, diagnose, operate).

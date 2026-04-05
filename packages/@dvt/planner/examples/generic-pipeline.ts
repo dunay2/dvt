@@ -6,7 +6,7 @@ const genericStepFactory: StepFactory = (node: GraphNode, resolved: ResolvedPoli
   // Example: use arbitrary kind and pass custom config
   return {
     stepId: node.nodeId,
-    kind: node.resourceType, // e.g. EXTRACT / TRANSFORM / LOAD
+    kind: node.stepKind, // e.g. EXTRACT / TRANSFORM / LOAD
     dependsOn: node.dependsOn,
     stepTypeConfig: {
       timeoutMs: resolved.stepTimeoutMs,
@@ -24,9 +24,9 @@ async function main(): Promise<void> {
   const input: PlannerInputEnvelopeV1 = {
     graphSource: {
       nodes: [
-        { nodeId: 'extract.s3', resourceType: 'EXTRACT', dependsOn: [] },
-        { nodeId: 'transform.clean', resourceType: 'TRANSFORM', dependsOn: ['extract.s3'] },
-        { nodeId: 'load.warehouse', resourceType: 'LOAD', dependsOn: ['transform.clean'] },
+        { nodeId: 'extract.s3', stepKind: 'EXTRACT', dependsOn: [] },
+        { nodeId: 'transform.clean', stepKind: 'TRANSFORM', dependsOn: ['extract.s3'] },
+        { nodeId: 'load.warehouse', stepKind: 'LOAD', dependsOn: ['transform.clean'] },
       ],
     },
     selection: { selectedNodeIds: ['load.warehouse'], includeUpstream: true },

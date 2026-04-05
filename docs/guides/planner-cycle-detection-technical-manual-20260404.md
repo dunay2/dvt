@@ -1,4 +1,4 @@
----
+﻿---
 title: Planner cycle detection technical manual
 status: Draft
 owner: Planning Domain / Architecture / Docs
@@ -104,5 +104,5 @@ pnpm verify:prepush
 ## Related docs
 
 - `docs/guides/planner-cycle-detection-user-manual-20260404.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
+- `docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
 - `docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md`

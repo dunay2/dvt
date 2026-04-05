@@ -1,8 +1,8 @@
----
+﻿---
 title: MVP-A1 Backend Contractual Inventory
-status: Review
+status: Superseded
 owner: Architecture / API / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-05
 planning_type: proposal
 ---
 

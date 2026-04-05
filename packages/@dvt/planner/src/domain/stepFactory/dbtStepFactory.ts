@@ -4,27 +4,9 @@
  */
 import type { DbtStepTypeConfig } from '@dvt/contracts';
 
-import { PlannerError, PlannerErrorCode } from '../errors.js';
-import {
-  DBT_MODEL,
-  DBT_TEST,
-  DBT_SNAPSHOT,
-  type ExecutionStepV1,
-  type GraphNode,
-  type ResolvedPolicies,
-} from '../types.js';
+import { type ExecutionStepV1, type GraphNode, type ResolvedPolicies } from '../types.js';
 
 import type { StepFactory } from './StepFactory.js';
-
-function kindForResourceType(resourceType: string): string {
-  if (resourceType === 'model') return DBT_MODEL;
-  if (resourceType === 'test') return DBT_TEST;
-  if (resourceType === 'snapshot') return DBT_SNAPSHOT;
-  throw new PlannerError(
-    PlannerErrorCode.UNKNOWN_RESOURCE_TYPE,
-    `Unknown resourceType for dbtStepFactory: "${resourceType}". Expected one of: model, test, snapshot.`
-  );
-}
 
 function policyConfig(resolved: ResolvedPolicies): DbtStepTypeConfig {
   const config: DbtStepTypeConfig = {};
@@ -46,11 +28,33 @@ export const dbtStepFactory: StepFactory = (
   node: GraphNode,
   resolvedPolicies: ResolvedPolicies
 ): ExecutionStepV1 => {
-  const kind = kindForResourceType(node.resourceType);
+  const mergedStepTypeConfig: Record<string, unknown> = {
+    ...(node.stepTypeConfig ?? {}),
+  };
+  const resolvedConfig = policyConfig(resolvedPolicies);
+
+  if ('stepTimeoutMs' in resolvedConfig) {
+    mergedStepTypeConfig['stepTimeoutMs'] = resolvedConfig['stepTimeoutMs'];
+  } else {
+    delete mergedStepTypeConfig['stepTimeoutMs'];
+  }
+
+  if ('retries' in resolvedConfig) {
+    mergedStepTypeConfig['retries'] = resolvedConfig['retries'];
+  } else {
+    delete mergedStepTypeConfig['retries'];
+  }
+
+  if ('concurrency' in resolvedConfig) {
+    mergedStepTypeConfig['concurrency'] = resolvedConfig['concurrency'];
+  } else {
+    delete mergedStepTypeConfig['concurrency'];
+  }
+
   return {
     stepId: node.nodeId,
-    kind,
+    kind: node.stepKind,
     dependsOn: node.dependsOn,
-    stepTypeConfig: policyConfig(resolvedPolicies),
+    stepTypeConfig: mergedStepTypeConfig,
   };
 };

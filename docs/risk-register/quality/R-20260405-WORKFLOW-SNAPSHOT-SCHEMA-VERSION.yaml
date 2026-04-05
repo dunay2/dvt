@@ -1,0 +1,25 @@
+---
+id: R-20260405-WORKFLOW-SNAPSHOT-SCHEMA-VERSION
+title: WorkflowSnapshot schema-version drift can reappear if version bumps are skipped
+status: Open
+date: 2026-04-05
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  WorkflowSnapshot now carries an explicit schemaVersion and Postgres read paths rebuild snapshots
+  when the stored version differs from the current contract version.
+risk: >
+  Future snapshot shape changes may bypass the version bump process, which would reduce the value of
+  automated stale detection and could allow incompatible persisted snapshots to survive unnoticed.
+mitigations:
+  - CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION is centralized in @dvt/contracts.
+  - Snapshot constructors in engine and adapter paths now stamp schemaVersion explicitly.
+  - Postgres getSnapshot triggers rebuildSnapshot on schemaVersion mismatch.
+  - Snapshot staleness SQL now includes schemaVersion mismatch predicates.
+  - ARC-2 evidence documents validation and rollout baseline for this change.
+review_after: 2026-05-15
+---
