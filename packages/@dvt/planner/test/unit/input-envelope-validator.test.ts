@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import { PlannerErrorCode } from '../../src/domain/errors.js';
 import { InputEnvelopeValidator } from '../../src/domain/InputEnvelopeValidator.js';
@@ -6,7 +6,7 @@ import { InputEnvelopeValidator } from '../../src/domain/InputEnvelopeValidator.
 const validator = new InputEnvelopeValidator();
 
 const BASE_SELECTION = { selectedNodeIds: ['model.a'] };
-const BASE_NODES = [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }];
+const BASE_NODES = [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }];
 const BASE_GRAPH_SOURCE = { kind: 'normalized-graph-v1' as const, nodes: BASE_NODES };
 
 describe('InputEnvelopeValidator - source rule', () => {

@@ -1,4 +1,4 @@
----
+﻿---
 title: Frontend-Facing Backend MVP Contract (MVP-E1)
 status: Review
 owner: Frontend / API / Architecture
@@ -21,7 +21,7 @@ This contract is route-truth only. It does not introduce new backend behavior.
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
+- `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
 - `docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md`
 - `apps/api/src/app.ts`
 - `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`

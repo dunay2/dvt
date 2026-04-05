@@ -1,8 +1,8 @@
----
+﻿---
 title: AR-A9 Planner cycle fail-closed plan
-status: Draft
+status: Superseded
 owner: Planning Domain / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-05
 planning_type: proposal
 ---
 

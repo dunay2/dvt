@@ -1,4 +1,4 @@
----
+﻿---
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
@@ -45,7 +45,7 @@ flowchart LR
   evidence-backed closeouts.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
-  [RC-C1 HTTP Error Envelope Normalization Plan](../proposals/mandatory/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
+  [RC-C1 HTTP Error Envelope Normalization Plan](../proposals/superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
   Near-term target: deliver admission/backpressure sequence with rollout
   observability.
 - `Planner and Contracts`

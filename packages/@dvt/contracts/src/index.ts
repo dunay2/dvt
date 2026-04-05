@@ -26,7 +26,6 @@ export type {
   ExecutionStepV1,
   GenericGraphNodeV1,
   GenericGraphSourceV1,
-  GraphNode,
   PlanCore,
   PlannerBuildResultV1,
   PlannerEnvironmentContext,

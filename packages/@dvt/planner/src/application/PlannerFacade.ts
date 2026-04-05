@@ -39,7 +39,6 @@ import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
 
 import { ManifestRefGraphSourceCache } from './ManifestRefGraphSourceCache.js';
 import { PlannerEnvelopeMapper } from './PlannerEnvelopeMapper.js';
-import type { StepKindResourceTypeMapper } from './StepKindResourceTypeMapper.js';
 
 type IPlanner = import('@dvt/contracts').IPlanner;
 type PlannerBuildResultV1 = import('@dvt/contracts').PlannerBuildResultV1;
@@ -57,8 +56,6 @@ export interface PlannerFacadeOptions extends PlannerOptions {
   resolver?: IArtifactResolver;
   /** Maximum number of resolved manifestRef graph sources cached in-memory. */
   manifestRefCacheSize?: number;
-  /** Application-boundary mapper from external StepKind to internal resourceType. */
-  stepKindToResourceType?: StepKindResourceTypeMapper;
 }
 
 // ── PlannerFacade ────────────────────────────────────────────────────────────
@@ -70,12 +67,11 @@ export class PlannerFacade implements IPlanner {
   private readonly manifestRefCache: ManifestRefGraphSourceCache | undefined;
 
   constructor(options?: PlannerFacadeOptions) {
-    const { resolver, manifestRefCacheSize, stepKindToResourceType, ...plannerOptions } =
-      options ?? {};
+    const { resolver, manifestRefCacheSize, ...plannerOptions } = options ?? {};
     this.planner = new Planner(plannerOptions);
     this.resolver = resolver;
     const normalizedManifestRefCacheSize = this.normalizeManifestRefCacheSize(manifestRefCacheSize);
-    this.envelopeMapper = new PlannerEnvelopeMapper(stepKindToResourceType);
+    this.envelopeMapper = new PlannerEnvelopeMapper();
     if (resolver !== undefined) {
       this.manifestRefCache = new ManifestRefGraphSourceCache(
         resolver,

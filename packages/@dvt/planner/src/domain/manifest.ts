@@ -69,7 +69,16 @@ class ManifestNodeParser {
     if (typeof resourceType !== 'string' || !SUPPORTED_RESOURCE_TYPES.has(resourceType)) {
       return undefined;
     }
-    return { nodeId, resourceType, dependsOn: this.parseDependsOn(raw) };
+    return {
+      nodeId,
+      stepKind:
+        resourceType === 'model'
+          ? 'DBT_MODEL'
+          : resourceType === 'test'
+            ? 'DBT_TEST'
+            : 'DBT_SNAPSHOT',
+      dependsOn: this.parseDependsOn(raw),
+    };
   }
 
   private parseDependsOn(raw: ManifestNodeLike): string[] {

@@ -10,23 +10,29 @@
  * boundary type in @dvt/contracts — re-exported here for internal use.
  */
 
-import type {
-  ExecutionPlan,
-  GraphNode,
-  PlannerPolicyClassSet,
-  PlannerSelection,
-} from '@dvt/contracts';
+import type { ExecutionPlan, PlannerPolicyClassSet, PlannerSelection } from '@dvt/contracts';
 
 // Canonical types — re-exported from @dvt/contracts (single source of truth).
 export type {
   ExecutionPlan,
   ExecutionStepV1,
-  GraphNode,
   PlanCore,
   PlannerSelection,
   ResolvedPolicies,
   StepKind,
 } from '@dvt/contracts';
+
+export interface GraphNode {
+  nodeId: string;
+  stepKind: string;
+  dependsOn: readonly string[];
+  stepTypeConfig?: Record<string, unknown>;
+  metadata?: {
+    displayName?: string;
+    sourceRef?: string;
+    tags?: Record<string, string>;
+  };
+}
 
 // dbt step-kind constants (planner-local; not part of the public contract vocabulary).
 export const DBT_MODEL = 'DBT_MODEL';

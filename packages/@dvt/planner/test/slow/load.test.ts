@@ -1,15 +1,13 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 
 import { Planner } from '../../src/domain/Planner.js';
 
-function buildLinearNodes(
-  n: number
-): { nodeId: string; resourceType: string; dependsOn: string[] }[] {
-  const nodes: { nodeId: string; resourceType: string; dependsOn: string[] }[] = [];
+function buildLinearNodes(n: number): { nodeId: string; stepKind: string; dependsOn: string[] }[] {
+  const nodes: { nodeId: string; stepKind: string; dependsOn: string[] }[] = [];
   for (let i = 0; i < n; i += 1) {
     const id = `model.${i}`;
     const dependsOn = i === 0 ? [] : [`model.${i - 1}`];
-    nodes.push({ nodeId: id, resourceType: 'model', dependsOn });
+    nodes.push({ nodeId: id, stepKind: 'DBT_MODEL', dependsOn });
   }
   return nodes;
 }

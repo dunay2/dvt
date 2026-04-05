@@ -12,12 +12,7 @@ export function derivePlannerGraphSourceFromManifest(
     sourceVersion: '1.0',
     nodes: nodes.map((node) => ({
       nodeId: node.nodeId,
-      stepKind:
-        node.resourceType === 'model'
-          ? 'DBT_MODEL'
-          : node.resourceType === 'test'
-            ? 'DBT_TEST'
-            : 'DBT_SNAPSHOT',
+      stepKind: node.stepKind,
       dependsOn: node.dependsOn,
     })),
   };
