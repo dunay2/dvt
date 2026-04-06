@@ -39,6 +39,8 @@
       "@dvt/engine/*": ["./packages/@dvt/engine/src/*"],
       "@dvt/planner": ["./packages/@dvt/planner/src/index.ts"],
       "@dvt/planner/*": ["./packages/@dvt/planner/src/*"],
+      "@dvt/plan-verifier": ["./packages/@dvt/plan-verifier/src/index.ts"],
+      "@dvt/plan-verifier/*": ["./packages/@dvt/plan-verifier/src/*"],
       "@dvt/plan-interpreter": [
         "./packages/@dvt/plan-interpreter/src/index.ts"
       ],
