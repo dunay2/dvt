@@ -300,6 +300,9 @@ function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
   };
   if (input.sizeBytes !== undefined) planRef.sizeBytes = input.sizeBytes;
   if (input.expiresAt !== undefined) planRef.expiresAt = input.expiresAt;
+  if (input.pluginCompatibilityFingerprint !== undefined) {
+    planRef.pluginCompatibilityFingerprint = input.pluginCompatibilityFingerprint;
+  }
   if (input.requiresCapabilities !== undefined) {
     planRef.requiresCapabilities = input.requiresCapabilities;
   }

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import type { IStepTypeRegistry } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StoredExecutablePlanResolver } from '../../../src/application/services/StoredExecutablePlanResolver.js';
@@ -80,6 +81,30 @@ describe('StoredExecutablePlanResolver', () => {
     await expect(resolver.fetch(planRef)).rejects.toThrow('PLAN_REF_MISMATCH: planId');
   });
 
+  it('accepts custom step kinds when an explicit stepTypeRegistry is injected', async () => {
+    const executablePlanText = JSON.stringify({
+      metadata: {
+        ...JSON.parse(EXECUTABLE_PLAN_TEXT).metadata,
+      },
+      steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
+    });
+    const fetcher = {
+      fetch: vi.fn(async () => Buffer.from(executablePlanText, 'utf8')),
+    };
+    const resolver = new StoredExecutablePlanResolver({
+      fetcher: fetcher as never,
+      stepTypeRegistry: makeRegistryForKind('SPARK_SQL'),
+    });
+    const planRef = {
+      ...PLAN_REF,
+      sha256: createHash('sha256').update(executablePlanText).digest('hex'),
+    };
+
+    await expect(resolver.fetch(planRef)).resolves.toMatchObject({
+      steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
+    });
+  });
+
   it('preserves legacy external planRef behavior for non-dvt-plan schemes', async () => {
     const fetcher = {
       fetch: vi.fn(async () => new Uint8Array()),
@@ -107,3 +132,20 @@ describe('StoredExecutablePlanResolver', () => {
     expect(fetcher.fetch).not.toHaveBeenCalled();
   });
 });
+
+function makeRegistryForKind(kind: string): IStepTypeRegistry {
+  return {
+    isKnown(candidate: string): boolean {
+      return candidate === kind;
+    },
+    validate(candidate: string): { success: true; data: Record<string, unknown> } {
+      if (candidate !== kind) {
+        throw new Error(`unexpected kind validation request: ${candidate}`);
+      }
+      return { success: true, data: {} };
+    },
+    getKinds(): readonly string[] {
+      return [kind];
+    },
+  };
+}
