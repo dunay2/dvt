@@ -12,12 +12,26 @@ export default function AppBrandMark({ className }: AppBrandMarkProps) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <linearGradient id="raven-feather" x1="18" y1="10" x2="36" y2="56" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="raven-feather"
+          x1="18"
+          y1="10"
+          x2="36"
+          y2="56"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#202A63" />
           <stop offset="0.6" stopColor="#0B1033" />
           <stop offset="1" stopColor="#4FD1C5" />
         </linearGradient>
-        <linearGradient id="raven-beak" x1="36" y1="18" x2="57" y2="28" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="raven-beak"
+          x1="36"
+          y1="18"
+          x2="57"
+          y2="28"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#1A224D" />
           <stop offset="1" stopColor="#0A0F2B" />
         </linearGradient>

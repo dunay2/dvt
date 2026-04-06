@@ -1,9 +1,6 @@
 import { Suspense, lazy } from 'react';
 
-import {
-  DEFAULT_MONACO_CONTAINER_CLASS_NAME,
-  MonacoViewerFallback,
-} from './MonacoViewerFallback';
+import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
 
 const MonacoCodeSurface = lazy(() => import('./MonacoCodeSurface'));
 

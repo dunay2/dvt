@@ -1,5 +1,9 @@
 import type { RuntimeCapabilitiesDto } from '../../capabilities/runtime-capabilities';
-import { getDefaultCoreViewPath, getNavigationViews, getRegisteredPluginIds } from '../plugins/registry';
+import {
+  getDefaultCoreViewPath,
+  getNavigationViews,
+  getRegisteredPluginIds,
+} from '../plugins/registry';
 
 function normalizeCapabilities(
   capabilities: RuntimeCapabilitiesDto | undefined

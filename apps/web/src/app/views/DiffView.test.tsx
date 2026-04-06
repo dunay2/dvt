@@ -163,10 +163,9 @@ describe('DiffView', () => {
       </AppServicesProvider>
     );
 
-    await waitForReactQuery(
-      () => mounted?.container.textContent?.includes('fct_sales') === true,
-      { description: 'diff changes render' }
-    );
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_sales') === true, {
+      description: 'diff changes render',
+    });
 
     expect(mounted.container.textContent).toContain('Diff Viewer');
     expect(mounted.container.textContent).toContain('Graph Diff');
@@ -186,10 +185,9 @@ describe('DiffView', () => {
       </AppServicesProvider>
     );
 
-    await waitForReactQuery(
-      () => mounted?.container.textContent?.includes('fct_sales') === true,
-      { description: 'diff changes render before SQL tab interaction' }
-    );
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_sales') === true, {
+      description: 'diff changes render before SQL tab interaction',
+    });
 
     const sqlTab = Array.from(document.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('SQL Diff')
