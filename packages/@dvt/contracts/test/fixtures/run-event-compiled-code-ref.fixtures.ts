@@ -22,6 +22,11 @@ export const VALID_COMPILED_CODE_REF_FIXTURE = {
   encoding: 'utf-8',
 } as const;
 
+export const VALID_STEP_ARTIFACT_REF_FIXTURE = {
+  artifactKind: 'dbt.compiled-sql',
+  ...VALID_COMPILED_CODE_REF_FIXTURE,
+} as const;
+
 export const STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE = {
   ...BASE_STEP_STARTED_WRITE_EVENT,
   eventId: 'evt-step-started-with-ref',
@@ -35,6 +40,16 @@ export const STEP_STARTED_WITHOUT_COMPILED_CODE_REF_WRITE_FIXTURE = {
   ...BASE_STEP_STARTED_WRITE_EVENT,
   eventId: 'evt-step-started-without-ref',
   idempotencyKey: 'StepStarted|tenant-a|run-compiled-code-ref-1|1|model.analytics.orders|no-ref',
+} as const;
+
+export const STEP_STARTED_WITH_STEP_ARTIFACT_REF_WRITE_FIXTURE = {
+  ...BASE_STEP_STARTED_WRITE_EVENT,
+  eventId: 'evt-step-started-with-step-artifact-ref',
+  idempotencyKey:
+    'StepStarted|tenant-a|run-compiled-code-ref-1|1|model.analytics.orders|step-artifact-ref',
+  payload: {
+    stepArtifactRef: VALID_STEP_ARTIFACT_REF_FIXTURE,
+  },
 } as const;
 
 export const STEP_STARTED_WITH_COMPILED_CODE_REF_RECORD_FIXTURE = {
