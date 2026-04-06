@@ -11,11 +11,7 @@ import FileTreePanel from './code/FileTreePanel';
 
 function flattenFiles(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
   return entries.flatMap((entry) =>
-    entry.kind === 'file'
-      ? [entry]
-      : entry.children
-        ? flattenFiles(entry.children)
-        : []
+    entry.kind === 'file' ? [entry] : entry.children ? flattenFiles(entry.children) : []
   );
 }
 

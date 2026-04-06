@@ -126,9 +126,7 @@ describe('CodeView', () => {
     expect(container.textContent).toContain('Explorer');
 
     await waitFor(() => container?.textContent?.includes('stg_orders.sql') === true);
-    await waitFor(
-      () => container?.querySelector('[data-testid="monaco-code-viewer"]') != null
-    );
+    await waitFor(() => container?.querySelector('[data-testid="monaco-code-viewer"]') != null);
 
     expect(container.textContent).toContain('stg_orders.sql');
 

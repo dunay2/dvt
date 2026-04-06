@@ -57,15 +57,17 @@ function FileTreeNode({
         {isDirectory && <Folder className="size-3.5 shrink-0 text-blue-400" />}
         <span className="truncate">{entry.name}</span>
       </button>
-      {isDirectory && expanded && entry.children?.map((child) => (
-        <FileTreeNode
-          key={child.path}
-          entry={child}
-          depth={depth + 1}
-          selectedPath={selectedPath}
-          onSelect={onSelect}
-        />
-      ))}
+      {isDirectory &&
+        expanded &&
+        entry.children?.map((child) => (
+          <FileTreeNode
+            key={child.path}
+            entry={child}
+            depth={depth + 1}
+            selectedPath={selectedPath}
+            onSelect={onSelect}
+          />
+        ))}
     </div>
   );
 }
