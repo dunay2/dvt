@@ -57,6 +57,21 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
       grouping: 'schema',
       options: { includeColumns: false, addTests: false, addFreshness: false },
     }),
+    listFiles: async () => [],
+    getFileContent: async (path) => ({
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'json',
+      content: '',
+      lastModified: '2026-04-06T00:00:00Z',
+    }),
+    saveFileContent: async (path, content) => ({
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'json',
+      content,
+      lastModified: '2026-04-06T00:00:00Z',
+    }),
     ...overrides,
   };
 }

@@ -47,6 +47,21 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         addFreshness: false,
       },
     }),
+    listFiles: async () => [],
+    getFileContent: async (path) => ({
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'sql',
+      content: '',
+      lastModified: '2026-04-06T00:00:00Z',
+    }),
+    saveFileContent: async (path, content) => ({
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'sql',
+      content,
+      lastModified: '2026-04-06T00:00:00Z',
+    }),
     ...overrides,
   };
 }
@@ -135,11 +150,12 @@ describe('CostView', () => {
       </AppServicesProvider>
     );
 
-    await act(async () => {
-      await Promise.resolve();
-    });
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('workspace unavailable') === true,
+      { description: 'cost error state render' }
+    );
 
-    expect(mounted.container.textContent).toContain('Cost data unavailable');
     expect(mounted.container.textContent).toContain('workspace unavailable');
+    expect(mounted.container.textContent).toContain('Cost alerts');
   });
 });

@@ -79,4 +79,17 @@ describe('Query key policy (architecture)', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('forbids direct raw fetch of runtime capabilities from app query surfaces', () => {
+    const sourceFiles: string[] = [];
+    collectSourceFiles(ROOT_DIR, sourceFiles);
+
+    const offenders = sourceFiles
+      .filter((filePath) =>
+        /fetch\s*\(\s*['"]\/api\/capabilities['"]/.test(readFileSync(filePath, 'utf8'))
+      )
+      .map(toRelativePath);
+
+    expect(offenders).toEqual([]);
+  });
 });

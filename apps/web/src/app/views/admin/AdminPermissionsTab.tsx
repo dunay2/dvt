@@ -55,7 +55,7 @@ function PermissionCell({ enabled }: Readonly<{ enabled: boolean }>) {
       {enabled ? (
         <CheckCircle2 className="mx-auto size-4 text-green-400" />
       ) : (
-        <XCircle className="mx-auto size-4 text-gray-600" />
+        <XCircle className="mx-auto size-4 text-slate-400" />
       )}
     </TableCell>
   );

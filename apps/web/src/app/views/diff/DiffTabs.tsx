@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { diffViewCopy as copy } from './copy';
+import type { CatalogDiffDocument, SqlDiffDocument } from './diffReviewModel';
 import { CatalogDiffPanel } from './CatalogDiffPanel';
 import { GraphDiffPanel } from './GraphDiffPanel';
 import { SqlDiffPanel } from './SqlDiffPanel';
@@ -9,10 +10,12 @@ const tabTriggerClassName =
   'text-slate-200 data-[state=active]:bg-[#101724] data-[state=active]:text-white';
 
 interface DiffTabsProps {
+  catalogDocument: CatalogDiffDocument;
   changes: DiffChange[];
+  sqlDocument: SqlDiffDocument;
 }
 
-export function DiffTabs({ changes }: DiffTabsProps) {
+export function DiffTabs({ catalogDocument, changes, sqlDocument }: DiffTabsProps) {
   return (
     <Tabs defaultValue="graph" className="mx-auto max-w-5xl">
       <TabsList className="border border-slate-700 bg-slate-900">
@@ -30,10 +33,10 @@ export function DiffTabs({ changes }: DiffTabsProps) {
         <GraphDiffPanel changes={changes} />
       </TabsContent>
       <TabsContent value="sql" className="mt-6">
-        <SqlDiffPanel />
+        <SqlDiffPanel document={sqlDocument} />
       </TabsContent>
       <TabsContent value="catalog" className="mt-6">
-        <CatalogDiffPanel />
+        <CatalogDiffPanel document={catalogDocument} />
       </TabsContent>
     </Tabs>
   );

@@ -6,9 +6,11 @@ import { useDiffData } from './diff/useDiffData';
 
 export default function DiffView() {
   const {
+    catalogDocument,
     compareMode,
     severityFilter,
     filteredChanges,
+    sqlDocument,
     summary,
     comparePreset,
     setCompareMode,
@@ -27,7 +29,11 @@ export default function DiffView() {
       <DiffSummaryCards summary={summary} />
       <ScrollArea className="flex-1">
         <div className="p-6">
-          <DiffTabs changes={filteredChanges} />
+          <DiffTabs
+            catalogDocument={catalogDocument}
+            changes={filteredChanges}
+            sqlDocument={sqlDocument}
+          />
         </div>
       </ScrollArea>
     </div>

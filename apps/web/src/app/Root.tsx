@@ -62,7 +62,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   }, [connectionStatus, setConnectionStatus, shellHealth.connectionState]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">
+    <div className="app-shell-background h-screen w-screen flex flex-col text-foreground overflow-hidden">
       <TopAppBar
         connectionDetail={shellHealth.connectionDetail}
         connectionStateOverride={shellHealth.connectionState}

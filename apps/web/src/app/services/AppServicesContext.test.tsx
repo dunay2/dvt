@@ -103,6 +103,21 @@ describe('AppServicesProvider', () => {
           addFreshness: false,
         },
       }),
+      listFiles: async () => [],
+      getFileContent: async (path: string) => ({
+        path,
+        name: path.split('/').at(-1) ?? path,
+        language: 'plaintext',
+        content: '',
+        lastModified: '2026-04-06T00:00:00Z',
+      }),
+      saveFileContent: async (path: string, content: string) => ({
+        path,
+        name: path.split('/').at(-1) ?? path,
+        language: 'plaintext',
+        content,
+        lastModified: '2026-04-06T00:00:00Z',
+      }),
     };
 
     await act(async () => {

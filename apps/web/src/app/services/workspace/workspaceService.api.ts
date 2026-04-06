@@ -1,4 +1,5 @@
 import type { AuditLogEntry, DiffChange, Plugin, Role } from '../../types/dbt';
+import type { FileContent, WorkspaceFileEntry } from '../../ports/workspace';
 import type { ApiClient } from '../api/createApiClient';
 import type { WorkspaceGraphSnapshot, WorkspaceService } from './workspaceService';
 
@@ -21,5 +22,13 @@ export function createApiWorkspaceService(apiClient: ApiClient): WorkspaceServic
     importSources: async () => {
       throw new Error(unsupportedImportMessage);
     },
+    listFiles: () => apiClient.getJson<WorkspaceFileEntry[]>('/workspace/files'),
+    getFileContent: (path) =>
+      apiClient.getJson<FileContent>(`/workspace/files/${encodeURIComponent(path)}`),
+    saveFileContent: (path, content) =>
+      apiClient.postJson<{ content: string }, FileContent>(
+        `/workspace/files/${encodeURIComponent(path)}`,
+        { content }
+      ),
   };
 }

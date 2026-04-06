@@ -1,16 +1,26 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
-import { CATALOG_PREVIEW, RUN_RESULTS_PREVIEW } from './constants';
 import { artifactsViewCopy } from './copy';
+import type { ArtifactPreviewDocumentMap } from './constants';
+import { formatStructuredArtifactContent } from './structuredArtifactContent';
 
 type ArtifactPreviewTabsProps = {
-  manifestPreview: unknown;
+  previewDocuments: ArtifactPreviewDocumentMap;
   panelClassName: string;
   tabTriggerClassName: string;
 };
 
-function PreviewPane({ title, content }: { title: string; content: unknown }) {
+function PreviewPane({
+  title,
+  fileName,
+  content,
+}: {
+  title: string;
+  fileName: string;
+  content: unknown;
+}) {
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
@@ -19,15 +29,19 @@ function PreviewPane({ title, content }: { title: string; content: unknown }) {
           {artifactsViewCopy.viewFullFile}
         </Button>
       </div>
-      <pre className="max-h-[500px] overflow-auto rounded border border-slate-700 bg-slate-950 p-4 font-mono text-xs text-slate-50">
-        {JSON.stringify(content, null, 2)}
-      </pre>
+      <MonacoCodeViewer
+        ariaLabel={title}
+        language="json"
+        loadingLabel={`Loading ${fileName}...`}
+        path={fileName}
+        value={formatStructuredArtifactContent(content)}
+      />
     </>
   );
 }
 
 export function ArtifactPreviewTabs({
-  manifestPreview,
+  previewDocuments,
   panelClassName,
   tabTriggerClassName,
 }: ArtifactPreviewTabsProps) {
@@ -47,13 +61,25 @@ export function ArtifactPreviewTabs({
         </TabsList>
 
         <TabsContent value="manifest" className="mt-4">
-          <PreviewPane title={artifactsViewCopy.previewManifest} content={manifestPreview} />
+          <PreviewPane
+            title={artifactsViewCopy.previewManifest}
+            fileName="manifest.json"
+            content={previewDocuments['manifest.json'].content}
+          />
         </TabsContent>
         <TabsContent value="run_results" className="mt-4">
-          <PreviewPane title={artifactsViewCopy.previewRunResults} content={RUN_RESULTS_PREVIEW} />
+          <PreviewPane
+            title={artifactsViewCopy.previewRunResults}
+            fileName="run_results.json"
+            content={previewDocuments['run_results.json'].content}
+          />
         </TabsContent>
         <TabsContent value="catalog" className="mt-4">
-          <PreviewPane title={artifactsViewCopy.previewCatalog} content={CATALOG_PREVIEW} />
+          <PreviewPane
+            title={artifactsViewCopy.previewCatalog}
+            fileName="catalog.json"
+            content={previewDocuments['catalog.json'].content}
+          />
         </TabsContent>
       </Tabs>
     </Card>

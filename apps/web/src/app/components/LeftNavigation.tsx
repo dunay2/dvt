@@ -1,8 +1,7 @@
 import { Shield, Puzzle } from 'lucide-react';
 import { NavLink } from 'react-router';
 
-import { useCapabilitiesQuery } from '../queries/useCapabilitiesQuery';
-import { getNavigationViews } from '../plugins/registry';
+import { useShellRuntime } from '../shell/useShellRuntime';
 import { resolveString } from '../plugins/contracts/PluginManifest';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
@@ -19,15 +18,14 @@ const NAV_LINK_CLASS =
 const NAV_ICON_CLASS = 'size-[18px] shrink-0';
 
 export default function LeftNavigation() {
-  const { data: capabilities } = useCapabilitiesQuery();
-  const pluginViews = getNavigationViews(capabilities);
+  const { navigationViews } = useShellRuntime();
 
   return (
     <div className="w-16 shrink-0 border-r border-slate-700 bg-slate-900">
       <TooltipProvider delayDuration={300}>
         <nav className="flex h-full flex-col items-center gap-3.5 overflow-y-auto py-4">
           {/* Plugin-contributed nav items (core + extended), sorted by order */}
-          {pluginViews.map((view) => {
+          {navigationViews.map((view) => {
             const Icon = view.nav.icon;
             const label = resolveString(view.nav.label);
             return (

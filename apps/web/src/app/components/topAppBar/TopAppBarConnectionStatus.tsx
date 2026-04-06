@@ -37,7 +37,7 @@ export function TopAppBarConnectionStatus({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`${topAppBarClasses.smallStatusText} text-slate-500`}>
+          <div className={`${topAppBarClasses.smallStatusText} text-slate-300`}>
             <div className="size-1.5 rounded-full bg-green-500" />
             <Activity className="size-3.5" />
           </div>
@@ -54,7 +54,7 @@ export function TopAppBarConnectionStatus({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`${topAppBarClasses.smallStatusText} select-none text-slate-500`}>
+          <div className={`${topAppBarClasses.smallStatusText} select-none text-slate-300`}>
             <WifiOff className="size-3.5" />
             <span>{copy.offline}</span>
           </div>

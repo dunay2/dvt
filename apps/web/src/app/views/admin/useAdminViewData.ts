@@ -5,7 +5,7 @@ import {
   usePlatformHealthSnapshotQuery,
 } from '../../../capabilities/platform-health';
 import { queryKeys } from '../../queries/queryKeys';
-import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
+import { useShellRuntime } from '../../shell/useShellRuntime';
 import { useWorkspaceService } from '../../services/AppServicesContext';
 import { filterAuditEntries } from './adminViewModel';
 
@@ -13,7 +13,7 @@ export function useAdminViewData() {
   const workspaceService = useWorkspaceService();
   const [searchQuery, setSearchQuery] = useState('');
   const platformHealth = usePlatformHealthSnapshotQuery();
-  const capabilities = useCapabilitiesQuery();
+  const { capabilitiesQuery } = useShellRuntime();
   const rolesQuery = useQuery({
     queryKey: queryKeys.workspace.roles(),
     queryFn: () => workspaceService.getRoles(),
@@ -37,7 +37,7 @@ export function useAdminViewData() {
     searchQuery,
     setSearchQuery,
     platformHealth,
-    capabilities,
+    capabilities: capabilitiesQuery,
     roles,
     auditLog,
     connectionStatus,

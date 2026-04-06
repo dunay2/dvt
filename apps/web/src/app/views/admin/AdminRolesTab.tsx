@@ -46,7 +46,7 @@ export function AdminRolesTab({ roles }: Readonly<{ roles: Role[] }>) {
                   'flex items-center gap-2 rounded border p-2',
                   enabled
                     ? 'border-green-800 bg-green-900/20 text-green-400'
-                    : 'border-slate-700 bg-gray-900/20 text-slate-400'
+                    : 'border-slate-700 bg-slate-950/30 text-slate-300'
                 )}
               >
                 {enabled ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}

@@ -14,6 +14,8 @@ export type {
   SourceImportGrouping,
   ImportSourcesInput,
   ImportSourcesResult,
+  FileContent,
+  WorkspaceFileEntry,
 } from '../../ports/workspace';
 
 /**

@@ -2,10 +2,10 @@ import { Fragment, Suspense, createElement, type ComponentType, type ReactNode }
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 
 import Root from './Root';
-import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
+import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import PluginsView from './views/PluginsView';
-import { getAllViews, getDefaultCoreViewPath, getRuntimePlugins } from './plugins/registry';
+import { getAllViews } from './plugins/registry';
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;
@@ -23,17 +23,22 @@ function PluginAvailabilityGuard({
   pluginId,
   children,
 }: Readonly<{ pluginId: string; children: ReactNode }>) {
-  const { data: capabilities } = useCapabilitiesQuery();
-  const enabledPluginIds = new Set(getRuntimePlugins(capabilities).map((plugin) => plugin.id));
+  const { enabledPluginIds, defaultCoreViewPath } = useShellRuntime();
 
   if (!enabledPluginIds.has(pluginId)) {
     return createElement(Navigate, {
-      to: getDefaultCoreViewPath(capabilities),
+      to: defaultCoreViewPath,
       replace: true,
     });
   }
 
   return createElement(Fragment, null, children);
+}
+
+function DefaultCoreRouteRedirect() {
+  const { defaultCoreViewPath } = useShellRuntime();
+
+  return createElement(Navigate, { to: defaultCoreViewPath, replace: true });
 }
 
 function createPluginRoute(pluginId: string, component: ComponentType): RouteObject['element'] {
@@ -63,7 +68,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: createElement(Navigate, { to: getDefaultCoreViewPath(), replace: true }),
+        element: createElement(DefaultCoreRouteRedirect),
       },
       ...pluginRoutes,
       ...shellRoutes,
