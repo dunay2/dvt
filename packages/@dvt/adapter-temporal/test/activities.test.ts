@@ -1,4 +1,5 @@
-import type { PlanRef, ResolvedRunContext, RunStateCommandPort } from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { RunStateCommandPort } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import {

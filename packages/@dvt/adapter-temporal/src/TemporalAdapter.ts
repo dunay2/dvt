@@ -12,7 +12,6 @@
  */
 import {
   type EngineRunRef,
-  type IProviderAdapter,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
@@ -23,6 +22,7 @@ import {
   parseSignalRequest,
 } from '@dvt/contracts';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
+import type { IProviderAdapter } from '@dvt/engine';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';

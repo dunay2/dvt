@@ -59,6 +59,12 @@ export interface PlanRef {
   schemaVersion: string;
   planId: string;
   planVersion: string;
+  /**
+   * Deterministic fingerprint of the plan-level plugin compatibility surface.
+   * When present, admission-time runExecutionContext artifacts MUST align with
+   * this value.
+   */
+  pluginCompatibilityFingerprint?: string | undefined;
   sizeBytes?: number;
   expiresAt?: IsoUtcString;
   /**
@@ -75,6 +81,11 @@ export interface RunExecutionContextRef {
   schemaVersion: string;
   planId: string;
   planVersion: string;
+  /**
+   * Optional echoed compatibility fingerprint bound to the referenced context.
+   * If supplied, it MUST match the governing plan-level fingerprint.
+   */
+  pluginCompatibilityFingerprint?: string | undefined;
 }
 
 export interface RunExecutionContext {
@@ -82,6 +93,11 @@ export interface RunExecutionContext {
   planId: string;
   planVersion: string;
   planSha256: string;
+  /**
+   * Deterministic fingerprint used to verify plugin/runtime compatibility
+   * against the governing plan artifact at admission and replay boundaries.
+   */
+  pluginCompatibilityFingerprint?: string | undefined;
   tenantId: string;
   projectId: string;
   environmentId: string;

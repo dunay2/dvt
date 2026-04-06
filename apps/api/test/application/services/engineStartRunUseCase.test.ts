@@ -111,6 +111,40 @@ describe('EngineStartRunUseCase', () => {
     });
   });
 
+  it('forwards planRef pluginCompatibilityFingerprint to engine boundary', async () => {
+    let capturedPlanRef: unknown;
+    const fakeEngine = {
+      async startRun(planRef: unknown) {
+        capturedPlanRef = planRef;
+        return {
+          provider: 'mock' as const,
+          tenantId: 'tenant-1',
+          workflowId: 'wf-1',
+          runId: 'run-test-1',
+        };
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    await useCase.execute(
+      {
+        ...mkCommand(),
+        planRef: {
+          ...PLAN_REF,
+          pluginCompatibilityFingerprint:
+            '1111111111111111111111111111111111111111111111111111111111111111',
+        },
+      },
+      mkContext()
+    );
+
+    expect(capturedPlanRef).toEqual({
+      ...PLAN_REF,
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
+    });
+  });
+
   it('passes runExecutionContextRef through to engine RunContext', async () => {
     let capturedRunContext: unknown;
 

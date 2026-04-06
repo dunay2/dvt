@@ -38,7 +38,12 @@ describe('buildStepStartedPayload', () => {
         compiledCodeRef: VALID_REF,
       })
     );
-    expect(payload).toEqual({ compiledCodeRef: VALID_REF });
+    expect(payload).toEqual({
+      stepArtifactRef: {
+        artifactKind: 'dbt.compiled-sql',
+        ...VALID_REF,
+      },
+    });
   });
 
   it('returns undefined when compiledCodeRef is absent', () => {

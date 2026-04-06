@@ -1,4 +1,4 @@
-import type { WorkflowSnapshot as ContractWorkflowSnapshot } from '@dvt/contracts';
+import type { WorkflowSnapshot as EngineWorkflowSnapshot } from '@dvt/engine';
 
 export type {
   AppendResult,
@@ -7,25 +7,28 @@ export type {
   EventEnvelope,
   EventType,
   IOutboxStorage,
-  IRunStateStore,
-  IRunStateStoreMaintenance,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
-  IRunSnapshotStalenessQuery,
   ListEventsOptions,
   ListRunsOptions,
   OutboxClaimSelection,
   OutboxRecord,
-  RetryAttemptReservation,
   RunBootstrapInput,
   RunId,
   RunMetadata,
-  RunStateCommandPort,
-  WorkflowSnapshot,
 } from '@dvt/contracts';
 export { MAX_OUTBOX_ATTEMPTS } from '@dvt/contracts';
 
-export type StepSnapshot = ContractWorkflowSnapshot['steps'][string];
+export type {
+  RetryAttemptReservation,
+  IRunSnapshotStalenessQuery,
+  IRunStateStore,
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+  RunStateCommandPort,
+  WorkflowSnapshot,
+} from '@dvt/engine';
+
+export type StepSnapshot = EngineWorkflowSnapshot['steps'][string];
 export type {
   ArchivedTerminalSnapshot,
   TerminalSnapshotPinResult,

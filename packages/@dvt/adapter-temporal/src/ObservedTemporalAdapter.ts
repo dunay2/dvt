@@ -1,11 +1,11 @@
 import type {
   EngineRunRef,
-  IProviderAdapter,
   PlanRef,
   ResolvedRunContext,
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
+import type { IProviderAdapter } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 
 import type { TemporalAdapterConfig } from './config.js';

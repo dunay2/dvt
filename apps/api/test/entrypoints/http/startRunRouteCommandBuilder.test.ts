@@ -17,7 +17,11 @@ describe('startRun command builders', () => {
   it('builds planRef command', () => {
     expect(
       buildPlanRefStartRunCommand({
-        rawPlanRef: VALID_PLAN_REF,
+        rawPlanRef: {
+          ...VALID_PLAN_REF,
+          pluginCompatibilityFingerprint:
+            '1111111111111111111111111111111111111111111111111111111111111111',
+        },
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'mock',
@@ -26,7 +30,11 @@ describe('startRun command builders', () => {
     ).toEqual({
       ok: true,
       value: {
-        planRef: VALID_PLAN_REF,
+        planRef: {
+          ...VALID_PLAN_REF,
+          pluginCompatibilityFingerprint:
+            '1111111111111111111111111111111111111111111111111111111111111111',
+        },
         runId: 'run-1',
         targetAdapter: 'mock',
         selection: ['model_a'],

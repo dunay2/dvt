@@ -54,6 +54,12 @@ export class RunExecutionContextAdmissionPolicy {
         `targetAdapter mismatch: context=${context.targetAdapter} runExecutionContext=${resolved.targetAdapter}`
       );
     }
+
+    this.assertPluginCompatibilityFingerprint(
+      planRef,
+      ref,
+      resolved.pluginCompatibilityFingerprint
+    );
   }
 
   private assertRefAlignment(ref: RunExecutionContextRef, planRef: PlanRef): void {
@@ -65,6 +71,47 @@ export class RunExecutionContextAdmissionPolicy {
     if (ref.planVersion !== planRef.planVersion) {
       throw new RunExecutionContextRejectedError(
         `planVersion mismatch: contextRef=${ref.planVersion} planRef=${planRef.planVersion}`
+      );
+    }
+    if (
+      planRef.pluginCompatibilityFingerprint !== undefined &&
+      ref.pluginCompatibilityFingerprint !== undefined &&
+      ref.pluginCompatibilityFingerprint !== planRef.pluginCompatibilityFingerprint
+    ) {
+      throw new RunExecutionContextRejectedError(
+        `pluginCompatibilityFingerprint mismatch: contextRef=${ref.pluginCompatibilityFingerprint} planRef=${planRef.pluginCompatibilityFingerprint}`
+      );
+    }
+  }
+
+  private assertPluginCompatibilityFingerprint(
+    planRef: PlanRef,
+    ref: RunExecutionContextRef,
+    resolvedFingerprint: string | undefined
+  ): void {
+    const expected = planRef.pluginCompatibilityFingerprint ?? ref.pluginCompatibilityFingerprint;
+    if (expected === undefined) {
+      return;
+    }
+
+    if (
+      ref.pluginCompatibilityFingerprint !== undefined &&
+      ref.pluginCompatibilityFingerprint !== expected
+    ) {
+      throw new RunExecutionContextRejectedError(
+        `runExecutionContextRef.pluginCompatibilityFingerprint mismatch: expected=${expected} actual=${ref.pluginCompatibilityFingerprint}`
+      );
+    }
+
+    if (resolvedFingerprint === undefined) {
+      throw new RunExecutionContextRejectedError(
+        'runExecutionContext.pluginCompatibilityFingerprint missing for compatibility-checked plan'
+      );
+    }
+
+    if (resolvedFingerprint !== expected) {
+      throw new RunExecutionContextRejectedError(
+        `runExecutionContext.pluginCompatibilityFingerprint mismatch: expected=${expected} actual=${resolvedFingerprint}`
       );
     }
   }

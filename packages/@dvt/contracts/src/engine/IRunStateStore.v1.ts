@@ -42,18 +42,15 @@ export type EventEnvelope = EventInput & {
 };
 
 /**
- * Content-addressable reference to a compiled SQL artifact stored in object storage.
- * Attached to StepStarted.payload for DBT_MODEL and DBT_TEST step kinds.
- *
- * Design: ADR-0032 - Option A (reference in StepStarted.payload)
- * Pattern: Content-Addressable Storage (CAS) with SHA-256 as key.
- *
- * INV-CCREF-001: sha256 MUST be the SHA-256 hex digest of the blob at storageUri.
- * INV-CCREF-003: Field is OPTIONAL. Absent = not an error. Consumers must fail-open.
- * INV-CCREF-006: Event log stores ONLY this reference, never the SQL text.
- * INV-CCREF-007: file:// is ONLY valid in local dev; prohibited in NODE_ENV=production.
+ * Generic content-addressable artifact reference emitted in step lifecycle events.
+ * This is the step-kind-agnostic runtime contract (`MW-A3`).
  */
-export interface CompiledCodeRef {
+export interface StepArtifactRef {
+  /**
+   * Canonical artifact discriminator, e.g. `dbt.compiled-sql`, `python.script`,
+   * `spark.job-spec`.
+   */
+  artifactKind: string;
   /** SHA-256 hex digest of the compiled SQL bytes (content-addressable key). */
   sha256: string;
   /** Object storage URI: s3://<bucket>/<key> | gs://<bucket>/<key> | file://<path> (dev only). */
@@ -63,6 +60,11 @@ export interface CompiledCodeRef {
   /** Character encoding. MUST be 'utf-8'. Default: 'utf-8'. */
   encoding?: 'utf-8';
 }
+
+/**
+ * DBT-specialized alias retained for compatibility with existing callers.
+ */
+export interface CompiledCodeRef extends Omit<StepArtifactRef, 'artifactKind'> {}
 
 export interface RunMetadata {
   tenantId: string;

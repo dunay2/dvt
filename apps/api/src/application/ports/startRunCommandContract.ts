@@ -33,6 +33,7 @@ export interface StartRunPlanRef {
   readonly schemaVersion: string;
   readonly planId: string;
   readonly planVersion: string;
+  readonly pluginCompatibilityFingerprint?: string | undefined;
 }
 
 export interface StartRunCommand {

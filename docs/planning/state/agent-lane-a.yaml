@@ -640,17 +640,17 @@ tasks:
       facade.
     complexity: L
     effort_points: 8
-    progress_pct: 55
+    progress_pct: 75
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
     status_reason: >-
-      ADR-0043 is accepted, S08-2 contract hardening is implemented, S08-3 artifacts-owned
-      read/write ports are now delivered, and the live S08-4 admission-hardening plan is frozen.
-      Postgres migration and admission cutover remain open.
-    last_verified: '2026-04-03'
+      ADR-0043 is accepted; S08-3, S08-4, and S08-5 (`A/B/C`) are now delivered with fail-closed
+      admission, governed `runExecutionContext` boundary handling, and plan-level plugin
+      compatibility fingerprinting. Remaining S08 work is the Postgres migration arc.
+    last_verified: '2026-04-06'
   - task_id: S08-3
     parent_task: S08
     priority: P0
@@ -679,7 +679,7 @@ tasks:
   - task_id: S08-4
     parent_task: S08
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       harden stored-plan admission by validating `stepTypeConfig` semantically per `StepKind` in
       `@dvt/plan-verifier` while keeping `ExecutionPlan.stepTypeConfig` extensible in
@@ -691,18 +691,22 @@ tasks:
       injected registries for governed non-dbt extensions.
     complexity: M
     effort_points: 5
-    progress_pct: 55
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
       - packages/@dvt/plan-verifier/src/stepTypeConfig.ts
       - packages/@dvt/plan-verifier/test/verify.test.ts
+      - apps/api/src/application/services/storedExecutablePlan.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
     status_reason: >-
       Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
       runtime failures as step kinds multiply; wave `S08-4-A` is now implemented in
       `@dvt/plan-verifier` with parse-plus-verify helpers and fail-closed rejection for unregistered
-      kinds. `S08-4-B/C` remain for admissions cutover and closure coverage.
-    last_verified: '2026-04-04'
+      kinds. `S08-4-B` cut over API admission to verifier-owned parsing and `S08-4-C` closed
+      regression coverage plus explicit handoff of extension protocol scope to `MW-A1`.
+    last_verified: '2026-04-06'
   - task_id: S08-4-A
     parent_task: S08-4
     priority: P0
@@ -728,10 +732,10 @@ tasks:
   - task_id: S08-4-B
     parent_task: S08-4
     priority: P0
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: cut the stored-plan executability gate over to the verifier-owned semantic boundary.
     dependency: S08-4-A
     target: >-
@@ -739,16 +743,22 @@ tasks:
       surface invalid kind/config outcomes before capability checks, and support optional registry
       injection.
     evidence_refs:
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
-    status_reason: The API cutover wave is sequenced behind verifier hardening.
-    last_verified: '2026-04-03'
+      - apps/api/src/application/services/storedExecutablePlan.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
+    status_reason: >-
+      API admission now parses stored executable plans via `@dvt/plan-verifier`, supports optional
+      `stepTypeRegistry` injection, and surfaces verifier rejection outcomes before adapter
+      capability checks.
+    last_verified: '2026-04-06'
   - task_id: S08-4-C
     parent_task: S08-4
     priority: P0
-    status: queued
+    status: done
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: close fail-closed regression coverage and explicit handoff to `MW-A1`.
     dependency: S08-4-B
     target: >-
@@ -756,14 +766,18 @@ tasks:
       injected non-dbt registry acceptance, while planning surfaces keep full extension protocol
       work in `MW-A1`.
     evidence_refs:
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
-    status_reason:
-      The closure wave is defined to prevent `S08-4` from expanding silently into `MW-A1`.
-    last_verified: '2026-04-03'
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
+      - docs/planning/state/agent-lane-a.yaml
+    status_reason: >-
+      Regression coverage now proves fail-closed rejection for invalid config and unknown kinds,
+      preserves valid DBT acceptance, and confirms injected custom-registry acceptance; extension
+      protocol design remains explicitly sequenced in `MW-A1`.
+    last_verified: '2026-04-06'
   - task_id: S08-5
     parent_task: S08
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       close the post-`S08-4` residual invariants: release-order contract versus claim timing, public
       serialized `runExecutionContext` boundary, and plan-level plugin compatibility fingerprint.
@@ -773,15 +787,16 @@ tasks:
       determinism, runtime-context ownership/provenance, and replay compatibility pinning.
     complexity: M
     effort_points: 5
-    progress_pct: 40
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+      - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
     status_reason: >-
-      Post-`S08-4` invariant closure arc is active; `S08-5-A` is delivered and `S08-5-B` is now in
-      implementation with governed runExecutionContext contracts, resolver port, and admission-path
-      provenance checks.
-    last_verified: '2026-04-03'
+      The full post-`S08-4` invariant arc is closed: release-vs-claim semantics (`S08-5-A`),
+      governed public `runExecutionContext` boundary (`S08-5-B`), and plan-level plugin
+      compatibility fingerprinting with fail-closed admission diagnostics (`S08-5-C`).
+    last_verified: '2026-04-06'
   - task_id: S08-5-A
     parent_task: S08-5
     priority: P0
@@ -809,10 +824,10 @@ tasks:
   - task_id: S08-5-B
     parent_task: S08-5
     priority: P0
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 100
     objective: >-
       promote `runExecutionContext` to a governed public serialized boundary with explicit ownership
       and provenance validation.
@@ -822,18 +837,21 @@ tasks:
       by negative-path provenance checks.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
+      - packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts
+      - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
+      - apps/api/src/entrypoints/http/startRunRouteRunExecutionContextRefParser.ts
+      - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
     status_reason: >-
-      In implementation: shared runExecutionContext contracts/parsers, artifacts read port, and
-      engine admission provenance checks are wired; remaining closeout is full validation and ARC
-      docs.
-    last_verified: '2026-04-03'
+      `runExecutionContext` is now a governed serialized boundary across contracts, API parsing, and
+      engine admission with explicit provenance checks and negative-path test coverage.
+    last_verified: '2026-04-06'
   - task_id: S08-5-C
     parent_task: S08-5
     priority: P0
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: >-
       add plan-level plugin compatibility fingerprinting so replay checks do not depend only on
       active deployment policy.
@@ -843,12 +861,19 @@ tasks:
       with explicit diagnostics on mismatch.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
-    status_reason:
-      The third closure wave is sequenced behind public execution-context boundary work.
-    last_verified: '2026-04-03'
+      - packages/@dvt/planner/src/domain/PlanAssembler.ts
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
+      - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
+    status_reason: >-
+      Plan-level `pluginCompatibilityFingerprint` now propagates from planner metadata into stored
+      `PlanRef` and admission boundaries, and fail-closed mismatch/missing checks reject replay
+      incompatibilities with explicit diagnostics.
+    last_verified: '2026-04-06'
   - task_id: MW-A1
     priority: P0
-    status: queued
+    status: done
     objective: >-
       create a StepKindRegistry with per-kind schema validation, adapter-to-kind mapping, and a
       documented extension protocol so that adding a new StepKind is a governed, testable operation.
@@ -858,16 +883,22 @@ tasks:
       adding a new kind follows a documented protocol with contract tests.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
+      - packages/@dvt/planner/src/domain/Planner.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - docs/planning/closeouts/20260406-mw-a1-step-kind-registry-governance-closeout.md
     status_reason: >-
-      Required for multi-workflow generalization â€” without a registry, adding step kinds is an act
-      of faith with no validation or adapter routing guarantee.
-    last_verified: '2026-04-02'
+      Step-kind governance is now executable: registry entries carry schema validation plus
+      execution metadata (supported adapters and required capabilities), planner projects capability
+      requirements into plan metadata, and admission rejects adapter-step kind incompatibilities
+      with explicit diagnostics.
+    last_verified: '2026-04-06'
   - task_id: MW-A2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       create a GenericGraphSource format that allows defining DAGs without dbt manifests, so the
       planner can accept workflow definitions from any source (Spark, Python, API, custom ETL).
@@ -878,16 +909,17 @@ tasks:
       parallel public planner contract.
     complexity: L
     effort_points: 8
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
       - docs/guides/generic-graph-source-technical-manual-20260404.md
       - docs/guides/generic-graph-source-user-manual-20260404.md
     status_reason: >-
-      The single biggest blocker for multi-workflow support â€” today the only entry to the planner
-      is dbt manifest.json. Without a generic graph source, multi-workflow is theoretical only.
-    last_verified: '2026-04-04'
+      `MW-A2-A..E` are now closed; GenericGraphSourceV1 is the active planner graph-source boundary,
+      API/planner wiring is aligned to that boundary, and determinism plus fail-closed invariants
+      are covered through contract/planner/api tests.
+    last_verified: '2026-04-06'
   - task_id: MW-A2-A
     parent_task: MW-A2
     priority: P0
@@ -911,10 +943,10 @@ tasks:
   - task_id: MW-A2-B
     parent_task: MW-A2
     priority: P0
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 100
     objective: >-
       replace planner graph-source contracts with GenericGraphSourceV1 as the single canonical
       boundary, with no compatibility aliases or legacy planner input shapes.
@@ -926,6 +958,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
       - packages/@dvt/contracts/src/index.ts
+      - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
       - packages/@dvt/contracts/src/schemas.ts
       - packages/@dvt/contracts/src/validation.ts
       - packages/@dvt/contracts/test/planner.contract.test.ts
@@ -934,19 +967,19 @@ tasks:
       - apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts
       - apps/api/test/entrypoints/http/startRunRoute.test.ts
       - apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts
+      - docs/planning/closeouts/20260406-mw-a2-b-contract-cleanup-closeout.md
     status_reason: >-
-      Legacy GraphNode contract surface was removed from @dvt/contracts public exports/schemas/
-      validators and planner keeps that shape as internal-only model; API ingress rejects legacy
-      nodes/manifest payloads in both planRef and planner-backed paths with passing route-policy and
-      route tests.
-    last_verified: '2026-04-05'
+      Planner graph-source contract surface is now GenericGraphSourceV1-only: remaining legacy
+      public alias (`DbtManifestLike`) was removed, schema/validation enforce canonical envelope
+      inputs, and API plan-source policy/tests keep legacy planner payload shapes fail-closed.
+    last_verified: '2026-04-06'
   - task_id: MW-A2-C
     parent_task: MW-A2
     priority: P0
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 30
+    progress_pct: 100
     objective: >-
       refactor the planner boundary so dbt manifest handling becomes a source adapter instead of the
       semantic center.
@@ -964,17 +997,20 @@ tasks:
       - packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts
       - packages/@dvt/planner/test/unit/planner-facade.test.ts
       - packages/@dvt/planner/test/unit/determinism.test.ts
+      - docs/planning/closeouts/20260406-mw-a2-c-planner-boundary-evolution-closeout.md
     status_reason: >-
       Planner internal node model now uses stepKind as the semantic center, facade no longer maps
       stepKind to legacy resourceType, and planner build+tests pass with the updated boundary shape.
-    last_verified: '2026-04-05'
+      dbt manifest handling remains isolated behind a source-adapter seam instead of serving as the
+      planner semantic center.
+    last_verified: '2026-04-06'
   - task_id: MW-A2-D
     parent_task: MW-A2
     priority: P0
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: >-
       align API and ref-resolution wiring with the generic graph-source boundary.
     dependency: MW-A2-C
@@ -983,15 +1019,25 @@ tasks:
       presenting manifest-specific seams as the canonical product story.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
-    status_reason: Queued after planner boundary adoption.
-    last_verified: '2026-04-04'
+      - packages/@dvt/planner/src/ports/IGraphSourceResolver.ts
+      - packages/@dvt/planner/src/application/PlannerFacade.ts
+      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+      - apps/api/src/modules/buildProtectedRuntimeModule.ts
+      - packages/@dvt/planner/test/unit/planner-facade.test.ts
+      - apps/api/test/integration/plannerEngineContract.test.ts
+      - docs/planning/closeouts/20260406-mw-a2-d-api-ref-resolution-alignment-closeout.md
+    status_reason: >-
+      API and planner boundary wiring now use graph-source-centric resolver semantics; canonical
+      naming is `IGraphSourceResolver`/`graphSourceResolver` while legacy resolver names remain
+      explicit compatibility aliases.
+    last_verified: '2026-04-06'
   - task_id: MW-A2-E
     parent_task: MW-A2
     priority: P0
-    status: queued
+    status: done
     complexity: M
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: >-
       harden determinism, invariant coverage, and negative-path tests for the new graph-source
       boundary.
@@ -1002,8 +1048,21 @@ tasks:
       paths for GenericGraphSource.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
-    status_reason: Final hardening wave after the boundary is wired.
-    last_verified: '2026-04-04'
+      - packages/@dvt/contracts/src/schemas.ts
+      - packages/@dvt/contracts/test/planner.contract.test.ts
+      - packages/@dvt/planner/src/domain/PlanAssembler.ts
+      - packages/@dvt/planner/test/unit/determinism.test.ts
+      - packages/@dvt/planner/test/unit/graph.test.ts
+      - packages/@dvt/planner/test/unit/planner-facade.test.ts
+      - apps/api/test/entrypoints/http/startRunRouteParserHelpers.test.ts
+      - apps/api/test/integration/plannerEngineContract.test.ts
+      - docs/planning/closeouts/20260406-mw-a2-e-determinism-and-integration-hardening-closeout.md
+    status_reason: >-
+      Determinism and negative-path hardening are now explicit across contract/planner/api:
+      duplicate node ids, missing dependency targets, and malformed manifest refs are rejected at
+      contract boundary; planner input hash is now semantic-order deterministic and ignores
+      provenance-only metadata; API parser coverage includes the new fail-closed vectors.
+    last_verified: '2026-04-06'
   - task_id: AR-A3
     priority: P1
     status: done
@@ -1027,7 +1086,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: MW-A3
     priority: P1
-    status: queued
+    status: done
     objective: >-
       generalize compiledCodeRef to StepArtifactRef â€” not every step produces SQL; the artifact
       model must be step-kind-agnostic to support Python scripts, Spark jobs, API calls, etc.
@@ -1037,16 +1096,22 @@ tasks:
       compiledCodeRef; existing dbt SQL artifacts are a specialization, not the only type.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+      - packages/@dvt/contracts/src/schemas.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts
+      - docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md
     status_reason: >-
-      ADR-0032 compiledCodeRef assumes SQL; multi-workflow requires a kind-agnostic artifact
-      reference model.
-    last_verified: '2026-04-02'
+      StepStarted payload now supports canonical step-kind-agnostic `stepArtifactRef`; Temporal
+      emits `stepArtifactRef` for DBT compiled SQL, and lineage consumers parse `stepArtifactRef`
+      with compatibility fallback for legacy `compiledCodeRef`.
+    last_verified: '2026-04-06'
   - task_id: MW-A4
     priority: P1
-    status: queued
+    status: done
     objective: >-
       document a governed 'How to add a new StepKind' guide covering schema definition, adapter
       implementation, activity registration, policy mapping, and contract test requirements.
@@ -1056,13 +1121,16 @@ tasks:
       protocol without implicit knowledge of adapter internals.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/guides/how-to-add-step-kind-20260406.md
+      - docs/planning/closeouts/20260406-mw-a4-step-kind-extension-guide-closeout.md
     status_reason: >-
-      Without this guide, extensibility is theoretical â€” a third party cannot add a step kind
-      without reverse-engineering the system.
-    last_verified: '2026-04-02'
+      The governed extension protocol is now documented with canonical file touchpoints, required
+      tests, validation commands, and planning closeout rules so contributors can add new step kinds
+      without reverse-engineering runtime internals.
+    last_verified: '2026-04-06'
   - task_id: AR-A4
     priority: P2
     status: queued
@@ -1620,8 +1688,8 @@ dependency_notes:
     preserving `PlannerErrorCode.GRAPH_CYCLE` as the canonical cycle contract.
   - >-
     `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
-    GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). `MW-A1`
-    depends on `S08-5-C`; `MW-A2` is now decomposed into `MW-A2-A..E`; `MW-A3` depends on `MW-A1`.
+    GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). `MW-A1`,
+    `MW-A2`, `MW-A3`, and `MW-A4` are now closed after `S08-5-C`.
   - >-
     `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
     folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.

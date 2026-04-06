@@ -4,10 +4,9 @@ import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
-  type IPlanFetcher as IStoredPlanFetcher,
   type PlanRef,
 } from '@dvt/contracts';
-import type { ExecutionPlan } from '@dvt/engine';
+import type { ExecutionPlan, IPlanFetcher as IStoredPlanFetcher } from '@dvt/engine';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
 
@@ -35,6 +34,9 @@ export class StoredExecutablePlanResolver {
         contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
         inputHashSha256: planRef.sha256,
         createdAtIso: new Date().toISOString(),
+        ...(planRef.pluginCompatibilityFingerprint === undefined
+          ? {}
+          : { pluginCompatibilityFingerprint: planRef.pluginCompatibilityFingerprint }),
         ...(planRef.requiresCapabilities === undefined
           ? {}
           : { requiresCapabilities: planRef.requiresCapabilities }),
@@ -62,5 +64,11 @@ function validateStoredPlanMetadata(plan: ExecutionPlan, planRef: PlanRef): void
   }
   if (plan.metadata.schemaVersion !== planRef.schemaVersion) {
     throw new Error('PLAN_REF_MISMATCH: schemaVersion');
+  }
+  if (
+    planRef.pluginCompatibilityFingerprint !== undefined &&
+    plan.metadata.pluginCompatibilityFingerprint !== planRef.pluginCompatibilityFingerprint
+  ) {
+    throw new Error('PLAN_REF_MISMATCH: pluginCompatibilityFingerprint');
   }
 }

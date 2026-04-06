@@ -1,7 +1,6 @@
 import type { IPlanStoreReader, IPlanStoreWriter } from '@dvt/artifacts';
 import {
   type ExecutabilityValidationResult,
-  type IPlanFetcher,
   type IPlanValidationLifecycleStore,
   type PlanAdmissionLink,
   type PlanExecutabilityRecord,
@@ -14,6 +13,7 @@ import {
   parsePlanRef,
   type PlannerBuildResultV1,
 } from '@dvt/contracts';
+import type { IPlanFetcher } from '@dvt/engine';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresPlanAdmissionRepository } from './PostgresPlanStore.admission-repository.js';
@@ -93,6 +93,12 @@ export class PostgresPlanStore
       planVersion: buildResult.plan.metadata.planVersion,
       schemaVersion: executable.schemaVersion,
       executableBytes,
+      ...(buildResult.plan.metadata.pluginCompatibilityFingerprint === undefined
+        ? {}
+        : {
+            pluginCompatibilityFingerprint:
+              buildResult.plan.metadata.pluginCompatibilityFingerprint,
+          }),
       uriScheme: PLAN_URI_SCHEME,
       ...(executable.requiresCapabilities === undefined
         ? {}

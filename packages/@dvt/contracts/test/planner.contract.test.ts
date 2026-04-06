@@ -34,6 +34,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(rootIndex).toMatch(/\bExecutionPlan,\s*/);
     expect(rootIndex).not.toMatch(/\bExecutionPlanV2\b/);
     expect(rootIndex).not.toMatch(/\bGraphNode,\s*/);
+    expect(rootIndex).not.toMatch(/\bDbtManifestLike,\s*/);
   });
 
   it('expone el contrato normativo IPlanner como forma canónica', async () => {
@@ -77,6 +78,54 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
 
   it('rechaza input inválido cuando manifestRef.sha256 no es hash hex de 64 chars', () => {
     const result = PlannerInputEnvelopeV1Schema.safeParse(INVALID_PLANNER_INPUT_FIXTURE);
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza input inválido cuando manifestRef.uri no es URI absoluta', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      manifestRef: {
+        uri: 'manifest.json',
+        sha256: 'a'.repeat(64),
+      },
+      selection: {
+        selectedNodeIds: ['model.analytics.orders'],
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza graphSource con nodeId duplicado', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      graphSource: {
+        kind: GENERIC_GRAPH_SOURCE_KIND,
+        sourceFamily: 'integration-suite',
+        sourceVersion: '1.0',
+        nodes: [
+          { nodeId: 'model.analytics.orders', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'model.analytics.orders', stepKind: 'DBT_MODEL', dependsOn: [] },
+        ],
+      },
+      selection: { selectedNodeIds: ['model.analytics.orders'] },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza graphSource con dependencia faltante', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      graphSource: {
+        kind: GENERIC_GRAPH_SOURCE_KIND,
+        sourceFamily: 'integration-suite',
+        sourceVersion: '1.0',
+        nodes: [
+          {
+            nodeId: 'model.analytics.orders',
+            stepKind: 'DBT_MODEL',
+            dependsOn: ['model.analytics.customers'],
+          },
+        ],
+      },
+      selection: { selectedNodeIds: ['model.analytics.orders'] },
+    });
     expect(result.success).toBe(false);
   });
 

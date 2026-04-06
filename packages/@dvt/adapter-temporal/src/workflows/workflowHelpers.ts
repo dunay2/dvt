@@ -9,7 +9,7 @@
 // normalizeDependsOn
 // ---------------------------------------------------------------------------
 
-import type { CompiledCodeRef, ExecutionStep } from '@dvt/contracts';
+import type { CompiledCodeRef, ExecutionStep, StepArtifactRef } from '@dvt/contracts';
 import { DbtStepTypeConfigSchema } from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {
@@ -146,13 +146,18 @@ export function buildContinueAsNewInput<T extends ContinueAsNewBase>(args: {
 // ---------------------------------------------------------------------------
 
 type StepStartedPayload = {
-  compiledCodeRef: CompiledCodeRef;
+  stepArtifactRef: StepArtifactRef;
 };
 
 export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload | undefined {
   const compiledCodeRef = extractCompiledCodeRef(step.stepTypeConfig);
   if (!compiledCodeRef) return undefined;
-  return { compiledCodeRef };
+  return {
+    stepArtifactRef: {
+      artifactKind: 'dbt.compiled-sql',
+      ...compiledCodeRef,
+    },
+  };
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

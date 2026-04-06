@@ -5,9 +5,11 @@ import { parseRunEventRecord, parseRunEventWrite } from '../src/validation.js';
 import {
   STEP_STARTED_WITHOUT_COMPILED_CODE_REF_RECORD_FIXTURE,
   STEP_STARTED_WITHOUT_COMPILED_CODE_REF_WRITE_FIXTURE,
+  STEP_STARTED_WITH_STEP_ARTIFACT_REF_WRITE_FIXTURE,
   STEP_STARTED_WITH_COMPILED_CODE_REF_RECORD_FIXTURE,
   STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
   VALID_COMPILED_CODE_REF_FIXTURE,
+  VALID_STEP_ARTIFACT_REF_FIXTURE,
 } from './fixtures/run-event-compiled-code-ref.fixtures';
 
 describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
@@ -27,6 +29,15 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     expect(parsed.payloadVersion).toBe(1);
     expect(parsed.stepId).toBe('model.analytics.orders');
     expect(parsed.payload?.['compiledCodeRef']).toBeUndefined();
+  });
+
+  it('accepts StepStarted write event with stepArtifactRef payload', () => {
+    const parsed = parseRunEventWrite(STEP_STARTED_WITH_STEP_ARTIFACT_REF_WRITE_FIXTURE);
+
+    expect(parsed.eventType).toBe('StepStarted');
+    expect(parsed.payloadVersion).toBe(1);
+    expect(parsed.stepId).toBe('model.analytics.orders');
+    expect(parsed.payload?.['stepArtifactRef']).toEqual(VALID_STEP_ARTIFACT_REF_FIXTURE);
   });
 
   it('accepts persisted StepStarted record fixtures with and without compiledCodeRef', () => {

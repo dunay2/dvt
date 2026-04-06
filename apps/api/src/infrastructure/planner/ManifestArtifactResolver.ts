@@ -7,7 +7,7 @@ import type { DbtManifestRef, GenericGraphSourceV1 } from '@dvt/contracts';
 import {
   PlannerErrorCode,
   derivePlannerGraphSourceFromManifest,
-  type IArtifactResolver,
+  type IGraphSourceResolver,
 } from '@dvt/planner';
 
 import {
@@ -23,7 +23,7 @@ export interface ManifestArtifactResolverOptions {
   readonly s3Client?: S3LikeClient;
 }
 
-export class ManifestArtifactResolver implements IArtifactResolver {
+export class ManifestArtifactResolver implements IGraphSourceResolver {
   private readonly nodeEnv: string;
   private readonly s3Client: S3LikeClient;
 
@@ -270,3 +270,9 @@ export class ManifestArtifactResolver implements IArtifactResolver {
     );
   }
 }
+
+/**
+ * Canonical name for graph-source resolver wiring.
+ * Legacy `ManifestArtifactResolver` name is retained for compatibility.
+ */
+export class GraphSourceArtifactResolver extends ManifestArtifactResolver {}

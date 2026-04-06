@@ -1,10 +1,7 @@
 export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
-export * from './adapters/IProviderAdapter.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
-export * from './contracts/engine/IStartRunIntentStore.v1.js';
-export * from './contracts/engine/StartRunIntentPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
@@ -19,7 +16,6 @@ export {
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
 export type {
-  DbtManifestLike,
   DbtManifestRef,
   ExecutionPlan,
   ExecutionStep,
@@ -115,29 +111,18 @@ export * from './validation.js';
 export type {
   AppendResult,
   CompiledCodeRef,
+  StepArtifactRef,
   EventEnvelope,
   EventIdempotencyInput,
   EventInput,
   EventType,
   ListEventsOptions,
   ListRunsOptions,
-  IClock,
-  IIdempotencyKeyBuilder,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
-  IRunStateStoreMaintenance,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
-  IRunStateStore,
-  ProviderRefUpdate,
-  RetryAttemptReservation,
   RunBootstrapInput,
   RunEventInput,
   RunEventInputBase,
   RunMetadata,
-  RunStateCommandPort,
   StepEventInput,
   WorkflowSnapshot,
 } from './engine/IRunStateStore.v1.js';
 export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './engine/IRunStateStore.v1.js';
-export type { IRunSnapshotStalenessQuery } from './engine/IRunSnapshotStalenessQuery.v1.js';

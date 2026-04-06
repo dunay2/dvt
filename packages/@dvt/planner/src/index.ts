@@ -10,6 +10,7 @@ export { derivePlannerGraphSourceFromManifest } from './application/derivePlanne
 
 export type { StepFactory } from './domain/stepFactory/StepFactory.js';
 export type { PlannerLimits } from './domain/limits.js';
+export type { IGraphSourceResolver } from './ports/IGraphSourceResolver.js';
 export type { IArtifactResolver } from './ports/IArtifactResolver.js';
 export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 

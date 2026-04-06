@@ -1,9 +1,15 @@
 import type {
   ExecutabilityValidationResult,
   IPlanExecutabilityValidator,
+  IStepTypeRegistry,
   PlanRefSchemaT,
 } from '@dvt/contracts';
-import { parsePlanRef } from '@dvt/contracts';
+import {
+  collectRequiredCapabilitiesForSteps,
+  createDefaultStepTypeRegistry,
+  parsePlanRef,
+} from '@dvt/contracts';
+import { isStepKindSupportedByAdapter } from '@dvt/contracts';
 import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
 
 import type { IStoredPlanValidationReader } from '../ports/storedPlan.js';
@@ -15,6 +21,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     private readonly deps: {
       readonly fetcher: IStoredPlanValidationReader;
       readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
+      readonly stepTypeRegistry?: IStepTypeRegistry;
     }
   ) {}
 
@@ -36,10 +43,14 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
       };
     }
 
+    const stepTypeRegistry = this.deps.stepTypeRegistry ?? createDefaultStepTypeRegistry();
+
     let plan: ExecutionPlan;
     try {
       const bytes = await this.deps.fetcher.fetchForValidation(validatedRef);
-      plan = parseStoredExecutablePlan(bytes);
+      plan = parseStoredExecutablePlan(bytes, {
+        stepTypeRegistry,
+      });
     } catch (error) {
       return {
         status: 'ERROR',
@@ -65,8 +76,26 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
       };
     }
 
-    const requiredCapabilities =
-      plan.metadata.requiresCapabilities ?? validatedRef.requiresCapabilities ?? [];
+    const unsupportedStep = plan.steps.find(
+      (step) => !isStepKindSupportedByAdapter(stepTypeRegistry, step.kind, adapterId)
+    );
+    if (unsupportedStep !== undefined) {
+      return {
+        status: 'ERROR',
+        planId: validatedRef.planId,
+        adapterId,
+        code: 'INVALID_STEP_KIND',
+        degradable: false,
+        reason: `Step kind ${unsupportedStep.kind} is not executable on adapter ${adapterId}`,
+        cause: unsupportedStep.kind,
+      };
+    }
+
+    const requiredCapabilities = dedupeCapabilities([
+      ...collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps),
+      ...(plan.metadata.requiresCapabilities ?? []),
+      ...(validatedRef.requiresCapabilities ?? []),
+    ]);
     const declaredCapabilities = adapter.capabilities?.();
     if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {
       return {
@@ -113,7 +142,17 @@ function validatePlanRefAlignment(plan: ExecutionPlan, planRef: PlanRefSchemaT):
   if (plan.metadata.schemaVersion !== planRef.schemaVersion) {
     return 'PLAN_REF_MISMATCH: schemaVersion';
   }
+  if (
+    planRef.pluginCompatibilityFingerprint !== undefined &&
+    plan.metadata.pluginCompatibilityFingerprint !== planRef.pluginCompatibilityFingerprint
+  ) {
+    return 'PLAN_REF_MISMATCH: pluginCompatibilityFingerprint';
+  }
   return null;
+}
+
+function dedupeCapabilities(values: readonly string[]): string[] {
+  return [...new Set(values)].sort((left, right) => left.localeCompare(right));
 }
 
 function toErrorMessage(error: unknown): string {

@@ -136,6 +136,9 @@ importers:
       '@dvt/observability-otel':
         specifier: workspace:*
         version: link:../../packages/@dvt/observability-otel
+      '@dvt/plan-verifier':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/plan-verifier
       '@dvt/planner':
         specifier: workspace:*
         version: link:../../packages/@dvt/planner
@@ -550,6 +553,9 @@ importers:
       '@dvt/dsl':
         specifier: workspace:*
         version: link:../dsl
+      '@dvt/engine':
+        specifier: workspace:*
+        version: link:../engine
       '@dvt/observability':
         specifier: workspace:*
         version: link:../observability
@@ -775,6 +781,9 @@ importers:
       '@dvt/crypto':
         specifier: workspace:*
         version: link:../canonical
+      '@dvt/engine':
+        specifier: workspace:*
+        version: link:../engine
     devDependencies:
       typescript:
         specifier: 5.9.3

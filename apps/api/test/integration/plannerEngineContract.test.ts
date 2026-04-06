@@ -30,7 +30,7 @@ import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
 
-import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
+import { GraphSourceArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
 
 const PLANNER_MANIFEST_FIXTURE_URL = new URL(
   '../fixtures/planner/basic-manifest.json',
@@ -228,7 +228,7 @@ function makeStepEvent(
 describe('planner -> engine contract', () => {
   it('PlannerFacade resolves manifestRef through the real API artifact resolver', async () => {
     const planner = new PlannerFacade({
-      resolver: new ManifestArtifactResolver({ nodeEnv: 'test' }),
+      graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: 'test' }),
     });
     const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
 
@@ -366,6 +366,42 @@ describe('planner -> engine contract', () => {
 
     expect(plan1.metadata.planId).toBe(plan2.metadata.planId);
     expect(plan1.metadata.inputHashSha256).toBe(plan2.metadata.inputHashSha256);
+  });
+
+  it('planner plan identity is stable for provenance-only graphSource changes', async () => {
+    const planner = new PlannerFacade();
+
+    const baseNodes = [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] as readonly string[] }];
+
+    const { plan: first } = await planner.buildPlan({
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: baseNodes,
+      },
+      selection: { selectedNodeIds: ['a'] },
+    });
+
+    const { plan: second } = await planner.buildPlan({
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'imported',
+        sourceVersion: '2026-04-06',
+        nodes: [
+          {
+            nodeId: 'a',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+            metadata: { displayName: 'Only metadata changed', sourceRef: 'src://different' },
+          },
+        ],
+      },
+      selection: { selectedNodeIds: ['a'] },
+    });
+
+    expect(first.metadata.planId).toBe(second.metadata.planId);
+    expect(first.metadata.inputHashSha256).toBe(second.metadata.inputHashSha256);
   });
 
   it('planner step fields remain compatible with engine step consumption', async () => {
