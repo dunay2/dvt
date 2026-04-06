@@ -1,4 +1,4 @@
-import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
+import type { IGraphSourceResolver } from '../ports/IGraphSourceResolver.js';
 
 type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
 type GenericGraphSourceV1 = import('@dvt/contracts').GenericGraphSourceV1SchemaT;
@@ -7,7 +7,7 @@ export class ManifestRefGraphSourceCache {
   private readonly cache = new Map<string, GenericGraphSourceV1>();
 
   constructor(
-    private readonly resolver: IArtifactResolver,
+    private readonly resolver: IGraphSourceResolver,
     private readonly cacheSize: number,
     private readonly validateGraphSource: (graphSource: unknown) => GenericGraphSourceV1
   ) {}

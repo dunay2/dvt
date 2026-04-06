@@ -25,6 +25,7 @@
     "@dvt/engine": "workspace:*",
     "@dvt/observability": "workspace:*",
     "@dvt/observability-otel": "workspace:*",
+    "@dvt/plan-verifier": "workspace:*",
     "@dvt/planner": "workspace:*",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.0",

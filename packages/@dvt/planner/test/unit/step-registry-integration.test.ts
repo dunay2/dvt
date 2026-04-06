@@ -120,4 +120,27 @@ describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
       buildPlanWithSingleStep('DBT_MODEL', { rogueField: 'ignored by registry' }, customRegistry)
     ).resolves.toBeDefined();
   });
+
+  it('projects required capabilities from step-kind execution profile into plan metadata', async () => {
+    const profileRegistry = new StepTypeRegistry(
+      new Map([['SPARK_JOB', SparkJobSchema]]),
+      new Map([
+        [
+          'SPARK_JOB',
+          {
+            supportedAdapters: ['mock'],
+            requiredCapabilities: ['spark.observe', 'spark.submit'],
+          },
+        ],
+      ])
+    );
+
+    const { plan } = await buildPlanWithSingleStep(
+      'SPARK_JOB',
+      { sparkVersion: '3.5' },
+      profileRegistry
+    );
+
+    expect(plan.metadata.requiresCapabilities).toEqual(['spark.observe', 'spark.submit']);
+  });
 });

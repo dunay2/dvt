@@ -4,6 +4,21 @@ import { PlannerErrorCode } from '../../src/domain/errors.js';
 import { Planner } from '../../src/domain/Planner.js';
 
 describe('graph', () => {
+  it('rejects duplicate node ids', async () => {
+    const planner = new Planner();
+    await expect(
+      planner.buildPlan({
+        graphSource: {
+          nodes: [
+            { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] },
+            { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          ],
+        },
+        selection: { selectedNodeIds: ['a'] },
+      })
+    ).rejects.toMatchObject({ code: PlannerErrorCode.INVALID_INPUT });
+  });
+
   it('rejects missing dependency references', async () => {
     const planner = new Planner();
     await expect(

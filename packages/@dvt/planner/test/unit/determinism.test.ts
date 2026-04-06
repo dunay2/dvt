@@ -91,6 +91,74 @@ describe('determinism', () => {
     expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
   });
 
+  it('keeps planId stable for semantically equivalent node and dependency ordering', async () => {
+    const planner = new Planner();
+
+    const first = await planner.buildPlan({
+      graphSource: {
+        nodes: [
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+          { nodeId: 'c', stepKind: 'DBT_MODEL', dependsOn: ['a', 'b'] },
+        ],
+      },
+      selection: { selectedNodeIds: ['c'], includeUpstream: true },
+    });
+
+    const second = await planner.buildPlan({
+      graphSource: {
+        nodes: [
+          { nodeId: 'c', stepKind: 'DBT_MODEL', dependsOn: ['b', 'a'] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] },
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] },
+        ],
+      },
+      selection: { selectedNodeIds: ['c'], includeUpstream: true },
+    });
+
+    expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
+    expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
+  });
+
+  it('ignores provenance-only node metadata for inputHash and planId', async () => {
+    const planner = new Planner();
+
+    const first = await planner.buildPlan({
+      graphSource: {
+        nodes: [
+          {
+            nodeId: 'model.a',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+            metadata: { displayName: 'Model A', sourceRef: 'dbt://a' },
+          },
+        ],
+      },
+      selection: { selectedNodeIds: ['model.a'] },
+    });
+
+    const second = await planner.buildPlan({
+      graphSource: {
+        nodes: [
+          {
+            nodeId: 'model.a',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+            metadata: {
+              displayName: 'Modelo A',
+              sourceRef: 'dbt://different/a',
+              tags: { owner: 'analytics' },
+            },
+          },
+        ],
+      },
+      selection: { selectedNodeIds: ['model.a'] },
+    });
+
+    expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
+    expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
+  });
+
   it('fixed vector produces expected planId', async () => {
     const BOOTSTRAP_MODE = process.env['DVT_BOOTSTRAP_VECTOR'] === '1';
 

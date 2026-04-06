@@ -15,7 +15,11 @@
  *  This class is the entry-point Domain Service: it orchestrates the pipeline
  *  and owns cross-cutting concerns (abort, metrics, limits).
  */
-import { createDefaultStepTypeRegistry, type IStepTypeRegistry } from '@dvt/contracts';
+import {
+  collectRequiredCapabilitiesForSteps,
+  createDefaultStepTypeRegistry,
+  type IStepTypeRegistry,
+} from '@dvt/contracts';
 
 import { nowMs } from '../runtime/time.js';
 
@@ -153,8 +157,17 @@ export class Planner {
       this.validateStepConfigs(normalizedSteps);
 
       // 7) Assemble plan
+      const requiredCapabilities = collectRequiredCapabilitiesForSteps(
+        this.stepTypeRegistry,
+        normalizedSteps
+      );
       const result = await this.assembler.execute(
-        new AssemblePlanCommand(normalizedInput, normalizedSteps, this.limits.maxPlanSizeBytes)
+        new AssemblePlanCommand(
+          normalizedInput,
+          normalizedSteps,
+          this.limits.maxPlanSizeBytes,
+          requiredCapabilities
+        )
       );
 
       this.metrics.recordDuration(nowMs() - started);

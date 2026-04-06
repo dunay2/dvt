@@ -1,31 +1,3 @@
-/**
- * Application-boundary service that implements the full IPlanner contract.
- *
- * ## Responsibilities
- *
- * The domain `Planner` is a pure, synchronous-style domain service that
- * accepts only pre-resolved graph inputs (graphSource). This facade
- * handles concerns that live outside the pure domain:
- *
- * - `manifestRef` resolution: fetches and integrity-verifies the graph-source
- *   payload via `IArtifactResolver` before handing off to the domain planner.
- * - `environment` context: accepted and stripped at this boundary (the domain
- *   planner does not model environment-dependent behaviour).
- * - One-active-source rule: rejects envelopes where graph source inputs are ambiguous.
- *
- * ## Invariants
- *
- * - If `manifestRef` is present and no `IArtifactResolver` is configured,
- *   the call fails fast with `INVALID_INPUT` before any network I/O.
- * - Resolution errors (fetch failure, sha256 mismatch) propagate as thrown
- *   errors from the resolver — this facade does not wrap them.
- * - The inner domain `Planner` sees exactly one resolved graph source
- *   (`graphSource`) with no application-boundary fields.
- *
- * @implements IPlanner
- * @see IArtifactResolver — the port used to resolve manifestRef payloads
- * @see Planner — the pure domain planner this facade delegates to
- */
 import {
   ContractValidationError,
   parseGenericGraphSourceV1,
@@ -35,7 +7,7 @@ import {
 import { PlannerError, PlannerErrorCode } from '../domain/errors.js';
 import { Planner, type PlannerOptions } from '../domain/Planner.js';
 import type { PlannerInputEnvelopeV1 as DomainEnvelope } from '../domain/types.js';
-import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
+import type { IGraphSourceResolver } from '../ports/IGraphSourceResolver.js';
 
 import { ManifestRefGraphSourceCache } from './ManifestRefGraphSourceCache.js';
 import { PlannerEnvelopeMapper } from './PlannerEnvelopeMapper.js';
@@ -46,36 +18,49 @@ type GenericGraphSourceV1 = import('@dvt/contracts').GenericGraphSourceV1SchemaT
 type ContractEnvelope = import('@dvt/contracts').PlannerInputEnvelopeV1;
 type PlannerInputEnvelopeV1SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV1SchemaT;
 
-// ── Options ─────────────────────────────────────────────────────────────────
-
 export interface PlannerFacadeOptions extends PlannerOptions {
+  /** Canonical port used to resolve `manifestRef` graph sources. */
+  graphSourceResolver?: IGraphSourceResolver;
   /**
-   * Port used to resolve `manifestRef` graph sources.
-   * Required when callers provide `input.manifestRef`; ignored otherwise.
+   * @deprecated Use graphSourceResolver.
+   * Compatibility alias retained while downstream wiring migrates.
    */
-  resolver?: IArtifactResolver;
-  /** Maximum number of resolved manifestRef graph sources cached in-memory. */
+  resolver?: IGraphSourceResolver;
+  /** Maximum number of resolved graph-source refs cached in-memory. */
+  graphSourceRefCacheSize?: number;
+  /**
+   * @deprecated Use graphSourceRefCacheSize.
+   * Compatibility alias retained while downstream wiring migrates.
+   */
   manifestRefCacheSize?: number;
 }
 
-// ── PlannerFacade ────────────────────────────────────────────────────────────
-
 export class PlannerFacade implements IPlanner {
   private readonly planner: Planner;
-  private readonly resolver: IArtifactResolver | undefined;
+  private readonly graphSourceResolver: IGraphSourceResolver | undefined;
   private readonly envelopeMapper: PlannerEnvelopeMapper;
-  private readonly manifestRefCache: ManifestRefGraphSourceCache | undefined;
+  private readonly graphSourceRefCache: ManifestRefGraphSourceCache | undefined;
 
   constructor(options?: PlannerFacadeOptions) {
-    const { resolver, manifestRefCacheSize, ...plannerOptions } = options ?? {};
+    const {
+      graphSourceResolver,
+      resolver,
+      graphSourceRefCacheSize,
+      manifestRefCacheSize,
+      ...plannerOptions
+    } = options ?? {};
+
     this.planner = new Planner(plannerOptions);
-    this.resolver = resolver;
-    const normalizedManifestRefCacheSize = this.normalizeManifestRefCacheSize(manifestRefCacheSize);
+    this.graphSourceResolver = graphSourceResolver ?? resolver;
+    const normalizedGraphSourceRefCacheSize = this.normalizeGraphSourceRefCacheSize(
+      graphSourceRefCacheSize ?? manifestRefCacheSize
+    );
     this.envelopeMapper = new PlannerEnvelopeMapper();
-    if (resolver !== undefined) {
-      this.manifestRefCache = new ManifestRefGraphSourceCache(
-        resolver,
-        normalizedManifestRefCacheSize,
+
+    if (this.graphSourceResolver !== undefined) {
+      this.graphSourceRefCache = new ManifestRefGraphSourceCache(
+        this.graphSourceResolver,
+        normalizedGraphSourceRefCacheSize,
         (graphSource) => this.validateGraphSource(graphSource)
       );
     }
@@ -92,13 +77,13 @@ export class PlannerFacade implements IPlanner {
     const graphSource = input.graphSource;
 
     if (manifestRef !== undefined) {
-      if (this.resolver === undefined) {
+      if (this.graphSourceResolver === undefined) {
         throw new PlannerError(
           PlannerErrorCode.INVALID_INPUT,
-          'manifestRef provided but no IArtifactResolver is configured.'
+          'manifestRef provided but no graph-source resolver is configured.'
         );
       }
-      const resolvedGraphSource = await this.manifestRefCache!.resolve(
+      const resolvedGraphSource = await this.graphSourceRefCache!.resolve(
         this.envelopeMapper.toManifestRef(manifestRef)
       );
       return {
@@ -151,10 +136,10 @@ export class PlannerFacade implements IPlanner {
     }
   }
 
-  private normalizeManifestRefCacheSize(input: number | undefined): number {
+  private normalizeGraphSourceRefCacheSize(input: number | undefined): number {
     if (input === undefined) return 64;
     if (!Number.isInteger(input) || input < 0) {
-      throw new Error('manifestRefCacheSize must be a non-negative integer.');
+      throw new Error('graphSourceRefCacheSize must be a non-negative integer.');
     }
     return input;
   }
