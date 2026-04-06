@@ -1,9 +1,4 @@
-import type {
-  AppendResult,
-  EventInput,
-  RunBootstrapInput,
-  RunStateCommandPort,
-} from '@dvt/contracts';
+import type { AppendResult, EventInput, RunBootstrapInput, RunStateCommandPort } from '@dvt/engine';
 
 export type { RunStateCommandPort };
 
