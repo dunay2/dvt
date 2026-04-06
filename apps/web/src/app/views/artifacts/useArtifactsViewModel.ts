@@ -34,10 +34,17 @@ type WorkspaceArtifactRecord = {
 
 type WorkspaceArtifactMap = Partial<Record<ArtifactFileName, WorkspaceArtifactRecord>>;
 
-const ARTIFACT_FILE_NAMES: ArtifactFileName[] = ['manifest.json', 'run_results.json', 'catalog.json'];
+const ARTIFACT_FILE_NAMES: ArtifactFileName[] = [
+  'manifest.json',
+  'run_results.json',
+  'catalog.json',
+];
 
 function flattenWorkspaceEntries(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
-  return entries.flatMap((entry) => [entry, ...(entry.children ? flattenWorkspaceEntries(entry.children) : [])]);
+  return entries.flatMap((entry) => [
+    entry,
+    ...(entry.children ? flattenWorkspaceEntries(entry.children) : []),
+  ]);
 }
 
 function parseStructuredContent(content: string): unknown {
@@ -76,7 +83,10 @@ function buildImportedStats(state: ImportState): ImportedStats | null {
   };
 }
 
-function buildWorkspaceArtifactPreview(fileName: ArtifactFileName, artifact: WorkspaceArtifactRecord): ArtifactPreview {
+function buildWorkspaceArtifactPreview(
+  fileName: ArtifactFileName,
+  artifact: WorkspaceArtifactRecord
+): ArtifactPreview {
   return {
     type: fileName,
     description: `Workspace artifact synchronized from ${artifact.file.path}`,
@@ -103,7 +113,9 @@ async function loadWorkspaceArtifacts(
     })
   );
 
-  return Object.fromEntries(records.filter((record): record is NonNullable<typeof record> => record !== null));
+  return Object.fromEntries(
+    records.filter((record): record is NonNullable<typeof record> => record !== null)
+  );
 }
 
 export function useArtifactsViewModel(state: ImportState): ArtifactsViewModel {
@@ -121,7 +133,9 @@ export function useArtifactsViewModel(state: ImportState): ArtifactsViewModel {
     const importedArtifact = buildImportedArtifact(state);
     const importedStats = buildImportedStats(state);
     const workspaceArtifactPreviews = ARTIFACT_FILE_NAMES.flatMap((fileName) =>
-      workspaceArtifacts[fileName] ? [buildWorkspaceArtifactPreview(fileName, workspaceArtifacts[fileName])] : []
+      workspaceArtifacts[fileName]
+        ? [buildWorkspaceArtifactPreview(fileName, workspaceArtifacts[fileName])]
+        : []
     );
 
     const artifacts =

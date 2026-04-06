@@ -111,10 +111,12 @@ describe('useArtifactsViewModel', () => {
     expect(mounted.container.querySelector('[data-testid="manifest-path"]')?.textContent).toBe(
       'target/manifest.json'
     );
-    expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe('3');
-    expect(mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent).toContain(
-      '"workspace"'
+    expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe(
+      '3'
     );
+    expect(
+      mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent
+    ).toContain('"workspace"');
   });
 
   it('falls back to default previews when workspace artifact lookup fails', async () => {
@@ -141,9 +143,11 @@ describe('useArtifactsViewModel', () => {
     expect(mounted.container.querySelector('[data-testid="manifest-path"]')?.textContent).toBe(
       'manifest.json'
     );
-    expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe('3');
-    expect(mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent).toContain(
-      'dbt_schema_version'
+    expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe(
+      '3'
     );
+    expect(
+      mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent
+    ).toContain('dbt_schema_version');
   });
 });

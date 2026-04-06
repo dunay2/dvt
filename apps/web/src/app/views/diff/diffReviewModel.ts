@@ -114,9 +114,14 @@ function revertCatalogNode(node: DbtNode, nodeChanges: DiffChange[]) {
   return previousNode;
 }
 
-export function selectPrimaryDiffNode(diffChanges: DiffChange[], graphNodes: DbtNode[]): DbtNode | null {
+export function selectPrimaryDiffNode(
+  diffChanges: DiffChange[],
+  graphNodes: DbtNode[]
+): DbtNode | null {
   for (const change of diffChanges) {
-    const match = graphNodes.find((node) => node.id === change.nodeId || node.name === change.nodeId);
+    const match = graphNodes.find(
+      (node) => node.id === change.nodeId || node.name === change.nodeId
+    );
     if (match) {
       return match;
     }
@@ -152,7 +157,10 @@ export function buildSqlDiffDocument(
   };
 }
 
-export function buildCatalogDiffDocument(node: DbtNode | null, nodeChanges: DiffChange[]): CatalogDiffDocument {
+export function buildCatalogDiffDocument(
+  node: DbtNode | null,
+  nodeChanges: DiffChange[]
+): CatalogDiffDocument {
   if (!node) {
     return {
       currentCatalogJson: '{}',

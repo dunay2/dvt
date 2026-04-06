@@ -1,7 +1,4 @@
-import {
-  createApiClient,
-  type ApiClient,
-} from '../../../app/services/api/createApiClient';
+import { createApiClient, type ApiClient } from '../../../app/services/api/createApiClient';
 import type { RuntimeCapabilitiesDto } from '../contracts/runtimeCapabilitiesDtos';
 
 export interface RuntimeCapabilitiesHttpClient {

@@ -42,7 +42,9 @@ export function useDiffData() {
   const primaryNodeChanges = useMemo(
     () =>
       primaryNode
-        ? diffChanges.filter((change) => change.nodeId === primaryNode.id || change.nodeId === primaryNode.name)
+        ? diffChanges.filter(
+            (change) => change.nodeId === primaryNode.id || change.nodeId === primaryNode.name
+          )
         : [],
     [diffChanges, primaryNode]
   );
