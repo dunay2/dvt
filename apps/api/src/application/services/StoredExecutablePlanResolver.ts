@@ -5,6 +5,7 @@ import {
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
   type PlanRef,
+  type IStepTypeRegistry,
 } from '@dvt/contracts';
 import type { ExecutionPlan, IPlanFetcher as IStoredPlanFetcher } from '@dvt/engine';
 
@@ -14,6 +15,7 @@ export class StoredExecutablePlanResolver {
   public constructor(
     private readonly deps: {
       readonly fetcher: IStoredPlanFetcher;
+      readonly stepTypeRegistry?: IStepTypeRegistry;
     }
   ) {}
 
@@ -21,7 +23,11 @@ export class StoredExecutablePlanResolver {
     if (planRef.uri.startsWith('dvt-plan://')) {
       const bytes = await this.deps.fetcher.fetch(planRef);
       validateStoredPlanIntegrity(bytes, planRef);
-      const plan = parseStoredExecutablePlan(bytes);
+      const plan = parseStoredExecutablePlan(bytes, {
+        ...(this.deps.stepTypeRegistry === undefined
+          ? {}
+          : { stepTypeRegistry: this.deps.stepTypeRegistry }),
+      });
       validateStoredPlanMetadata(plan, planRef);
       return plan;
     }
