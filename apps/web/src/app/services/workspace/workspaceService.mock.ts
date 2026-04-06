@@ -7,6 +7,7 @@ import {
   mockRoles,
 } from '../../data/mockDbtData';
 import type { DbtNode } from '../../types/dbt';
+import type { FileContent, WorkspaceFileEntry } from '../../ports/workspace';
 import type {
   ImportSourcesInput,
   ImportSourcesResult,
@@ -239,6 +240,248 @@ function importMockSources(input: ImportSourcesInput): ImportSourcesResult {
   return buildImportResult(input, importedNodes);
 }
 
+const mockFileTree: WorkspaceFileEntry[] = [
+  {
+    path: 'models',
+    name: 'models',
+    kind: 'directory',
+    children: [
+      { path: 'models/staging/stg_orders.sql', name: 'stg_orders.sql', kind: 'file' },
+      { path: 'models/staging/stg_customers.sql', name: 'stg_customers.sql', kind: 'file' },
+      { path: 'models/marts/dim_store.sql', name: 'dim_store.sql', kind: 'file' },
+    ],
+  },
+  {
+    path: 'target',
+    name: 'target',
+    kind: 'directory',
+    children: [
+      { path: 'target/manifest.json', name: 'manifest.json', kind: 'file' },
+      { path: 'target/run_results.json', name: 'run_results.json', kind: 'file' },
+      { path: 'target/catalog.json', name: 'catalog.json', kind: 'file' },
+    ],
+  },
+  {
+    path: 'pipelines',
+    name: 'pipelines',
+    kind: 'directory',
+    children: [
+      { path: 'pipelines/sales_pipeline.yaml', name: 'sales_pipeline.yaml', kind: 'file' },
+    ],
+  },
+  { path: 'README.md', name: 'README.md', kind: 'file' },
+];
+
+const mockFileContents: Record<string, FileContent> = {
+  'models/staging/stg_orders.sql': {
+    path: 'models/staging/stg_orders.sql',
+    name: 'stg_orders.sql',
+    language: 'sql',
+    content: [
+      'WITH source AS (',
+      '    SELECT * FROM {{ source("erp", "orders") }}',
+      '),',
+      '',
+      'renamed AS (',
+      '    SELECT',
+      '        order_id,',
+      '        customer_id,',
+      '        order_date,',
+      '        total_amount',
+      '    FROM source',
+      ')',
+      '',
+      'SELECT * FROM renamed',
+    ].join('\n'),
+    lastModified: '2026-04-05T14:22:00.000Z',
+  },
+  'models/staging/stg_customers.sql': {
+    path: 'models/staging/stg_customers.sql',
+    name: 'stg_customers.sql',
+    language: 'sql',
+    content: [
+      'WITH source AS (',
+      '    SELECT * FROM {{ source("erp", "customers") }}',
+      '),',
+      '',
+      'renamed AS (',
+      '    SELECT',
+      '        customer_id,',
+      '        customer_name,',
+      '        email',
+      '    FROM source',
+      ')',
+      '',
+      'SELECT * FROM renamed',
+    ].join('\n'),
+    lastModified: '2026-04-05T12:10:00.000Z',
+  },
+  'models/marts/dim_store.sql': {
+    path: 'models/marts/dim_store.sql',
+    name: 'dim_store.sql',
+    language: 'sql',
+    content: [
+      'SELECT',
+      '    o.order_id,',
+      '    c.customer_name,',
+      '    o.order_date,',
+      '    o.total_amount',
+      'FROM {{ ref("stg_orders") }} AS o',
+      'JOIN {{ ref("stg_customers") }} AS c',
+      '    ON o.customer_id = c.customer_id',
+    ].join('\n'),
+    lastModified: '2026-04-06T09:00:00.000Z',
+  },
+  'models/marts/fct_sales.sql': {
+    path: 'models/marts/fct_sales.sql',
+    name: 'fct_sales.sql',
+    language: 'sql',
+    content: [
+      'SELECT',
+      '    o.order_id,',
+      '    o.customer_id,',
+      '    o.order_date,',
+      '    s.store_id,',
+      '    o.total_amount',
+      'FROM {{ ref("stg_orders") }} AS o',
+      'LEFT JOIN {{ ref("dim_store") }} AS s',
+      '    ON o.store_id = s.store_id',
+    ].join('\n'),
+    lastModified: '2026-04-06T09:10:00.000Z',
+  },
+  'pipelines/sales_pipeline.yaml': {
+    path: 'pipelines/sales_pipeline.yaml',
+    name: 'sales_pipeline.yaml',
+    language: 'yaml',
+    content: [
+      'name: sales_pipeline',
+      'version: "1.0"',
+      '',
+      'steps:',
+      '  - id: extract_orders',
+      '    type: source',
+      '    source: erp.orders',
+      '',
+      '  - id: stage_orders',
+      '    type: sql',
+      '    file: models/staging/stg_orders.sql',
+      '    depends_on: [extract_orders]',
+      '',
+      '  - id: build_dim_store',
+      '    type: sql',
+      '    file: models/marts/dim_store.sql',
+      '    depends_on: [stage_orders]',
+    ].join('\n'),
+    lastModified: '2026-04-04T16:30:00.000Z',
+  },
+  'target/manifest.json': {
+    path: 'target/manifest.json',
+    name: 'manifest.json',
+    language: 'json',
+    content: JSON.stringify(
+      {
+        metadata: {
+          dbt_schema_version: 'https://schemas.getdbt.com/dbt/manifest/v11.json',
+          dbt_version: '1.8.0',
+          generated_at: '2026-04-06T09:30:00.000Z',
+        },
+        nodes: {
+          'model.dbt_analytics.fct_sales': {
+            unique_id: 'model.dbt_analytics.fct_sales',
+            name: 'fct_sales',
+            resource_type: 'model',
+            path: 'models/marts/fct_sales.sql',
+          },
+        },
+      },
+      null,
+      2
+    ),
+    lastModified: '2026-04-06T09:30:00.000Z',
+  },
+  'target/run_results.json': {
+    path: 'target/run_results.json',
+    name: 'run_results.json',
+    language: 'json',
+    content: JSON.stringify(
+      {
+        metadata: {
+          dbt_schema_version: 'https://schemas.getdbt.com/dbt/run-results/v5.json',
+          generated_at: '2026-04-06T09:31:00.000Z',
+        },
+        results: [
+          {
+            unique_id: 'model.dbt_analytics.fct_sales',
+            status: 'success',
+            execution_time: 12.4,
+          },
+        ],
+      },
+      null,
+      2
+    ),
+    lastModified: '2026-04-06T09:31:00.000Z',
+  },
+  'target/catalog.json': {
+    path: 'target/catalog.json',
+    name: 'catalog.json',
+    language: 'json',
+    content: JSON.stringify(
+      {
+        metadata: {
+          dbt_schema_version: 'https://schemas.getdbt.com/dbt/catalog/v1.json',
+          generated_at: '2026-04-06T09:32:00.000Z',
+        },
+        nodes: {
+          'model.dbt_analytics.fct_sales': {
+            metadata: {
+              schema: 'analytics',
+              name: 'fct_sales',
+              type: 'table',
+            },
+          },
+        },
+      },
+      null,
+      2
+    ),
+    lastModified: '2026-04-06T09:32:00.000Z',
+  },
+  'README.md': {
+    path: 'README.md',
+    name: 'README.md',
+    language: 'markdown',
+    content: [
+      '# DVT Workspace',
+      '',
+      'This workspace contains the data transformation pipeline.',
+      '',
+      '## Structure',
+      '',
+      '- `models/staging/` - Staging models',
+      '- `models/marts/` - Business-layer models',
+      '- `pipelines/` - Pipeline definitions',
+    ].join('\n'),
+    lastModified: '2026-04-01T10:00:00.000Z',
+  },
+};
+
+function inferLanguage(path: string): string {
+  const ext = path.split('.').pop()?.toLowerCase() ?? '';
+  const langMap: Record<string, string> = {
+    sql: 'sql',
+    yaml: 'yaml',
+    yml: 'yaml',
+    py: 'python',
+    ts: 'typescript',
+    tsx: 'typescript',
+    js: 'javascript',
+    json: 'json',
+    md: 'markdown',
+  };
+  return langMap[ext] ?? 'plaintext';
+}
+
 export function createMockWorkspaceService(): WorkspaceService {
   return {
     getGraphSnapshot: async () => cloneGraphSnapshot(mockGraphSnapshot),
@@ -253,5 +496,26 @@ export function createMockWorkspaceService(): WorkspaceService {
         columns: table.columns?.map((column) => ({ ...column })),
       })),
     importSources: async (input) => importMockSources(input),
+    listFiles: async () => mockFileTree.map((entry) => ({ ...entry })),
+    getFileContent: async (path) => {
+      const file = mockFileContents[path];
+      if (!file) {
+        throw new Error(`File not found: ${path}`);
+      }
+      return { ...file };
+    },
+    saveFileContent: async (path, content) => {
+      const existing = mockFileContents[path];
+      const name = path.split('/').pop() ?? path;
+      const updated: FileContent = {
+        path,
+        name,
+        language: existing?.language ?? inferLanguage(path),
+        content,
+        lastModified: new Date().toISOString(),
+      };
+      mockFileContents[path] = updated;
+      return { ...updated };
+    },
   };
 }

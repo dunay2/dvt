@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-03'
+last_reviewed: '2026-04-05'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -1421,6 +1421,125 @@ tasks:
       Monaco is now explicitly treated as future preview and diff infrastructure, not as the owner
       of the route.
     last_verified: '2026-04-03'
+  - task_id: F-22
+    priority: P1
+    status: review
+    objective: >-
+      publish the governed document set for the SQL-first execution-first transformation product,
+      including the decision register, architecture and contract model, renderable diagrams,
+      cross-lane task distribution, and the end-to-end route sequence needed before implementation
+      slicing starts.
+    dependency: F-07, F-21
+    target: >-
+      A governed proposal set acts as the handoff package for the operator flow `design graph ->
+      preview/persist -> PlanRef -> run -> PostgreSQL result`, with phase-2 dbt extension, Git-first
+      provenance, cross-lane ownership, detailed phases, test inventory, and acceptance criteria
+      suitable for downstream implementation slicing.
+    complexity: S
+    effort_points: 3
+    progress_pct: 99
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      The proposal set now freezes the real product decisions, architecture, and delivery phases:
+      SQL-first execution, design-graph planning input, preview as validate-plus-persist, PostgreSQL
+      as the first data target, Docker PostgreSQL as the first proof environment, Git-first
+      artifacts, phase-2 dbt engine, and cross-lane execution ownership. Remaining work is
+      implementation review and acceptance, not roadmap ambiguity.
+    last_verified: '2026-04-05'
+  - task_id: TF-E1
+    priority: P0
+    status: queued
+    objective: >-
+      implement the basic Canvas transformation UX for `source -> sql_transform -> sink`, wired to
+      preview-persist, start-run, and result inspection so the first product vertical is operator
+      usable.
+    dependency: TF-A1, TF-C1
+    target: >-
+      Canvas supports one governed source, one SQL transform, and one sink; valid preview returns a
+      real `PlanRef`; Start run launches the persisted plan; run detail shows PostgreSQL execution
+      outcome and materialization evidence.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      The roadmap now freezes the execution-first UI loop, but the basic Canvas authoring and
+      result-reading surface has not yet been sliced into implemented Lane E work.
+    last_verified: '2026-04-05'
+  - task_id: TF-E1-A
+    priority: P0
+    status: queued
+    objective: >-
+      implement basic Canvas authoring for one source, one SQL transform, and one sink with inline
+      graph validation.
+    dependency: TF-A1-A
+    target: >-
+      The UI can compose the constrained three-node graph, prevent illegal edge shapes, and keep the
+      graph in a valid editable state before preview is allowed.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      The design graph is now frozen in docs, but the basic Canvas authoring surface is not yet a
+      dedicated Lane E slice.
+    last_verified: '2026-04-05'
+  - task_id: TF-E1-B
+    priority: P0
+    status: queued
+    objective: >-
+      wire preview and start-run UX to the real persisted-plan path so the UI no longer depends on
+      mock plan state.
+    dependency: TF-C1-B, TF-E1-A
+    target: >-
+      A valid preview returns a real `PlanRef`, enables Start run, and routes the operator into the
+      runtime detail flow using the persisted plan path.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      The API boundary is now defined, but the frontend handoff from preview to run is not yet
+      isolated as a concrete Lane E work item.
+    last_verified: '2026-04-05'
+  - task_id: TF-E1-C
+    priority: P0
+    status: queued
+    objective: >-
+      implement the result UX that shows executor identity, sink materialization evidence, and
+      failed-step diagnostics.
+    dependency: TF-C2-B, TF-E1-B
+    target: >-
+      Run detail shows rows written, sink target, executor, timestamps, and failure reason or step
+      attribution so operators can decide what happened without backend log inspection.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/architecture/frontend/ux-implementation-guide.md
+    status_reason: >-
+      The result model is now frozen in docs, but the caller-visible evidence and failure UI remains
+      unimplemented.
+    last_verified: '2026-04-05'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in
@@ -1449,14 +1568,18 @@ dependency_notes:
     `F-17-F` delays backend-backed Monaco panes until `F-07` and `F-11` govern the contract and
     artifact truth. See docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
     for the decision rationale and route-level diagrams.
+  - >-
+    `F-22` is now the proposal-set handoff for the SQL-first execution-first product slice, and
+    `TF-E1` is decomposed into `TF-E1-A/B/C` for authoring, preview-to-run, and result UX closure on
+    the basic Canvas flow `source -> sql_transform -> sink`.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-04'
-  total_tasks: 38
-  total_effort_points: 157
-  completed_weighted_points: 27.2
-  lane_progress_pct: 17
+  verified_on: '2026-04-05'
+  total_tasks: 42
+  total_effort_points: 171
+  completed_weighted_points: 27.38
+  lane_progress_pct: 16
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7

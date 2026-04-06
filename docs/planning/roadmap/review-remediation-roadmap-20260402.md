@@ -2,7 +2,7 @@
 title: Review Remediation Roadmap 2026-04
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-05
 planning_type: proposal
 ---
 
@@ -16,6 +16,22 @@ sequenced execution boards with explicit dependencies.
 - planning review backlog converted into sprint board files
 - dependency-aware execution sequencing across 3 sprints
 - board-based prioritization for runtime, contracts, planner, and CI concerns
+
+## Parallel productization track
+
+This roadmap still governs review remediation work. It does not become the
+product roadmap for the transformation vertical.
+
+That productization work now routes through:
+
+- [Transformation Flow Proposal Set 2026-04-05](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
+- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+
+Interpretation rule:
+
+- review remediation hardens enabling boundaries
+- the transformation delivery plan consumes those hardened boundaries to ship a
+  real execution-first vertical
 
 ## Sprint Phases
 

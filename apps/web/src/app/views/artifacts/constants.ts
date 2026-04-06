@@ -1,5 +1,14 @@
 import type { ArtifactPreview } from './types';
 
+export type ArtifactFileName = 'manifest.json' | 'run_results.json' | 'catalog.json';
+
+export type ArtifactPreviewDocument = {
+  path: string;
+  content: unknown;
+};
+
+export type ArtifactPreviewDocumentMap = Record<ArtifactFileName, ArtifactPreviewDocument>;
+
 export const SERVER_ARTIFACTS: ArtifactPreview[] = [
   {
     type: 'manifest.json',
@@ -76,5 +85,20 @@ export const CATALOG_PREVIEW = {
         total_amount: { type: 'NUMERIC(18,2)', index: 3 },
       },
     },
+  },
+};
+
+export const DEFAULT_PREVIEW_DOCUMENTS: ArtifactPreviewDocumentMap = {
+  'manifest.json': {
+    path: 'manifest.json',
+    content: DEFAULT_MANIFEST_PREVIEW,
+  },
+  'run_results.json': {
+    path: 'run_results.json',
+    content: RUN_RESULTS_PREVIEW,
+  },
+  'catalog.json': {
+    path: 'catalog.json',
+    content: CATALOG_PREVIEW,
   },
 };

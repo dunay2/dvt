@@ -38,7 +38,7 @@ export default function CanvasToolbar({
   return (
     <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="hidden text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500 lg:block">
+        <div className="hidden text-[11px] font-medium uppercase tracking-[0.16em] text-slate-300 lg:block">
           Graph Tools
         </div>
 
@@ -110,11 +110,11 @@ export default function CanvasToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 select-none tabular-nums">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-300 select-none tabular-nums">
           <span>
             {nodeCount} node{nodeCount !== 1 ? 's' : ''}
           </span>
-          <span className="text-slate-700">·</span>
+          <span className="text-slate-400">·</span>
           <span>
             {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
           </span>

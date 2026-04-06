@@ -24,7 +24,7 @@ export default function PluginsView() {
             <p className="text-xs text-slate-400">
               {PLUGIN_REGISTRY.length} plugin{PLUGIN_REGISTRY.length !== 1 ? 's' : ''} registered
               {capabilities && (
-                <span className="ml-2 inline-flex items-center gap-1 text-slate-500">
+                <span className="ml-2 inline-flex items-center gap-1 text-slate-300">
                   <Radio className="size-3" />
                   API {capabilities.apiVersion}
                 </span>
@@ -102,7 +102,7 @@ export default function PluginsView() {
                       )}
 
                       {plugin.envFlag && (
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-slate-300">
                           env flag: <span className="font-mono">{plugin.envFlag}</span> ={' '}
                           <span className="font-mono">{envFlagValue ?? 'unset'}</span>
                         </p>
@@ -110,7 +110,7 @@ export default function PluginsView() {
 
                       {(plugin.capabilities?.length ?? 0) > 0 && (
                         <div className="mt-3">
-                          <div className="mb-1 text-xs text-slate-500">Capabilities</div>
+                          <div className="mb-1 text-xs text-slate-300">Capabilities</div>
                           <div className="flex flex-wrap gap-1">
                             {plugin.capabilities!.map((cap) => (
                               <Badge key={cap} variant="secondary" className="text-xs">
@@ -123,7 +123,7 @@ export default function PluginsView() {
 
                       {(plugin.nodeKinds?.length ?? 0) > 0 && (
                         <div className="mt-3">
-                          <div className="mb-1 text-xs text-slate-500">Node kinds</div>
+                          <div className="mb-1 text-xs text-slate-300">Node kinds</div>
                           <div className="flex flex-wrap gap-1">
                             {plugin.nodeKinds!.map((kind) => (
                               <Badge
@@ -140,7 +140,7 @@ export default function PluginsView() {
                     </div>
                   </div>
 
-                  <span className="shrink-0 font-mono text-[10px] text-slate-600">{plugin.id}</span>
+                  <span className="shrink-0 font-mono text-[10px] text-slate-300">{plugin.id}</span>
                 </div>
               </Card>
             );

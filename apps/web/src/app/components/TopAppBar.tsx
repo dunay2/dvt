@@ -1,8 +1,7 @@
-import { Database } from 'lucide-react';
-
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import AppBrandMark from './AppBrandMark';
 
 import { TopAppBarConnectionStatus } from './topAppBar/TopAppBarConnectionStatus';
 import { resolveTopAppBarCopy } from './topAppBar/copy';
@@ -43,8 +42,8 @@ export default function TopAppBar({
     <TooltipProvider>
       <div className="flex h-10 flex-shrink-0 items-center gap-2 border-b border-slate-700 bg-slate-900 px-3">
         <div className="mr-1 flex shrink-0 items-center gap-2">
-          <Database className="size-5 text-blue-400" />
-          <span className="text-base leading-none font-semibold">DVT+</span>
+          <AppBrandMark className="size-6 shrink-0" />
+          <span className="text-base leading-none font-semibold text-slate-50">Raven</span>
         </div>
 
         <TopAppBarWorkspaceSelectors

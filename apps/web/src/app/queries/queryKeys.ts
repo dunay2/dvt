@@ -23,6 +23,9 @@ export const queryKeys = {
     diffChanges: () => ['workspace', 'diff-changes'] as const,
     roles: () => ['workspace', 'roles'] as const,
     audit: () => ['workspace', 'audit'] as const,
+    fileTree: () => ['workspace', 'file-tree'] as const,
+    fileContent: (path: string) => ['workspace', 'file-content', path] as const,
+    artifacts: () => ['workspace', 'artifacts'] as const,
   },
 
   // -------------------------------------------------------------------------
@@ -35,5 +38,6 @@ export const queryKeys = {
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
     list: (viewId: string) => ['runs', 'list', viewId] as const,
+    consoleLogStream: (runId: string | undefined) => ['runs', 'console-log-stream', runId] as const,
   },
 } as const;

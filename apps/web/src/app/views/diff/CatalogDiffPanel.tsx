@@ -1,10 +1,16 @@
 import { Edit, Minus } from 'lucide-react';
 
+import { MonacoDiffViewer } from '../../components/monaco/MonacoDiffViewer';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { diffViewCopy as copy } from './copy';
+import type { CatalogDiffDocument } from './diffReviewModel';
 
-export function CatalogDiffPanel() {
+type CatalogDiffPanelProps = {
+  document: CatalogDiffDocument;
+};
+
+export function CatalogDiffPanel({ document }: CatalogDiffPanelProps) {
   return (
     <Card className="border-slate-700 bg-slate-900 p-4 text-slate-50">
       <h3 className="mb-4 font-semibold text-slate-50">{copy.catalog.title}</h3>
@@ -25,6 +31,16 @@ export function CatalogDiffPanel() {
           </div>
           <Badge className="bg-yellow-600">{copy.catalog.typeChanged}</Badge>
         </div>
+      </div>
+      <div className="mt-4">
+        <MonacoDiffViewer
+          language="json"
+          loadingLabel="Loading catalog diff..."
+          modified={document.currentCatalogJson}
+          modifiedLabel="Current catalog"
+          original={document.previousCatalogJson}
+          originalLabel="Previous catalog"
+        />
       </div>
     </Card>
   );

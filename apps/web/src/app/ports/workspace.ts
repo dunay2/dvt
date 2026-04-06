@@ -4,6 +4,21 @@ import type { AuditLogEntry, DbtEdge, DbtNode, DiffChange, Plugin, Role } from '
 // Presentation-facing DTOs for the workspace domain
 // ---------------------------------------------------------------------------
 
+export type FileContent = {
+  path: string;
+  name: string;
+  language: string;
+  content: string;
+  lastModified: string;
+};
+
+export type WorkspaceFileEntry = {
+  path: string;
+  name: string;
+  kind: 'file' | 'directory';
+  children?: WorkspaceFileEntry[];
+};
+
 export type WorkspaceGraphSnapshot = {
   nodes: DbtNode[];
   edges: DbtEdge[];
@@ -73,4 +88,7 @@ export interface IWorkspacePort {
   listWarehouseConnections: () => Promise<WarehouseConnection[]>;
   listWarehouseTables: (connectionId: string) => Promise<WarehouseTable[]>;
   importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;
+  listFiles: () => Promise<WorkspaceFileEntry[]>;
+  getFileContent: (path: string) => Promise<FileContent>;
+  saveFileContent: (path: string, content: string) => Promise<FileContent>;
 }

@@ -28,6 +28,7 @@ import { registerOperationalHooks } from './modules/registerOperationalHooks.js'
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
+import { capabilitiesRoutes } from './routes/capabilities.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
 import {
@@ -157,6 +158,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
     readinessPorts,
   });
+  app.register(capabilitiesRoutes, { prefix: '/' });
   app.register(versionRoutes, { prefix: '/', env });
   app.register(dbReadyRoutes, { prefix: '/', env });
 

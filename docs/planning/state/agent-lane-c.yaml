@@ -2,7 +2,7 @@
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-04'
+last_reviewed: '2026-04-05'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -686,6 +686,178 @@ tasks:
       Tenant access is asserted before plan-ref validation in code and the ordering is exercised by
       tests.
     last_verified: '2026-03-31'
+  - task_id: TF-C1
+    priority: P0
+    status: queued
+    objective: >-
+      implement the SQL-first `POST /plans/preview` boundary so design-graph input is validated,
+      canonical plan bytes are persisted with Git provenance, and callers receive the real `PlanRef`
+      required by runtime start.
+    dependency: TF-A1, TF-B1
+    target: >-
+      Protected runtime exposes preview as validate-plus-persist, rejects invalid graph and SQL
+      inputs with typed errors, persists immutable plan bytes plus provenance, and returns the real
+      `PlanRef` used by `POST /runs/start`.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+    status_reason: >-
+      The roadmap now fixes preview as a persistence boundary, but the protected API and runtime
+      path still lack the implementation slice that validates and persists immutable plans.
+    last_verified: '2026-04-05'
+  - task_id: TF-C1-A
+    priority: P0
+    status: queued
+    objective: >-
+      implement the protected preview route, typed validation failures, and authorization behavior
+      for SQL-first design-graph requests.
+    dependency: TF-A1-A, TF-B1-A
+    target: >-
+      `POST /plans/preview` exists behind the protected API boundary, enforces the draft contract,
+      and returns typed `400`, `401`, `403`, `422`, and `500` outcomes instead of ambiguous route
+      behavior.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+    status_reason: >-
+      The route contract is now described, but the protected entrypoint and typed error behavior are
+      not yet isolated as a concrete Lane C slice.
+    last_verified: '2026-04-05'
+  - task_id: TF-C1-B
+    priority: P0
+    status: queued
+    objective: >-
+      persist canonical plan bytes plus provenance and issue the real `PlanRef` consumed by runtime
+      start.
+    dependency: TF-C1-A, TF-A1-B
+    target: >-
+      Successful preview writes the immutable plan record, stores Git provenance, and returns the
+      runtime-safe `PlanRef` later accepted by `POST /runs/start`.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      The roadmap now requires persisted preview, but the concrete plan-store write and `PlanRef`
+      issuance slice is not yet represented separately from the route work.
+    last_verified: '2026-04-05'
+  - task_id: TF-C2
+    priority: P0
+    status: queued
+    objective: >-
+      deliver the first execution-first vertical for SQL transformations against PostgreSQL,
+      including the local Docker PostgreSQL proof environment and caller-visible materialization
+      evidence.
+    dependency: TF-C1
+    target: >-
+      A persisted `PlanRef` can drive one PostgreSQL-backed SQL transformation end to end, local
+      acceptance uses Docker PostgreSQL, and runtime read surfaces expose sink evidence and failure
+      diagnostics.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      PostgreSQL is now the first locked execution target for the product roadmap, but no governed
+      runtime slice yet executes the persisted plan against PostgreSQL and returns materialization
+      evidence.
+    last_verified: '2026-04-05'
+  - task_id: TF-C2-A
+    priority: P0
+    status: queued
+    objective: >-
+      add the PostgreSQL executor path and the first repeatable Docker PostgreSQL proof baseline for
+      SQL-first persisted plans.
+    dependency: TF-C1-B
+    target: >-
+      Runtime can resolve a persisted plan into ordered PostgreSQL execution steps, and a documented
+      Docker PostgreSQL environment exists for local proof of success and failure paths.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      PostgreSQL is the locked v1 target, but the executor seam and its proof environment still need
+      a dedicated Lane C delivery slice.
+    last_verified: '2026-04-05'
+  - task_id: TF-C2-B
+    priority: P0
+    status: queued
+    objective: >-
+      expose caller-visible materialization evidence and step-attributed failure diagnostics on the
+      runtime read surfaces.
+    dependency: TF-C2-A, TF-B1-B
+    target: >-
+      `GET /runs/:runId` and `GET /runs/:runId/events` return executor identity, rows written, sink
+      target, failure step attribution, and timestamps needed for operator inspection.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      Outcome visibility is now part of the product definition, but the read-surface evidence slice
+      is not yet separate from the executor work.
+    last_verified: '2026-04-05'
+  - task_id: TF-C3
+    priority: P1
+    status: queued
+    objective: >-
+      add phase-2 dbt engine integration behind the same preview-persist-run contract so dbt becomes
+      an execution mode instead of a second product path.
+    dependency: TF-C2
+    target: >-
+      dbt-backed execution reuses the same `POST /plans/preview` and `POST /runs/start` boundary,
+      executor identity is caller-visible, and the roadmap does not fork into a separate outer
+      product loop.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      Phase 2 is now explicitly sequenced after the PostgreSQL execution-first closure and must be
+      tracked as the next runtime mode, not as an ambiguous future idea.
+    last_verified: '2026-04-05'
+  - task_id: TF-C3-A
+    priority: P1
+    status: queued
+    objective: >-
+      add the dbt executor mode under the same preview-persist-run contract without creating a
+      second product loop.
+    dependency: TF-C2-B
+    target: >-
+      Runtime can dispatch eligible persisted plans to a dbt-backed executor while preserving the
+      same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      Phase 2 is now product-scoped, but the dbt execution mode still needs its own explicit Lane C
+      slice instead of remaining a generic future note.
+    last_verified: '2026-04-05'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
@@ -725,14 +897,18 @@ dependency_notes:
   - >-
     `MW-C1` is the P0 multi-workflow execution-layer blocker: abstract step execution in Temporal to
     support non-dbt step kinds via StepActivityDispatcher.
+  - >-
+    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
+    subtasks so runtime closure can progress in smaller slices without losing the same outer
+    contract.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-04'
-  total_tasks: 27
-  total_effort_points: 102
+  verified_on: '2026-04-05'
+  total_tasks: 35
+  total_effort_points: 132
   completed_weighted_points: 50.3
-  lane_progress_pct: 49
+  lane_progress_pct: 38
   notes: >-
     Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
     parent umbrella tasks with subtasks carry coordination-only effort.

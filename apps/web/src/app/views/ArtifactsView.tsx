@@ -17,7 +17,9 @@ export default function ArtifactsView() {
     'text-slate-200 data-[state=active]:bg-[#101724] data-[state=active]:text-white';
 
   const manifestImport = useLocalManifestImport();
-  const { manifestPreview, artifacts, importedStats } = useArtifactsViewModel(manifestImport.state);
+  const { artifacts, importedStats, previewDocuments } = useArtifactsViewModel(
+    manifestImport.state
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-950 text-slate-50">
@@ -51,7 +53,7 @@ export default function ArtifactsView() {
             />
             <ArtifactsList artifacts={artifacts} panelClassName={panelClassName} />
             <ArtifactPreviewTabs
-              manifestPreview={manifestPreview}
+              previewDocuments={previewDocuments}
               panelClassName={panelClassName}
               tabTriggerClassName={tabTriggerClassName}
             />

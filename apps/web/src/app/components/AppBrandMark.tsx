@@ -1,0 +1,73 @@
+type AppBrandMarkProps = {
+  readonly className?: string;
+};
+
+export default function AppBrandMark({ className }: AppBrandMarkProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient
+          id="raven-feather"
+          x1="18"
+          y1="10"
+          x2="36"
+          y2="56"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#202A63" />
+          <stop offset="0.6" stopColor="#0B1033" />
+          <stop offset="1" stopColor="#4FD1C5" />
+        </linearGradient>
+        <linearGradient
+          id="raven-beak"
+          x1="36"
+          y1="18"
+          x2="57"
+          y2="28"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#1A224D" />
+          <stop offset="1" stopColor="#0A0F2B" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M14 43.5C14.3 31.4 18.6 21.6 27 14.4C33.9 8.6 42.1 8.1 50.8 11.5C54.6 13 56.4 16.1 56 20.1C55.7 22.8 54.1 24.6 51.3 25.1C48.5 25.6 45.7 25.6 42.9 25.6C42.1 25.6 41.3 25.8 40.6 26.2C37.8 27.8 35.3 30 32.8 32.3C29 35.9 25.4 39.9 21 43.1C19 44.5 16.8 45 14.4 44.8L14 43.5Z"
+        fill="url(#raven-feather)"
+      />
+      <path
+        d="M24.4 18.3C19.9 22.7 16.8 27.7 14.9 33.6C14.4 29.4 15.2 25.5 17.2 21.9C18.8 18.8 21.2 16.2 24.4 14.1L24.4 18.3Z"
+        fill="#1A2254"
+      />
+      <path
+        d="M22.1 25.8C18.1 30.1 15.8 35.1 14.8 40.8C13.7 36.4 14.1 32.2 15.9 28.2C17.2 25.5 19.2 23.2 22.1 21.4L22.1 25.8Z"
+        fill="#101740"
+      />
+      <path
+        d="M30 12.6C35.4 9.9 41.1 9.4 47.1 10.9C43.8 12.2 40.5 13.3 37.6 15.5C35.5 17.1 33.6 18.9 31.4 20.4C29.8 21.5 28 22 25.9 21.7C26.5 18.1 27.6 15.2 30 12.6Z"
+        fill="#27306E"
+      />
+      <path
+        d="M39.5 18.2C44.4 16.7 49.2 16.6 54 18C50.2 20.1 46.9 22.8 43.5 25.3C42.1 26.3 40.6 27.1 38.8 27.2C36.9 27.3 35.1 26.8 33.6 25.5C35 22.2 36.8 19.7 39.5 18.2Z"
+        fill="url(#raven-beak)"
+      />
+      <path
+        d="M35.7 20.6C35.7 17.1 38.5 14.3 42 14.3C45.5 14.3 48.3 17.1 48.3 20.6C48.3 24 45.5 26.9 42 26.9C38.5 26.9 35.7 24 35.7 20.6Z"
+        fill="#060A1C"
+      />
+      <path
+        d="M38.7 20.6C38.7 18.7 40.2 17.2 42 17.2C43.9 17.2 45.4 18.7 45.4 20.6C45.4 22.4 43.9 23.9 42 23.9C40.2 23.9 38.7 22.4 38.7 20.6Z"
+        fill="#7CF3E7"
+      />
+      <path
+        d="M40.4 19.3C40.4 18.5 41 17.9 41.8 17.9C42.6 17.9 43.2 18.5 43.2 19.3C43.2 20.1 42.6 20.7 41.8 20.7C41 20.7 40.4 20.1 40.4 19.3Z"
+        fill="#E6FFFB"
+      />
+    </svg>
+  );
+}
