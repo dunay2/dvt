@@ -42,7 +42,7 @@ import {
   CURRENT_EXECUTION_PLAN_VERSION,
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
-import { CompiledCodeRefSchema } from './step-registry/StepTypeRegistry.js';
+import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/StepTypeRegistry.js';
 
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
@@ -87,6 +87,10 @@ export const PlanRefSchema = z.object({
   schemaVersion: z.string().min(1),
   planId: z.string().min(1),
   planVersion: z.string().min(1),
+  pluginCompatibilityFingerprint: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
   sizeBytes: z.number().int().nonnegative().optional(),
   expiresAt: z.string().optional(),
   requiresCapabilities: z.array(z.string().min(1)).optional(),
@@ -214,8 +218,15 @@ const RunFailedPayloadSchema = z
   .strict();
 const StepStartedPayloadSchema = z
   .object({
-    compiledCodeRef: CompiledCodeRefSchema,
+    stepArtifactRef: StepArtifactRefSchema.optional(),
+    compiledCodeRef: CompiledCodeRefSchema.optional(),
   })
+  .refine(
+    (payload) => payload.stepArtifactRef !== undefined || payload.compiledCodeRef !== undefined,
+    {
+      message: 'StepStarted payload must contain stepArtifactRef or compiledCodeRef',
+    }
+  )
   .strict();
 const StepCompletedPayloadSchema = z
   .object({
@@ -447,11 +458,39 @@ export const GenericGraphSourceV1Schema = z
     sourceVersion: z.string().min(1),
     nodes: z.array(GenericGraphNodeV1Schema).min(1),
   })
+  .superRefine((graphSource, ctx) => {
+    const nodeIds = new Set<string>();
+    for (const [index, node] of graphSource.nodes.entries()) {
+      if (nodeIds.has(node.nodeId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['nodes', index, 'nodeId'],
+          message: `Duplicate nodeId: ${node.nodeId}`,
+        });
+      }
+      nodeIds.add(node.nodeId);
+    }
+
+    for (const [index, node] of graphSource.nodes.entries()) {
+      for (const [depIndex, dep] of node.dependsOn.entries()) {
+        if (!nodeIds.has(dep)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['nodes', index, 'dependsOn', depIndex],
+            message: `Node ${node.nodeId} dependsOn missing node: ${dep}`,
+          });
+        }
+      }
+    }
+  })
   .strict();
 
 export const DbtManifestRefSchema = z
   .object({
-    uri: z.string().min(1),
+    uri: z
+      .string()
+      .min(1)
+      .regex(/^[a-z][a-z0-9+.-]*:\/\//i, 'uri must be an absolute URI'),
     sha256: HexSha256Schema,
     artifactId: z.string().min(1).optional(),
   })
@@ -510,6 +549,7 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
       createdAtIso: z.string().min(1),
       plannerVersion: z.string().min(1).optional(),
       plannerGitSha: z.string().length(40).optional(),
+      pluginCompatibilityFingerprint: HexSha256Schema.optional(),
       requiresCapabilities: z.array(z.string().min(1)).optional(),
       fallbackBehavior: z.enum(['reject', 'emulate', 'degrade']).optional(),
       targetAdapter: z.enum(['temporal', 'conductor', 'any', 'mock']).optional(),

@@ -25,7 +25,8 @@ export class AssemblePlanCommand {
   constructor(
     readonly normalizedInput: NormalizedPlannerInput,
     readonly normalizedSteps: PlanCore['steps'],
-    readonly maxPlanSizeBytes: number
+    readonly maxPlanSizeBytes: number,
+    readonly requiredCapabilities: readonly string[] = []
   ) {}
 }
 
@@ -38,6 +39,9 @@ export class PlanAssembler {
     command: AssemblePlanCommand
   ): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
     const inputHashSha256 = await this.computeInputHash(command.normalizedInput);
+    const pluginCompatibilityFingerprint = await this.computePluginCompatibilityFingerprint(
+      command.normalizedSteps
+    );
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
     const {
@@ -52,15 +56,35 @@ export class PlanAssembler {
     this.metrics.recordPlanSize(bytes);
 
     return {
-      plan: this.assembleFinalPlan(planCore, planId, command.normalizedInput),
+      plan: this.assembleFinalPlan(
+        planCore,
+        planId,
+        command.normalizedInput,
+        pluginCompatibilityFingerprint,
+        command.requiredCapabilities
+      ),
       canonicalPlanJson,
     };
   }
 
   private async computeInputHash(input: NormalizedPlannerInput): Promise<string> {
+    const normalizedNodes = [...input.nodes]
+      .sort((left, right) => left.nodeId.localeCompare(right.nodeId))
+      .map((node) => ({
+        nodeId: node.nodeId,
+        stepKind: node.stepKind,
+        dependsOn: [...node.dependsOn].sort((left, right) => left.localeCompare(right)),
+        ...(node.stepTypeConfig === undefined ? {} : { stepTypeConfig: node.stepTypeConfig }),
+      }));
+
     const semantic = {
-      nodes: input.nodes,
-      selection: input.selection,
+      nodes: normalizedNodes,
+      selection: {
+        ...input.selection,
+        selectedNodeIds: [...input.selection.selectedNodeIds].sort((left, right) =>
+          left.localeCompare(right)
+        ),
+      },
       policies: input.policies,
     };
     const { sha256 } = await sha256CanonicalJson(semantic);
@@ -74,7 +98,9 @@ export class PlanAssembler {
   private assembleFinalPlan(
     planCore: PlanCore,
     planId: string,
-    input: NormalizedPlannerInput
+    input: NormalizedPlannerInput,
+    pluginCompatibilityFingerprint: string,
+    requiredCapabilities: readonly string[]
   ): ExecutionPlan {
     const planBase: ExecutionPlan = {
       ...planCore,
@@ -84,6 +110,8 @@ export class PlanAssembler {
         contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
         planId,
         createdAtIso: new Date().toISOString(),
+        pluginCompatibilityFingerprint,
+        ...(requiredCapabilities.length > 0 ? { requiresCapabilities: requiredCapabilities } : {}),
       },
     };
 
@@ -101,6 +129,29 @@ export class PlanAssembler {
     }
 
     return plan;
+  }
+
+  private async computePluginCompatibilityFingerprint(
+    steps: readonly {
+      stepId: string;
+      kind: string;
+      stepTypeConfig?: Record<string, unknown>;
+    }[]
+  ): Promise<string> {
+    const normalized = [...steps]
+      .sort((left, right) => left.stepId.localeCompare(right.stepId))
+      .map((step) => ({
+        stepId: step.stepId,
+        kind: step.kind,
+        stepTypeConfigKeys: Object.keys(step.stepTypeConfig ?? {}).sort((left, right) =>
+          left.localeCompare(right)
+        ),
+      }));
+    const { sha256 } = await sha256CanonicalJson({
+      compatibilitySurfaceVersion: 1,
+      steps: normalized,
+    });
+    return sha256;
   }
 }
 

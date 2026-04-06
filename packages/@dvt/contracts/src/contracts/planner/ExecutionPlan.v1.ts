@@ -15,12 +15,6 @@ import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 export type StepKind = string;
 
 /**
- * Raw dbt manifest payload (or equivalent planning graph artifact)
- * passed at the planner boundary.
- */
-export type DbtManifestLike = Record<string, unknown>;
-
-/**
  * Immutable reference to a manifest artifact stored out-of-band.
  */
 export interface DbtManifestRef {
@@ -125,6 +119,11 @@ export type VersionedExecutionPlan<TVersion extends SupportedPlanVersion> =
       createdAtIso: string;
       plannerVersion?: string;
       plannerGitSha?: string;
+      /**
+       * Deterministic fingerprint for plugin/runtime compatibility checks at
+       * admission and replay boundaries.
+       */
+      pluginCompatibilityFingerprint?: string;
       requiresCapabilities?: readonly string[];
       fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
       targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';

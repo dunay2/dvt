@@ -18,6 +18,7 @@ export const RunExecutionContextRefSchema: z.ZodType<RunExecutionContextRef> = z
     schemaVersion: NonBlankStringSchema,
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,
+    pluginCompatibilityFingerprint: NonBlankStringSchema.optional(),
   })
   .strict();
 
@@ -27,6 +28,7 @@ export const RunExecutionContextSchema: z.ZodType<RunExecutionContext> = z
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,
     planSha256: NonBlankStringSchema,
+    pluginCompatibilityFingerprint: NonBlankStringSchema.optional(),
     tenantId: NonBlankStringSchema,
     projectId: NonBlankStringSchema,
     environmentId: NonBlankStringSchema,

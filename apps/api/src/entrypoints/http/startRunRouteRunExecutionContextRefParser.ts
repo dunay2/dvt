@@ -19,11 +19,23 @@ export function parseStartRunRunExecutionContextRef(
   const schemaVersion = asNonEmptyTrimmedStringOrUndefined(record.schemaVersion);
   const planId = asNonEmptyTrimmedStringOrUndefined(record.planId);
   const planVersion = asNonEmptyTrimmedStringOrUndefined(record.planVersion);
+  const pluginCompatibilityFingerprint = asNonEmptyTrimmedStringOrUndefined(
+    record.pluginCompatibilityFingerprint
+  );
 
   if (uri && sha256 && schemaVersion && planId && planVersion) {
     return {
       ok: true,
-      value: { uri, sha256, schemaVersion, planId, planVersion },
+      value: {
+        uri,
+        sha256,
+        schemaVersion,
+        planId,
+        planVersion,
+        ...(pluginCompatibilityFingerprint === undefined
+          ? {}
+          : { pluginCompatibilityFingerprint }),
+      },
     };
   }
 

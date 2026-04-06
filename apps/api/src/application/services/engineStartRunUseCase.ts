@@ -163,6 +163,9 @@ function toEnginePlanRef(planRef: StartRunPlanRef): PlanRef {
     schemaVersion: planRef.schemaVersion,
     planId: planRef.planId,
     planVersion: planRef.planVersion,
+    ...(planRef.pluginCompatibilityFingerprint === undefined
+      ? {}
+      : { pluginCompatibilityFingerprint: planRef.pluginCompatibilityFingerprint }),
   };
 }
 

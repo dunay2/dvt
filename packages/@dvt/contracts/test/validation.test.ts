@@ -41,9 +41,12 @@ describe('contracts: validation helpers', () => {
       schemaVersion: '1.0.0',
       planId: 'plan-1',
       planVersion: 'v1',
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
     });
 
     expect(planRef.planId).toBe('plan-1');
+    expect(planRef.pluginCompatibilityFingerprint).toHaveLength(64);
   });
 
   it('throws ContractValidationError for invalid signal type', () => {
@@ -116,9 +119,12 @@ describe('contracts: validation helpers', () => {
       schemaVersion: 'v1.0',
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
     });
 
     expect(ref.planId).toBe(VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId);
+    expect(ref.pluginCompatibilityFingerprint).toHaveLength(64);
   });
 
   it('rejects malformed RunExecutionContextRef', () => {
@@ -139,6 +145,8 @@ describe('contracts: validation helpers', () => {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
       planSha256: 'a'.repeat(64),
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'prod',
@@ -153,6 +161,7 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(runExecutionContext.pluginContexts.dbt.projectBundleRef).toContain('artifacts://');
+    expect(runExecutionContext.pluginCompatibilityFingerprint).toHaveLength(64);
   });
 
   it('rejects RunExecutionContext when top-level provenance fields are missing', () => {

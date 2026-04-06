@@ -10,6 +10,8 @@ function makePlanRef(): PlanRef {
     schemaVersion: 'v1.2',
     planId: 'plan-1',
     planVersion: '1.0',
+    pluginCompatibilityFingerprint:
+      '1111111111111111111111111111111111111111111111111111111111111111',
   };
 }
 
@@ -28,6 +30,8 @@ function makeContext(): ResolvedRunContext {
       schemaVersion: 'v1.0',
       planId: 'plan-1',
       planVersion: '1.0',
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
     },
   };
 }
@@ -38,6 +42,8 @@ function makeRunExecutionContext(overrides?: Partial<RunExecutionContext>): RunE
     planId: 'plan-1',
     planVersion: '1.0',
     planSha256: 'plan-sha',
+    pluginCompatibilityFingerprint:
+      '1111111111111111111111111111111111111111111111111111111111111111',
     tenantId: 'tenant-a',
     projectId: 'project-a',
     environmentId: 'prod',
@@ -83,6 +89,35 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     const policy = new RunExecutionContextAdmissionPolicy({
       async resolve() {
         return runExecutionContext;
+      },
+    });
+
+    await expect(policy.assertAllowed(makePlanRef(), makeContext())).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+    });
+  });
+
+  it('rejects pluginCompatibilityFingerprint mismatch against planRef', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      async resolve() {
+        return makeRunExecutionContext({
+          pluginCompatibilityFingerprint:
+            '2222222222222222222222222222222222222222222222222222222222222222',
+        });
+      },
+    });
+
+    await expect(policy.assertAllowed(makePlanRef(), makeContext())).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+    });
+  });
+
+  it('rejects compatibility-checked plan when resolved context omits fingerprint', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      async resolve() {
+        return makeRunExecutionContext({
+          pluginCompatibilityFingerprint: undefined,
+        });
       },
     });
 
