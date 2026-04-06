@@ -28,9 +28,7 @@ export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPla
         schemaVersion,
         planId,
         planVersion,
-        ...(pluginCompatibilityFingerprint === undefined
-          ? {}
-          : { pluginCompatibilityFingerprint }),
+        ...(pluginCompatibilityFingerprint === undefined ? {} : { pluginCompatibilityFingerprint }),
       },
     };
   }

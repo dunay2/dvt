@@ -26,6 +26,7 @@ Developer guides, contribution guides, and quality standards.
 - [Gap 5 User Reference](gap-5-user-reference-20260319.md)
 - [GenericGraphSource Technical Manual](generic-graph-source-technical-manual-20260404.md)
 - [GenericGraphSource User Manual](generic-graph-source-user-manual-20260404.md)
+- [How To Add A New StepKind](how-to-add-step-kind-20260406.md)
 - [Outbox worker technical manual](outbox-worker-technical-manual-20260404.md)
 - [Outbox worker user manual](outbox-worker-user-manual-20260404.md)
 - [Planner Cycle Detection Technical Manual](planner-cycle-detection-technical-manual-20260404.md)

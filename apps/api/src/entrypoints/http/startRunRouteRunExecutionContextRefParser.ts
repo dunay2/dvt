@@ -32,9 +32,7 @@ export function parseStartRunRunExecutionContextRef(
         schemaVersion,
         planId,
         planVersion,
-        ...(pluginCompatibilityFingerprint === undefined
-          ? {}
-          : { pluginCompatibilityFingerprint }),
+        ...(pluginCompatibilityFingerprint === undefined ? {} : { pluginCompatibilityFingerprint }),
       },
     };
   }
