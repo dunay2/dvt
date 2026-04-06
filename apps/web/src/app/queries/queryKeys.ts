@@ -38,7 +38,6 @@ export const queryKeys = {
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
     list: (viewId: string) => ['runs', 'list', viewId] as const,
-    consoleLogStream: (runId: string | undefined) =>
-      ['runs', 'console-log-stream', runId] as const,
+    consoleLogStream: (runId: string | undefined) => ['runs', 'console-log-stream', runId] as const,
   },
 } as const;
