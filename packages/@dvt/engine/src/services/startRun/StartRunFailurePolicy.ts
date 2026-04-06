@@ -96,7 +96,7 @@ export class StartRunFailurePolicy {
           ) {
             this.lastStderrFallbackAtMs = nowMs;
             process.stderr.write(
-              `[dvt][StartRunCoordinator] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
+              `[dvt][StartRunApplicationService] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
             );
           }
         } catch {

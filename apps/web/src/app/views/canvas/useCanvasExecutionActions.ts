@@ -3,8 +3,9 @@ import { toast } from 'sonner';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
-import { buildSessionRunContext, buildPlanRefFromPlan } from '../../services/plans/plansService';
+import { buildSessionRunContext } from '../../services/plans/plansService';
 import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanRef } from '../../types/engine';
 
 type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
@@ -27,6 +28,10 @@ type UseCanvasExecutionActionsResult = {
   handlePlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
 };
+
+export function resolvePlanRefForStartRun(plan: ExecutionPlan): PlanRef | null {
+  return plan.planRef ?? null;
+}
 
 export function useCanvasExecutionActions({
   plansService,
@@ -81,7 +86,12 @@ export function useCanvasExecutionActions({
     try {
       const runId = `run_ui_${Date.now()}`;
       const context = buildSessionRunContext(runId);
-      const planRef = buildPlanRefFromPlan(currentPlan);
+      const planRef = resolvePlanRefForStartRun(currentPlan);
+      if (!planRef) {
+        toast.error('Plan reference is unavailable for this mode');
+        setPlanModalOpen(true);
+        return;
+      }
       const runRef = await runsService.startRun({ planRef, context });
 
       if (!consolePanelVisible) {

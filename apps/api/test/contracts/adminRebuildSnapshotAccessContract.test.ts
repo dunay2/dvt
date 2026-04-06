@@ -1,3 +1,4 @@
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
@@ -13,13 +14,13 @@ function makeSnapshot(
   status: WorkflowSnapshotResult['status'] = 'PENDING'
 ): WorkflowSnapshotResult {
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
     runId,
     status,
     paused: false,
     cancelling: false,
     steps: {},
-  };
+  } as WorkflowSnapshotResult;
 }
 
 function createApp(

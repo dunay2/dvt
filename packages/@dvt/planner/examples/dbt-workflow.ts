@@ -1,4 +1,4 @@
-import { Planner } from '../src/domain/Planner.js';
+﻿import { Planner } from '../src/domain/Planner.js';
 import type { PlannerInputEnvelopeV1 } from '../src/domain/types.js';
 
 async function main(): Promise<void> {
@@ -7,11 +7,11 @@ async function main(): Promise<void> {
   const input: PlannerInputEnvelopeV1 = {
     graphSource: {
       nodes: [
-        { nodeId: 'model.stg_orders', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'model.fct_orders', resourceType: 'model', dependsOn: ['model.stg_orders'] },
+        { nodeId: 'model.stg_orders', stepKind: 'DBT_MODEL', dependsOn: [] },
+        { nodeId: 'model.fct_orders', stepKind: 'DBT_MODEL', dependsOn: ['model.stg_orders'] },
         {
           nodeId: 'test.fct_orders_not_null',
-          resourceType: 'test',
+          stepKind: 'DBT_TEST',
           dependsOn: ['model.fct_orders'],
         },
       ],

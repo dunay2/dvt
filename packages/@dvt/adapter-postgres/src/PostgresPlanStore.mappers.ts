@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 
 import {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   type PlanExecutabilityRecord,
   type PlanExecutabilityRejectionReport,
   type PlanRefSchemaT,
@@ -27,15 +29,32 @@ export type StoredPlanRow = {
 
 export type ExecutabilityState = 'PENDING' | 'VALID' | 'INVALID';
 
+export function toPersistedCanonicalPlanJson(buildResult: PlannerBuildResultV1): string {
+  const persistedPlan = {
+    metadata: {
+      planVersion: buildResult.plan.metadata.planVersion,
+      schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+      contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+      inputHashSha256: buildResult.plan.metadata.inputHashSha256,
+      planId: buildResult.plan.metadata.planId,
+      // Keep persisted canonical JSON stable across equivalent rebuilds.
+      createdAtIso: '1970-01-01T00:00:00.000Z',
+    },
+    steps: buildResult.plan.steps,
+  };
+  return JSON.stringify(persistedPlan);
+}
+
 export function buildPlanRecord(
   buildResult: PlannerBuildResultV1,
   planRef: PlanRefSchemaT
 ): PlanRecord {
   const nowIso = new Date().toISOString();
+  const canonicalPlanJson = toPersistedCanonicalPlanJson(buildResult);
   return parsePlanRecord({
     planId: buildResult.plan.metadata.planId,
-    canonicalPlanJson: buildResult.canonicalPlanJson,
-    canonicalHash: createHash('sha256').update(buildResult.canonicalPlanJson).digest('hex'),
+    canonicalPlanJson,
+    canonicalHash: createHash('sha256').update(canonicalPlanJson).digest('hex'),
     planVersion: buildResult.plan.metadata.planVersion,
     schemaVersion: buildResult.plan.metadata.schemaVersion,
     contractVersion: buildResult.plan.metadata.contractVersion,

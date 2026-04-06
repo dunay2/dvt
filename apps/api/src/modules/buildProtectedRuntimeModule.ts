@@ -206,6 +206,13 @@ export async function buildProtectedRuntimeModule(
     })
   );
   const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
+  const planner = new PlannerFacade({
+    resolver: new ManifestArtifactResolver({ nodeEnv: env.NODE_ENV }),
+  });
+  const planValidator = new StoredPlanExecutabilityValidator({
+    fetcher: planStore,
+    adapters,
+  });
   const facade = new StartRunAuthorizedFacade(
     authenticator,
     commandAuthorizer,
@@ -216,14 +223,9 @@ export async function buildProtectedRuntimeModule(
       mode: env.DVT_START_RUN_BACKPRESSURE_MODE,
       retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
       delegate: new PlannerBackedStartRunUseCase({
-        planner: new PlannerFacade({
-          resolver: new ManifestArtifactResolver({ nodeEnv: env.NODE_ENV }),
-        }),
+        planner,
         planStore,
-        validator: new StoredPlanExecutabilityValidator({
-          fetcher: planStore,
-          adapters,
-        }),
+        validator: planValidator,
         compileTelemetry: startRunSlaTelemetry,
         delegate: new EngineStartRunUseCase(engine),
       }),
@@ -239,6 +241,10 @@ export async function buildProtectedRuntimeModule(
     adapters,
     startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,
+    planner,
+    planStore,
+    planValidator,
+    executablePlanResolver,
     migrate: async () => {
       await accessRepo.migrate();
       await stateStore.migrate();

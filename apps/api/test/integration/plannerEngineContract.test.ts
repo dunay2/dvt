@@ -16,8 +16,13 @@ import {
   RunAccessPolicy,
   SequenceClock,
   SnapshotProjector,
+  StartRunAdmissionGuard,
+  StartRunApplicationService,
   WorkflowEngine,
+  WorkflowEngineCoreService,
+  type EngineRunRef,
   type ExecutionPlan,
+  type IProviderAdapter,
   type RunEventInput,
 } from '@dvt/engine';
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
@@ -116,20 +121,44 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     projector,
     planFetcher: { fetch: async () => enginePlan },
   });
+  const policy = new RunAccessPolicy({
+    authorizer: new AllowAllAuthorizer(),
+    planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+  });
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
 
   const engine = new WorkflowEngine({
+    startRunApplicationService: new StartRunApplicationService({
+      policy,
+      guard: new StartRunAdmissionGuard({
+        policy,
+        stateStoreRead: store,
+        adapters,
+      }),
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      idempotency,
+      clock,
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
+    }),
+    core: new WorkflowEngineCoreService({
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      projector,
+      idempotency,
+      policy,
+      adapters,
+      observability: createNoopObservability(),
+      clock,
+    }),
     stateStoreRead: store,
     stateStoreWrite: store,
     projector,
     idempotency,
     clock,
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
-    adapters: new Map([['mock', mockAdapter]]),
+    adapters,
   });
 
   return { engine, store, clock, idempotency };

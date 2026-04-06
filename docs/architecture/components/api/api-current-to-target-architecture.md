@@ -1,4 +1,4 @@
----
+﻿---
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
@@ -25,7 +25,7 @@ through the existing planning registry.
 - [System Delivery Status](../../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../../../planning/status/canonical-doc-code-matrix.md)
 - [DVT+ Design Guide - Boundaries, Ports, Composition, and CQRS](../../../guides/dvt-code-style-solid-hexagonal-cqrs.md)
-- [MVP-A1 Backend Contractual Inventory](../../../planning/proposals/mandatory/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
+- [MVP-A1 Backend Contractual Inventory](../../../planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
 - [Deep Technical Architectural Review - DVT+ System](../../../planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md)
 
 ## Current System

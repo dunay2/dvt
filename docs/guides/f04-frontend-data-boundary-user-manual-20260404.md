@@ -26,6 +26,7 @@ planning_type: guide
 2. Views load data from shared service context.
 3. Platform health and capabilities reflect the same mode context.
 4. Canvas/runs/cost/lineage stay aligned with centralized query key policy.
+5. Starting a run requires a valid `planRef` on the current execution plan.
 
 ## Troubleshooting
 
@@ -43,6 +44,14 @@ planning_type: guide
 
 - verify features use sliced stores by concern.
 - avoid re-introducing legacy monolithic store selectors.
+
+### Symptom: "Plan reference is unavailable for this mode"
+
+- this is a boundary guard, not a transport error.
+- expected behavior: run start is blocked and plan modal is reopened.
+- resolution path:
+  - in `api` mode, backend plan preview/import payload must include canonical `planRef`.
+  - in `mock` mode, mock execution plan fixture must include `planRef`.
 
 ## Validation Checklist (User-Facing Confidence)
 

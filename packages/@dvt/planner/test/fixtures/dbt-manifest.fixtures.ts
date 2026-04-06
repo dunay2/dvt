@@ -39,13 +39,18 @@ function makeManifestEnvelope(size: 10 | 100 | 500): PlannerInputEnvelopeV1 {
   const leaf = `model.analytics.n${(size - 1).toString().padStart(3, '0')}`;
   const graphNodes = Object.entries(manifestNodes).map(([nodeId, node]) => ({
     nodeId,
-    resourceType: node.resource_type,
+    stepKind:
+      node.resource_type === 'model'
+        ? 'DBT_MODEL'
+        : node.resource_type === 'test'
+          ? 'DBT_TEST'
+          : 'DBT_SNAPSHOT',
     dependsOn: [...node.depends_on.nodes],
   }));
 
   return {
     graphSource: {
-      kind: 'normalized-graph-v1',
+      kind: 'generic-graph-v1',
       nodes: graphNodes,
     },
     selection: {

@@ -156,6 +156,13 @@ describe('applyRunEvent - step terminal guard', () => {
 });
 
 describe('applyRunEvent - explicit transition guards', () => {
+  it('allows RunCancelRequested when run is PENDING', () => {
+    const snap = makeSnap('PENDING');
+    applyRunEvent(snap, makeRunEvent('RunCancelRequested'));
+    expect(snap.cancelling).toBe(true);
+    expect(snap.status).toBe('PENDING');
+  });
+
   it('rejects RunPaused when run is not RUNNING', () => {
     expect(() => applyRunEvent(makeSnap('PENDING'), makeRunEvent('RunPaused'))).toThrow(
       InvalidStateTransitionError

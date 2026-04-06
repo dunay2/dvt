@@ -45,6 +45,10 @@ describe('modules', () => {
         maintenance: {} as never,
         snapshotStaleness: {} as never,
       },
+      planner: {} as never,
+      planStore: {} as never,
+      planValidator: {} as never,
+      executablePlanResolver: { fetch: async () => ({}) } as never,
       async migrate() {
         migrateCalls += 1;
       },

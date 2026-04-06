@@ -33,6 +33,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     const rootIndex = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
     expect(rootIndex).toMatch(/\bExecutionPlan,\s*/);
     expect(rootIndex).not.toMatch(/\bExecutionPlanV2\b/);
+    expect(rootIndex).not.toMatch(/\bGraphNode,\s*/);
   });
 
   it('expone el contrato normativo IPlanner como forma canónica', async () => {

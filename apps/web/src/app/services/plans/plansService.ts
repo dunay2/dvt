@@ -2,11 +2,7 @@ import type { IPlansPort } from '../../ports/plans';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
 import type { DataSourceMode } from '../config/dataSource';
 import { createApiPlansService } from './plansService.api';
-import {
-  buildPlanRefFromPlan,
-  buildSessionRunContext,
-  createMockPlansService,
-} from './plansService.mock';
+import { buildSessionRunContext, createMockPlansService } from './plansService.mock';
 
 // Re-export port types for backward compatibility - consumers should migrate
 // to importing from '../../ports/plans' or '../../ports' directly.
@@ -28,4 +24,4 @@ export function createPlansService(
   return createMockPlansService();
 }
 
-export { buildSessionRunContext, buildPlanRefFromPlan };
+export { buildSessionRunContext };

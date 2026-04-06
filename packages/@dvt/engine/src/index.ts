@@ -44,4 +44,4 @@ export * from './security/RunAccessPolicy.js';
 
 export * from './application/providerSelection.js';
 export * from './application/StartRunAdmissionGuard.js';
-export * from './application/StartRunCoordinator.js';
+export * from './application/StartRunApplicationService.js';

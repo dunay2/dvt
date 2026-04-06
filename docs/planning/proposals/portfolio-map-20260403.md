@@ -42,6 +42,10 @@ planning_type: proposal
 ## Superseded
 
 - [Runtime And Delivery](superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md)
+- [AR-A9 Planner cycle fail-closed plan](superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
+- [MVP-A1 Backend Contractual Inventory](superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
+- [RC-C1 HTTP Error Envelope Normalization Plan](superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
+- [G4-PR4 Admission Control Operability Plan](superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md)
 
 ## Disposable
 

@@ -1,8 +1,8 @@
----
+﻿---
 title: RC-C1 HTTP Error Envelope Normalization Plan
-status: Active
+status: Superseded
 owner: API / Architecture / Delivery / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-05
 planning_type: proposal
 ---
 

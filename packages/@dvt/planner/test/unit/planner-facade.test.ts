@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 
 import { PlannerFacade } from '../../src/application/PlannerFacade.js';
 import { PlannerErrorCode } from '../../src/domain/errors.js';
@@ -114,15 +114,11 @@ describe('PlannerFacade - graph source routing', () => {
     expect(result.plan).toBeDefined();
   });
 
-  it('supports non-DBT translation when step-kind mapper and stepFactory are injected', async () => {
+  it('supports non-DBT graphSource when stepFactory is injected', async () => {
     const facade = new PlannerFacade({
-      stepKindToResourceType: (stepKind) => {
-        if (stepKind === 'API_CALL') return 'service';
-        throw new Error(`unexpected stepKind: ${stepKind}`);
-      },
       stepFactory: (node) => ({
         stepId: node.nodeId,
-        kind: 'API_CALL',
+        kind: node.stepKind,
         dependsOn: [...node.dependsOn],
       }),
     });
@@ -139,24 +135,6 @@ describe('PlannerFacade - graph source routing', () => {
       stepId: 'service.notify',
       kind: 'API_CALL',
       dependsOn: [],
-    });
-  });
-
-  it('normalizes mapper failures into INVALID_INPUT planner errors', async () => {
-    const facade = new PlannerFacade({
-      stepKindToResourceType: () => {
-        throw new Error('mapper exploded');
-      },
-    });
-
-    await expect(
-      facade.buildPlan({
-        graphSource: BASE_GRAPH_SOURCE,
-        selection: BASE_SELECTION,
-      })
-    ).rejects.toMatchObject({
-      code: PlannerErrorCode.INVALID_INPUT,
-      message: expect.stringContaining('stepKind to resourceType mapping failed'),
     });
   });
 });
@@ -215,7 +193,7 @@ describe('PlannerFacade - resolver requirements', () => {
       kind: 'generic-graph-v1',
       sourceFamily: 'dbt',
       sourceVersion: '1.0',
-      nodes: [{ nodeId: 'x', resourceType: 'model', dependsOn: [] }],
+      nodes: [{ nodeId: 'x', dependsOn: [] }],
     });
     const facade = new PlannerFacade({ resolver });
     await expectInvalidInput(

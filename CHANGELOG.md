@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.10.0](https://github.com/dunay2/dvt/compare/v5.9.0...v5.10.0) (2026-04-05)
+
+
+### Features
+
+* **ci:** Add AR-C2 evidence collector MVP command ([#789](https://github.com/dunay2/dvt/issues/789)) ([f6ae619](https://github.com/dunay2/dvt/commit/f6ae619f90afc7bc91564609ce4c86d6630cb47c))
+* **planner:** Add stepTypeConfig validation for plan verifier ([#795](https://github.com/dunay2/dvt/issues/795)) ([3d0cd66](https://github.com/dunay2/dvt/commit/3d0cd66f62c455607476bd4d710692336c3d722b))
+* **planner:** Complete MW-A2 policy-first QA closure ([#800](https://github.com/dunay2/dvt/issues/800)) ([c081750](https://github.com/dunay2/dvt/commit/c0817503a1e41ab90945c3aa5c1562f3a6cba06e))
+
+
+### Bug Fixes
+
+* **adapters:** Align pending cancel flow and plan-store canonical persistence ([#802](https://github.com/dunay2/dvt/issues/802)) ([9cea707](https://github.com/dunay2/dvt/commit/9cea707841372fd989987e8f8b937cdb98f3cf81))
+* **adapters:** Close S19-F1-C snapshot queue closure evidence ([#790](https://github.com/dunay2/dvt/issues/790)) ([358c2c6](https://github.com/dunay2/dvt/commit/358c2c65502c219e9f24f36aadd1d3fa5fcc958f))
+* **adapters:** Harden outbox worker startup abort handling and add manuals ([#794](https://github.com/dunay2/dvt/issues/794)) ([e4d1848](https://github.com/dunay2/dvt/commit/e4d184888cd6d9d72d6ba72375781acd00f792ce))
+* **api:** Enforce explicit admin RBAC for maintenance routes ([#792](https://github.com/dunay2/dvt/issues/792)) ([92ce493](https://github.com/dunay2/dvt/commit/92ce49389bb0f35c38dad1620b96f16d17f5d12a))
+* **api:** Guarantee canonical planRef payload for plan preview and import ([#801](https://github.com/dunay2/dvt/issues/801)) ([b32e25e](https://github.com/dunay2/dvt/commit/b32e25e098e3236baf9eef0ff4b291ea6e7c1751))
+* **contracts:** Version WorkflowSnapshot and rebuild stale snapshots ([#798](https://github.com/dunay2/dvt/issues/798)) ([2c41871](https://github.com/dunay2/dvt/commit/2c41871a86e490f8eecb1dbd4fff651f738b50ce))
+* **web:** Ensure app services provider wraps router globally ([#797](https://github.com/dunay2/dvt/issues/797)) ([0589750](https://github.com/dunay2/dvt/commit/0589750e03ae94e9047a435856f56e11218c86dd))
+
 ## [5.9.0](https://github.com/dunay2/dvt/compare/v5.8.0...v5.9.0) (2026-04-04)
 
 
