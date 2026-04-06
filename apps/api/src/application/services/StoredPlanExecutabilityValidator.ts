@@ -1,6 +1,7 @@
 import type {
   ExecutabilityValidationResult,
   IPlanExecutabilityValidator,
+  IStepTypeRegistry,
   PlanRefSchemaT,
 } from '@dvt/contracts';
 import {
@@ -9,7 +10,6 @@ import {
   parsePlanRef,
 } from '@dvt/contracts';
 import { isStepKindSupportedByAdapter } from '@dvt/contracts';
-import type { IStepTypeRegistry } from '@dvt/contracts';
 import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
 
 import type { IStoredPlanValidationReader } from '../ports/storedPlan.js';
