@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
+import { FileCode2, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
@@ -55,6 +55,18 @@ export const dbtContributions: PluginContributions = {
         label: 'Lineage',
         icon: GitGraph,
         order: 15,
+        level: 'core',
+      },
+    },
+    {
+      pluginId: DBT_PLUGIN_ID,
+      id: 'dbt.code',
+      path: '/code',
+      component: React.lazy(() => import('../../views/CodeView')),
+      nav: {
+        label: 'Code',
+        icon: FileCode2,
+        order: 16,
         level: 'core',
       },
     },
