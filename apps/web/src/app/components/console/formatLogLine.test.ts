@@ -32,9 +32,7 @@ describe('formatRunEventAsLogLine', () => {
   });
 
   it('formats a StepCompleted event', () => {
-    const line = formatRunEventAsLogLine(
-      makeEvent({ eventType: 'StepCompleted' })
-    );
+    const line = formatRunEventAsLogLine(makeEvent({ eventType: 'StepCompleted' }));
     expect(line).toContain('[SUCCESS]');
     expect(line).toContain('Step stg_orders completed');
   });
@@ -85,9 +83,7 @@ describe('formatRunEventAsLogLine', () => {
   });
 
   it('handles unknown event types gracefully', () => {
-    const line = formatRunEventAsLogLine(
-      makeEvent({ eventType: 'CustomEvent' as never })
-    );
+    const line = formatRunEventAsLogLine(makeEvent({ eventType: 'CustomEvent' as never }));
     expect(line).toContain('[INFO]');
     expect(line).toContain('CustomEvent');
   });

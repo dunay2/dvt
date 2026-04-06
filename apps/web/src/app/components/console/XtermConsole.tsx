@@ -73,11 +73,5 @@ export default function XtermConsole({ lines }: XtermConsoleProps) {
     fitAddonRef.current?.fit();
   }, [lines]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="h-full w-full"
-      data-testid="xterm-console"
-    />
-  );
+  return <div ref={containerRef} className="h-full w-full" data-testid="xterm-console" />;
 }

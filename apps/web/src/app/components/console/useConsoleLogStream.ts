@@ -27,16 +27,13 @@ export function useConsoleLogStream(): {
   const afterSeqRef = useRef<number | undefined>(undefined);
   const lastRunIdRef = useRef<string | undefined>(undefined);
 
-  const resetOnRunChange = useCallback(
-    (currentRunId: string | undefined) => {
-      if (currentRunId !== lastRunIdRef.current) {
-        lastRunIdRef.current = currentRunId;
-        afterSeqRef.current = undefined;
-        setLines([]);
-      }
-    },
-    []
-  );
+  const resetOnRunChange = useCallback((currentRunId: string | undefined) => {
+    if (currentRunId !== lastRunIdRef.current) {
+      lastRunIdRef.current = currentRunId;
+      afterSeqRef.current = undefined;
+      setLines([]);
+    }
+  }, []);
 
   useQuery({
     queryKey: queryKeys.runs.consoleLogStream(runId),
