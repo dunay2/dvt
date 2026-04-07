@@ -725,14 +725,11 @@ async function waitForTerminalStatus(
 interface CancelScenarioRequest {
   mode: 'signal' | 'cancel';
   adapter: TemporalAdapter;
-  planRef: PlanRef;
+  planId: string;
+  planBytes: Uint8Array;
   runId: RunId;
   store: TestStateStore;
   waitForCondition: WaitForConditionFn;
-}
-
-function clonePlanRef(planRef: PlanRef): PlanRef {
-  return { ...planRef };
 }
 
 async function runCancelScenario(args: CancelScenarioRequest): Promise<{
@@ -741,7 +738,7 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   eventTypes: string[];
 }> {
   const runCtx = createRunContext(args.runId);
-  const runRef = await args.adapter.startRun(clonePlanRef(args.planRef), runCtx);
+  const runRef = await args.adapter.startRun(createPlanRef(args.planId, args.planBytes), runCtx);
   await args.waitForCondition(
     () => args.store.listRunEvents(args.runId),
     (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -1051,8 +1048,6 @@ describe('temporal integration (time-skipping)', () => {
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-      const planRef = createPlanRef('it-plan', planBytes);
-
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
         TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel',
@@ -1079,7 +1074,8 @@ describe('temporal integration (time-skipping)', () => {
         const signalResult = await runCancelScenario({
           mode: 'signal',
           adapter,
-          planRef,
+          planId: 'it-plan',
+          planBytes,
           runId: RunId.of('run-it-cancel-1'),
           store,
           waitForCondition,
@@ -1094,7 +1090,8 @@ describe('temporal integration (time-skipping)', () => {
         const cancelResult = await runCancelScenario({
           mode: 'cancel',
           adapter,
-          planRef,
+          planId: 'it-plan',
+          planBytes,
           runId: RunId.of('run-it-cancel-2'),
           store,
           waitForCondition,
