@@ -202,6 +202,20 @@ module.exports = [
     },
   },
   {
+    files: ['apps/web/cypress/**/*.ts', 'apps/web/cypress.config.ts'],
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: __dirname },
+      globals: {
+        Cypress: 'readonly',
+        cy: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'off',
+      'no-undef': 'off',
+    },
+  },
+  {
     files: ['apps/web/vite.config.ts'],
     languageOptions: {
       parserOptions: { tsconfigRootDir: __dirname }, // no project => no type-aware for this file

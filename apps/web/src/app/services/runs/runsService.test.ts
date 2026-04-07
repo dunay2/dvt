@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError, type ApiClient } from '../api/createApiClient';
+import { useSessionStore } from '../../stores/sessionStore';
 import { createRunsService, type StartRunInput } from './runsService';
 
 function createApiClientMock(): ApiClient {
@@ -41,6 +42,12 @@ function createApiError(statusCode: number, endpoint = '/runs/start'): ApiError 
 }
 
 describe('runsService runtime contract', () => {
+  useSessionStore.setState({
+    tenantId: 'tenant-1',
+    projectId: 'project-1',
+    environmentId: 'env-1',
+  });
+
   it('uses POST /runs/start for startRun', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson).mockResolvedValue({
@@ -73,7 +80,7 @@ describe('runsService runtime contract', () => {
     const service = createRunsService('api', apiClient);
     const snapshot = await service.getRunSnapshot('run_abc');
 
-    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc');
+    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc?tenantId=tenant-1');
     expect(snapshot).toEqual({
       runId: 'run_abc',
       planId: 'plan_abc',
@@ -112,7 +119,9 @@ describe('runsService runtime contract', () => {
     const service = createRunsService('api', apiClient);
     await service.listRunEvents('run_abc', 5);
 
-    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc/events?afterSeq=5');
+    expect(apiClient.getJson).toHaveBeenCalledWith(
+      '/runs/run_abc/events?tenantId=tenant-1&afterSeq=5'
+    );
   });
 
   it('maps listRunSummaries from runtime list result items', async () => {
@@ -136,7 +145,9 @@ describe('runsService runtime contract', () => {
     const service = createRunsService('api', apiClient);
     const runs = await service.listRunSummaries();
 
-    expect(apiClient.getJson).toHaveBeenCalledWith('/runs');
+    expect(apiClient.getJson).toHaveBeenCalledWith(
+      '/runs?tenantId=tenant-1&projectId=project-1&environmentId=env-1'
+    );
     expect(runs).toEqual([
       {
         runId: 'run_1',
@@ -229,7 +240,7 @@ describe('runsService runtime contract', () => {
     const service = createRunsService('api', apiClient);
     await service.getRunSnapshot('run_abc');
 
-    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc');
+    expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc?tenantId=tenant-1');
     expect(apiClient.getJson).not.toHaveBeenCalledWith('/runs/run_abc/status');
   });
 });

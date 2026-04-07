@@ -6,7 +6,12 @@
   "scripts": {
     "pretest": "pnpm --filter \"@dvt/web^...\" build",
     "build": "vite build",
+    "build:e2e": "vite build --mode e2e",
     "dev": "vite",
+    "preview:e2e": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
+    "test:e2e": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"docker run --rm -t -v \\\"%cd%/../..:/repo\\\" -w /repo/apps/web -e CYPRESS_baseUrl=http://host.docker.internal:4173 cypress/included:13.17.0 --project /repo/apps/web --config-file /repo/apps/web/cypress.config.ts\"",
+    "test:e2e:native": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"cypress run --config-file cypress.config.ts\"",
+    "test:e2e:open": "pnpm build:e2e && start-server-and-test \"pnpm preview:e2e\" http://127.0.0.1:4173 \"cypress open --config-file cypress.config.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts"
@@ -84,7 +89,9 @@
     "@vitejs/plugin-react": "4.7.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+    "cypress": "13.17.0",
     "jsdom": "^26.1.0",
+    "start-server-and-test": "^2.0.11",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   }
