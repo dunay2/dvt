@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND,
+  ManifestArtifactResolutionError,
+} from '../../../src/application/errors/ManifestArtifactResolutionError.js';
 import { importPlanRoute, previewPlanRoute } from '../../../src/entrypoints/http/planRoutes.js';
 
 function createReply(): {
@@ -80,6 +84,104 @@ describe('planRoutes', () => {
 
     expect(reply.statusCode).toBe(400);
     expect(reply.payload).toEqual({ error: { type: 'bad_request', reason: 'invalid_body' } });
+  });
+
+  it('returns 401 on preview when bearer token is missing', async () => {
+    const reply = createReply();
+    const deps = {
+      authenticator: {
+        authenticateBearerToken: vi.fn(async () => ({ ok: false, code: 'missing_bearer_token' })),
+      },
+      authorizer: { authorize: vi.fn() },
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn() },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-missing-token',
+        headers: {},
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(401);
+    expect(reply.payload).toEqual({
+      error: { type: 'unauthorized', reason: 'missing_bearer_token' },
+    });
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 on preview when principal is not granted run:start', async () => {
+    const reply = createReply();
+    const deps = {
+      authenticator: {
+        authenticateBearerToken: vi.fn(async () => ({
+          ok: true,
+          principal: { principalId: 'principal-1' },
+        })),
+      },
+      authorizer: {
+        authorize: vi.fn(async () => ({
+          ok: false,
+          reason: 'action_not_granted',
+        })),
+      },
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn() },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-forbidden',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(403);
+    expect(reply.payload).toEqual({
+      error: { type: 'forbidden', reason: 'action_not_granted' },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
   });
 
   it('returns plan and planRef from preview route', async () => {
@@ -265,6 +367,110 @@ describe('planRoutes', () => {
       VALID_PLAN_REF,
       expect.objectContaining({ status: 'ERROR', code: 'REJECTED' })
     );
+  });
+
+  it('returns 422 plan_rejected when planner manifest resolution fails', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: {
+        buildPlan: vi.fn(async () => {
+          throw new ManifestArtifactResolutionError(
+            MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.integrityMismatch,
+            'Manifest artifact integrity mismatch.',
+            { detail: 'sha256_mismatch' }
+          );
+        }),
+      },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-manifest-rejected',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          manifestRef: {
+            uri: 'file://manifest.json',
+            sha256: 'f'.repeat(64),
+          },
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          message: 'Manifest artifact integrity mismatch.',
+          cause: 'manifest_ref_integrity_mismatch',
+        },
+      },
+    });
+    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+  });
+
+  it('returns 500 on preview when planner throws an unexpected error', async () => {
+    const reply = createReply();
+    const logError = vi.fn();
+    const deps = {
+      ...okAuthDeps(),
+      planner: {
+        buildPlan: vi.fn(async () => {
+          throw new Error('unexpected planner failure');
+        }),
+      },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-internal-error',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+        log: { error: logError },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(500);
+    expect(reply.payload).toEqual({
+      error: { type: 'internal_server_error', reason: 'internal_error' },
+    });
+    expect(logError).toHaveBeenCalledTimes(1);
   });
 
   it('returns plan and planRef from import route', async () => {

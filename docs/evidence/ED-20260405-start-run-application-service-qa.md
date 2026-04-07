@@ -23,6 +23,10 @@ evidence:
     - pnpm --filter dvt-api typecheck
     - pnpm --filter @dvt/engine test
     - pnpm --filter dvt-api test
+    - docker compose -f infra/docker/postgres/docker-compose.yml up -d
+    - DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api test -- protectedRuntime.integration
+    - pnpm --filter dvt-api test -- planRoutes
+    - pnpm --filter dvt-api test -- plannerEngineContract
     - pnpm verify:prepush
 ---
 
@@ -38,6 +42,10 @@ evidence:
 
 This artifact captures QA alignment for extracting `StartRunApplicationService`
 from `WorkflowEngine` and reducing engine `startRun` to delegation.
+
+Addendum (2026-04-07): this document now also records hard-QA documentary
+evidence for protected-runtime integration under Docker and the follow-up test
+stabilization required after plan-integrity ownership hardening.
 
 Canonical execution tracking remains in:
 
@@ -116,11 +124,42 @@ No critical findings.
   - `pnpm --filter dvt-api test`
   - `pnpm --filter @dvt/engine test -- StartRunApplicationService`
   - `pnpm --filter dvt-api test -- WorkflowEngineFactory`
+  - `docker compose -f infra/docker/postgres/docker-compose.yml up -d`
+  - `DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api test -- protectedRuntime.integration`
+  - `pnpm --filter dvt-api test -- planRoutes`
+  - `pnpm --filter dvt-api test -- plannerEngineContract`
   - `pnpm docs:sync`
   - `pnpm verify:prepush`
-- What passed: all listed commands passed.
-- What failed: none.
-- What could not be verified: none.
+- What passed:
+  - `pnpm --filter dvt-api test -- protectedRuntime.integration` with Docker DB after test remediation (11 passed, 0 failed, 0 skipped).
+  - `pnpm --filter dvt-api test -- planRoutes`.
+  - `pnpm --filter dvt-api test -- plannerEngineContract`.
+  - `pnpm verify:prepush`.
+- What failed:
+  - First Docker-backed run of `protectedRuntime.integration` failed with 2 tests (`500` vs expected `202`) due `PLAN_NOT_FOUND` and then `PLAN_STORE_CONFLICT`.
+- What could not be verified:
+  - none for the active protected-runtime scope once Docker-backed rerun passed.
+
+## 2026-04-07 Runtime QA Addendum (Documentary Evidence)
+
+### Scope
+
+- `apps/api/src/entrypoints/http/planRoutes.ts`
+- `apps/api/test/entrypoints/http/planRoutes.test.ts`
+- `apps/api/test/integration/protectedRuntime.integration.test.ts`
+
+### Observed failure and correction
+
+1. Docker-backed integration removed the previous `skipped` state and exposed
+   real regressions in two integration tests.
+2. Root causes found in test setup:
+   - stale start-run payload shape using a fixed unresolved `planRef`;
+   - plan-store collision between tests reusing identical planner graph input.
+3. Remediation applied in
+   `apps/api/test/integration/protectedRuntime.integration.test.ts`:
+   - migrated affected tests to planner-backed payloads (`graphSource`);
+   - separated graph node ids per test to avoid cross-test plan collisions.
+4. Rerun against Docker-backed Postgres finished green: 11/11 passed.
 
 ## Unblock Roadmap
 
