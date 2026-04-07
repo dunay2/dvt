@@ -1015,11 +1015,10 @@ describe('temporal integration (time-skipping)', () => {
           { timeoutMs: 30_000 }
         );
 
-        const metadata = await store.getRunMetadataByRunId(ctx.runId);
-        expect(metadata?.planRef).toEqual(planRef);
-        expect((await store.listRunEvents(RunId.of(ctx.runId))).at(-1)?.eventType).toBe(
-          'RunCompleted'
-        );
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
+        expect(events.every((event) => event.planId === planRef.planId)).toBe(true);
+        expect(events.every((event) => event.planVersion === planRef.planVersion)).toBe(true);
+        expect(events.at(-1)?.eventType).toBe('RunCompleted');
       } finally {
         await worker.shutdown();
         await env.teardown();
