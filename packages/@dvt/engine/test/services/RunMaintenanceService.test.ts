@@ -12,7 +12,12 @@ import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
-import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanRefForPlan,
+  makeProviderMap,
+} from '../helpers/workflowEngine.fixture.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type IObservability = import('@dvt/observability').IObservability;
@@ -23,14 +28,10 @@ type IProviderAdapter = import('../../src/adapters/IProviderAdapter.js').IProvid
 // helpers moved to module scope
 
 function makePlanRef(): PlanRef {
-  return {
-    uri: 'https://example.com/plan',
-    sha256: 'deadbeef',
-    schemaVersion: 'v1.1',
-    planId: 'p',
-    planVersion: '1.0',
-  };
+  return makePlanRefForPlan(makeDefaultExecutionPlan(), 'https://example.com/plan');
 }
+
+const TEST_PLAN_REF = makePlanRef();
 
 function makeContext(runId = 'r1'): RunContext {
   return {
@@ -45,7 +46,7 @@ function makeContext(runId = 'r1'): RunContext {
 function makeTemporalAdapter(): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef: PlanRef, ctx) {
+    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -248,7 +249,7 @@ function createStatusSignalObservability(spy: {
 function makeAdapterWithLookup(knownRunIds: Set<string>, cancelLog?: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef: PlanRef, ctx) {
+    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -291,7 +292,7 @@ function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapte
 function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef, ctx) {
+    async startRun(_plan, _planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -315,7 +316,7 @@ function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
 function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
     provider: 'mock',
-    async startRun(_planRef, ctx) {
+    async startRun(_plan, _planRef, ctx) {
       return {
         provider: 'mock',
         tenantId: ctx.tenantId,
@@ -411,7 +412,7 @@ async function makeCancellingRun(
 ): Promise<EngineRunRef> {
   const ctx = makeContext(runId);
   ctx.tenantId = tenantId;
-  const runRef = await fixture.engine.startRun(makePlanRef(), ctx);
+  const runRef = await fixture.engine.startRun(TEST_PLAN_REF, ctx);
 
   // Transition to RUNNING
   await fixture.store.appendAndEnqueueTx(runId, [
@@ -423,16 +424,16 @@ async function makeCancellingRun(
       projectId: 'p',
       environmentId: 'dev',
       runId,
-      planId: 'p',
-      planVersion: '1.0',
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
       engineAttemptId: 1,
       logicalAttemptId: 1,
       idempotencyKey: fixture.idempotency.runEventKey({
         eventType: 'RunStarted',
         runId,
         logicalAttemptId: 1,
-        planId: 'p',
-        planVersion: '1.0',
+        planId: TEST_PLAN_REF.planId,
+        planVersion: TEST_PLAN_REF.planVersion,
       }),
       payloadVersion: 1,
     },
@@ -957,16 +958,16 @@ describe('RunMaintenanceService', () => {
           projectId: 'p',
           environmentId: 'dev',
           runId: 'running-1',
-          planId: 'p',
-          planVersion: '1.0',
+          planId: TEST_PLAN_REF.planId,
+          planVersion: TEST_PLAN_REF.planVersion,
           engineAttemptId: 1,
           logicalAttemptId: 1,
           idempotencyKey: fixture.idempotency.runEventKey({
             eventType: 'RunStarted',
             runId: 'running-1',
             logicalAttemptId: 1,
-            planId: 'p',
-            planVersion: '1.0',
+            planId: TEST_PLAN_REF.planId,
+            planVersion: TEST_PLAN_REF.planVersion,
           }),
           payloadVersion: 1,
         },

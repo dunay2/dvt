@@ -1,6 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createDefaultStepTypeRegistry } from '@dvt/contracts';
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -150,8 +151,10 @@ export async function buildProtectedRuntimeModule(
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
     },
   });
+  const stepTypeRegistry = createDefaultStepTypeRegistry();
   const executablePlanResolver = new StoredExecutablePlanResolver({
     fetcher: planStore,
+    stepTypeRegistry,
   });
   const systemClock = { nowIsoUtc: () => new Date().toISOString() };
 
@@ -161,7 +164,6 @@ export async function buildProtectedRuntimeModule(
     clock: systemClock,
     projector,
     observability,
-    planFetcher: executablePlanResolver,
   });
   const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
     adapters.keys()
@@ -180,6 +182,7 @@ export async function buildProtectedRuntimeModule(
       stateStoreRead: stateStoreRoles.read,
       stateStoreWrite: stateStoreRoles.write,
       intentStore,
+      planFetcher: planStore,
     },
     runtime: { adapters },
     infrastructure: {
@@ -212,6 +215,7 @@ export async function buildProtectedRuntimeModule(
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
     adapters,
+    stepTypeRegistry,
   });
   const facade = new StartRunAuthorizedFacade(
     authenticator,

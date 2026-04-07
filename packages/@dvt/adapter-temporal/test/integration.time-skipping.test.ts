@@ -722,6 +722,42 @@ async function waitForTerminalStatus(
   return status.status as RunStatusValue;
 }
 
+interface CancelScenarioRequest {
+  mode: 'signal' | 'cancel';
+  adapter: TemporalAdapter;
+  plan: Parameters<TemporalAdapter['startRun']>[0];
+  planRef: PlanRef;
+  runId: RunId;
+  store: TestStateStore;
+  waitForCondition: WaitForConditionFn;
+}
+
+async function runCancelScenario(args: CancelScenarioRequest): Promise<{
+  status: RunStatusValue;
+  cancelledCount: number;
+  eventTypes: string[];
+}> {
+  const runCtx = createRunContext(args.runId);
+  const runRef = await args.adapter.startRun(args.plan, args.planRef, runCtx);
+  await args.waitForCondition(
+    () => args.store.listRunEvents(args.runId),
+    (events) => events.some((event) => event.eventType === 'StepStarted'),
+    { timeoutMs: 30_000 }
+  );
+
+  if (args.mode === 'signal') {
+    await args.adapter.signal(runRef, { signalId: `s-${args.runId.value}`, type: 'CANCEL' });
+  } else {
+    await args.adapter.cancelRun(runRef);
+  }
+
+  const status = await waitForTerminalStatus(args.adapter, runRef, args.waitForCondition);
+  const events = await args.store.listRunEvents(RunId.of(runRef.runId));
+  const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
+  const eventTypes = events.map((event) => event.eventType);
+
+  return { status, cancelledCount, eventTypes };
+}
 function createBlockingExecutor(targetStepId: string): {
   executor: StepExecutor;
   waitUntilExecuting: Promise<void>;
@@ -909,7 +945,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const runRef = await adapter.startRun(planRef, ctx);
+        const runRef = await adapter.startRun(plan, planRef, ctx);
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -942,7 +978,6 @@ describe('temporal integration (time-skipping)', () => {
       const plan = mkLinearThreeStepPlan();
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-      const fetchedPlanRefs: PlanRef[] = [];
       const planRef = createPlanRef('it-plan-linear-3', planBytes, {
         uri: 'dvt-plan://postgres/it-plan-linear-3',
       });
@@ -960,11 +995,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes, {
-          onFetch(planRefFromFetch) {
-            fetchedPlanRefs.push(planRefFromFetch);
-          },
-        }),
+        activityDeps: createActivityDeps(store, outbox, planBytes),
       });
 
       await worker.start(env.nativeConnection);
@@ -975,7 +1006,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -983,12 +1014,10 @@ describe('temporal integration (time-skipping)', () => {
           { timeoutMs: 30_000 }
         );
 
-        if (fetchedPlanRefs.length > 0) {
-          expect(fetchedPlanRefs).toContainEqual(planRef);
-        }
-        expect((await store.listRunEvents(RunId.of(ctx.runId))).at(-1)?.eventType).toBe(
-          'RunCompleted'
-        );
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
+        expect(events.every((event) => event.planId === planRef.planId)).toBe(true);
+        expect(events.every((event) => event.planVersion === planRef.planVersion)).toBe(true);
+        expect(events.at(-1)?.eventType).toBe('RunCompleted');
       } finally {
         await worker.shutdown();
         await env.teardown();
@@ -1010,6 +1039,7 @@ describe('temporal integration (time-skipping)', () => {
       const outbox = new TestOutbox();
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const planRef = createPlanRef('it-plan', planBytes);
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -1034,44 +1064,15 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const startRunCompat = async (runId: RunId): Promise<EngineRunRef> => {
-          const planRef = createPlanRef('it-plan', planBytes);
-          const ctx = createRunContext(runId);
-          try {
-            return await adapter.startRun(planRef, ctx);
-          } catch (error) {
-            const details = (error as { details?: Array<{ path?: string }> })?.details;
-            const isPlanRefValidationShape =
-              Array.isArray(details) &&
-              ['uri', 'sha256', 'schemaVersion', 'planId', 'planVersion'].every((path) =>
-                details.some((detail) => detail?.path === path)
-              );
-            if (!isPlanRefValidationShape) {
-              throw error;
-            }
-            return await (
-              adapter as unknown as {
-                startRun(ctx: ResolvedRunContext, planRef: PlanRef): Promise<EngineRunRef>;
-              }
-            ).startRun(ctx, planRef);
-          }
-        };
-
-        const signalRunId = RunId.of('run-it-cancel-1');
-        const signalRunRef = await startRunCompat(signalRunId);
-        await waitForCondition(
-          () => store.listRunEvents(signalRunId),
-          (events) => events.some((event) => event.eventType === 'StepStarted'),
-          { timeoutMs: 30_000 }
-        );
-        await adapter.signal(signalRunRef, { signalId: `s-${signalRunId.value}`, type: 'CANCEL' });
-        const signalStatus = await waitForTerminalStatus(adapter, signalRunRef, waitForCondition);
-        const signalEvents = await store.listRunEvents(RunId.of(signalRunRef.runId));
-        const signalResult = {
-          status: signalStatus,
-          cancelledCount: signalEvents.filter((e) => e.eventType === 'RunCancelled').length,
-          eventTypes: signalEvents.map((event) => event.eventType),
-        };
+        const signalResult = await runCancelScenario({
+          mode: 'signal',
+          adapter,
+          plan,
+          planRef,
+          runId: RunId.of('run-it-cancel-1'),
+          store,
+          waitForCondition,
+        });
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
         expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(signalResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
@@ -1079,21 +1080,15 @@ describe('temporal integration (time-skipping)', () => {
           signalResult.eventTypes.indexOf('RunCancelRequested')
         );
 
-        const cancelRunId = RunId.of('run-it-cancel-2');
-        const cancelRunRef = await startRunCompat(cancelRunId);
-        await waitForCondition(
-          () => store.listRunEvents(cancelRunId),
-          (events) => events.some((event) => event.eventType === 'StepStarted'),
-          { timeoutMs: 30_000 }
-        );
-        await adapter.cancelRun(cancelRunRef);
-        const cancelStatus = await waitForTerminalStatus(adapter, cancelRunRef, waitForCondition);
-        const cancelEvents = await store.listRunEvents(RunId.of(cancelRunRef.runId));
-        const cancelResult = {
-          status: cancelStatus,
-          cancelledCount: cancelEvents.filter((e) => e.eventType === 'RunCancelled').length,
-          eventTypes: cancelEvents.map((event) => event.eventType),
-        };
+        const cancelResult = await runCancelScenario({
+          mode: 'cancel',
+          adapter,
+          plan,
+          planRef,
+          runId: RunId.of('run-it-cancel-2'),
+          store,
+          waitForCondition,
+        });
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
         expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(cancelResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
@@ -1150,7 +1145,7 @@ describe('temporal integration (time-skipping)', () => {
 
       try {
         const runId = RunId.of('run-it-cancel-finalization-1');
-        const runRef = await adapter.startRun(planRef, createRunContext(runId));
+        const runRef = await adapter.startRun(plan, planRef, createRunContext(runId));
 
         await blocker.waitUntilExecuting;
         await adapter.cancelRun(runRef);
@@ -1220,7 +1215,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1293,7 +1288,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1377,7 +1372,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1444,7 +1439,7 @@ describe('temporal integration (time-skipping)', () => {
       await worker1.start(env.nativeConnection);
 
       try {
-        const _runRef = await adapter.startRun(planRef, ctx);
+        const _runRef = await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),

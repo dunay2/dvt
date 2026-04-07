@@ -26,8 +26,13 @@ import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import { ENGINE_ERROR_MESSAGE_KEY } from '../../src/contracts/errors.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { sha256Hex } from '../../src/utils/sha256.js';
-import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanFetcherForPlan,
+  makePlanRefForPlan,
+  makeProviderMap,
+} from '../helpers/workflowEngine.fixture.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -47,23 +52,15 @@ function resolveMatrixPath(): string {
 
 const MATRIX_PATH = resolveMatrixPath();
 
-function utf8(s: string): Uint8Array {
-  return new TextEncoder().encode(s);
-}
-
 function makePlanRef(requiresCapabilities?: string[]): PlanRef {
-  const body = JSON.stringify({ id: 'cap-test' });
-  const bytes = utf8(body);
+  const baseRef = makePlanRefForPlan(CAPABILITY_PLAN, 'https://plans.example.com/cap-test.json');
   return {
-    uri: 'https://plans.example.com/cap-test.json',
-    sha256: sha256Hex(bytes),
-    schemaVersion: 'v1.2',
-    planId: 'cap-test',
-    planVersion: '1.0',
-    sizeBytes: bytes.byteLength,
+    ...baseRef,
     ...(requiresCapabilities === undefined ? {} : { requiresCapabilities }),
   };
 }
+
+const CAPABILITY_PLAN = makeDefaultExecutionPlan();
 
 function makeCtx(runId: string): {
   tenantId: string;
@@ -97,6 +94,7 @@ function createEngine(adapter?: IProviderAdapter): {
     projector,
     observability: createNoopObservability(),
     adapters: makeProviderMap(effective),
+    planFetcher: makePlanFetcherForPlan(CAPABILITY_PLAN),
   });
 
   return { engine, mock };

@@ -283,7 +283,7 @@ it('emits warning with stable payload shape on markResolved failure', async () =
       context: expect.objectContaining({
         adapter: 'temporal',
         environmentId: 'dev',
-        planId: 'p',
+        planId: makePlanRef().planId,
         projectId: 'p',
         runId,
         tenantId: 't',
