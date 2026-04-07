@@ -164,13 +164,13 @@ Decision after review:
 
 ## Extension Seams And Internal Dependencies
 
-| Seam                                              | Current role                                               | Review decision                                                                |
-| ------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `resolveCanvasGraphStrategy()`                    | Maps workspace graph inputs into canonical graph shape     | Keep as plugin-aware graph seam                                                |
-| `getAllOverlays()` and `getRegisteredPluginIds()` | Overlay registration and plugin visibility                 | Keep as extension seam, but make overlay traversal cheaper                     |
-| `resolveNodeKindRegistration()`                   | Node-kind specific labels and minimap colors               | Keep as rendering metadata seam                                                |
-| `AppServicesContext` hooks                        | Governed route access to workspace, plan, and run services | Keep and deepen                                                                |
-| `useCapabilitiesQuery()`                          | Fetches `/api/capabilities` directly with `fetch`          | Change: align with governed service boundary or a dedicated `CapabilitiesPort` |
+| Seam                                              | Current role                                               | Review decision                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| `resolveCanvasGraphStrategy()`                    | Maps workspace graph inputs into canonical graph shape     | Keep as plugin-aware graph seam                                  |
+| `getAllOverlays()` and `getRegisteredPluginIds()` | Overlay registration and plugin visibility                 | Keep as extension seam, but make overlay traversal cheaper       |
+| `resolveNodeKindRegistration()`                   | Node-kind specific labels and minimap colors               | Keep as rendering metadata seam                                  |
+| `AppServicesContext` hooks                        | Governed route access to workspace, plan, and run services | Keep and deepen                                                  |
+| `useCapabilitiesQuery()`                          | Loads runtime capabilities through `CapabilitiesPort`      | Keep behind the governed app query boundary and composition root |
 
 ## Subsystem Handoffs And Non-Ownership
 

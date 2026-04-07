@@ -23,3 +23,4 @@ export type {
 
 export type { SessionContextPort, WorkspaceScope } from './sessionContext';
 export type { ShellFeedbackPort } from './shellFeedback';
+export type { CapabilitiesPort } from './capabilities';

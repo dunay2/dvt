@@ -248,18 +248,20 @@ tasks:
       of direct mode or service factory ownership from route-level view code.
     complexity: M
     effort_points: 5
-    progress_pct: 60
+    progress_pct: 78
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
     status_reason: >-
       TDD-first implementation is now active: the composition root was extracted into a dedicated
       module, `SessionContextPort` and `ShellFeedbackPort` were formalized, and `Canvas`/`Runs`
       route seams now consume composition-owned accessors instead of hidden runtime globals.
-      `CapabilitiesPort` formalization and the remaining route/query cleanup still keep F-04 open.
+      `CapabilitiesPort` is now formalized and `useCapabilitiesQuery` is composition-owned; the
+      remaining open work is hard-QA follow-up under `F-04-RISK` plus final residual cleanup.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
@@ -347,7 +349,7 @@ tasks:
   - task_id: F-04-D
     parent_task: F-04
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       define explicit frontend ports and split hybrid service surfaces into domain ports, adapters,
       and mapping boundaries.
@@ -357,20 +359,23 @@ tasks:
       consumed by application facades rather than by route-local service factories.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 85
     evidence_refs:
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+      - apps/web/src/app/ports/capabilities.ts
       - apps/web/src/app/ports/sessionContext.ts
       - apps/web/src/app/ports/shellFeedback.ts
+      - apps/web/src/app/services/capabilities/capabilitiesPort.ts
       - apps/web/src/app/services/runs/runsService.api.ts
       - apps/web/src/app/services/runs/runsService.mock.ts
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
     status_reason: >-
       `SessionContextPort` and `ShellFeedbackPort` now exist as explicit runtime seams and the Runs
-      adapters consume injected session context rather than reading hidden globals directly. The
-      broader `CapabilitiesPort` formalization and the remaining adapter parity work are still open
-      before F-04-D can move to review.
+      adapters consume injected session context rather than reading hidden globals directly.
+      `CapabilitiesPort` is now formalized and composition-owned; remaining closure depends on final
+      adapter-parity acceptance across the wider F-04 convergence chain.
     definition_of_done:
       - named ports exist and are typed in frontend domain/application layers
       - api and mock adapters implement the same port contracts
@@ -381,7 +386,7 @@ tasks:
   - task_id: F-04-E
     parent_task: F-04
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       introduce composition-root wiring so data-source mode and adapter selection happen at boot,
       then expose route-safe service accessors.
@@ -391,20 +396,23 @@ tasks:
       composition accessors.
     complexity: M
     effort_points: 5
-    progress_pct: 80
+    progress_pct: 95
     evidence_refs:
       - apps/web/src/app/services/composition/appServices.ts
       - apps/web/src/app/services/AppServicesContext.tsx
       - apps/web/src/app/services/composition/appServices.test.ts
+      - apps/web/src/app/queries/useCapabilitiesQuery.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/runs/useRunWorkspace.ts
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
     status_reason: >-
       Composition-root tests now exist and pass, `resolveDataSource` moved under
       `services/composition/appServices.ts`, and the React provider is reduced to a thin delivery
-      wrapper over composition-built services. Core `Canvas` and `Runs` paths now consume
-      composition-owned seams, but wider route migration still remains for full closure.
+      wrapper over composition-built services. Core `Canvas` and `Runs` paths plus the capabilities
+      query boundary now consume composition-owned seams; final closure depends on broader F-04
+      acceptance and residual cleanup, not missing composition wiring.
     definition_of_done:
       - VITE_DATA_SOURCE is read in one composition boundary for route-facing services
       - views/controllers no longer instantiate create*Service directly
@@ -415,7 +423,7 @@ tasks:
   - task_id: F-04-F
     parent_task: F-04
     priority: P0
-    status: queued
+    status: review
     objective: >-
       remove direct resolveDataSource, createRunsService, createWorkspaceService,
       createPlansService, and raw fetch usage from route-level view and query surfaces.
@@ -425,25 +433,32 @@ tasks:
       direct mode/factory ownership.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/queries/useCapabilitiesQuery.ts
+      - apps/web/src/app/queries/useCapabilitiesQuery.test.tsx
+      - apps/web/src/app/ports/capabilities.ts
+      - apps/web/src/app/services/capabilities/capabilitiesPort.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/AdminView.tsx
       - apps/web/src/app/views/DiffView.tsx
       - apps/web/src/app/views/LineageView.tsx
       - apps/web/src/app/views/CostView.tsx
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+      - docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md
     status_reason: >-
-      Direct mode/factory usage is mapped; implementation is deferred until TDD-first checks are
-      authored for affected routes and query hooks.
+      TDD-first guard tests now exist and pass, `useCapabilitiesQuery` consumes a composition-owned
+      `CapabilitiesPort`, and route/query surfaces no longer rely on raw capability transport or
+      direct mode/service-factory ownership. Documentary hard QA found no blocking issues; the slice
+      remains in `review` pending normal commit/PR publication rather than further implementation.
     definition_of_done:
       - no route-level view or controller imports resolveDataSource
       - no route-level view imports createRunsService/createWorkspaceService/createPlansService
       - capabilities query uses governed client boundary instead of raw fetch
       - failing guard tests are defined before code rewiring (TDD red phase)
       - route/query tests and typecheck pass after implementation (green + refactor phases)
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK
     parent_task: F-04
     priority: P1
@@ -1633,10 +1648,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-07'
-  total_tasks: 43
-  total_effort_points: 174
-  completed_weighted_points: 27.38
-  lane_progress_pct: 16
+  total_tasks: 58
+  total_effort_points: 205
+  completed_weighted_points: 71.17
+  lane_progress_pct: 35
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7

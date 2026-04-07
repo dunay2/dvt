@@ -1,9 +1,11 @@
+import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
 import { createApiClient, type ApiClient } from '../api/createApiClient';
+import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
 import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
 import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
@@ -18,6 +20,7 @@ export interface AppServices {
   readonly workspaceService: IWorkspacePort;
   readonly runsService: IRunsPort;
   readonly plansService: IPlansPort;
+  readonly capabilitiesPort: CapabilitiesPort;
   readonly sessionContext: SessionContextPort;
   readonly shellFeedback: ShellFeedbackPort;
 }
@@ -28,6 +31,7 @@ export interface AppServicesOverrides {
   readonly workspaceService?: IWorkspacePort;
   readonly runsService?: IRunsPort;
   readonly plansService?: IPlansPort;
+  readonly capabilitiesPort?: CapabilitiesPort;
   readonly sessionContext?: SessionContextPort;
   readonly shellFeedback?: ShellFeedbackPort;
 }
@@ -46,6 +50,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     runsService:
       overrides.runsService ?? createRunsService(dataSourceMode, apiClient, { sessionContext }),
     plansService: overrides.plansService ?? createPlansService(dataSourceMode, apiClient),
+    capabilitiesPort: overrides.capabilitiesPort ?? createCapabilitiesPort(apiClient),
     sessionContext,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
   };
