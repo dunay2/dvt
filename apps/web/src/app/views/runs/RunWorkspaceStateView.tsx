@@ -9,8 +9,46 @@ type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
 };
 
+function formatDuration(durationMs: number): string {
+  if (durationMs < 1000) {
+    return `${durationMs} ms`;
+  }
+
+  return `${(durationMs / 1000).toFixed(1)} s`;
+}
+
+function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
+  for (const event of [...workspace.timeline.events].reverse()) {
+    if (event.eventType !== 'RunFailed' || !event.payload || typeof event.payload !== 'object') {
+      continue;
+    }
+
+    const reason = (event.payload as { reason?: unknown }).reason;
+    if (typeof reason === 'string') {
+      return reason;
+    }
+  }
+
+  return undefined;
+}
+
+function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
+  const failedStepId =
+    workspace.snapshot.failedStepId ??
+    [...workspace.timeline.events].reverse().find((event) => event.eventType === 'StepFailed')
+      ?.stepId;
+  const errorReason = workspace.snapshot.errorReason ?? getRunFailedReason(workspace);
+
+  return {
+    failedStepId,
+    errorReason,
+  };
+}
+
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
+  const failureDiagnostics = deriveFailureDiagnostics(workspace);
+
   return (
     <RunStateFrame title={`Run ${snapshot.runId}`}>
       <div className="mx-auto max-w-4xl space-y-4">
@@ -56,8 +94,72 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div className="font-mono">{snapshot.gitSha}</div>
               </div>
             ) : null}
+            {isKnownRunField(snapshot.currentStepId) ? (
+              <div>
+                <span className="text-slate-400">{copy.currentStepLabel}</span>
+                <div className="font-mono">{snapshot.currentStepId}</div>
+              </div>
+            ) : null}
           </div>
         </Card>
+
+        <Card className="border-slate-700 bg-slate-900 p-5">
+          <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
+          {snapshot.materialization ? (
+            <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+              <div>
+                <span className="text-slate-400">{copy.executorLabel}</span>
+                <div>{snapshot.materialization.executor}</div>
+              </div>
+              <div>
+                <span className="text-slate-400">{copy.environmentLabel}</span>
+                <div>{snapshot.materialization.environmentId}</div>
+              </div>
+              <div>
+                <span className="text-slate-400">{copy.sinkTableLabel}</span>
+                <div className="font-mono">{snapshot.materialization.sinkTable}</div>
+              </div>
+              <div>
+                <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
+                <div>{snapshot.materialization.rowsWritten.toLocaleString()}</div>
+              </div>
+              <div>
+                <span className="text-slate-400">{copy.startedLabel}</span>
+                <div>{new Date(snapshot.materialization.startedAt).toLocaleString()}</div>
+              </div>
+              <div>
+                <span className="text-slate-400">{copy.completedLabel}</span>
+                <div>{new Date(snapshot.materialization.completedAt).toLocaleString()}</div>
+              </div>
+              <div>
+                <span className="text-slate-400">{copy.durationLabel}</span>
+                <div>{formatDuration(snapshot.materialization.durationMs)}</div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
+          )}
+        </Card>
+
+        {failureDiagnostics.failedStepId || failureDiagnostics.errorReason ? (
+          <Card className="border-slate-700 bg-slate-900 p-5">
+            <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
+            <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+              {failureDiagnostics.failedStepId ? (
+                <div>
+                  <span className="text-slate-400">{copy.failedStepLabel}</span>
+                  <div className="font-mono">{failureDiagnostics.failedStepId}</div>
+                </div>
+              ) : null}
+              {failureDiagnostics.errorReason ? (
+                <div>
+                  <span className="text-slate-400">{copy.errorReasonLabel}</span>
+                  <div>{failureDiagnostics.errorReason}</div>
+                </div>
+              ) : null}
+            </div>
+          </Card>
+        ) : null}
 
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>

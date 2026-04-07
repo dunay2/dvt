@@ -38,6 +38,14 @@ Normative rules:
 - `appendAndEnqueueTx` is used for all subsequent event appends.
 - Callers MUST NOT create run metadata mid-run via non-bootstrap paths.
 
+### Clarification: `RunQueued` versus bootstrap mechanism
+
+- `bootstrapRunTx` is the **storage/write mechanism** for the first transaction of a run.
+- `RunQueued` is the **domain event** that most commonly occupies `firstEvents[0]`.
+- The fact that `RunQueued` is usually written inside `bootstrapRunTx` does **not** reduce it to a storage-layer implementation detail.
+- If a run is accepted and assigned a `runId`, that acceptance MUST remain observable in the canonical event log even when execution never reaches `RunStarted`.
+- Therefore `RunQueued` remains part of the public run event catalog, while `bootstrapRunTx` remains the append-authority API that persists it atomically with metadata and outbox rows.
+
 ### Conflict behavior (normative)
 
 - `bootstrapRunTx` assumes the run is new.

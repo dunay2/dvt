@@ -97,6 +97,14 @@ describe('applyRunEvent - run terminal guard', () => {
     }
   });
 
+  it('treats RunQueued as lifecycle evidence without mutating the snapshot', () => {
+    const snap = makeSnap('PENDING');
+
+    applyRunEvent(snap, makeRunEvent('RunQueued'));
+
+    expect(snap).toEqual(makeSnap('PENDING'));
+  });
+
   it('does not throw for unknown event types on terminal runs', () => {
     expect(() =>
       applyRunEvent(makeSnap('COMPLETED'), makeRunEvent('SomeUnknownEvent'))

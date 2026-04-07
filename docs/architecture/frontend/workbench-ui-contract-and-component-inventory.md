@@ -2,7 +2,7 @@
 title: Workbench UI Contract And Component Inventory
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-07
 planning_type: architecture
 ---
 
@@ -87,11 +87,12 @@ Primary route inventory:
 1. `Canvas`
 2. `Runs`
 3. `Lineage`
-4. `Diff`
-5. `Artifacts`
-6. `Templates`
-7. `Plugins`
-8. `Admin`
+4. `Code`
+5. `Diff`
+6. `Artifacts`
+7. `Templates`
+8. `Plugins`
+9. `Admin`
 
 ## Iconography Contract
 
@@ -110,13 +111,13 @@ Rules:
 
 Core icon categories:
 
-| Category   | Examples                                                              |
-| ---------- | --------------------------------------------------------------------- |
-| Navigation | Canvas, Runs, Lineage, Diff, Artifacts, Templates, Plugins, Admin     |
-| Status     | success, failed, running, paused, degraded, offline, read-only        |
-| Actions    | add, remove, play, stop, inspect, compare, download, upload, filter   |
-| Panels     | open explorer, hide explorer, open inspector, hide inspector, console |
-| Domain     | graph, table, columns, artifacts, SQL, templates, metrics             |
+| Category   | Examples                                                                |
+| ---------- | ----------------------------------------------------------------------- |
+| Navigation | Canvas, Runs, Lineage, Code, Diff, Artifacts, Templates, Plugins, Admin |
+| Status     | success, failed, running, paused, degraded, offline, read-only          |
+| Actions    | add, remove, play, stop, inspect, compare, download, upload, filter     |
+| Panels     | open explorer, hide explorer, open inspector, hide inspector, console   |
+| Domain     | graph, table, columns, artifacts, SQL, templates, metrics               |
 
 ## Shared Workbench Components
 
@@ -301,6 +302,19 @@ Main screen composition:
 | `LineageColumnsToggle`        | column-lineage mode         | Current                  |
 | `LineageEmptyState`           | no focus available          | Needed                   |
 | `LineageMetadataMissingState` | missing column metadata     | Needed                   |
+
+### Code
+
+| Component           | Responsibility                            | Status                   |
+| ------------------- | ----------------------------------------- | ------------------------ |
+| `CodeWorkbench`     | Route composition root                    | Current, needs hardening |
+| `CodeToolbar`       | file-level actions and history entry      | Needed                   |
+| `FileTreePanel`     | workspace file selection                  | Current                  |
+| `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
+| `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
+| `CodeEmptyState`    | no file or no workspace files available   | Needed                   |
+| `CodeErrorState`    | preserve selected-file context on failure | Needed                   |
+| `CodeReadOnlyState` | explicit non-editing treatment            | Needed                   |
 
 ### Diff
 

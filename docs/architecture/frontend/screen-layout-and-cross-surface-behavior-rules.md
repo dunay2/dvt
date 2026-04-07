@@ -2,7 +2,7 @@
 title: Screen Layout And Cross-Surface Behavior Rules
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-07
 planning_type: architecture
 ---
 
@@ -56,14 +56,15 @@ Visual tone:
 
 ## Screen Ownership Matrix
 
-| Screen      | Primary job                                     | Secondary context allowed in the same route                          | What should move to another route                                      |
-| ----------- | ----------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `Canvas`    | graph authoring and graph-context actions       | inspector, explorer, read-only SQL preview, runtime overlays         | full SQL review, full Git review, artifacts browser, source generation |
-| `Runs`      | execution operations and run evidence           | metrics, events, artifacts for the active run, worker or lag signals | graph editing, template generation                                     |
-| `Lineage`   | dependency and impact analysis                  | breadcrumb, impact summary, optional column lineage                  | graph authoring, Git review                                            |
-| `Diff`      | repository-aware structural and SQL review      | graph diff, SQL diff, catalog diff, compare controls                 | graph editing, task generation                                         |
-| `Artifacts` | immutable artifact browsing                     | manifest, run results, catalog preview, import flows                 | graph authoring, execution operations                                  |
-| `Templates` | source generation and provider task scaffolding | template selection, parameter form, preview, diff, export            | graph editing, full run monitoring                                     |
+| Screen      | Primary job                                       | Secondary context allowed in the same route                          | What should move to another route                                      |
+| ----------- | ------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `Canvas`    | graph authoring and graph-context actions         | inspector, explorer, read-only SQL preview, runtime overlays         | full SQL review, full Git review, artifacts browser, source generation |
+| `Runs`      | execution operations and run evidence             | metrics, events, artifacts for the active run, worker or lag signals | graph editing, template generation                                     |
+| `Lineage`   | dependency and impact analysis                    | breadcrumb, impact summary, optional column lineage                  | graph authoring, Git review                                            |
+| `Code`      | read-only file browsing and selected-file history | file tree, source preview, selected-file metadata                    | repository compare ownership, staging, shell-level Git navigation      |
+| `Diff`      | repository-aware structural and SQL review        | graph diff, SQL diff, catalog diff, compare controls                 | graph editing, task generation                                         |
+| `Artifacts` | immutable artifact browsing                       | manifest, run results, catalog preview, import flows                 | graph authoring, execution operations                                  |
+| `Templates` | source generation and provider task scaffolding   | template selection, parameter form, preview, diff, export            | graph editing, full run monitoring                                     |
 
 ## Canvas Rules
 
@@ -152,6 +153,19 @@ Rules:
 - column lineage is optional and only appears when metadata exists;
 - `Pin to Canvas` is a handoff action, not a mode switch that turns Lineage into
   Canvas.
+
+## Code Rules
+
+Code is the file-browsing workbench, not a browser Git client.
+
+Rules:
+
+- `Code` owns the selected file, file tree, and read-only preview;
+- file-history review is scoped to the selected file only;
+- `Code` may expose revision entry actions, but revision comparison itself moves
+  to `Diff`;
+- `Code` must not introduce branch management, staging, commit creation, or
+  conflict resolution in this slice.
 
 ## Diff And Git Rules
 
@@ -274,30 +288,33 @@ Rules:
 | worker lag, outbox lag, backlog hints          | `Runs` and shell-level degraded signals when critical |
 | node runtime or cost overlays                  | `Canvas` contextual overlays                          |
 | recent failures and operational summaries      | `Runs`                                                |
+| selected-file history entry                    | `Code`                                                |
 | repository diff severity                       | `Diff`                                                |
 | template validation and generation diagnostics | `Templates`                                           |
 
 ## Cross-Screen Handoffs
 
-| From      | To          | Trigger                            | Rule                                                   |
-| --------- | ----------- | ---------------------------------- | ------------------------------------------------------ |
-| `Canvas`  | `Runs`      | `Run` started                      | explicit route navigation                              |
-| `Canvas`  | `Diff`      | need full SQL or structural review | hand off review, do not overload Canvas                |
-| `Canvas`  | `Templates` | need provider task generation      | pass workflow context only                             |
-| `Lineage` | `Canvas`    | pin or follow-up authoring         | return to authoring route                              |
-| `Runs`    | `Artifacts` | inspect payload or outputs         | artifact-specific inspection route or tab              |
-| `Diff`    | `Templates` | review generated source deltas     | keep review and generation close but still route-owned |
+| From      | To          | Trigger                            | Rule                                                      |
+| --------- | ----------- | ---------------------------------- | --------------------------------------------------------- |
+| `Canvas`  | `Runs`      | `Run` started                      | explicit route navigation                                 |
+| `Canvas`  | `Diff`      | need full SQL or structural review | hand off review, do not overload Canvas                   |
+| `Canvas`  | `Templates` | need provider task generation      | pass workflow context only                                |
+| `Lineage` | `Canvas`    | pin or follow-up authoring         | return to authoring route                                 |
+| `Code`    | `Diff`      | open revision compare              | keep history entry in `Code`, compare ownership in `Diff` |
+| `Runs`    | `Artifacts` | inspect payload or outputs         | artifact-specific inspection route or tab                 |
+| `Diff`    | `Templates` | review generated source deltas     | keep review and generation close but still route-owned    |
 
 ## Immediate Design Decisions Locked By This Document
 
 1. `Canvas` stays graph-first and only supports read-only SQL context, not full
    SQL review as a co-equal primary surface.
-2. Full SQL diff and Git-aware review belong to `Diff`.
-3. Git is modeled as a domain-aware review experience, not a full browser Git
+2. `Code` owns read-only file browsing and selected-file history entry.
+3. Full SQL diff and Git-aware revision comparison belong to `Diff`.
+4. Git is modeled as a domain-aware review experience, not a full browser Git
    client.
-4. `Templates` owns governed task generation from templates, profiles, and
+5. `Templates` owns governed task generation from templates, profiles, and
    workflow context.
-5. Metrics and telemetry are distributed across shell and `Runs`, with only
+6. Metrics and telemetry are distributed across shell and `Runs`, with only
    contextual overlays in `Canvas`.
-6. No single route should try to combine graph authoring, Git review, run ops,
+7. No single route should try to combine graph authoring, Git review, run ops,
    artifact browsing, and source generation at once.

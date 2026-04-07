@@ -2,7 +2,7 @@
 title: Frontend Roadmap - Prototype To Operational UI
 status: Active
 owner: Product / UX / Frontend
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-07
 planning_type: proposal
 ---
 
@@ -13,7 +13,7 @@ planning_type: proposal
 The execution of this roadmap is tracked in
 [Agent Lane E](../../../state/agent-lane-e.yaml)
 (`docs/planning/state/agent-lane-e.yaml`).
-Lane E tasks (`MVP-E1`, `F-01` through `F-21`) are the canonical work units.
+Lane E tasks (`MVP-E1`, `F-01` through `F-23`) are the canonical work units.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
 The dedicated F-04 boundary pack is tracked here:
@@ -138,6 +138,8 @@ Canonical `MVP-E1` contract artifact:
 - `F-21`: add a governed execution-template and source-generation workbench for
   provider-facing artifacts such as Snowflake tasks, procedures, and ETL
   scaffolds.
+- `F-23`: add governed file-history review inside `Code` with revision handoff
+  to `Diff` instead of introducing a separate Git explorer.
 
 ### Monaco adoption mini-roadmap
 
@@ -224,7 +226,7 @@ The shell grammar stays route-first:
 
 - Canvas is the graph authoring workbench;
 - Runs is the operational monitoring workbench;
-- Diff and Artifacts are review workbenches;
+- Code, Diff, and Artifacts are review-adjacent workbenches;
 - Templates is the future source-generation workbench.
 
 Monaco supports review and generation inside those routes. It does not replace

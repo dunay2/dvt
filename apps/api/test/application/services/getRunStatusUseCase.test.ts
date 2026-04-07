@@ -375,4 +375,36 @@ describe('GetRunStatusUseCase', () => {
     );
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
   });
+
+  it('rejects enriched status when enrichment times out instead of returning partial status', async () => {
+    const engine = {
+      async getRunStatus() {
+        throw new Error('should not be called');
+      },
+      async enrichRunStatus() {
+        throw new Error('adapter.getRunStatus timed out after 5ms');
+      },
+    };
+
+    const telemetry = {
+      recordSnapshotStalenessResult: vi.fn(),
+      recordSnapshotStalenessFallback: vi.fn(),
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      telemetry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: true }, queryContext as never)
+    ).rejects.toThrow(/adapter\.getRunStatus timed out after 5ms/);
+
+    expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
+    expect(telemetry.recordSnapshotStalenessResult).not.toHaveBeenCalled();
+  });
 });

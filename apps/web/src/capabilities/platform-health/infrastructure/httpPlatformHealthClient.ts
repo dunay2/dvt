@@ -231,7 +231,7 @@ export function createHttpPlatformHealthClient(
   const requestRaw = (path: string) =>
     apiClient.requestRaw(path, {
       method: 'GET',
-      includeSessionHeaders: true,
+      includeSessionHeaders: false,
     });
 
   return {

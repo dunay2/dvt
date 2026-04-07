@@ -64,6 +64,10 @@ function buildWorkspace(
       environment: 'dev',
       gitSha: 'abc123def',
       substatus: 'WAITING_APPROVAL',
+      currentStepId: 'step-transform',
+      failedStepId: undefined,
+      errorReason: undefined,
+      materialization: undefined,
     },
     timeline,
     detailState: 'snapshot-plus-events',
@@ -144,6 +148,8 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('snapshot-only');
     expect(container.textContent).toContain('No runtime events are available yet for this run.');
     expect(container.textContent).toContain('Runtime snapshot');
+    expect(container.textContent).toContain('Current step');
+    expect(container.textContent).toContain('step-transform');
   });
 
   it('renders snapshot-plus-events run detail state', async () => {
@@ -160,6 +166,50 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('snapshot+timeline');
     expect(container.textContent).toContain('StepStarted');
     expect(container.textContent).toContain('Step: step-1');
+    expect(container.textContent).toContain(
+      'Result evidence is not available yet for this run snapshot.'
+    );
+  });
+
+  it('renders materialization evidence and failure diagnostics when available', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        status: 'failed',
+        startedAt: '2026-03-28T10:00:00Z',
+        completedAt: '2026-03-28T10:00:30Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        failedStepId: 'step-transform',
+        errorReason: 'STEP_FAILURE',
+        currentStepId: undefined,
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-03-28T10:00:05Z',
+          completedAt: '2026-03-28T10:00:25Z',
+          durationMs: 20000,
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Materialization evidence');
+    expect(container.textContent).toContain('postgres');
+    expect(container.textContent).toContain('analytics.orders_daily');
+    expect(container.textContent).toContain('42');
+    expect(container.textContent).toContain('Failure diagnostics');
+    expect(container.textContent).toContain('step-transform');
+    expect(container.textContent).toContain('STEP_FAILURE');
   });
 
   it('renders error and not-found states', async () => {

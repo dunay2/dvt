@@ -7,6 +7,7 @@ import {
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import type {
+  MaterializationEvidence,
   RunEventTimelinePage,
   RunSnapshot,
   RunSummaryItem,
@@ -17,6 +18,47 @@ import type {
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
+}
+
+function asFiniteNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function parseMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const executor = asString(candidate.executor);
+  const environmentId = asString(candidate.environmentId);
+  const sinkTable = asString(candidate.sinkTable);
+  const rowsWritten = asFiniteNumber(candidate.rowsWritten);
+  const startedAt = asString(candidate.startedAt);
+  const completedAt = asString(candidate.completedAt);
+  const durationMs = asFiniteNumber(candidate.durationMs);
+
+  if (
+    (executor !== 'postgres' && executor !== 'dbt') ||
+    !environmentId ||
+    !sinkTable ||
+    rowsWritten === undefined ||
+    !startedAt ||
+    !completedAt ||
+    durationMs === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    executor,
+    environmentId,
+    sinkTable,
+    rowsWritten,
+    startedAt,
+    completedAt,
+    durationMs,
+  };
 }
 
 function mapContractStatusToUi(status: ContractRunStatus | string | undefined): UiRunStatus {
@@ -68,6 +110,10 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
       | 'STALE'
       | 'UNKNOWN'
       | undefined,
+    currentStepId: asString(candidate.currentStepId),
+    failedStepId: asString(candidate.failedStepId),
+    errorReason: asString(candidate.errorReason),
+    materialization: parseMaterializationEvidence(candidate.materialization),
   };
 }
 
@@ -83,6 +129,10 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     substatus: snapshot.substatus,
     message: snapshot.message,
     snapshotStaleness: snapshot.snapshotStaleness,
+    currentStepId: snapshot.currentStepId,
+    failedStepId: snapshot.failedStepId,
+    errorReason: snapshot.errorReason,
+    materialization: snapshot.materialization,
   };
 }
 

@@ -2,7 +2,7 @@
 title: Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-07
 ---
 
 # Frontend Architecture
@@ -20,7 +20,7 @@ Use it to answer four questions quickly:
 ## Current Reality
 
 - `apps/web` is a real browser application with a persistent shell, plugin-based
-  routing, and working Canvas, Runs, Lineage, Diff, and Artifacts views.
+  routing, and working Canvas, Runs, Lineage, Code, Diff, and Artifacts views.
 - The shell is partially backend-backed today: platform health is real, while
   several feature views still mix API data and mock-oriented paths.
 - The main UX is already workbench-shaped, but the documentation had lagged
@@ -45,6 +45,7 @@ flowchart TB
   Outlet --> Canvas["/canvas"]
   Outlet --> Runs["/runs"]
   Outlet --> Lineage["/lineage"]
+  Outlet --> Code["/code"]
   Outlet --> Diff["/diff"]
   Outlet --> Artifacts["/artifacts"]
   Outlet --> Plugins["/plugins"]
@@ -58,14 +59,24 @@ flowchart TB
 | Canvas    | `/canvas`               | Main graph workbench with explorer, viewport, overlays, and inspector  |
 | Runs      | `/runs`, `/runs/:runId` | Operational run list and run detail workbench                          |
 | Lineage   | `/lineage`              | Dependency and impact analysis surface derived from the graph snapshot |
+| Code      | `/code`                 | Workspace file browser with read-only source preview                   |
 | Diff      | `/diff`                 | Early change-review surface for graph, SQL, and catalog deltas         |
 | Artifacts | `/artifacts`            | Artifact browser and local manifest import surface                     |
 | Plugins   | `/plugins`              | Installed-plugin inspection and configuration shell route              |
 | Admin     | `/admin`                | Administrative shell route                                             |
 
-## Next Governed Slice
+## Current Open Governed Slices
 
-The main workbench still lacks a dedicated source-generation surface.
+The main workbench still has two governed review or generation gaps:
+
+- file-history review inside `Code` with handoff to `Diff`;
+- a dedicated source-generation surface in `Templates`.
+
+The `Code -> Diff` slice should cover:
+
+- selected-file commit history;
+- explicit revision handoff into `Diff`;
+- no left-nav Git explorer or second shell model.
 
 That future route-level workbench should cover:
 
@@ -123,6 +134,7 @@ That future route-level workbench should cover:
 - Operational views:
   [RunsView.tsx](../../../apps/web/src/app/views/RunsView.tsx),
   [LineageView.tsx](../../../apps/web/src/app/views/LineageView.tsx),
+  [CodeView.tsx](../../../apps/web/src/app/views/CodeView.tsx),
   [DiffView.tsx](../../../apps/web/src/app/views/DiffView.tsx),
   [ArtifactsView.tsx](../../../apps/web/src/app/views/ArtifactsView.tsx)
 
@@ -148,6 +160,8 @@ That future route-level workbench should cover:
   enforce it consistently.
 - The frontend still needs stricter contract alignment with the protected API
   runtime surface, especially around run start and richer run diagnostics.
+- The frontend still lacks governed file-history review that starts in `Code`
+  and hands revision comparison to `Diff`.
 - The frontend still lacks a first-class execution-template and code-generation
   workbench, so generation intent is not yet modeled as a governed UX surface.
 

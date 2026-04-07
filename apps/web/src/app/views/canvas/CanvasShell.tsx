@@ -44,10 +44,13 @@ export default function CanvasShell({
   onToggleColumns,
   onPlan,
   onRun,
+  canStartRun,
+  planStatusSummary,
   exclusiveOverlayMode,
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  transformationValidation,
 }: CanvasShellProps) {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
 
@@ -86,10 +89,13 @@ export default function CanvasShell({
             onToggleColumns={onToggleColumns}
             onPlan={onPlan}
             onRun={onRun}
+            canStartRun={canStartRun}
+            planStatusSummary={planStatusSummary}
             exclusiveOverlayMode={exclusiveOverlayMode}
             canUseCostOverlay={canUseCostOverlay}
             impactOverlayEnabled={impactOverlayEnabled}
             columnLevelLineageEnabled={columnLevelLineageEnabled}
+            transformationValidation={transformationValidation}
             nodeCount={nodesWithImpact.length}
             edgeCount={edges.length}
           />

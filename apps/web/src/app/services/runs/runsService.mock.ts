@@ -15,6 +15,7 @@ function buildMockRunList(): Run[] {
     ...mockRun,
     runId: 'run_abc123',
     status: 'completed',
+    endTime: '2026-02-13T10:36:04Z',
   };
 
   return [mockRun, completedRun];
@@ -34,6 +35,19 @@ function mapMockEventType(eventType: DbtRunEvent['type']): RunEvent['eventType']
 }
 
 function mapDbtRunToSnapshot(run: Run): RunSnapshot {
+  const materialization =
+    run.status === 'completed' && run.endTime
+      ? {
+          executor: 'postgres' as const,
+          environmentId: run.environment,
+          sinkTable: 'analytics.fct_sales',
+          rowsWritten: 1284,
+          startedAt: run.startTime,
+          completedAt: run.endTime,
+          durationMs: Math.max(0, Date.parse(run.endTime) - Date.parse(run.startTime)),
+        }
+      : undefined;
+
   return {
     runId: run.runId,
     planId: run.planId,
@@ -42,6 +56,10 @@ function mapDbtRunToSnapshot(run: Run): RunSnapshot {
     gitSha: run.gitSha,
     startedAt: run.startTime,
     completedAt: run.endTime,
+    currentStepId: run.status === 'running' ? 'step_run' : undefined,
+    failedStepId: undefined,
+    errorReason: undefined,
+    materialization,
   };
 }
 

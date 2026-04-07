@@ -32,7 +32,7 @@ function mockEndpointResponse(endpoint: string): Response {
 
 describe('createHttpPlatformHealthClient', () => {
   describe('transport contract', () => {
-    it('uses GET requests with session headers for every probe', async () => {
+    it('uses GET requests without session headers for every probe', async () => {
       const recorder = createApiRequestRecorder((endpoint) => mockEndpointResponse(endpoint));
 
       const client = createHttpPlatformHealthClient(createApiClientStub(recorder.requestRaw));
@@ -48,7 +48,7 @@ describe('createHttpPlatformHealthClient', () => {
       ]);
       expect(
         recorder.requests.every(
-          (entry) => entry.init?.method === 'GET' && entry.init?.includeSessionHeaders === true
+          (entry) => entry.init?.method === 'GET' && entry.init?.includeSessionHeaders === false
         )
       ).toBe(true);
     });

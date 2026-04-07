@@ -55,6 +55,35 @@ export interface ExecutionPlan {
   steps: ExecutionStep[];
   estimatedCost?: number;
   capabilities: string[];
+  preview?: {
+    summary?: {
+      executor: 'postgres' | 'dbt';
+      nodeCount: number;
+      stepCount: number;
+      sourceTables: string[];
+      sinkTables: string[];
+    };
+    persisted?: {
+      planRecordId: string;
+      canonicalPlanSha256: string;
+    };
+    provenance?: {
+      graphArtifact?: {
+        repo: string;
+        path: string;
+        ref?: string;
+        commitSha?: string;
+        contentSha256?: string;
+      };
+      sqlArtifact?: {
+        repo: string;
+        path: string;
+        ref?: string;
+        commitSha?: string;
+        contentSha256?: string;
+      };
+    };
+  };
 }
 
 export interface ExecutionStep {

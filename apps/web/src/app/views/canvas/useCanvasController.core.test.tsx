@@ -39,9 +39,17 @@ describe('useCanvasController core', () => {
     const result = harness.getLatestResult();
     expect(result?.inspectorNode).toEqual(harness.state.canonicalNodes[0]);
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
+    expect(result?.transformationValidation).toEqual(
+      expect.objectContaining({
+        valid: false,
+        summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+      })
+    );
     expect(result?.registeredPlugins).toEqual(new Set(['dbt', 'monitoring', 'cost']));
     expect(result?.handlePlan).toBe(harness.state.executionActionsResult.handlePlan);
     expect(result?.handleStartRun).toBe(harness.state.executionActionsResult.handleStartRun);
+    expect(result?.canStartRun).toBe(false);
+    expect(result?.planStatusSummary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.confirmEdgeCreation).toBe(harness.state.graphHandlersResult.confirmEdgeCreation);
   });

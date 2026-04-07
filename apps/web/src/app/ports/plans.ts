@@ -9,6 +9,7 @@ export type PlanPreviewInput = {
   selectedNodeIds: string[];
   context: RunContext;
   planName?: string;
+  persist: true;
 };
 
 // ---------------------------------------------------------------------------
