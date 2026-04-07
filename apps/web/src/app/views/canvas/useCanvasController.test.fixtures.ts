@@ -34,6 +34,8 @@ export type CanvasHarnessMocks = {
   useWorkspaceService: MockFn;
   usePlansService: MockFn;
   useRunsService: MockFn;
+  useSessionContext: MockFn;
+  useShellFeedback: MockFn;
   useCanvasInteractionStore: MockFn;
   useExecutionStore: MockFn;
   useSessionStore: MockFn;
@@ -173,6 +175,25 @@ export function configureDefaultCanvasHarnessMocks(
   mocks.useWorkspaceService.mockReturnValue({ getGraphSnapshot: vi.fn() });
   mocks.usePlansService.mockReturnValue({ previewPlan: vi.fn() });
   mocks.useRunsService.mockReturnValue({ listRuns: vi.fn() });
+  mocks.useSessionContext.mockReturnValue({
+    getWorkspaceScope: () => ({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
+      targetAdapter: 'mock',
+    }),
+    buildRunContext: (runId: string) => ({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
+      targetAdapter: 'mock',
+      runId,
+    }),
+  });
+  mocks.useShellFeedback.mockReturnValue({
+    success: vi.fn(),
+    error: vi.fn(),
+  });
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
