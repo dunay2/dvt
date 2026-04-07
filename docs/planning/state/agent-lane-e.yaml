@@ -248,7 +248,7 @@ tasks:
       of direct mode or service factory ownership from route-level view code.
     complexity: M
     effort_points: 5
-    progress_pct: 78
+    progress_pct: 88
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
@@ -256,12 +256,19 @@ tasks:
       - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
       - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+      - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
     status_reason: >-
       TDD-first implementation is now active: the composition root was extracted into a dedicated
       module, `SessionContextPort` and `ShellFeedbackPort` were formalized, and `Canvas`/`Runs`
       route seams now consume composition-owned accessors instead of hidden runtime globals.
-      `CapabilitiesPort` is now formalized and `useCapabilitiesQuery` is composition-owned; the
-      remaining open work is hard-QA follow-up under `F-04-RISK` plus final residual cleanup.
+      `CapabilitiesPort` is now formalized and `useCapabilitiesQuery` is composition-owned. `QA-03`
+      under `F-04-RISK-A` is now closed with backend-owned `planRef` payloads on preview/import, and
+      `F-04-RISK-B` now isolates mutable mock workspace state per service instance with an explicit
+      shared-state seam plus instance-local file-tree discoverability for newly saved paths.
+      Documentary hard QA found no blocking issues. The remaining open work is final residual
+      cleanup under `F-04-RESIDUAL`.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
@@ -462,7 +469,7 @@ tasks:
   - task_id: F-04-RISK
     parent_task: F-04
     priority: P1
-    status: queued
+    status: review
     objective: >-
       close the active risk findings from the hard QA pass of the data-source service boundary
       implementation.
@@ -472,20 +479,27 @@ tasks:
       state is deterministic across provider instances and tests.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+      - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/services/plans/plansService.mock.ts
       - apps/web/src/app/services/workspace/workspaceService.mock.ts
     status_reason: >-
-      Hard QA found active functional and determinism risks that are not yet represented as
-      executable lane tasks.
-    last_verified: '2026-04-04'
+      Hard QA risk intake is now represented by executable lane tasks. The `planRef` contract-drift
+      branch (`F-04-RISK-A`) is closed in code and review, and `F-04-RISK-B` now hardens the mock
+      workspace adapter so mutable state is isolated by default and shared only through an explicit,
+      tested seam, including file-tree discoverability for newly saved paths. Documentary hard QA
+      found no blocking issues. The parent risk chain is ready for normal review/PR flow.
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK-A
     parent_task: F-04-RISK
     priority: P1
-    status: in_progress
+    status: review
     objective: >-
       remove mock-only PlanRef semantics from the shared start-run flow so API mode no longer
       depends on placeholder plan identity fields.
@@ -495,20 +509,22 @@ tasks:
       API mode emits a contract-safe plan reference path with explicit tests.
     complexity: S
     effort_points: 2
-    progress_pct: 75
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/services/plans/plansService.mock.ts
       - apps/web/src/app/services/plans/plansService.test.ts
+      - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
     status_reason: >-
-      QA-01 and QA-02 are closed in code and tests, and QA-04 documentation alignment is closed. The
-      remaining blocker is QA-03: API mode still synthesizes PlanRef client-side because backend
-      preview/import payload does not yet expose canonical planRef.
-    last_verified: '2026-04-05'
+      QA-01 through QA-04 are now closed. The shared start-run path no longer depends on mock-only
+      `PlanRef` construction, preview/import payloads carry backend-owned canonical `planRef`, and
+      the web adapter path is regression-tested for both preview and import envelopes.
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK-A-QA-03
     parent_task: F-04-RISK-A
     priority: P1
-    status: in_progress
+    status: review
     objective: >-
       move planRef ownership to backend plan preview/import payload and remove frontend PlanRef
       synthesis from the API plans adapter.
@@ -518,24 +534,30 @@ tasks:
       `uri`/`sha256`/`schemaVersion` locally from metadata fields.
     complexity: M
     effort_points: 3
-    progress_pct: 10
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+      - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/test/entrypoints/http/planRoutes.test.ts
       - apps/web/src/app/services/plans/plansService.api.ts
-      - apps/api/src/entrypoints/http/startRunRoute.ts
+      - apps/web/src/app/services/plans/plansService.test.ts
     status_reason: >-
-      Opened from hard QA as the remaining high-severity contract-drift risk: frontend synthesis of
-      PlanRef can diverge from backend canonical identity rules.
+      Closed on current repo truth: `/plans/preview` and `/plans/import` now return canonical
+      backend-owned `planRef`, `plansService.api` parses it directly and rejects missing envelopes,
+      and adapter coverage now proves both preview and import paths without local synthesis.
     definition_of_done:
       - backend plan payload used by web includes canonical `planRef`
       - frontend API adapter does not synthesize PlanRef
       - start-run path remains fail-closed when planRef is absent
       - '`@dvt/web` tests and typecheck pass and `pnpm verify:prepush` is green'
-    last_verified: '2026-04-05'
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK-B
     parent_task: F-04-RISK
     priority: P1
-    status: queued
+    status: review
     objective: >-
       isolate mock workspace graph state per service or per test seam to prevent cross-instance
       mutation bleed.
@@ -545,13 +567,21 @@ tasks:
       instances unless an explicit, tested shared-state policy is declared.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
       - apps/web/src/app/services/workspace/workspaceService.mock.ts
       - apps/web/src/app/services/workspace/workspaceService.test.ts
+      - apps/web/src/app/services/composition/appServices.test.ts
     status_reason: >-
-      Hard QA identified global mutable state as a determinism and test isolation risk.
-    last_verified: '2026-04-04'
+      TDD-first regression coverage now proves that default mock workspace services do not share
+      mutable graph or file-content state across instances, while `createMockWorkspaceState()`
+      provides an explicit opt-in shared-state seam for tests that require it. Newly saved file
+      paths now enter the instance-local file tree as well. Documentary hard QA found no blocking
+      issues.
+    last_verified: '2026-04-07'
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2

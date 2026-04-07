@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiClient } from '../api/createApiClient';
+import type { PlanRef } from '../../types/engine';
 import { createPlansService } from './plansService';
 
 function buildValidContractPlan(): Readonly<Record<string, unknown>> {
@@ -23,7 +24,7 @@ function buildValidContractPlan(): Readonly<Record<string, unknown>> {
   } as const;
 }
 
-function buildValidPlanRef(): Readonly<Record<string, string>> {
+function buildValidPlanRef(): PlanRef {
   return {
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     sha256: 'b'.repeat(64),
@@ -163,6 +164,62 @@ describe('createPlansService', () => {
           environmentId: 'e1',
           targetAdapter: 'temporal',
         },
+      })
+    ).rejects.toThrow('Invalid plans payload: expected { plan, planRef }');
+  });
+
+  it('maps importPlan responses from backend-owned planRef payloads', async () => {
+    const postJsonMock = vi.fn(async () => ({
+      plan: buildValidContractPlan(),
+      planRef: {
+        ...buildValidPlanRef(),
+        uri: 'dvt-plan://plans/backend-owned-import-ref',
+      },
+    }));
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+    const context = {
+      runId: 'run-1',
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'e1',
+      targetAdapter: 'temporal' as const,
+    };
+
+    const plan = await service.importPlan(buildValidPlanRef(), context);
+
+    expect(plan.planRef).toEqual({
+      ...buildValidPlanRef(),
+      uri: 'dvt-plan://plans/backend-owned-import-ref',
+    });
+    expect(postJsonMock).toHaveBeenCalledWith('/plans/import', {
+      planRef: buildValidPlanRef(),
+      context,
+    });
+  });
+
+  it('rejects import payloads that do not include planRef', async () => {
+    const postJsonMock = vi.fn(async () => ({
+      plan: buildValidContractPlan(),
+    }));
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    await expect(
+      service.importPlan(buildValidPlanRef(), {
+        runId: 'run-1',
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
       })
     ).rejects.toThrow('Invalid plans payload: expected { plan, planRef }');
   });
