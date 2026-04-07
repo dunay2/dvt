@@ -722,42 +722,6 @@ async function waitForTerminalStatus(
   return status.status as RunStatusValue;
 }
 
-interface CancelScenarioRequest {
-  mode: 'signal' | 'cancel';
-  adapter: TemporalAdapter;
-  planRef: PlanRef;
-  runId: RunId;
-  store: TestStateStore;
-  waitForCondition: WaitForConditionFn;
-}
-
-async function runCancelScenario(args: CancelScenarioRequest): Promise<{
-  status: RunStatusValue;
-  cancelledCount: number;
-  eventTypes: string[];
-}> {
-  const runCtx = createRunContext(args.runId);
-  const runRef = await args.adapter.startRun({ ...args.planRef }, runCtx);
-  await args.waitForCondition(
-    () => args.store.listRunEvents(args.runId),
-    (events) => events.some((event) => event.eventType === 'StepStarted'),
-    { timeoutMs: 30_000 }
-  );
-
-  if (args.mode === 'signal') {
-    await args.adapter.signal(runRef, { signalId: `s-${args.runId.value}`, type: 'CANCEL' });
-  } else {
-    await args.adapter.cancelRun(runRef);
-  }
-
-  const status = await waitForTerminalStatus(args.adapter, runRef, args.waitForCondition);
-  const events = await args.store.listRunEvents(RunId.of(runRef.runId));
-  const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
-  const eventTypes = events.map((event) => event.eventType);
-
-  return { status, cancelledCount, eventTypes };
-}
-
 function createBlockingExecutor(targetStepId: string): {
   executor: StepExecutor;
   waitUntilExecuting: Promise<void>;
@@ -1070,14 +1034,37 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const signalResult = await runCancelScenario({
-          mode: 'signal',
-          adapter,
-          planRef: createPlanRef('it-plan', planBytes),
-          runId: RunId.of('run-it-cancel-1'),
-          store,
-          waitForCondition,
-        });
+        const runCancelScenario = async (
+          mode: 'signal' | 'cancel',
+          runIdValue: string
+        ): Promise<{
+          status: RunStatusValue;
+          cancelledCount: number;
+          eventTypes: string[];
+        }> => {
+          const runId = RunId.of(runIdValue);
+          const runCtx = createRunContext(runId);
+          const runRef = await adapter.startRun(createPlanRef('it-plan', planBytes), runCtx);
+          await waitForCondition(
+            () => store.listRunEvents(runId),
+            (events) => events.some((event) => event.eventType === 'StepStarted'),
+            { timeoutMs: 30_000 }
+          );
+
+          if (mode === 'signal') {
+            await adapter.signal(runRef, { signalId: `s-${runId.value}`, type: 'CANCEL' });
+          } else {
+            await adapter.cancelRun(runRef);
+          }
+
+          const status = await waitForTerminalStatus(adapter, runRef, waitForCondition);
+          const events = await store.listRunEvents(RunId.of(runRef.runId));
+          const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
+          const eventTypes = events.map((event) => event.eventType);
+          return { status, cancelledCount, eventTypes };
+        };
+
+        const signalResult = await runCancelScenario('signal', 'run-it-cancel-1');
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
         expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(signalResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
@@ -1085,14 +1072,7 @@ describe('temporal integration (time-skipping)', () => {
           signalResult.eventTypes.indexOf('RunCancelRequested')
         );
 
-        const cancelResult = await runCancelScenario({
-          mode: 'cancel',
-          adapter,
-          planRef: createPlanRef('it-plan', planBytes),
-          runId: RunId.of('run-it-cancel-2'),
-          store,
-          waitForCondition,
-        });
+        const cancelResult = await runCancelScenario('cancel', 'run-it-cancel-2');
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
         expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(cancelResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
