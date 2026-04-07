@@ -318,7 +318,7 @@ tasks:
   - task_id: AR-C1-T1
     parent_task: AR-C1
     priority: P0
-    status: queued
+    status: done
     objective: >-
       reduce duplication in admin route unit coverage by extracting reusable test builders for app
       setup and route injection while preserving the current authorization matrix assertions.
@@ -328,13 +328,14 @@ tasks:
       keeps behavior-equivalent assertions for 401/403/400/404/500/success paths.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t1-admin-route-test-harness-closeout.md
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
     status_reason: >-
-      The current test suite is behavior-correct but still has setup/injection duplication that
-      slows future policy changes.
-    last_verified: '2026-04-03'
+      The admin route unit suite now uses a reusable local request harness for setup, injection, and
+      teardown while preserving the existing authorization and error-path assertions.
+    last_verified: '2026-04-07'
   - task_id: AR-C1-T2
     parent_task: AR-C1
     priority: P0
