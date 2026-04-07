@@ -112,6 +112,7 @@ export function useCanvasExecutionActions({
     plansService,
     selectedNodeIds,
     setCurrentPlan,
+    transformationValidation.draftSignature,
     transformationValidation.valid,
     transformationValidation.summary,
     workspaceNodeIds,
