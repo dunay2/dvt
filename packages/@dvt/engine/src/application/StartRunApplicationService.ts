@@ -131,10 +131,16 @@ export class StartRunApplicationService {
     errorContext: StartRunErrorContext
   ): Promise<EngineRunRef> {
     await this.deps.guard.assertStartRunAllowed(planRef, resolvedContext);
-    const adapter = this.deps.guard.resolveAdapter(planRef, resolvedContext);
-    const verifiedPlan = await this.planIntegrityValidator.fetchAndValidate(
+    const adapter = this.deps.guard.resolveAdapter(resolvedContext);
+    const verifiedArtifact = await this.planIntegrityValidator.fetchAndValidate(
       planRef,
       this.deps.planFetcher
+    );
+    await this.deps.guard.assertExecutionPolicyAllowed(
+      planRef,
+      verifiedArtifact.executionPolicy,
+      resolvedContext,
+      adapter
     );
 
     const intentId = await this.createStartRunIntent(
@@ -145,7 +151,7 @@ export class StartRunApplicationService {
 
     return this.executionService.executeStartRun({
       adapter,
-      plan: verifiedPlan,
+      plan: verifiedArtifact.plan,
       planRef,
       resolvedContext,
       traceContext,

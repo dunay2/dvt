@@ -9,6 +9,7 @@ import {
   type PlanRecord,
   parsePlanRecord,
   type PlannerBuildResultV1,
+  type RunExecutionPolicy,
 } from '@dvt/contracts';
 
 export type StoredPlanRow = {
@@ -138,8 +139,6 @@ export function buildPlanRef(input: {
   planVersion: string;
   schemaVersion: string;
   executableBytes: Uint8Array;
-  pluginCompatibilityFingerprint?: string;
-  requiresCapabilities?: readonly string[];
   uriScheme: string;
 }): PlanRefSchemaT {
   const sha256 = createHash('sha256').update(input.executableBytes).digest('hex');
@@ -149,27 +148,30 @@ export function buildPlanRef(input: {
     schemaVersion: input.schemaVersion,
     planId: input.planId,
     planVersion: input.planVersion,
-    ...(input.pluginCompatibilityFingerprint === undefined
-      ? {}
-      : { pluginCompatibilityFingerprint: input.pluginCompatibilityFingerprint }),
     sizeBytes: input.executableBytes.byteLength,
-    ...(input.requiresCapabilities && input.requiresCapabilities.length > 0
-      ? { requiresCapabilities: [...input.requiresCapabilities] }
-      : {}),
   };
 }
 
 export function buildPlanRefFromStoredRow(row: StoredPlanRow): PlanRefSchemaT {
-  const requiresCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
-  const pluginCompatibilityFingerprint = resolvePluginCompatibilityFingerprint(row);
   return {
     uri: row.plan_uri,
     sha256: row.plan_sha256,
     schemaVersion: row.schema_version,
     planId: row.plan_id,
     planVersion: row.plan_version,
-    ...(pluginCompatibilityFingerprint === undefined ? {} : { pluginCompatibilityFingerprint }),
     sizeBytes: row.size_bytes,
+  };
+}
+
+export function buildExecutionPolicyFromStoredRow(
+  row: Pick<StoredPlanRow, 'plugin_compatibility_fingerprint' | 'requires_capabilities'>
+): RunExecutionPolicy {
+  const requiresCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
+  return {
+    ...(row.plugin_compatibility_fingerprint === undefined ||
+    row.plugin_compatibility_fingerprint === null
+      ? {}
+      : { pluginCompatibilityFingerprint: row.plugin_compatibility_fingerprint }),
     ...(requiresCapabilities.length > 0 ? { requiresCapabilities } : {}),
   };
 }
@@ -178,6 +180,7 @@ export function assertStoredPlanMatchesRequest(
   row: StoredPlanRow,
   expected: {
     planRef: PlanRefSchemaT;
+    executionPolicy: RunExecutionPolicy;
     canonicalPlanJson: string;
     executablePlanJson: string;
   }
@@ -189,14 +192,16 @@ export function assertStoredPlanMatchesRequest(
   if (row.plan_sha256 !== expected.planRef.sha256) mismatches.push('plan_sha256');
   if (row.schema_version !== expected.planRef.schemaVersion) mismatches.push('schema_version');
   if (row.size_bytes !== expected.planRef.sizeBytes) mismatches.push('size_bytes');
+
   if (
-    resolvePluginCompatibilityFingerprint(row) !== expected.planRef.pluginCompatibilityFingerprint
+    (row.plugin_compatibility_fingerprint ?? undefined) !==
+    expected.executionPolicy.pluginCompatibilityFingerprint
   ) {
     mismatches.push('plugin_compatibility_fingerprint');
   }
 
   const actualCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
-  const expectedCapabilities = [...(expected.planRef.requiresCapabilities ?? [])].sort(
+  const expectedCapabilities = [...(expected.executionPolicy.requiresCapabilities ?? [])].sort(
     (left, right) => left.localeCompare(right)
   );
   if (JSON.stringify(actualCapabilities) !== JSON.stringify(expectedCapabilities)) {
@@ -210,29 +215,6 @@ export function assertStoredPlanMatchesRequest(
 
   if (mismatches.length > 0) {
     throw new Error(`PLAN_STORE_CONFLICT: ${expected.planRef.planId}:${mismatches.join(',')}`);
-  }
-}
-
-function resolvePluginCompatibilityFingerprint(row: StoredPlanRow): string | undefined {
-  if (
-    row.plugin_compatibility_fingerprint !== undefined &&
-    row.plugin_compatibility_fingerprint !== null
-  ) {
-    return row.plugin_compatibility_fingerprint;
-  }
-
-  if (typeof row.executable_plan_json !== 'string') {
-    return undefined;
-  }
-
-  try {
-    const parsed = JSON.parse(row.executable_plan_json) as {
-      metadata?: { pluginCompatibilityFingerprint?: unknown };
-    };
-    const value = parsed.metadata?.pluginCompatibilityFingerprint;
-    return typeof value === 'string' && value.length > 0 ? value : undefined;
-  } catch {
-    return undefined;
   }
 }
 

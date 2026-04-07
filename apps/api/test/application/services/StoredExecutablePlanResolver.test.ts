@@ -28,7 +28,10 @@ const PLAN_REF = {
 describe('StoredExecutablePlanResolver', () => {
   it('parses executable bytes for stored dvt-plan refs', async () => {
     const fetcher = {
-      fetch: vi.fn(async () => Buffer.from(EXECUTABLE_PLAN_TEXT, 'utf8')),
+      fetch: vi.fn(async () => ({
+        bytes: Buffer.from(EXECUTABLE_PLAN_TEXT, 'utf8'),
+        executionPolicy: {},
+      })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
@@ -50,7 +53,10 @@ describe('StoredExecutablePlanResolver', () => {
 
   it('rejects stored dvt-plan refs when the executable bytes do not match the ref hash', async () => {
     const fetcher = {
-      fetch: vi.fn(async () => Buffer.from(`${EXECUTABLE_PLAN_TEXT}\n`, 'utf8')),
+      fetch: vi.fn(async () => ({
+        bytes: Buffer.from(`${EXECUTABLE_PLAN_TEXT}\n`, 'utf8'),
+        executionPolicy: {},
+      })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
@@ -70,7 +76,10 @@ describe('StoredExecutablePlanResolver', () => {
       steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
     });
     const fetcher = {
-      fetch: vi.fn(async () => Buffer.from(mismatchedText, 'utf8')),
+      fetch: vi.fn(async () => ({
+        bytes: Buffer.from(mismatchedText, 'utf8'),
+        executionPolicy: {},
+      })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
     const planRef = {
@@ -89,7 +98,10 @@ describe('StoredExecutablePlanResolver', () => {
       steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
     });
     const fetcher = {
-      fetch: vi.fn(async () => Buffer.from(executablePlanText, 'utf8')),
+      fetch: vi.fn(async () => ({
+        bytes: Buffer.from(executablePlanText, 'utf8'),
+        executionPolicy: {},
+      })),
     };
     const resolver = new StoredExecutablePlanResolver({
       fetcher: fetcher as never,
@@ -107,14 +119,13 @@ describe('StoredExecutablePlanResolver', () => {
 
   it('preserves legacy external planRef behavior for non-dvt-plan schemes', async () => {
     const fetcher = {
-      fetch: vi.fn(async () => new Uint8Array()),
+      fetch: vi.fn(async () => ({ bytes: new Uint8Array(), executionPolicy: {} })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
     const plan = await resolver.fetch({
       ...PLAN_REF,
       uri: 'https://plans.example.com/plan-1.json',
-      requiresCapabilities: ['basic-execution'],
     });
 
     expect(plan).toEqual({
@@ -125,7 +136,6 @@ describe('StoredExecutablePlanResolver', () => {
         contractVersion: '1.0.0',
         inputHashSha256: PLAN_REF.sha256,
         createdAtIso: expect.any(String),
-        requiresCapabilities: ['basic-execution'],
       },
       steps: [],
     });

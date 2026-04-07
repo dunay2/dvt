@@ -74,7 +74,7 @@ class CountingAdapter implements IProviderAdapter {
     this.signalCalls += 1;
   }
 
-  signalSemanticsVersions() {
+  signalSemanticsVersions(): readonly (typeof CURRENT_SIGNAL_SEMANTICS_VERSION)[] {
     return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 }

@@ -116,6 +116,10 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
 
 export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
   plan: VALID_EXECUTION_PLAN_V2_FIXTURE,
+  executionPolicy: {
+    pluginCompatibilityFingerprint: HEX_64_A,
+    requiresCapabilities: ['basic-execution'],
+  },
   canonicalPlanJson: JSON.stringify({
     metadata: {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,

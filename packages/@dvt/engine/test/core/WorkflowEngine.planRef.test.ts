@@ -13,7 +13,6 @@ function makePlanRef(): PlanRef {
     schemaVersion: 'v1.2',
     planId: 'plan-1',
     planVersion: '1.0',
-    pluginCompatibilityFingerprint: 'b'.repeat(64),
   };
 }
 
@@ -28,7 +27,7 @@ function makeContext(): RunContext {
 }
 
 describe('WorkflowEngine planRef normalization', () => {
-  it('preserves pluginCompatibilityFingerprint on the engine startRun path', async () => {
+  it('does not reintroduce execution policy fields onto PlanRef', async () => {
     const startRun = vi.fn<
       (
         planRef: PlanRef,
@@ -69,12 +68,11 @@ describe('WorkflowEngine planRef normalization', () => {
 
     await engine.startRun(makePlanRef(), makeContext());
 
-    expect(startRun).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pluginCompatibilityFingerprint: 'b'.repeat(64),
-      }),
-      expect.any(Object),
-      expect.any(Object)
-    );
+    const normalizedPlanRef = startRun.mock.calls[0]?.[0] as PlanRef | undefined;
+    expect(normalizedPlanRef).toEqual(makePlanRef());
+    expect(
+      normalizedPlanRef !== undefined &&
+        'pluginCompatibilityFingerprint' in (normalizedPlanRef as Record<string, unknown>)
+    ).toBe(false);
   });
 });

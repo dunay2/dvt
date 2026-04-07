@@ -54,6 +54,15 @@ Sprint execution board:
 | [20260401 Lane C RC-C2 efficiency institutionalization review](ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | `ci-and-delivery`                 | RC-C2 phase-2 institutionalization review              | `RC-C2`                                    | `review`         | `67%`              |
 | [20260402 RC-C2 operational friction intake review](ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
 
+Additional active rationale:
+
+- [20260407 Execution plan and run execution policy rationale](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md)
+  - domain: `architecture-and-governance`
+  - role: current plan-definition vs execution-policy rationale
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
 ## Newly Classified Review
 
 - Review:

@@ -43,7 +43,8 @@ export interface IProviderAdapter {
 
   /**
    * Returns the capability identifiers this adapter implements.
-   * Used by the engine to enforce `PlanRef.requiresCapabilities` before starting a run.
+   * Used by the engine to enforce `RunExecutionPolicy.requiresCapabilities`
+   * before starting a run.
    * Strings MUST be from capabilities.schema.json.
    * Optional: adapters that omit this method skip capability validation.
    */

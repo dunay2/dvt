@@ -3,6 +3,8 @@ import {
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
+  type RunExecutionPolicy,
+  type StoredPlanArtifact,
 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
@@ -70,7 +72,7 @@ export function createWorkflowEngineFixture(input?: {
   requiredProviders?: EngineRunRef['provider'][];
   observabilityFallbackThrottleMs?: number;
   runExecutionContextResolver?: IRunExecutionContextResolver;
-  planFetcher?: { fetch(planRef: PlanRef): Promise<Uint8Array> };
+  planFetcher?: { fetch(planRef: PlanRef): Promise<StoredPlanArtifact> };
 }): {
   engine: WorkflowEngine;
   store: InMemoryTxStore;
@@ -98,8 +100,11 @@ export function createWorkflowEngineFixture(input?: {
   const planFetcher =
     input?.planFetcher ??
     ({
-      async fetch(_planRef: PlanRef): Promise<Uint8Array> {
-        return Buffer.from(JSON.stringify(defaultPlan), 'utf8');
+      async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+        return {
+          bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
+          executionPolicy: {},
+        };
       },
     } as const);
 
@@ -150,12 +155,18 @@ export function makePlanRefForPlan(
   };
 }
 
-export function makePlanFetcherForPlan(plan: ExecutionPlan): {
-  fetch(planRef: PlanRef): Promise<Uint8Array>;
+export function makePlanFetcherForPlan(
+  plan: ExecutionPlan,
+  executionPolicy: RunExecutionPolicy = {}
+): {
+  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
 } {
   return {
-    async fetch(_planRef: PlanRef): Promise<Uint8Array> {
-      return Buffer.from(JSON.stringify(plan), 'utf8');
+    async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+      return {
+        bytes: Buffer.from(JSON.stringify(plan), 'utf8'),
+        executionPolicy,
+      };
     },
   };
 }

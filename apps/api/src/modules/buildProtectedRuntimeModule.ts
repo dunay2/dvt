@@ -103,9 +103,6 @@ export async function buildProtectedRuntimeModule(
       return {
         schemaVersion: plan.metadata.schemaVersion,
         text: JSON.stringify(plan),
-        ...(plan.metadata.requiresCapabilities === undefined
-          ? {}
-          : { requiresCapabilities: plan.metadata.requiresCapabilities }),
       };
     },
   });

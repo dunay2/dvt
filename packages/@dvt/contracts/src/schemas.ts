@@ -20,12 +20,14 @@ import {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
 } from './contracts/engine/RunExecutionContext.v1.js';
+import { RunExecutionPolicySchema } from './contracts/engine/RunExecutionPolicy.v1.js';
 import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v1.js';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GENERIC_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v1.js';
+export { RunExecutionPolicySchema } from './contracts/engine/RunExecutionPolicy.v1.js';
 export {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
@@ -87,13 +89,8 @@ export const PlanRefSchema = z.object({
   schemaVersion: z.string().min(1),
   planId: z.string().min(1),
   planVersion: z.string().min(1),
-  pluginCompatibilityFingerprint: z
-    .string()
-    .regex(/^[a-f0-9]{64}$/)
-    .optional(),
   sizeBytes: z.number().int().nonnegative().optional(),
   expiresAt: z.string().optional(),
-  requiresCapabilities: z.array(z.string().min(1)).optional(),
 });
 
 export const RunContextSchema = z
@@ -548,10 +545,6 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
       createdAtIso: z.string().min(1),
       plannerVersion: z.string().min(1).optional(),
       plannerGitSha: z.string().length(40).optional(),
-      pluginCompatibilityFingerprint: HexSha256Schema.optional(),
-      requiresCapabilities: z.array(z.string().min(1)).optional(),
-      fallbackBehavior: z.enum(['reject', 'emulate', 'degrade']).optional(),
-      targetAdapter: z.enum(['temporal', 'conductor', 'any', 'mock']).optional(),
     })
     .strict(),
   observability: ExecutionPlanObservabilitySchema,
@@ -599,6 +592,7 @@ export const PlannerInputEnvelopeV1Schema = z
 export const PlannerBuildResultV1Schema = z
   .object({
     plan: ExecutionPlanSchema,
+    executionPolicy: RunExecutionPolicySchema,
     canonicalPlanJson: z.string().min(1),
   })
   .strict();
@@ -738,6 +732,7 @@ export const PlanAdmissionLinkSchema: z.ZodType<PlanAdmissionLink> = z
 // ─── Inferred types from schemas (B1) ────────────────────────────────────────
 
 export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
+export type RunExecutionPolicySchemaT = z.infer<typeof RunExecutionPolicySchema>;
 export type RunExecutionContextRefSchemaT = z.infer<typeof RunExecutionContextRefSchema>;
 export type RunExecutionContextSchemaT = z.infer<typeof RunExecutionContextSchema>;
 export type RunContextSchemaT = z.infer<typeof RunContextSchema>;

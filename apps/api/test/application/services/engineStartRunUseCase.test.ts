@@ -111,7 +111,7 @@ describe('EngineStartRunUseCase', () => {
     });
   });
 
-  it('forwards planRef pluginCompatibilityFingerprint to engine boundary', async () => {
+  it('forwards only canonical planRef fields to engine boundary', async () => {
     let capturedPlanRef: unknown;
     const fakeEngine = {
       async startRun(planRef: unknown) {
@@ -126,23 +126,21 @@ describe('EngineStartRunUseCase', () => {
     };
 
     const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const noisyPlanRef = {
+      ...PLAN_REF,
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
+      requiresCapabilities: ['basic-execution'],
+    };
     await useCase.execute(
       {
         ...mkCommand(),
-        planRef: {
-          ...PLAN_REF,
-          pluginCompatibilityFingerprint:
-            '1111111111111111111111111111111111111111111111111111111111111111',
-        },
+        planRef: noisyPlanRef as StartRunCommand['planRef'],
       },
       mkContext()
     );
 
-    expect(capturedPlanRef).toEqual({
-      ...PLAN_REF,
-      pluginCompatibilityFingerprint:
-        '1111111111111111111111111111111111111111111111111111111111111111',
-    });
+    expect(capturedPlanRef).toEqual(PLAN_REF);
   });
 
   it('passes runExecutionContextRef through to engine RunContext', async () => {

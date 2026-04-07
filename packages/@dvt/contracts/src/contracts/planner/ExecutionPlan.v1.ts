@@ -9,6 +9,8 @@
  * @see specs/contracts/engine/ExecutionPlan.v1.schema.json — JSON Schema (draft 2020-12)
  */
 
+import type { RunExecutionPolicy } from '../engine/RunExecutionPolicy.v1.js';
+
 import type { PlannerPolicyClassSet } from './PlannerPolicyVocabulary.v2.js';
 import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 
@@ -119,14 +121,6 @@ export type VersionedExecutionPlan<TVersion extends SupportedPlanVersion> =
       createdAtIso: string;
       plannerVersion?: string;
       plannerGitSha?: string;
-      /**
-       * Deterministic fingerprint for plugin/runtime compatibility checks at
-       * admission and replay boundaries.
-       */
-      pluginCompatibilityFingerprint?: string;
-      requiresCapabilities?: readonly string[];
-      fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
-      targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
     };
     observability?: {
       tags?: Record<string, string>;
@@ -183,5 +177,6 @@ export interface PlannerInputEnvelopeV1 {
 
 export interface PlannerBuildResultV1 {
   plan: ExecutionPlan;
+  executionPolicy: RunExecutionPolicy;
   canonicalPlanJson: string;
 }

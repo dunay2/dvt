@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   assertStoredPlanMatchesRequest,
+  buildExecutionPolicyFromStoredRow,
   buildPlanRefFromStoredRow,
   toPlanExecutabilityRecord,
   type StoredPlanRow,
@@ -24,9 +25,9 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
     rejection_report_json: null,
   };
 
-  test('buildPlanRefFromStoredRow normalizes requiresCapabilities order', () => {
-    const ref = buildPlanRefFromStoredRow(baseStoredRow);
-    expect(ref.requiresCapabilities).toEqual(['cap.a', 'cap.b']);
+  test('buildExecutionPolicyFromStoredRow normalizes requiresCapabilities order', () => {
+    const executionPolicy = buildExecutionPolicyFromStoredRow(baseStoredRow);
+    expect(executionPolicy.requiresCapabilities).toEqual(['cap.a', 'cap.b']);
   });
 
   test('assertStoredPlanMatchesRequest fails fast on persisted payload mismatch', () => {
@@ -34,6 +35,7 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
     expect(() =>
       assertStoredPlanMatchesRequest(baseStoredRow, {
         planRef: ref,
+        executionPolicy: buildExecutionPolicyFromStoredRow(baseStoredRow),
         canonicalPlanJson: '{"metadata":{"planId":"p1"},"changed":true}',
         executablePlanJson: baseStoredRow.executable_plan_json ?? '',
       })

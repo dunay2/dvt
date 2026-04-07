@@ -62,9 +62,6 @@ function makePlanMetadata(
     contractVersion: '1.0.0',
     inputHashSha256,
     createdAtIso: '2026-02-12T00:00:00.000Z',
-    targetAdapter: 'mock',
-    fallbackBehavior: 'reject',
-    requiresCapabilities: [],
   };
 }
 
@@ -299,7 +296,12 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
+    const planFetcher = {
+      fetch: vi.fn(async () => ({
+        bytes: utf8(JSON.stringify(makeHelloWorldPlan())),
+        executionPolicy: {},
+      })),
+    };
     const { engine } = createWorkflowEngineFixture({
       stateStore: store,
       projector,

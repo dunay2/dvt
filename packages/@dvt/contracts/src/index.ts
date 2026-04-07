@@ -2,6 +2,7 @@ export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
+export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
 export {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
@@ -126,12 +127,15 @@ export type {
   EventIdempotencyInput,
   EventInput,
   EventType,
+  IPlanFetcher,
+  IPlanIntegrityValidator,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
   RunEventInput,
   RunEventInputBase,
   RunMetadata,
+  StoredPlanArtifact,
   StepEventInput,
   WorkflowSnapshot,
 } from './engine/IRunStateStore.v1.js';

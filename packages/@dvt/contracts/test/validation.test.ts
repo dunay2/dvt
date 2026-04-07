@@ -41,12 +41,10 @@ describe('contracts: validation helpers', () => {
       schemaVersion: '1.0.0',
       planId: 'plan-1',
       planVersion: 'v1',
-      pluginCompatibilityFingerprint:
-        '1111111111111111111111111111111111111111111111111111111111111111',
     });
 
     expect(planRef.planId).toBe('plan-1');
-    expect(planRef.pluginCompatibilityFingerprint).toHaveLength(64);
+    expect(planRef.sha256).toBe('abc123');
   });
 
   it('throws ContractValidationError for invalid signal type', () => {

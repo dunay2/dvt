@@ -3,7 +3,7 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → BuildPlanCommand (input VO) + Planner.execute()
- *   - QUERY side   → { plan: ExecutionPlan; canonicalPlanJson: string } (read model)
+ *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanJson: string }
  *
  *  Delegated sub-responsibilities (SRP):
  *   - InputEnvelopeValidator → validates shape of the input envelope
@@ -101,7 +101,11 @@ export class Planner {
   }
 
   /** CQRS command handler entry point. */
-  execute(command: BuildPlanCommand): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
+  execute(command: BuildPlanCommand): Promise<{
+    plan: ExecutionPlan;
+    executionPolicy: import('@dvt/contracts').RunExecutionPolicy;
+    canonicalPlanJson: string;
+  }> {
     return this.buildPlan(command.input);
   }
 
@@ -109,9 +113,11 @@ export class Planner {
    * Primary public API (retained for call-site compatibility).
    * Internally delegates to the CQRS collaborators.
    */
-  public async buildPlan(
-    input: PlannerInputEnvelopeV1
-  ): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
+  public async buildPlan(input: PlannerInputEnvelopeV1): Promise<{
+    plan: ExecutionPlan;
+    executionPolicy: import('@dvt/contracts').RunExecutionPolicy;
+    canonicalPlanJson: string;
+  }> {
     const started = nowMs();
     try {
       this.checkAbort(started);
