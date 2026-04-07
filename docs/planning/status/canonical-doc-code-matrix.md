@@ -49,7 +49,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                                | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | Web frontend shell and client routing          | `apps/web`                                                                             | [Frontend Architecture](../../architecture/frontend/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)                                                                 | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Plan integrity and compatibility verification  | `@dvt/plan-verifier`                                                                   | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
+| Plan integrity and compatibility verification  | `@dvt/engine`, `@dvt/adapter-temporal`, `apps/api`, `@dvt/plan-verifier`               | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | Planner typed graph-source boundary            | `@dvt/contracts`, `@dvt/planner`, `apps/api`                                           | [Planner Contracts](../../contracts/planner/index.md), [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                                                                              | [Planner Current State Assessment](planner-current-state-assessment-20260320.md)                                                 |
 | Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                                        | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
 | Gateway DSL evaluator                          | `@dvt/dsl`                                                                             | [Gateway DSL Package](../../architecture/shared/dsl.md)                                                                                                                                                          | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
@@ -500,12 +500,34 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`Plan Verifier`)
 - Primary code:
+  [packages/@dvt/engine/src/application/StartRunApplicationService.ts](../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+  and
+  [packages/@dvt/engine/src/security/planIntegrity.ts](../../../packages/@dvt/engine/src/security/planIntegrity.ts)
+  and
+  [packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
+  and
+  [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts)
+  and
   [packages/@dvt/plan-verifier/src/verify.ts](../../../packages/@dvt/plan-verifier/src/verify.ts)
   and
   [packages/@dvt/plan-verifier/src/planVersion.ts](../../../packages/@dvt/plan-verifier/src/planVersion.ts)
 - Key tests:
+  [packages/@dvt/engine/test/contracts/engine.test.ts](../../../packages/@dvt/engine/test/contracts/engine.test.ts)
+  and
+  [packages/@dvt/engine/test/services/StartRunApplicationService.test.ts](../../../packages/@dvt/engine/test/services/StartRunApplicationService.test.ts)
+  and
+  [packages/@dvt/adapter-temporal/test/activities.test.ts](../../../packages/@dvt/adapter-temporal/test/activities.test.ts)
+  and
+  [apps/api/test/integration/plannerEngineContract.test.ts](../../../apps/api/test/integration/plannerEngineContract.test.ts)
+  and
   [packages/@dvt/plan-verifier/test/verify.test.ts](../../../packages/@dvt/plan-verifier/test/verify.test.ts)
 - Verification:
+  `pnpm --filter @dvt/engine test`
+  and
+  `pnpm --filter @dvt/adapter-temporal test`
+  and
+  `pnpm --filter dvt-api test`
+  and
   `pnpm --filter @dvt/plan-verifier test`
 
 ### Deterministic DAG interpretation

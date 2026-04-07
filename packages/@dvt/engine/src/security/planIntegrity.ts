@@ -1,31 +1,69 @@
 /**
  * @file packages/@dvt/engine/src/security/planIntegrity.ts
  * @baseline ADR-0003: Execution Model Sovereignty
- * @decision Decision — Plan integrity is validated using SHA-256 before execution
- * @consequence Executions against altered plans are prevented and trust in plan references is reinforced
- * @version 1.0.0
- * @date 2026-02-21
+ * @baseline ADR-0012: Plan Integrity Ownership
+ * @decision Engine entry-point plan integrity verification resolves the executable plan,
+ *   validates metadata alignment, and recomputes planner identity before adapter dispatch.
+ * @consequence Adapters execute the exact plan instance the engine has already verified.
  */
-import type { PlanRef } from '@dvt/contracts';
+import { parseExecutionPlan, type ExecutionPlan, type PlanRef } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
 
 import { sha256Hex } from '../utils/sha256.js';
 
-/** Fetches raw plan bytes for SHA-256 integrity validation. */
+/** Fetches raw executable plan bytes for engine-side integrity validation. */
 export interface IRawPlanFetcher {
   fetch(planRef: PlanRef): Promise<Uint8Array>;
 }
 
 export class PlanIntegrityValidator {
-  async fetchAndValidate(planRef: PlanRef, fetcher: IRawPlanFetcher): Promise<Uint8Array> {
+  async fetchAndValidate(planRef: PlanRef, fetcher: IRawPlanFetcher): Promise<ExecutionPlan> {
     const bytes = await fetcher.fetch(planRef);
-    const actual = sha256Hex(bytes);
-    if (actual !== planRef.sha256) {
-      const err = new Error(
-        `PLAN_INTEGRITY_VALIDATION_FAILED: expected=${planRef.sha256} actual=${actual}`
-      );
-      // In real impl: emit P1 alert + audit log.
-      throw err;
+    const plan = parseExecutablePlan(bytes);
+    validatePlanAgainstRef(plan, planRef);
+    const actualPlanId = derivePlanId(plan);
+    if (actualPlanId !== planRef.planId) {
+      throw new Error(`PLAN_ID_MISMATCH: expected=${planRef.planId} actual=${actualPlanId}`);
     }
-    return bytes;
+    return plan;
   }
+}
+
+function parseExecutablePlan(bytes: Uint8Array): ExecutionPlan {
+  try {
+    const input = JSON.parse(Buffer.from(bytes).toString('utf8')) as unknown;
+    return parseExecutionPlan(input);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`INVALID_EXECUTABLE_PLAN: ${reason}`);
+  }
+}
+
+function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
+  if (plan.metadata.planId !== ref.planId) {
+    throw new Error('PLAN_REF_MISMATCH: planId');
+  }
+  if (plan.metadata.planVersion !== ref.planVersion) {
+    throw new Error('PLAN_REF_MISMATCH: planVersion');
+  }
+  if (plan.metadata.schemaVersion !== ref.schemaVersion) {
+    throw new Error('PLAN_REF_MISMATCH: schemaVersion');
+  }
+  if (
+    ref.pluginCompatibilityFingerprint !== undefined &&
+    plan.metadata.pluginCompatibilityFingerprint !== ref.pluginCompatibilityFingerprint
+  ) {
+    throw new Error('PLAN_REF_MISMATCH: pluginCompatibilityFingerprint');
+  }
+}
+
+function derivePlanId(plan: ExecutionPlan): string {
+  const canonical = jcsCanonicalize({
+    metadata: {
+      planVersion: plan.metadata.planVersion,
+      inputHashSha256: plan.metadata.inputHashSha256,
+    },
+    steps: plan.steps,
+  });
+  return sha256Hex(canonical);
 }

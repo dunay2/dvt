@@ -9,6 +9,7 @@ import {
 import type { StartRunTraceContext } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
+type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type PlanRef = import('@dvt/contracts').PlanRef;
 type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
 type IObservability = import('@dvt/observability').IObservability;
@@ -35,6 +36,7 @@ export class StartRunExecutionService {
 
   async executeStartRun(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
@@ -53,13 +55,14 @@ export class StartRunExecutionService {
 
   private async startRunWithEstimatedRef(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     estimatedRef: EngineRunRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
+    const { adapter, plan, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
       planRef,
@@ -73,6 +76,7 @@ export class StartRunExecutionService {
 
     const runRef = await this.startAdapterAndMarkDispatched({
       adapter,
+      plan,
       planRef,
       resolvedContext,
       intentId,
@@ -97,14 +101,16 @@ export class StartRunExecutionService {
 
   private async startRunWithoutEstimatedRef(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, traceContext, intentId } = input;
+    const { adapter, plan, planRef, resolvedContext, traceContext, intentId } = input;
     const runRef = await this.startAdapterAndMarkDispatched({
       adapter,
+      plan,
       planRef,
       resolvedContext,
       intentId,
@@ -128,13 +134,14 @@ export class StartRunExecutionService {
 
   private async startAdapterAndMarkDispatched(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, intentId } = input;
+    const { adapter, plan, planRef, resolvedContext, intentId } = input;
     const runRef = await this.withTimeout(
-      adapter.startRun(planRef, resolvedContext),
+      adapter.startRun(plan, planRef, resolvedContext),
       this.deps.timeouts?.adapterCallMs ?? 30_000,
       'adapter.startRun'
     );

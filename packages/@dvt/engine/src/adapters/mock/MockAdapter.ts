@@ -13,6 +13,7 @@ import {
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
   type EngineRunRef,
+  type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
@@ -21,7 +22,6 @@ import {
 } from '@dvt/contracts';
 
 import { RunMetadataNotFoundError } from '../../contracts/errors.js';
-import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { buildRunEvents } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
@@ -35,9 +35,6 @@ export interface MockAdapterDeps {
   clock: Pick<IClock, 'nowIsoUtc'>;
   idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
-  planFetcher?: {
-    fetch(planRef: PlanRef): Promise<ExecutionPlan>;
-  };
 }
 
 /** Contract versions this adapter implementation can execute. */
@@ -69,22 +66,24 @@ export class MockAdapter implements IProviderAdapter {
     };
   }
 
-  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
-    const plan: ExecutionPlan = this.deps.planFetcher
-      ? await this.deps.planFetcher.fetch(planRef)
-      : {
-          metadata: {
-            planId: planRef.planId,
-            planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-            schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
-            contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
-            inputHashSha256: planRef.sha256,
-            createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
-          },
-          steps: [],
-        };
+  async startRun(
+    plan: ExecutionPlan,
+    planRef: PlanRef,
+    ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
+    const effectivePlan: ExecutionPlan = plan ?? {
+      metadata: {
+        planId: planRef.planId,
+        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+        inputHashSha256: planRef.sha256,
+        createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
+      },
+      steps: [],
+    };
 
-    validateMockPlanMetadata(plan.metadata);
+    validateMockPlanMetadata(effectivePlan.metadata);
 
     const runRef: EngineRunRef = {
       provider: 'mock',
@@ -93,7 +92,7 @@ export class MockAdapter implements IProviderAdapter {
       runId: ctx.runId,
     };
 
-    for (const step of plan.steps) {
+    for (const step of effectivePlan.steps) {
       validateMockStep(step);
     }
 

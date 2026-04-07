@@ -1,6 +1,6 @@
 import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { RunStateCommandPort } from '@dvt/engine';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   createActivities,
@@ -26,16 +26,6 @@ import {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const PLAN_JSON = {
-  metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1', contractVersion: '1.0.0' },
-  steps: [
-    { stepId: 'step-a', kind: 'test' },
-    { stepId: 'step-b', kind: 'test' },
-  ],
-};
-
-const PLAN_BYTES = Buffer.from(JSON.stringify(PLAN_JSON), 'utf-8');
 
 const PLAN_REF: PlanRef = {
   uri: 's3://bucket/plans/p1.json',
@@ -65,8 +55,6 @@ const TEST_ERRORS = {
 } as const;
 
 const EXPECTED_ERRORS = {
-  planRefMismatchPlanId: 'PLAN_REF_MISMATCH: planId',
-  planContractVersionUnknown: 'PLAN_CONTRACT_VERSION_UNKNOWN',
   transientDbError: 'TRANSIENT_DB_ERROR',
   dependsOnMustBeArray: 'INVALID_STEP_SCHEMA: dependsOn_must_be_array',
   dependsOnValuesMustBeString: 'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string',
@@ -224,10 +212,6 @@ function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
     testStore: store,
     clock: new TestClock(),
     idempotency: new TestIdempotencyKeyBuilder(),
-    fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
-    integrity: {
-      fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
-    } as unknown as ActivityDeps['integrity'],
   };
 }
 
@@ -305,46 +289,6 @@ function expectExecuteStepRejects(step: unknown, expectedError: string) {
 // ---------------------------------------------------------------------------
 
 describe('stepActivities', () => {
-  describe('fetchPlan', () => {
-    it('validates integrity and parses plan', async () => {
-      const { deps, acts } = setupActivities();
-
-      const plan = await acts.fetchPlan(PLAN_REF);
-
-      expect(plan.metadata.planId).toBe('p1');
-      expect(plan.steps).toHaveLength(2);
-      expect(deps.integrity.fetchAndValidate).toHaveBeenCalledWith(PLAN_REF, deps.fetcher);
-    });
-
-    it('rejects plan when metadata does not match PlanRef', async () => {
-      const { acts } = setupActivities();
-
-      const badRef: PlanRef = { ...PLAN_REF, planId: 'wrong-id' };
-
-      await expect(acts.fetchPlan(badRef)).rejects.toThrow(EXPECTED_ERRORS.planRefMismatchPlanId);
-    });
-
-    it('rejects unsupported plan contractVersion', async () => {
-      const badPlan = {
-        ...PLAN_JSON,
-        metadata: {
-          ...PLAN_JSON.metadata,
-          contractVersion: '99.0.0',
-        },
-      };
-      const badBytes = Buffer.from(JSON.stringify(badPlan), 'utf-8');
-      const { deps, acts } = setupActivities();
-      deps.fetcher = { fetch: vi.fn(async () => badBytes) };
-      deps.integrity = {
-        fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
-      } as unknown as ActivityDeps['integrity'];
-
-      await expect(acts.fetchPlan(PLAN_REF)).rejects.toThrow(
-        EXPECTED_ERRORS.planContractVersionUnknown
-      );
-    });
-  });
-
   describe('emitEvent', () => {
     it('persists event to state store', async () => {
       const { deps, acts } = setupActivities();
