@@ -47,10 +47,6 @@ export interface RunStatusSnapshot {
   message?: string;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
-  /**
-   * Deterministic hash of the logical snapshot state. Implemented using RFC8785 canonical JSON + SHA-256.
-   */
-  hash?: string;
 }
 
 export interface PlanRef {

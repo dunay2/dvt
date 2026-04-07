@@ -4,7 +4,7 @@
  * @baseline ADR-0013: bootstrapRunTx atomicity
   // RunCancelRequested -> cancelling=true (ADR-0007)
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
- * @decision Verify Postgres adapter lifecycle, idempotency, outbox, snapshot write-through, and tenant isolation
+ * @decision Verify Postgres adapter lifecycle, idempotency, outbox, queue-backed snapshot rebuilds, and tenant isolation
  * @consequence Regression coverage for adapter-level invariants against a live PostgreSQL instance
  * @version 1.0.0
  * @date 2026-03-03
@@ -88,6 +88,28 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
       makeEvent({ runId, eventType: 'RunQueued', idempotencyKey: `${runId}:queued`, tenantId }),
     ],
   };
+}
+
+async function claimSnapshotWorkForRun(
+  adapter: PostgresStateStoreAdapter,
+  tenantId: string,
+  runId: string
+): Promise<{ tenantId: string; runId: string; claimToken: string }> {
+  const claims = await adapter.claimSnapshotWork(10);
+  return requireDefined(
+    claims.find((claim) => claim.tenantId === tenantId && claim.runId === runId),
+    `expected snapshot work claim for ${tenantId}/${runId}`
+  );
+}
+
+async function rebuildClaimedSnapshot(
+  adapter: PostgresStateStoreAdapter,
+  tenantId: string,
+  runId: string
+): Promise<void> {
+  const claim = await claimSnapshotWorkForRun(adapter, tenantId, runId);
+  await adapter.rebuildSnapshot(tenantId, rid(runId));
+  await adapter.completeSnapshotWork(tenantId, runId, claim.claimToken);
 }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Suite Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -421,22 +443,25 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(second.lastSeq).toBe(3);
     }));
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Snapshot write-through (W0-7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Snapshot freshness and queued persistence Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
-  test('getSnapshot: returns PENDING snapshot after bootstrapRunTx', () =>
+  test('bootstrapRunTx seeds a PENDING snapshot for active runs', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-snap-1'));
 
       const snap = await adapter.getSnapshot('t1', rid('run-snap-1'));
-      expect(snap).not.toBeNull();
       expect(snap?.status).toBe('PENDING');
       expect(snap?.paused).toBe(false);
       expect(snap?.cancelling).toBe(false);
+
+      const claims = await adapter.claimSnapshotWork(10);
+      expect(claims.find((claim) => claim.runId === 'run-snap-1')).toBeUndefined();
     }));
 
-  test('getSnapshot: advances to RUNNING after RunStarted', () =>
+  test('appendAndEnqueueTx keeps getSnapshot fresh while queued rebuild catches persisted state up', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-snap-2'));
+
       await adapter.appendAndEnqueueTx(rid('run-snap-2'), [
         makeEvent({
           runId: 'run-snap-2',
@@ -445,16 +470,23 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snap = await adapter.getSnapshot('t1', rid('run-snap-2'));
-      expect(snap?.status).toBe('RUNNING');
-      expect(snap?.startedAt).toBe(NOW);
+      const freshBeforeRebuild = await adapter.getSnapshot('t1', rid('run-snap-2'));
+      expect(freshBeforeRebuild?.status).toBe('RUNNING');
+      expect(freshBeforeRebuild?.startedAt).toBe(NOW);
+
+      await rebuildClaimedSnapshot(adapter, 't1', 'run-snap-2');
+
+      const freshAfterRebuild = await adapter.getSnapshot('t1', rid('run-snap-2'));
+      expect(freshAfterRebuild?.status).toBe('RUNNING');
+      expect(freshAfterRebuild?.startedAt).toBe(NOW);
     }));
 
   // RunCancelRequested -> cancelling=true (ADR-0007)
 
-  test('getSnapshot: sets cancelling=true on RunCancelRequested, CANCELLED on RunCancelled', () =>
+  test('getSnapshot applies cancellation tail events before the queued rebuild persists them', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-cancel'));
+
       await adapter.appendAndEnqueueTx(rid('run-cancel'), [
         makeEvent({
           runId: 'run-cancel',
@@ -468,9 +500,15 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snapCancelling = await adapter.getSnapshot('t1', rid('run-cancel'));
-      expect(snapCancelling?.status).toBe('RUNNING');
-      expect(snapCancelling?.cancelling).toBe(true);
+      const freshCancelling = await adapter.getSnapshot('t1', rid('run-cancel'));
+      expect(freshCancelling?.status).toBe('RUNNING');
+      expect(freshCancelling?.cancelling).toBe(true);
+
+      await rebuildClaimedSnapshot(adapter, 't1', 'run-cancel');
+
+      const persistedCancelling = await adapter.getSnapshot('t1', rid('run-cancel'));
+      expect(persistedCancelling?.status).toBe('RUNNING');
+      expect(persistedCancelling?.cancelling).toBe(true);
 
       await adapter.appendAndEnqueueTx(rid('run-cancel'), [
         makeEvent({
@@ -480,8 +518,15 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snapCancelled = await adapter.getSnapshot('t1', rid('run-cancel'));
-      expect(snapCancelled?.status).toBe('CANCELLED');
+      const freshCancelled = await adapter.getSnapshot('t1', rid('run-cancel'));
+      expect(freshCancelled?.status).toBe('CANCELLED');
+      expect(freshCancelled?.cancelling).toBe(false);
+
+      await rebuildClaimedSnapshot(adapter, 't1', 'run-cancel');
+
+      const persistedCancelled = await adapter.getSnapshot('t1', rid('run-cancel'));
+      expect(persistedCancelled?.status).toBe('CANCELLED');
+      expect(persistedCancelled?.cancelling).toBe(false);
     }));
 
   // Ã¢â€â‚¬Ã¢â€â‚¬ Outbox lifecycle Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬

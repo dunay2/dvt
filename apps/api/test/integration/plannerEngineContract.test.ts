@@ -331,7 +331,6 @@ describe('planner -> engine contract', () => {
 
     const finalSnapshot = await engine.getRunStatus(runRef);
     expect(finalSnapshot.status).toBe('COMPLETED');
-    expect(finalSnapshot.hash).toMatch(/^[a-f0-9]{64}$/);
 
     const persistedSnapshot = await store.getSnapshot('test-tenant', runId);
     expect(persistedSnapshot).toBeTruthy();

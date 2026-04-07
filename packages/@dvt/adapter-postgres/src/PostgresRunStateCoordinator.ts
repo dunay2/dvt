@@ -90,6 +90,13 @@ export class PostgresRunStateCoordinator {
           input.metadata.runId as RunId,
           input.firstEvents
         );
+        await this.snapshotStore.updateWithClient(
+          client,
+          input.metadata.runId as RunId,
+          append.appended,
+          0,
+          append.lastSeq
+        );
         await this.outboxStore.enqueueWithClient(
           client,
           input.metadata.runId as RunId,
@@ -132,13 +139,6 @@ export class PostgresRunStateCoordinator {
   ): Promise<AppendResult> {
     const { appended, deduped, lastAppendedRunSeq, baseRunSeq } =
       await this.runEventRepository.append(client, tenantId, runId, envelopes);
-    await this.snapshotStore.updateWithClient(
-      client,
-      runId,
-      appended,
-      baseRunSeq,
-      lastAppendedRunSeq
-    );
     return { appended, deduped, lastSeq: lastAppendedRunSeq ?? baseRunSeq };
   }
 }
