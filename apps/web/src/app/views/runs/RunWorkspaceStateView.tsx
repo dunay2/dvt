@@ -35,8 +35,7 @@ function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefine
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
   const failedStepId =
     workspace.snapshot.failedStepId ??
-    [...workspace.timeline.events].reverse().find((event) => event.eventType === 'StepFailed')
-      ?.stepId;
+    [...workspace.timeline.events].reverse().find((event) => event.eventType === 'StepFailed')?.stepId;
   const errorReason = workspace.snapshot.errorReason ?? getRunFailedReason(workspace);
 
   return {
@@ -62,11 +61,11 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
 
           <p className="text-sm text-slate-300">{copy.snapshotReadModelNote}</p>
 
-          {snapshot.message ? (
-            <p className="mt-3 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
-              {snapshot.message}
-            </p>
-          ) : null}
+            {snapshot.message ? (
+              <p className="mt-3 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+                {snapshot.message}
+              </p>
+            ) : null}
         </Card>
 
         <Card className="border-slate-700 bg-slate-900 p-5">
@@ -98,6 +97,12 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
               <div>
                 <span className="text-slate-400">{copy.currentStepLabel}</span>
                 <div className="font-mono">{snapshot.currentStepId}</div>
+              </div>
+            ) : null}
+            {snapshot.hash ? (
+              <div className="md:col-span-2">
+                <span className="text-slate-400">{copy.snapshotHashLabel}</span>
+                <div className="break-all font-mono text-xs">{snapshot.hash}</div>
               </div>
             ) : null}
           </div>
