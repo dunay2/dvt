@@ -1,4 +1,4 @@
-import type { IStepTypeRegistry } from '@dvt/contracts';
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, type IStepTypeRegistry } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -76,6 +76,9 @@ describe('StoredPlanExecutabilityValidator', () => {
             },
             async signal() {
               throw new Error('not used');
+            },
+            signalSemanticsVersions() {
+              return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
             },
           } as IProviderAdapter,
         ],
@@ -342,6 +345,9 @@ function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
     },
     async signal() {
       throw new Error('not used');
+    },
+    signalSemanticsVersions() {
+      return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
     },
     capabilities() {
       return [...capabilities];

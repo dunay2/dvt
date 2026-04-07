@@ -1,6 +1,6 @@
+import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
-  CURRENT_SIGNAL_SEMANTICS_VERSION,
   StartRunApplicationService,
   type IProviderAdapter,
   type ResolvedRunContext,

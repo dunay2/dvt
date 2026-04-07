@@ -12,6 +12,7 @@ import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
   type StartRunCommand,
+  type StartRunPlanRef,
 } from '../../../src/application/ports/startRunContract.js';
 import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
@@ -126,7 +127,10 @@ describe('EngineStartRunUseCase', () => {
     };
 
     const useCase = new EngineStartRunUseCase(fakeEngine as never);
-    const noisyPlanRef = {
+    const noisyPlanRef: StartRunPlanRef & {
+      pluginCompatibilityFingerprint: string;
+      requiresCapabilities: string[];
+    } = {
       ...PLAN_REF,
       pluginCompatibilityFingerprint:
         '1111111111111111111111111111111111111111111111111111111111111111',
@@ -135,7 +139,7 @@ describe('EngineStartRunUseCase', () => {
     await useCase.execute(
       {
         ...mkCommand(),
-        planRef: noisyPlanRef as StartRunCommand['planRef'],
+        planRef: noisyPlanRef,
       },
       mkContext()
     );

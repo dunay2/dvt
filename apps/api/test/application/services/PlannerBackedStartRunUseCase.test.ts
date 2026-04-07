@@ -500,9 +500,7 @@ function makeBuildResult(planId: string): PlannerBuildResultV1 {
         },
       ],
     },
-    executionPolicy: {
-      compatibility: {},
-    },
+    executionPolicy: {},
     canonicalPlanCoreJson: JSON.stringify({
       metadata: {
         planVersion: '1.0',
