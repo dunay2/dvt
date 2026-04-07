@@ -22,6 +22,10 @@ Canonical execution tracking remains in:
 The original blockers identified in this QA pass were corrected in the same
 slice. The review now closes as `Ready`.
 
+## Markdown Artifact Path Suggestion
+
+- `docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md`
+
 ## Governing Sources
 
 - [governance-document-rule-inventory.md](../../status/governance-document-rule-inventory.md)
@@ -119,7 +123,9 @@ No critical findings remain in the reviewed slice.
 - What could not be verified:
   - no separate API runtime behavior changed in this slice
 
-## Current-State Confirmation
+## Mermaid Diagram
+
+### Current-State Confirmation
 
 ```mermaid
 flowchart LR
@@ -148,6 +154,66 @@ explicitly left to ADR-0040]
 - [x] `QA-RS-3` Correct ADR-0048 and evidence wording about shipped-surface parity
 - [x] `QA-RS-4` Re-run docs validation and close the slice
 
+### Task Details
+
+#### `QA-RS-1` Align touched v1 engine contract docs with ADR-0047 ownership truth
+
+- Objective: Remove stale engine-owned lifecycle claims from active v1 docs.
+- Scope: `IWorkflowEngine.v1.md`, `ExecutionSemantics.v1.md`, `RunEvents.v1.md`.
+- Recommended owner: Engine/contracts docs owner.
+- Dependencies: `ADR-0047`.
+- Documentation impact: Active contract docs reflect runtime-owned realized lifecycle facts.
+- Evidence / risk-doc impact: None beyond slice evidence alignment.
+- Comment with rationale: Reviewers must not have to mentally override active docs with newer ADRs.
+- Definition of Done:
+  - touched v1 docs stop attributing `RunPaused`, `RunResumed`, and `RunCancelled` to engine append ownership;
+  - docs point to runtime-owned lifecycle truth;
+  - no contradictory producer-path guidance remains in active v1 surfaces.
+
+#### `QA-RS-2` Rewrite `SignalsAndAuth.v1.md`
+
+- Objective: Replace speculative signal guidance with the real canonical signal contract.
+- Scope: `SignalsAndAuth.v1.md`.
+- Recommended owner: Engine/contracts docs owner.
+- Dependencies: `ADR-0048`, current `@dvt/contracts` signal types.
+- Documentation impact: Request shape, supported signals, and non-canonical commands are explicit.
+- Evidence / risk-doc impact: None beyond slice evidence alignment.
+- Comment with rationale: An active contract doc that advertises unsupported verbs is a governance defect, not a harmless draft.
+- Definition of Done:
+  - canonical signal list matches code;
+  - `SignalRequest` shape matches code;
+  - speculative commands are removed or explicitly out of scope;
+  - `RETRY_STEP` is documented as a separate use case, not a signal.
+
+#### `QA-RS-3` Correct ADR-0048 and evidence wording about shipped-surface parity
+
+- Objective: Stop overstating transport/API parity after narrowing only `RETRY_STEP`.
+- Scope: `ADR-0048`, evidence note for the slice.
+- Recommended owner: Slice owner.
+- Dependencies: code truth and API surface truth.
+- Documentation impact: ADR/evidence claims match the actual shipped HTTP/API surface.
+- Evidence / risk-doc impact: Direct update to evidence wording.
+- Comment with rationale: Governance text should narrow claims to what the slice actually changed, especially when `RETRY_RUN` remains unresolved at the API surface.
+- Definition of Done:
+  - ADR/evidence claim only `RETRY_STEP` narrowing;
+  - `RETRY_RUN` is explicitly left to `ADR-0040`;
+  - no text implies full surface parity that does not exist.
+
+#### `QA-RS-4` Re-run docs validation and close the slice
+
+- Objective: Close with validation evidence rather than narrative assertion.
+- Scope: touched docs plus repo gate.
+- Recommended owner: Slice owner.
+- Dependencies: `QA-RS-1`, `QA-RS-2`, `QA-RS-3`.
+- Documentation impact: QA artifact and board move to done state.
+- Evidence / risk-doc impact: QA artifact records commands and outcomes.
+- Comment with rationale: The slice is not ready until the governed doc gates pass on the actual artifact set.
+- Definition of Done:
+  - markdown lint passes on touched docs;
+  - `pnpm verify:prepush` passes;
+  - QA artifact closes as `Ready`;
+  - board entry is updated to `done`.
+
 ### Closeout rationale
 
 The implementation was already correct at the code boundary. The remaining work
@@ -165,3 +231,11 @@ issue.
 - Unrelated untracked file present during this QA:
   [20260407-principal-architecture-review-progress-and-diagrams.md](C:/dvt/docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md)
 - It remains outside the scope of this slice.
+
+## Final Verdict
+
+Ready.
+
+- The code boundary remains aligned with the narrowing slice.
+- The governing docs now match the shipped contract truth for this slice.
+- Residual `RETRY_RUN` posture is explicit and remains out of scope here.
