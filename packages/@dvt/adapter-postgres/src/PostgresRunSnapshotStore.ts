@@ -20,6 +20,7 @@ import {
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
+import { InvalidRunSequenceValueError } from './runEventStoreErrors.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
 
@@ -29,6 +30,15 @@ import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
 
 interface SnapshotRow {
   snapshot: WorkflowSnapshot;
+}
+
+interface SnapshotWithSeqRow extends SnapshotRow {
+  last_run_seq: number | string | null;
+}
+
+interface SnapshotReadRow extends SnapshotRow {
+  last_run_seq: number | string | null;
+  latest_run_seq: number | string | null;
 }
 
 interface PinnedSnapshotRow extends SnapshotRow {
@@ -63,26 +73,66 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
   ) {}
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
-    const result = await this.withClient((client) =>
-      client.query<SnapshotRow>(
+    const read = await this.withClient(async (client) => {
+      const result = await client.query<SnapshotReadRow>(
         `
-          SELECT s.snapshot
-          FROM ${quoteIdentifier(this.schema)}.run_snapshots s
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
-          WHERE m.tenant_id = $1 AND s.run_id = $2
+          SELECT
+            s.snapshot,
+            s.last_run_seq,
+            le.run_seq AS latest_run_seq
+          FROM ${quoteIdentifier(this.schema)}.run_metadata m
+          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+          LEFT JOIN LATERAL (
+            SELECT e.run_seq
+            FROM ${quoteIdentifier(this.schema)}.run_events e
+            WHERE e.run_id = m.run_id
+              AND e.tenant_id = m.tenant_id
+            ORDER BY e.run_seq DESC
+            LIMIT 1
+          ) le ON TRUE
+          WHERE m.tenant_id = $1
+            AND m.run_id = $2
+          LIMIT 1
         `,
         [tenantId, runId]
-      )
-    );
-    const snapshot = result.rows[0]?.snapshot ?? null;
-    if (snapshot === null) return null;
-    if (snapshot.schemaVersion === CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION) {
-      return snapshot;
+      );
+      const row = result.rows[0];
+      if (!row?.snapshot) {
+        return null;
+      }
+      const snapshot = row.snapshot;
+
+      const persistedLastRunSeq =
+        row.last_run_seq === null ? 0 : parsePersistedRunSequence(row.last_run_seq, runId);
+      const latestRunSeq =
+        row.latest_run_seq === null
+          ? persistedLastRunSeq
+          : parsePersistedRunSequence(row.latest_run_seq, runId);
+
+      const tailEvents =
+        latestRunSeq > persistedLastRunSeq
+          ? await this.listEventsAfterSeqWithClient(client, tenantId, runId, persistedLastRunSeq)
+          : [];
+
+      return { snapshot, tailEvents };
+    });
+    if (read === null) {
+      return null;
+    }
+    if (read.snapshot.schemaVersion !== CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION) {
+      // Schema-version mismatch means the stored read model shape is stale.
+      // Rebuild from canonical event history before serving.
+      return this.rebuildSnapshot(tenantId, runId);
+    }
+    if (read.tailEvents.length === 0) {
+      return read.snapshot;
     }
 
-    // Schema-version mismatch means the stored read model shape is stale.
-    // Rebuild from canonical event history before serving.
-    return this.rebuildSnapshot(tenantId, runId);
+    const freshSnapshot = cloneWorkflowSnapshot(read.snapshot);
+    for (const event of read.tailEvents) {
+      applyRunEvent(freshSnapshot, event);
+    }
+    return freshSnapshot;
   }
 
   async pinTerminalSnapshot(
@@ -295,6 +345,34 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     await this.persistWithClient(client, runId, snap, lastAppendedRunSeq);
   }
 
+  /**
+   * Validates appended events against the current run lifecycle state inside the
+   * same transaction used by append. This preserves transition guards even when
+   * snapshot persistence is decoupled to background workers.
+   */
+  async validateAppendedTransitionsWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    baseRunSeq: number,
+    appended: EventEnvelope[]
+  ): Promise<void> {
+    if (appended.length === 0) {
+      return;
+    }
+
+    const validationSnapshot = await this.buildValidationSnapshotWithClient(
+      client,
+      tenantId,
+      runId,
+      baseRunSeq
+    );
+
+    for (const event of appended) {
+      applyRunEvent(validationSnapshot, event);
+    }
+  }
+
   async persistWithClient(
     client: PoolClient,
     runId: RunId,
@@ -362,6 +440,102 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     };
   }
 
+  private async buildValidationSnapshotWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    baseRunSeq: number
+  ): Promise<WorkflowSnapshot> {
+    const snapshotRow = await client.query<SnapshotWithSeqRow>(
+      `
+        SELECT snapshot, last_run_seq
+        FROM ${quoteIdentifier(this.schema)}.run_snapshots
+        WHERE run_id = $1
+        LIMIT 1
+      `,
+      [runId]
+    );
+
+    const persisted = snapshotRow.rows[0];
+    const snapshot = persisted?.snapshot
+      ? cloneWorkflowSnapshot(persisted.snapshot)
+      : this.createEmptySnapshot(runId);
+    const snapshotLastRunSeq =
+      persisted?.last_run_seq === null || persisted?.last_run_seq === undefined
+        ? 0
+        : parsePersistedRunSequence(persisted.last_run_seq, runId);
+
+    if (baseRunSeq <= snapshotLastRunSeq) {
+      return snapshot;
+    }
+
+    const tailEvents = await this.listEventsBetweenSeqWithClient(
+      client,
+      tenantId,
+      runId,
+      snapshotLastRunSeq,
+      baseRunSeq
+    );
+    for (const event of tailEvents) {
+      applyRunEvent(snapshot, event);
+    }
+    return snapshot;
+  }
+
+  private createEmptySnapshot(runId: RunId): WorkflowSnapshot {
+    return {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+      runId,
+      status: 'PENDING',
+      paused: false,
+      cancelling: false,
+      gatewayDecisions: {},
+      steps: {},
+    };
+  }
+
+  private async listEventsAfterSeqWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    afterSeq: number
+  ): Promise<EventEnvelope[]> {
+    const result = await client.query<EventPayloadRow>(
+      `
+        SELECT payload
+        FROM ${quoteIdentifier(this.schema)}.run_events
+        WHERE tenant_id = $1
+          AND run_id = $2
+          AND run_seq > $3
+        ORDER BY run_seq ASC
+      `,
+      [tenantId, runId, afterSeq]
+    );
+    return result.rows.map((row) => row.payload);
+  }
+
+  private async listEventsBetweenSeqWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    afterSeq: number,
+    toSeqInclusive: number
+  ): Promise<EventEnvelope[]> {
+    const result = await client.query<EventPayloadRow>(
+      `
+        SELECT payload
+        FROM ${quoteIdentifier(this.schema)}.run_events
+        WHERE tenant_id = $1
+          AND run_id = $2
+          AND run_seq > $3
+          AND run_seq <= $4
+        ORDER BY run_seq ASC
+      `,
+      [tenantId, runId, afterSeq, toSeqInclusive]
+    );
+    return result.rows.map((row) => row.payload);
+  }
+
   private async requireRunOwnership(
     client: PoolClient,
     tenantId: string,
@@ -384,4 +558,52 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
 function isTerminalRunStatus(status: string): status is TerminalRunStatus {
   return status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
+}
+
+function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnapshot {
+  const steps = Object.fromEntries(
+    Object.entries(snapshot.steps).map(([stepId, step]) => [stepId, { ...step }])
+  );
+
+  return {
+    ...snapshot,
+    steps,
+    gatewayDecisions: snapshot.gatewayDecisions ? { ...snapshot.gatewayDecisions } : {},
+  };
+}
+
+const MAX_SAFE_RUN_SEQUENCE = BigInt(Number.MAX_SAFE_INTEGER);
+
+function parsePersistedRunSequence(rawValue: unknown, runId: RunId): number {
+  if (typeof rawValue === 'number') {
+    if (!Number.isInteger(rawValue) || rawValue < 0 || rawValue > Number.MAX_SAFE_INTEGER) {
+      throw new InvalidRunSequenceValueError(runId, rawValue);
+    }
+    return rawValue;
+  }
+
+  if (typeof rawValue === 'bigint') {
+    return parsePersistedBigIntRunSequence(rawValue, runId);
+  }
+
+  if (typeof rawValue === 'string') {
+    const normalized = rawValue.trim();
+    if (normalized.length === 0) {
+      throw new InvalidRunSequenceValueError(runId, rawValue);
+    }
+    try {
+      return parsePersistedBigIntRunSequence(BigInt(normalized), runId);
+    } catch {
+      throw new InvalidRunSequenceValueError(runId, rawValue);
+    }
+  }
+
+  throw new InvalidRunSequenceValueError(runId, rawValue);
+}
+
+function parsePersistedBigIntRunSequence(value: bigint, runId: RunId): number {
+  if (value < 0n || value > MAX_SAFE_RUN_SEQUENCE) {
+    throw new InvalidRunSequenceValueError(runId, value.toString());
+  }
+  return Number(value);
 }

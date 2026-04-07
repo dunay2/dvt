@@ -50,7 +50,13 @@ Transactional outbox records used for at-least-once dispatch semantics:
 
 ### `run_snapshots`
 
-Persisted hot-read snapshot updated in the same transaction as event append.
+Persisted hot-read snapshot seeded at bootstrap and then rebuilt
+asynchronously from the canonical event log as more events arrive.
+
+### `snapshot_work_queue`
+
+Push-based queue of runs whose `run_snapshots` row is missing or stale relative
+to the latest appended event sequence.
 
 ### `outbox_dead_letter`
 
@@ -64,11 +70,16 @@ The adapter supports two paths:
 1. `bootstrapRunTx()`
 2. `appendAndEnqueueTx()`
 
-`bootstrapRunTx()` persists metadata, first events, snapshot, and outbox rows in
-one transaction.
+`bootstrapRunTx()` persists metadata, first events, an initial seeded snapshot,
+queue metadata, and outbox rows in one transaction.
 
-`appendAndEnqueueTx()` performs event append + snapshot update + outbox enqueue
-in a single DB transaction to preserve atomicity.
+`appendAndEnqueueTx()` performs event append + snapshot-work enqueue + outbox
+enqueue in a single DB transaction. Snapshot rebuilding moves to the
+projector-worker path via `snapshot_work_queue`.
+
+`getSnapshot()` prefers the persisted row, but if `run_snapshots.last_run_seq`
+lags the latest event sequence it applies the event tail in memory so hot reads
+stay current while the worker catches up.
 
 Per-run ordering is stabilized with a 64-bit MD5-derived advisory transaction
 lock before sequence allocation.

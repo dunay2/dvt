@@ -41,7 +41,10 @@ Canonical catalog of ADRs in this repository.
 | ADR-0040   | Retry Ownership and Attempt Authority                                                           | Accepted                 | 2026-03-24                       | [ADR-0040-retry-ownership-and-attempt-authority.md](ADR-0040-retry-ownership-and-attempt-authority.md)                                             |
 | ADR-0041   | Global Domain State Model and Boundary Contracts                                                | Accepted                 | 2026-03-26                       | [ADR-0041-global-domain-state-model-and-boundary-contracts.md](ADR-0041-global-domain-state-model-and-boundary-contracts.md)                       |
 | ADR-0041A  | Reconciler Health State and Readiness Port Semantics                                            | Accepted                 | 2026-03-26                       | [ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md](ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md)             |
+| ADR-0042   | ExecutionPlan canonical identity unification                                                    | Accepted                 | 2026-03-31                       | [ADR-0042-execution-plan-canonical-identity-unification.md](ADR-0042-execution-plan-canonical-identity-unification.md)                             |
 | ADR-0043   | Plan record, plan store, and artifacts ownership                                                | Accepted                 | 2026-04-02                       | [ADR-0043-plan-record-plan-store-and-artifacts-ownership.md](ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)                           |
+| ADR-0044   | Structured contracts error metadata and non-semantic messages                                   | Accepted                 | 2026-04-03                       | [ADR-0044-structured-contracts-error-metadata.md](ADR-0044-structured-contracts-error-metadata.md)                                                 |
+| ADR-0045   | Dedicated status-head read model for hot run status queries                                     | Proposed                 | 2026-04-07                       | [ADR-0045-dedicated-status-head-read-model.md](ADR-0045-dedicated-status-head-read-model.md)                                                       |
 
 ## Usage rules
 
@@ -54,4 +57,4 @@ Canonical catalog of ADRs in this repository.
 - [ADR landing page](index.md)
 - [ADR implementation status](ADR-Implementation-Status.md)
 
-_Last updated: 2026-04-02_
+_Last updated: 2026-04-07_

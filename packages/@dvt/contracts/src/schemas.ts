@@ -130,7 +130,6 @@ export const RunStatusSnapshotSchema = z.object({
   message: z.string().optional(),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
-  hash: z.string().optional(),
 });
 
 // ─── EngineRunRef (discriminated union) ──────────────────────────────────────

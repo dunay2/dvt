@@ -67,7 +67,6 @@ describe('runsService runtime contract', () => {
       startedAt: '2026-04-04T00:00:00.000Z',
       substatus: 'WAITING_APPROVAL',
       message: 'Approval required',
-      hash: 'snapshot-hash',
       snapshotStaleness: 'FRESH',
     });
 
@@ -85,7 +84,6 @@ describe('runsService runtime contract', () => {
       completedAt: undefined,
       substatus: 'WAITING_APPROVAL',
       message: 'Approval required',
-      hash: 'snapshot-hash',
       snapshotStaleness: 'FRESH',
     });
   });
@@ -146,7 +144,6 @@ describe('runsService runtime contract', () => {
         completedAt: undefined,
         substatus: 'WAITING_APPROVAL',
         message: 'Approval required',
-        hash: undefined,
         snapshotStaleness: undefined,
       },
     ]);

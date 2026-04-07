@@ -758,7 +758,6 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
 
   return { status, cancelledCount, eventTypes };
 }
-
 function createBlockingExecutor(targetStepId: string): {
   executor: StepExecutor;
   waitUntilExecuting: Promise<void>;
@@ -1040,7 +1039,6 @@ describe('temporal integration (time-skipping)', () => {
       const outbox = new TestOutbox();
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
       const planRef = createPlanRef('it-plan', planBytes);
 
       const temporalConfig = loadTemporalAdapterConfig({

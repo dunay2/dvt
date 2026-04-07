@@ -115,7 +115,7 @@ GET /runs/:runId?enriched=true           // ADR-0015: path enriquecido (llama al
 → 200 {
     runId, status, substatus,
     startedAt, completedAt,
-    hash                                 // para detectar cambios en polling
+    snapshotStaleness                    // opcional: telemetria de frescura
   }
 ```
 
@@ -181,7 +181,6 @@ export interface RunStatusSnapshot {
   substatus?: string;
   startedAt: string; // ISO UTC
   completedAt?: string;
-  hash: string; // para polling optimista
 }
 
 export interface RunEvent {
@@ -450,7 +449,7 @@ Los items de Nivel C aparecen en la navegación solo cuando:
 
 ### Sprint 3 — "Monitor y Trazabilidad"
 
-- [ ] `useRunStatus(runId, { enriched: true })` — polling con hash comparison
+- [ ] `useRunStatus(runId, { enriched: true })` — polling con comparación de campos relevantes
 - [ ] `useRunEvents(runId)` — SSE con fallback a polling (ver §5)
 - [ ] Timeline de eventos ordenada y consistente
 - [ ] Console unificada: events/logs/metrics con filtros por step/severity
@@ -472,7 +471,7 @@ Los items de Nivel C aparecen en la navegación solo cuando:
 
 1. Un usuario puede completar Plan → Run → Monitor sin mock data.
 2. La UI refleja siempre el estado real del backend.
-3. El polling usa `hash` para evitar re-renders innecesarios.
+3. El polling compara el payload recibido y evita re-renders cuando no hay cambios relevantes.
 4. `?enriched=true` solo se llama desde la vista de run activo (no en listas).
 5. El switch `mock|api` no requiere cambios en componentes de vista.
 6. Los tipos del frontend son isomorfos a los contratos del engine.
