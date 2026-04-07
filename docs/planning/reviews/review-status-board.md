@@ -104,6 +104,13 @@ Additional active QA:
   - status: `review`
   - progress: `100%`
 
+- [20260407 Retry-step boundary hard QA review](architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for narrowing `RETRY_STEP` out of canonical `SignalType`
+  - linkage: `QA-RS-1..QA-RS-4`
+  - status: `done`
+  - progress: `100%`
+
 ## Newly Classified Review
 
 - Review:

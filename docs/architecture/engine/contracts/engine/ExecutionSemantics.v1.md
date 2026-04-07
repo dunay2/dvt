@@ -1,22 +1,26 @@
-# Execution Semantics Contract (Normative v1)
+﻿# Execution Semantics Contract (Normative v1)
 
 > Historical note: references in this v1 surface to a `RETRY_STEP` signal are
 > superseded by [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
 > The current canonical signal boundary no longer includes `RETRY_STEP`.
+> References to engine-owned realized lifecycle events for `RunPaused`,
+> `RunResumed`, or `RunCancelled` are superseded by
+> [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
+> Those lifecycle facts are runtime-owned in the current model.
 
-[← Back to Contracts Registry](../README.md)
+[Back to Contracts Registry](../README.md)
 
 **Status**: DRAFT  
 **Version**: v1
-**Stability**: Core semantics — breaking changes require version bump  
+**Stability**: Core semantics - breaking changes require version bump  
 **Consumers**: Engine, StateStore, Projector
 
 **References**:
 [IWorkflowEngine Contract](./IWorkflowEngine.reference.v1.md)  
- [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)  
- [State Store Contract](../state-store/README.md) — storage-agnostic interface  
- [State Store Adapters](../../adapters/state-store/) — backend-specific implementations (Snowflake, Postgres, etc.)  
- [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) — Temporal-specific policies (continue-as-new, limits)
+ [Contract Versioning Policy](../../VERSIONING.md) - how this contract evolves (minor/major bumps, deprecation)  
+ [State Store Contract](../state-store/README.md) - storage-agnostic interface  
+ [State Store Adapters](../../adapters/state-store/) - backend-specific implementations (Snowflake, Postgres, etc.)  
+ [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) - Temporal-specific policies (continue-as-new, limits)
 
 **NOTE**: This document defines **core, storage/engine-agnostic semantics**. Physical schemas (DDLs), clustering strategies, and platform-specific policies (e.g., Temporal continue-as-new) are documented in adapter guides.
 
@@ -54,7 +58,7 @@
 
 **Projector responsibility**:
 
-- If the projector detects a dependency inversion (e.g., step B appears satisfied before step A where A → B), it MUST NOT assume corruption.
+- If the projector detects a dependency inversion (e.g., step B appears satisfied before step A where A -> B), it MUST NOT assume corruption.
 - The projector SHOULD apply events strictly in `runSeq` order.
 - Downstream consumers MAY observe temporary inconsistency; it resolves when delayed events arrive.
 
@@ -73,12 +77,12 @@ Every event persisted to StateStore MUST include a **strictly increasing** `runS
 
 - `runSeq` MUST be **monotonic** (strictly increasing per `runId`)
 - `runSeq` is **NOT required to be contiguous** (gaps are allowed and natural)
-- `runSeq` MUST be assigned by the **Append Authority** (see [State Store Contract § 3](../state-store/README.md#3-append-authority-pattern))
+- `runSeq` MUST be assigned by the **Append Authority** (see [State Store Contract Section 3](../state-store/README.md#3-append-authority-pattern))
 
 **Logical constraints** (MUST be enforced by all StateStore adapters):
 
-- **Unique key**: `(runId, runSeq)` — no duplicate sequence numbers within a run
-- **Uniqueness**: `(runId, idempotencyKey)` — same idempotency key cannot produce multiple events
+- **Unique key**: `(runId, runSeq)` - no duplicate sequence numbers within a run
+- **Uniqueness**: `(runId, idempotencyKey)` - same idempotency key cannot produce multiple events
 
 **Idempotency key collision handling** (NORMATIVE):
 
@@ -91,8 +95,8 @@ The adapter MUST NOT overwrite or create a second event. The chosen behavior MUS
 
 **Physical implementation**: See backend-specific adapters:
 
-- [Snowflake StateStore Adapter](../../adapters/state-store/snowflake/StateStoreAdapter.md) — DDL, MERGE patterns, clustering
-- [Postgres StateStore Adapter](../../adapters/state-store/postgres/StateStoreAdapter.md) — advisory-lock ordering, snapshots, outbox + DLQ
+- [Snowflake StateStore Adapter](../../adapters/state-store/snowflake/StateStoreAdapter.md) - DDL, MERGE patterns, clustering
+- [Postgres StateStore Adapter](../../adapters/state-store/postgres/StateStoreAdapter.md) - advisory-lock ordering, snapshots, outbox + DLQ
 
 **UI consumption rule** (watermark-based polling):
 
@@ -110,21 +114,21 @@ State is derived by reducing **append-only events** in order. No field is ever u
 
 **Canonical event types**:
 
-| Event            | Emitted By     | Effect                                                 |
-| ---------------- | -------------- | ------------------------------------------------------ |
-| `RunApproved`    | Planner        | `status := APPROVED`                                   |
-| `RunStarted`     | Engine         | `status := RUNNING`, `engineRunRef` recorded           |
-| `StepStarted`    | Activity       | Step `status := RUNNING`                               |
-| `StepCompleted`  | Activity       | Step `status := SUCCESS`, artifacts recorded           |
-| `StepFailed`     | Activity       | Step `status := FAILED`, error recorded                |
-| `StepSkipped`    | Engine         | Step `status := SKIPPED`, reason recorded              |
-| `SignalAccepted` | IAuthorization | Decision recorded, does NOT change run status          |
-| `SignalRejected` | IAuthorization | Signal denied                                          |
-| `RunPaused`      | Engine         | `status := PAUSED` (see § 6 for Conductor limitations) |
-| `RunResumed`     | Engine         | `status := RUNNING`                                    |
-| `RunCompleted`   | Engine         | `status := COMPLETED`                                  |
-| `RunFailed`      | Engine         | `status := FAILED`                                     |
-| `RunCancelled`   | Engine         | `status := CANCELLED`                                  |
+| Event            | Emitted By                          | Effect                                           |
+| ---------------- | ----------------------------------- | ------------------------------------------------ |
+| `RunApproved`    | Planner                             | `status := APPROVED`                             |
+| `RunStarted`     | Engine                              | `status := RUNNING`, `engineRunRef` recorded     |
+| `StepStarted`    | Activity                            | Step `status := RUNNING`                         |
+| `StepCompleted`  | Activity                            | Step `status := SUCCESS`, artifacts recorded     |
+| `StepFailed`     | Activity                            | Step `status := FAILED`, error recorded          |
+| `StepSkipped`    | Engine                              | Step `status := SKIPPED`, reason recorded        |
+| `SignalAccepted` | IAuthorization                      | Decision recorded, does NOT change run status    |
+| `SignalRejected` | IAuthorization                      | Signal denied                                    |
+| `RunPaused`      | Runtime / adapter execution context | `status := PAUSED` (runtime-owned realized fact) |
+| `RunResumed`     | Runtime / adapter execution context | `status := RUNNING`                              |
+| `RunCompleted`   | Engine                              | `status := COMPLETED`                            |
+| `RunFailed`      | Engine                              | `status := FAILED`                               |
+| `RunCancelled`   | Runtime / adapter execution context | `status := CANCELLED`                            |
 
 #### State Transition Diagram
 
@@ -150,7 +154,7 @@ stateDiagram-v2
 
     note right of PAUSED
         Engine stops scheduling new tasks
-        (see § 6 for Conductor draining behavior)
+        (see Section 6 for Conductor draining behavior)
     end note
 ```
 
@@ -206,7 +210,7 @@ For **step-level events** (StepStarted, StepCompleted, StepFailed):
 SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
 ```
 
-For **run-level events** (RunStarted, RunPaused, RunCancelled):
+For **run-level events** (for example `RunStarted`, `RunPaused`, `RunResumed`, `RunCancelled`):
 
 ```
 // Normalize absent fields for idempotency key calculation
@@ -217,9 +221,9 @@ SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planV
 
 **Rationale**: Run-level events don't have natural "attempts" (no retry semantics). Normalizing to `1` avoids serialization ambiguity (`undefined` vs `null` vs absent) across languages.
 
-NOT `engineAttemptId`. Same logical attempt retried by platform → same idempotency key.
+NOT `engineAttemptId`. Same logical attempt retried by platform -> same idempotency key.
 
-**Reference**: Idempotency patterns and retry safety — [AWS Builders Library: Making retries safe with idempotent APIs](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-apis/)
+**Reference**: Idempotency patterns and retry safety - [AWS Builders Library: Making retries safe with idempotent APIs](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-apis/)
 
 ---
 
@@ -288,7 +292,7 @@ interface StepSnapshot {
 **Invariants**:
 
 - Snapshots are **always immutable** (new object per projection, never in-place update).
-- Projection lag SLA: ≤1s in normal operation.
+- Projection lag SLA: <=1s in normal operation.
 - If lag > 5s, emit alert `PROJECTOR_LAG_HIGH` (P2).
 
 ---
@@ -347,7 +351,7 @@ sequenceDiagram
 
 **Diagram Notes**:
 
-- **Transformation**: `(previousSnapshot, newEvents[]) → newSnapshot` (immutable projection)
+- **Transformation**: `(previousSnapshot, newEvents[]) -> newSnapshot` (immutable projection)
 - **Watermark-based**: `lastEventSeq` tracks highest applied event, enabling crash recovery
 - **Gap handling**: Non-contiguous sequences trigger resync (not failure) due to eventual consistency
 - **Error recovery**: Projector can safely reprocess events from watermark after crashes
@@ -364,21 +368,21 @@ sequenceDiagram
 2. **Immutability**: Each projection is a new snapshot. No in-place updates. `lastEventSeq` = highest `runSeq` applied.
 
 3. **Event reduction** (idempotent state machine):
-   - `RunApproved` → status = APPROVED
-   - `RunStarted` → status = RUNNING, engineRunRef set
-   - `StepStarted` → create/update step, status = RUNNING
-   - `StepCompleted` → status = SUCCESS, record artifacts
-   - `StepFailed` → status = FAILED, record error, update failedSteps counter
-   - `RunPaused` → status = PAUSED
-   - `RunResumed` → status = RUNNING
-   - `RunCompleted` → status = COMPLETED, aggregate artifacts
-   - `RunFailed` → status = FAILED, record root cause
-   - `RunCancelled` → status = CANCELLED
+   - `RunApproved` -> status = APPROVED
+   - `RunStarted` -> status = RUNNING, engineRunRef set
+   - `StepStarted` -> create/update step, status = RUNNING
+   - `StepCompleted` -> status = SUCCESS, record artifacts
+   - `StepFailed` -> status = FAILED, record error, update failedSteps counter
+   - `RunPaused` -> status = PAUSED
+   - `RunResumed` -> status = RUNNING
+   - `RunCompleted` -> status = COMPLETED, aggregate artifacts
+   - `RunFailed` -> status = FAILED, record root cause
+   - `RunCancelled` -> status = CANCELLED
 
-4. **Failure recovery**: Projector crashes → resume from `lastEventSeq` watermark. Reprocessing same event idempotently is safe.
+4. **Failure recovery**: Projector crashes -> resume from `lastEventSeq` watermark. Reprocessing same event idempotently is safe.
 
 5. **UI lag SLA**:
-   - ≤1s: normal
+   - <=1s: normal
    - > 5s: alert P2 `PROJECTOR_LAG_HIGH`
    - non-contiguous fetch observed: alert P2 `PROJECTOR_NON_CONTIGUOUS_FETCH_DETECTED` (investigate consistency; resync may be needed)
 
@@ -511,9 +515,9 @@ Consumers MUST NOT assume exactly-once delivery. Idempotent processing is mandat
 
 **Failure handling**:
 
-- EventBus publish fails → enqueue to **outbox** (StateStore) for retry worker.
+- EventBus publish fails -> enqueue to **outbox** (StateStore) for retry worker.
 - Retry policy: exponential backoff + jitter.
-- After N failures → DLQ with alert.
+- After N failures -> DLQ with alert.
 
 ### Outbox Pattern Flow Diagram
 
@@ -600,14 +604,14 @@ Execution engines (Temporal, Conductor, etc.) have platform-specific constraints
 
 **Temporal**:
 
-- History size limits (50MB hard limit) → requires **continue-as-new** rotation
+- History size limits (50MB hard limit) -> requires **continue-as-new** rotation
 - Signal size/rate limits
 - Determinism constraints
 - See [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) for details
 
 **Conductor**:
 
-- No native pause support → signal-based emulation required
+- No native pause support -> signal-based emulation required
 - Different timeout semantics
 <!-- - See [Conductor Adapter Spec](../../adapters/conductor/ConductorAdapter.spec.md) (Conductor-specific behavior and limits) -->
 
@@ -620,54 +624,60 @@ Conductor does NOT support pause/resume natively. If the target adapter is Condu
 ```mermaid
 sequenceDiagram
     participant C as Client/Operator
-    participant E as Engine (Conductor)
+    participant E as Engine command path
+    participant R as Runtime (Conductor)
     participant SS as StateStore
     participant W as Workflow Tasks
 
-    Note over E,W: Initial state: RUNNING (tasks executing)
+    Note over R,W: Initial state: RUNNING (tasks executing)
 
     C->>E: Send PAUSE signal
+    E->>R: Dispatch PAUSE command
 
-    E->>SS: appendEvent(RunPaused)
-    SS-->>E: Status = PAUSED persisted
+    R->>SS: appendEvent(RunPaused)
+    SS-->>R: Status = PAUSED persisted
 
-    E->>E: Set internal state = DRAINING
-    Note over E: Stop scheduling new tasks
+    R->>R: Set internal state = DRAINING
+    Note over R: Stop scheduling new tasks
 
-    Note over W: In-flight tasks continue\n(cannot be cancelled in Conductor)
+    Note over W: In-flight tasks continue
+(cannot be cancelled in Conductor)
 
-    W->>E: Task 1 completes
-    W->>E: Task 2 completes
-    W->>E: Task 3 completes
+    W->>R: Task 1 completes
+    W->>R: Task 2 completes
+    W->>R: Task 3 completes
 
     alt All tasks drained within timeout
-        E->>E: Internal state = PAUSED (fully drained)
-        E->>SS: Update substatus metadata
+        R->>R: Internal state = PAUSED (fully drained)
+        R->>SS: Update substatus metadata
         SS-->>C: Status response: PAUSED
     else Timeout exceeded (default: 5 min)
-        E->>E: Log warning + emit alert
-        E->>E: Force transition to PAUSED
-        Note over E: Orphaned tasks may complete\nasynchronously (not tracked)
+        R->>R: Log warning + emit alert
+        R->>R: Force transition to PAUSED
+        Note over R: Orphaned tasks may complete
+asynchronously (not tracked)
     end
 
     C->>E: Send RESUME signal
+    E->>R: Dispatch RESUME command
 
-    E->>SS: appendEvent(RunResumed)
-    SS-->>E: Status = RUNNING
+    R->>SS: appendEvent(RunResumed)
+    SS-->>R: Status = RUNNING
 
-    E->>E: Resume scheduling tasks
-    Note over E: Previously completed tasks\nare NOT re-executed
+    R->>R: Resume scheduling tasks
+    Note over R: Previously completed tasks
+are NOT re-executed
 
-    E->>W: Schedule remaining tasks
+    R->>W: Schedule remaining tasks
 ```
 
 **Diagram Notes**:
 
-- **State transitions**: `RUNNING → PAUSED (StateStore)` + `RUNNING → DRAINING → PAUSED (Engine internal)`
-- **Graceful draining**: Engine stops scheduling new tasks but allows in-flight tasks to complete naturally
-- **No cancellation**: Conductor lacks cancellation tokens (unlike Temporal), so tasks must complete or timeout
-- **Substatus visibility**: UI must display `DRAINING` substatus to manage user expectations during the transition period
-- **Timeout handling**: Configurable drain timeout (default: 5 minutes) prevents indefinite waiting
+- **State transitions**: `RUNNING -> PAUSED` and `PAUSED -> RUNNING` are persisted from the runtime execution context.
+- **Graceful draining**: the runtime stops scheduling new tasks but allows in-flight tasks to complete naturally.
+- **No cancellation**: Conductor lacks cancellation tokens (unlike Temporal), so tasks must complete or timeout.
+- **Substatus visibility**: UI must display `DRAINING` substatus to manage user expectations during the transition period.
+- **Timeout handling**: configurable drain timeout (default: 5 minutes) prevents indefinite waiting.
 
 1. **PAUSE semantics**: When a `PAUSE` signal is issued, the adapter MUST:
    - Set run status to `PAUSED` in StateStore
@@ -722,14 +732,14 @@ sequenceDiagram
 
 Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../../VERSIONING.md)):
 
-**MINOR Bump (v1.0 → v1.1)**: Backward-compatible additions
+**MINOR Bump (v1.0 -> v1.1)**: Backward-compatible additions
 
 - New optional event types (consumers ignore unknown types)
 - New optional fields in existing events (producers and consumers tolerate old/new shapes)
 - Constraint relaxation (e.g., widened `maxLength` on a field)
 - Documentation clarifications
 
-**MAJOR Bump (v1.0 → v2.0)**: Breaking changes
+**MAJOR Bump (v1.0 -> v2.0)**: Breaking changes
 
 - Remove required field or change field type
 - Rename event type or field
@@ -767,12 +777,21 @@ This applies to:
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                                                                                                               |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1.1   | 2026-02-12 | **Patch**: Unify event envelope timestamps (emittedAt REQUIRED, occurredAt optional); normalize `logicalAttemptId` for run-level events (`?? 1`); remove `StepDelayed` from planned schemas (not canonical); add normative rules for timestamp usage (ordering by runSeq, durations use occurredAt). |
-| 1.1     | 2026-02-12 | **Minor (NORMATIVE)**: Fix attempt types (logicalAttemptId/engineAttemptId: string → number); define run-level idempotency normalization (stepId → '**run**'); strengthen resync completion rule (watermark MUST advance); rename CanonicalEngineEvent → RunEvent for clarity.                       |
-| 1.0.1   | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility)                                                                                                       |
-| 1.0     | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection)                                                                                                                                                                                                                           |
+- `1.1.1` (`2026-02-12`): **Patch**. Unified event envelope timestamps
+  (`emittedAt` required, `occurredAt` optional); normalized
+  `logicalAttemptId` for run-level events (`?? 1`); removed `StepDelayed` from
+  planned schemas (not canonical); added normative rules for timestamp usage
+  (ordering by `runSeq`, durations use `occurredAt`).
+- `1.1` (`2026-02-12`): **Minor (NORMATIVE)**. Fixed attempt types
+  (`logicalAttemptId`/`engineAttemptId`: `string -> number`); defined run-level
+  idempotency normalization (`stepId -> '**run**'`); strengthened the resync
+  completion rule (watermark MUST advance); renamed `CanonicalEngineEvent` to
+  `RunEvent`.
+- `1.0.1` (`2026-02-11`): **Patch**. Clarified non-contiguous semantics
+  (resync exit condition uses watermark advancement, not gap closure); added
+  the normative rule for unknown `eventType` handling (forward compatibility).
+- `1.0` (`2026-02-11`): Initial normative contract for state store, events,
+  dual attempts, and projection.
 
 ---
 
@@ -784,16 +803,16 @@ This applies to:
 
 **Implemented Schemas** (JSON Schema Draft 2020-12):
 
-- [RunStarted.schema.json](./events/RunStarted.schema.json) ✅
-- [StepStarted.schema.json](./events/StepStarted.schema.json) ✅
-- [StepCompleted.schema.json](./events/StepCompleted.schema.json) ✅
-- [StepFailed.schema.json](./events/StepFailed.schema.json) ✅
+- [RunStarted.schema.json](./events/RunStarted.schema.json)
+- [StepStarted.schema.json](./events/StepStarted.schema.json)
+- [StepCompleted.schema.json](./events/StepCompleted.schema.json)
+- [StepFailed.schema.json](./events/StepFailed.schema.json)
 
 **Planned Schemas** (remaining events):
 
 - RunQueued, RunApproved, StepSkipped, RunPaused, RunResumed, RunCompleted, RunFailed, RunCancelled, SignalAccepted, SignalRejected
 
-**Note**: `StepDelayed` removed — not canonical until backpressure semantics are finalized (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for contract hygiene patterns).
+**Note**: `StepDelayed` removed - not canonical until backpressure semantics are finalized (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for contract hygiene patterns).
 
 ---
 
@@ -801,7 +820,7 @@ This applies to:
 
 Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.).
 
-**JSON Schema Reference**: [RunStarted.schema.json](./events/RunStarted.schema.json) ✅
+**JSON Schema Reference**: [RunStarted.schema.json](./events/RunStarted.schema.json)
 
 **Normative Fields**:
 
@@ -813,9 +832,9 @@ interface RunStartedEvent {
   runId: string; // Workflow run identifier
   runSeq: number; // Monotonic sequence (per runId)
   idempotencyKey: string; // SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)
-  emittedAt: string; // ISO 8601 timestamp (UTC) — when event was persisted to StateStore
+  emittedAt: string; // ISO 8601 timestamp (UTC) - when event was persisted to StateStore
   emittedBy: string; // e.g., "engine", "planner", "activity-worker"
-  occurredAt?: string; // ISO 8601 timestamp (UTC) — when event actually occurred (if different from emittedAt)
+  occurredAt?: string; // ISO 8601 timestamp (UTC) - when event actually occurred (if different from emittedAt)
 
   // Event payload (specific to RunStarted)
   status: 'RUNNING'; // Run status transition
@@ -841,8 +860,8 @@ interface RunStartedEvent {
 
 **Event Timestamp Semantics** (NORMATIVE):
 
-- **`emittedAt`** (REQUIRED): Processing time — when event was persisted to StateStore ("append time").
-- **`occurredAt`** (OPTIONAL): Event time — when event actually occurred at source (if measurably different).
+- **`emittedAt`** (REQUIRED): Processing time - when event was persisted to StateStore ("append time").
+- **`occurredAt`** (OPTIONAL): Event time - when event actually occurred at source (if measurably different).
 
 **Usage rules**:
 
@@ -850,7 +869,7 @@ interface RunStartedEvent {
 - **Durations / UX**: Use `occurredAt` (if present) for calculating durations; fall back to `emittedAt` if absent.
 - **Projector watermarks**: Track progress by `runSeq` (monotonic), not by timestamps.
 
-**Reference**: Event-time vs processing-time — [Apache Flink: Notions of Time](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/)
+**Reference**: Event-time vs processing-time - [Apache Flink: Notions of Time](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/)
 
 ---
 
@@ -908,25 +927,25 @@ For complete event schema specifications, see:
 
 **Implemented Schemas**:
 
-- **RunStarted** ✅: [RunStarted.schema.json](./events/RunStarted.schema.json) — Engine starts workflow execution
-- **StepStarted** ✅: [StepStarted.schema.json](./events/StepStarted.schema.json) — Activity begins execution
-- **StepCompleted** ✅: [StepCompleted.schema.json](./events/StepCompleted.schema.json) — Activity execution succeeded
-- **StepFailed** ✅: [StepFailed.schema.json](./events/StepFailed.schema.json) — Activity execution failed
+- **RunStarted**: [RunStarted.schema.json](./events/RunStarted.schema.json) - Engine starts workflow execution
+- **StepStarted**: [StepStarted.schema.json](./events/StepStarted.schema.json) - Activity begins execution
+- **StepCompleted**: [StepCompleted.schema.json](./events/StepCompleted.schema.json) - Activity execution succeeded
+- **StepFailed**: [StepFailed.schema.json](./events/StepFailed.schema.json) - Activity execution failed
 
 **Planned Schemas** (remaining events):
 
 - **RunQueued**: Section 3 (Backpressure & Run Queue)
 - **RunApproved**: Emitted by Planner (approval gate passed)
 - **StepSkipped**: Activity skipped due to dependency failure or conditional logic
-- **RunPaused**: Workflow paused (via PAUSE signal)
-- **RunResumed**: Workflow resumed (via RESUME signal)
+- **RunPaused**: Workflow paused (runtime-owned fact after PAUSE dispatch)
+- **RunResumed**: Workflow resumed (runtime-owned fact after RESUME dispatch)
 - **RunCompleted**: All steps completed successfully
 - **RunFailed**: Workflow failed (unrecoverable error)
-- **RunCancelled**: Workflow cancelled (via user or system signal)
+- **RunCancelled**: Workflow cancelled (runtime-owned fact after cancellation is realized)
 - **SignalAccepted**: External signal received and validated
 - **SignalRejected**: External signal rejected (authorization or validation failure)
 
-**Note**: `StepDelayed` removed — not yet canonical in §1.2 event table. Will be reintroduced in future version if backpressure semantics require it (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for event catalog hygiene).
+**Note**: `StepDelayed` removed - not yet canonical in Section 1.2 event table. Will be reintroduced in future version if backpressure semantics require it (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for event catalog hygiene).
 
 **Validation Rule** (NORMATIVE):
 

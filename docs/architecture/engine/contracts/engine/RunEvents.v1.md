@@ -1,10 +1,14 @@
-# Run Events Contract (Normative v1)
+﻿# Run Events Contract (Normative v1)
 
-[← Back to Contracts Registry](../README.md)
+> Historical note: signal-driven realized lifecycle ownership in this v1 draft is
+> superseded by [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
+> RunPaused, RunResumed, and RunCancelled are runtime-owned lifecycle
+> facts in the current model.
+> [Back to Contracts Registry](../README.md)
 
 **Status**: DRAFT
 **Version**: v1
-**Stability**: Contracts — breaking changes require version bump
+**Stability**: Contracts - breaking changes require version bump
 **Consumers**: StateStore, Projectors, UI, Audit Systems
 **Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
 **References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [Temporal Limits](https://docs.temporal.io/encyclopedia/limits), [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor](https://github.com/netflix/conductor/wiki)
@@ -30,16 +34,16 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 - `RunFailed`
 - `RunCancelled`
 
-**Scope (NORMATIVE)**: This contract governs events emitted by the **Engine** during workflow execution. Signal decision events (`SignalAccepted`, `SignalRejected`) are emitted by the **Authorization** component and are defined in `SignalsAndAuth.v1.md`. They are out of scope here.
+**Scope (NORMATIVE)**: This contract governs lifecycle events persisted by the execution domain during workflow execution. Signal decision events (`SignalAccepted`, `SignalRejected`) are emitted by the **Authorization** component and are defined in `SignalsAndAuth.v1.md`. They are out of scope here.
 
-**Note**: `RunQueued` may be emitted by the Admission Control / Run Queue component (see ExecutionSemantics §3). If admission control is implemented inside an engine adapter, that adapter MUST emit `RunQueued` using the shared schema; otherwise it is out of scope for this contract.
+**Note**: `RunQueued` may be emitted by the Admission Control / Run Queue component (see ExecutionSemantics Section 3). If admission control is implemented inside an engine adapter, that adapter MUST emit `RunQueued` using the shared schema; otherwise it is out of scope for this contract.
 
 ### 1.2 Event Naming Convention
 
 **MUST** use PascalCase event names **without** `on` prefix.
 
-- ✅ Correct: `RunStarted`, `StepStarted`, `RunCompleted`
-- ❌ Incorrect: `onRunStarted`, `onStepStarted`, `onRunCompleted`
+- Correct: `RunStarted`, `StepStarted`, `RunCompleted`
+- Incorrect: `onRunStarted`, `onStepStarted`, `onRunCompleted`
 
 **Rationale**: Consistent naming across:
 
@@ -71,7 +75,7 @@ Events **MUST** include these fields:
 
 ### 2.2 Idempotency Guarantee
 
-Events **MUST** be idempotent: same event replayed → same state.
+Events **MUST** be idempotent: same event replayed -> same state.
 
 **Idempotency key formula**:
 
@@ -100,7 +104,7 @@ The chosen behavior MUST be documented in the adapter contract.
 **Assignment mechanism (NORMATIVE)**:
 
 - Engine writes events **without** `runSeq`.
-- The **Append Authority** assigns `runSeq` during the append operation (see State Store Contract §3).
+- The **Append Authority** assigns `runSeq` during the append operation (see State Store Contract Section 3).
 - Engine receives assigned `runSeq` in the append response (or reads back).
 
 **Properties**:
@@ -112,29 +116,29 @@ The chosen behavior MUST be documented in the adapter contract.
 
 ## 3) State Transition Mapping (Normative)
 
-This table defines the **ONLY valid** state transitions from **engine-emitted events**.
+This table defines the **only valid** status transitions from persisted lifecycle events in this draft.
 
 ### Run-level transitions (NORMATIVE)
 
-| Event          | Status Transition | Notes                                                              |
-| -------------- | ----------------- | ------------------------------------------------------------------ |
-| `RunStarted`   | → `RUNNING`       | Workflow execution begins                                          |
-| `RunPaused`    | → `PAUSED`        | After PAUSE signal accepted + applied (not when request received)  |
-| `RunResumed`   | → `RUNNING`       | After RESUME signal accepted + applied (not when request received) |
-| `RunCompleted` | → `COMPLETED`     | All steps succeeded                                                |
-| `RunFailed`    | → `FAILED`        | Terminal failure (step exhausted retries)                          |
-| `RunCancelled` | → `CANCELLED`     | After cancelRun() or EMERGENCY_STOP signal                         |
+| Event          | Status Transition | Notes                                                     |
+| -------------- | ----------------- | --------------------------------------------------------- |
+| `RunStarted`   | -> `RUNNING`      | Workflow execution begins                                 |
+| `RunPaused`    | -> `PAUSED`       | Runtime-owned fact after the runtime reaches paused state |
+| `RunResumed`   | -> `RUNNING`      | Runtime-owned fact after the runtime resumes execution    |
+| `RunCompleted` | -> `COMPLETED`    | All steps succeeded                                       |
+| `RunFailed`    | -> `FAILED`       | Terminal failure (step exhausted retries)                 |
+| `RunCancelled` | -> `CANCELLED`    | Runtime-owned fact after cancellation is realized         |
 
 ### Step-level transitions (NORMATIVE)
 
 | Event           | Step Status Transition | Notes                              |
 | --------------- | ---------------------- | ---------------------------------- |
-| `StepStarted`   | → `RUNNING`            | Attempt enters RUNNING             |
-| `StepCompleted` | → `SUCCESS`            | Terminal for that attempt          |
-| `StepFailed`    | → `FAILED`             | Terminal for that attempt          |
-| `StepSkipped`   | `PENDING` → `SKIPPED`  | Dependency/condition/operator skip |
+| `StepStarted`   | -> `RUNNING`           | Attempt enters RUNNING             |
+| `StepCompleted` | -> `SUCCESS`           | Terminal for that attempt          |
+| `StepFailed`    | -> `FAILED`            | Terminal for that attempt          |
+| `StepSkipped`   | `PENDING` -> `SKIPPED` | Dependency/condition/operator skip |
 
-**Status enum** (see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
+**Status enum** (see [ExecutionSemantics.v1.md Section 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
 
 - `PENDING`: Run created, awaiting approval (**managed by Planner/StateStore, not engine events**)
 - `APPROVED`: Approved by planner, ready to start (**managed by Planner/StateStore, not engine events**)
@@ -144,7 +148,7 @@ This table defines the **ONLY valid** state transitions from **engine-emitted ev
 - `FAILED`: Terminated due to step failure
 - `CANCELLED`: Terminated by operator cancellation
 
-**Scope note**: This contract governs **engine-emitted transitions only**. `PENDING` and `APPROVED` states are set by Planner via StateStore contract (out of scope for this document).
+**Scope note**: This contract governs persisted lifecycle transitions, not only engine-core append behavior. `PENDING` and `APPROVED` states are set by Planner via StateStore contract (out of scope for this document).
 
 ---
 
@@ -171,7 +175,7 @@ interface RunEventWrite {
     | 'RunCompleted'
     | 'RunFailed'
     | 'RunCancelled';
-  emittedAt: string; // ISO 8601 UTC (engine clock)
+  emittedAt: string; // ISO 8601 UTC (producer clock)
   runId: string;
   tenantId: string;
   projectId: string;
@@ -203,7 +207,7 @@ interface RunEventRecord {
     | 'RunCompleted'
     | 'RunFailed'
     | 'RunCancelled';
-  emittedAt: string; // ISO 8601 UTC (engine clock)
+  emittedAt: string; // ISO 8601 UTC (producer clock)
   persistedAt: string; // ISO 8601 UTC (StateStore server time, assigned during write)
   runId: string;
   tenantId: string;
@@ -222,8 +226,8 @@ interface RunEventRecord {
 
 **Usage**:
 
-- Engine → StateStore: uses `RunEventWrite`
-- StateStore → Projectors/UI/Audit: uses `RunEventRecord`
+- Engine -> StateStore: uses `RunEventWrite`
+- StateStore -> Projectors/UI/Audit: uses `RunEventRecord`
 
 **persistedAt rationale**: Engine's `emittedAt` can suffer clock skew. `persistedAt` (server time) provides authoritative ordering for audit and debugging.
 
@@ -304,7 +308,7 @@ All events MUST include these identifiers for traceability:
 
 - Event `idempotencyKey` MUST be derived from `logicalAttemptId`, NOT `engineAttemptId`.
 - `engineAttemptId` MUST be present in events/audit logs for debugging, but MUST NOT affect idempotency.
-- Rationale: Infrastructure retries (network blips, worker restarts) → same logical attempt → same idempotency key.
+- Rationale: Infrastructure retries (network blips, worker restarts) -> same logical attempt -> same idempotency key.
 
 ---
 

@@ -116,10 +116,10 @@ This ADR is intentionally narrow:
 
 ### Positive
 
-- canonical signal vocabulary now matches the real shipped product surface;
+- canonical signal vocabulary is narrower and no longer advertises speculative step retry;
 - step-level recovery stops masquerading as a simple control signal;
 - engine and adapter responsibilities for future step retry become clearer;
-- contract and API drift are reduced immediately.
+- contract drift is reduced immediately, while `RETRY_RUN` posture remains governed separately by ADR-0040.
 
 ### Negative
 

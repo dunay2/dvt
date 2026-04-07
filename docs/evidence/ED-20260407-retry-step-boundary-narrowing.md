@@ -57,7 +57,7 @@ application use case rather than as `signal(..., { type: 'RETRY_STEP' })`.
 
 ## Expected effect
 
-- Canonical signal vocabulary now matches the shipped run-control surface.
-- Consumers can no longer bind to a speculative `RETRY_STEP` signal path.
+- Canonical signal vocabulary no longer advertises speculative `RETRY_STEP` support.
+- Consumers can no longer bind to a speculative `RETRY_STEP` signal path; `RETRY_RUN` posture remains a separate API/product decision.
 - Any future step retry feature must declare its own engine semantics,
   authorization, admission rules, and adapter capability behavior explicitly.
