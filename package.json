@@ -34,6 +34,7 @@
     "build:clean": "rimraf dist && pnpm -r build",
     "test": "pnpm -r test",
     "test:web": "pnpm --filter @dvt/web test",
+    "test:web:e2e": "pnpm --filter @dvt/web test:e2e",
     "ci:affected:build": "pnpm -r --filter \"...[origin/main]\" --if-present run build",
     "ci:affected:test": "pnpm -r --filter \"...[origin/main]\" --if-present run test",
     "ci:affected:typecheck": "pnpm -r --filter \"...[origin/main]\" --if-present run typecheck",

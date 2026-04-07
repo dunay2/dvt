@@ -473,18 +473,22 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/web/src/app/routes.ts](../../../apps/web/src/app/routes.ts),
   [apps/web/src/app/components/TopAppBar.tsx](../../../apps/web/src/app/components/TopAppBar.tsx)
 - Current test posture:
-  Local test files exist under `apps/web/src/**`, but the workspace currently
-  exposes no package-level `test` command, so the governed lane is still
-  `typecheck` plus `build`.
+  The workspace exposes package-level unit/integration tests (`vitest`) plus a
+  browser E2E lane (`Cypress`) for frontend-to-runtime contract checks.
 - Key tests:
   [apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts](../../../apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts),
   [apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts](../../../apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts),
   [apps/web/src/app/views/canvas/useCanvasController.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.test.tsx),
-  [apps/web/src/app/views/runs/RunStates.test.tsx](../../../apps/web/src/app/views/runs/RunStates.test.tsx)
+  [apps/web/src/app/views/runs/RunStates.test.tsx](../../../apps/web/src/app/views/runs/RunStates.test.tsx),
+  [apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts](../../../apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts)
 - Verification:
+  `pnpm --filter @dvt/web test`
+  and
   `pnpm --filter @dvt/web typecheck`
   and
   `pnpm --filter @dvt/web build`
+  and
+  `pnpm --filter @dvt/web test:e2e`
 - Gap:
   Mock-data paths still dominate the client surface via
   [apps/web/src/app/data/mockData.ts](../../../apps/web/src/app/data/mockData.ts)
