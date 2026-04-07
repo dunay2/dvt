@@ -101,6 +101,8 @@ export interface IProviderAdapter {
   provider-qualified reference.
 - `cancelRun`: request stop/cancel semantics according to provider constraints.
 - `getRunStatus`: map provider runtime state into canonical `RunStatusSnapshot`.
+  - When consumed via engine `enrichRunStatus()`, adapter latency timeout or provider failure causes the enrichment call to fail.
+  - Providers MUST NOT rely on the engine to downgrade that same call to projected status automatically.
 - `signal`: deliver control signal within authorization and lifecycle
   boundaries.
 

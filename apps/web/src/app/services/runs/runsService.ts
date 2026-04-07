@@ -7,6 +7,7 @@ import { createMockRunsService } from './runsService.mock';
 // Re-export port types for backward compatibility — consumers should migrate
 // to importing from '../../ports/runs' or '../../ports' directly.
 export type {
+  MaterializationEvidence,
   StartRunInput,
   UiRunStatus,
   RunSummaryItem,

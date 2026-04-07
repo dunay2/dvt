@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "pretest": "pnpm --filter \"@dvt/web^...\" build",
     "build": "vite build",
     "dev": "vite",
     "typecheck": "tsc -p tsconfig.json --noEmit",

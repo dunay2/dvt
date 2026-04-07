@@ -134,6 +134,7 @@ export function useCanvasGraphModel({
     graphSnapshotQuery,
     workspaceNodes,
     canonicalNodes,
+    canonicalEdges,
     canonicalNodesById,
     nodes,
     edges,

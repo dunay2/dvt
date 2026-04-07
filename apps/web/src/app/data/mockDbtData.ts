@@ -214,6 +214,35 @@ export const mockExecutionPlan: ExecutionPlan = {
   generatedAt: '2026-02-13T10:30:00Z',
   adapter: 'snowflake',
   target: 'dev',
+  preview: {
+    summary: {
+      executor: 'postgres',
+      nodeCount: 3,
+      stepCount: 3,
+      sourceTables: ['raw.orders'],
+      sinkTables: ['analytics.fct_sales'],
+    },
+    persisted: {
+      planRecordId: 'plan-record-abc123',
+      canonicalPlanSha256: 'c'.repeat(64),
+    },
+    provenance: {
+      graphArtifact: {
+        repo: 'dunay2/dvt',
+        path: 'graphs/orders-daily.json',
+        ref: 'refs/heads/main',
+        commitSha: 'abc123',
+        contentSha256: 'sha256-graph',
+      },
+      sqlArtifact: {
+        repo: 'dunay2/dvt',
+        path: 'sql/orders-daily.sql',
+        ref: 'refs/heads/main',
+        commitSha: 'abc123',
+        contentSha256: 'sha256-sql',
+      },
+    },
+  },
   capabilities: ['pause', 'resume', 'retry'],
   estimatedCost: 0.95,
   steps: [

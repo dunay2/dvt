@@ -19,6 +19,7 @@ import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
+import { validateTransformationGraph } from './transformationGraphValidation';
 
 const nodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
@@ -80,6 +81,8 @@ export function useCanvasController() {
   const executionActions = useCanvasExecutionActions({
     plansService,
     runsService,
+    canonicalNodes: graphModel.canonicalNodes,
+    canonicalEdges: graphModel.canonicalEdges,
     selectedNodeIds: store.selectedNodeIds,
     workspaceNodeIds: graphModel.workspaceNodes.map((node) => node.id),
     canPlan: store.userPermissions.canPlan,
@@ -91,6 +94,15 @@ export function useCanvasController() {
     toggleConsolePanel: store.toggleConsolePanel,
     onRunStarted: navigationActions.handleRunStarted,
   });
+  const transformationValidation = useMemo(
+    () =>
+      validateTransformationGraph({
+        nodes: graphModel.canonicalNodes,
+        edges: graphModel.canonicalEdges,
+        selectedNodeIds: store.selectedNodeIds,
+      }),
+    [graphModel.canonicalEdges, graphModel.canonicalNodes, store.selectedNodeIds]
+  );
 
   const nodesWithImpact = useMemo(
     () =>
@@ -164,10 +176,13 @@ export function useCanvasController() {
     toggleColumnLevelLineage: store.toggleColumnLevelLineage,
     handlePlan: executionActions.handlePlan,
     handleStartRun: executionActions.handleStartRun,
+    canStartRun: executionActions.canStartRun,
+    planStatusSummary: executionActions.planStatusSummary,
     exclusiveOverlayMode: overlayModel.exclusiveOverlayMode,
     canUseCostOverlay: overlayModel.canUseCostOverlay,
     impactOverlayEnabled: store.impactOverlayEnabled,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
+    transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
     currentPlan: store.currentPlan as ExecutionPlan | null,

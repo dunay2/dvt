@@ -2,7 +2,7 @@
 title: UX Implementation Guide
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-07
 ---
 
 # UX Implementation Guide
@@ -184,7 +184,7 @@ Primary tasks:
 
 - Canvas as the authoring workbench;
 - Runs as the operational workbench;
-- Lineage, Diff, and Artifacts as supporting workbenches with the same shell
+- Lineage, Code, Diff, and Artifacts as supporting workbenches with the same shell
   grammar.
 
 Primary tasks:
@@ -197,6 +197,8 @@ Primary tasks:
 ### Phase 4. Upgrade dense surfaces
 
 - move runs and event-heavy views to TanStack Table when cards stop scaling;
+- deepen `Code` and `Diff` with governed file-history review and revision
+  handoff once query boundaries and Monaco-backed review are ready;
 - move `Diff` and `Artifacts` to Monaco-backed review panes when basic viewers
   stop scaling;
 - prepare `Templates` to reuse Monaco for preview and diff without turning the
@@ -209,6 +211,7 @@ Primary tasks:
 - `F-16`
 - `F-17`
 - `F-18`
+- `F-23`
 
 ### Phase 5. Add governed source generation
 
@@ -264,10 +267,14 @@ Done when:
   shown;
 - dense tables replace cards where required by scale.
 
-### Diff And Artifacts
+### Code, Diff, And Artifacts
 
 Done when:
 
+- `Code` supports read-only file browsing with explicit empty, loading, error,
+  and read-only states;
+- selected-file history stays in `Code`, while revision comparison hands off to
+  `Diff`;
 - users can review SQL, JSON, and structural deltas without placeholder panes;
 - `Diff` and `Artifacts` use Monaco-backed viewers or diff panes where
   complexity justifies them;

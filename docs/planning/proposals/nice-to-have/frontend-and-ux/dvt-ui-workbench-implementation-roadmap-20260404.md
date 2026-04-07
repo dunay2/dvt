@@ -2,7 +2,7 @@
 title: DVT UI workbench implementation roadmap 2026-04-04
 status: Active
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-07
 planning_type: proposal
 ---
 
@@ -79,13 +79,15 @@ Target:
   embedding (`F-17-A`);
 - console and run-log story converges.
 
-### Wave 4 - Governed generation and visual split
+### Wave 4 - Governed review, generation, and visual split
 
-Tasks: `F-21`, `F-17-B`, `F-17-C`, `F-17-D`, `F-17-E`, `F-17-F`, `F-19`
+Tasks: `F-21`, `F-17-B`, `F-17-C`, `F-17-D`, `F-17-E`, `F-17-F`, `F-19`, `F-23`
 
 Target:
 
 - Templates route delivers governed source generation with preview and diff;
+- `Code` and `Diff` converge on governed file-history review without creating a
+  second shell or Git explorer;
 - Monaco route implementations stay dependency-safe: `F-17-D` and `F-17-F`
   remain blocked until `F-21` and governed contract/data prerequisites are
   available;
@@ -132,13 +134,14 @@ DoD:
 
 ### Package D - UX hardening and generation
 
-Tasks: `F-01`, `F-14`, `F-15`, `F-16`, `F-17`, `F-18`, `F-21`, `F-19`
+Tasks: `F-01`, `F-14`, `F-15`, `F-16`, `F-17`, `F-18`, `F-21`, `F-19`, `F-23`
 
 DoD:
 
 - shell slots and route workbench grammar are consistent across core routes;
 - frontend CI has a governed test lane;
 - dense surfaces use table-grade interaction where needed;
+- file-history review stays in `Code` while revision comparison stays in `Diff`;
 - Monaco remains infrastructure, not route owner;
 - Templates owns generation flow and keeps provider semantics in backend
   contracts;
@@ -148,12 +151,12 @@ DoD:
 
 Date: `2026-04-04`
 
-| Package | Task set                                                       | Lane E status snapshot                                                                                                                     |
-| ------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| A       | `MVP-E1`, `F-07`, `F-13`, `F-20`                               | `MVP-E1` queued, `F-07` in_progress, `F-13` in_progress, `F-20` review                                                                     |
-| B       | `F-04`, `F-05`, `F-06`, `F-12`                                 | `F-04` in_progress (`F-04-D/E/F` queued), `F-05` in_progress, `F-06` queued, `F-12` queued                                                 |
-| C       | `F-08`, `F-09`, `F-10`, `F-11`                                 | `F-08` queued, `F-09` queued, `F-10` queued, `F-11` queued                                                                                 |
-| D       | `F-01`, `F-14`, `F-15`, `F-16`, `F-17`, `F-18`, `F-21`, `F-19` | `F-01` queued, `F-14` queued, `F-15` in_progress, `F-16` queued, `F-17` in_progress, `F-18` queued, `F-21` in_progress, `F-19` in_progress |
+| Package | Task set                                                               | Lane E status snapshot                                                                                                                                         |
+| ------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A       | `MVP-E1`, `F-07`, `F-13`, `F-20`                                       | `MVP-E1` queued, `F-07` in_progress, `F-13` in_progress, `F-20` review                                                                                         |
+| B       | `F-04`, `F-05`, `F-06`, `F-12`                                         | `F-04` in_progress (`F-04-D/E/F` queued), `F-05` in_progress, `F-06` queued, `F-12` queued                                                                     |
+| C       | `F-08`, `F-09`, `F-10`, `F-11`                                         | `F-08` queued, `F-09` queued, `F-10` queued, `F-11` queued                                                                                                     |
+| D       | `F-01`, `F-14`, `F-15`, `F-16`, `F-17`, `F-18`, `F-21`, `F-19`, `F-23` | `F-01` queued, `F-14` queued, `F-15` in_progress, `F-16` queued, `F-17` in_progress, `F-18` queued, `F-21` in_progress, `F-19` in_progress, `F-23` in_progress |
 
 Traceability rule:
 

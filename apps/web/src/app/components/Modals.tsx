@@ -37,10 +37,19 @@ interface PlanPreviewModalProps {
   open: boolean;
   onClose: () => void;
   plan: ExecutionPlan | null;
+  startRunDisabled?: boolean;
+  startRunMessage?: string;
   onStartRun: () => void;
 }
 
-export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPreviewModalProps) {
+export function PlanPreviewModal({
+  open,
+  onClose,
+  plan,
+  startRunDisabled = false,
+  startRunMessage,
+  onStartRun,
+}: PlanPreviewModalProps) {
   if (!plan) return null;
 
   return (
@@ -58,6 +67,12 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
           </DialogDescription>
         </DialogHeader>
 
+        {startRunMessage ? (
+          <div className="rounded border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
+            {startRunMessage}
+          </div>
+        ) : null}
+
         <ScrollArea className="max-h-[500px]">
           <div className="space-y-4">
             {/* Plan Metadata */}
@@ -72,6 +87,12 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
                   <span className="text-slate-300">Version:</span>
                   <span className="ml-2">{plan.planVersion}</span>
                 </div>
+                {plan.planRef ? (
+                  <div className="col-span-2">
+                    <span className="text-slate-300">Plan Ref:</span>
+                    <code className="ml-2 break-all text-blue-400">{plan.planRef.uri}</code>
+                  </div>
+                ) : null}
                 <div>
                   <span className="text-slate-300">Adapter:</span>
                   <span className="ml-2">{plan.adapter}</span>
@@ -94,6 +115,78 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
                 </div>
               </div>
             </Card>
+
+            {plan.preview?.summary ? (
+              <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
+                <h3 className="text-sm font-medium mb-3 text-slate-50">Persisted Preview Summary</h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-slate-300">Executor:</span>
+                    <span className="ml-2">{plan.preview.summary.executor}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-300">Nodes:</span>
+                    <span className="ml-2">{plan.preview.summary.nodeCount}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-300">Steps:</span>
+                    <span className="ml-2">{plan.preview.summary.stepCount}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-300">Sink tables:</span>
+                    <span className="ml-2">{plan.preview.summary.sinkTables.join(', ') || 'n/a'}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-300">Source tables:</span>
+                    <span className="ml-2">{plan.preview.summary.sourceTables.join(', ') || 'n/a'}</span>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
+
+            {plan.preview?.persisted ? (
+              <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
+                <h3 className="text-sm font-medium mb-3 text-slate-50">Persistence Evidence</h3>
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <div>
+                    <span className="text-slate-300">Plan record:</span>
+                    <code className="ml-2 text-blue-400">{plan.preview.persisted.planRecordId}</code>
+                  </div>
+                  <div>
+                    <span className="text-slate-300">Canonical SHA:</span>
+                    <code className="ml-2 break-all text-green-400">
+                      {plan.preview.persisted.canonicalPlanSha256}
+                    </code>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
+
+            {plan.preview?.provenance ? (
+              <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
+                <h3 className="text-sm font-medium mb-3 text-slate-50">Provenance</h3>
+                <div className="space-y-3 text-sm">
+                  {plan.preview.provenance.graphArtifact ? (
+                    <div>
+                      <div className="text-slate-300">Graph artifact</div>
+                      <code className="text-blue-400">
+                        {plan.preview.provenance.graphArtifact.repo}:{' '}
+                        {plan.preview.provenance.graphArtifact.path}
+                      </code>
+                    </div>
+                  ) : null}
+                  {plan.preview.provenance.sqlArtifact ? (
+                    <div>
+                      <div className="text-slate-300">SQL artifact</div>
+                      <code className="text-blue-400">
+                        {plan.preview.provenance.sqlArtifact.repo}:{' '}
+                        {plan.preview.provenance.sqlArtifact.path}
+                      </code>
+                    </div>
+                  ) : null}
+                </div>
+              </Card>
+            ) : null}
 
             {/* Capabilities */}
             <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
@@ -152,6 +245,7 @@ export function PlanPreviewModal({ open, onClose, plan, onStartRun }: PlanPrevie
             Export JSON
           </Button>
           <Button
+            disabled={startRunDisabled}
             onClick={() => {
               onStartRun();
               onClose();

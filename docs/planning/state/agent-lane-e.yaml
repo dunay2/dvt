@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-07'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -1184,20 +1184,23 @@ tasks:
     progress_pct: 90
     evidence_refs:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/architecture/frontend/ux-implementation-guide.md
       - docs/architecture/frontend/main-workspace-views-and-ux.md
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
     status_reason: >-
-      The canonical docs and roadmap are being rewritten around the embedded-surface model. Final
-      closure waits on full validation and regenerated planning outputs.
+      The canonical docs and roadmap are being rewritten around the embedded-surface model, and the
+      legacy `vscode style` integration note has now been realigned so it no longer claims a
+      Canvas-centered Monaco shell or a primary Git explorer outside the governed route-level
+      workbench model. Final closure waits on full validation and regenerated planning outputs.
     definition_of_done:
       - docs and roadmap wording match each other
       - no task or doc claims Canvas replacement by Monaco
       - route-level shell topology remains unchanged in the architecture story
       - F-21 is described as using Monaco only for preview and diff infrastructure
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-17-B
     parent_task: F-17
     priority: P1
@@ -1348,8 +1351,10 @@ tasks:
       - docs/architecture/frontend/ux-implementation-guide.md
       - docs/architecture/frontend/observability/front-observability-architecture-dvt.md
     status_reason: >-
-      The shell already has a console drawer, but there is no tracked implementation slice for
-      turning it into a real governed log surface or deciding when xterm.js is justified.
+      The shell already has a console drawer and the current frontend includes an xterm-backed
+      implementation, but there is still no accepted governed slice for typed live-log behavior,
+      run-log UX states, or the authority boundary between structured logs and terminal-grade
+      streaming.
     last_verified: '2026-04-03'
   - task_id: F-19
     priority: P2
@@ -1452,6 +1457,36 @@ tasks:
       artifacts, phase-2 dbt engine, and cross-lane execution ownership. Remaining work is
       implementation review and acceptance, not roadmap ambiguity.
     last_verified: '2026-04-05'
+  - task_id: F-23
+    priority: P1
+    status: in_progress
+    objective: >-
+      add governed Git file-history review inside the existing Code and Diff workbenches without
+      introducing a VS Code-style Git explorer or a second shell model.
+    dependency: F-06, F-17-B
+    target: >-
+      Operators can inspect recent commit history for a selected workspace file, open a revision
+      diff through the existing Diff workbench, and retain DVT-aware route ownership in Code and
+      Diff rather than switching to a separate embedded Git client.
+    complexity: S
+    effort_points: 3
+    progress_pct: 15
+    evidence_refs:
+      - docs/architecture/frontend/git/git-mode-architecture.md
+      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
+    status_reason: >-
+      The docs-first baseline now freezes `Code` as the file-history entry surface and `Diff` as the
+      revision comparison surface. Implementation remains blocked on `F-06` query convergence and
+      `F-17-B` Monaco in Diff, but the slice is now active with a governed proposal instead of a
+      broken legacy reference.
+    definition_of_done:
+      - file-history review is presented inside governed Code or Diff workbenches
+      - no task or implementation path introduces a left-nav Git explorer as the primary Git mode
+      - revision comparison reuses the existing Diff route or its governed primitives
+      - docs, route ownership, and runtime expectations remain aligned with the Git-mode
+        architecture
+    last_verified: '2026-04-07'
   - task_id: TF-E1
     priority: P0
     status: queued
@@ -1572,16 +1607,21 @@ dependency_notes:
     `F-22` is now the proposal-set handoff for the SQL-first execution-first product slice, and
     `TF-E1` is decomposed into `TF-E1-A/B/C` for authoring, preview-to-run, and result UX closure on
     the basic Canvas flow `source -> sql_transform -> sink`.
+  - >-
+    `F-23` captures the next Git-facing UX slice as governed file-history review inside `Code` and
+    `Diff`. It explicitly avoids a VS Code-style Git explorer and keeps route ownership aligned with
+    the Git-mode architecture.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 42
-  total_effort_points: 171
+  verified_on: '2026-04-07'
+  total_tasks: 43
+  total_effort_points: 174
   completed_weighted_points: 27.38
   lane_progress_pct: 16
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
     tasks (parent + 6 subtasks) for Monaco embedded review surfaces across Diff, Artifacts, and
-    Templates rather than a Canvas takeover.
+    Templates rather than a Canvas takeover. `F-23` now has a governed docs-first baseline for
+    Code-owned file-history review with Diff-owned revision comparison.

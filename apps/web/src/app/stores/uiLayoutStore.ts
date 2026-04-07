@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { PlatformConnectionState } from '../../capabilities/platform-health';
 
-type TabType = 'canvas' | 'run' | 'diff' | 'lineage';
+type TabType = 'canvas' | 'run' | 'diff' | 'lineage' | 'code';
 
 interface UiLayoutState {
   leftNavCollapsed: boolean;

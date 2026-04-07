@@ -11,6 +11,16 @@ export type StartRunInput = {
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
+export type MaterializationEvidence = {
+  executor: 'postgres' | 'dbt';
+  environmentId: string;
+  sinkTable: string;
+  rowsWritten: number;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+};
+
 export type RunSummaryItem = {
   runId: string;
   planId?: string;
@@ -23,6 +33,10 @@ export type RunSummaryItem = {
   message?: string;
   hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: MaterializationEvidence;
 };
 
 export type RunSnapshot = {
@@ -37,6 +51,10 @@ export type RunSnapshot = {
   message?: string;
   hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: MaterializationEvidence;
 };
 
 export type RunEventTimelinePage = {

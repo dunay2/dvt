@@ -18,7 +18,12 @@ const state = vi.hoisted(() => ({
   currentPlan: null,
   store: { setCanvasViewport: vi.fn(), setCanvasNodePositions: vi.fn() },
   graphHandlersResult: { handleDrop: vi.fn(), confirmEdgeCreation: vi.fn() },
-  executionActionsResult: { handlePlan: vi.fn(), handleStartRun: vi.fn() },
+  executionActionsResult: {
+    canStartRun: false,
+    planStatusSummary: 'Preview required before running.',
+    handlePlan: vi.fn(),
+    handleStartRun: vi.fn(),
+  },
 })) as CanvasHarnessState;
 const mocks = vi.hoisted(() => ({
   useQuery: vi.fn(),

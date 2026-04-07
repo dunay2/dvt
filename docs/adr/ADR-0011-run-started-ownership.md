@@ -15,6 +15,23 @@ Emitting `RunStarted` before adapter/orchestrator acceptance causes invalid tran
 - The **adapter** exclusively owns emission of **RunStarted**.
 - The engine MUST NOT emit RunStarted.
 
+### Meaning of `RunQueued` (normative)
+
+- `RunQueued` is a **domain lifecycle event**, not a storage-only sentinel.
+- `RunQueued` means the run has been accepted into the engine-owned admission / queue boundary and has an authoritative `runId`.
+- `RunQueued` MUST remain part of the shared event catalog because it is visible to:
+  - event-log consumers,
+  - outbox delivery,
+  - audit/replay tooling,
+  - read models that distinguish "accepted but not yet started" from "workflow execution has begun".
+- `RunQueued` being persisted during `bootstrapRunTx` does **not** make it a storage concern. `bootstrapRunTx` is the atomic first-write mechanism for run metadata plus the first domain event(s); it does not define event semantics.
+
+### Projection consequence (normative)
+
+- `RunQueued` MAY be a no-op in snapshot projection when the snapshot bootstrap already materializes the pre-start state as `PENDING`.
+- A projector no-op for `RunQueued` is therefore intentional: the event contributes auditability, ordering, and lifecycle evidence even when it does not mutate the derived snapshot fields.
+- Consumers MUST NOT reinterpret that projector no-op as meaning `RunQueued` is non-domain or storage-internal only.
+
 ### Temporal / Conductor acceptance semantics (normative)
 
 For orchestrator-based adapters (Temporal, Conductor):

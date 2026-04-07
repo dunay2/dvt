@@ -21,6 +21,8 @@ export type CanvasHarnessState = {
     confirmEdgeCreation: MockFn;
   } & Record<string, unknown>;
   executionActionsResult: {
+    canStartRun: boolean;
+    planStatusSummary: string;
     handlePlan: MockFn;
     handleStartRun: MockFn;
   } & Record<string, unknown>;
@@ -155,6 +157,8 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
     executionActionsResult: {
       planModalOpen: false,
       setPlanModalOpen: vi.fn(),
+      canStartRun: false,
+      planStatusSummary: 'Preview required before running.',
       handlePlan: vi.fn(),
       handleStartRun: vi.fn(),
     },

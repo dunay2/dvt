@@ -87,6 +87,10 @@ describe('runsService runtime contract', () => {
       message: 'Approval required',
       hash: 'snapshot-hash',
       snapshotStaleness: 'FRESH',
+      currentStepId: undefined,
+      failedStepId: undefined,
+      errorReason: undefined,
+      materialization: undefined,
     });
   });
 
@@ -148,8 +152,45 @@ describe('runsService runtime contract', () => {
         message: 'Approval required',
         hash: undefined,
         snapshotStaleness: undefined,
+        currentStepId: undefined,
+        failedStepId: undefined,
+        errorReason: undefined,
+        materialization: undefined,
       },
     ]);
+  });
+
+  it('maps result evidence fields from GET /runs/:runId', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_completed',
+      status: 'COMPLETED',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: '2026-04-04T00:00:10.000Z',
+      currentStepId: 'step_transform',
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'env-prod',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-04T00:00:02.000Z',
+        completedAt: '2026-04-04T00:00:10.000Z',
+        durationMs: 8000,
+      },
+    });
+
+    const service = createRunsService('api', apiClient);
+    const snapshot = await service.getRunSnapshot('run_completed');
+
+    expect(snapshot).toMatchObject({
+      runId: 'run_completed',
+      currentStepId: 'step_transform',
+      materialization: {
+        executor: 'postgres',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+      },
+    });
   });
 
   it('maps listRunEvents from runtime events result items and nextCursor', async () => {

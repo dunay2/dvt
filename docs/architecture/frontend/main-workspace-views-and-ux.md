@@ -2,7 +2,7 @@
 title: Main Workspace Views And UX
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-07
 ---
 
 # Main Workspace Views And UX
@@ -32,6 +32,7 @@ flowchart LR
   TopBar["TopAppBar"] --> Canvas
   TopBar --> Runs
   TopBar --> Lineage
+  TopBar --> Code
   TopBar --> Diff
   TopBar --> Artifacts
 
@@ -41,6 +42,7 @@ flowchart LR
   Nav["LeftNavigation"] --> Canvas
   Nav --> Runs
   Nav --> Lineage
+  Nav --> Code
   Nav --> Diff
   Nav --> Artifacts
 
@@ -103,6 +105,28 @@ Current composition:
 - breadcrumb path;
 - layered lineage cards for the focused node;
 - impact summary cards.
+
+### Code
+
+Current route: `/code`
+
+Current composition:
+
+- file tree panel for workspace browsing;
+- read-only Monaco source preview for the selected file;
+- route-level loading and error states around file tree and file content.
+
+Current user jobs:
+
+- browse the workspace without leaving the main shell;
+- inspect one file read-only;
+- keep file context ready for future file-history review and revision handoff.
+
+Target Git posture:
+
+- `Code` owns selected-file context and recent history entry for that file;
+- revision comparison hands off to `Diff`;
+- `Code` does not become a full Git explorer or repository console.
 
 ### Diff
 
@@ -180,6 +204,7 @@ flowchart TB
   Canvas -->|"Start run / open run"| Runs
   Canvas -->|"Selected node"| Inspector
   Canvas -->|"Column toggle and graph context"| Lineage
+  Code -->|"Open revision compare"| Diff
   Canvas -->|"Generate execution scaffolding from current workflow context"| Templates
   Lineage -->|"Pin-to-canvas intent exists, not complete yet"| Canvas
   Runs -->|"Artifacts tab"| Artifacts
@@ -188,6 +213,7 @@ flowchart TB
   TopBar -->|"Tenant / project / environment"| Canvas
   TopBar --> Runs
   TopBar --> Lineage
+  TopBar --> Code
   TopBar --> Diff
   TopBar --> Artifacts
   TopBar --> Templates
@@ -235,8 +261,10 @@ flowchart TB
 
 - The shell already behaves like a workbench, but state ownership is still too
   centralized in `appStore.ts`.
-- Canvas is the most mature workbench route. Lineage, Diff, and Artifacts still
-  need stronger data contracts and more consistent UX hardening.
+- Canvas is the most mature workbench route. Code, Lineage, Diff, and Artifacts
+  still need stronger data contracts and more consistent UX hardening.
+- `Code` currently supports read-only browsing, but it still lacks governed
+  per-file history review and handoff into `Diff`.
 - There is a hidden `CostView` implementation in the codebase, but it is not an
   active shell route today. Observability is currently expressed through the
   shell health banner and the Runs detail surface instead.

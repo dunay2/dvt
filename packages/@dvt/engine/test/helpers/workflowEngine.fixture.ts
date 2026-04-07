@@ -128,6 +128,10 @@ export function createWorkflowEngineCoreFixture(input?: {
   clock?: IClock;
   authorizer?: IAuthorizer;
   allowedSchemes?: string[];
+  timeouts?: {
+    adapterCallMs?: number;
+    outboxEnqueueMs?: number;
+  };
 }): {
   core: WorkflowEngineCoreService;
   store: InMemoryTxStore;
@@ -160,6 +164,7 @@ export function createWorkflowEngineCoreFixture(input?: {
     adapters,
     observability: input?.observability ?? createNoopObservability(),
     clock,
+    ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
   });
 
   return {

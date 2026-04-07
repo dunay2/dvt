@@ -23,6 +23,8 @@ type StepSnapshot = WorkflowSnapshot['steps'][string];
 export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
   switch (e.eventType) {
     case 'RunQueued':
+      // Deliberate no-op: queue admission is already represented by the bootstrapped
+      // pre-start snapshot state. The event still remains authoritative lifecycle evidence.
       break;
 
     case 'RunStarted':

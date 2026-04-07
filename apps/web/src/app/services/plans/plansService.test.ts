@@ -53,6 +53,7 @@ describe('createPlansService', () => {
 
     const plan = await service.previewPlan({
       selectedNodeIds: ['node_1'],
+      persist: true,
       context: {
         runId: 'run-1',
         tenantId: 't1',
@@ -70,6 +71,27 @@ describe('createPlansService', () => {
     const postJsonMock = vi.fn(async () => ({
       plan: buildValidContractPlan(),
       planRef: buildValidPlanRef(),
+      planSummary: {
+        executor: 'postgres',
+        nodeCount: 3,
+        stepCount: 2,
+        sourceTables: ['raw.orders'],
+        sinkTables: ['analytics.orders_daily'],
+      },
+      persisted: {
+        planRecordId: 'plan-record-1',
+        canonicalPlanSha256: 'c'.repeat(64),
+      },
+      provenance: {
+        graphArtifact: {
+          repo: 'dunay2/dvt',
+          path: 'graphs/orders.json',
+        },
+        sqlArtifact: {
+          repo: 'dunay2/dvt',
+          path: 'sql/orders.sql',
+        },
+      },
     }));
     const service = createPlansService(
       'api',
@@ -80,6 +102,7 @@ describe('createPlansService', () => {
 
     const plan = await service.previewPlan({
       selectedNodeIds: ['node_1'],
+      persist: true,
       context: {
         runId: 'run-1',
         tenantId: 't1',
@@ -90,11 +113,30 @@ describe('createPlansService', () => {
     });
 
     expect(plan.planRef).toEqual(buildValidPlanRef());
+    expect(plan.preview).toMatchObject({
+      summary: {
+        executor: 'postgres',
+        sourceTables: ['raw.orders'],
+        sinkTables: ['analytics.orders_daily'],
+      },
+      persisted: {
+        planRecordId: 'plan-record-1',
+      },
+      provenance: {
+        graphArtifact: {
+          path: 'graphs/orders.json',
+        },
+        sqlArtifact: {
+          path: 'sql/orders.sql',
+        },
+      },
+    });
 
     expect(postJsonMock).toHaveBeenCalledWith(
       '/plans/preview',
       expect.objectContaining({
         selectedNodeIds: ['node_1'],
+        persist: true,
       })
     );
   });
@@ -113,6 +155,7 @@ describe('createPlansService', () => {
     await expect(
       service.previewPlan({
         selectedNodeIds: ['node_1'],
+        persist: true,
         context: {
           runId: 'run-1',
           tenantId: 't1',

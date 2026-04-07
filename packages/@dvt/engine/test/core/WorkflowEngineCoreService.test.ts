@@ -78,6 +78,27 @@ describe('WorkflowEngineCoreService', () => {
     await expect(core.enrichStatus(ref)).rejects.toThrow(/provider unavailable/);
   });
 
+  it('enrichStatus rejects on adapter timeout without downgrading to projected status', async () => {
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: {
+        async getRunStatus() {
+          return await new Promise<RunStatusSnapshot>((resolve) => {
+            setTimeout(() => resolve({ runId: 'late-run', status: 'RUNNING' }), 25);
+          });
+        },
+      },
+      timeouts: {
+        adapterCallMs: 5,
+      },
+    });
+    await bootstrapQueuedRun(store, 'core-enrich-timeout-1');
+    const ref: EngineRunRef = makeRunRef('core-enrich-timeout-1');
+
+    await expect(core.enrichStatus(ref)).rejects.toThrow(
+      /adapter\.getRunStatus timed out after 5ms/
+    );
+  });
+
   it('cancel delegates to adapter without appending RunCancelRequested', async () => {
     const cancelRun = vi.fn(async () => {});
     const { core, store } = createWorkflowEngineCoreFixture({

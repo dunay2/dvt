@@ -3,6 +3,7 @@ import { Columns, FileCheck, GitBranch, LayoutGrid, Play, Target, Upload } from 
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
+import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 type CanvasToolbarProps = {
   readonly onOpenDataRegistry: () => void;
@@ -12,10 +13,13 @@ type CanvasToolbarProps = {
   readonly onToggleColumns: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
+  readonly canStartRun: boolean;
+  readonly planStatusSummary: string;
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
   readonly canUseCostOverlay: boolean;
   readonly impactOverlayEnabled: boolean;
   readonly columnLevelLineageEnabled: boolean;
+  readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
 };
@@ -28,13 +32,18 @@ export default function CanvasToolbar({
   onToggleColumns,
   onPlan,
   onRun,
+  canStartRun,
+  planStatusSummary,
   exclusiveOverlayMode,
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  transformationValidation,
   nodeCount,
   edgeCount,
 }: CanvasToolbarProps) {
+  const canPlanTransformation = transformationValidation.valid;
+
   return (
     <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3">
       <div className="flex min-w-0 items-center gap-2">
@@ -118,6 +127,14 @@ export default function CanvasToolbar({
           <span>
             {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
           </span>
+          <span className="text-slate-400">Â·</span>
+          <span className={cn(canPlanTransformation ? 'text-emerald-300' : 'text-amber-300')}>
+            {transformationValidation.summary}
+          </span>
+          <span className="text-slate-400">Â·</span>
+          <span className={cn(canStartRun ? 'text-emerald-300' : 'text-slate-300')}>
+            {planStatusSummary}
+          </span>
         </div>
         <Separator orientation="vertical" className="h-5 bg-slate-700" />
         <Button
@@ -125,6 +142,7 @@ export default function CanvasToolbar({
           variant="outline"
           size="sm"
           onClick={onPlan}
+          disabled={!canPlanTransformation}
           className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
         >
           <FileCheck className="mr-1.5 size-4" />
@@ -135,6 +153,7 @@ export default function CanvasToolbar({
           variant="default"
           size="sm"
           onClick={onRun}
+          disabled={!canStartRun}
           className="h-8 px-3 text-xs"
         >
           <Play className="mr-1.5 size-4" />

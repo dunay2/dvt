@@ -2,7 +2,7 @@
 title: Screen Manuals And User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-07
 ---
 
 # Screen Manuals And User Stories
@@ -231,6 +231,35 @@ The user expects:
 - Loading: preserve route frame.
 - Missing metadata: explain why column lineage is unavailable.
 
+## Code
+
+### User expectation
+
+Code is the read-only workspace file browser and the entry surface for future
+file-history review.
+
+The user expects:
+
+- one selected file at a time;
+- a stable file tree and source preview;
+- explicit handoff to `Diff` when revision comparison is needed.
+
+### Primary user stories
+
+- As an operator, I want to browse workspace files inside the main shell so I
+  can inspect source without leaving the product.
+- As a reviewer, I want selected-file history to stay attached to the current
+  file so I can decide when to open a real compare view.
+- As a reviewer, I want revision comparison to move into `Diff` instead of
+  overloading the file browser.
+
+### Expected states
+
+- Empty: explain that no file is selected or no workspace files are available.
+- Loading: keep shell and route visible while file tree or preview resolves.
+- Error: preserve selected-file context and explain which file surface failed.
+- Read-only: make it clear that browsing is allowed but editing is not.
+
 ## Diff
 
 ### User expectation
@@ -324,20 +353,22 @@ The user expects to:
 This matrix is the active acceptance baseline for route-level workbench slices.
 Each route keeps one primary job and hands off to another route explicitly.
 
-| Route       | Primary job                              | Allowed handoff targets     | Required acceptance states                      |
-| ----------- | ---------------------------------------- | --------------------------- | ----------------------------------------------- |
-| `Canvas`    | graph authoring and graph-context intent | `Runs`, `Diff`, `Templates` | loading, empty, error, degraded, read-only      |
-| `Runs`      | execution operations and run evidence    | `Artifacts`                 | loading, empty, error, degraded, missing run    |
-| `Lineage`   | dependency and impact analysis           | `Canvas`                    | loading, empty, error, missing metadata         |
-| `Diff`      | structural and SQL review                | `Templates`                 | loading, empty, error                           |
-| `Artifacts` | immutable artifact inspection            | none                        | loading, empty, error, invalid import           |
-| `Templates` | governed source generation               | none                        | loading, empty, validation error, preview ready |
+| Route       | Primary job                               | Allowed handoff targets     | Required acceptance states                      |
+| ----------- | ----------------------------------------- | --------------------------- | ----------------------------------------------- |
+| `Canvas`    | graph authoring and graph-context intent  | `Runs`, `Diff`, `Templates` | loading, empty, error, degraded, read-only      |
+| `Runs`      | execution operations and run evidence     | `Artifacts`                 | loading, empty, error, degraded, missing run    |
+| `Lineage`   | dependency and impact analysis            | `Canvas`                    | loading, empty, error, missing metadata         |
+| `Code`      | read-only file browsing and history entry | `Diff`                      | loading, empty, error, read-only                |
+| `Diff`      | structural and SQL review                 | `Templates`                 | loading, empty, error                           |
+| `Artifacts` | immutable artifact inspection             | none                        | loading, empty, error, invalid import           |
+| `Templates` | governed source generation                | none                        | loading, empty, validation error, preview ready |
 
 ```mermaid
 flowchart TB
   Canvas -->|"run"| Runs
   Canvas -->|"review"| Diff
   Canvas -->|"generate"| Templates
+  Code -->|"revision compare"| Diff
   Runs -->|"inspect"| Artifacts
   Lineage -->|"authoring follow-up"| Canvas
   Diff -->|"generated-source review"| Templates
@@ -357,6 +388,7 @@ Current related tasks:
 - `F-18` console and live-log convergence
 - `F-19` Marquez open-data visual direction
 - `F-21` execution-template and source-generation workbench
+- `F-23` governed file-history review inside `Code` and `Diff`
 
 Runtime contract baseline references:
 

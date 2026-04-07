@@ -158,7 +158,7 @@ flowchart LR
 
 ### 5.6 Rationale
 
-Esta opción es la mejor cuando la prioridad es **disponibilidad** y no **escala de escritura**. PostgreSQL HA mantiene un modelo de **primary read/write + standbys**, y hot standby permite consultas **solo lectura** sobre réplicas [R1][R2]. Patroni existe precisamente para orquestar HA de PostgreSQL y también soporta despliegues con Citus más adelante [R3][R4].
+Esta opción es la mejor cuando la prioridad es **disponibilidad** y no **escala de escritura**. PostgreSQL HA mantiene un modelo de **primary read/write + standbys**, y hot standby permite consultas **solo lectura** sobre réplicas [R1], [R2]. Patroni existe precisamente para orquestar HA de PostgreSQL y también soporta despliegues con Citus más adelante [R3], [R4].
 
 ### 5.7 Configuración sugerida del modo
 
@@ -253,7 +253,7 @@ flowchart LR
 
 ### 6.6 Rationale
 
-Debezium documenta el patrón **outbox** precisamente para evitar inconsistencias entre el estado interno de la aplicación y los eventos consumidos por otros sistemas [R10][R11]. PostgreSQL logical replication permite publicar cambios de datos con modelo **publish/subscribe**, pero el **DDL no se replica** automáticamente [R8][R9].
+Debezium documenta el patrón **outbox** precisamente para evitar inconsistencias entre el estado interno de la aplicación y los eventos consumidos por otros sistemas [R10], [R11]. PostgreSQL logical replication permite publicar cambios de datos con modelo **publish/subscribe**, pero el **DDL no se replica** automáticamente [R8], [R9].
 
 ### 6.7 Configuración sugerida del modo
 
@@ -475,7 +475,7 @@ flowchart LR
 | ----------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
 | `actual -> pg_ha`             | **Sí, con cutover corto** | Es la mejor transición inicial. Patroni documenta conversión de standalone a clúster [R3]. |
 | `pg_ha -> añadir replicas`    | **Sí**                    | Es principalmente routing y operación.                                                     |
-| `pg_ha -> outbox_cdc`         | **Sí, casi en caliente**  | CDC sobre WAL; requiere preparar outbox y connector [R10][R11].                            |
+| `pg_ha -> outbox_cdc`         | **Sí, casi en caliente**  | CDC sobre WAL; requiere preparar outbox y connector [R10], [R11].                          |
 | `pg_ha -> distributed`        | **No como toggle**        | Requiere shadow cluster, backfill, validación y cutover gestionado.                        |
 | `distributed -> añadir Kafka` | **Depende**               | No lo tomaría como primer paso; primero abrir Kafka sobre `pg_ha`.                         |
 
