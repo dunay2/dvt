@@ -72,6 +72,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -104,6 +105,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -126,6 +128,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -151,6 +154,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -184,6 +188,7 @@ describe('PostgresRunStateCoordinator', () => {
         updateWithClient: async () => {
           calls.push('updateWithClient');
         },
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => {
@@ -221,6 +226,7 @@ describe('PostgresRunStateCoordinator', () => {
         updateWithClient: async () => {
           throw new Error('snapshot seed failed');
         },
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient,
@@ -250,6 +256,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient,
@@ -278,6 +285,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient,
@@ -319,6 +327,7 @@ describe('PostgresRunStateCoordinator', () => {
     }));
     const enqueueWithClient = vi.fn(async () => undefined);
     const updateWithClient = vi.fn(async () => undefined);
+    const validateAppendedTransitionsWithClient = vi.fn(async () => undefined);
     const coordinator = new PostgresRunStateCoordinator({
       metadataRepo: {
         resolveTenantWithClient: async () => TEST_TENANT_ID,
@@ -329,6 +338,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient,
+        validateAppendedTransitionsWithClient,
       },
       outboxStore: {
         enqueueWithClient,
@@ -344,10 +354,12 @@ describe('PostgresRunStateCoordinator', () => {
     expect(enqueueWithClient).toHaveBeenCalledTimes(1);
     expect(enqueueWithClient).toHaveBeenCalledWith(expect.anything(), TEST_RUN_ID, result.appended);
     expect(updateWithClient).not.toHaveBeenCalled();
+    expect(validateAppendedTransitionsWithClient).toHaveBeenCalledTimes(1);
   });
 
   it('appendAndEnqueueTx does not enqueue when append fails', async () => {
     const updateWithClient = vi.fn(async () => undefined);
+    const validateAppendedTransitionsWithClient = vi.fn(async () => undefined);
     const enqueueWithClient = vi.fn(async () => undefined);
     const coordinator = new PostgresRunStateCoordinator({
       metadataRepo: {
@@ -361,6 +373,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient,
+        validateAppendedTransitionsWithClient,
       },
       outboxStore: {
         enqueueWithClient,
@@ -373,6 +386,7 @@ describe('PostgresRunStateCoordinator', () => {
       /append failed/
     );
     expect(updateWithClient).not.toHaveBeenCalled();
+    expect(validateAppendedTransitionsWithClient).not.toHaveBeenCalled();
     expect(enqueueWithClient).not.toHaveBeenCalled();
   });
 });

@@ -37,6 +37,13 @@ interface SnapshotWritePort {
     baseRunSeq: number,
     lastAppendedRunSeq: number | null
   ): Promise<void>;
+  validateAppendedTransitionsWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    baseRunSeq: number,
+    appended: EventEnvelope[]
+  ): Promise<void>;
 }
 
 interface OutboxEnqueuePort {
@@ -139,6 +146,13 @@ export class PostgresRunStateCoordinator {
   ): Promise<AppendResult> {
     const { appended, deduped, lastAppendedRunSeq, baseRunSeq } =
       await this.runEventRepository.append(client, tenantId, runId, envelopes);
+    await this.snapshotStore.validateAppendedTransitionsWithClient(
+      client,
+      tenantId,
+      runId,
+      baseRunSeq,
+      appended
+    );
     return { appended, deduped, lastSeq: lastAppendedRunSeq ?? baseRunSeq };
   }
 }

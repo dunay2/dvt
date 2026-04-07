@@ -32,6 +32,10 @@ interface SnapshotRow {
   snapshot: WorkflowSnapshot;
 }
 
+interface SnapshotWithSeqRow extends SnapshotRow {
+  last_run_seq: number | string | null;
+}
+
 interface SnapshotReadRow extends SnapshotRow {
   last_run_seq: number | string | null;
   latest_run_seq: number | string | null;
@@ -341,6 +345,34 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     await this.persistWithClient(client, runId, snap, lastAppendedRunSeq);
   }
 
+  /**
+   * Validates appended events against the current run lifecycle state inside the
+   * same transaction used by append. This preserves transition guards even when
+   * snapshot persistence is decoupled to background workers.
+   */
+  async validateAppendedTransitionsWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    baseRunSeq: number,
+    appended: EventEnvelope[]
+  ): Promise<void> {
+    if (appended.length === 0) {
+      return;
+    }
+
+    const validationSnapshot = await this.buildValidationSnapshotWithClient(
+      client,
+      tenantId,
+      runId,
+      baseRunSeq
+    );
+
+    for (const event of appended) {
+      applyRunEvent(validationSnapshot, event);
+    }
+  }
+
   async persistWithClient(
     client: PoolClient,
     runId: RunId,
@@ -408,6 +440,60 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     };
   }
 
+  private async buildValidationSnapshotWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    baseRunSeq: number
+  ): Promise<WorkflowSnapshot> {
+    const snapshotRow = await client.query<SnapshotWithSeqRow>(
+      `
+        SELECT snapshot, last_run_seq
+        FROM ${quoteIdentifier(this.schema)}.run_snapshots
+        WHERE run_id = $1
+        LIMIT 1
+      `,
+      [runId]
+    );
+
+    const persisted = snapshotRow.rows[0];
+    const snapshot = persisted?.snapshot
+      ? cloneWorkflowSnapshot(persisted.snapshot)
+      : this.createEmptySnapshot(runId);
+    const snapshotLastRunSeq =
+      persisted?.last_run_seq === null || persisted?.last_run_seq === undefined
+        ? 0
+        : parsePersistedRunSequence(persisted.last_run_seq, runId);
+
+    if (baseRunSeq <= snapshotLastRunSeq) {
+      return snapshot;
+    }
+
+    const tailEvents = await this.listEventsBetweenSeqWithClient(
+      client,
+      tenantId,
+      runId,
+      snapshotLastRunSeq,
+      baseRunSeq
+    );
+    for (const event of tailEvents) {
+      applyRunEvent(snapshot, event);
+    }
+    return snapshot;
+  }
+
+  private createEmptySnapshot(runId: RunId): WorkflowSnapshot {
+    return {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+      runId,
+      status: 'PENDING',
+      paused: false,
+      cancelling: false,
+      gatewayDecisions: {},
+      steps: {},
+    };
+  }
+
   private async listEventsAfterSeqWithClient(
     client: PoolClient,
     tenantId: string,
@@ -424,6 +510,28 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         ORDER BY run_seq ASC
       `,
       [tenantId, runId, afterSeq]
+    );
+    return result.rows.map((row) => row.payload);
+  }
+
+  private async listEventsBetweenSeqWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    afterSeq: number,
+    toSeqInclusive: number
+  ): Promise<EventEnvelope[]> {
+    const result = await client.query<EventPayloadRow>(
+      `
+        SELECT payload
+        FROM ${quoteIdentifier(this.schema)}.run_events
+        WHERE tenant_id = $1
+          AND run_id = $2
+          AND run_seq > $3
+          AND run_seq <= $4
+        ORDER BY run_seq ASC
+      `,
+      [tenantId, runId, afterSeq, toSeqInclusive]
     );
     return result.rows.map((row) => row.payload);
   }
