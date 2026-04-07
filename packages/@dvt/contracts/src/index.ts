@@ -2,7 +2,18 @@ export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
+export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
+export {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  getSignalDerivedEventType,
+  resolveSignalSemanticsContract,
+  SIGNAL_SEMANTICS_REGISTRY,
+} from './contracts/engine/SignalSemantics.v1.js';
+export type {
+  SignalSemanticsContract,
+  SignalSemanticsVersion,
+} from './contracts/engine/SignalSemantics.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -107,6 +118,8 @@ export * from './errors.js';
 export * from './ports/artifact-store.js';
 export * from './schemas.js';
 export * from './step-registry/StepTypeRegistry.js';
+export * from './utils/jcsCanonicalize.js';
+export * from './utils/sha256HexUtf8.js';
 export * from './validation.js';
 export type {
   AppendResult,
@@ -116,12 +129,15 @@ export type {
   EventIdempotencyInput,
   EventInput,
   EventType,
+  IPlanFetcher,
+  IPlanIntegrityValidator,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
   RunEventInput,
   RunEventInputBase,
   RunMetadata,
+  StoredPlanArtifact,
   StepEventInput,
   WorkflowSnapshot,
 } from './engine/IRunStateStore.v1.js';

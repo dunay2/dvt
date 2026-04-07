@@ -28,7 +28,7 @@ Use this for examples like `PYTHON_SCRIPT`, `SPARK_JOB`, or `API_CALL`.
    - Add event payload tests if the kind emits artifacts (StepStarted payload shape).
 3. Planner integration:
    - Ensure planner build path accepts the kind via injected/registered registry.
-   - Validate required capabilities projection into `ExecutionPlan.metadata.requiresCapabilities`.
+   - Validate required capabilities projection into `RunExecutionPolicy.requiresCapabilities`.
    - Add planner integration tests in [step-registry-integration.test.ts](/c:/dvt/packages/@dvt/planner/test/unit/step-registry-integration.test.ts).
 4. Admission and executability checks:
    - Ensure executability gate rejects unsupported adapter-kind combinations.

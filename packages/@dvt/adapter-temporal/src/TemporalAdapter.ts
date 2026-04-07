@@ -13,11 +13,13 @@
 import { Buffer } from 'node:buffer';
 
 import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
+  type SignalSemanticsVersion,
   type SignalRequest,
   parseEngineRunRef,
   parsePlanRef,
@@ -165,10 +167,10 @@ export class TemporalAdapter implements IProviderAdapter {
 
     switch (validatedRequest.type) {
       case 'PAUSE':
-        await workflow.signal(WorkflowSignals.PAUSE);
+        await workflow.signal(WorkflowSignals.PAUSE, validatedRequest.signalId);
         return;
       case 'RESUME':
-        await workflow.signal(WorkflowSignals.RESUME);
+        await workflow.signal(WorkflowSignals.RESUME, validatedRequest.signalId);
         return;
       case 'CANCEL':
         await workflow.signal(WorkflowSignals.CANCEL, validatedRequest.reason);
@@ -184,6 +186,10 @@ export class TemporalAdapter implements IProviderAdapter {
 
   capabilities(): readonly string[] {
     return TEMPORAL_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
   /**

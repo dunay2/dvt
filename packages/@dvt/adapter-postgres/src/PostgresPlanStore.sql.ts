@@ -7,6 +7,7 @@ export function sqlCreateStoredPlansTable(schema: string): string {
       plan_version TEXT NOT NULL,
       plan_uri TEXT NOT NULL UNIQUE,
       plan_sha256 TEXT NOT NULL,
+      plugin_compatibility_fingerprint TEXT,
       schema_version TEXT NOT NULL,
       size_bytes INTEGER NOT NULL,
       requires_capabilities JSONB,
@@ -17,6 +18,22 @@ export function sqlCreateStoredPlansTable(schema: string): string {
       stored_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `;
+}
+
+export function sqlEnsureStoredPlansCompatibilityFingerprintColumn(schema: string): string {
+  return `
+    ALTER TABLE ${quoteIdentifier(schema)}.stored_plans
+      ADD COLUMN IF NOT EXISTS plugin_compatibility_fingerprint TEXT
+  `;
+}
+
+export function sqlBackfillStoredPlansCompatibilityFingerprint(schema: string): string {
+  return `
+    UPDATE ${quoteIdentifier(schema)}.stored_plans
+    SET plugin_compatibility_fingerprint =
+      NULLIF(executable_plan_json::jsonb #>> '{metadata,pluginCompatibilityFingerprint}', '')
+    WHERE plugin_compatibility_fingerprint IS NULL
   `;
 }
 

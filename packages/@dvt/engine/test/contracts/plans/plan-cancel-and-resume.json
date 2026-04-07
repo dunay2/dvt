@@ -1,18 +1,37 @@
 {
   "metadata": {
-    "planId": "plan-cancel-and-resume",
-    "planVersion": "1.0.0",
+    "planVersion": "1.0",
     "schemaVersion": "v1.2",
     "contractVersion": "1.0.0",
-    "targetAdapter": "mock",
-    "fallbackBehavior": "reject",
-    "requiresCapabilities": ["basic-execution", "signal.pause.native"]
+    "inputHashSha256": "b415260c5b584c5794eeeed9c184c0dd18ca486e2b4a485b88728854d72cd518",
+    "planId": "d90b05799ed24d4f29db92b8871162281286c592a97eb9ada940e699a1b08715",
+    "createdAtIso": "2026-04-07T00:00:00.000Z"
   },
   "steps": [
-    { "stepId": "s1", "kind": "noop" },
-    { "stepId": "s2", "kind": "noop" },
-    { "stepId": "s3", "kind": "noop" },
-    { "stepId": "s4", "kind": "noop" },
-    { "stepId": "s5", "kind": "noop" }
+    {
+      "stepId": "s1",
+      "kind": "noop",
+      "dependsOn": []
+    },
+    {
+      "stepId": "s2",
+      "kind": "noop",
+      "dependsOn": ["s1"]
+    },
+    {
+      "stepId": "s3",
+      "kind": "noop",
+      "dependsOn": ["s2"]
+    },
+    {
+      "stepId": "s4",
+      "kind": "noop",
+      "dependsOn": ["s3"]
+    },
+    {
+      "stepId": "s5",
+      "kind": "noop",
+      "dependsOn": ["s4"]
+    }
   ]
 }

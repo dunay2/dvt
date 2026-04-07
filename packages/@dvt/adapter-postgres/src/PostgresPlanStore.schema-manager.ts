@@ -3,12 +3,14 @@ import { createHash } from 'node:crypto';
 import type { PoolClient } from 'pg';
 
 import {
+  sqlBackfillStoredPlansCompatibilityFingerprint,
   sqlBackfillPlanRecordsFromStoredPlans,
   sqlCreatePlanAdmissionLinksTable,
   sqlCreatePlanExecutabilityRecordsTable,
   sqlCreatePlanRecordsTable,
   sqlCreateStoredPlansTable,
   sqlCreateStoredPlansValidationStateIndex,
+  sqlEnsureStoredPlansCompatibilityFingerprintColumn,
   sqlEnsurePlanRecordLineageConstraints,
   sqlEnsurePlanRecordSupersedesConstraints,
 } from './PostgresPlanStore.sql.js';
@@ -25,6 +27,8 @@ export class PostgresPlanStoreSchemaManager {
     await this.txRunner.withTransaction(async (client) => {
       await client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
       await client.query(sqlCreateStoredPlansTable(this.schema));
+      await client.query(sqlEnsureStoredPlansCompatibilityFingerprintColumn(this.schema));
+      await client.query(sqlBackfillStoredPlansCompatibilityFingerprint(this.schema));
       await client.query(sqlCreateStoredPlansValidationStateIndex(this.schema));
       await client.query(sqlCreatePlanRecordsTable(this.schema));
       await client.query(sqlCreatePlanExecutabilityRecordsTable(this.schema));

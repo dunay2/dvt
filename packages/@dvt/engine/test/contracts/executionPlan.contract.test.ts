@@ -9,7 +9,7 @@
  *   - Shape of ExecutionPlan: required vs optional fields compile and satisfy the TypeScript interface.
  *   - contractVersion validation: MockAdapter rejects plans with unknown versions.
  *   - Provenance fields: plannerVersion and plannerGitSha are optional and structurally inert.
- *   - Step metadata passthrough: extra step fields are rejected by the mock adapter narrowing rule.
+ *   - Runtime policy fields are not carried inside canonical plan metadata.
  */
 import type { ExecutionPlan, PlanRef } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
@@ -155,14 +155,11 @@ describe('ExecutionPlan — interface shape', (): void => {
     expect(plan.metadata.createdAtIso).toBe('2026-02-23T00:00:00.000Z');
   });
 
-  it('requiresCapabilities is optional', (): void => {
-    const withCaps: ExecutionPlan = {
-      ...makeMinimalPlan(),
-      metadata: { ...makeMinimalPlan().metadata, requiresCapabilities: ['basic-execution'] },
-    };
-    const withoutCaps: ExecutionPlan = makeMinimalPlan();
-    expect(withCaps.metadata.requiresCapabilities).toEqual(['basic-execution']);
-    expect(withoutCaps.metadata.requiresCapabilities).toBeUndefined();
+  it('does not carry runtime policy fields in metadata', (): void => {
+    const metadata = makeMinimalPlan().metadata as Record<string, unknown>;
+    expect(metadata).not.toHaveProperty('requiresCapabilities');
+    expect(metadata).not.toHaveProperty('targetAdapter');
+    expect(metadata).not.toHaveProperty('fallbackBehavior');
   });
 
   it('steps array uses the governed shared shape', (): void => {
@@ -220,9 +217,6 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
         createdAtIso: '2026-02-23T00:00:00.000Z',
         plannerVersion: '3.1.4',
         plannerGitSha: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
-        requiresCapabilities: ['basic-execution'],
-        targetAdapter: 'mock',
-        fallbackBehavior: 'reject',
       },
       steps: [{ stepId: 's1', kind: 'noop', dependsOn: [] }],
     };

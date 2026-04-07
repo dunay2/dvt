@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-07
 planning_type: review
 ---
 
@@ -28,6 +28,8 @@ Sprint execution board:
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------ | ------------------------------------------ | ---------------- | ------------------ |
 | [20260326 DVT principal architectural review](architecture-and-governance/20260326-dvt-principal-architectural-review.md)                       | `architecture-and-governance`     | reference baseline for cross-cutting architecture      | `none`                                     | reference        | `n/a`              |
 | [20260331 Principal architecture deep review](architecture-and-governance/20260331-principal-architecture-deep-review.md)                       | `architecture-and-governance`     | latest deep architectural reference                    | `none`                                     | reference        | `n/a`              |
+| [20260407 Engine boundary current/target review](architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)   | `architecture-and-governance`     | current engine-boundary and migration reference        | `none`                                     | reference        | `n/a`              |
+| [20260407 Principles and target-state review](architecture-and-governance/20260407-dvt-principles-boundaries-and-target-state-review.md)        | `architecture-and-governance`     | current product-principles and target-state reference  | `none`                                     | reference        | `n/a`              |
 | [20260322 DDD and hexagonal port audit](architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)                                | `architecture-and-governance`     | active architecture reference cited by ADRs            | `none`                                     | reference        | `n/a`              |
 | [20260314 Domain cohesion review](architecture-and-governance/20260314-domain-cohesion-review.md)                                               | `architecture-and-governance`     | active domain-boundary reference                       | `none`                                     | reference        | `n/a`              |
 | [20260321 Planner-backed StartRun QA review](execution-runtime/20260321-planner-backed-start-run-qa-review.md)                                  | `execution-runtime`               | runtime/planner QA reference                           | `none`                                     | reference        | `n/a`              |
@@ -51,6 +53,24 @@ Sprint execution board:
 | [20260401 CI process review](ci-and-delivery/20260401-ci-process-review.md)                                                                     | `ci-and-delivery`                 | current CI process baseline review                     | `none`                                     | reference        | `n/a`              |
 | [20260401 Lane C RC-C2 efficiency institutionalization review](ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | `ci-and-delivery`                 | RC-C2 phase-2 institutionalization review              | `RC-C2`                                    | `review`         | `67%`              |
 | [20260402 RC-C2 operational friction intake review](ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
+
+Additional active rationale:
+
+- [20260407 Execution plan and run execution policy rationale](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md)
+  - domain: `architecture-and-governance`
+  - role: current plan-definition vs execution-policy rationale
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
+Additional active QA:
+
+- [20260407 Execution plan and policy hard QA review](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for the plan-definition vs execution-policy slice
+  - linkage: `QA-EP-9..QA-EP-11`
+  - status: `done`
+  - progress: `100%`
 
 ## Newly Classified Review
 

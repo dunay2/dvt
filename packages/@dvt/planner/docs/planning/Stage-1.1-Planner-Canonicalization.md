@@ -216,7 +216,7 @@ sequenceDiagram
         Resolver-->>App: immutable manifest payload
     end
     App->>Core: build canonical plan input
-    Core-->>App: plan + canonicalPlanJson
+    Core-->>App: plan + canonicalPlanCoreJson
     App-->>Caller: built canonical plan
     Caller->>Store: storePlan(plan, PENDING_VALIDATION)
     Store-->>Caller: planRef
@@ -1615,11 +1615,11 @@ Operational rule: exactly one discriminated branch is authoritative per request.
 ### Example B — planner output vs enrichment
 
 ```ts
-const { plan, canonicalPlanJson } = await planner.buildPlan(input);
+const { plan, canonicalPlanCoreJson } = await planner.buildPlan(input);
 const enrichedPlan = await attachCompiledCodeRefs(plan, storage);
 ```
 
-Rule: `canonicalPlanJson` and `plan.metadata.planId` derive from core plan
+Rule: `canonicalPlanCoreJson` and `plan.metadata.planId` derive from core plan
 content, not from the later enrichment.
 
 If the enriched binding needs to persist, it should persist as associated

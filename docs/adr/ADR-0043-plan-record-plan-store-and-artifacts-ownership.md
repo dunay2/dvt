@@ -165,8 +165,10 @@ Admission is therefore modeled as a relation, not as a `PlanRecord` state.
 
 S08-v1 persists one canonical plan artifact as the system of record.
 
-- `canonicalPlanJson` is the planner-emitted canonical `ExecutionPlan`
-  governed by `ADR-0042`.
+- `canonicalPlanJson` is `JCS(canonical ExecutionPlan)` governed by `ADR-0042`.
+- `canonicalHash` is `sha256(canonicalPlanJson)`.
+- planner-side hash evidence is published separately as
+  `canonicalPlanCoreJson = JCS(planCore)`.
 - S08-v1 does not introduce a second sibling field such as
   `executablePlanJson`.
 

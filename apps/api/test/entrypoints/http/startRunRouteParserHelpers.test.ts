@@ -107,31 +107,6 @@ describe('startRunRoute parser helpers', () => {
     });
   });
 
-  it('parses optional planRef pluginCompatibilityFingerprint', () => {
-    expect(
-      parseStartRunPlanRef({
-        uri: 'https://plans.example.com/p.json',
-        sha256: 'abc123',
-        schemaVersion: '1.0.0',
-        planId: 'p1',
-        planVersion: '1.0',
-        pluginCompatibilityFingerprint:
-          '1111111111111111111111111111111111111111111111111111111111111111',
-      })
-    ).toEqual({
-      ok: true,
-      value: {
-        uri: 'https://plans.example.com/p.json',
-        sha256: 'abc123',
-        schemaVersion: '1.0.0',
-        planId: 'p1',
-        planVersion: '1.0',
-        pluginCompatibilityFingerprint:
-          '1111111111111111111111111111111111111111111111111111111111111111',
-      },
-    });
-  });
-
   it('parses runExecutionContextRef and validates shape', () => {
     expect(
       parseStartRunRunExecutionContextRef({

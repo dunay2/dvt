@@ -1,4 +1,4 @@
-import type { IStepTypeRegistry } from '@dvt/contracts';
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, type IStepTypeRegistry } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -16,7 +16,7 @@ describe('StoredPlanExecutabilityValidator', () => {
   it('returns OK when the stored executable plan matches the ref and capabilities', async () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
-        fetchForValidation: vi.fn(async () => executablePlanBytes()),
+        fetchForValidation: vi.fn(async () => storedPlanArtifact()),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution', 'workflow.fan.parallel'])]]),
     });
@@ -34,7 +34,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({ requiresCapabilities: ['workflow.pause'] })
+          storedPlanArtifact({ executionPolicy: { requiresCapabilities: ['workflow.pause'] } })
         ),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
@@ -57,7 +57,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({ requiresCapabilities: ['workflow.pause'] })
+          storedPlanArtifact({ executionPolicy: { requiresCapabilities: ['workflow.pause'] } })
         ),
       },
       adapters: new Map([
@@ -76,6 +76,9 @@ describe('StoredPlanExecutabilityValidator', () => {
             },
             async signal() {
               throw new Error('not used');
+            },
+            signalSemanticsVersions() {
+              return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
             },
           } as IProviderAdapter,
         ],
@@ -99,7 +102,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({
+          storedPlanArtifact({
             planId: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
           })
         ),
@@ -125,7 +128,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({
+          storedPlanArtifact({
             stepTypeConfig: {
               retries: {
                 maxAttempts: 3,
@@ -164,7 +167,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({
+          storedPlanArtifact({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -186,7 +189,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({
+          storedPlanArtifact({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -215,7 +218,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({
+          storedPlanArtifact({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -244,7 +247,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({
+          storedPlanArtifact({
             stepKind: 'SPARK_SQL',
           })
         ),
@@ -289,43 +292,43 @@ describe('StoredPlanExecutabilityValidator', () => {
   });
 });
 
-function executablePlanBytes(
+function storedPlanArtifact(
   overrides?: Partial<{
     planId: string;
     planVersion: string;
     schemaVersion: string;
-    requiresCapabilities: string[];
     stepKind: string;
     stepTypeConfig: Record<string, unknown>;
+    executionPolicy: { requiresCapabilities?: string[] };
   }>
-): Uint8Array {
-  return Buffer.from(
-    JSON.stringify({
-      metadata: {
-        planId:
-          overrides?.planId ?? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        planVersion: overrides?.planVersion ?? '1.0',
-        schemaVersion: overrides?.schemaVersion ?? 'v1.2',
-        contractVersion: '1.0.0',
-        inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-        createdAtIso: '2026-03-01T00:00:00.000Z',
-        ...(overrides?.requiresCapabilities === undefined
-          ? {}
-          : { requiresCapabilities: overrides.requiresCapabilities }),
-      },
-      steps: [
-        {
-          stepId: 'step-1',
-          kind: overrides?.stepKind ?? 'DBT_MODEL',
-          dependsOn: [],
-          ...(overrides?.stepTypeConfig === undefined
-            ? {}
-            : { stepTypeConfig: overrides.stepTypeConfig }),
+): { bytes: Uint8Array; executionPolicy: { requiresCapabilities?: string[] } } {
+  return {
+    bytes: Buffer.from(
+      JSON.stringify({
+        metadata: {
+          planId:
+            overrides?.planId ?? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+          planVersion: overrides?.planVersion ?? '1.0',
+          schemaVersion: overrides?.schemaVersion ?? 'v1.2',
+          contractVersion: '1.0.0',
+          inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          createdAtIso: '2026-03-01T00:00:00.000Z',
         },
-      ],
-    }),
-    'utf8'
-  );
+        steps: [
+          {
+            stepId: 'step-1',
+            kind: overrides?.stepKind ?? 'DBT_MODEL',
+            dependsOn: [],
+            ...(overrides?.stepTypeConfig === undefined
+              ? {}
+              : { stepTypeConfig: overrides.stepTypeConfig }),
+          },
+        ],
+      }),
+      'utf8'
+    ),
+    executionPolicy: overrides?.executionPolicy ?? {},
+  };
 }
 
 function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
@@ -342,6 +345,9 @@ function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
     },
     async signal() {
       throw new Error('not used');
+    },
+    signalSemanticsVersions() {
+      return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
     },
     capabilities() {
       return [...capabilities];

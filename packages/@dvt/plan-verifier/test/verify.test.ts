@@ -38,18 +38,18 @@ function makeExecutionPlan(stepOverrides: Partial<ExecutionPlan['steps'][number]
 }
 
 describe('@dvt/plan-verifier', () => {
-  it('verifies planId for canonicalPlanJson (happy path)', async () => {
+  it('verifies planId for canonicalPlanCoreJson (happy path)', async () => {
     const canonical = '{"a":1,"b":[true,false,null],"c":"x"}';
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
-      verifyPlanIdOrThrow({ canonicalPlanJson: canonical, planId })
+      verifyPlanIdOrThrow({ canonicalPlanCoreJson: canonical, planId })
     ).resolves.toBeUndefined();
   });
 
   it('fails when planId mismatches', async () => {
     const canonical = '{"a":1}';
     await expect(
-      verifyPlanIdOrThrow({ canonicalPlanJson: canonical, planId: 'deadbeef' })
+      verifyPlanIdOrThrow({ canonicalPlanCoreJson: canonical, planId: 'deadbeef' })
     ).rejects.toThrow();
   });
 
@@ -58,7 +58,7 @@ describe('@dvt/plan-verifier', () => {
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
       verifyPlanOrThrow({
-        canonicalPlanJson: canonical,
+        canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '3.0',
         supportedMajor: 1,
@@ -71,7 +71,7 @@ describe('@dvt/plan-verifier', () => {
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
       verifyPlanOrThrow({
-        canonicalPlanJson: canonical,
+        canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0',
         supportedMajor: 1,
@@ -84,7 +84,7 @@ describe('@dvt/plan-verifier', () => {
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
       verifyPlanOrThrow({
-        canonicalPlanJson: canonical,
+        canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0',
         supportedMajor: 1,
@@ -98,7 +98,7 @@ describe('@dvt/plan-verifier', () => {
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
       verifyPlanOrThrow({
-        canonicalPlanJson: canonical,
+        canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0',
         supportedMajor: 1,
@@ -113,7 +113,7 @@ describe('@dvt/plan-verifier', () => {
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
       verifyPlanOrThrow({
-        canonicalPlanJson: canonical,
+        canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0',
         supportedMajor: 1,

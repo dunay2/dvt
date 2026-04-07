@@ -110,6 +110,8 @@ export interface RunPlanWorkflowInput {
   completedStepResults?: Record<string, Record<string, unknown>>;
   /** Internal skipped-step set carried across continue-as-new rollovers. */
   skippedStepIds?: string[];
+  /** Internal processed control-signal ids carried across continue-as-new rollovers. */
+  processedControlSignalIds?: string[];
 }
 
 export interface RunPlanWorkflowResult {
@@ -138,8 +140,8 @@ export interface WorkflowState {
 // Signals & queries
 // ---------------------------------------------------------------------------
 
-export const pauseSignal = defineSignal('pause');
-export const resumeSignal = defineSignal('resume');
+export const pauseSignal = defineSignal<[string]>('pause');
+export const resumeSignal = defineSignal<[string]>('resume');
 export const cancelSignal = defineSignal<[string | undefined]>('cancel');
 export const statusQuery = defineQuery<WorkflowState>('status');
 
@@ -168,7 +170,8 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   const ctrl = parseWorkflowControlInput(input);
 
   const state = createInitialWorkflowState(ctrl.continuedAsNewCount, input.gatewayDecisions);
-  registerSignalHandlers(state);
+  const processedControlSignalIds = new Set(ctrl.processedControlSignalIds);
+  registerSignalHandlers(state, processedControlSignalIds);
 
   const completedStepResults = cloneStepResults(input.completedStepResults);
   const skippedSteps = new Set<string>(ctrl.skippedStepIds);
@@ -202,6 +205,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       planRef,
       state,
       runtime,
+      processedControlSignalIds,
     });
 
     return resolveLayerLoopOutcome({
@@ -226,6 +230,7 @@ interface WorkflowControlInput {
   resumeFromLayerIndex: number;
   continuedAsNewCount: number;
   skippedStepIds: string[];
+  processedControlSignalIds: string[];
 }
 
 function parseWorkflowControlInput(input: RunPlanWorkflowInput): WorkflowControlInput {
@@ -243,6 +248,10 @@ function parseWorkflowControlInput(input: RunPlanWorkflowInput): WorkflowControl
       'continuedAsNewCount'
     ),
     skippedStepIds: parseOptionalStringArray(input.skippedStepIds, 'skippedStepIds'),
+    processedControlSignalIds: parseOptionalStringArray(
+      input.processedControlSignalIds,
+      'processedControlSignalIds'
+    ),
   };
 }
 
@@ -319,14 +328,19 @@ function createInitialWorkflowState(
   };
 }
 
-function registerSignalHandlers(state: WorkflowState): void {
-  setHandler(pauseSignal, () => {
+function registerSignalHandlers(
+  state: WorkflowState,
+  processedControlSignalIds: Set<string>
+): void {
+  setHandler(pauseSignal, (signalId: string) => {
+    if (isDuplicateControlSignal(signalId, processedControlSignalIds)) return;
     if (state.status !== 'RUNNING') return;
     state.paused = true;
     state.status = 'PAUSED';
   });
 
-  setHandler(resumeSignal, () => {
+  setHandler(resumeSignal, (signalId: string) => {
+    if (isDuplicateControlSignal(signalId, processedControlSignalIds)) return;
     if (!state.paused) return;
     state.paused = false;
     state.status = 'RUNNING';
@@ -387,6 +401,7 @@ interface ExecutePlanLayersArgs {
   planRef: RunPlanWorkflowInput['planRef'];
   state: WorkflowState;
   runtime: LayerRuntimeState;
+  processedControlSignalIds: ReadonlySet<string>;
 }
 
 interface ProcessLayerArgs extends ExecutePlanLayersArgs {
@@ -473,6 +488,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     gatewayDecisions: args.state.gatewayDecisions ?? {},
     completedStepResults: args.runtime.completedStepResults,
     skippedStepIds: args.runtime.skippedSteps,
+    processedControlSignalIds: args.processedControlSignalIds,
   });
 }
 
@@ -486,6 +502,7 @@ function maybeBuildContinueAsNewOutcome(args: {
   gatewayDecisions: Record<string, boolean>;
   completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: ReadonlySet<string>;
+  processedControlSignalIds: ReadonlySet<string>;
 }): LayerLoopOutcome | null {
   const nextLayerIndex = args.layerIndex + 1;
   if (
@@ -509,6 +526,7 @@ function maybeBuildContinueAsNewOutcome(args: {
       gatewayDecisions: args.gatewayDecisions,
       completedStepResults: args.completedStepResults,
       skippedStepIds: args.skippedStepIds,
+      processedControlSignalIds: args.processedControlSignalIds,
     }),
   };
 }
@@ -792,4 +810,15 @@ function cloneStepResults(
     cloned[stepId] = { ...result };
   }
   return cloned;
+}
+
+function isDuplicateControlSignal(
+  signalId: string,
+  processedControlSignalIds: Set<string>
+): boolean {
+  if (processedControlSignalIds.has(signalId)) {
+    return true;
+  }
+  processedControlSignalIds.add(signalId);
+  return false;
 }

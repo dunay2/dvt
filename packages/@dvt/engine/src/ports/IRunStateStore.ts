@@ -1,5 +1,11 @@
 import type { ExecutionPlan as CanonicalExecutionPlan } from '@dvt/contracts';
-import type { IsoUtcString, PlanRef, Provider, RunStatus } from '@dvt/contracts';
+import type {
+  IsoUtcString,
+  PlanRef,
+  Provider,
+  RunExecutionPolicy,
+  RunStatus,
+} from '@dvt/contracts';
 
 export type EventType =
   | 'RunQueued'
@@ -281,9 +287,17 @@ export interface IIdempotencyKeyBuilder {
 }
 
 export interface IPlanFetcher {
-  fetch(planRef: PlanRef): Promise<Uint8Array>;
+  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
 }
 
 export interface IPlanIntegrityValidator {
-  fetchAndValidate(planRef: PlanRef, fetcher: IPlanFetcher): Promise<ExecutionPlan>;
+  fetchAndValidate(
+    planRef: PlanRef,
+    fetcher: IPlanFetcher
+  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }>;
+}
+
+export interface StoredPlanArtifact {
+  bytes: Uint8Array;
+  executionPolicy: RunExecutionPolicy;
 }
