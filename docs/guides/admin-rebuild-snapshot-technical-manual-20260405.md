@@ -20,6 +20,8 @@ endpoint in the API.
 
 - `apps/api/src/entrypoints/http/adminRoutes.ts`
 - `apps/api/src/entrypoints/http/authorizeAdminExecutionScope.ts`
+- `docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md`
+- `docs/contracts/shared/AdminRebuildSnapshotAccess.v1.schema.json`
 - `apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts`
 - `apps/api/test/entrypoints/http/adminRoutes.test.ts`
 
@@ -92,6 +94,9 @@ Failure envelopes:
 
 Contract-level:
 
+- Schema-valid canonical access contract
+- Invalid `requiredAction.name` mutation rejected by schema
+- Invalid pipeline-order mutation rejected by schema
 - Success envelope shape
 - Missing tenant input
 - Forbidden envelope
