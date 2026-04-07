@@ -7,6 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import type { ExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type {
   EngineRunRef,
   PlanRef,
@@ -18,7 +19,7 @@ import type {
 export interface IProviderAdapter {
   readonly provider: EngineRunRef['provider'];
 
-  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
+  startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;

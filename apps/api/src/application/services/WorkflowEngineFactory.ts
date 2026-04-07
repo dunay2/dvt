@@ -20,6 +20,7 @@ import {
   type IAuthorizer,
   type IClock,
   type IOutboxRateLimiter,
+  type IPlanFetcher,
   type IProviderAdapter,
   type IRunExecutionContextResolver,
   type IRunAccessPolicy,
@@ -47,6 +48,7 @@ export interface EnginePersistenceConfig {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
+  planFetcher: IPlanFetcher;
   runExecutionContextResolver?: IRunExecutionContextResolver;
 }
 
@@ -115,6 +117,7 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
       idempotency,
       clock: config.infrastructure.clock,
       intentStore: config.persistence.intentStore,
+      planFetcher: config.persistence.planFetcher,
       observability: config.infrastructure.observability,
       ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
     }),
@@ -136,6 +139,7 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
     clock: config.infrastructure.clock,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
+    planFetcher: config.persistence.planFetcher,
     ...(config.persistence.runExecutionContextResolver !== undefined
       ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
       : {}),

@@ -10,18 +10,14 @@ import type { IClock } from '../../src/utils/clock.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import {
   createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanRefForPlan,
   makeProviderMap,
   makeTemporalAdapter as makeSharedTemporalAdapter,
 } from '../helpers/workflowEngine.fixture.js';
 
 export function makePlanRef(): PlanRef {
-  return {
-    uri: 'https://example.com/plan',
-    sha256: 'deadbeef',
-    schemaVersion: 'v1.1',
-    planId: 'p',
-    planVersion: '1.0',
-  };
+  return makePlanRefForPlan(makeDefaultExecutionPlan(), 'https://example.com/plan');
 }
 
 export function makeContext(runId = 'r1'): RunContext {
@@ -162,8 +158,8 @@ export function makeRunEventInput(input: {
     tenantId: 't',
     projectId: 'p',
     environmentId: 'dev',
-    planId: 'p',
-    planVersion: '1.0',
+    planId: makePlanRef().planId,
+    planVersion: makePlanRef().planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
     idempotencyKey: input.idempotencyKey ?? `idemp-${input.eventId}`,

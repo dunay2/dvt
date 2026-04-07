@@ -12,6 +12,7 @@
  */
 import {
   type EngineRunRef,
+  type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
@@ -94,7 +95,11 @@ export class TemporalAdapter implements IProviderAdapter {
     });
   }
 
-  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
+  async startRun(
+    plan: ExecutionPlan,
+    planRef: PlanRef,
+    ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
     const validatedPlanRef = parsePlanRef(planRef);
     const validatedCtx = parseResolvedRunContext(ctx);
     const workflowClient = await this.getClient();
@@ -107,6 +112,7 @@ export class TemporalAdapter implements IProviderAdapter {
       workflowId,
       args: [
         {
+          plan,
           planRef: validatedPlanRef,
           ctx: validatedCtx,
           continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,

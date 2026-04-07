@@ -161,7 +161,6 @@ export async function buildProtectedRuntimeModule(
     clock: systemClock,
     projector,
     observability,
-    planFetcher: executablePlanResolver,
   });
   const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
     adapters.keys()
@@ -180,6 +179,7 @@ export async function buildProtectedRuntimeModule(
       stateStoreRead: stateStoreRoles.read,
       stateStoreWrite: stateStoreRoles.write,
       intentStore,
+      planFetcher: planStore,
     },
     runtime: { adapters },
     infrastructure: {

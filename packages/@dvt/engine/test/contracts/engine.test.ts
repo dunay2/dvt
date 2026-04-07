@@ -6,6 +6,7 @@
  * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
  *   expectations in the mocked adapter path (`PENDING` until completion events are present).
  */
+import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -26,16 +27,40 @@ import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
-import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makePlanFetcherForPlan,
+  makeProviderMap,
+} from '../helpers/workflowEngine.fixture.js';
 
 import { InMemoryPlanFetcher, utf8 } from './helpers.js';
 
-function makePlanMetadata(planId: string): ExecutionPlan['metadata'] {
+function derivePlanId(
+  steps: ExecutionPlan['steps'],
+  inputHashSha256 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+): string {
+  return sha256Hex(
+    jcsCanonicalize({
+      metadata: {
+        planVersion: '1.0',
+        inputHashSha256,
+      },
+      steps,
+    })
+  );
+}
+
+function makePlanMetadata(
+  steps: ExecutionPlan['steps'],
+  inputHashSha256 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+): ExecutionPlan['metadata'] {
   return {
-    planId,
+    planId: derivePlanId(steps, inputHashSha256),
     planVersion: '1.0',
     schemaVersion: 'v1.2',
     contractVersion: '1.0.0',
+    inputHashSha256,
+    createdAtIso: '2026-02-12T00:00:00.000Z',
     targetAdapter: 'mock',
     fallbackBehavior: 'reject',
     requiresCapabilities: [],
@@ -43,22 +68,24 @@ function makePlanMetadata(planId: string): ExecutionPlan['metadata'] {
 }
 
 function makeHelloWorldPlan(): ExecutionPlan {
+  const steps: ExecutionPlan['steps'] = [
+    { stepId: 's1', kind: 'noop', dependsOn: [] },
+    { stepId: 's2', kind: 'noop', dependsOn: [] },
+  ];
   return {
-    metadata: makePlanMetadata('hello-world'),
-    steps: [
-      { stepId: 's1', kind: 'noop' },
-      { stepId: 's2', kind: 'noop' },
-    ],
+    metadata: makePlanMetadata(steps),
+    steps,
   };
 }
 
 function makeDagPlanWithDependsOn(): ExecutionPlan {
+  const steps: ExecutionPlan['steps'] = [
+    { stepId: 's1', kind: 'noop', dependsOn: [] },
+    { stepId: 's2', kind: 'noop', dependsOn: ['s1'] },
+  ];
   return {
-    metadata: makePlanMetadata('dag-plan'),
-    steps: [
-      { stepId: 's1', kind: 'noop' },
-      { stepId: 's2', kind: 'noop', dependsOn: ['s1'] },
-    ],
+    metadata: makePlanMetadata(steps),
+    steps,
   };
 }
 
@@ -102,7 +129,6 @@ function setupEngineWithMock(plan: ExecutionPlan): {
     clock,
     idempotency,
     projector,
-    planFetcher: { fetch: async () => plan },
   });
   const { engine } = createWorkflowEngineFixture({
     stateStore: store,
@@ -111,6 +137,7 @@ function setupEngineWithMock(plan: ExecutionPlan): {
     clock,
     observability: createNoopObservability(),
     adapters: makeProviderMap(mock),
+    planFetcher: makePlanFetcherForPlan(plan),
   });
   return { engine, planRef, store };
 }
@@ -149,7 +176,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       idempotency,
       projector,
-      planFetcher: { fetch: async () => plan },
     });
 
     const { engine } = createWorkflowEngineFixture({
@@ -159,6 +185,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       observability: createNoopObservability(),
       adapters: makeProviderMap(mock),
+      planFetcher: makePlanFetcherForPlan(plan),
     });
 
     const runRef = await engine.startRun(planRef, makeCtx('run-2'));
@@ -196,14 +223,21 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     expect(() => policy.validateOrThrow('file:///etc/passwd')).toThrowError(PlanUriNotAllowedError);
   });
 
-  it('Plan integrity validation: sha256 mismatch fails', async () => {
+  it('Plan integrity validation: planId mismatch against fetched bytes fails', async () => {
     const plan = makeHelloWorldPlan();
     const uri = 'https://plans.example.com/bad.json';
-    const bytes = utf8(JSON.stringify(plan));
+    const tamperedPlan: ExecutionPlan = {
+      ...plan,
+      steps: [...plan.steps, { stepId: 's3', kind: 'noop', dependsOn: [] }],
+      metadata: {
+        ...plan.metadata,
+      },
+    };
+    const bytes = utf8(JSON.stringify(tamperedPlan));
 
     const badRef: PlanRef = {
       uri,
-      sha256: 'deadbeef',
+      sha256: sha256Hex(bytes),
       schemaVersion: plan.metadata.schemaVersion,
       planId: plan.metadata.planId,
       planVersion: plan.metadata.planVersion,
@@ -214,13 +248,13 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const integrity = new PlanIntegrityValidator();
 
     await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
-      /PLAN_INTEGRITY_VALIDATION_FAILED/
+      /PLAN_ID_MISMATCH/
     );
   });
 
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
     const startRunMock: IProviderAdapter['startRun'] = vi.fn(
-      async (_planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> => ({
+      async (_plan, _planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> => ({
         provider: 'conductor',
         tenantId: ctx.tenantId,
         workflowId: 'wf',
@@ -251,6 +285,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       observability: createNoopObservability(),
       adapters: makeProviderMap(adapter),
+      planFetcher,
     });
 
     const baseCtx: RunContext = {
@@ -288,6 +323,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     expect(startRunMock).not.toHaveBeenCalled();
     expect(planFetcher.fetch).not.toHaveBeenCalled();
 
-    // Integrity validation moved to adapters in this phase.
+    // Engine entry-point integrity now owns fetch/verify, but invalid plan refs still fail before fetch.
   });
 });

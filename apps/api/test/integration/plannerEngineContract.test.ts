@@ -119,7 +119,6 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     stateStoreWrite: store,
     clock,
     projector,
-    planFetcher: { fetch: async () => enginePlan },
   });
   const policy = new RunAccessPolicy({
     authorizer: new AllowAllAuthorizer(),
@@ -141,6 +140,9 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
       clock,
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
+      planFetcher: {
+        fetch: async () => Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+      },
     }),
     core: new WorkflowEngineCoreService({
       stateStoreRead: store,
@@ -159,6 +161,9 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     clock,
     observability: createNoopObservability(),
     adapters,
+    planFetcher: {
+      fetch: async () => Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+    },
   });
 
   return { engine, store, clock, idempotency };
@@ -281,7 +286,7 @@ describe('planner -> engine contract', () => {
     expect(indexOf('staging.orders') < indexOf('mart.revenue')).toBe(true);
     expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
-    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    const enginePlan: ExecutionPlan = plannerPlan;
     expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
     expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
@@ -437,11 +442,10 @@ describe('planner -> engine contract', () => {
       stateStoreWrite: store,
       clock,
       projector,
-      planFetcher: { fetch: async () => enginePlan },
     });
 
     const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
-    const runRef = await mock.startRun(planRef, makeResolvedRunContext('compat-run'));
+    const runRef = await mock.startRun(enginePlan, planRef, makeResolvedRunContext('compat-run'));
     expect(runRef.provider).toBe('mock');
   });
 

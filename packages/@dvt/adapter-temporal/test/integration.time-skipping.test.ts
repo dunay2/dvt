@@ -945,7 +945,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const runRef = await adapter.startRun(planRef, ctx);
+        const runRef = await adapter.startRun(plan, planRef, ctx);
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -1011,7 +1011,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1149,7 +1149,7 @@ describe('temporal integration (time-skipping)', () => {
 
       try {
         const runId = RunId.of('run-it-cancel-finalization-1');
-        const runRef = await adapter.startRun(planRef, createRunContext(runId));
+        const runRef = await adapter.startRun(plan, planRef, createRunContext(runId));
 
         await blocker.waitUntilExecuting;
         await adapter.cancelRun(runRef);
@@ -1219,7 +1219,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1292,7 +1292,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1376,7 +1376,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        await adapter.startRun(planRef, ctx);
+        await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -1443,7 +1443,7 @@ describe('temporal integration (time-skipping)', () => {
       await worker1.start(env.nativeConnection);
 
       try {
-        const _runRef = await adapter.startRun(planRef, ctx);
+        const _runRef = await adapter.startRun(plan, planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),

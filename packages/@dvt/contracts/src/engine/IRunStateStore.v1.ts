@@ -285,5 +285,5 @@ export interface IPlanFetcher {
 }
 
 export interface IPlanIntegrityValidator {
-  fetchAndValidate(planRef: PlanRef, fetcher: IPlanFetcher): Promise<Uint8Array>;
+  fetchAndValidate(planRef: PlanRef, fetcher: IPlanFetcher): Promise<ExecutionPlan>;
 }

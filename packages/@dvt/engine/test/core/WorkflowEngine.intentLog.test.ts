@@ -279,7 +279,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       [
         'temporal',
         makeTemporalAdapter({
-          async startRun(_planRef, ctx) {
+          async startRun(_plan, _planRef, ctx) {
             adapterCalled = true;
             return {
               provider: 'temporal',

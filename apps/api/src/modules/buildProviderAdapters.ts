@@ -1,7 +1,5 @@
-import type { PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
-  ExecutionPlan,
   IClock,
   IProviderAdapter,
   IRunStateStoreRead,
@@ -39,7 +37,6 @@ export async function buildProviderAdapters(
     clock: Pick<IClock, 'nowIsoUtc'>;
     projector: { rebuild(runId: string, events: unknown[]): unknown };
     observability: IObservability;
-    planFetcher?: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
   }
 ): Promise<BuildProviderAdaptersResult> {
   const { MockAdapter } = await import('@dvt/engine/testing');
@@ -48,7 +45,6 @@ export async function buildProviderAdapters(
     stateStoreWrite: deps.stateStoreWrite as never,
     clock: deps.clock as never,
     projector: deps.projector as never,
-    ...(deps.planFetcher !== undefined ? { planFetcher: deps.planFetcher as never } : {}),
   });
 
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);

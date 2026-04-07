@@ -2,8 +2,14 @@ import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
-import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
+import type {
+  IPlanFetcher,
+  IPlanIntegrityValidator,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+} from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
+import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { START_RUN_MESSAGE } from '../services/startRun/StartRunDomainConstants.js';
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
@@ -26,6 +32,8 @@ export interface StartRunApplicationServiceDeps {
   clock: IClock;
   intentStore: IStartRunIntentStore;
   observability: IObservability;
+  planFetcher: IPlanFetcher;
+  planIntegrityValidator?: IPlanIntegrityValidator;
   timeouts?: {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
@@ -40,6 +48,7 @@ export interface StartRunApplicationServiceDeps {
 export class StartRunApplicationService {
   private readonly failurePolicy: StartRunFailurePolicy;
   private readonly executionService: StartRunExecutionService;
+  private readonly planIntegrityValidator: IPlanIntegrityValidator;
 
   constructor(private readonly deps: StartRunApplicationServiceDeps) {
     const eventFactory = new StartRunEventFactory({
@@ -66,6 +75,7 @@ export class StartRunApplicationService {
       clock: deps.clock,
       ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
     });
+    this.planIntegrityValidator = deps.planIntegrityValidator ?? new PlanIntegrityValidator();
   }
 
   async startRun(
@@ -122,6 +132,10 @@ export class StartRunApplicationService {
   ): Promise<EngineRunRef> {
     await this.deps.guard.assertStartRunAllowed(planRef, resolvedContext);
     const adapter = this.deps.guard.resolveAdapter(planRef, resolvedContext);
+    const verifiedPlan = await this.planIntegrityValidator.fetchAndValidate(
+      planRef,
+      this.deps.planFetcher
+    );
 
     const intentId = await this.createStartRunIntent(
       resolvedContext,
@@ -131,6 +145,7 @@ export class StartRunApplicationService {
 
     return this.executionService.executeStartRun({
       adapter,
+      plan: verifiedPlan,
       planRef,
       resolvedContext,
       traceContext,
