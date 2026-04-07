@@ -28,12 +28,18 @@ mitigations:
     SignalTransitionGuard validates PAUSE/RESUME transitions without re-owning realized lifecycle
     emission.
   - >-
+    ADR-0047 explicitly governs runtime-owned realized lifecycle for pause/resume and sets the same
+    forward rule for future signal-driven lifecycle facts.
+  - >-
     Temporal runtime forwards signalId for PAUSE/RESUME and deduplicates processed control-signal
     ids across pause-resume cycles and continue-as-new rollover.
   - >-
     Engine and mock-runtime tests cover no-derive engine behavior and runtime-owned RunPaused and
     RunResumed emission, including stale signalId replay and repeated pause cycles in the same
     logical attempt.
+  - >-
+    Dedicated SignalTransitionGuard tests cover validation-only speculative pause/resume simulation
+    under the runtime-owned lifecycle model.
   - >-
     Adapter-temporal tests cover signalId forwarding, continue-as-new carry, and stale PAUSE replay
     after a pause-resume cycle.

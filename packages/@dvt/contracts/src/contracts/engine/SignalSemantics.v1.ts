@@ -25,6 +25,8 @@ export const SIGNAL_SEMANTICS_REGISTRY: Readonly<
 > = {
   '1.0.0': {
     version: '1.0.0',
+    // Runtime-owned realized lifecycle: the engine does not derive PAUSE/RESUME
+    // events from signal submission in the active semantics line.
     signalToEventType: {},
   },
 } as const;
