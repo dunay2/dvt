@@ -1,0 +1,28 @@
+---
+id: R-20260407-STATUS-HEAD-CONTRACT-CUTOVER
+title: Status-head contract cutover across adapter engine API web surfaces
+status: Open
+date: 2026-04-07
+owners:
+  - '@dvt/adapter-postgres'
+  - '@dvt/contracts'
+  - '@dvt/engine'
+  - 'dvt-api'
+  - '@dvt/web'
+severity: Medium
+probability: Medium
+---
+summary: >
+  Runtime status paths were changed in one slice across adapter, contracts, engine, API, and web. A
+  mismatch between status-head rollout assumptions and downstream consumers can reintroduce stale
+  status reads or contract drift.
+
+mitigations:
+  - Keep `pnpm verify:prepush` required for every follow-up commit in this lane.
+  - Maintain adapter and engine targeted vitest coverage for status projection paths.
+  - Keep ARC evidence and risk updates synchronized for subsequent contract-touching slices.
+
+signals:
+  - CI failures in adapter/contracts/engine suites.
+  - Regressions in run status payload shape at API/web boundaries.
+  - Read-path latency regressions tied to replay fallback in status hot path.
