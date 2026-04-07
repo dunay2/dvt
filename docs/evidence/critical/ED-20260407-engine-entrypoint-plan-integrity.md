@@ -15,6 +15,7 @@ code_refs:
   - packages/@dvt/engine/src/adapters/IProviderAdapter.ts
   - packages/@dvt/engine/src/security/planIntegrity.ts
   - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+  - packages/@dvt/adapter-temporal/src/config.ts
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
   - apps/api/src/application/services/StoredExecutablePlanResolver.ts
   - apps/api/src/application/services/WorkflowEngineFactory.ts
@@ -40,10 +41,14 @@ verification to engine entry-point verification before adapter dispatch.
 - The engine fetches the executable plan before dispatch.
 - The engine recomputes planner identity from the resolved plan and verifies it
   against `planId`.
+- The engine also verifies `sha256(bytes)` against `planRef.sha256` before
+  accepting the executable plan payload.
 - The adapter receives the verified plan object instead of owning fetch and
   verification itself.
 - Temporal workflow execution no longer depends on runtime plan fetch for the
   authoritative integrity check.
+- Temporal start rejects oversized serialized workflow payloads before calling
+  `workflowClient.start`.
 
 # Validation
 

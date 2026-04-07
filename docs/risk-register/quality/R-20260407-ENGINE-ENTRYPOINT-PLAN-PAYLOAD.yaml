@@ -20,5 +20,6 @@ triggers:
   - degraded workflow startup or continueAsNew cadence under wide DAG payloads
 mitigations:
   - Keep continueAsNew thresholds explicit in Temporal runtime docs.
+  - Reject oversized workflow-start payloads in the Temporal adapter before provider dispatch.
   - Monitor payload size and startup latency on Temporal-backed runs.
   - Consider plan-size guardrails or alternate transport if large-plan evidence appears.
