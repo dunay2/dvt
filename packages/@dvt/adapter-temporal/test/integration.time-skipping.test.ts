@@ -725,8 +725,7 @@ async function waitForTerminalStatus(
 interface CancelScenarioRequest {
   mode: 'signal' | 'cancel';
   adapter: TemporalAdapter;
-  planId: string;
-  planBytes: Uint8Array;
+  planRef: PlanRef;
   runId: RunId;
   store: TestStateStore;
   waitForCondition: WaitForConditionFn;
@@ -738,7 +737,7 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   eventTypes: string[];
 }> {
   const runCtx = createRunContext(args.runId);
-  const runRef = await args.adapter.startRun(createPlanRef(args.planId, args.planBytes), runCtx);
+  const runRef = await args.adapter.startRun({ ...args.planRef }, runCtx);
   await args.waitForCondition(
     () => args.store.listRunEvents(args.runId),
     (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -1074,8 +1073,7 @@ describe('temporal integration (time-skipping)', () => {
         const signalResult = await runCancelScenario({
           mode: 'signal',
           adapter,
-          planId: 'it-plan',
-          planBytes,
+          planRef: createPlanRef('it-plan', planBytes),
           runId: RunId.of('run-it-cancel-1'),
           store,
           waitForCondition,
@@ -1090,8 +1088,7 @@ describe('temporal integration (time-skipping)', () => {
         const cancelResult = await runCancelScenario({
           mode: 'cancel',
           adapter,
-          planId: 'it-plan',
-          planBytes,
+          planRef: createPlanRef('it-plan', planBytes),
           runId: RunId.of('run-it-cancel-2'),
           store,
           waitForCondition,
