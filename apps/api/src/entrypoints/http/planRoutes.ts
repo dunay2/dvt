@@ -281,9 +281,9 @@ function isPlanOwnedByScope(
   );
 }
 
-function mapManifestResolutionFailure(error: unknown):
-  | ReturnType<typeof createHttpErrorResponse>
-  | null {
+function mapManifestResolutionFailure(
+  error: unknown
+): ReturnType<typeof createHttpErrorResponse> | null {
   if (!isManifestArtifactResolutionError(error)) {
     return null;
   }
