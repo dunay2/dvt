@@ -65,7 +65,7 @@
     "logicalAttemptId": {
       "type": "integer",
       "minimum": 1,
-      "description": "Business-level attempt counter (increments on RETRY_STEP signal)"
+      "description": "Business-level attempt counter (increments on a new logical step attempt)"
     },
     "engineAttemptId": {
       "type": "integer",

@@ -1,0 +1,29 @@
+---
+id: R-20260407-RETRY-STEP-SIGNAL-DRIFT
+title: Active docs or consumers may continue treating RETRY_STEP as a canonical signal
+status: Open
+date: 2026-04-07
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+severity: Medium
+probability: Low
+context: >
+  The repository historically exposed RETRY_STEP through canonical SignalType even though the
+  shipped product did not implement step-scoped retry as a real signal. This slice narrows the
+  contract and formalizes step retry as a future dedicated engine use case under ADR-0048.
+risk: >
+  If active docs, downstream consumers, or future adapter work keep assuming RETRY_STEP belongs to
+  the generic signal boundary, they can reintroduce stale bindings, false product expectations, or a
+  dual-boundary design where step retry semantics drift by provider.
+mitigations:
+  - 'ADR-0048 explicitly removes RETRY_STEP from canonical SignalType.'
+  - 'SignalType and SignalRequest schema validation now reject RETRY_STEP.'
+  - 'TemporalAdapter.signal no longer advertises a RETRY_STEP branch.'
+  - 'Signal idempotency docs and vectors were narrowed to the current canonical signal set.'
+  - 'Active engine contract docs now point future step retry to a dedicated use case boundary.'
+  - 'Contracts and engine tests cover RETRY_STEP rejection and the updated signal idempotency
+    vectors.'
+  - 'Planning state tracks WE-HX-4-C as in progress until RETRY_RUN ownership is also resolved.'
+review_after: 2026-05-31
+---

@@ -14,7 +14,6 @@ export const WorkflowSignals = {
   PAUSE: 'pause',
   RESUME: 'resume',
   CANCEL: 'cancel',
-  RETRY_STEP: 'retry_step',
   RETRY_RUN: 'retry_run',
 } as const;
 

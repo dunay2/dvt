@@ -25,7 +25,6 @@ describe('SignalSemantics contract', () => {
 
   it('returns null for adapter-owned signals with no engine-derived event', () => {
     expect(getSignalDerivedEventType('CANCEL')).toBeNull();
-    expect(getSignalDerivedEventType('RETRY_STEP')).toBeNull();
     expect(getSignalDerivedEventType('RETRY_RUN')).toBeNull();
   });
 });

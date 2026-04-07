@@ -22,6 +22,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260405 Admin Rebuild And Plan Store Alignment](ED-20260405-admin-rebuild-and-plan-store-alignment.md)
 - [ED 20260405 Workflow Snapshot Schema Versioning](ED-20260405-workflow-snapshot-schema-versioning.md)
 - [ED 20260407 Execution Plan And Run Execution Policy Separation](ED-20260407-execution-plan-and-run-execution-policy-separation.md)
+- [ED 20260407 Retry Step Boundary Narrowing](ED-20260407-retry-step-boundary-narrowing.md)
 - [ED 20260407 Signal Semantics Contract Versioning](ED-20260407-signal-semantics-contract-versioning.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)

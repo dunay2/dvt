@@ -1,5 +1,9 @@
 # Execution Semantics Contract (Normative v1)
 
+> Historical note: references in this v1 surface to a `RETRY_STEP` signal are
+> superseded by [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
+> The current canonical signal boundary no longer includes `RETRY_STEP`.
+
 [← Back to Contracts Registry](../README.md)
 
 **Status**: DRAFT  
@@ -189,8 +193,8 @@ stateDiagram-v2
 
 - `RETRY_RUN` creates a new `runId` and consumes the next `logicalAttemptId`
   in the recovery chain.
-- `RETRY_STEP` remains unsupported in the current runtime and requires a
-  separate ADR for partial-execution semantics.
+- Step-scoped retry is not part of canonical `SignalType`; a dedicated
+  step-retry use case requires its own ADR and contract surface.
 - Provider-native retries MUST keep the same `logicalAttemptId` and MUST NOT
   emit extra logical lifecycle events for the same attempt.
 
@@ -230,7 +234,7 @@ stateDiagram-v2
     RUNNING --> SUCCESS: StepCompleted
     RUNNING --> FAILED: StepFailed
     PENDING --> SKIPPED: StepSkipped
-    FAILED --> PENDING: RETRY_STEP signal\n(increments logicalAttemptId)
+    FAILED --> PENDING: dedicated step retry use case\n(increments logicalAttemptId)
 
     note right of FAILED
         Failed attempts remain immutable
@@ -238,7 +242,7 @@ stateDiagram-v2
     end note
 
     note right of PENDING
-        RETRY_STEP creates a NEW
+        Dedicated step retry creates a NEW
         logical attempt (new logicalAttemptId)
     end note
 ```
@@ -247,7 +251,7 @@ stateDiagram-v2
 
 1. A step attempt MUST be in `PENDING` state before its first `StepStarted` event.
 2. `StepCompleted` / `StepFailed` events MUST NOT be emitted unless the attempt is in `RUNNING` state.
-3. `RETRY_STEP` signal creates a NEW logical attempt (increments `logicalAttemptId`); it does NOT mutate the failed attempt.
+3. A dedicated step-retry use case creates a NEW logical attempt (increments `logicalAttemptId`); it does NOT mutate the failed attempt.
 4. Failed attempts remain **immutable** in the log and snapshots (audit trail).
 5. `StepSkipped` MAY transition from `PENDING` state (conditional logic, dependency failure, or operator signal).
 

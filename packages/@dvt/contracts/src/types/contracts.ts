@@ -161,12 +161,11 @@ export type EngineRunRef =
       runId: string;
     };
 
-export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_STEP' | 'RETRY_RUN';
+export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_RUN';
 
 export interface SignalRequest {
   signalId: string; // caller-provided idempotency id
   type: SignalType;
-  stepId?: string;
   reason?: string;
   requestedAt?: IsoUtcString;
 }

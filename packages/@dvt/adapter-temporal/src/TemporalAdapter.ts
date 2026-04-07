@@ -175,9 +175,10 @@ export class TemporalAdapter implements IProviderAdapter {
       case 'CANCEL':
         await workflow.signal(WorkflowSignals.CANCEL, validatedRequest.reason);
         return;
-      case 'RETRY_STEP':
       case 'RETRY_RUN':
-        throw new Error('NotImplemented: RETRY_* signals are Phase 2');
+        throw new Error(
+          'NotImplemented: RETRY_RUN signal remains unsupported in provider signal()'
+        );
       default: {
         throw new Error(`Unknown signal type: ${String(validatedRequest.type)}`);
       }

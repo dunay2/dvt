@@ -292,7 +292,7 @@ All events MUST include these identifiers for traceability:
   - Increments on: workflow restart, worker crash recovery, continue-as-new
   - Used for: debugging, infra failure detection, cost attribution
 - **`logicalAttemptId`**: Logical attempt counter (step/run retries per planner policy)
-  - Increments on: explicit RETRY_STEP signal, automatic retry per plan policy
+  - Increments on: a new logical step attempt, automatic retry per plan policy
   - Used for: deterministic replay, idempotency key generation, user-visible attempt count
 
 **Semantic difference**:

@@ -7,7 +7,7 @@
 **Stability**: Contracts — breaking changes require version bump  
 **Consumers**: Engine, Authorization Service, Audit Systems, UI  
 **Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)  
-**References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
+**References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
 
 **Version alignment**: Contract v1 aligns with parent IWorkflowEngine.v1 and ExecutionSemantics.v1.
 
@@ -26,19 +26,18 @@ Signals are **operator actions** routed to the engine and **ALWAYS enforced by `
 - `UPDATE_TARGET`
 - `EMERGENCY_STOP`
 
-| SignalType        | Payload                                   | RBAC Role | Destructive? | Effect                                          | Status                         |
-| ----------------- | ----------------------------------------- | --------- | ------------ | ----------------------------------------------- | ------------------------------ |
-| `PAUSE`           | `{ reason?: string }`                     | Operator  | No           | Pauses future step scheduling                   | ✅ Phase 1                     |
-| `RESUME`          | `{}`                                      | Operator  | No           | Resumes paused run                              | ✅ Phase 1                     |
-| `CANCEL`          | `{ reason?: string }`                     | Operator  | No           | Cancels run → terminal state `CANCELLED`        | ✅ Phase 1                     |
-| `RETRY_STEP`      | `{ stepId, force?: boolean }`             | Engineer  | No           | Reserved for future partial-execution semantics | Deferred                       |
-| `RETRY_RUN`       | `{ reason?: string, force?: boolean }`    | Engineer  | No           | Re-executes run as a new run                    | ✅ Engine/Application recovery |
-| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**      | Updates runtime parameters                      | ✅ Phase 1                     |
-| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**      | Injects override for next step                  | ✅ Phase 1                     |
-| `ESCALATE_ALERT`  | `{ level: AlertLevel, note?: string }`    | System    | No           | Emits escalation audit event                    | ✅ Phase 1                     |
-| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No           | Skips a step                                    | ⏳ Phase 2                     |
-| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**      | Changes target schema/db                        | ✅ Phase 1                     |
-| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**      | Immediate termination                           | ⏳ Phase 3                     |
+| SignalType        | Payload                                   | RBAC Role | Destructive? | Effect                                   | Status                         |
+| ----------------- | ----------------------------------------- | --------- | ------------ | ---------------------------------------- | ------------------------------ |
+| `PAUSE`           | `{ reason?: string }`                     | Operator  | No           | Pauses future step scheduling            | ✅ Phase 1                     |
+| `RESUME`          | `{}`                                      | Operator  | No           | Resumes paused run                       | ✅ Phase 1                     |
+| `CANCEL`          | `{ reason?: string }`                     | Operator  | No           | Cancels run → terminal state `CANCELLED` | ✅ Phase 1                     |
+| `RETRY_RUN`       | `{ reason?: string, force?: boolean }`    | Engineer  | No           | Re-executes run as a new run             | ✅ Engine/Application recovery |
+| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**      | Updates runtime parameters               | ✅ Phase 1                     |
+| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**      | Injects override for next step           | ✅ Phase 1                     |
+| `ESCALATE_ALERT`  | `{ level: AlertLevel, note?: string }`    | System    | No           | Emits escalation audit event             | ✅ Phase 1                     |
+| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No           | Skips a step                             | ⏳ Phase 2                     |
+| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**      | Changes target schema/db                 | ✅ Phase 1                     |
+| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**      | Immediate termination                    | ⏳ Phase 3                     |
 
 #### 1.1.1 CANCEL vs EMERGENCY_STOP (NORMATIVE)
 
@@ -57,7 +56,16 @@ Signals are **operator actions** routed to the engine and **ALWAYS enforced by `
 - Adapters MUST NOT implement `RETRY_RUN` by mutating the original provider run.
 - Provider-native technical retries MUST NOT consume `RETRY_RUN` business budget.
 
-#### 1.1.3 Alert levels (NORMATIVE)
+#### 1.1.3 RETRY_STEP boundary (NORMATIVE)
+
+- `RETRY_STEP` is NOT part of the canonical `SignalType` contract.
+- Step-scoped retry requires a dedicated engine or application use case rather
+  than `signal(..., { type: 'RETRY_STEP' })`.
+- Future step retry MUST NOT be introduced by silently widening the generic
+  signal boundary.
+- See [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
+
+#### 1.1.4 Alert levels (NORMATIVE)
 
 ```ts
 type AlertLevel = 'INFO' | 'WARNING' | 'CRITICAL' | 'P1';
@@ -74,7 +82,6 @@ type AlertLevel = 'INFO' | 'WARNING' | 'CRITICAL' | 'P1';
 
 Signals are processed in the order they are received (best-effort). The engine MUST enforce step-state constraints:
 
-- Current runtime scope: `RETRY_STEP` is deferred and MUST be rejected as not implemented until a separate partial-execution ADR is accepted.
 - `SKIP_STEP` sent to a step in `COMPLETED` or `FAILED` MUST be rejected with `STEP_TERMINAL`.
 - Signals sent to a **terminal run** MUST be rejected with `RUN_TERMINAL`, except `ESCALATE_ALERT` which MAY be allowed if it does not mutate run state (adapter MUST document behavior).
 
@@ -89,7 +96,6 @@ Each signal payload MUST conform to its schema. Invalid payloads MUST be rejecte
 | `PAUSE`           | [schemas/signal/Pause.v1.json](../../schemas/signal/Pause.v1.json)                   |
 | `RESUME`          | [schemas/signal/Resume.v1.json](../../schemas/signal/Resume.v1.json)                 |
 | `CANCEL`          | [schemas/signal/Cancel.v1.json](../../schemas/signal/Cancel.v1.json)                 |
-| `RETRY_STEP`      | [schemas/signal/RetryStep.v1.json](../../schemas/signal/RetryStep.v1.json)           |
 | `RETRY_RUN`       | [schemas/signal/RetryRun.v1.json](../../schemas/signal/RetryRun.v1.json)             |
 | `UPDATE_PARAMS`   | [schemas/signal/UpdateParams.v1.json](../../schemas/signal/UpdateParams.v1.json)     |
 | `INJECT_OVERRIDE` | [schemas/signal/InjectOverride.v1.json](../../schemas/signal/InjectOverride.v1.json) |
@@ -228,7 +234,7 @@ interface IAuthorization {
 | Role       | Allowed Signals                                                                       |
 | ---------- | ------------------------------------------------------------------------------------- |
 | `Operator` | `PAUSE`, `RESUME`, `CANCEL`                                                           |
-| `Engineer` | `RETRY_STEP`, `RETRY_RUN`, `SKIP_STEP` (+ all Operator signals)                       |
+| `Engineer` | `RETRY_RUN`, `SKIP_STEP` (+ all Operator signals)                                     |
 | `Admin`    | `UPDATE_PARAMS`, `INJECT_OVERRIDE`, `UPDATE_TARGET`, `EMERGENCY_STOP` (+ all signals) |
 | `System`   | `ESCALATE_ALERT` (automated escalation only)                                          |
 

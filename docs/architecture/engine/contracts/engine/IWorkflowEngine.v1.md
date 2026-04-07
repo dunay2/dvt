@@ -1,5 +1,9 @@
 # IWorkflowEngine Contract (Normative v1)
 
+> Historical note: references in this v1 surface to `retryStep` as a signal are
+> superseded by [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
+> The current canonical signal boundary no longer includes `RETRY_STEP`.
+
 [← Back to Contracts Registry](../README.md)
 
 **Status**: DRAFT  
@@ -26,7 +30,7 @@ This baseline is intentionally small and normative for the blocked base-contract
 - Start a run from a validated plan reference.
 - Cancel a run.
 - Return run status.
-- Accept runtime signals (`pause`, `resume`, `retryStep`).
+- Accept runtime signals (`PAUSE`, `RESUME`, `CANCEL`, `RETRY_RUN`).
 - Emit run and step lifecycle events through the event pipeline.
 - Include correlation identifiers on operations/events: `tenantId`, `projectId`, `environmentId`, `runId`.
 
@@ -172,19 +176,19 @@ Idempotency rule (normative):
 ## 6) Signals Baseline
 
 ```ts
-type SignalType = 'pause' | 'resume' | 'retryStep';
+type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_RUN';
 
 interface SignalRequest {
   signalId: string;
   type: SignalType;
-  stepId?: string; // required for retryStep
   reason?: string;
 }
 ```
 
 Rules:
 
-- `retryStep` MUST include `stepId`.
+- `RETRY_STEP` is not part of canonical `SignalType`; future step retry
+  requires a dedicated use case per ADR-0048.
 - Signal operations MUST be tenant-authorized before execution.
 - Signal idempotency key MUST include `(tenantId, runId, signalId)`.
 

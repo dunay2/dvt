@@ -5,7 +5,7 @@
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: Planner, State, UI, adapter implementers  
 **Sub-Contracts**: [RunEvents.v2.0.md](./RunEvents.v2.0.md), SignalsAndAuth v1.1 (pending publication), [ExecutionSemantics.v2.0.md](./ExecutionSemantics.v2.0.md)
-**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md), [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
 
 ---
 
@@ -39,6 +39,10 @@ interface IWorkflowEngine {
 ```
 
 `startRun` MUST accept `PlanRef` (not full `ExecutionPlan`) in normative production mode.
+
+`signal(...)` is the canonical run-control boundary. `RETRY_STEP` is not part
+of that boundary; step-scoped retry requires a dedicated use case per
+[ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
 
 For the current end-to-end `startRun()` protocol, including admission,
 integrity verification, intent logging, dispatch, bootstrap, and compensation,

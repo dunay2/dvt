@@ -81,6 +81,15 @@ describe('contracts: validation helpers', () => {
     expect(response.details[0]?.message).toBe('Unknown validation error');
   });
 
+  it('rejects RETRY_STEP because it is no longer part of canonical SignalType', () => {
+    expect(() =>
+      parseSignalRequest({
+        signalId: 'sig-retry-step-1',
+        type: 'RETRY_STEP',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunContext with valid provider', () => {
     const ctx = parseRunContext({
       tenantId: 'tenant-a',
