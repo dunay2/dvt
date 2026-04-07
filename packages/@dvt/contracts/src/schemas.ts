@@ -593,9 +593,65 @@ export const PlannerBuildResultV1Schema = z
   .object({
     plan: ExecutionPlanSchema,
     executionPolicy: RunExecutionPolicySchema,
-    canonicalPlanJson: z.string().min(1),
+    canonicalPlanCoreJson: NonBlankStringSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((result, ctx) => {
+    let canonicalPlanCoreInput: unknown;
+
+    try {
+      canonicalPlanCoreInput = JSON.parse(result.canonicalPlanCoreJson);
+    } catch {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanCoreJson'],
+        message: 'canonicalPlanCoreJson must contain valid JSON',
+      });
+      return;
+    }
+
+    const canonicalPlanCoreResult = PlanCoreSchema.safeParse(canonicalPlanCoreInput);
+    if (!canonicalPlanCoreResult.success) {
+      for (const issue of canonicalPlanCoreResult.error.issues) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['canonicalPlanCoreJson', ...issue.path],
+          message: issue.message,
+        });
+      }
+      return;
+    }
+
+    const expectedPlanCore = {
+      metadata: {
+        planVersion: result.plan.metadata.planVersion,
+        inputHashSha256: result.plan.metadata.inputHashSha256,
+      },
+      steps: result.plan.steps,
+    } satisfies PlanCore;
+
+    if (
+      JSON.stringify(canonicalPlanCoreResult.data.metadata) !==
+      JSON.stringify(expectedPlanCore.metadata)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanCoreJson', 'metadata'],
+        message:
+          'canonicalPlanCoreJson.metadata must match plan.metadata.{planVersion,inputHashSha256}',
+      });
+    }
+
+    if (
+      JSON.stringify(canonicalPlanCoreResult.data.steps) !== JSON.stringify(expectedPlanCore.steps)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanCoreJson', 'steps'],
+        message: 'canonicalPlanCoreJson.steps must match plan.steps',
+      });
+    }
+  });
 
 export const PlanRecordStateSchema = z.enum(['ACTIVE', 'SUPERSEDED', 'ARCHIVED']);
 const PlanRecordCommonSchema = z

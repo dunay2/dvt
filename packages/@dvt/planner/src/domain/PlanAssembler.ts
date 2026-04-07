@@ -3,7 +3,7 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → AssemblePlanCommand (input VO)
- *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanJson: string }
+ *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanCoreJson: string }
  *
  *  SRP: sole responsibility — hash inputs, assemble the immutable ExecutionPlan,
  *       attach observability layers. Knows nothing about graph topology or node selection.
@@ -39,7 +39,7 @@ export class PlanAssembler {
   async execute(command: AssemblePlanCommand): Promise<{
     plan: ExecutionPlan;
     executionPolicy: RunExecutionPolicy;
-    canonicalPlanJson: string;
+    canonicalPlanCoreJson: string;
   }> {
     const inputHashSha256 = await this.computeInputHash(command.normalizedInput);
     const pluginCompatibilityFingerprint = await this.computePluginCompatibilityFingerprint(
@@ -48,7 +48,7 @@ export class PlanAssembler {
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
     const {
-      canonical: canonicalPlanJson,
+      canonical: canonicalPlanCoreJson,
       sha256: planId,
       bytes,
     } = await sha256CanonicalJson(planCore);
@@ -64,7 +64,7 @@ export class PlanAssembler {
         pluginCompatibilityFingerprint,
         command.requiredCapabilities
       ),
-      canonicalPlanJson,
+      canonicalPlanCoreJson,
     };
   }
 

@@ -152,9 +152,26 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     );
   });
 
-  it('valida schema de PlannerBuildResultV1 con canonicalPlanJson', () => {
+  it('valida schema de PlannerBuildResultV1 con canonicalPlanCoreJson', () => {
     const result = PlannerBuildResultV1Schema.parse(VALID_PLANNER_BUILD_RESULT_V2_FIXTURE);
     expect(result.executionPolicy.requiresCapabilities).toEqual(['basic-execution']);
-    expect(result.canonicalPlanJson).toContain(`"planVersion":"${CURRENT_EXECUTION_PLAN_VERSION}"`);
+    expect(result.canonicalPlanCoreJson).toContain(
+      `"planVersion":"${CURRENT_EXECUTION_PLAN_VERSION}"`
+    );
+  });
+
+  it('rechaza PlannerBuildResultV1 cuando canonicalPlanCoreJson no coincide con plan', () => {
+    const result = PlannerBuildResultV1Schema.safeParse({
+      ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+      canonicalPlanCoreJson: JSON.stringify({
+        metadata: {
+          planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+          inputHashSha256: 'c'.repeat(64),
+        },
+        steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+      }),
+    });
+
+    expect(result.success).toBe(false);
   });
 });

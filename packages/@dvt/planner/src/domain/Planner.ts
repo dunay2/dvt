@@ -3,7 +3,7 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → BuildPlanCommand (input VO) + Planner.execute()
- *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanJson: string }
+ *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanCoreJson: string }
  *
  *  Delegated sub-responsibilities (SRP):
  *   - InputEnvelopeValidator → validates shape of the input envelope
@@ -77,7 +77,8 @@ export interface PlannerOptions {
  *
  * Guarantees:
  * - planId = sha256(JCS(planCore)), where planCore = { metadata: { planVersion, inputHashSha256 }, steps }
- * - canonicalPlanJson = JCS(planCore), i.e. caller can verify sha256(canonicalPlanJson) === planId
+ * - canonicalPlanCoreJson = JCS(planCore), i.e. caller can verify
+ *   sha256(canonicalPlanCoreJson) === planId
  * - inputHashSha256 = sha256(JCS({ nodes, selection, policies })) excluding observability and volatile fields
  * - Same semantic input -> same planId across Node/Bun/Deno
  */
@@ -104,7 +105,7 @@ export class Planner {
   execute(command: BuildPlanCommand): Promise<{
     plan: ExecutionPlan;
     executionPolicy: import('@dvt/contracts').RunExecutionPolicy;
-    canonicalPlanJson: string;
+    canonicalPlanCoreJson: string;
   }> {
     return this.buildPlan(command.input);
   }
@@ -116,7 +117,7 @@ export class Planner {
   public async buildPlan(input: PlannerInputEnvelopeV1): Promise<{
     plan: ExecutionPlan;
     executionPolicy: import('@dvt/contracts').RunExecutionPolicy;
-    canonicalPlanJson: string;
+    canonicalPlanCoreJson: string;
   }> {
     const started = nowMs();
     try {

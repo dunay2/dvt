@@ -117,8 +117,8 @@ The planner must emit the canonical contract directly.
 
 - `schemaVersion`, `contractVersion`, and `createdAtIso` are emitted on the
   final plan metadata.
-- `planId` and `canonicalPlanJson` semantics remain unchanged and continue to be
-  derived only from `PlanCore`.
+- `planId` and `canonicalPlanCoreJson` semantics remain unchanged and continue
+  to be derived only from `PlanCore`.
 - `schemaVersion`, `contractVersion`, and `createdAtIso` do not participate in
   the plan hash.
 
@@ -199,7 +199,7 @@ consumers read the same public plan shape while those semantics are applied.
 - `IRunStateStore.v1.ts` exposes the canonical `ExecutionPlan` by alias.
 - `packages/@dvt/engine/src/contracts/executionPlan.ts` is a pure re-export
   compatibility layer.
-- Planner determinism tests prove `canonicalPlanJson` still excludes
+- Planner determinism tests prove `canonicalPlanCoreJson` still excludes
   `planId`, `createdAtIso`, `schemaVersion`, and `contractVersion`.
 - API integration tests assert direct canonical planner-to-engine compatibility
   without bridge reshaping.

@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-07
 planning_type: review
 ---
 
@@ -62,6 +62,15 @@ Additional active rationale:
   - linkage: `none`
   - status: `reference`
   - progress: `n/a`
+
+Additional active QA:
+
+- [20260407 Execution plan and policy hard QA review](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for the plan-definition vs execution-policy slice
+  - linkage: `QA-EP-1..QA-EP-4`
+  - status: `done`
+  - progress: `100%`
 
 ## Newly Classified Review
 

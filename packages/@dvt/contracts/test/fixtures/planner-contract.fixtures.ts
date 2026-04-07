@@ -120,7 +120,7 @@ export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
     pluginCompatibilityFingerprint: HEX_64_A,
     requiresCapabilities: ['basic-execution'],
   },
-  canonicalPlanJson: JSON.stringify({
+  canonicalPlanCoreJson: JSON.stringify({
     metadata: {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,
       inputHashSha256: HEX_64_A,

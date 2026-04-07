@@ -52,7 +52,7 @@ flowchart LR
   Planner --> Selector["NodeSelector"]
   Planner --> Assembler["PlanAssembler"]
   Planner --> Registry["IStepTypeRegistry"]
-  Assembler --> Plan["ExecutionPlan + canonicalPlanJson"]
+  Assembler --> Plan["ExecutionPlan + canonicalPlanCoreJson"]
 ```
 
 ## Primary code anchors

@@ -178,5 +178,5 @@ export interface PlannerInputEnvelopeV1 {
 export interface PlannerBuildResultV1 {
   plan: ExecutionPlan;
   executionPolicy: RunExecutionPolicy;
-  canonicalPlanJson: string;
+  canonicalPlanCoreJson: string;
 }

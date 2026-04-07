@@ -190,7 +190,7 @@ sequenceDiagram
   Planner->>Registry: validate per-kind config when registry knows the kind
   Registry-->>Planner: success or failure
   Planner->>Assembler: assemble canonical plan
-  Assembler-->>Caller: ExecutionPlan + canonicalPlanJson
+  Assembler-->>Caller: ExecutionPlan + canonicalPlanCoreJson
 ```
 
 ### Procedure 2: Ref-based generic graph source
@@ -209,7 +209,7 @@ sequenceDiagram
   Facade->>Validator: parse and validate resolved source
   Validator-->>Facade: GenericGraphSourceV1
   Facade->>Planner: buildPlan(domainInput)
-  Planner-->>Caller: ExecutionPlan + canonicalPlanJson
+  Planner-->>Caller: ExecutionPlan + canonicalPlanCoreJson
 ```
 
 Status: planned target path. The current implementation still resolves
@@ -282,7 +282,7 @@ Status: planned target path. The current implementation still resolves
 ### Determinism tests
 
 - same generic graph with different node array order yields the same
-  `canonicalPlanJson`
+  `canonicalPlanCoreJson`
 - same dbt manifest content with different raw key ordering yields the same
   normalized graph source
 - graph-source provenance-only differences (`sourceFamily`, `sourceVersion`,

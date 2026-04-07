@@ -88,10 +88,13 @@ The planner now publishes:
 
 - `plan: ExecutionPlan`
 - `executionPolicy: RunExecutionPolicy`
-- `canonicalPlanJson`
+- `canonicalPlanCoreJson`
 
-This preserves one canonical plan artifact while separating the engine-owned
-execution policy boundary.
+`canonicalPlanCoreJson` is `JCS(planCore)` and exists only to prove
+`sha256(canonicalPlanCoreJson) === plan.metadata.planId`.
+
+This preserves one persisted canonical plan artifact while separating the
+engine-owned execution policy boundary.
 
 ### 5. `PlanRef` is plan identity and integrity only
 
@@ -111,6 +114,8 @@ Per `ADR-0043`, the persisted canonical plan artifact remains singular.
 - `canonicalPlanJson` continues to store the canonical `ExecutionPlan`
 - `RunExecutionPolicy` is stored as sidecar execution metadata, not as a second
   canonical plan artifact
+- `canonicalPlanCoreJson` is planner-side hash evidence, not a second persisted
+  plan artifact
 
 This ADR does not introduce dual first-class plan payloads.
 

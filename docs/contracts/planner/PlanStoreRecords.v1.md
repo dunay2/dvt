@@ -33,8 +33,11 @@ runtime behavior ports remain owned by `@dvt/artifacts` under `ADR-0043`.
 ### `PlanRecord`
 
 `PlanRecord` is the single persisted canonical plan artifact. It stores the
-planner-emitted `ExecutionPlan` JSON in `canonicalPlanJson` and repeats query
-keys at the top level for storage and lookup.
+persisted canonical `ExecutionPlan` JSON in `canonicalPlanJson` and repeats
+query keys at the top level for storage and lookup.
+
+This field is distinct from planner-side `canonicalPlanCoreJson`, which is only
+`JCS(planCore)` used to prove `planId`.
 
 Invariants:
 
