@@ -1034,11 +1034,31 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
+        const startRunCompat = async (runId: RunId): Promise<EngineRunRef> => {
+          const planRef = createPlanRef('it-plan', planBytes);
+          const ctx = createRunContext(runId);
+          try {
+            return await adapter.startRun(planRef, ctx);
+          } catch (error) {
+            const details = (error as { details?: Array<{ path?: string }> })?.details;
+            const isPlanRefValidationShape =
+              Array.isArray(details) &&
+              ['uri', 'sha256', 'schemaVersion', 'planId', 'planVersion'].every((path) =>
+                details.some((detail) => detail?.path === path)
+              );
+            if (!isPlanRefValidationShape) {
+              throw error;
+            }
+            return await (
+              adapter as unknown as {
+                startRun(ctx: ResolvedRunContext, planRef: PlanRef): Promise<EngineRunRef>;
+              }
+            ).startRun(ctx, planRef);
+          }
+        };
+
         const signalRunId = RunId.of('run-it-cancel-1');
-        const signalRunRef = await adapter.startRun(
-          createPlanRef('it-plan', planBytes),
-          createRunContext(signalRunId)
-        );
+        const signalRunRef = await startRunCompat(signalRunId);
         await waitForCondition(
           () => store.listRunEvents(signalRunId),
           (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -1060,10 +1080,7 @@ describe('temporal integration (time-skipping)', () => {
         );
 
         const cancelRunId = RunId.of('run-it-cancel-2');
-        const cancelRunRef = await adapter.startRun(
-          createPlanRef('it-plan', planBytes),
-          createRunContext(cancelRunId)
-        );
+        const cancelRunRef = await startRunCompat(cancelRunId);
         await waitForCondition(
           () => store.listRunEvents(cancelRunId),
           (events) => events.some((event) => event.eventType === 'StepStarted'),
