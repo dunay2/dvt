@@ -45,7 +45,13 @@ const BASE_CTX: ResolvedRunContext = {
   originRunId: 'run-1',
 };
 
-function makeAdapter(configOverrides: Partial<typeof BASE_CONFIG> = {}) {
+function makeAdapter(configOverrides: Partial<typeof BASE_CONFIG> = {}): {
+  adapter: TemporalAdapter;
+  workflowClient: {
+    start: ReturnType<typeof vi.fn>;
+    getHandle: ReturnType<typeof vi.fn>;
+  };
+} {
   const workflowClient = {
     start: vi.fn(async () => ({
       workflowId: 'run-1',
