@@ -248,20 +248,23 @@ tasks:
       of direct mode or service factory ownership from route-level view code.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 60
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
+      - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
     status_reason: >-
-      The F-04 plan and architecture pack are now explicit and linked to Lane E; implementation
-      remains intentionally paused until TDD-first scaffolding is in place for D/E/F.
+      TDD-first implementation is now active: the composition root was extracted into a dedicated
+      module, `SessionContextPort` and `ShellFeedbackPort` were formalized, and `Canvas`/`Runs`
+      route seams now consume composition-owned accessors instead of hidden runtime globals.
+      `CapabilitiesPort` formalization and the remaining route/query cleanup still keep F-04 open.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
       - frontend docs and roadmap entrypoints link to canonical F-04 pack
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-A
     parent_task: F-04
     priority: P0
@@ -344,7 +347,7 @@ tasks:
   - task_id: F-04-D
     parent_task: F-04
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       define explicit frontend ports and split hybrid service surfaces into domain ports, adapters,
       and mapping boundaries.
@@ -354,23 +357,31 @@ tasks:
       consumed by application facades rather than by route-local service factories.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 45
     evidence_refs:
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+      - apps/web/src/app/ports/sessionContext.ts
+      - apps/web/src/app/ports/shellFeedback.ts
+      - apps/web/src/app/services/runs/runsService.api.ts
+      - apps/web/src/app/services/runs/runsService.mock.ts
+      - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
     status_reason: >-
-      Port model is documented but implementation split has not been completed yet.
+      `SessionContextPort` and `ShellFeedbackPort` now exist as explicit runtime seams and the Runs
+      adapters consume injected session context rather than reading hidden globals directly. The
+      broader `CapabilitiesPort` formalization and the remaining adapter parity work are still open
+      before F-04-D can move to review.
     definition_of_done:
       - named ports exist and are typed in frontend domain/application layers
       - api and mock adapters implement the same port contracts
       - route-level code depends on facades or hooks, not adapter factories
       - failing port/adapter tests are introduced before implementation (TDD red phase)
       - tests pass after implementation and refactor (green + refactor phases)
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-E
     parent_task: F-04
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       introduce composition-root wiring so data-source mode and adapter selection happen at boot,
       then expose route-safe service accessors.
@@ -380,20 +391,27 @@ tasks:
       composition accessors.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - apps/web/src/app/services/composition/appServices.ts
+      - apps/web/src/app/services/AppServicesContext.tsx
+      - apps/web/src/app/services/composition/appServices.test.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/runs/useRunWorkspace.ts
+      - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
     status_reason: >-
-      Awaiting TDD-first start: composition-root tests must be defined before wiring changes.
+      Composition-root tests now exist and pass, `resolveDataSource` moved under
+      `services/composition/appServices.ts`, and the React provider is reduced to a thin delivery
+      wrapper over composition-built services. Core `Canvas` and `Runs` paths now consume
+      composition-owned seams, but wider route migration still remains for full closure.
     definition_of_done:
       - VITE_DATA_SOURCE is read in one composition boundary for route-facing services
       - views/controllers no longer instantiate create*Service directly
       - core routes build and typecheck with composition-root accessors
       - failing composition-root tests exist before implementation (TDD red phase)
       - composition tests pass after implementation and refactor (green + refactor phases)
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-F
     parent_task: F-04
     priority: P0

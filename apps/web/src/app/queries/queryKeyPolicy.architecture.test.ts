@@ -67,7 +67,7 @@ describe('Query key policy (architecture)', () => {
     collectSourceFiles(ROOT_DIR, sourceFiles);
 
     const allowedResolveDataSourceCallers = new Set([
-      'services/AppServicesContext.tsx',
+      'services/composition/appServices.ts',
       'services/config/dataSource.ts',
       'services/config/runtimeDataSourceMode.ts',
     ]);
@@ -76,6 +76,29 @@ describe('Query key policy (architecture)', () => {
       .filter((filePath) => /resolveDataSource\s*\(/.test(readFileSync(filePath, 'utf8')))
       .map(toRelativePath)
       .filter((filePath) => !allowedResolveDataSourceCallers.has(filePath));
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('enforces service-factory ownership to composition root and service modules', () => {
+    const sourceFiles: string[] = [];
+    collectSourceFiles(ROOT_DIR, sourceFiles);
+
+    const allowedFactoryCallers = new Set([
+      'services/composition/appServices.ts',
+      'services/workspace/workspaceService.ts',
+      'services/runs/runsService.ts',
+      'services/plans/plansService.ts',
+    ]);
+
+    const offenders = sourceFiles
+      .filter((filePath) =>
+        /createWorkspaceService\s*\(|createRunsService\s*\(|createPlansService\s*\(/.test(
+          readFileSync(filePath, 'utf8')
+        )
+      )
+      .map(toRelativePath)
+      .filter((filePath) => !allowedFactoryCallers.has(filePath));
 
     expect(offenders).toEqual([]);
   });

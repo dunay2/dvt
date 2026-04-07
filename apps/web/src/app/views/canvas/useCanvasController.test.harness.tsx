@@ -31,6 +31,8 @@ const mocks = vi.hoisted(() => ({
   useWorkspaceService: vi.fn(),
   usePlansService: vi.fn(),
   useRunsService: vi.fn(),
+  useSessionContext: vi.fn(),
+  useShellFeedback: vi.fn(),
   useCanvasInteractionStore: vi.fn(),
   useExecutionStore: vi.fn(),
   useSessionStore: vi.fn(),
@@ -68,6 +70,8 @@ vi.mock('../../services/AppServicesContext', () => ({
   useWorkspaceService: mocks.useWorkspaceService,
   usePlansService: mocks.usePlansService,
   useRunsService: mocks.useRunsService,
+  useSessionContext: mocks.useSessionContext,
+  useShellFeedback: mocks.useShellFeedback,
 }));
 vi.mock('../../stores/canvasInteractionStore', () => ({
   useCanvasInteractionStore: mocks.useCanvasInteractionStore,

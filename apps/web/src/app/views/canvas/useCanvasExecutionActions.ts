@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
-import { toast } from 'sonner';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
-import { buildSessionRunContext } from '../../services/plans/plansService';
+import type { SessionContextPort } from '../../ports/sessionContext';
+import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ExecutionPlan } from '../../types/dbt';
 import type { PlanRef } from '../../types/engine';
@@ -18,6 +18,8 @@ type UseCanvasExecutionActionsParams = {
   workspaceNodeIds: string[];
   canPlan: boolean;
   canRun: boolean;
+  sessionContext: SessionContextPort;
+  shellFeedback: ShellFeedbackPort;
   consolePanelVisible: boolean;
   currentPlan: ExecutionPlan | null;
   setCurrentPlan: (plan: ExecutionPlan | null) => void;
@@ -49,6 +51,8 @@ export function useCanvasExecutionActions({
   workspaceNodeIds,
   canPlan,
   canRun,
+  sessionContext,
+  shellFeedback,
   consolePanelVisible,
   currentPlan,
   setCurrentPlan,
@@ -83,12 +87,12 @@ export function useCanvasExecutionActions({
 
   const handlePlan = useCallback(async () => {
     if (!canPlan) {
-      toast.error('You do not have permission to create plans');
+      shellFeedback.error('You do not have permission to create plans');
       return;
     }
 
     if (!transformationValidation.valid) {
-      toast.error(transformationValidation.summary);
+      shellFeedback.error(transformationValidation.summary);
       return;
     }
 
@@ -96,41 +100,43 @@ export function useCanvasExecutionActions({
       const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
       const plan = await plansService.previewPlan({
         selectedNodeIds: selectedForPlan,
-        context: buildSessionRunContext(`run_ui_${Date.now()}`),
+        context: sessionContext.buildRunContext(`run_ui_${Date.now()}`),
         persist: true,
       });
       setCurrentPlan(plan);
       setLastPlannedDraftSignature(transformationValidation.draftSignature);
       setPlanModalOpen(true);
-      toast.success('Execution plan created');
+      shellFeedback.success('Execution plan created');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to create execution plan';
-      toast.error(message);
+      shellFeedback.error(message);
     }
   }, [
     canPlan,
     plansService,
     selectedNodeIds,
+    sessionContext,
     setCurrentPlan,
+    shellFeedback,
     transformationValidation.draftSignature,
-    transformationValidation.valid,
     transformationValidation.summary,
+    transformationValidation.valid,
     workspaceNodeIds,
   ]);
 
   const handleStartRun = useCallback(async () => {
     if (!canRun) {
-      toast.error('You do not have permission to start runs');
+      shellFeedback.error('You do not have permission to start runs');
       return;
     }
 
     if (!currentPlan) {
-      toast.error('No execution plan available — run Plan first');
+      shellFeedback.error('No execution plan available - run Plan first');
       return;
     }
 
     if (isCurrentPlanStale) {
-      toast.error('Preview is stale. Re-run Plan before starting.');
+      shellFeedback.error('Preview is stale. Re-run Plan before starting.');
       setPlanModalOpen(true);
       return;
     }
@@ -139,10 +145,10 @@ export function useCanvasExecutionActions({
 
     try {
       const runId = `run_ui_${Date.now()}`;
-      const context = buildSessionRunContext(runId);
+      const context = sessionContext.buildRunContext(runId);
       const planRef = resolvePlanRefForStartRun(currentPlan);
       if (!planRef) {
-        toast.error('Plan reference is unavailable for this mode');
+        shellFeedback.error('Plan reference is unavailable for this mode');
         setPlanModalOpen(true);
         return;
       }
@@ -154,11 +160,11 @@ export function useCanvasExecutionActions({
         setConsolePanelHeight(160);
       }
 
-      toast.success('Run started');
+      shellFeedback.success('Run started');
       onRunStarted(runRef.runId);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start run';
-      toast.error(message);
+      shellFeedback.error(message);
       setPlanModalOpen(true);
     }
   }, [
@@ -168,7 +174,9 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     onRunStarted,
     runsService,
+    sessionContext,
     setConsolePanelHeight,
+    shellFeedback,
     toggleConsolePanel,
   ]);
 

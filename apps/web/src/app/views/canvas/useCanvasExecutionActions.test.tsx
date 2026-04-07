@@ -7,36 +7,18 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { mockExecutionPlan } from '../../data/mockDbtData';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
+import type { SessionContextPort } from '../../ports/sessionContext';
+import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolvePlanRefForStartRun, useCanvasExecutionActions } from './useCanvasExecutionActions';
-
-const mockBuildSessionRunContext = vi.fn(() => ({
-  runId: 'run_ui_test',
-  tenantId: 'tenant',
-  projectId: 'project',
-  environmentId: 'env',
-  targetAdapter: 'mock' as const,
-}));
-
-vi.mock('../../services/plans/plansService', () => ({
-  buildSessionRunContext: () => mockBuildSessionRunContext(),
-}));
-
-const toastErrorMock = vi.fn();
-const toastSuccessMock = vi.fn();
-
-vi.mock('sonner', () => ({
-  toast: {
-    error: (...args: unknown[]) => toastErrorMock(...args),
-    success: (...args: unknown[]) => toastSuccessMock(...args),
-  },
-}));
 
 function HookHost({
   plansService,
   runsService,
   currentPlan,
   onRunStarted,
+  sessionContext,
+  shellFeedback,
   canonicalNodes,
   canonicalEdges,
   selectedNodeIds = [],
@@ -46,6 +28,8 @@ function HookHost({
   runsService: IRunsPort;
   currentPlan: typeof mockExecutionPlan | null;
   onRunStarted: (runId: string) => void;
+  sessionContext: SessionContextPort;
+  shellFeedback: ShellFeedbackPort;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds?: string[];
@@ -60,6 +44,8 @@ function HookHost({
     workspaceNodeIds,
     canPlan: true,
     canRun: true,
+    sessionContext,
+    shellFeedback,
     consolePanelVisible: false,
     currentPlan,
     setCurrentPlan: () => undefined,
@@ -96,6 +82,25 @@ function HookHost({
 describe('resolvePlanRefForStartRun', () => {
   let container: HTMLDivElement;
   let root: Root;
+  const shellFeedback: ShellFeedbackPort = {
+    error: vi.fn(),
+    success: vi.fn(),
+  };
+  const sessionContext: SessionContextPort = {
+    getWorkspaceScope: () => ({
+      tenantId: 'tenant',
+      projectId: 'project',
+      environmentId: 'env',
+      targetAdapter: 'mock',
+    }),
+    buildRunContext: (runId) => ({
+      runId,
+      tenantId: 'tenant',
+      projectId: 'project',
+      environmentId: 'env',
+      targetAdapter: 'mock',
+    }),
+  };
   const canonicalNodes: CanonicalNode[] = [
     {
       id: 'source-node',
@@ -137,9 +142,8 @@ describe('resolvePlanRefForStartRun', () => {
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
-    toastErrorMock.mockReset();
-    toastSuccessMock.mockReset();
-    mockBuildSessionRunContext.mockClear();
+    vi.mocked(shellFeedback.error).mockReset();
+    vi.mocked(shellFeedback.success).mockReset();
   });
 
   afterEach(() => {
@@ -189,6 +193,8 @@ describe('resolvePlanRefForStartRun', () => {
           runsService={runsService}
           currentPlan={{ ...mockExecutionPlan, planRef: undefined }}
           onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
           canonicalNodes={canonicalNodes}
           canonicalEdges={canonicalEdges}
         />
@@ -204,7 +210,7 @@ describe('resolvePlanRefForStartRun', () => {
 
     expect(runsService.startRun).not.toHaveBeenCalled();
     expect(onRunStarted).not.toHaveBeenCalled();
-    expect(toastErrorMock).toHaveBeenCalledWith('Plan reference is unavailable for this mode');
+    expect(shellFeedback.error).toHaveBeenCalledWith('Plan reference is unavailable for this mode');
     expect(container.querySelector('[data-testid="plan-modal-state"]')?.textContent).toBe('true');
   });
 
@@ -232,6 +238,8 @@ describe('resolvePlanRefForStartRun', () => {
           runsService={runsService}
           currentPlan={null}
           onRunStarted={vi.fn()}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
           canonicalNodes={canonicalNodes.slice(0, 2)}
           canonicalEdges={canonicalEdges.slice(0, 1)}
         />
@@ -246,7 +254,7 @@ describe('resolvePlanRefForStartRun', () => {
     });
 
     expect(plansService.previewPlan).not.toHaveBeenCalled();
-    expect(toastErrorMock).toHaveBeenCalledWith(
+    expect(shellFeedback.error).toHaveBeenCalledWith(
       'Plan requires exactly 3 nodes: source, sql_transform, and sink.'
     );
   });
@@ -275,6 +283,8 @@ describe('resolvePlanRefForStartRun', () => {
           runsService={runsService}
           currentPlan={null}
           onRunStarted={vi.fn()}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
           canonicalNodes={canonicalNodes}
           canonicalEdges={canonicalEdges}
         />
@@ -291,10 +301,15 @@ describe('resolvePlanRefForStartRun', () => {
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
+        context: expect.objectContaining({
+          tenantId: 'tenant',
+          projectId: 'project',
+          environmentId: 'env',
+        }),
         persist: true,
       })
     );
-    expect(toastSuccessMock).toHaveBeenCalledWith('Execution plan created');
+    expect(shellFeedback.success).toHaveBeenCalledWith('Execution plan created');
     expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
     expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
       'Preview required before running.'
@@ -326,6 +341,8 @@ describe('resolvePlanRefForStartRun', () => {
           runsService={runsService}
           currentPlan={null}
           onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
           canonicalNodes={canonicalNodes}
           canonicalEdges={canonicalEdges}
         />
@@ -345,6 +362,8 @@ describe('resolvePlanRefForStartRun', () => {
           runsService={runsService}
           currentPlan={mockExecutionPlan}
           onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
           canonicalNodes={canonicalNodes}
           canonicalEdges={canonicalEdges.slice(0, 1)}
         />
@@ -363,7 +382,9 @@ describe('resolvePlanRefForStartRun', () => {
     });
 
     expect(runsService.startRun).not.toHaveBeenCalled();
-    expect(toastErrorMock).toHaveBeenCalledWith('Preview is stale. Re-run Plan before starting.');
+    expect(shellFeedback.error).toHaveBeenCalledWith(
+      'Preview is stale. Re-run Plan before starting.'
+    );
     expect(onRunStarted).not.toHaveBeenCalled();
   });
 });

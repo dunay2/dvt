@@ -1,0 +1,52 @@
+import type { IPlansPort } from '../../ports/plans';
+import type { IRunsPort } from '../../ports/runs';
+import type { SessionContextPort } from '../../ports/sessionContext';
+import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type { IWorkspacePort } from '../../ports/workspace';
+import { createApiClient, type ApiClient } from '../api/createApiClient';
+import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
+import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
+import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
+import { createPlansService } from '../plans/plansService';
+import { createRunsService } from '../runs/runsService';
+import { createSessionContextPort } from '../session/sessionContextPort';
+import { createWorkspaceService } from '../workspace/workspaceService';
+
+export interface AppServices {
+  readonly dataSourceMode: DataSourceMode;
+  readonly apiClient: ApiClient;
+  readonly workspaceService: IWorkspacePort;
+  readonly runsService: IRunsPort;
+  readonly plansService: IPlansPort;
+  readonly sessionContext: SessionContextPort;
+  readonly shellFeedback: ShellFeedbackPort;
+}
+
+export interface AppServicesOverrides {
+  readonly mode?: DataSourceMode;
+  readonly apiClient?: ApiClient;
+  readonly workspaceService?: IWorkspacePort;
+  readonly runsService?: IRunsPort;
+  readonly plansService?: IPlansPort;
+  readonly sessionContext?: SessionContextPort;
+  readonly shellFeedback?: ShellFeedbackPort;
+}
+
+export function buildAppServices(overrides: AppServicesOverrides = {}): AppServices {
+  const dataSourceMode = overrides.mode ?? resolveDataSource();
+  setRuntimeDataSourceMode(dataSourceMode);
+  const apiClient = overrides.apiClient ?? createApiClient();
+  const sessionContext = overrides.sessionContext ?? createSessionContextPort();
+
+  return {
+    dataSourceMode,
+    apiClient,
+    workspaceService:
+      overrides.workspaceService ?? createWorkspaceService(dataSourceMode, apiClient),
+    runsService:
+      overrides.runsService ?? createRunsService(dataSourceMode, apiClient, { sessionContext }),
+    plansService: overrides.plansService ?? createPlansService(dataSourceMode, apiClient),
+    sessionContext,
+    shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
+  };
+}
