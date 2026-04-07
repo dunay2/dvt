@@ -52,9 +52,7 @@ export function validateTransformationGraph({
   selectedNodeIds = [],
 }: ValidateTransformationGraphArgs): TransformationGraphValidationResult {
   const scopedNodes =
-    selectedNodeIds.length > 0
-      ? nodes.filter((node) => selectedNodeIds.includes(node.id))
-      : nodes;
+    selectedNodeIds.length > 0 ? nodes.filter((node) => selectedNodeIds.includes(node.id)) : nodes;
   const scopedNodeIds = scopedNodes.map((node) => node.id);
   const scopedNodeIdSet = new Set(scopedNodeIds);
   const scopedEdges = edges.filter(

@@ -333,7 +333,9 @@ describe('resolvePlanRefForStartRun', () => {
     });
 
     await act(async () => {
-      container.querySelectorAll('button')[0]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     await act(async () => {
@@ -355,7 +357,9 @@ describe('resolvePlanRefForStartRun', () => {
     );
 
     await act(async () => {
-      container.querySelectorAll('button')[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      container
+        .querySelectorAll('button')[1]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(runsService.startRun).not.toHaveBeenCalled();

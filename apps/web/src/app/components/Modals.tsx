@@ -118,7 +118,9 @@ export function PlanPreviewModal({
 
             {plan.preview?.summary ? (
               <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-                <h3 className="text-sm font-medium mb-3 text-slate-50">Persisted Preview Summary</h3>
+                <h3 className="text-sm font-medium mb-3 text-slate-50">
+                  Persisted Preview Summary
+                </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-slate-300">Executor:</span>
@@ -134,11 +136,15 @@ export function PlanPreviewModal({
                   </div>
                   <div>
                     <span className="text-slate-300">Sink tables:</span>
-                    <span className="ml-2">{plan.preview.summary.sinkTables.join(', ') || 'n/a'}</span>
+                    <span className="ml-2">
+                      {plan.preview.summary.sinkTables.join(', ') || 'n/a'}
+                    </span>
                   </div>
                   <div className="col-span-2">
                     <span className="text-slate-300">Source tables:</span>
-                    <span className="ml-2">{plan.preview.summary.sourceTables.join(', ') || 'n/a'}</span>
+                    <span className="ml-2">
+                      {plan.preview.summary.sourceTables.join(', ') || 'n/a'}
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -150,7 +156,9 @@ export function PlanPreviewModal({
                 <div className="grid grid-cols-1 gap-3 text-sm">
                   <div>
                     <span className="text-slate-300">Plan record:</span>
-                    <code className="ml-2 text-blue-400">{plan.preview.persisted.planRecordId}</code>
+                    <code className="ml-2 text-blue-400">
+                      {plan.preview.persisted.planRecordId}
+                    </code>
                   </div>
                   <div>
                     <span className="text-slate-300">Canonical SHA:</span>
