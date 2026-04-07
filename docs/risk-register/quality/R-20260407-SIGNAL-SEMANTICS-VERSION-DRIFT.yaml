@@ -1,0 +1,23 @@
+---
+id: R-20260407-SIGNAL-SEMANTICS-VERSION-DRIFT
+title: Adapter-declared signal semantics versions can drift from engine expectations
+status: Open
+date: 2026-04-07
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+severity: Medium
+probability: Low
+context: >
+  Signal-to-event derivation is now contract-driven and adapters declare supported signal semantics
+  versions.
+risk: >
+  If adapter declarations drift or unsupported versions are introduced without coordinated contract
+  publication, runtime behavior may silently fall back to default semantics.
+mitigations:
+  - Signal semantics are centralized in @dvt/contracts with explicit version constants.
+  - Engine resolves mappings only through contract helpers.
+  - Built-in adapters now declare supported semantics versions explicitly.
+  - ARC-2 evidence tracks validation and affected code paths.
+review_after: 2026-05-31
+---

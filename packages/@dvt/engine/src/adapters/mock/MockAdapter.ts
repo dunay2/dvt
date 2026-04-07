@@ -8,6 +8,7 @@
  * @date 2026-02-21
  */
 import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -15,6 +16,7 @@ import {
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
+  type SignalSemanticsVersion,
   type SignalRequest,
 } from '@dvt/contracts';
 
@@ -115,6 +117,10 @@ export class MockAdapter implements IProviderAdapter {
 
   capabilities(): readonly string[] {
     return MOCK_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
   private async appendCancelLifecycle(runRef: EngineRunRef): Promise<void> {

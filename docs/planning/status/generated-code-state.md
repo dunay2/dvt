@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-06
+last_reviewed: 2026-04-07
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-06.
+Generated automatically from repository code on 2026-04-07.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 723   |
-| Total test files             | 269   |
+| Total source files           | 724   |
+| Total test files             | 271   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 21/23 |
 
@@ -34,10 +34,10 @@ Generated automatically from repository code on 2026-04-06.
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 40        | 11         | yes   | yes  | no        | 33                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 41        | 12         | yes   | yes  | no        | 35                      |
 | packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 91        | 37         | yes   | yes  | no        | 34                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 91        | 38         | yes   | yes  | no        | 34                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |

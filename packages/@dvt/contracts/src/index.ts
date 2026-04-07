@@ -4,6 +4,16 @@ export * from './workflows.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
 export {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  getSignalDerivedEventType,
+  resolveSignalSemanticsContract,
+  SIGNAL_SEMANTICS_REGISTRY,
+} from './contracts/engine/SignalSemantics.v1.js';
+export type {
+  SignalSemanticsContract,
+  SignalSemanticsVersion,
+} from './contracts/engine/SignalSemantics.v1.js';
+export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GENERIC_GRAPH_SOURCE_KIND,

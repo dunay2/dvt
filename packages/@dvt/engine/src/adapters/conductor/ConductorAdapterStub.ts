@@ -8,12 +8,14 @@
  * @version 2.0.0
  * @date 2026-02-21
  */
-import type {
-  EngineRunRef,
-  PlanRef,
-  ResolvedRunContext,
-  RunStatusSnapshot,
-  SignalRequest,
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type EngineRunRef,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunStatusSnapshot,
+  type SignalRequest,
+  type SignalSemanticsVersion,
 } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../IProviderAdapter.js';
@@ -53,5 +55,9 @@ export class ConductorAdapterStub implements IProviderAdapter {
 
   capabilities(): readonly string[] {
     return CONDUCTOR_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 }

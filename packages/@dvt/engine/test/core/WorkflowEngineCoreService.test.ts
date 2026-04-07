@@ -200,4 +200,32 @@ describe('WorkflowEngineCoreService', () => {
       (await store.listEvents('t', 'core-signal-pause-invalid-1')).map((event) => event.eventType)
     ).toEqual(['RunQueued']);
   });
+
+  it('signal(RETRY_RUN) delegates to adapter without deriving run events when semantics mapping is absent', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    await bootstrapQueuedRun(store, 'core-signal-retry-run-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-retry-run-1');
+    await appendRunStarted(store, 'core-signal-retry-run-1');
+
+    await core.signal(ref, {
+      signalId: 'sig-retry-run-1',
+      type: 'RETRY_RUN',
+      reason: 'operator-request',
+    });
+
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(signal).toHaveBeenCalledWith(ref, {
+      signalId: 'sig-retry-run-1',
+      type: 'RETRY_RUN',
+      reason: 'operator-request',
+    });
+    expect(
+      (await store.listEvents('t', 'core-signal-retry-run-1')).map((event) => event.eventType)
+    ).toEqual(['RunQueued', 'RunStarted']);
+  });
 });

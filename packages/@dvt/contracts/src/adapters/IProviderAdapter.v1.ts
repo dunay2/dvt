@@ -7,6 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import type { SignalSemanticsVersion } from '../contracts/engine/SignalSemantics.v1.js';
 import type {
   EngineRunRef,
   PlanRef,
@@ -22,6 +23,7 @@ export interface IProviderAdapter {
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
+  signalSemanticsVersions?(): readonly SignalSemanticsVersion[];
 
   /**
    * Optional. Computes a deterministic EngineRunRef from RunContext WITHOUT a network call.

@@ -1,9 +1,8 @@
 import type { EngineRunRef, EventType, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
-import { parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
+import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
-import { SignalNotImplementedError } from '../contracts/errors.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
@@ -18,8 +17,6 @@ import {
   CORE_SPAN,
   CORE_TIMEOUT_MS,
   CORE_TIMEOUT_OPERATION,
-  NOT_IMPLEMENTED_SIGNAL_TYPES,
-  SIGNAL_TO_EVENT_TYPE,
 } from './lifecycle/coreDomainConstants.js';
 import {
   buildMetricTags,
@@ -219,7 +216,10 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         },
         async (span) => {
           try {
-            const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
+            const mappedEventType = this.mapSignalToRunEventType(
+              validatedRequest.type,
+              adapter.signalSemanticsVersions?.()
+            );
             if (mappedEventType) {
               // Guard against idempotent retries: if the derived event was already
               // persisted (same signalId redelivery), the current snapshot already
@@ -278,10 +278,10 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     );
   }
 
-  private mapSignalToRunEventType(type: SignalRequest['type']): EventType | null {
-    if (NOT_IMPLEMENTED_SIGNAL_TYPES.has(type)) {
-      throw new SignalNotImplementedError(type);
-    }
-    return SIGNAL_TO_EVENT_TYPE[type] ?? null;
+  private mapSignalToRunEventType(
+    type: SignalRequest['type'],
+    supportedVersions?: readonly string[]
+  ): EventType | null {
+    return getSignalDerivedEventType(type, supportedVersions);
   }
 }
