@@ -6,6 +6,7 @@
  * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
  *   expectations in the mocked adapter path (`PENDING` until completion events are present).
  */
+import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect, vi } from 'vitest';
@@ -291,6 +292,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
         throw new Error('noop');
       },
       signal: async () => {},
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
     const store = new InMemoryTxStore();

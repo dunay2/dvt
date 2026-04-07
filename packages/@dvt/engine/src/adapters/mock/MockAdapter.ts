@@ -109,8 +109,18 @@ export class MockAdapter implements IProviderAdapter {
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    if (request.type === 'CANCEL') {
-      await this.appendCancelLifecycle(runRef);
+    switch (request.type) {
+      case 'CANCEL':
+        await this.appendCancelLifecycle(runRef);
+        return;
+      case 'PAUSE':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunPaused');
+        return;
+      case 'RESUME':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunResumed');
+        return;
+      default:
+        return;
     }
   }
 
@@ -148,6 +158,52 @@ export class MockAdapter implements IProviderAdapter {
         payloadVersion: 1,
       }))
     );
+  }
+
+  private async appendPauseResumeLifecycle(
+    runRef: EngineRunRef,
+    request: SignalRequest,
+    eventType: 'RunPaused' | 'RunResumed'
+  ): Promise<void> {
+    const meta = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    if (!meta) {
+      throw new RunMetadataNotFoundError(runRef.runId);
+    }
+
+    const snapshot = await this.deps.stateStore.getSnapshot(runRef.tenantId, runRef.runId);
+    if (eventType === 'RunPaused') {
+      if (!snapshot || snapshot.status !== 'RUNNING' || snapshot.paused) {
+        return;
+      }
+    } else if (!snapshot || snapshot.status !== 'PAUSED' || !snapshot.paused) {
+      return;
+    }
+
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(runRef.runId, [
+      {
+        eventId: this.idempotency.eventId(),
+        eventType,
+        payloadVersion: 1,
+        emittedAt: this.clock.nowIsoUtc(),
+        tenantId: meta.tenantId,
+        projectId: meta.projectId,
+        environmentId: meta.environmentId,
+        runId: meta.runId,
+        planId: meta.planId,
+        planVersion: meta.planVersion,
+        engineAttemptId: 1,
+        logicalAttemptId: meta.logicalAttemptId,
+        idempotencyKey: this.idempotency.signalKey(
+          {
+            runId: meta.runId,
+            logicalAttemptId: meta.logicalAttemptId,
+            planId: meta.planId,
+            planVersion: meta.planVersion,
+          },
+          request
+        ),
+      },
+    ]);
   }
 }
 

@@ -1,6 +1,7 @@
 import type { EngineRunRef, EventType, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
 import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
+import type { GuardedRunEventType } from '@dvt/run-domain';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
@@ -216,39 +217,22 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         },
         async (span) => {
           try {
+            const validationEventType = this.mapSignalToValidationEventType(validatedRequest.type);
             const mappedEventType = this.mapSignalToRunEventType(
               validatedRequest.type,
               adapter.signalSemanticsVersions?.()
             );
-            if (mappedEventType) {
-              // Guard against idempotent retries: if the derived event was already
-              // persisted (same signalId redelivery), the current snapshot already
-              // reflects the transition. Running assertAllowed against the updated
-              // state would throw a false InvalidStateTransitionError.
-              // We short-circuit and return a no-op acknowledgement instead.
-              const idemKey = this.deps.idempotency.signalKey(
-                {
-                  runId: meta.runId,
-                  logicalAttemptId: meta.logicalAttemptId,
-                  planId: meta.planId,
-                  planVersion: meta.planVersion,
-                },
-                validatedRequest
+
+            if (validationEventType) {
+              const validationResult = await this.signalTransitionGuard.assertAllowed(
+                meta,
+                validatedRequest,
+                validationEventType
               );
-              const existingEvents = await this.deps.stateStoreRead.listEvents(
-                meta.tenantId,
-                meta.runId
-              );
-              if (existingEvents.some((e) => e.idempotencyKey === idemKey)) {
+              if (validationResult === 'already_applied') {
                 span.setStatus('ok');
                 return;
               }
-
-              await this.signalTransitionGuard.assertAllowed(
-                meta,
-                validatedRequest,
-                mappedEventType
-              );
             }
 
             await withTimeout(
@@ -283,5 +267,16 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     supportedVersions?: readonly string[]
   ): EventType | null {
     return getSignalDerivedEventType(type, supportedVersions);
+  }
+
+  private mapSignalToValidationEventType(type: SignalRequest['type']): GuardedRunEventType | null {
+    switch (type) {
+      case 'PAUSE':
+        return 'RunPaused';
+      case 'RESUME':
+        return 'RunResumed';
+      default:
+        return null;
+    }
   }
 }

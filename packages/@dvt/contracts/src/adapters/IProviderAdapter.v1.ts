@@ -24,7 +24,7 @@ export interface IProviderAdapter {
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
-  signalSemanticsVersions?(): readonly SignalSemanticsVersion[];
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[];
 
   /**
    * Optional. Computes a deterministic EngineRunRef from RunContext WITHOUT a network call.

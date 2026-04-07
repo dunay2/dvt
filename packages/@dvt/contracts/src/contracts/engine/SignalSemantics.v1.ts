@@ -25,10 +25,7 @@ export const SIGNAL_SEMANTICS_REGISTRY: Readonly<
 > = {
   '1.0.0': {
     version: '1.0.0',
-    signalToEventType: {
-      PAUSE: 'RunPaused',
-      RESUME: 'RunResumed',
-    },
+    signalToEventType: {},
   },
 } as const;
 
@@ -39,14 +36,13 @@ export function resolveSignalSemanticsContract(
     return SIGNAL_SEMANTICS_REGISTRY[CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
-  for (const version of supportedVersions) {
-    const contract = SIGNAL_SEMANTICS_REGISTRY[version as SignalSemanticsVersion];
-    if (contract) {
-      return contract;
-    }
+  if (supportedVersions.includes(CURRENT_SIGNAL_SEMANTICS_VERSION)) {
+    return SIGNAL_SEMANTICS_REGISTRY[CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
-  return SIGNAL_SEMANTICS_REGISTRY[CURRENT_SIGNAL_SEMANTICS_VERSION];
+  throw new Error(
+    `SIGNAL_SEMANTICS_VERSION_UNSUPPORTED: expected ${CURRENT_SIGNAL_SEMANTICS_VERSION}, got ${supportedVersions.join(',')}`
+  );
 }
 
 export function getSignalDerivedEventType(

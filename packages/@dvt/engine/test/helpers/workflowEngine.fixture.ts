@@ -1,4 +1,9 @@
-import type { EngineRunRef, ExecutionPlan, PlanRef } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type EngineRunRef,
+  type ExecutionPlan,
+  type PlanRef,
+} from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
@@ -35,6 +40,9 @@ export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IPro
       return { runId: runRef.runId, status: 'RUNNING' } as const;
     },
     async signal() {},
+    signalSemanticsVersions() {
+      return [CURRENT_SIGNAL_SEMANTICS_VERSION];
+    },
   };
 
   return overrides ? { ...base, ...overrides } : base;

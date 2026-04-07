@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { PlanRef } from '@dvt/contracts';
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, type PlanRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
@@ -161,6 +161,7 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
       cancelRun: base.cancelRun.bind(base),
       getRunStatus: base.getRunStatus.bind(base),
       signal: base.signal.bind(base),
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
       // capabilities intentionally absent
     };
     const { engine } = createEngine(noCapAdapter);

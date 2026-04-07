@@ -12,9 +12,15 @@ describe('SignalSemantics contract', () => {
     expect(contract.version).toBe(CURRENT_SIGNAL_SEMANTICS_VERSION);
   });
 
-  it('maps PAUSE and RESUME to engine-owned run events', () => {
-    expect(getSignalDerivedEventType('PAUSE')).toBe('RunPaused');
-    expect(getSignalDerivedEventType('RESUME')).toBe('RunResumed');
+  it('does not derive PAUSE and RESUME run events in the current semantics version', () => {
+    expect(getSignalDerivedEventType('PAUSE')).toBeNull();
+    expect(getSignalDerivedEventType('RESUME')).toBeNull();
+  });
+
+  it('fails closed when an adapter declares an unsupported semantics version', () => {
+    expect(() => getSignalDerivedEventType('PAUSE', ['2.0.0'])).toThrow(
+      /SIGNAL_SEMANTICS_VERSION_UNSUPPORTED/
+    );
   });
 
   it('returns null for adapter-owned signals with no engine-derived event', () => {

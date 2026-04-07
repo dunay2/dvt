@@ -9,15 +9,34 @@ owners:
 severity: Medium
 probability: Low
 context: >
-  Signal-to-event derivation is now contract-driven and adapters declare supported signal semantics
-  versions.
+  Signal-to-event derivation is contract-driven and adapters declare supported signal semantics
+  versions. The active semantics version makes `PAUSE/RESUME` runtime-owned for realized lifecycle
+  emission.
 risk: >
   If adapter declarations drift or unsupported versions are introduced without coordinated contract
-  publication, runtime behavior may silently fall back to default semantics.
+  publication, a runtime may negotiate the wrong semantics version and either reintroduce duplicate
+  `PAUSE/RESUME` lifecycle emission or fail to emit the realized lifecycle facts expected by the
+  engine and projectors.
 mitigations:
-  - Signal semantics are centralized in @dvt/contracts with explicit version constants.
-  - Engine resolves mappings only through contract helpers.
-  - Built-in adapters now declare supported semantics versions explicitly.
-  - ARC-2 evidence tracks validation and affected code paths.
+  - 'Signal semantics are centralized in @dvt/contracts with explicit version constants.'
+  - 'Engine resolves mappings only through contract helpers.'
+  - 'Built-in adapters declare supported semantics versions explicitly.'
+  - >-
+    Active semantics 1.0.0 removes engine-derived PAUSE/RESUME mappings and adapters declare that
+    exact line explicitly.
+  - >-
+    SignalTransitionGuard validates PAUSE/RESUME transitions without re-owning realized lifecycle
+    emission.
+  - >-
+    Temporal runtime forwards signalId for PAUSE/RESUME and deduplicates processed control-signal
+    ids across pause-resume cycles and continue-as-new rollover.
+  - >-
+    Engine and mock-runtime tests cover no-derive engine behavior and runtime-owned RunPaused and
+    RunResumed emission, including stale signalId replay and repeated pause cycles in the same
+    logical attempt.
+  - >-
+    Adapter-temporal tests cover signalId forwarding, continue-as-new carry, and stale PAUSE replay
+    after a pause-resume cycle.
+  - 'ARC-2 evidence tracks validation and affected code paths.'
 review_after: 2026-05-31
 ---

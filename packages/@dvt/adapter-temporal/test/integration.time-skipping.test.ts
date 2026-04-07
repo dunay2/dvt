@@ -1469,4 +1469,80 @@ describe('temporal integration (time-skipping)', () => {
     },
     INTEGRATION_TEST_TIMEOUT
   );
+
+  it(
+    'deduplicates stale PAUSE signal ids across a pause-resume cycle',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+      const store = new TestStateStore();
+      const outbox = new TestOutbox();
+      const plan = mkLinearThreeStepPlan();
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const planRef = createPlanRef('it-plan-pause-signal-id-dedupe', planBytes);
+      const blocker1 = createBlockingExecutor('s-1');
+      const blocker2 = createBlockingExecutor('s-2');
+
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-pause-signal-id-dedupe',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
+
+      const worker = new TemporalWorkerHost({
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
+        },
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, outbox, planBytes),
+        stepExecutors: [blocker1.executor, blocker2.executor, ...DEFAULT_STEP_EXECUTORS],
+      });
+
+      await worker.start(env.nativeConnection);
+
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+      });
+
+      try {
+        const runId = RunId.of('run-it-pause-signal-id-dedupe-1');
+        const runRef = await adapter.startRun(plan, planRef, createRunContext(runId));
+
+        await blocker1.waitUntilExecuting;
+        await adapter.signal(runRef, { signalId: 'sig-pause-1', type: 'PAUSE' });
+        blocker1.release();
+
+        await waitForCondition(
+          () => store.listRunEvents(runId),
+          (events) => events.filter((event) => event.eventType === 'RunPaused').length === 1,
+          { timeoutMs: 30_000 }
+        );
+
+        await adapter.signal(runRef, { signalId: 'sig-resume-1', type: 'RESUME' });
+
+        await waitForCondition(
+          () => store.listRunEvents(runId),
+          (events) => events.filter((event) => event.eventType === 'RunResumed').length === 1,
+          { timeoutMs: 30_000 }
+        );
+
+        await blocker2.waitUntilExecuting;
+        await adapter.signal(runRef, { signalId: 'sig-pause-1', type: 'PAUSE' });
+        blocker2.release();
+
+        const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
+        expect(status).toBe('COMPLETED');
+
+        const eventTypes = (await store.listRunEvents(runId)).map((event) => event.eventType);
+        expect(eventTypes.filter((eventType) => eventType === 'RunPaused')).toHaveLength(1);
+        expect(eventTypes.filter((eventType) => eventType === 'RunResumed')).toHaveLength(1);
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
 });
