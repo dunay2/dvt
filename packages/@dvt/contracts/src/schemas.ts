@@ -45,6 +45,8 @@ import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/StepTypeRegistry.js';
+import { jcsCanonicalize } from './utils/jcsCanonicalize.js';
+import { sha256HexUtf8 } from './utils/sha256HexUtf8.js';
 
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
@@ -629,26 +631,23 @@ export const PlannerBuildResultV1Schema = z
       },
       steps: result.plan.steps,
     } satisfies PlanCore;
+    const expectedCanonicalPlanCoreJson = jcsCanonicalize(expectedPlanCore);
 
-    if (
-      JSON.stringify(canonicalPlanCoreResult.data.metadata) !==
-      JSON.stringify(expectedPlanCore.metadata)
-    ) {
+    if (result.canonicalPlanCoreJson !== expectedCanonicalPlanCoreJson) {
       ctx.addIssue({
         code: 'custom',
-        path: ['canonicalPlanCoreJson', 'metadata'],
+        path: ['canonicalPlanCoreJson'],
         message:
-          'canonicalPlanCoreJson.metadata must match plan.metadata.{planVersion,inputHashSha256}',
+          'canonicalPlanCoreJson must equal JCS(planCore) derived from plan.metadata.{planVersion,inputHashSha256} and plan.steps',
       });
+      return;
     }
 
-    if (
-      JSON.stringify(canonicalPlanCoreResult.data.steps) !== JSON.stringify(expectedPlanCore.steps)
-    ) {
+    if (sha256HexUtf8(result.canonicalPlanCoreJson) !== result.plan.metadata.planId.toLowerCase()) {
       ctx.addIssue({
         code: 'custom',
-        path: ['canonicalPlanCoreJson', 'steps'],
-        message: 'canonicalPlanCoreJson.steps must match plan.steps',
+        path: ['plan', 'metadata', 'planId'],
+        message: 'plan.metadata.planId must match sha256(canonicalPlanCoreJson)',
       });
     }
   });

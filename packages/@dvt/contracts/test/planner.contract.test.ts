@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
@@ -18,6 +19,8 @@ import {
   PlannerInputEnvelopeV1Schema,
   type PlannerInputEnvelopeV1SchemaT,
 } from '../src/schemas.js';
+import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
+import { ContractValidationError, parsePlannerBuildResultV1 } from '../src/validation.js';
 
 import {
   INVALID_PLANNER_INPUT_FIXTURE,
@@ -173,5 +176,76 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it('rechaza parsePlannerBuildResultV1 cuando planId no coincide con sha256(canonicalPlanCoreJson)', async () => {
+    await expect(
+      parsePlannerBuildResultV1({
+        ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+        plan: {
+          ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan,
+          metadata: {
+            ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan.metadata,
+            planId: 'f'.repeat(64),
+          },
+        },
+      })
+    ).rejects.toMatchObject<Partial<ContractValidationError>>({
+      details: [
+        {
+          path: 'plan.metadata.planId',
+          message: 'plan.metadata.planId must match sha256(canonicalPlanCoreJson)',
+        },
+      ],
+    });
+  });
+
+  it('acepta parsePlannerBuildResultV1 con canonicalPlanCoreJson canónico aunque el orden original de claves difiera', async () => {
+    const canonicalPlanCoreJson = jcsCanonicalize({
+      metadata: {
+        planVersion: '1.0',
+        inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      },
+      steps: [
+        {
+          stepId: 's1',
+          kind: 'CUSTOM',
+          dependsOn: [],
+          stepTypeConfig: { a: 2, b: 1 },
+        },
+      ],
+    });
+    const planId = createHash('sha256').update(canonicalPlanCoreJson, 'utf8').digest('hex');
+
+    await expect(
+      parsePlannerBuildResultV1({
+        plan: {
+          metadata: {
+            planVersion: '1.0',
+            schemaVersion: 'v1.2',
+            contractVersion: '1.0.0',
+            inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            planId,
+            createdAtIso: '2026-04-07T00:00:00.000Z',
+          },
+          steps: [
+            {
+              stepId: 's1',
+              kind: 'CUSTOM',
+              dependsOn: [],
+              stepTypeConfig: { b: 1, a: 2 },
+            },
+          ],
+        },
+        executionPolicy: {},
+        canonicalPlanCoreJson,
+      })
+    ).resolves.toMatchObject({
+      plan: {
+        metadata: {
+          planId,
+        },
+      },
+    });
   });
 });

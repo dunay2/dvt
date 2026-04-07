@@ -289,7 +289,9 @@ export function parsePlannerInputEnvelopeV1(input: unknown): PlannerInputEnvelop
   return parseWithSchema(PlannerInputEnvelopeV1Schema, input);
 }
 
-export function parsePlannerBuildResultV1(input: unknown): PlannerBuildResultV1SchemaT {
+export async function parsePlannerBuildResultV1(
+  input: unknown
+): Promise<PlannerBuildResultV1SchemaT> {
   return parseWithSchema(PlannerBuildResultV1Schema, input);
 }
 

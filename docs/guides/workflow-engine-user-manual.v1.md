@@ -72,8 +72,9 @@ through engine policy and timeout controls.
 
 ### `signal`
 
-Validates access and forwards a typed signal to provider adapter; engine may
-persist signal-derived run events according to policy.
+Validates access and forwards a typed signal to provider adapter. The engine may
+persist signal request or audit facts, but realized lifecycle events remain
+runtime-owned.
 
 ## Communication model with provider runtimes
 
@@ -93,7 +94,7 @@ A run can pass contract shape checks and still be rejected at admission due to
 runtime constraints:
 
 - adapter not registered for target provider
-- capability mismatch with `PlanRef.requiresCapabilities`
+- capability mismatch with `RunExecutionPolicy.requiresCapabilities`
 - `runExecutionContextRef` provenance mismatch
 - access policy denial
 - rate-limit policy rejection

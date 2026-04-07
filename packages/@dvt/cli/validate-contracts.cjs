@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const {
+  parseExecutionPlan,
   parsePlanRef,
   parseRunContext,
   parseSignalRequest,
@@ -67,6 +68,12 @@ function validatePlanFile(filePath) {
   const checks = [];
 
   checks.push(
+    runCheck('ExecutionPlan schema', () => {
+      parseExecutionPlan(payload);
+    })
+  );
+
+  checks.push(
     runCheck('PlanRef schema', () => {
       const bytes = Buffer.from(JSON.stringify(payload), 'utf8');
       parsePlanRef({
@@ -87,10 +94,7 @@ function validatePlanFile(filePath) {
         projectId: 'project-demo',
         environmentId: 'dev',
         runId: `run-${payload?.metadata?.planId || 'unknown'}`,
-        targetAdapter:
-          payload?.metadata?.targetAdapter === 'any' || !payload?.metadata?.targetAdapter
-            ? 'mock'
-            : payload.metadata.targetAdapter,
+        targetAdapter: 'mock',
       });
     })
   );

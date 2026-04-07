@@ -279,10 +279,13 @@ At minimum:
 - `planId`
 - `planVersion`
 - `schemaVersion`
-- `uri`
-- `sha256`
-- provider/capability requirements
+- `contractVersion`
+- `inputHashSha256`
 - ordered or dependency-structured steps
+
+Runtime compatibility and capability requirements do not belong to
+`ExecutionPlan`. They belong to `RunExecutionPolicy`, while adapter selection
+remains owned by `RunContext.targetAdapter`.
 
 ### 9.3 Rule set
 
@@ -295,16 +298,19 @@ At minimum:
 
 ```json
 {
-  "planId": "plan_123",
-  "planVersion": "1.0.0",
-  "schemaVersion": "v1.2",
-  "uri": "artifact://plans/plan_123.json",
-  "sha256": "abc123...",
-  "requiresCapabilities": ["pause", "resume"],
+  "metadata": {
+    "planId": "plan_123",
+    "planVersion": "1.0",
+    "schemaVersion": "v1.2",
+    "contractVersion": "1.0.0",
+    "inputHashSha256": "abc123...",
+    "createdAtIso": "2026-04-07T00:00:00.000Z"
+  },
   "steps": [
     {
       "stepId": "compile",
-      "kind": "task"
+      "kind": "task",
+      "dependsOn": []
     },
     {
       "stepId": "run_models",
@@ -314,6 +320,29 @@ At minimum:
   ]
 }
 ```
+
+The corresponding runtime policy is separate:
+
+```json
+{
+  "requiresCapabilities": ["pause", "resume"],
+  "pluginCompatibilityFingerprint": "def456..."
+}
+```
+
+`PlanRef` is a transport reference to the persisted plan artifact and carries:
+
+```json
+{
+  "uri": "artifact://plans/plan_123.json",
+  "sha256": "abc123...",
+  "schemaVersion": "v1.2",
+  "planId": "plan_123",
+  "planVersion": "1.0"
+}
+```
+
+````
 
 ---
 
@@ -359,7 +388,7 @@ sequenceDiagram
     State->>Outbox: enqueue initial events
     Engine->>Intent: markResolved(...)
     Engine-->>API: EngineRunRef
-```
+````
 
 ### Why
 

@@ -22,11 +22,13 @@ Update after remediation:
   teach `RunExecutionPolicy` plus `RunContext.targetAdapter`, not retired plan
   metadata fields.
 - `QA-EP-3` is resolved: `PlannerBuildResultV1Schema` now enforces that
-  `canonicalPlanCoreJson` parses as `PlanCore` and matches
-  `plan.metadata.{planVersion,inputHashSha256}` plus `plan.steps`.
+  `canonicalPlanCoreJson` parses as `PlanCore`, equals `JCS(planCore)`, and
+  that `plan.metadata.planId === sha256(canonicalPlanCoreJson)`.
 - `QA-EP-4` is resolved: evidence language and validation baseline were rerun
   after the corrections; the risk entry still stays open for broader boundary
   drift, which is the intended residual posture.
+- readiness is now proven by `pnpm validate:contracts`, `pnpm golden:validate`,
+  `pnpm docs:status:generate`, and a final green `pnpm verify:prepush`.
 
 Canonical execution tracking remains in:
 
@@ -76,11 +78,14 @@ This document is the hard QA gate for the current slice.
 - Title: `PlannerBuildResultV1` now enforces the plan-core invariant
   What changed:
   `PlannerBuildResultV1Schema` now reparses `canonicalPlanCoreJson` as
-  `PlanCore` and rejects mismatches against the returned `plan`.
-  Negative regression coverage was added at the contract layer.
+  `PlanCore`, rejects mismatches against the returned `plan`, and rejects
+  `planId` values that do not match `sha256(canonicalPlanCoreJson)`.
+  Negative regression coverage was added at the contract layer, including hash
+  vectors and schema-level rejection.
   Evidence:
   [schemas.ts](../../../../packages/@dvt/contracts/src/schemas.ts:592) and
-  [planner.contract.test.ts](../../../../packages/@dvt/contracts/test/planner.contract.test.ts:163).
+  [planner.contract.test.ts](../../../../packages/@dvt/contracts/test/planner.contract.test.ts:163),
+  [sha256HexUtf8.test.ts](../../../../packages/@dvt/contracts/test/sha256HexUtf8.test.ts:1).
 
 - Title: Normative-looking engine capability docs still describe removed fields
   What changed:
@@ -178,6 +183,7 @@ No open findings remain for the current slice.
   - targeted file inspections listed in the findings above
   - `pnpm --filter @dvt/contracts test`
   - `pnpm --filter @dvt/contracts build`
+  - `pnpm validate:contracts`
   - `pnpm --filter @dvt/planner test`
   - `pnpm --filter @dvt/planner build`
   - `pnpm --filter @dvt/plan-verifier test`
@@ -188,6 +194,9 @@ No open findings remain for the current slice.
 - What passed:
   - repository inspection and evidence gathering completed
   - contracts/planner/verifier/API validation commands
+  - `pnpm validate:contracts`
+  - `pnpm golden:validate`
+  - `pnpm docs:status:generate`
   - `pnpm docs:sync`
   - `pnpm verify:prepush`
 - What failed:
@@ -196,6 +205,13 @@ No open findings remain for the current slice.
   - no additional runtime behavior was re-executed in this review; this artifact
     is based on code, docs, tests, previously recorded validation evidence, and
     the final readiness gate rerun
+
+## Unrelated worktree observations
+
+- `apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts`
+  and `packages/@dvt/planner/examples/dbt-workflow.ts` required Prettier-only
+  cleanup to satisfy the branch-wide `verify:prepush` gate. That formatting
+  cleanup was incidental to this slice and did not change behavior.
 
 ## Unblock Roadmap
 

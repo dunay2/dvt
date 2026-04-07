@@ -1,4 +1,7 @@
+import { createHash } from 'node:crypto';
+
 import { CURRENT_EXECUTION_PLAN_VERSION } from '../../src/index.js';
+import { jcsCanonicalize } from '../../src/utils/jcsCanonicalize.js';
 
 /**
  * Fixtures mínimos para validar el contrato normativo del planner (GAP-P0-02).
@@ -86,7 +89,7 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
     schemaVersion: 'v1.2',
     contractVersion: '1.0.0',
     inputHashSha256: HEX_64_A,
-    planId: HEX_64_B,
+    planId: '',
     createdAtIso: '2026-02-26T22:01:00.000Z',
   },
   steps: [
@@ -114,19 +117,27 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
   },
 };
 
+const VALID_PLAN_CORE_FIXTURE = {
+  metadata: {
+    planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+    inputHashSha256: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.inputHashSha256,
+  },
+  steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+} as const;
+
+const VALID_CANONICAL_PLAN_CORE_JSON = jcsCanonicalize(VALID_PLAN_CORE_FIXTURE);
+
+VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId = createHash('sha256')
+  .update(VALID_CANONICAL_PLAN_CORE_JSON, 'utf8')
+  .digest('hex');
+
 export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
   plan: VALID_EXECUTION_PLAN_V2_FIXTURE,
   executionPolicy: {
     pluginCompatibilityFingerprint: HEX_64_A,
     requiresCapabilities: ['basic-execution'],
   },
-  canonicalPlanCoreJson: JSON.stringify({
-    metadata: {
-      planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-      inputHashSha256: HEX_64_A,
-    },
-    steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
-  }),
+  canonicalPlanCoreJson: VALID_CANONICAL_PLAN_CORE_JSON,
 };
 
 export const INVALID_PLANNER_INPUT_FIXTURE = {

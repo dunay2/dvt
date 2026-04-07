@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-04-07.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 725   |
-| Total test files             | 272   |
+| Total source files           | 727   |
+| Total test files             | 273   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 21/23 |
 
@@ -34,7 +34,7 @@ Generated automatically from repository code on 2026-04-07.
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 42        | 12         | yes   | yes  | no        | 36                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 44        | 13         | yes   | yes  | no        | 36                      |
 | packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/engine               | `packages/@dvt/engine`               | 91        | 38         | yes   | yes  | no        | 34                      |
