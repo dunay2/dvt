@@ -1034,37 +1034,24 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const runCancelScenario = async (
-          mode: 'signal' | 'cancel',
-          runIdValue: string
-        ): Promise<{
-          status: RunStatusValue;
-          cancelledCount: number;
-          eventTypes: string[];
-        }> => {
-          const runId = RunId.of(runIdValue);
-          const runPlanRef = createPlanRef('it-plan', planBytes);
-          const runRef = await adapter.startRun(runPlanRef, createRunContext(runId));
-          await waitForCondition(
-            () => store.listRunEvents(runId),
-            (events) => events.some((event) => event.eventType === 'StepStarted'),
-            { timeoutMs: 30_000 }
-          );
-
-          if (mode === 'signal') {
-            await adapter.signal(runRef, { signalId: `s-${runId.value}`, type: 'CANCEL' });
-          } else {
-            await adapter.cancelRun(runRef);
-          }
-
-          const status = await waitForTerminalStatus(adapter, runRef, waitForCondition);
-          const events = await store.listRunEvents(RunId.of(runRef.runId));
-          const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
-          const eventTypes = events.map((event) => event.eventType);
-          return { status, cancelledCount, eventTypes };
+        const signalRunId = RunId.of('run-it-cancel-1');
+        const signalRunRef = await adapter.startRun(
+          createPlanRef('it-plan', planBytes),
+          createRunContext(signalRunId)
+        );
+        await waitForCondition(
+          () => store.listRunEvents(signalRunId),
+          (events) => events.some((event) => event.eventType === 'StepStarted'),
+          { timeoutMs: 30_000 }
+        );
+        await adapter.signal(signalRunRef, { signalId: `s-${signalRunId.value}`, type: 'CANCEL' });
+        const signalStatus = await waitForTerminalStatus(adapter, signalRunRef, waitForCondition);
+        const signalEvents = await store.listRunEvents(RunId.of(signalRunRef.runId));
+        const signalResult = {
+          status: signalStatus,
+          cancelledCount: signalEvents.filter((e) => e.eventType === 'RunCancelled').length,
+          eventTypes: signalEvents.map((event) => event.eventType),
         };
-
-        const signalResult = await runCancelScenario('signal', 'run-it-cancel-1');
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
         expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(signalResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
@@ -1072,7 +1059,24 @@ describe('temporal integration (time-skipping)', () => {
           signalResult.eventTypes.indexOf('RunCancelRequested')
         );
 
-        const cancelResult = await runCancelScenario('cancel', 'run-it-cancel-2');
+        const cancelRunId = RunId.of('run-it-cancel-2');
+        const cancelRunRef = await adapter.startRun(
+          createPlanRef('it-plan', planBytes),
+          createRunContext(cancelRunId)
+        );
+        await waitForCondition(
+          () => store.listRunEvents(cancelRunId),
+          (events) => events.some((event) => event.eventType === 'StepStarted'),
+          { timeoutMs: 30_000 }
+        );
+        await adapter.cancelRun(cancelRunRef);
+        const cancelStatus = await waitForTerminalStatus(adapter, cancelRunRef, waitForCondition);
+        const cancelEvents = await store.listRunEvents(RunId.of(cancelRunRef.runId));
+        const cancelResult = {
+          status: cancelStatus,
+          cancelledCount: cancelEvents.filter((e) => e.eventType === 'RunCancelled').length,
+          eventTypes: cancelEvents.map((event) => event.eventType),
+        };
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
         expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(cancelResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
