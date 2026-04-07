@@ -37,13 +37,6 @@ const PLANNER_MANIFEST_FIXTURE_URL = new URL(
   '../fixtures/planner/basic-manifest.json',
   import.meta.url
 );
-const VALID_PLAN_REF = {
-  uri: 'https://plans.example.com/integration-plan.json',
-  sha256: 'integration-sha-256',
-  schemaVersion: 'v1.2',
-  planId: 'integration-plan',
-  planVersion: '1.0',
-};
 const TENANT_ACTIONS_FULL = [
   'run:start',
   'run:list',
@@ -171,8 +164,13 @@ describeIfPg('protected runtime integration', () => {
         tenantId: TENANT_ID,
         projectId: PROJECT_ID,
         environmentId: ENVIRONMENT_ID,
-        selection: ['model.orders'],
-        planRef: VALID_PLAN_REF,
+        selection: ['model.orders.persisted'],
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.orders.persisted', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
         runId,
         targetAdapter: 'mock',
       },
@@ -193,8 +191,8 @@ describeIfPg('protected runtime integration', () => {
           projectId: PROJECT_ID,
           environmentId: ENVIRONMENT_ID,
           runId,
-          planId: VALID_PLAN_REF.planId,
-          planVersion: VALID_PLAN_REF.planVersion,
+          planId: expect.any(String),
+          planVersion: expect.any(String),
           provider: 'mock',
           status: 'PENDING',
         },
@@ -581,8 +579,13 @@ describeIfPg('protected runtime integration', () => {
           tenantId: TENANT_ID,
           projectId: PROJECT_ID,
           environmentId: ENVIRONMENT_ID,
-          selection: ['model.orders'],
-          planRef: VALID_PLAN_REF,
+          selection: ['model.orders.admin'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model.orders.admin', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
           runId,
           targetAdapter: 'mock',
         },
