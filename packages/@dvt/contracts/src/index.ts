@@ -118,6 +118,8 @@ export * from './errors.js';
 export * from './ports/artifact-store.js';
 export * from './schemas.js';
 export * from './step-registry/StepTypeRegistry.js';
+export * from './utils/jcsCanonicalize.js';
+export * from './utils/sha256HexUtf8.js';
 export * from './validation.js';
 export type {
   AppendResult,

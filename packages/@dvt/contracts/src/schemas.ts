@@ -709,7 +709,26 @@ export const PlanRecordSchema: z.ZodType<PlanRecord> = PlanRecordShapeSchema.sup
       return;
     }
 
-    const canonicalMetadata = canonicalPlanResult.data.metadata;
+    const canonicalPlan = canonicalPlanResult.data;
+    const expectedCanonicalPlanJson = jcsCanonicalize(canonicalPlan);
+    if (record.canonicalPlanJson !== expectedCanonicalPlanJson) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanJson'],
+        message: 'canonicalPlanJson must equal JCS(canonical ExecutionPlan)',
+      });
+      return;
+    }
+
+    if (record.canonicalHash !== sha256HexUtf8(record.canonicalPlanJson)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalHash'],
+        message: 'canonicalHash must match sha256(canonicalPlanJson)',
+      });
+    }
+
+    const canonicalMetadata = canonicalPlan.metadata;
     if (record.planId !== canonicalMetadata.planId) {
       ctx.addIssue({
         code: 'custom',

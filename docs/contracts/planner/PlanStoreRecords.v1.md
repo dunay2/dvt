@@ -42,6 +42,8 @@ This field is distinct from planner-side `canonicalPlanCoreJson`, which is only
 Invariants:
 
 - `canonicalPlanJson` must parse as the canonical `ExecutionPlan`.
+- `canonicalPlanJson` must equal `JCS(canonical ExecutionPlan)`.
+- `canonicalHash` must equal `sha256(canonicalPlanJson)`.
 - top-level `planId`, `planVersion`, `schemaVersion`, and `contractVersion`
   must match `canonicalPlanJson.metadata` exactly.
 - `schemaVersion` and `contractVersion` inherit validity from the canonical

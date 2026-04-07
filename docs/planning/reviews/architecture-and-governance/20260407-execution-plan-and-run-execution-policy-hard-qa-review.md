@@ -13,22 +13,19 @@ planning_type: review
 This artifact reviews the active slice that introduced `RunExecutionPolicy` and
 removed runtime-policy fields from `ExecutionPlan.metadata`.
 
-Update after remediation:
+Update after second-pass remediation:
 
-- `QA-EP-1` is resolved: planner hash evidence now uses
-  `canonicalPlanCoreJson`, while persisted plan records keep
-  `PlanRecord.canonicalPlanJson` for the full `ExecutionPlan`.
-- `QA-EP-2` is resolved: active engine/capabilities/frontend alignment docs now
-  teach `RunExecutionPolicy` plus `RunContext.targetAdapter`, not retired plan
-  metadata fields.
-- `QA-EP-3` is resolved: `PlannerBuildResultV1Schema` now enforces that
-  `canonicalPlanCoreJson` parses as `PlanCore`, equals `JCS(planCore)`, and
-  that `plan.metadata.planId === sha256(canonicalPlanCoreJson)`.
-- `QA-EP-4` is resolved: evidence language and validation baseline were rerun
-  after the corrections; the risk entry still stays open for broader boundary
-  drift, which is the intended residual posture.
-- readiness is now proven by `pnpm validate:contracts`, `pnpm golden:validate`,
-  `pnpm docs:status:generate`, and a final green `pnpm verify:prepush`.
+- `QA-EP-5` is resolved: persisted `canonicalPlanJson` is now
+  `JCS(canonical ExecutionPlan)`, so semantically equivalent plans serialize to
+  the same stored bytes.
+- `QA-EP-6` is resolved: `PlanRecordSchema` now rejects
+  `canonicalHash !== sha256(canonicalPlanJson)`.
+- `QA-EP-7` is resolved: the active execution-model draft now uses the accepted
+  engine-boundary wording.
+- `QA-EP-8` is resolved: validation was rerun after the fixes and the repo gate
+  is green.
+
+The slice is now closed.
 
 Canonical execution tracking remains in:
 
@@ -61,46 +58,29 @@ This document is the hard QA gate for the current slice.
 
 ### Resolved in this iteration
 
-- Title: `canonicalPlanJson` vocabulary split is now explicit
+- Title: persisted canonical plan JSON is now deterministic
   What changed:
-  Planner/build-result contracts, determinism tests, verifier tooling, and the
-  active ADR/docs set now use `canonicalPlanCoreJson` for `JCS(planCore)`.
-  `PlanRecord.canonicalPlanJson` remains the persisted full `ExecutionPlan`.
+  The store mapper now serializes persisted plans with `JCS(canonical
+ExecutionPlan)` instead of `JSON.stringify(...)`, and regression coverage now
+  proves equivalent nested key ordering yields identical persisted JSON.
   Evidence:
-  [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts:178),
-  [schemas.ts](../../../../packages/@dvt/contracts/src/schemas.ts:592),
-  [determinism.test.ts](../../../../packages/@dvt/planner/test/unit/determinism.test.ts:47),
-  [verify.ts](../../../../packages/@dvt/plan-verifier/src/verify.ts:7),
-  [ADR-0043](../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md:168),
-  [ADR-0046](../../../adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md:88),
-  and [PlanStoreRecords.v1.md](../../../contracts/planner/PlanStoreRecords.v1.md:34).
+  [PostgresPlanStore.mappers.ts](../../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts),
+  [PostgresPlanStore.invariants.unit.test.ts](../../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts).
 
-- Title: `PlannerBuildResultV1` now enforces the plan-core invariant
+- Title: `PlanRecord.canonicalHash` is now enforced
   What changed:
-  `PlannerBuildResultV1Schema` now reparses `canonicalPlanCoreJson` as
-  `PlanCore`, rejects mismatches against the returned `plan`, and rejects
-  `planId` values that do not match `sha256(canonicalPlanCoreJson)`.
-  Negative regression coverage was added at the contract layer, including hash
-  vectors and schema-level rejection.
+  `PlanRecordSchema` now rejects both non-canonical `canonicalPlanJson` and
+  mismatched `canonicalHash`, and contract tests cover the negative paths.
   Evidence:
-  [schemas.ts](../../../../packages/@dvt/contracts/src/schemas.ts:592) and
-  [planner.contract.test.ts](../../../../packages/@dvt/contracts/test/planner.contract.test.ts:163),
-  [sha256HexUtf8.test.ts](../../../../packages/@dvt/contracts/test/sha256HexUtf8.test.ts:1).
+  [schemas.ts](../../../../packages/@dvt/contracts/src/schemas.ts),
+  [validation.test.ts](../../../../packages/@dvt/contracts/test/validation.test.ts).
 
-- Title: Normative-looking engine capability docs still describe removed fields
+- Title: active execution-model docs now use the accepted engine-boundary wording
   What changed:
-  Active engine/capability docs now reference `RunExecutionPolicy` for
-  capability requirements and `RunContext.targetAdapter` for adapter
-  selection.
+  The active execution-model draft no longer teaches `Engine does not decide`;
+  it now matches the accepted engine-boundary rationale.
   Evidence:
-  [IWorkflowEngine.reference.v1.md](../../../architecture/engine/contracts/engine/IWorkflowEngine.reference.v1.md),
-  [capabilities/README.md](../../../architecture/engine/contracts/capabilities/README.md),
-  and
-  [FRONTEND_PLAN_BACK_ALIGNMENT.md](../../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md).
-
-- Title: Adjacent frontend alignment docs still show `requiresCapabilities` on `PlanRef`
-  What changed:
-  The frontend alignment doc no longer teaches `PlanRef.requiresCapabilities`.
+  [dvt-execution-model.md](../../execution-model/dvt-execution-model.md).
 
 ### Remaining
 
@@ -109,15 +89,14 @@ No open findings remain for the current slice.
 ## Alignment
 
 - Doc vs code:
-  Aligned. Planner/store vocabulary and active engine/capability docs now
-  describe the shipped `RunExecutionPolicy` model.
+  Aligned.
 - Promise vs implementation:
   The code now separates `RunExecutionPolicy` from `ExecutionPlan.metadata` and
   uses distinct vocabulary for plan-core hash evidence versus persisted plan
-  JSON.
+  JSON, with deterministic persistence on both artifacts.
 - Tests vs claims:
-  Tests and active planner/store docs now agree on the split between
-  `canonicalPlanCoreJson` and `PlanRecord.canonicalPlanJson`.
+  Planner-build invariants and plan-record persistence invariants are both
+  covered.
 - Current truth vs planned truth:
   Current truth matches the intended plan/policy separation.
 - Documentation update status:
@@ -134,32 +113,35 @@ No open findings remain for the current slice.
 ## Architecture Assessment
 
 - SRP:
-  Improved at both the runtime-policy boundary and the planner/store artifact
-  vocabulary boundary.
+  Improved at both the planner/engine boundary and the state-store artifact
+  seam.
 - DDD:
   Better bounded-context ownership between planner and engine, without
   persistence vocabulary leaking across contexts.
 - Hexagonal:
   Improved. Engine admission now consumes a separate execution-policy contract.
-  The remaining weakness is contract language, not port placement.
+  Persisted-plan contract enforcement now also lives at the correct port.
 - CQRS if relevant:
   Still directionally correct. The planner query artifact is now explicitly
   `plan + executionPolicy + canonicalPlanCoreJson`.
 - Complexity:
-  Reduced in both code and active public contract language.
+  Reduced in both public contract language and persisted-plan handling.
 - Modularity:
-  Good package seams; terminology seam corrected for the active slice.
+  Good package seams; the persistence seam now has a single enforced owner.
 
 ## Test Assessment
 
 - Negative paths present:
-  Capability mismatch and plan-ref alignment checks are covered.
+  Capability mismatch, plan-ref alignment, and planner-build hash mismatch are
+  covered.
 - Negative paths missing:
   None specific to the corrected slice.
 - Regression status:
-  Strong on runtime separation and artifact-language consistency.
+  Strong on runtime separation, planner-build invariants, and persisted
+  plan-record determinism.
 - Determinism:
-  Planner determinism remains strong and clearly tested.
+  Planner determinism remains strong and clearly tested. Persisted plan
+  determinism is now also guaranteed at the mapper/parser seam.
 - Local suite vs meaningful global confidence:
   Global confidence is now consistent with the package-local and integration
   suites that exercised the contract split.
@@ -179,148 +161,113 @@ No open findings remain for the current slice.
 - Commands executed:
   - `git diff --stat origin/main...HEAD`
   - `git diff --name-only origin/main...HEAD`
-  - `rg -n "executionPolicy|pluginCompatibilityFingerprint|requiresCapabilities|PlanRef|StoredPlanArtifact|canonicalPlanJson" apps packages docs/adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md`
+  - `rg -n "executionPolicy|pluginCompatibilityFingerprint|requiresCapabilities|PlanRef|StoredPlanArtifact|canonicalPlanJson|canonicalHash" apps packages docs`
   - targeted file inspections listed in the findings above
-  - `pnpm --filter @dvt/contracts test`
   - `pnpm --filter @dvt/contracts build`
-  - `pnpm validate:contracts`
-  - `pnpm --filter @dvt/planner test`
-  - `pnpm --filter @dvt/planner build`
-  - `pnpm --filter @dvt/plan-verifier test`
-  - `pnpm --filter @dvt/plan-verifier build`
-  - `pnpm --filter dvt-api test`
-  - `pnpm docs:sync`
+  - `pnpm --filter @dvt/contracts test`
+  - `pnpm --filter @dvt/adapter-postgres test`
+  - `pnpm exec markdownlint-cli2 docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md docs/planning/reviews/review-status-board.md`
   - `pnpm verify:prepush`
 - What passed:
   - repository inspection and evidence gathering completed
-  - contracts/planner/verifier/API validation commands
-  - `pnpm validate:contracts`
-  - `pnpm golden:validate`
-  - `pnpm docs:status:generate`
-  - `pnpm docs:sync`
+  - contracts build/tests
+  - adapter-postgres tests
+  - markdownlint for the QA artifact and board
   - `pnpm verify:prepush`
 - What failed:
-  - none in the final rerun recorded by this artifact
+  - none during this review pass
 - What could not be verified:
-  - no additional runtime behavior was re-executed in this review; this artifact
-    is based on code, docs, tests, previously recorded validation evidence, and
-    the final readiness gate rerun
+  - no additional runtime behavior was re-executed in this pass; this review is
+    focused on contract/store determinism and active docs
 
 ## Unrelated worktree observations
 
-- `apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts`
-  and `packages/@dvt/planner/examples/dbt-workflow.ts` required Prettier-only
-  cleanup to satisfy the branch-wide `verify:prepush` gate. That formatting
-  cleanup was incidental to this slice and did not change behavior.
+None in this pass.
 
 ## Unblock Roadmap
 
-### Wave 0 - Truth and documentation baseline
-
-Tasks: `QA-EP-1`, `QA-EP-2`
-
-Target:
-
-- one meaning for `canonicalPlanJson` exists across planner, contracts, store,
-  ADRs, and evidence;
-- active reference docs no longer describe retired `ExecutionPlan.metadata`
-  policy fields;
-- evidence and rationale documents describe the actual contract truth.
-
-### Wave 1 - Boundary and ownership hardening
-
-Tasks: `QA-EP-3`
-
-Target:
-
-- planner/build-result contracts enforce the chosen invariant;
-- store persistence, plan records, and verifier tooling use one stable
-  vocabulary.
-
-### Wave 2 - Regression closure
-
-Tasks: `QA-EP-4`
-
-Target:
-
-- cross-package contract regressions fail fast;
-- docs and evidence remain aligned with implementation.
+No open unblock roadmap remains for this slice.
 
 ## Action Artifact
 
 ### Task Checklist
 
-- [x] `QA-EP-1` Unify `canonicalPlanJson` vocabulary across planner, store, and docs
-- [x] `QA-EP-2` Update active contract-reference docs to the `RunExecutionPolicy` model
-- [x] `QA-EP-3` Add missing contract invariants and regression tests
-- [x] `QA-EP-4` Refresh evidence/risk docs and close with validation evidence
+- [x] `QA-EP-5` Canonicalize persisted `ExecutionPlan` JSON before hashing and storage
+- [x] `QA-EP-6` Enforce `PlanRecord.canonicalHash === sha256(canonicalPlanJson)`
+- [x] `QA-EP-7` Update active execution-model wording for engine boundary truth
+- [x] `QA-EP-8` Re-run validation and refresh the QA artifact after closure
 
 ### Task Details
 
-#### `QA-EP-1` Unify `canonicalPlanJson` vocabulary across planner, store, and docs
+#### `QA-EP-5` Canonicalize persisted `ExecutionPlan` JSON before hashing and storage
 
-- Objective: Remove the dual meaning of `canonicalPlanJson`.
-- Scope: planner contracts, plan-store docs, ADR-0043, ADR-0046, evidence doc,
-  and store mapper naming.
-- Recommended owner: Contracts + planner + state-store owners.
+- Objective: Make persisted plan artifacts deterministic across semantically
+  equivalent builds.
+- Scope: `toPersistedCanonicalPlanJson`, plan-store hashing, and store
+  regression tests.
+- Recommended owner: State-store + contracts owners.
+- Dependencies: none.
+- Documentation impact: update plan-store record docs if persistence format is
+  tightened.
+- Evidence / risk-doc impact: mention deterministic persisted JSON in evidence.
+- Comment with rationale: A plan store cannot call an artifact canonical if its
+  bytes change with map insertion order while `planId` remains constant.
+- Definition of Done:
+  - semantically equivalent `ExecutionPlan` values produce identical persisted
+    `canonicalPlanJson`;
+  - `canonicalHash` derived from the persisted JSON is stable for equivalent
+    builds;
+  - an adapter-postgres regression test proves the invariant.
+    Status: done.
+
+#### `QA-EP-6` Enforce `PlanRecord.canonicalHash === sha256(canonicalPlanJson)`
+
+- Objective: Turn `canonicalHash` into a real contract invariant.
+- Scope: `PlanRecordSchema`, contract tests, and JSON-schema sync tests.
+- Recommended owner: Contracts owners.
+- Dependencies: `QA-EP-5`.
+- Documentation impact: `PlanStoreRecords.v1.md` should list the invariant
+  explicitly.
+- Evidence / risk-doc impact: evidence should cite the negative-path test.
+- Comment with rationale: A hash field that is never checked is decorative
+  metadata, not a contract.
+- Definition of Done:
+  - `parsePlanRecord` rejects mismatched `canonicalHash`;
+  - a negative test proves rejection.
+    Status: done.
+
+#### `QA-EP-7` Update active execution-model wording for engine boundary truth
+
+- Objective: Remove stale engine-boundary doctrine from active planning docs.
+- Scope: `docs/planning/execution-model/dvt-execution-model.md` and any active
+  linked references that repeat the same wording.
+- Recommended owner: Docs + architecture owners.
 - Dependencies: none.
 - Documentation impact: direct.
-- Evidence / risk-doc impact: update both ARC documents for the slice.
-- Comment with rationale: A field name with two incompatible meanings is not a
-  naming nit; it is a broken boundary contract.
+- Evidence / risk-doc impact: none unless the slice widens.
+- Comment with rationale: Active docs must not keep a slogan that the
+  architecture review has already rejected.
 - Definition of Done:
-  - one repository-wide definition of `canonicalPlanJson` exists;
-  - the other artifact is renamed or explicitly removed;
-  - docs, schemas, and store code use the same term for the same artifact.
+  - the active execution-model doc no longer says `Engine does not decide`;
+  - wording matches the accepted engine-boundary rationale;
+  - no active doc linked from this slice teaches the stale principle.
+    Status: done.
 
-#### `QA-EP-2` Update active contract-reference docs to the `RunExecutionPolicy` model
+#### `QA-EP-8` Re-run validation and refresh the QA artifact after closure
 
-- Objective: Remove active docs that still teach runtime policy on
-  `ExecutionPlan.metadata`.
-- Scope: engine contract reference docs, capabilities docs, and adjacent
-  backend-alignment docs.
-- Recommended owner: Docs + engine/contracts owners.
-- Dependencies: `QA-EP-1` for terminology.
-- Documentation impact: direct.
-- Evidence / risk-doc impact: mention the doc closure in evidence.
-- Comment with rationale: A slice that changes contracts but leaves active
-  reference docs stale is not done; it only moved the drift.
-- Definition of Done:
-  - active docs no longer mention retired policy fields on
-    `ExecutionPlan.metadata`;
-  - `RunExecutionPolicy` and `RunContext.targetAdapter` are the taught path;
-  - stale examples are removed or explicitly marked historical.
-
-#### `QA-EP-3` Add missing contract invariants and regression tests
-
-- Objective: Make the plan/policy split fail fast when a producer violates it.
-- Scope: `PlannerBuildResultV1Schema`, planner contract tests, plan-store
-  contract tests, and any verifier fixtures touched by the chosen vocabulary.
-- Recommended owner: Contracts + planner owners.
-- Dependencies: `QA-EP-1`.
-- Documentation impact: minimal, but examples should mirror the invariant.
-- Evidence / risk-doc impact: evidence doc should cite the new regression tests.
-- Comment with rationale: The public contract is only as strong as the invariant
-  it actually enforces.
-- Definition of Done:
-  - schema enforces the chosen canonical JSON invariant;
-  - at least one negative contract test proves mismatch rejection;
-  - store persistence and planner output are covered by the same terminology.
-
-#### `QA-EP-4` Refresh evidence/risk docs and close with validation evidence
-
-- Objective: Make the governed slice evidence truthful after the corrections.
-- Scope: current ARC evidence/risk docs and final validation evidence.
+- Objective: Close the residual gaps with fresh evidence.
+- Scope: touched package tests, repo gate, and this QA artifact.
 - Recommended owner: Slice owner.
-- Dependencies: `QA-EP-1` through `QA-EP-3`.
-- Documentation impact: direct.
-- Evidence / risk-doc impact: direct.
-- Comment with rationale: ARC evidence that describes the wrong artifact shape
-  weakens governance and misleads later reviews.
+- Dependencies: `QA-EP-5` through `QA-EP-7`.
+- Documentation impact: update this artifact and board status.
+- Evidence / risk-doc impact: update if the closure changes residual risk.
+- Comment with rationale: The slice is not `Ready` until the remaining
+  persistence and doc gaps are actually closed, not inferred closed.
 - Definition of Done:
-  - evidence doc reflects the final artifact vocabulary;
-  - risk entry reflects the residual drift risk accurately;
-  - validation evidence is rerun and recorded.
+  - touched package tests are rerun;
+  - `pnpm verify:prepush` is green;
+  - this artifact and the board reflect the final status.
+    Status: done.
 
 ## Mermaid Diagram
 
@@ -330,18 +277,20 @@ Target:
 flowchart LR
   Planner[Planner.buildPlan] --> CoreJson["canonicalPlanCoreJson = JCS(planCore)"]
   Planner --> Plan[ExecutionPlan]
-  Store[PostgresPlanStore] --> PersistedJson["toPersistedCanonicalPlanJson(buildResult)"]
+  Plan --> PlanId["planId = sha256(canonicalPlanCoreJson)"]
+  Store[PostgresPlanStore] --> PersistedJson["canonicalPlanJson = JCS(canonical ExecutionPlan)"]
+  PersistedJson --> Hash["canonicalHash = sha256(canonicalPlanJson)"]
   PlanRecord[PlanRecordSchema] --> PersistedJson
-  ADR[ADR-0046 / docs] --> PersistedJson
-  CoreJson -.distinct vocabulary.-> PersistedJson
+  PlanRecord --> Hash
 ```
 
 ### Unblock sequence
 
 ```mermaid
 flowchart LR
-  Wave0["Wave 0: vocabulary and doc truth"] --> Wave1["Wave 1: contract invariant hardening"]
-  Wave1 --> Wave2["Wave 2: evidence and regression closure"]
+  Fixes["Mapper + schema + docs fixes"] --> Tests["Contracts + adapter-postgres tests"]
+  Tests --> Gate["verify:prepush"]
+  Gate --> Closeout["QA artifact back to Ready"]
 ```
 
 ## Validation Baseline For Each Execution Slice

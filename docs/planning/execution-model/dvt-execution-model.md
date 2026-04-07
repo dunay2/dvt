@@ -78,7 +78,7 @@ DVT+ execution follows these rules:
 ## 4. Core execution principles
 
 1. **UI does not execute.**
-2. **Engine does not decide.**
+2. **Engine does not invent plan topology or provider semantics, but it does own execution-policy governance at the system boundary.**
 3. **Planner does not persist.**
 4. **State is the source of truth for run status.**
 5. **Provider status is enrichment, not authority.**

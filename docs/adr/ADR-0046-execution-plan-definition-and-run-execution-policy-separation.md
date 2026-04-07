@@ -111,7 +111,8 @@ engine-owned execution policy boundary.
 
 Per `ADR-0043`, the persisted canonical plan artifact remains singular.
 
-- `canonicalPlanJson` continues to store the canonical `ExecutionPlan`
+- `canonicalPlanJson` continues to store `JCS(canonical ExecutionPlan)`
+- `canonicalHash` continues to mean `sha256(canonicalPlanJson)`
 - `RunExecutionPolicy` is stored as sidecar execution metadata, not as a second
   canonical plan artifact
 - `canonicalPlanCoreJson` is planner-side hash evidence, not a second persisted

@@ -10,6 +10,8 @@ import {
   parsePlanRecord,
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
+  jcsCanonicalize,
+  sha256HexUtf8,
 } from '@dvt/contracts';
 
 export type StoredPlanRow = {
@@ -44,7 +46,7 @@ export function toPersistedCanonicalPlanJson(buildResult: PlannerBuildResultV1):
     },
     steps: buildResult.plan.steps,
   };
-  return JSON.stringify(persistedPlan);
+  return jcsCanonicalize(persistedPlan);
 }
 
 export function buildPlanRecord(
@@ -56,7 +58,7 @@ export function buildPlanRecord(
   return parsePlanRecord({
     planId: buildResult.plan.metadata.planId,
     canonicalPlanJson,
-    canonicalHash: createHash('sha256').update(canonicalPlanJson).digest('hex'),
+    canonicalHash: sha256HexUtf8(canonicalPlanJson),
     planVersion: buildResult.plan.metadata.planVersion,
     schemaVersion: buildResult.plan.metadata.schemaVersion,
     contractVersion: buildResult.plan.metadata.contractVersion,

@@ -54,7 +54,8 @@ The planner now returns:
 - `executionPolicy`
 - `canonicalPlanCoreJson`
 - persisted `PlanRecord` artifacts keep `canonicalPlanJson` for the full
-  `ExecutionPlan`
+  `ExecutionPlan` serialized as `JCS(canonical ExecutionPlan)` with
+  `canonicalHash = sha256(canonicalPlanJson)`
 
 The engine and API now consume execution policy from stored-plan sidecar
 metadata rather than from `PlanRef` or `ExecutionPlan.metadata`.

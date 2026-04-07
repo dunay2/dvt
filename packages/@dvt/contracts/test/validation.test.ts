@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { CONTRACTS_ERROR_CODE, CONTRACTS_ERROR_MESSAGE_KEY } from '../src/errorContract.js';
+import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
+import { sha256HexUtf8 } from '../src/utils/sha256HexUtf8.js';
 import {
   ContractValidationError,
   parseGenericGraphSourceV1,
@@ -20,11 +22,11 @@ import {
 import { VALID_EXECUTION_PLAN_V2_FIXTURE } from './fixtures/planner-contract.fixtures.js';
 
 describe('contracts: validation helpers', () => {
-  const validCanonicalPlanJson = JSON.stringify(VALID_EXECUTION_PLAN_V2_FIXTURE);
+  const validCanonicalPlanJson = jcsCanonicalize(VALID_EXECUTION_PLAN_V2_FIXTURE);
   const validPlanRecord = {
     planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
     canonicalPlanJson: validCanonicalPlanJson,
-    canonicalHash: 'a'.repeat(64),
+    canonicalHash: sha256HexUtf8(validCanonicalPlanJson),
     planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
     schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
     contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
@@ -388,6 +390,37 @@ describe('contracts: validation helpers', () => {
       parsePlanRecord({
         ...validPlanRecord,
         canonicalPlanJson: JSON.stringify({ metadata: { planId: 'a'.repeat(64) } }),
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects PlanRecord when canonicalHash does not match canonicalPlanJson', () => {
+    expect(() =>
+      parsePlanRecord({
+        ...validPlanRecord,
+        canonicalHash: 'f'.repeat(64),
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects PlanRecord when canonicalPlanJson is not JCS(canonical ExecutionPlan)', () => {
+    const nonCanonicalPlanJson = JSON.stringify({
+      steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+      metadata: {
+        createdAtIso: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.createdAtIso,
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        inputHashSha256: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.inputHashSha256,
+        contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
+        schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      },
+    });
+
+    expect(() =>
+      parsePlanRecord({
+        ...validPlanRecord,
+        canonicalPlanJson: nonCanonicalPlanJson,
+        canonicalHash: sha256HexUtf8(nonCanonicalPlanJson),
       })
     ).toThrow(ContractValidationError);
   });

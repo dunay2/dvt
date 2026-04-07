@@ -4,6 +4,7 @@ import {
   assertStoredPlanMatchesRequest,
   buildExecutionPolicyFromStoredRow,
   buildPlanRefFromStoredRow,
+  toPersistedCanonicalPlanJson,
   toPlanExecutabilityRecord,
   type StoredPlanRow,
 } from '../src/PostgresPlanStore.mappers.js';
@@ -40,6 +41,50 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
         executablePlanJson: baseStoredRow.executable_plan_json ?? '',
       })
     ).toThrow('PLAN_STORE_CONFLICT');
+  });
+
+  test('toPersistedCanonicalPlanJson is stable for equivalent nested key ordering', () => {
+    const buildResultA = {
+      plan: {
+        metadata: {
+          planVersion: '1.0',
+          schemaVersion: 'v1.2',
+          contractVersion: '1.0.0',
+          inputHashSha256: 'a'.repeat(64),
+          planId: 'b'.repeat(64),
+          createdAtIso: '2026-04-07T00:00:00.000Z',
+        },
+        steps: [
+          {
+            stepId: 's1',
+            kind: 'CUSTOM',
+            dependsOn: [],
+            stepTypeConfig: { alpha: 1, beta: 2 },
+          },
+        ],
+      },
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    };
+
+    const buildResultB = {
+      ...buildResultA,
+      plan: {
+        ...buildResultA.plan,
+        steps: [
+          {
+            stepId: 's1',
+            kind: 'CUSTOM',
+            dependsOn: [],
+            stepTypeConfig: { beta: 2, alpha: 1 },
+          },
+        ],
+      },
+    };
+
+    expect(toPersistedCanonicalPlanJson(buildResultA)).toBe(
+      toPersistedCanonicalPlanJson(buildResultB)
+    );
   });
 
   test('toPlanExecutabilityRecord rejects VALID rows without validated_at', () => {
