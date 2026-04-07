@@ -65,9 +65,9 @@ apparently isolated service factory.
 Introduce an explicit mock workspace state seam owned by
 `workspaceService.mock.ts`. `createMockWorkspaceService()` will allocate its own
 state by default, so every service instance gets an isolated graph, discoverable
-file tree, and editable file-content map. A helper state factory will exist for
-tests or demos that want deliberate shared state across multiple service
-instances.
+file tree with unique workspace paths, and editable file-content map. A helper
+state factory will exist for tests or demos that want deliberate shared state
+across multiple service instances.
 
 ### Rejected alternatives
 
@@ -117,6 +117,8 @@ instances.
   - positive path proving explicit shared state still shares mutations when
     requested
   - regression check proving per-instance file saves stay local by default
+  - regression check proving the default mock file tree does not duplicate
+    nested workspace paths
   - regression check proving newly saved mock files become discoverable through
     `listFiles()` only in the owning instance
 - Libraries evaluated:
@@ -124,21 +126,49 @@ instances.
 
 ## Changes made
 
-| File or path                                                                              | Change                                                                                                                                                   | Why                                                                                                                              |
-| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/web/src/app/services/workspace/workspaceService.mock.ts`                            | Introduced `MockWorkspaceState`, `createMockWorkspaceState()`, instance-local graph/file-tree/file-content state, and deep-clone helpers.                | Removes hidden process-global mutable state while preserving an explicit opt-in shared-state seam.                               |
-| `apps/web/src/app/services/workspace/workspaceService.test.ts`                            | Added RED->GREEN regression tests for default graph isolation, explicit shared state, local file-save isolation, and new-path file-tree discoverability. | Proves the adapter no longer leaks state across independent mock service instances and now surfaces newly saved paths correctly. |
-| `apps/web/src/app/services/composition/appServices.test.ts`                               | Added a composition-root regression proving two `buildAppServices({ mode: 'mock' })` calls do not share workspace graph mutations.                       | Verifies the real app composition path preserves isolation instead of accidentally reusing singleton state.                      |
-| `docs/architecture/frontend/appshell/data-source-service-boundary.md`                     | Documented instance-local mock workspace state and the explicit `createMockWorkspaceState()` test seam.                                                  | Keeps the canonical frontend boundary doc aligned with the hardened adapter behavior.                                            |
-| `docs/planning/state/agent-lane-e.yaml`                                                   | Moved `F-04-RISK-B` and its parent `F-04-RISK` to evidence-backed review state.                                                                          | Keeps planning truth aligned with the shipped slice instead of leaving the risk queued after implementation.                     |
-| `docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md` | Removed stale wording that still described `F-04-RISK-B` as open.                                                                                        | Prevents governance drift across sibling hard-QA artifacts.                                                                      |
-| `docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md`                | Recorded think-first analysis, implementation rationale, and validation evidence for the slice.                                                          | Makes the slice auditable and lane-traceable.                                                                                    |
+- `apps/web/src/app/services/workspace/workspaceService.mock.ts`
+  Changed: introduced `MockWorkspaceState`, `createMockWorkspaceState()`,
+  instance-local graph/file-tree/file-content state, deep-clone helpers, and a
+  canonical nested default `models` tree.
+  Why: removes hidden process-global mutable state while preserving an explicit
+  opt-in shared-state seam and avoids duplicate default file-tree paths.
+- `apps/web/src/app/services/workspace/workspaceService.test.ts`
+  Changed: added RED->GREEN regression tests for default graph isolation,
+  explicit shared state, local file-save isolation, default-tree path
+  uniqueness, and new-path file-tree discoverability.
+  Why: proves the adapter no longer leaks state across independent mock service
+  instances, keeps the default tree canonical, and surfaces newly saved paths
+  correctly.
+- `apps/web/src/app/services/composition/appServices.test.ts`
+  Changed: added a composition-root regression proving two
+  `buildAppServices({ mode: 'mock' })` calls do not share workspace graph
+  mutations.
+  Why: verifies the real app composition path preserves isolation instead of
+  accidentally reusing singleton state.
+- `docs/architecture/frontend/appshell/data-source-service-boundary.md`
+  Changed: documented instance-local mock workspace state and the explicit
+  `createMockWorkspaceState()` test seam.
+  Why: keeps the canonical frontend boundary doc aligned with the hardened
+  adapter behavior.
+- `docs/planning/state/agent-lane-e.yaml`
+  Changed: moved `F-04-RISK-B` and its parent `F-04-RISK` to evidence-backed
+  review state and refreshed their status rationale for unique file-tree paths.
+  Why: keeps planning truth aligned with the shipped slice instead of leaving
+  the risk queued after implementation.
+- `docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md`
+  Changed: removed stale wording that still described `F-04-RISK-B` as open.
+  Why: prevents governance drift across sibling hard-QA artifacts.
+- `docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md`
+  Changed: recorded think-first analysis, implementation rationale, and
+  validation evidence for the slice, including the duplicated-path follow-up
+  fix.
+  Why: makes the slice auditable and lane-traceable.
 
 ## TDD evidence
 
 - RED:
   - `pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.test.ts --config vitest.config.ts`
-  - Failed before implementation because default mock services shared imported graph nodes, file-content saves leaked across instances, and `createMockWorkspaceState()` did not exist.
+  - Failed before implementation because default mock services shared imported graph nodes, file-content saves leaked across instances, the default file tree duplicated nested workspace paths, and `createMockWorkspaceState()` did not exist.
 - GREEN:
   - `pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.test.ts src/app/services/composition/appServices.test.ts --config vitest.config.ts`
   - Passed after the adapter moved mutable state behind an explicit per-instance seam.
@@ -151,11 +181,9 @@ instances.
 
 ## Validation note
 
-`pnpm verify:prepush` was executed and passed, but its diff-based subchecks
-reported "No changed files detected" because the branch still carries an
-uncommitted worktree delta. To avoid hiding that limitation, direct
-`prettier --check`, `eslint`, and `markdownlint-cli2` commands were also run on
-the full modified file set.
+`pnpm verify:prepush` was executed and passed on committed branch state. This
+follow-up fix also reran the focused RED->GREEN workspace/composition tests to
+close the duplicated-path regression explicitly.
 
 ## Test evidence
 
@@ -182,6 +210,5 @@ implementation was added.
 
 - `F-04-RISK` is now closed at the code-and-review level; remaining `F-04`
   work sits under `F-04-RESIDUAL`.
-- This branch still contains the earlier uncommitted `F-04-RISK-A-QA-03`
-  documentary/test delta, so publication should separate or intentionally group
-  the two slices before PR creation.
+- Future mock file-tree fixture changes should preserve canonical nesting and
+  unique workspace paths so `listFiles()` stays a trustworthy UI seam.
