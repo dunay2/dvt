@@ -725,6 +725,7 @@ async function waitForTerminalStatus(
 interface CancelScenarioRequest {
   mode: 'signal' | 'cancel';
   adapter: TemporalAdapter;
+  plan: Parameters<TemporalAdapter['startRun']>[0];
   planRef: PlanRef;
   runId: RunId;
   store: TestStateStore;
@@ -737,7 +738,7 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   eventTypes: string[];
 }> {
   const runCtx = createRunContext(args.runId);
-  const runRef = await args.adapter.startRun(args.planRef, runCtx);
+  const runRef = await args.adapter.startRun(args.plan, args.planRef, runCtx);
   await args.waitForCondition(
     () => args.store.listRunEvents(args.runId),
     (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -978,7 +979,6 @@ describe('temporal integration (time-skipping)', () => {
       const plan = mkLinearThreeStepPlan();
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-      const fetchedPlanRefs: PlanRef[] = [];
       const planRef = createPlanRef('it-plan-linear-3', planBytes, {
         uri: 'dvt-plan://postgres/it-plan-linear-3',
       });
@@ -996,11 +996,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes, {
-          onFetch(planRefFromFetch) {
-            fetchedPlanRefs.push(planRefFromFetch);
-          },
-        }),
+        activityDeps: createActivityDeps(store, outbox, planBytes),
       });
 
       await worker.start(env.nativeConnection);
@@ -1019,7 +1015,8 @@ describe('temporal integration (time-skipping)', () => {
           { timeoutMs: 30_000 }
         );
 
-        expect(fetchedPlanRefs).toContainEqual(planRef);
+        const metadata = await store.getRunMetadataByRunId(ctx.runId);
+        expect(metadata?.planRef).toEqual(planRef);
         expect((await store.listRunEvents(RunId.of(ctx.runId))).at(-1)?.eventType).toBe(
           'RunCompleted'
         );
@@ -1073,6 +1070,7 @@ describe('temporal integration (time-skipping)', () => {
         const signalResult = await runCancelScenario({
           mode: 'signal',
           adapter,
+          plan,
           planRef,
           runId: RunId.of('run-it-cancel-1'),
           store,
@@ -1088,6 +1086,7 @@ describe('temporal integration (time-skipping)', () => {
         const cancelResult = await runCancelScenario({
           mode: 'cancel',
           adapter,
+          plan,
           planRef,
           runId: RunId.of('run-it-cancel-2'),
           store,
