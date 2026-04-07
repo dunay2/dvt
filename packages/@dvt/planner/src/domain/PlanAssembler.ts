@@ -3,7 +3,7 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → AssemblePlanCommand (input VO)
- *   - QUERY side   → { plan: ExecutionPlan; canonicalPlanJson: string } (read model)
+ *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanCoreJson: string }
  *
  *  SRP: sole responsibility — hash inputs, assemble the immutable ExecutionPlan,
  *       attach observability layers. Knows nothing about graph topology or node selection.
@@ -12,6 +12,7 @@ import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
+  type RunExecutionPolicy,
 } from '@dvt/contracts';
 
 import { sha256CanonicalJson } from './hashing.js';
@@ -35,9 +36,11 @@ export class AssemblePlanCommand {
 export class PlanAssembler {
   constructor(private readonly metrics: PlannerMetrics) {}
 
-  async execute(
-    command: AssemblePlanCommand
-  ): Promise<{ plan: ExecutionPlan; canonicalPlanJson: string }> {
+  async execute(command: AssemblePlanCommand): Promise<{
+    plan: ExecutionPlan;
+    executionPolicy: RunExecutionPolicy;
+    canonicalPlanCoreJson: string;
+  }> {
     const inputHashSha256 = await this.computeInputHash(command.normalizedInput);
     const pluginCompatibilityFingerprint = await this.computePluginCompatibilityFingerprint(
       command.normalizedSteps
@@ -45,7 +48,7 @@ export class PlanAssembler {
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
     const {
-      canonical: canonicalPlanJson,
+      canonical: canonicalPlanCoreJson,
       sha256: planId,
       bytes,
     } = await sha256CanonicalJson(planCore);
@@ -56,14 +59,12 @@ export class PlanAssembler {
     this.metrics.recordPlanSize(bytes);
 
     return {
-      plan: this.assembleFinalPlan(
-        planCore,
-        planId,
-        command.normalizedInput,
+      plan: this.assembleFinalPlan(planCore, planId, command.normalizedInput),
+      executionPolicy: this.buildExecutionPolicy(
         pluginCompatibilityFingerprint,
         command.requiredCapabilities
       ),
-      canonicalPlanJson,
+      canonicalPlanCoreJson,
     };
   }
 
@@ -98,9 +99,7 @@ export class PlanAssembler {
   private assembleFinalPlan(
     planCore: PlanCore,
     planId: string,
-    input: NormalizedPlannerInput,
-    pluginCompatibilityFingerprint: string,
-    requiredCapabilities: readonly string[]
+    input: NormalizedPlannerInput
   ): ExecutionPlan {
     const planBase: ExecutionPlan = {
       ...planCore,
@@ -110,8 +109,6 @@ export class PlanAssembler {
         contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
         planId,
         createdAtIso: new Date().toISOString(),
-        pluginCompatibilityFingerprint,
-        ...(requiredCapabilities.length > 0 ? { requiresCapabilities: requiredCapabilities } : {}),
       },
     };
 
@@ -129,6 +126,18 @@ export class PlanAssembler {
     }
 
     return plan;
+  }
+
+  private buildExecutionPolicy(
+    pluginCompatibilityFingerprint: string,
+    requiredCapabilities: readonly string[]
+  ): RunExecutionPolicy {
+    return {
+      pluginCompatibilityFingerprint,
+      ...(requiredCapabilities.length > 0
+        ? { requiresCapabilities: [...requiredCapabilities] }
+        : {}),
+    };
   }
 
   private async computePluginCompatibilityFingerprint(

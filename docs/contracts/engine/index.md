@@ -18,6 +18,8 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - `packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunEvents.v2.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts`
+- `packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts`
+- `packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/StartRunIntentPolicy.v1.ts`
 
 ## Reference Documentation
@@ -40,6 +42,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - [RunEventCatalog.v1.md](../../architecture/engine/contracts/engine/RunEventCatalog.v1.md)
 - [RunEvents.v1.md](../../architecture/engine/contracts/engine/RunEvents.v1.md)
 - [RunEvents.v2.0.md](../../architecture/engine/contracts/engine/RunEvents.v2.0.md)
+- [RunExecutionPolicy.v1.md](../../architecture/engine/contracts/engine/RunExecutionPolicy.v1.md)
 - [SignalsAndAuth.v1.md](../../architecture/engine/contracts/engine/SignalsAndAuth.v1.md)
 - [PluginSandbox.v1.md](../../architecture/engine/contracts/extensions/PluginSandbox.v1.md)
 - [MIGRATION_v1.1.1_to_v2.0.0.md](../../architecture/engine/contracts/MIGRATION_v1.1.1_to_v2.0.0.md)

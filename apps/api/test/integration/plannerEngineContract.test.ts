@@ -5,6 +5,7 @@ import { URL } from 'node:url';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
+  parseExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunContext,
@@ -141,7 +142,10 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
       planFetcher: {
-        fetch: async () => Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+        fetch: async () => ({
+          bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+          executionPolicy: {},
+        }),
       },
     }),
     core: new WorkflowEngineCoreService({
@@ -162,7 +166,10 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     observability: createNoopObservability(),
     adapters,
     planFetcher: {
-      fetch: async () => Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+      fetch: async () => ({
+        bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+        executionPolicy: {},
+      }),
     },
   });
 
@@ -286,7 +293,7 @@ describe('planner -> engine contract', () => {
     expect(indexOf('staging.orders') < indexOf('mart.revenue')).toBe(true);
     expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
-    const enginePlan: ExecutionPlan = plannerPlan;
+    const enginePlan = parseExecutionPlan(plannerPlan);
     expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
     expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
@@ -464,7 +471,7 @@ describe('planner -> engine contract', () => {
       selection: { selectedNodeIds: ['z'], includeUpstream: true },
     });
 
-    const enginePlan: ExecutionPlan = plannerPlan;
+    const enginePlan = parseExecutionPlan(plannerPlan);
 
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
     expect(enginePlan.steps.length).toBe(plannerPlan.steps.length);
@@ -488,6 +495,7 @@ describe('planner -> engine contract', () => {
     });
 
     const metadata = plan.metadata as Record<string, unknown>;
+    expect(() => parseExecutionPlan(plan)).not.toThrow();
     expect(metadata['schemaVersion']).toBe('v1.2');
     expect(metadata['contractVersion']).toBe('1.0.0');
     expect(metadata['planId']).not.toBe(undefined);

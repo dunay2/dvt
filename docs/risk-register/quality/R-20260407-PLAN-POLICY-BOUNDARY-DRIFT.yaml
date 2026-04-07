@@ -1,0 +1,32 @@
+---
+id: R-20260407-PLAN-POLICY-BOUNDARY-DRIFT
+title: Execution policy sidecar can drift from canonical stored plan identity
+status: Open
+date: 2026-04-07
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Medium
+context: >
+  Execution admission policy has been separated from canonical plan definition. Stored-plan
+  persistence and fetch paths now move two coordinated payloads: canonical plan bytes and sidecar
+  RunExecutionPolicy metadata.
+risk: >
+  If plan bytes and execution policy are persisted, backfilled, or fetched out of sync, the engine
+  can verify one canonical plan while admitting the run against stale capability or compatibility
+  requirements. That would weaken the intended planner/engine boundary instead of clarifying it.
+mitigations:
+  - 'ADR-0046 freezes the ownership split between ExecutionPlan and RunExecutionPolicy.'
+  - 'PlannerBuildResultV1 now publishes plan and executionPolicy separately.'
+  - 'PlanRef no longer carries runtime policy fields, reducing leakage paths.'
+  - 'Plan integrity validation and executability validation load StoredPlanArtifact with both bytes
+    and executionPolicy.'
+  - 'Adapter-postgres persists plugin compatibility fingerprint and required capabilities as sidecar
+    metadata.'
+  - 'Contracts, planner, engine, adapter-postgres, and API tests cover the split end to end.'
+  - 'verify:prepush remains mandatory before push or PR creation.'
+review_after: 2026-05-31
+---

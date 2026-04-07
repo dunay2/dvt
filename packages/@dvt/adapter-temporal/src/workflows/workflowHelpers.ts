@@ -106,6 +106,7 @@ type ContinueAsNewBase = {
   gatewayDecisions?: Record<string, boolean>;
   completedStepResults?: Record<string, Record<string, unknown>>;
   skippedStepIds?: string[];
+  processedControlSignalIds?: string[];
 };
 
 type ContinueAsNewState = {
@@ -115,6 +116,7 @@ type ContinueAsNewState = {
   gatewayDecisions: Record<string, boolean>;
   completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: string[];
+  processedControlSignalIds: string[];
 };
 
 export type ContinueAsNewInput<T extends ContinueAsNewBase> = Omit<T, keyof ContinueAsNewState> &
@@ -128,6 +130,7 @@ export function buildContinueAsNewInput<T extends ContinueAsNewBase>(args: {
   gatewayDecisions: Record<string, boolean>;
   completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: ReadonlySet<string>;
+  processedControlSignalIds: ReadonlySet<string>;
 }): ContinueAsNewInput<T> {
   const nextInput: ContinueAsNewInput<T> = {
     ...args.input,
@@ -137,6 +140,7 @@ export function buildContinueAsNewInput<T extends ContinueAsNewBase>(args: {
     gatewayDecisions: { ...args.gatewayDecisions },
     completedStepResults: cloneStepResults(args.completedStepResults),
     skippedStepIds: [...args.skippedStepIds],
+    processedControlSignalIds: [...args.processedControlSignalIds],
   };
   return nextInput;
 }

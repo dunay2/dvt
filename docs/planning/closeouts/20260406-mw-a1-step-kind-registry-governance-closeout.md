@@ -63,7 +63,7 @@ status: Accepted
 - Added helper functions in contracts:
   `isStepKindSupportedByAdapter` and `collectRequiredCapabilitiesForSteps`.
 - Planner now derives required capabilities from step-kind registry metadata and
-  projects them into `ExecutionPlan.metadata.requiresCapabilities`.
+  projects them into `RunExecutionPolicy.requiresCapabilities`.
 - API executability validator now:
   - rejects step kinds unsupported by selected adapter (`INVALID_STEP_KIND`);
   - merges required capabilities from registry + plan metadata + planRef and

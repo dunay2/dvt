@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-07'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -1509,10 +1509,10 @@ tasks:
   - task_id: WE-HX-4
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: in_progress
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 25
     objective: split runtime query, command, signal, and enrichment paths.
     dependency: WE-HX-2
     target: >-
@@ -1520,8 +1520,117 @@ tasks:
       ADR-0015 read-path discipline is structurally explicit.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Includes former AR-A3 objective as part of this wave.
-    last_verified: '2026-04-03'
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+    status_reason: >-
+      Includes former AR-A3 objective as part of this wave; the current real defect fix
+      (`WE-HX-4-D`) is now shipped and the remaining signal-boundary cleanup stays decomposed into
+      the broader contract and mapper work in `WE-HX-4-A..C`.
+    last_verified: '2026-04-07'
+  - task_id: WE-HX-4-A
+    parent_task: WE-HX-4
+    priority: P1
+    status: queued
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    objective: separate DVT-governed canonical signals from provider-private runtime commands.
+    dependency: WE-HX-2
+    target: >-
+      `SignalType` only represents engine-owned semantics, while provider-private retry and recovery
+      operations move to a dedicated adapter command boundary instead of remaining mixed into the
+      canonical contract.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/contracts/src/types/contracts.ts
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+    status_reason: >-
+      Deferred from the current product release because no new adapters ship now; this boundary must
+      be cleaned before the next provider-expansion wave.
+    last_verified: '2026-04-07'
+  - task_id: WE-HX-4-B
+    parent_task: WE-HX-4
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective:
+      add an explicit provider mapper seam between canonical signals and native adapter commands.
+    dependency: WE-HX-4-A
+    target: >-
+      Engine-owned signals translate through a provider mapper, adapter-private commands do not leak
+      into canonical contracts, and signal or command negotiation fails closed instead of silently
+      falling back.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/engine/src/adapters/IProviderAdapter.ts
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+    status_reason: >-
+      The current slice extracted signal semantics from local constants but did not yet add the
+      explicit provider-mapper boundary needed for future adapters.
+    last_verified: '2026-04-07'
+  - task_id: WE-HX-4-C
+    parent_task: WE-HX-4
+    priority: P1
+    status: queued
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    objective:
+      resolve ownership of `RETRY_RUN` and `RETRY_STEP` and lock the tests and docs to that
+      decision.
+    dependency: WE-HX-4-B
+    target: >-
+      Retry-oriented signal semantics are explicitly classified as engine-owned or adapter-owned,
+      and contract or runtime coverage prevents those concerns from being mixed again.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/contracts/src/types/contracts.ts
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+    status_reason: >-
+      The current release keeps retry signal shape stable, but ownership remains intentionally
+      deferred until the broader signal-boundary cleanup is executed.
+    last_verified: '2026-04-07'
+  - task_id: WE-HX-4-D
+    parent_task: WE-HX-4
+    priority: P1
+    status: completed
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective:
+      move `PAUSE/RESUME` realized lifecycle ownership to the runtime and retire duplicate engine
+      emission.
+    dependency: WE-HX-2
+    target: >-
+      `WorkflowEngineCoreService` no longer appends `RunPaused` or `RunResumed`, Temporal runtime
+      remains the sole producer of those realized lifecycle facts, and `SignalSemantics` plus
+      `SignalTransitionGuard` are updated without silent semantic drift.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+      - packages/@dvt/engine/src/services/signal/SignalTransitionGuard.ts
+      - packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
+      - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+      - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+      - packages/@dvt/engine/test/adapters/MockAdapter.cancel.test.ts
+      - packages/@dvt/contracts/test/signalSemantics.test.ts
+      - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
+      - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
+    status_reason: >-
+      Completed. `WorkflowEngineCoreService` now validates and dispatches `PAUSE/RESUME` without
+      appending realized lifecycle events, the runtime remains the sole producer of `RunPaused` and
+      `RunResumed`, Temporal and mock runtimes deduplicate stale `signalId` replays across
+      pause-resume cycles without collapsing legitimate repeated pause cycles, and the current
+      `SignalSemantics` version no longer encodes stale engine-derived mappings.
+    last_verified: '2026-04-07'
   - task_id: WE-HX-5
     parent_task: WE-HX
     priority: P1
@@ -1694,6 +1803,11 @@ dependency_notes:
     `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
     folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.
   - >-
+    `WE-HX-4-D` captures the current real signal defect (`PAUSE/RESUME` duplicate realized-event
+    emission). `WE-HX-4-A..C` capture the deferred signal-boundary cleanup that remains after that:
+    canonical engine-owned signals, adapter-private commands, fail-closed provider mapping, and
+    explicit retry ownership before any future adapter expansion.
+  - >-
     `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
     planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
     traceability waves instead of continuing script-by-script growth.
@@ -1704,11 +1818,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 60
-  total_effort_points: 214
-  completed_weighted_points: 86.79
-  lane_progress_pct: 41
+  verified_on: '2026-04-07'
+  total_tasks: 82
+  total_effort_points: 279
+  completed_weighted_points: 167.15
+  lane_progress_pct: 60
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

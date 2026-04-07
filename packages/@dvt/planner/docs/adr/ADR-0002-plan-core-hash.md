@@ -3,7 +3,7 @@
 Decision:
 
 - Define `planCore` as the only object hashed to generate planId.
-- Return `canonicalPlanJson = JCS(planCore)`.
+- Return `canonicalPlanCoreJson = JCS(planCore)`.
 
 Rationale:
 

@@ -79,6 +79,7 @@ describe('continue-as-new policy', () => {
         gwB: false,
       },
       skippedStepIds: new Set(['skipped-step']),
+      processedControlSignalIds: new Set<string>(),
     });
 
     expect(nextInput.resumeFromLayerIndex).toBe(2);
@@ -116,12 +117,43 @@ describe('continue-as-new policy', () => {
         's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
       },
       skippedStepIds: new Set(['skipped-step']),
+      processedControlSignalIds: new Set<string>(),
     });
 
     expect(nextInput.completedStepResults).toEqual({
       's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
     });
     expect(nextInput.completedStepResults).not.toBeUndefined();
+  });
+
+  it('carries processed control-signal ids across continue-as-new rollover', () => {
+    const nextInput = buildContinueAsNewInput({
+      input: {
+        planRef: {
+          uri: 'file://plan.json',
+          sha256: 'abc',
+          schemaVersion: 'v1.0.0',
+          planId: 'plan-1',
+          planVersion: '1',
+        },
+        ctx: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          runId: 'r1',
+          targetAdapter: 'temporal',
+        },
+      },
+      continueAsNewAfterLayerCount: 3,
+      nextLayerIndex: 2,
+      continuedAsNewCount: 1,
+      gatewayDecisions: {},
+      completedStepResults: {},
+      skippedStepIds: new Set<string>(),
+      processedControlSignalIds: new Set(['sig-pause-1', 'sig-resume-1']),
+    });
+
+    expect(nextInput.processedControlSignalIds).toEqual(['sig-pause-1', 'sig-resume-1']);
   });
 });
 

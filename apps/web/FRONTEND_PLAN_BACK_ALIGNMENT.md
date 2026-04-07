@@ -162,7 +162,6 @@ export interface PlanRef {
   schemaVersion: string;
   planId: string;
   planVersion: string;
-  requiresCapabilities?: string[];
 }
 
 export interface RunContext {

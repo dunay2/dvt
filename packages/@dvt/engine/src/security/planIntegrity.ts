@@ -6,19 +6,29 @@
  *   validates metadata alignment, and recomputes planner identity before adapter dispatch.
  * @consequence Adapters execute the exact plan instance the engine has already verified.
  */
-import { parseExecutionPlan, type ExecutionPlan, type PlanRef } from '@dvt/contracts';
+import {
+  parseExecutionPlan,
+  type ExecutionPlan,
+  type PlanRef,
+  type RunExecutionPolicy,
+} from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
+import type { StoredPlanArtifact } from '../ports/IRunStateStore.js';
 import { sha256Hex } from '../utils/sha256.js';
 
 /** Fetches raw executable plan bytes for engine-side integrity validation. */
 export interface IRawPlanFetcher {
-  fetch(planRef: PlanRef): Promise<Uint8Array>;
+  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
 }
 
 export class PlanIntegrityValidator {
-  async fetchAndValidate(planRef: PlanRef, fetcher: IRawPlanFetcher): Promise<ExecutionPlan> {
-    const bytes = await fetcher.fetch(planRef);
+  async fetchAndValidate(
+    planRef: PlanRef,
+    fetcher: IRawPlanFetcher
+  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }> {
+    const artifact = await fetcher.fetch(planRef);
+    const bytes = artifact.bytes;
     validatePlanBytesAgainstRef(bytes, planRef);
     const plan = parseExecutablePlan(bytes);
     validatePlanAgainstRef(plan, planRef);
@@ -26,7 +36,10 @@ export class PlanIntegrityValidator {
     if (actualPlanId !== planRef.planId) {
       throw new Error(`PLAN_ID_MISMATCH: expected=${planRef.planId} actual=${actualPlanId}`);
     }
-    return plan;
+    return {
+      plan,
+      executionPolicy: artifact.executionPolicy,
+    };
   }
 }
 
@@ -58,12 +71,6 @@ function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
   }
   if (plan.metadata.schemaVersion !== ref.schemaVersion) {
     throw new Error('PLAN_REF_MISMATCH: schemaVersion');
-  }
-  if (
-    ref.pluginCompatibilityFingerprint !== undefined &&
-    plan.metadata.pluginCompatibilityFingerprint !== ref.pluginCompatibilityFingerprint
-  ) {
-    throw new Error('PLAN_REF_MISMATCH: pluginCompatibilityFingerprint');
   }
 }
 

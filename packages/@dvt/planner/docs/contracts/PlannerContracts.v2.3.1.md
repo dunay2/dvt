@@ -13,13 +13,13 @@ steps: ExecutionStepV2[]
 
 planId = sha256(JCS(planCore))
 
-### canonicalPlanJson
+### canonicalPlanCoreJson
 
-canonicalPlanJson = JCS(planCore)
+canonicalPlanCoreJson = JCS(planCore)
 
 ### Verification
 
-sha256(canonicalPlanJson) === plan.metadata.planId
+sha256(canonicalPlanCoreJson) === plan.metadata.planId
 
 ## Input hash
 

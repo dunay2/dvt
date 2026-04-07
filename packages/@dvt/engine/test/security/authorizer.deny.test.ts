@@ -1,4 +1,8 @@
-import type { ResolvedRunContext, RunContext } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type ResolvedRunContext,
+  type RunContext,
+} from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
@@ -68,6 +72,10 @@ class CountingAdapter implements IProviderAdapter {
     _request: import('@dvt/contracts').SignalRequest
   ): Promise<void> {
     this.signalCalls += 1;
+  }
+
+  signalSemanticsVersions(): readonly (typeof CURRENT_SIGNAL_SEMANTICS_VERSION)[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 }
 

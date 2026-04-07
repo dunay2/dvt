@@ -6,6 +6,7 @@
  * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
  *   expectations in the mocked adapter path (`PENDING` until completion events are present).
  */
+import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect, vi } from 'vitest';
@@ -61,9 +62,6 @@ function makePlanMetadata(
     contractVersion: '1.0.0',
     inputHashSha256,
     createdAtIso: '2026-02-12T00:00:00.000Z',
-    targetAdapter: 'mock',
-    fallbackBehavior: 'reject',
-    requiresCapabilities: [],
   };
 }
 
@@ -291,13 +289,19 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
         throw new Error('noop');
       },
       signal: async () => {},
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
+    const planFetcher = {
+      fetch: vi.fn(async () => ({
+        bytes: utf8(JSON.stringify(makeHelloWorldPlan())),
+        executionPolicy: {},
+      })),
+    };
     const { engine } = createWorkflowEngineFixture({
       stateStore: store,
       projector,
