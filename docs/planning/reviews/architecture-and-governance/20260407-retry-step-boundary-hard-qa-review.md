@@ -22,7 +22,7 @@ Canonical execution tracking remains in:
 The original blockers identified in this QA pass were corrected in the same
 slice. The review now closes as `Ready`.
 
-## Markdown Artifact Path Suggestion
+### Markdown Artifact Path Suggestion
 
 - `docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md`
 
