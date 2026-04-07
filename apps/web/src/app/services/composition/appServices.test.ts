@@ -40,6 +40,34 @@ describe('buildAppServices', () => {
     expect(typeof appServices.shellFeedback.success).toBe('function');
   });
 
+  it('builds isolated mock workspace services for independent composition roots', async () => {
+    const firstServices = buildAppServices({ mode: 'mock' });
+    const secondServices = buildAppServices({ mode: 'mock' });
+    const secondBefore = await secondServices.workspaceService.getGraphSnapshot();
+
+    await firstServices.workspaceService.importSources({
+      connectionId: 'conn-1',
+      tables: [
+        {
+          database: 'RAW',
+          schema: 'FINANCE',
+          table: 'LEDGER_ENTRIES',
+          rowCount: 42,
+          columns: [{ name: 'entry_id', type: 'INTEGER', nullable: false }],
+        },
+      ],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    const secondAfter = await secondServices.workspaceService.getGraphSnapshot();
+
+    expect(secondAfter.nodes.some((node) => node.id === 'src_finance_ledger_entries')).toBe(false);
+    expect(secondAfter.nodes).toHaveLength(secondBefore.nodes.length);
+  });
+
   it('uses explicit overrides instead of rebuilding runtime seams', () => {
     const apiClient = buildApiClientStub();
     const workspaceService = {} as IWorkspacePort;

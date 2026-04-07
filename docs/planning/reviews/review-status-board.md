@@ -78,10 +78,22 @@ Additional active QA:
   - linkage: `QA-EP-9..QA-EP-11`
   - status: `done`
   - progress: `100%`
+- [20260405 F04-RISK-A PlanRef runtime boundary hard QA review](architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA intake and closure record for backend-owned `planRef` handoff
+  - linkage: `F-04-RISK-A`, `F-04-RISK-A-QA-03`
+  - status: `review`
+  - progress: `100%`
 - [20260407 F-04-F capabilities-port hard QA review](20260407-f04-f-capabilities-port-hard-qa-review.md)
   - domain: `frontend-and-ui`
   - role: documentary hard QA gate for the governed capabilities-boundary slice
   - linkage: `F-04-F`
+  - status: `review`
+  - progress: `100%`
+- [20260407 F-04-RISK-B mock workspace isolation hard QA review](20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md)
+  - domain: `frontend-and-ui`
+  - role: documentary hard QA gate for the mock workspace determinism hardening slice
+  - linkage: `F-04-RISK-B`
   - status: `review`
   - progress: `100%`
 

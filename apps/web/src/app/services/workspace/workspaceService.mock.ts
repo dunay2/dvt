@@ -131,7 +131,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
   ],
 };
 
-let mockGraphSnapshot: WorkspaceGraphSnapshot = {
+const defaultGraphSnapshot: WorkspaceGraphSnapshot = {
   nodes: [...mockNodes],
   edges: [...mockEdges],
 };
@@ -147,6 +147,89 @@ function cloneGraphSnapshot(snapshot: WorkspaceGraphSnapshot): WorkspaceGraphSna
     })),
     edges: snapshot.edges.map((edge) => ({ ...edge })),
   };
+}
+
+function cloneWorkspaceFileEntries(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
+  return entries.map((entry) => ({
+    ...entry,
+    children: entry.children ? cloneWorkspaceFileEntries(entry.children) : undefined,
+  }));
+}
+
+function cloneFileContent(file: FileContent): FileContent {
+  return { ...file };
+}
+
+function cloneFileContents(fileContents: Record<string, FileContent>): Record<string, FileContent> {
+  return Object.fromEntries(
+    Object.entries(fileContents).map(([path, file]) => [path, cloneFileContent(file)])
+  );
+}
+
+export interface MockWorkspaceState {
+  graphSnapshot: WorkspaceGraphSnapshot;
+  fileTree: WorkspaceFileEntry[];
+  fileContents: Record<string, FileContent>;
+}
+
+export function createMockWorkspaceState(): MockWorkspaceState {
+  return {
+    graphSnapshot: cloneGraphSnapshot(defaultGraphSnapshot),
+    fileTree: createDefaultWorkspaceFileTree(),
+    fileContents: cloneFileContents(defaultFileContents),
+  };
+}
+
+function ensureWorkspaceFileEntry(entries: WorkspaceFileEntry[], path: string): void {
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length === 0) {
+    return;
+  }
+
+  let currentEntries = entries;
+  let currentPath = '';
+
+  for (const segment of segments.slice(0, -1)) {
+    currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    let directory = currentEntries.find(
+      (entry) => entry.kind === 'directory' && entry.path === currentPath
+    );
+
+    if (!directory) {
+      directory = {
+        path: currentPath,
+        name: segment,
+        kind: 'directory',
+        children: [],
+      };
+      currentEntries.push(directory);
+    }
+
+    if (!directory.children) {
+      directory.children = [];
+    }
+
+    currentEntries = directory.children;
+  }
+
+  const fileName = segments.at(-1) ?? path;
+  if (currentEntries.some((entry) => entry.path === path)) {
+    return;
+  }
+
+  currentEntries.push({
+    path,
+    name: fileName,
+    kind: 'file',
+  });
+}
+
+function createDefaultWorkspaceFileTree(): WorkspaceFileEntry[] {
+  const fileTree = cloneWorkspaceFileEntries(mockFileTree);
+  for (const path of Object.keys(defaultFileContents)) {
+    ensureWorkspaceFileEntry(fileTree, path);
+  }
+  return fileTree;
 }
 
 function toSourceNodeId(table: WarehouseTable): string {
@@ -216,8 +299,11 @@ function buildImportResult(
   };
 }
 
-function importMockSources(input: ImportSourcesInput): ImportSourcesResult {
-  const existingNodeIds = new Set(mockGraphSnapshot.nodes.map((node) => node.id));
+function importMockSources(
+  state: MockWorkspaceState,
+  input: ImportSourcesInput
+): ImportSourcesResult {
+  const existingNodeIds = new Set(state.graphSnapshot.nodes.map((node) => node.id));
   const importedNodes: DbtNode[] = [];
 
   for (const table of input.tables) {
@@ -232,9 +318,9 @@ function importMockSources(input: ImportSourcesInput): ImportSourcesResult {
     existingNodeIds.add(nodeId);
   }
 
-  mockGraphSnapshot = {
-    nodes: [...mockGraphSnapshot.nodes, ...importedNodes],
-    edges: [...mockGraphSnapshot.edges],
+  state.graphSnapshot = {
+    nodes: [...state.graphSnapshot.nodes, ...importedNodes],
+    edges: [...state.graphSnapshot.edges],
   };
 
   return buildImportResult(input, importedNodes);
@@ -272,7 +358,7 @@ const mockFileTree: WorkspaceFileEntry[] = [
   { path: 'README.md', name: 'README.md', kind: 'file' },
 ];
 
-const mockFileContents: Record<string, FileContent> = {
+const defaultFileContents: Record<string, FileContent> = {
   'models/staging/stg_orders.sql': {
     path: 'models/staging/stg_orders.sql',
     name: 'stg_orders.sql',
@@ -482,9 +568,11 @@ function inferLanguage(path: string): string {
   return langMap[ext] ?? 'plaintext';
 }
 
-export function createMockWorkspaceService(): WorkspaceService {
+export function createMockWorkspaceService(
+  state: MockWorkspaceState = createMockWorkspaceState()
+): WorkspaceService {
   return {
-    getGraphSnapshot: async () => cloneGraphSnapshot(mockGraphSnapshot),
+    getGraphSnapshot: async () => cloneGraphSnapshot(state.graphSnapshot),
     getDiffChanges: async () => mockDiffChanges,
     getPlugins: async () => mockPlugins,
     getRoles: async () => mockRoles,
@@ -495,17 +583,17 @@ export function createMockWorkspaceService(): WorkspaceService {
         ...table,
         columns: table.columns?.map((column) => ({ ...column })),
       })),
-    importSources: async (input) => importMockSources(input),
-    listFiles: async () => mockFileTree.map((entry) => ({ ...entry })),
+    importSources: async (input) => importMockSources(state, input),
+    listFiles: async () => cloneWorkspaceFileEntries(state.fileTree),
     getFileContent: async (path) => {
-      const file = mockFileContents[path];
+      const file = state.fileContents[path];
       if (!file) {
         throw new Error(`File not found: ${path}`);
       }
-      return { ...file };
+      return cloneFileContent(file);
     },
     saveFileContent: async (path, content) => {
-      const existing = mockFileContents[path];
+      const existing = state.fileContents[path];
       const name = path.split('/').pop() ?? path;
       const updated: FileContent = {
         path,
@@ -514,8 +602,9 @@ export function createMockWorkspaceService(): WorkspaceService {
         content,
         lastModified: new Date().toISOString(),
       };
-      mockFileContents[path] = updated;
-      return { ...updated };
+      state.fileContents[path] = updated;
+      ensureWorkspaceFileEntry(state.fileTree, path);
+      return cloneFileContent(updated);
     },
   };
 }
