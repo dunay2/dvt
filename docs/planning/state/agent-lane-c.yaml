@@ -363,7 +363,7 @@ tasks:
   - task_id: AR-C1-T3
     parent_task: AR-C1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       add protected-runtime composition tests proving admin routes stay disabled when OIDC runtime
       prerequisites are missing even if `DVT_ADMIN_ROUTES_ENABLED=true`.
@@ -373,14 +373,17 @@ tasks:
       path is reachable without protected-runtime auth composition.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md
+      - apps/api/test/app.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
       - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
     status_reason: >-
-      Route-level RBAC is implemented, but composition-level activation semantics still need an
-      explicit integration guardrail.
-    last_verified: '2026-04-03'
+      Composition-level bootstrap tests now prove protected and admin routes remain unmounted when
+      `DVT_ADMIN_ROUTES_ENABLED=true` but OIDC prerequisites are absent or partial, closing the
+      remaining admin-route activation guardrail.
+    last_verified: '2026-04-07'
   - task_id: AR-C1-T4
     parent_task: AR-C1
     priority: P1
