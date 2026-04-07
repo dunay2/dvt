@@ -43,7 +43,7 @@ flowchart LR
 
 - [WorkflowEngine.ts](../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 - [WorkflowEngineCoreService.ts](../../packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts)
-- [StartRunCoordinator.ts](../../packages/@dvt/engine/src/application/StartRunCoordinator.ts)
+- [StartRunApplicationService.ts](../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
 - [PostgresStateStoreRuntime.ts](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts)
 - [TemporalAdapter.ts](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
 

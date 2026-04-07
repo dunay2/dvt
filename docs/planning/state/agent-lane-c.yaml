@@ -63,7 +63,7 @@ tasks:
     evidence_refs:
       - docs/evidence/supporting/ED-20260329-mvp-c1-backend-control-plane-runbook.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason:
       The runbook already had accepted evidence, and the final `MVP-A1`/`MVP-B1` dependency chain is
       now closed.

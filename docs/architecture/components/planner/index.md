@@ -1,8 +1,8 @@
-﻿---
+---
 title: @dvt/planner
 status: Active
 owner: Planning Domain / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-07
 ---
 
 # @dvt/planner
@@ -15,63 +15,67 @@ last_reviewed: 2026-04-04
 4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
 5. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
 6. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-7. [AR-A9 planner cycle fail-closed plan](../../../planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
-8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+7. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 
 - package: `packages/@dvt/planner`
 - domain: [Planning domain](../../domain-planning.md)
-- shared contract surfaces: `packages/@dvt/contracts/src/contracts/planner/**`
+- public contract surfaces: `packages/@dvt/contracts/src/contracts/planner/**`
 
 ## Current truth
 
 - public boundary: `PlannerFacade`
-- public envelope: `PlannerInputEnvelopeV2`
+- public envelope: `PlannerInputEnvelopeV1`
+- canonical plan artifact: `ExecutionPlan.v1.ts`
 - canonical production ingress: `manifestRef`
 - typed inline ingress: `graphSource`
 - compatibility ingress: `manifest`, `nodes`
-- active dbt normalization seam: `derivePlannerGraphSourceFromManifest` plus API-side resolver wiring
+- active dbt normalization seam: `derivePlannerGraphSourceFromManifest`
 
-## Target truth (MW-A2)
+## Target truth
 
 - canonical planner input evolves toward `GenericGraphSourceV1`
-- dbt manifest ingestion remains supported as a compatibility adapter path
+- dbt manifest ingestion remains a compatibility adapter path
 - non-dbt graph sources become first-class at planner ingress
-- runtime executability for non-dbt kinds remains sequenced behind `MW-A1`, `MW-A3`, and `MW-C1`
+- planner component pages stay summary-only and point back to canonical planner docs
 
-## Component map (current)
+## Component map
 
 ```mermaid
 flowchart LR
   Caller["API or integrator"] --> Facade["PlannerFacade"]
+  Facade --> Mapper["PlannerEnvelopeMapper"]
   Facade --> Resolver["IArtifactResolver"]
   Facade --> Planner["Planner domain service"]
   Planner --> Validator["InputEnvelopeValidator"]
+  Planner --> Deriver["derivePlannerGraphSourceFromManifest"]
   Planner --> Graph["GraphBuilder"]
   Planner --> Selector["NodeSelector"]
   Planner --> Assembler["PlanAssembler"]
   Planner --> Registry["IStepTypeRegistry"]
-  Assembler --> Plan["ExecutionPlan + canonicalPlanCoreJson"]
+  Assembler --> Plan["ExecutionPlanV1 + canonicalPlanCoreJson"]
 ```
 
 ## Primary code anchors
 
 - [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
+- [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
 - [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
 - [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)
 - [InputEnvelopeValidator.ts](../../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts)
-- [IArtifactResolver.ts](../../../../packages/@dvt/planner/src/ports/IArtifactResolver.ts)
-- [ExecutionPlan.v2.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+- [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 
-## Invariant catalog
+## Supporting component pages
 
-| Invariant          | Rule                                                                                                                                                 | Code anchor                                                                                           | Test anchor                                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Policy precedence  | Governance policy values (`retry`, `timeout`, `concurrency`) MUST override node-provided `stepTypeConfig` values in dbt step materialization.        | `packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`                                      | `packages/@dvt/planner/test/unit/dbt-step-factory.test.ts`, `apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts` |
-| StepKind authority | Planner internal graph and step creation MUST be driven by `stepKind`; no local re-mapping back to legacy `resourceType` is allowed in planner core. | `packages/@dvt/planner/src/domain/types.ts`, `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts` | `packages/@dvt/planner/test/unit/graph.test.ts`, `packages/@dvt/planner/test/unit/planner-facade.test.ts`                             |
+- [Functional surface](planner-functional.md)
+- [Constraints and invariants](planner-constraints.md)
+- [Structure and module map](planner-ddd.md)
+- [Build sequence](planner-sequence.md)
 
 ## Notes
 
-- This page replaces stale aggregate-centric references that no longer match the shipped planner code.
-- If this page and another planner doc disagree, use the documents listed under "Canonical reading order" as source of truth.
+- The shipped planner is service-oriented. It does not expose a mutable
+  draft/edit/compile lifecycle or long-lived `PlanAggregate` API.
+- If this page and another planner doc disagree, use the documents in
+  "Canonical reading order" as source of truth.

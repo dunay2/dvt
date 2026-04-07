@@ -12,11 +12,11 @@ planning_type: review
 
 This review analyzes the four GitHub Actions workflows that form the CI pipeline:
 
-- [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) — Code Quality
-- [`.github/workflows/pr-quality-gate.yml`](../../../.github/workflows/pr-quality-gate.yml) — PR Quality Gate
-- [`.github/workflows/test.yml`](../../../.github/workflows/test.yml) — Test Suite
-- [`.github/workflows/contracts.yml`](../../../.github/workflows/contracts.yml) — Contracts & Determinism
-- [`.github/actions/setup-node-pnpm/action.yml`](../../../.github/actions/setup-node-pnpm/action.yml) — Shared setup composite
+- [`.github/workflows/ci.yml`](../../../../.github/workflows/ci.yml) — Code Quality
+- [`.github/workflows/pr-quality-gate.yml`](../../../../.github/workflows/pr-quality-gate.yml) — PR Quality Gate
+- [`.github/workflows/test.yml`](../../../../.github/workflows/test.yml) — Test Suite
+- [`.github/workflows/contracts.yml`](../../../../.github/workflows/contracts.yml) — Contracts & Determinism
+- [`.github/actions/setup-node-pnpm/action.yml`](../../../../.github/actions/setup-node-pnpm/action.yml) — Shared setup composite
 
 Focus: wall-clock duration on pull requests, redundant work, and scope-filter gaps.
 
@@ -38,7 +38,7 @@ For a typical PR touching `packages/@dvt/engine/**`, the expected wall-clock ove
 
 ### Root cause
 
-The composite action [`setup-node-pnpm`](../../../.github/actions/setup-node-pnpm/action.yml)
+The composite action [`setup-node-pnpm`](../../../../.github/actions/setup-node-pnpm/action.yml)
 caches the pnpm **store** only (`$(pnpm store path)`). The store cache avoids re-downloading
 packages, but `pnpm install` still runs in every job to link `node_modules`.
 
@@ -88,7 +88,7 @@ Skip `pnpm install` on a full cache hit.
 
 ### Root cause
 
-In [`ci.yml`](../../../.github/workflows/ci.yml), the `markdown-lint` job has no
+In [`ci.yml`](../../../../.github/workflows/ci.yml), the `markdown-lint` job has no
 `needs: detect-affected` dependency and no paths-filter. Its only guard is:
 
 ```yaml
@@ -134,7 +134,7 @@ slightly more fragile). Either option eliminates the job on code-only PRs.
 
 ### Root cause
 
-In [`pr-quality-gate.yml`](../../../.github/workflows/pr-quality-gate.yml), these 7 steps
+In [`pr-quality-gate.yml`](../../../../.github/workflows/pr-quality-gate.yml), these 7 steps
 run sequentially in `pr-checks` with only `if: github.event_name == 'pull_request'` — no
 path-scope filter:
 
@@ -223,8 +223,8 @@ eliminated).
 
 ### Root cause
 
-`detect-affected` in [`ci.yml`](../../../.github/workflows/ci.yml#L34) and `detect-changes` in
-[`contracts.yml`](../../../.github/workflows/contracts.yml#L39) use `fetch-depth: 0`
+`detect-affected` in [`ci.yml`](../../../../.github/workflows/ci.yml) and `detect-changes` in
+[`contracts.yml`](../../../../.github/workflows/contracts.yml) use `fetch-depth: 0`
 unconditionally. On `push` to `main`, the `paths-filter` step is skipped
 (`if: github.event_name == 'pull_request'`), so fetching full history is unnecessary.
 
@@ -262,14 +262,14 @@ Apply the same conditional to `detect-affected` and `detect-changes` checkouts.
 
 **Task CI-OPT-1**: Cache `node_modules` in `setup-node-pnpm`
 
-- File: [`.github/actions/setup-node-pnpm/action.yml`](../../../.github/actions/setup-node-pnpm/action.yml)
+- File: [`.github/actions/setup-node-pnpm/action.yml`](../../../../.github/actions/setup-node-pnpm/action.yml)
 - Change: add `node_modules` cache step with `pnpm-lock.yaml` key; make `pnpm install` conditional on cache miss.
 - Risk: low — worst case is stale cache which `pnpm install` self-heals.
 - Validation: confirm install step is skipped on second identical run in CI logs.
 
 **Task CI-OPT-5**: Fix `fetch-depth` in non-PR runs
 
-- Files: [`ci.yml`](../../../.github/workflows/ci.yml), [`contracts.yml`](../../../.github/workflows/contracts.yml)
+- Files: [`ci.yml`](../../../../.github/workflows/ci.yml), [`contracts.yml`](../../../../.github/workflows/contracts.yml)
 - Change: `fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}`
 - Risk: none.
 
@@ -277,7 +277,7 @@ Apply the same conditional to `detect-affected` and `detect-changes` checkouts.
 
 **Task CI-OPT-2**: Gate `markdown-lint` on docs changes
 
-- File: [`ci.yml`](../../../.github/workflows/ci.yml)
+- File: [`ci.yml`](../../../../.github/workflows/ci.yml)
 - Change: add `needs: detect-affected`, add `docs_changed` output to `detect-affected` matrix
   step, add `if` guard on `markdown-lint` job.
 - Risk: low — verify that docs-only PRs still trigger the job correctly.
@@ -285,7 +285,7 @@ Apply the same conditional to `detect-affected` and `detect-changes` checkouts.
 
 **Task CI-OPT-3**: Gate 7 doc-checks in `pr-quality-gate.yml` on docs changes
 
-- File: [`pr-quality-gate.yml`](../../../.github/workflows/pr-quality-gate.yml)
+- File: [`pr-quality-gate.yml`](../../../../.github/workflows/pr-quality-gate.yml)
 - Change: add `docs_changed` to the `scope` paths-filter; add `if` conditions to each doc step
   per the table in Finding 3.
 - Risk: medium — `docs:status:check` and `docs:capability:check` must still run on code changes.
@@ -296,7 +296,7 @@ Apply the same conditional to `detect-affected` and `detect-changes` checkouts.
 
 **Task CI-OPT-4**: Remove duplicate `adapter-postgres-smoke` from `pr-quality-gate.yml`
 
-- File: [`pr-quality-gate.yml`](../../../.github/workflows/pr-quality-gate.yml)
+- File: [`pr-quality-gate.yml`](../../../../.github/workflows/pr-quality-gate.yml)
 - Change: remove `adapter-postgres-smoke` job; update `all-checks-passed` `needs` array.
 - Risk: low if `test.yml` already provides full coverage — confirm parity first.
 - Validation: adapter-postgres PR triggers only one Postgres service + one test run.

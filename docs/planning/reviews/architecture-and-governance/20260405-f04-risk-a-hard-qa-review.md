@@ -36,7 +36,7 @@ Canonical execution tracking remains in:
 
 - Title: API `planRef` is still synthesized client-side instead of consumed as a backend-owned ref.
   Why it matters: This keeps a drift risk between frontend-generated refs and backend canonical identity rules.
-  Evidence: [plansService.api.ts](/c:/dvt/apps/web/src/app/services/plans/plansService.api.ts:59) builds `planRef` from metadata.
+  Evidence: [plansService.api.ts](../../../../apps/web/src/app/services/plans/plansService.api.ts:59) builds `planRef` from metadata.
   Risk: Runtime mismatch if backend changes ref semantics (`uri` format, hash source, versioning).
   Recommendation: Promote `planRef` to explicit backend response payload and map it directly.
 
@@ -45,8 +45,8 @@ Canonical execution tracking remains in:
 - Title: Behavioral negative test for full `handleStartRun` path was missing (resolved in this slice).
   Why it matters: Side effects (`toast`, modal reopen, start-run short-circuit) must be protected at hook level.
   Evidence:
-  - [useCanvasExecutionActions.test.tsx](/c:/dvt/apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx:104) exercises `handleStartRun` with missing `planRef`.
-  - [useCanvasExecutionActions.ts](/c:/dvt/apps/web/src/app/views/canvas/useCanvasExecutionActions.ts:89) contains modal + toast + early-return behavior.
+  - [useCanvasExecutionActions.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx:104) exercises `handleStartRun` with missing `planRef`.
+  - [useCanvasExecutionActions.ts](../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts:89) contains modal + toast + early-return behavior.
     Risk: Reduced for this boundary after test hardening.
     Recommendation: Keep this test as mandatory guard when evolving run-start UX flow.
 
@@ -55,7 +55,7 @@ Canonical execution tracking remains in:
 - Title: `ExecutionPlan` UI type gained `planRef` without companion manual/architecture update.
   Why it matters: Contract understanding can drift between docs and code for frontend contributors.
   Evidence:
-  - [dbt.ts](/c:/dvt/apps/web/src/app/types/dbt.ts:48)
+  - [dbt.ts](../../../../apps/web/src/app/types/dbt.ts:48)
   - no paired update in frontend architecture/manual docs in this slice.
     Risk: Minor onboarding confusion and future duplicate fixes.
     Recommendation: Add a short doc note in the next `F04` closeout or architecture update.

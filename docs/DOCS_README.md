@@ -19,6 +19,9 @@ and build flows.
 - Mark document status explicitly (`Accepted`, `Active`, `Draft`, `Review`, `Archived`)
 - Keep ADR IDs unique globally
 - Move historical documents to `docs/archive/` or `docs/adr/_archive/`
+- Use the governed maintenance procedure in
+  [`docs/guides/documentation-maintenance-guide-20260407.md`](guides/documentation-maintenance-guide-20260407.md)
+  when code, planning, or archive moves change active reader routes
 
 ## Quick start
 

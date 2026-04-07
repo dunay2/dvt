@@ -16,20 +16,20 @@ qa_artifact: true
 - Title: Lane E task registry is not aligned with implemented slice status.
   Why it matters: planning truth is still reporting `MVP-E1` as queued and `F-03` at 35%, so governance surfaces under-report delivered work.
   Evidence:
-  - [agent-lane-e.yaml](/f:/cuartodvt/dvt/dvt/docs/planning/state/agent-lane-e.yaml#L144) (`MVP-E1` queued, `progress_pct: 0`)
-  - [agent-lane-e.yaml](/f:/cuartodvt/dvt/dvt/docs/planning/state/agent-lane-e.yaml#L207) (`F-03` in progress, `progress_pct: 35`)
+  - [agent-lane-e.yaml](../../state/agent-lane-e.yaml) (`MVP-E1` queued, `progress_pct: 0`)
+  - [agent-lane-e.yaml](../../state/agent-lane-e.yaml) (`F-03` in progress, `progress_pct: 35`)
   - implemented contract and shell changes exist in:
-    [frontend-backend-contract-mvp-e1-20260404.md](/f:/cuartodvt/dvt/dvt/docs/architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md),
-    [Root.tsx](/f:/cuartodvt/dvt/dvt/apps/web/src/app/Root.tsx),
-    [usePlatformHealthSnapshotQuery.ts](/f:/cuartodvt/dvt/dvt/apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts)
+    [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md),
+    [Root.tsx](../../../../apps/web/src/app/Root.tsx),
+    [usePlatformHealthSnapshotQuery.ts](../../../../apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts)
     Risk: execution board and readiness decisions can be made from stale task posture.
     Recommendation: update Lane E task statuses/evidence refs and regenerate planning views.
 
 - Title: MVP-E1 contract artifact is not discoverable from frontend architecture entrypoint.
   Why it matters: contract exists but discoverability fails for engineers entering from canonical frontend index.
   Evidence:
-  - [frontend index reading order](/f:/cuartodvt/dvt/dvt/docs/architecture/frontend/index.md#L78) does not include the new MVP-E1 artifact.
-  - artifact exists at [frontend-backend-contract-mvp-e1-20260404.md](/f:/cuartodvt/dvt/dvt/docs/architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md).
+  - [frontend index reading order](../../../architecture/frontend/index.md) does not include the new MVP-E1 artifact.
+  - artifact exists at [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md).
     Risk: route/auth assumptions continue from older docs.
     Recommendation: add explicit link from frontend index and route/runtime manuals.
 
@@ -38,8 +38,8 @@ qa_artifact: true
 - Title: Contract section promises canonical envelope examples but only provides narrative bullets.
   Why it matters: plan asks for canonical success/error envelope examples; current doc is descriptive only.
   Evidence:
-  - plan asks for examples in [MVP-E1-D](/f:/cuartodvt/dvt/dvt/docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md)
-  - current contract section [Canonical success and error envelope baseline](/f:/cuartodvt/dvt/dvt/docs/architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md#L47) has no concrete payload samples.
+  - plan asks for examples in [MVP-E1-D](../../proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md)
+  - current contract section [Canonical success and error envelope baseline](../../../architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md) has no concrete payload samples.
     Risk: frontend error handling can diverge by interpretation.
     Recommendation: add minimal JSON examples for `2xx`, `401/403`, and health degraded/offline mappings.
 

@@ -478,7 +478,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Key tests:
   [apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts](../../../apps/web/src/capabilities/platform-health/application/platformHealthCapability.test.ts),
   [apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts](../../../apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts),
-  [apps/web/src/app/views/canvas/useCanvasController.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.test.tsx),
+  [apps/web/src/app/views/canvas/useCanvasController.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.core.test.tsx),
+  [apps/web/src/app/views/canvas/useCanvasController.negative.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.negative.test.tsx),
+  [apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx),
   [apps/web/src/app/views/runs/RunStates.test.tsx](../../../apps/web/src/app/views/runs/RunStates.test.tsx),
   [apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts](../../../apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts)
 - Verification:

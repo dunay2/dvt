@@ -75,6 +75,15 @@ interface VerificationResult {
 - Revoked certificate or identity
 - Invalid or missing `plugin.manifest.json`
 
+### vm2 Prohibition
+
+The `vm2` npm package is prohibited for plugin isolation and dependency trees.
+
+- marketplace and self-hosted plugin bundles MUST fail verification if `vm2`
+  appears in the bundled dependency graph
+- migration targets include `isolated-vm`, `worker_threads`, or stronger
+  sandboxing such as gVisor-backed isolation
+
 ---
 
 ### 2.2 Trust Roots
@@ -218,6 +227,14 @@ All plugins MUST include SBOM (CycloneDX or SPDX format).
 
 - Component name, version, publisher
 - Dependencies (direct + transitive) with package URLs (purl) and hashes (SHA-256 minimum)
+
+### Enforcement Checklist
+
+- verify signature and trust-root match before install or load
+- reject unsigned, revoked, or digest-mismatched bundles
+- verify manifest structure and supported `apiVersion`
+- reject prohibited dependencies such as `vm2`
+- persist verification outcome in the tamper-evident catalog
 
 **Enforcement** (MUST):
 
