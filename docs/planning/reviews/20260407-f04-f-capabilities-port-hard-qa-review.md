@@ -8,6 +8,8 @@ planning_type: review
 
 # F-04-F capabilities-port hard QA review
 
+## Artifact Metadata
+
 ### Markdown Artifact Path Suggestion
 
 - `docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md`
