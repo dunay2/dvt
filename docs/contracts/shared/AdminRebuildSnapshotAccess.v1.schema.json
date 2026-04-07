@@ -88,11 +88,12 @@
                   "type": "string",
                   "enum": [
                     "PENDING",
+                    "APPROVED",
                     "RUNNING",
-                    "SUCCEEDED",
+                    "PAUSED",
+                    "COMPLETED",
                     "FAILED",
-                    "CANCELLED",
-                    "PAUSED"
+                    "CANCELLED"
                   ]
                 }
               }
@@ -140,7 +141,14 @@
                 "statusCode": { "const": 403 },
                 "reason": {
                   "type": "string",
-                  "const": "action_not_granted"
+                  "enum": [
+                    "principal_suspended",
+                    "tenant_not_granted",
+                    "project_not_granted",
+                    "environment_not_granted",
+                    "action_not_granted",
+                    "token_assertion_conflict"
+                  ]
                 }
               }
             },

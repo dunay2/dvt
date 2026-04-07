@@ -63,7 +63,9 @@ remains part of the route boundary.
 - Error classes:
   - `400`: `invalid_body`, `missing_tenant_id`, `invalid_tenant_id`
   - `401`: token/authentication failure classes such as `missing_token`
-  - `403`: `action_not_granted`
+  - `403`: normalized authorization denial reasons such as
+    `action_not_granted`, `tenant_not_granted`, or
+    `token_assertion_conflict`
   - `404`: `run_not_found`
   - `500`: `internal_error`
 

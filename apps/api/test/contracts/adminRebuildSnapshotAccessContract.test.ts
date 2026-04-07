@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
-import Ajv2020 from 'ajv/dist/2020.js';
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
@@ -50,7 +50,13 @@ type AdminRebuildSnapshotAccessContract = {
       },
       {
         readonly statusCode: 403;
-        readonly reason: 'action_not_granted';
+        readonly reason:
+          | 'principal_suspended'
+          | 'tenant_not_granted'
+          | 'project_not_granted'
+          | 'environment_not_granted'
+          | 'action_not_granted'
+          | 'token_assertion_conflict';
       },
       {
         readonly statusCode: 404;
@@ -247,6 +253,30 @@ describe('AdminRebuildSnapshot access contract', () => {
         }),
       ])
     );
+  });
+
+  it('accepts normalized non-action authorization denials in the 403 contract slot', () => {
+    const mutatedContract = {
+      ...ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT,
+      responses: {
+        ...ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT.responses,
+        errors: [
+          ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT.responses.errors[0],
+          ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT.responses.errors[1],
+          {
+            statusCode: 403,
+            reason: 'tenant_not_granted',
+          },
+          ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT.responses.errors[3],
+          ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT.responses.errors[4],
+        ],
+      },
+    };
+
+    const valid = validateAdminRebuildSnapshotAccess(mutatedContract);
+
+    expect(validateAdminRebuildSnapshotAccess.errors).toBeNull();
+    expect(valid).toBe(true);
   });
 
   it('exposes the documented success envelope', async () => {
