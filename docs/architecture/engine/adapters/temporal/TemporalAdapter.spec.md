@@ -8,9 +8,12 @@
 
 ---
 
-## 1) Plan Transport: PlanRef Versioning
+## 1) Plan Transport: Engine-Verified Payload
 
-The adapter receives a **plan reference**, not the full plan (Temporal payload limits).
+The adapter receives a verified **execution plan plus its plan reference**.
+`PlanRef` remains the persisted identity handle, but authoritative fetch and
+integrity verification now happen at the engine entry point before Temporal
+dispatch.
 
 ```ts
 type PlanRef = {
@@ -43,8 +46,11 @@ type PlanRef = {
 
 **Integrity Validation (NORMATIVE)**:
 
-When `fetchPlan(planRef)` downloads the plan, the adapter MUST compute SHA256 and compare it to `planRef.sha256`.
-If the hash does **not** match, the Activity MUST fail with error code `VALIDATION_FAILED` and the workflow MUST NOT continue.
+The engine MUST fetch the executable plan, validate metadata alignment against
+`PlanRef`, and recompute canonical planner identity (`planId`) before it calls
+the Temporal adapter. The adapter MUST treat the incoming `ExecutionPlan` as
+the authoritative verified payload and MUST NOT create a second authoritative
+integrity check by refetching the plan during workflow execution.
 
 ---
 
@@ -52,9 +58,9 @@ If the hash does **not** match, the Activity MUST fail with error code `VALIDATI
 
 Temporal is code-first. The adapter MUST implement a **generic interpreter workflow** that:
 
-1. Receives `PlanRef`.
-2. Fetches + validates plan via Activity (`fetchPlan(planRef)`).
-3. Walks the plan, scheduling Activities according to dependencies (DAG walker, deterministic order).
+1. Receives the engine-verified `ExecutionPlan` plus `PlanRef`.
+2. Walks the plan, scheduling Activities according to dependencies (DAG walker, deterministic order).
+3. Uses `PlanRef` for event identity/audit metadata, not as a runtime fetch authority.
 4. Emits lifecycle events to StateStore.
 5. Handles signals (PAUSE, RESUME, RETRY_STEP, etc.).
 6. Calls `continueAsNew()` when history exceeds limits.
@@ -63,29 +69,27 @@ Temporal is code-first. The adapter MUST implement a **generic interpreter workf
 
 ```ts
 export async function interpreterWorkflow(
+  plan: ExecutionPlan,
   planRef: PlanRef,
   context: RunContext
 ): Promise<RunSnapshot> {
-  // 1. Fetch plan
-  const plan = await workflow.executeActivity('fetchPlan', planRef);
-
-  // 2. Validate capabilities (check against adapterCapabilities.json)
+  // 1. Validate capabilities (check against adapterCapabilities.json)
   const validationReport = await workflow.executeActivity('validatePlan', plan);
   if (validationReport.status === 'ERRORS') {
     throw new PlanValidationError('Plan validation failed', validationReport);
   }
 
-  // 3. Initialize state
+  // 2. Initialize state
   let cursor = { completedStepIds: new Set<string>(), artifacts: [] };
   let stepsSinceContinue = 0;
 
-  // 4. Walk plan, schedule Activities
+  // 3. Walk plan, schedule Activities
   for (const step of planWalker.walk(plan, cursor)) {
     const stepResult = await workflow.executeActivity('executeStep', { step, context });
     cursor.completedStepIds.add(step.stepId);
     stepsSinceContinue++;
 
-    // 5. Check for continueAsNew trigger
+    // 4. Check for continueAsNew trigger
     if (
       stepsSinceContinue >= CONFIG.CONTINUE_STEPS ||
       workflow.workflowInfo.historySizeEstimate >= CONFIG.HISTORY_BYTES_THRESHOLD
@@ -94,144 +98,45 @@ export async function interpreterWorkflow(
     }
   }
 
-  // 6. Return final snapshot
+  // 5. Return final snapshot
   return workflow.executeActivity('compileRunSnapshot', cursor);
 }
 ```
 
 ---
 
-## 2.1) fetchPlan Activity (Normative Validation)
+## 2.1) Entry-Point Verification Boundary
 
-The `fetchPlan` Activity MUST implement strict integrity validation to prevent execution of tampered or mismatched plans.
-
-**Activity Signature**:
-
-```ts
-interface FetchPlanActivity {
-  fetchPlan(planRef: PlanRef): Promise<ExecutionPlan>;
-}
-```
+The authoritative integrity proof is complete before the Temporal adapter is
+called.
 
 **NORMATIVE Requirements**:
 
-1. **Download Plan**: Fetch the plan from `planRef.uri` (e.g., from S3, GCS, Azure Blob, or HTTP endpoint).
+1. The engine MUST fetch the executable plan bytes using `PlanRef`.
+2. The engine MUST validate executable-plan metadata against `PlanRef`.
+3. The engine MUST recompute canonical planner identity from the resolved plan
+   core and reject dispatch on mismatch.
+4. The Temporal adapter MUST accept the verified `ExecutionPlan` as the
+   authoritative payload.
+5. Temporal workflow execution MUST NOT refetch the plan as a second
+   authoritative integrity step.
 
-2. **Compute SHA256**: Calculate the SHA256 hash of the downloaded plan content (after decompression if `planRef.compression` is set).
+**Operational Implication**:
 
-3. **Strict Hash Validation** (CRITICAL):
-   - If the computed SHA256 does **NOT** match `planRef.sha256`, the Activity MUST:
-     - **Fail immediately** with error code `PLAN_INTEGRITY_VALIDATION_FAILED`
-     - **NOT proceed with execution**
-     - Emit a critical alert (P1) to operations/security team
-     - Record the mismatch in audit logs with both expected and actual hash values
-4. **Error Response Structure**:
-
-   ```ts
-   {
-     category: "VALIDATION_ERROR",
-     code: "PLAN_INTEGRITY_VALIDATION_FAILED",
-     message: "Plan hash mismatch: expected sha256 does not match downloaded content",
-     retryable: false,
-     details: {
-       expectedSha256: planRef.sha256,
-       actualSha256: computedSha256,
-       planUri: planRef.uri,
-       planId: planRef.planId,
-       planVersion: planRef.planVersion
-     }
-   }
-   ```
-
-5. **Retry Policy**: This error is **NOT retryable**. The workflow MUST transition to `FAILED` status immediately.
-
-6. **Security Rationale**:
-   - Prevents execution of plans that have been modified after approval
-   - Detects cache poisoning, man-in-the-middle attacks, or storage corruption
-   - Ensures audit trail integrity (executed plan matches approved plan)
-
-**Implementation Example** (TypeScript):
-
-```ts
-import { createHash } from 'crypto';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { ungzip } from 'node:zlib';
-import { promisify } from 'node:util';
-
-const ungzipAsync = promisify(ungzip);
-
-export async function fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
-  // 1. Download plan
-  const s3 = new S3Client({});
-  const command = new GetObjectCommand({
-    Bucket: extractBucket(planRef.uri),
-    Key: extractKey(planRef.uri),
-  });
-
-  const response = await s3.send(command);
-  let content = await response.Body!.transformToByteArray();
-
-  // 2. Decompress if needed
-  if (planRef.compression === 'gzip') {
-    content = await ungzipAsync(Buffer.from(content));
-  }
-
-  // 3. Compute SHA256
-  const computedSha256 = createHash('sha256').update(content).digest('hex');
-
-  // 4. STRICT VALIDATION (NORMATIVE)
-  if (computedSha256 !== planRef.sha256) {
-    throw new PlanIntegrityError({
-      category: 'VALIDATION_ERROR',
-      code: 'PLAN_INTEGRITY_VALIDATION_FAILED',
-      message: 'Plan hash mismatch: expected sha256 does not match downloaded content',
-      retryable: false,
-      details: {
-        expectedSha256: planRef.sha256,
-        actualSha256: computedSha256,
-        planUri: planRef.uri,
-        planId: planRef.planId,
-        planVersion: planRef.planVersion,
-      },
-    });
-  }
-
-  // 5. Parse and return
-  const plan = JSON.parse(content.toString('utf-8')) as ExecutionPlan;
-
-  // 6. Schema version validation (bonus)
-  if (!isSupportedSchemaVersion(plan.schemaVersion, planRef.schemaVersion)) {
-    throw new PlanSchemaError({
-      category: 'VALIDATION_ERROR',
-      code: 'PLAN_SCHEMA_VERSION_MISMATCH',
-      message: `Plan schema version ${plan.schemaVersion} does not match PlanRef ${planRef.schemaVersion}`,
-      retryable: false,
-    });
-  }
-
-  return plan;
-}
-
-function isSupportedSchemaVersion(planVersion: string, refVersion: string): boolean {
-  // Support exact match or backward compatible versions (e.g., v1.2 plan can run with v1.2 or v1.3 ref)
-  return planVersion === refVersion; // Simplified; implement semver logic as needed
-}
-```
-
-**Operational Monitoring**:
-
-- Alert: `PLAN_INTEGRITY_VALIDATION_FAILED` (P1, critical)
-- Metrics:
-  - `plan_fetch_integrity_failure_count` (counter)
-  - `plan_fetch_duration_ms` (histogram)
-  - `plan_fetch_size_bytes` (histogram)
+- integrity failures occur before workflow start, at the engine boundary
+- workflow input size grows because the verified plan crosses the adapter
+  boundary as payload
+- runtime monitoring should focus on payload size, start latency, and
+  `continueAsNew` cadence rather than plan-download integrity metrics
 
 **Testing Requirements**:
 
-- Unit test: Tampered plan content (modified after hashing) → MUST fail
-- Unit test: Correct plan → MUST succeed
-- Unit test: Network-corrupted download → MUST fail with integrity error (not generic network error)
-- Integration test: End-to-end workflow with mismatched hash → workflow transitions to FAILED
+- engine tests MUST fail closed when fetched bytes do not match `planId` or
+  required metadata
+- adapter tests MUST prove workflow start consumes the verified plan payload
+  without runtime `fetchPlan` ownership
+- integration tests MUST show dispatch does not occur after engine-side
+  verification failure
 
 ---
 
@@ -285,11 +190,11 @@ temporal:
 
 **Worker classes**:
 
-| Class         | Task Queue                    | Responsibilities                                                              | Resources                     |
-| ------------- | ----------------------------- | ----------------------------------------------------------------------------- | ----------------------------- |
-| **Control**   | `tq-control-{env}`            | Plan fetch/validation, StateStore writes, light HTTP steps, signal processing | 0.5 CPU, 1Gi RAM, 2-10 pods   |
-| **Data**      | `tq-data-{env}`               | `DBT_RUN`, heavy computation steps                                            | High CPU/memory, GPU optional |
-| **Isolation** | `tq-isolation-{tenant}-{env}` | Tenant-isolated steps (security/regulatory)                                   | Dedicated per tenant          |
+| Class         | Task Queue                    | Responsibilities                                       | Resources                     |
+| ------------- | ----------------------------- | ------------------------------------------------------ | ----------------------------- |
+| **Control**   | `tq-control-{env}`            | StateStore writes, light HTTP steps, signal processing | 0.5 CPU, 1Gi RAM, 2-10 pods   |
+| **Data**      | `tq-data-{env}`               | `DBT_RUN`, heavy computation steps                     | High CPU/memory, GPU optional |
+| **Isolation** | `tq-isolation-{tenant}-{env}` | Tenant-isolated steps (security/regulatory)            | Dedicated per tenant          |
 
 **Routing logic** (in step dispatch):
 
@@ -496,7 +401,7 @@ if (
 
 **State persisted across continuation** (MINIMAL):
 
-- `PlanRef` (reference only, not full plan)
+- `ExecutionPlan` plus `PlanRef` from the engine-verified dispatch payload
 - `cursor` (compacted: step IDs + artifact pointers)
 - No logs, expanded lists, or large errors
 

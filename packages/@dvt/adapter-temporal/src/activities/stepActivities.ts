@@ -8,8 +8,6 @@
  * @version 1.1.0
  * @date 2026-03-07
  */
-import { TextDecoder } from 'node:util';
-
 import { parsePlanRef, parseResolvedRunContext, RUN_EVENT_PAYLOAD_VERSION } from '@dvt/contracts';
 import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
@@ -21,8 +19,6 @@ import type {
   ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   RunStateCommandPort,
 } from '../engine-types.js';
 
@@ -31,10 +27,6 @@ import type {
 // ---------------------------------------------------------------------------
 
 const ActivityErrorCode = {
-  INVALID_PLAN_SCHEMA: 'INVALID_PLAN_SCHEMA',
-  PLAN_CONTRACT_VERSION_MISSING: 'PLAN_CONTRACT_VERSION_MISSING',
-  PLAN_CONTRACT_VERSION_UNKNOWN: 'PLAN_CONTRACT_VERSION_UNKNOWN',
-  PLAN_REF_MISMATCH: 'PLAN_REF_MISMATCH',
   INVALID_STEP_SCHEMA: 'INVALID_STEP_SCHEMA',
   INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
   TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
@@ -46,11 +38,6 @@ const PERMANENT_STEP_ERROR_TYPE = 'PermanentStepError';
 // ---------------------------------------------------------------------------
 // Role-based dependency interfaces (3.3 — ISP: each activity declares its needs)
 // ---------------------------------------------------------------------------
-
-export interface PlanFetcherDeps {
-  fetcher: IPlanFetcher;
-  integrity: IPlanIntegrityValidator;
-}
 
 export interface EventEmitterDeps {
   runStateCommandPort: RunStateCommandPort;
@@ -65,7 +52,7 @@ export interface RunBootstrapperDeps {
 }
 
 /** Full dependency container (union of role interfaces). Injected at Worker creation time. */
-export interface ActivityDeps extends PlanFetcherDeps, EventEmitterDeps, RunBootstrapperDeps {}
+export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {}
 
 // ---------------------------------------------------------------------------
 // Activity input / output types
@@ -156,23 +143,10 @@ export function createActivities(
   deps: ActivityDeps,
   stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS
 ): {
-  fetchPlan(planRef: PlanRef): Promise<ExecutionPlan>;
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
 } {
   return {
-    /**
-     * Fetch plan from storage, validate SHA-256 integrity, parse JSON,
-     * and verify metadata matches PlanRef.
-     */
-    async fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
-      const validatedPlanRef = parsePlanRef(planRef);
-      const bytes = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
-      const plan = parsePlan(bytes);
-      validatePlanAgainstRef(plan, validatedPlanRef);
-      return plan;
-    },
-
     /**
      * Execute a single step.
      * Thin dispatcher: validates shape, applies test hook, then delegates to executor registry.
@@ -247,8 +221,6 @@ const ALLOWED_STEP_FIELDS = new Set([
   'dependsOn',
 ]);
 
-const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
-
 function resolveTemporalAttemptFromContext(): number {
   try {
     const attempt = Context.current().info.attempt;
@@ -257,52 +229,6 @@ function resolveTemporalAttemptFromContext(): number {
     // Activity context not available (unit tests) — fall back to 1.
     return 1;
   }
-}
-
-function parsePlan(bytes: Uint8Array): ExecutionPlan {
-  const text = new TextDecoder().decode(bytes);
-  const obj: unknown = JSON.parse(text);
-  if (!isExecutionPlan(obj)) {
-    throw new TypeError(ActivityErrorCode.INVALID_PLAN_SCHEMA);
-  }
-  const contractVersion = obj.metadata.contractVersion;
-  if (typeof contractVersion !== 'string') {
-    throw new TypeError(ActivityErrorCode.PLAN_CONTRACT_VERSION_MISSING);
-  }
-  validatePlanContractVersion(contractVersion);
-  return obj;
-}
-
-function isExecutionPlan(v: unknown): v is ExecutionPlan {
-  if (typeof v !== 'object' || v === null) return false;
-  const o = v as Record<string, unknown>;
-  const meta = o['metadata'];
-  const steps = o['steps'];
-  if (typeof meta !== 'object' || meta === null) return false;
-  if (!Array.isArray(steps)) return false;
-  const m = meta as Record<string, unknown>;
-  return (
-    typeof m['planId'] === 'string' &&
-    typeof m['planVersion'] === 'string' &&
-    typeof m['schemaVersion'] === 'string' &&
-    typeof m['contractVersion'] === 'string'
-  );
-}
-
-function validatePlanContractVersion(contractVersion: string): void {
-  if (SUPPORTED_PLAN_CONTRACT_VERSIONS.has(contractVersion)) return;
-  throw new TypeError(
-    `${ActivityErrorCode.PLAN_CONTRACT_VERSION_UNKNOWN}: ${contractVersion}. Supported: ${Array.from(SUPPORTED_PLAN_CONTRACT_VERSIONS).join(', ')}`
-  );
-}
-
-function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
-  if (plan.metadata.planId !== ref.planId)
-    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: planId`);
-  if (plan.metadata.planVersion !== ref.planVersion)
-    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: planVersion`);
-  if (plan.metadata.schemaVersion !== ref.schemaVersion)
-    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: schemaVersion`);
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {

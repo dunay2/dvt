@@ -1,0 +1,24 @@
+id: R-20260407-ENGINE-ENTRYPOINT-PLAN-PAYLOAD
+title: Engine-owned plan verification increases adapter payload size and replay pressure
+status: Open
+date: 2026-04-07
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Medium
+context:
+  ADR-0012 now centralizes executable-plan fetch and integrity verification at the engine entry
+  point. The Temporal adapter consumes the verified ExecutionPlan instance instead of fetching the
+  plan during workflow execution.
+risk:
+  Passing the verified plan object into adapter runtime input increases payload size at the
+  engine-to-adapter handoff and can increase workflow replay pressure for large plans.
+triggers:
+  - unusually large executable plans
+  - Temporal workflow input or history growth
+  - degraded workflow startup or continueAsNew cadence under wide DAG payloads
+mitigations:
+  - Keep continueAsNew thresholds explicit in Temporal runtime docs.
+  - Monitor payload size and startup latency on Temporal-backed runs.
+  - Consider plan-size guardrails or alternate transport if large-plan evidence appears.

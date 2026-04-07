@@ -67,7 +67,6 @@ type ExecutedStepResult = {
 // ---------------------------------------------------------------------------
 
 type WorkflowActivitiesPort = {
-  fetchPlan(planRef: RunPlanWorkflowInput['planRef']): Promise<ExecutionPlan>;
   executeStep(input: {
     step: WorkflowStep;
     ctx: RunPlanWorkflowInput['ctx'];
@@ -88,6 +87,7 @@ type WorkflowActivitiesPort = {
 // ---------------------------------------------------------------------------
 
 export interface RunPlanWorkflowInput {
+  plan: ExecutionPlan;
   planRef: {
     uri: string;
     sha256: string;
@@ -176,7 +176,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   try {
     await bootstrapFirstExecutionIfNeeded(ctrl.resumeFromLayerIndex, ctx, planRef);
 
-    const plan = await activities.fetchPlan(planRef);
+    const plan = input.plan;
     validateGatewayDependencies(plan.steps);
     const executionLayers = planExecutionLayers<WorkflowStep>(plan.steps);
     if (ctrl.resumeFromLayerIndex > executionLayers.length) {
