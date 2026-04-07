@@ -18,7 +18,6 @@ export const runStatesCopy = {
   startedLabel: 'Started',
   completedLabel: 'Completed',
   gitShaLabel: 'Git SHA',
-  snapshotHashLabel: 'Snapshot hash',
   eventTimelineTitle: 'Event timeline',
   emptyTimeline: 'No runtime events are available yet for this run.',
   stepLabel: 'Step:',

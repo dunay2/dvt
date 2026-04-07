@@ -21,7 +21,6 @@ export type RunSummaryItem = {
   completedAt?: string;
   substatus?: string;
   message?: string;
-  hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
 };
 
@@ -35,7 +34,6 @@ export type RunSnapshot = {
   completedAt?: string;
   substatus?: string;
   message?: string;
-  hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
 };
 
