@@ -44,6 +44,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - [RunEvents.v2.0.md](../../architecture/engine/contracts/engine/RunEvents.v2.0.md)
 - [RunExecutionPolicy.v1.md](../../architecture/engine/contracts/engine/RunExecutionPolicy.v1.md)
 - [SignalsAndAuth.v1.md](../../architecture/engine/contracts/engine/SignalsAndAuth.v1.md)
+- [StartRunProtocol.v1.md](../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
 - [PluginSandbox.v1.md](../../architecture/engine/contracts/extensions/PluginSandbox.v1.md)
 - [MIGRATION_v1.1.1_to_v2.0.0.md](../../architecture/engine/contracts/MIGRATION_v1.1.1_to_v2.0.0.md)
 - [README.md](../../architecture/engine/contracts/README.md)

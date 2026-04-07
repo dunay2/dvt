@@ -4,7 +4,8 @@
 **Version**: 2.0.0  
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: Engine runtime, adapters, StateStore (Append Authority), projectors, audit pipelines  
-**Related Contracts**: [IWorkflowEngine.v2.0.md](./IWorkflowEngine.v2.0.md), [RunEvents.v2.0.md](./RunEvents.v2.0.md), [IRunStateStore.v2.0.md](../state-store/IRunStateStore.v2.0.md)
+**Related Contracts**: [IWorkflowEngine.v2.0.md](./IWorkflowEngine.v2.0.md), [RunEvents.v2.0.md](./RunEvents.v2.0.md), [IRunStateStore.v2.0.md](../state-store/IRunStateStore.v2.0.md)  
+**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 
 ---
 
@@ -90,6 +91,31 @@ Canonical lifecycle events are defined in [RunEvents.v2.0.md](./RunEvents.v2.0.m
 - Step-level: `StepStarted`, `StepCompleted`, `StepFailed`, `StepSkipped`
 
 `RunQueued` remains admission-control owned and MAY be emitted if schema-compatible.
+
+### 5.1 Signal-driven realized lifecycle ownership
+
+For signal-driven realized lifecycle transitions:
+
+- the engine validates authorization, transition legality, and capability;
+- the engine dispatches the command to the adapter;
+- the runtime execution context appends the realized lifecycle fact when the
+  workflow actually reaches that state.
+
+In the current model this applies to:
+
+- `RunPaused`
+- `RunResumed`
+- `RunCancelled`
+
+The engine core MUST NOT append those realized lifecycle events merely because
+the signal or cancellation command was accepted.
+
+Validation-only speculative transition simulation is allowed at the engine
+boundary if it remains non-persistent. `SignalTransitionGuard` is the current
+short-term mechanism for that validation path.
+
+Any future canonical `SignalType` that maps to a realized lifecycle fact MUST
+follow the same runtime-owned model.
 
 ---
 
