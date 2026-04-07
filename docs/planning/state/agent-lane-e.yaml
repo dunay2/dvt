@@ -266,9 +266,9 @@ tasks:
       `CapabilitiesPort` is now formalized and `useCapabilitiesQuery` is composition-owned. `QA-03`
       under `F-04-RISK-A` is now closed with backend-owned `planRef` payloads on preview/import, and
       `F-04-RISK-B` now isolates mutable mock workspace state per service instance with an explicit
-      shared-state seam plus instance-local file-tree discoverability for newly saved paths.
-      Documentary hard QA found no blocking issues. The remaining open work is final residual
-      cleanup under `F-04-RESIDUAL`.
+      shared-state seam plus instance-local file-tree discoverability with unique workspace paths
+      for newly saved files. Documentary hard QA found no blocking issues. The remaining open work
+      is final residual cleanup under `F-04-RESIDUAL`.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
@@ -493,8 +493,9 @@ tasks:
       Hard QA risk intake is now represented by executable lane tasks. The `planRef` contract-drift
       branch (`F-04-RISK-A`) is closed in code and review, and `F-04-RISK-B` now hardens the mock
       workspace adapter so mutable state is isolated by default and shared only through an explicit,
-      tested seam, including file-tree discoverability for newly saved paths. Documentary hard QA
-      found no blocking issues. The parent risk chain is ready for normal review/PR flow.
+      tested seam, including unique file-tree paths and discoverability for newly saved paths.
+      Documentary hard QA found no blocking issues. The parent risk chain is ready for normal
+      review/PR flow.
     last_verified: '2026-04-07'
   - task_id: F-04-RISK-A
     parent_task: F-04-RISK
@@ -579,8 +580,8 @@ tasks:
       TDD-first regression coverage now proves that default mock workspace services do not share
       mutable graph or file-content state across instances, while `createMockWorkspaceState()`
       provides an explicit opt-in shared-state seam for tests that require it. Newly saved file
-      paths now enter the instance-local file tree as well. Documentary hard QA found no blocking
-      issues.
+      paths now enter the instance-local file tree, and the default mock tree no longer duplicates
+      nested workspace paths. Documentary hard QA found no blocking issues.
     last_verified: '2026-04-07'
   - task_id: F-04-RESIDUAL
     parent_task: F-04

@@ -67,7 +67,8 @@ Canonical execution tracking remains in:
   state and the explicit shared-state seam.
 - Promise vs implementation:
   Aligned for the stated `F-04-RISK-B` target. Default mock service instances
-  no longer share mutable graph, file-tree, or file-content state.
+  no longer share mutable graph, file-tree, or file-content state, and the
+  default file tree now emits unique workspace paths.
 - Tests vs claims:
   Aligned for the reviewed scope. RED->GREEN evidence exists for default
   isolation, explicit shared state, and composition-root isolation.
@@ -105,6 +106,7 @@ Canonical execution tracking remains in:
     nodes
   - default mock service instances do not observe each other's file-content
     edits
+  - default mock file trees do not duplicate nested workspace paths
   - newly saved mock file paths become visible only in the owning instance's
     file tree
   - API mode still fails explicitly for unsupported warehouse import endpoints
@@ -146,6 +148,7 @@ Canonical execution tracking remains in:
   - `pnpm verify:prepush`
 - What passed:
   - the adapter no longer exposes module-level mutable graph state
+  - the default mock file tree no longer duplicates nested workspace paths
   - targeted and package-level validation passed
   - docs sync and workboard generation passed
   - markdown and formatting checks for the QA artifact and planning surfaces
@@ -154,9 +157,7 @@ Canonical execution tracking remains in:
 - What failed:
   - Nothing in the final review baseline
 - What could not be verified:
-  - `pnpm verify:prepush` still skipped its diff-based changed-file subchecks
-    because this branch remains an uncommitted worktree delta; direct
-    file-scoped checks were run to compensate
+  - Nothing material in the final review baseline
 
 ## Unblock Roadmap
 
@@ -184,7 +185,8 @@ Tasks: `RISK-B-QA-4`
 
 Target:
 
-- new mock file paths become discoverable through explicit file-tree state.
+- new mock file paths become discoverable through explicit file-tree state
+  without duplicating existing workspace paths.
 
 ## Action Artifact
 
@@ -193,7 +195,7 @@ Target:
 - [x] `RISK-B-QA-1` Verify default mock workspace instances no longer share mutable graph state
 - [x] `RISK-B-QA-2` Verify explicit shared state remains opt-in and test-backed
 - [x] `RISK-B-QA-3` Reconcile lane/docs/review navigation with the shipped isolation seam
-- [x] `RISK-B-QA-4` Move file-tree structure into explicit state so newly saved paths become discoverable
+- [x] `RISK-B-QA-4` Move file-tree structure into explicit state so newly saved paths become discoverable without duplicating existing workspace paths
 
 ### Task Details
 
@@ -249,7 +251,7 @@ Target:
   - lane evidence references the review;
   - docs no longer describe `F-04-RISK-B` as merely queued or unresolved.
 
-#### `RISK-B-QA-4` Move file-tree structure into explicit state so newly saved paths become discoverable
+#### `RISK-B-QA-4` Move file-tree structure into explicit state so newly saved paths become discoverable without duplicating existing workspace paths
 
 - Objective: Remove the remaining mismatch between mutable file contents and
   discoverable workspace paths.
@@ -263,9 +265,12 @@ Target:
   closeout.
 - Comment with rationale: Once `saveFileContent()` can create or update a new
   path, `listFiles()` must reflect that path or the adapter still leaks an
-  inconsistent state model.
+  inconsistent state model. The default tree also must not surface the same
+  workspace path twice, or Code and Artifacts consume an already-corrupted
+  hierarchy.
 - Definition of Done:
   - file-tree structure is part of `MockWorkspaceState`;
+  - default mock file trees expose unique workspace paths;
   - newly saved paths appear in `listFiles()` for the owning instance;
   - independent default instances still do not observe each other's new paths.
 
@@ -279,8 +284,8 @@ flowchart LR
   ServiceA --> DefaultStateA["Default MockWorkspaceState A"]
   ServiceB --> DefaultStateB["Default MockWorkspaceState B"]
 
-  DefaultStateA --> GraphA["graph + fileContents"]
-  DefaultStateB --> GraphB["graph + fileContents"]
+  DefaultStateA --> GraphA["graph + fileTree + fileContents"]
+  DefaultStateB --> GraphB["graph + fileTree + fileContents"]
 
   Shared["Explicit createMockWorkspaceState()"] --> SharedA["Service A (opt-in)"]
   Shared --> SharedB["Service B (opt-in)"]
@@ -291,5 +296,5 @@ flowchart LR
 `F-04-RISK-B` passes this hard QA review with no blocking findings. The
 original determinism risk is closed: default mock workspace services are now
 isolated, the composition-root path inherits that behavior, the explicit
-shared-state seam is test-backed, and newly saved file paths are now
-discoverable through instance-local file-tree state.
+shared-state seam is test-backed, and instance-local file-tree state now keeps
+workspace paths both discoverable and unique.
