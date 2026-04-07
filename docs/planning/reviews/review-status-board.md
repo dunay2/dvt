@@ -78,6 +78,12 @@ Additional active QA:
   - linkage: `QA-EP-9..QA-EP-11`
   - status: `done`
   - progress: `100%`
+- [20260407 F-04-F capabilities-port hard QA review](20260407-f04-f-capabilities-port-hard-qa-review.md)
+  - domain: `frontend-and-ui`
+  - role: documentary hard QA gate for the governed capabilities-boundary slice
+  - linkage: `F-04-F`
+  - status: `review`
+  - progress: `100%`
 
 ## Newly Classified Review
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
+import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -25,6 +26,7 @@ export function AppServicesProvider({
       overrides?.plansService,
       overrides?.runsService,
       overrides?.workspaceService,
+      overrides?.capabilitiesPort,
       overrides?.sessionContext,
       overrides?.shellFeedback,
     ]
@@ -55,6 +57,10 @@ export function useRunsService(): IRunsPort {
 
 export function usePlansService(): IPlansPort {
   return useRequiredAppServicesContext().plansService;
+}
+
+export function useCapabilitiesPort(): CapabilitiesPort {
+  return useRequiredAppServicesContext().capabilitiesPort;
 }
 
 export function useSessionContext(): SessionContextPort {

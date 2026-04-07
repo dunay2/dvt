@@ -115,4 +115,15 @@ describe('Query key policy (architecture)', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps the app capabilities query on a governed composition boundary', () => {
+    const querySource = readFileSync(
+      path.join(ROOT_DIR, 'queries', 'useCapabilitiesQuery.ts'),
+      'utf8'
+    );
+
+    expect(querySource).not.toMatch(
+      /export\s*\{\s*[\s\S]*useRuntimeCapabilitiesQuery\s+as\s+useCapabilitiesQuery[\s\S]*\}\s*from\s*['"][^'"]*capabilities\/runtime-capabilities['"]/
+    );
+  });
 });
