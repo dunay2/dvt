@@ -19,6 +19,7 @@ export interface IRawPlanFetcher {
 export class PlanIntegrityValidator {
   async fetchAndValidate(planRef: PlanRef, fetcher: IRawPlanFetcher): Promise<ExecutionPlan> {
     const bytes = await fetcher.fetch(planRef);
+    validatePlanBytesAgainstRef(bytes, planRef);
     const plan = parseExecutablePlan(bytes);
     validatePlanAgainstRef(plan, planRef);
     const actualPlanId = derivePlanId(plan);
@@ -26,6 +27,15 @@ export class PlanIntegrityValidator {
       throw new Error(`PLAN_ID_MISMATCH: expected=${planRef.planId} actual=${actualPlanId}`);
     }
     return plan;
+  }
+}
+
+function validatePlanBytesAgainstRef(bytes: Uint8Array, ref: PlanRef): void {
+  const actualSha256 = sha256Hex(bytes);
+  if (actualSha256 !== ref.sha256) {
+    throw new Error(
+      `PLAN_INTEGRITY_VALIDATION_FAILED: expected=${ref.sha256} actual=${actualSha256}`
+    );
   }
 }
 

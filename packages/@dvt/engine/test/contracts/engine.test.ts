@@ -252,6 +252,28 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     );
   });
 
+  it('Plan integrity validation: sha256 mismatch against fetched bytes fails before planId checks', async () => {
+    const plan = makeHelloWorldPlan();
+    const uri = 'https://plans.example.com/bad-sha.json';
+    const bytes = utf8(JSON.stringify(plan));
+
+    const badRef: PlanRef = {
+      uri,
+      sha256: '0'.repeat(64),
+      schemaVersion: plan.metadata.schemaVersion,
+      planId: plan.metadata.planId,
+      planVersion: plan.metadata.planVersion,
+      sizeBytes: bytes.byteLength,
+    };
+
+    const fetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
+    const integrity = new PlanIntegrityValidator();
+
+    await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
+      /PLAN_INTEGRITY_VALIDATION_FAILED/
+    );
+  });
+
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
     const startRunMock: IProviderAdapter['startRun'] = vi.fn(
       async (_plan, _planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> => ({

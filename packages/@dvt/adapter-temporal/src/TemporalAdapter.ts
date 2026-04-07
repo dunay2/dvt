@@ -10,6 +10,8 @@
  * @version 1.2.0
  * @date 2026-03-08
  */
+import { Buffer } from 'node:buffer';
+
 import {
   type EngineRunRef,
   type ExecutionPlan,
@@ -106,18 +108,19 @@ export class TemporalAdapter implements IProviderAdapter {
 
     const workflowId = toTemporalWorkflowId(validatedCtx.runId);
     const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
+    const workflowInput = {
+      plan,
+      planRef: validatedPlanRef,
+      ctx: validatedCtx,
+      continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
+    };
+
+    assertWorkflowStartPayloadWithinLimit(workflowInput, this.deps.config.maxStartPayloadBytes);
 
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
-      args: [
-        {
-          plan,
-          planRef: validatedPlanRef,
-          ctx: validatedCtx,
-          continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
-        },
-      ],
+      args: [workflowInput],
     });
 
     return toTemporalRunRef({
@@ -267,6 +270,29 @@ export class TemporalAdapter implements IProviderAdapter {
       handle.describe(),
       this.deps.config.requestTimeoutMs,
       'lookupRunRef.describe'
+    );
+  }
+}
+
+function assertWorkflowStartPayloadWithinLimit(
+  workflowInput: {
+    plan: ExecutionPlan;
+    planRef: PlanRef;
+    ctx: ResolvedRunContext;
+    continueAsNewAfterLayerCount: number;
+  },
+  maxBytes: number
+): void {
+  if (workflowInput.planRef.sizeBytes !== undefined && workflowInput.planRef.sizeBytes > maxBytes) {
+    throw new Error(
+      `TEMPORAL_START_PAYLOAD_TOO_LARGE: sizeBytes=${workflowInput.planRef.sizeBytes} maxBytes=${maxBytes}`
+    );
+  }
+
+  const serializedSizeBytes = Buffer.byteLength(JSON.stringify([workflowInput]), 'utf8');
+  if (serializedSizeBytes > maxBytes) {
+    throw new Error(
+      `TEMPORAL_START_PAYLOAD_TOO_LARGE: sizeBytes=${serializedSizeBytes} maxBytes=${maxBytes}`
     );
   }
 }
