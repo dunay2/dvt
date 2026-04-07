@@ -86,6 +86,7 @@ describe('adapter-temporal foundation', () => {
     });
 
     expect(cfg.identity).toBeUndefined();
+    expect(cfg.maxStartPayloadBytes).toBe(2_000_000);
     expect(cfg.continueAsNewAfterLayerCount).toBe(0);
   });
 
@@ -97,6 +98,7 @@ describe('adapter-temporal foundation', () => {
       TEMPORAL_IDENTITY: 'adapter-a',
       TEMPORAL_CONNECT_TIMEOUT_MS: '1500',
       TEMPORAL_REQUEST_TIMEOUT_MS: '2500',
+      TEMPORAL_MAX_START_PAYLOAD_BYTES: '123456',
       TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '12',
     });
 
@@ -106,6 +108,7 @@ describe('adapter-temporal foundation', () => {
     expect(cfg.identity).toBe('adapter-a');
     expect(cfg.connectTimeoutMs).toBe(1500);
     expect(cfg.requestTimeoutMs).toBe(2500);
+    expect(cfg.maxStartPayloadBytes).toBe(123456);
     expect(cfg.continueAsNewAfterLayerCount).toBe(12);
   });
 
