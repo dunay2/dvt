@@ -12,6 +12,7 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts
   - packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
   - packages/@dvt/contracts/src/index.ts
+  - docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md
   - packages/@dvt/engine/src/adapters/IProviderAdapter.ts
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
   - packages/@dvt/engine/src/services/signal/SignalTransitionGuard.ts
@@ -23,6 +24,7 @@ code_refs:
   - packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts
   - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
   - packages/@dvt/engine/test/adapters/MockAdapter.cancel.test.ts
+  - packages/@dvt/engine/test/services/SignalTransitionGuard.test.ts
   - packages/@dvt/contracts/test/signalSemantics.test.ts
   - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
   - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
@@ -31,6 +33,7 @@ evidence:
   tests:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/contracts build
+    - pnpm --filter @dvt/engine test -- test/services/SignalTransitionGuard.test.ts
     - pnpm --filter @dvt/engine test -- test/core/WorkflowEngineCoreService.test.ts test/adapters/MockAdapter.cancel.test.ts
     - pnpm --filter @dvt/engine test
     - pnpm --filter @dvt/adapter-temporal test
@@ -72,6 +75,12 @@ of realized pause/resume lifecycle events in the current semantics version.
   lifetime and across continue-as-new rollover.
 - Added tests for contract mapping, runtime-owned pause/resume emission, and
   engine no-derive behavior for current semantics.
+- Added an accepted ADR (`ADR-0047`) that extends the cancellation ownership
+  principle to pause/resume and establishes the forward rule for future
+  signal-driven realized lifecycle facts.
+- Added explicit `SignalTransitionGuard` unit tests proving that speculative
+  pause/resume simulation remains validation-only and does not reintroduce
+  engine-owned realized lifecycle persistence.
 - Added Temporal coverage for signal-id forwarding, continue-as-new state carry,
   and stale `PAUSE` replay after a `PAUSE -> RESUME` cycle.
 

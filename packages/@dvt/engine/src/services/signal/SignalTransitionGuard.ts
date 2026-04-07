@@ -32,6 +32,9 @@ export class SignalTransitionGuard {
       return 'already_applied';
     }
     const transientSnap = cloneWorkflowSnapshot(baseSnap);
+    // Validation-only simulation: the engine no longer persists pause/resume
+    // realized lifecycle events, but it still validates whether the transition
+    // would be legal if the runtime later realized it.
     const event = buildSignalDerivedRunEventInput({
       idempotency: this.deps.idempotency,
       clock: this.deps.clock,

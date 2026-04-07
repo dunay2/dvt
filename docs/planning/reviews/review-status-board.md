@@ -63,6 +63,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260407 PlanCore operational consumption design spike](architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md)
+  - domain: `architecture-and-governance`
+  - role: design spike on whether existing `PlanCore` should become an operationally consumed split
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
 Additional active QA:
 
 - [20260407 Execution plan and policy hard QA review](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
