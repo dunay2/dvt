@@ -8,6 +8,7 @@ import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.j
 
 type RebuildSnapshot = IRunStateStoreMaintenance['rebuildSnapshot'];
 type WorkflowSnapshotResult = Awaited<ReturnType<RebuildSnapshot>>;
+type RouteResponse = Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>;
 
 function makeSnapshot(
   runId: string,
@@ -147,7 +148,7 @@ async function injectRebuildSnapshot(
   app: ReturnType<typeof Fastify>,
   runId: string,
   payload: unknown
-): Promise<Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>> {
+): Promise<RouteResponse> {
   return app.inject({
     method: 'POST',
     url: `/admin/runs/${runId}/rebuild-snapshot`,
@@ -155,209 +156,228 @@ async function injectRebuildSnapshot(
   });
 }
 
+async function withRebuildSnapshotRequest(
+  options: {
+    readonly rebuildSnapshot: RebuildSnapshot;
+    readonly runId?: string;
+    readonly payload?: unknown;
+    readonly authenticateBearerToken?: (token: string | undefined) => Promise<unknown>;
+    readonly authorize?: () => Promise<unknown>;
+    readonly auth?: {
+      readonly tenantId?: string;
+      readonly actionName?: string;
+      readonly principalId?: string;
+      readonly principalType?: string;
+      readonly requestId?: string;
+    };
+  },
+  assert: (context: {
+    readonly response: RouteResponse;
+    readonly rebuildSnapshotSpy: ReturnType<typeof vi.fn>;
+  }) => Promise<void> | void
+): Promise<void> {
+  const { app, rebuildSnapshotSpy } = buildAuthorizedApp(options.rebuildSnapshot, options);
+
+  try {
+    const response = await injectRebuildSnapshot(
+      app,
+      options.runId ?? 'r1',
+      options.payload ?? { tenantId: 'tenant-a' }
+    );
+    await assert({ response, rebuildSnapshotSpy });
+  } finally {
+    await app.close();
+  }
+}
+
 describe('adminRoutes', () => {
   it('returns 401 when token is missing or invalid', async () => {
-    const { app, rebuildSnapshotSpy } = buildAuthorizedApp(
-      async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+    await withRebuildSnapshotRequest(
       {
+        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
         authenticateBearerToken: async () => ({ ok: false, code: 'MISSING_TOKEN' }),
+      },
+      ({ response, rebuildSnapshotSpy }) => {
+        expect(response.statusCode).toBe(401);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'unauthorized',
+            reason: 'missing_token',
+          },
+        });
+        expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
       }
     );
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r1', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'unauthorized',
-          reason: 'missing_token',
-        },
-      });
-      expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
-    } finally {
-      await app.close();
-    }
   });
 
   it('returns 403 when principal lacks explicit admin action', async () => {
-    const { app, rebuildSnapshotSpy } = buildAuthorizedApp(
-      async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+    await withRebuildSnapshotRequest(
       {
+        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
         authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
+      },
+      ({ response, rebuildSnapshotSpy }) => {
+        expect(response.statusCode).toBe(403);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'forbidden',
+            reason: 'action_not_granted',
+          },
+        });
+        expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
       }
     );
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r1', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'forbidden',
-          reason: 'action_not_granted',
-        },
-      });
-      expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
-    } finally {
-      await app.close();
-    }
   });
 
   it('returns 403 when authorization context is not an admin action', async () => {
-    const { app, rebuildSnapshotSpy } = buildAuthorizedApp(
-      async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+    await withRebuildSnapshotRequest(
       {
+        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
         auth: { actionName: 'run:cancel' },
+      },
+      ({ response, rebuildSnapshotSpy }) => {
+        expect(response.statusCode).toBe(403);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'forbidden',
+            reason: 'action_not_granted',
+          },
+        });
+        expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
       }
     );
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r1', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'forbidden',
-          reason: 'action_not_granted',
-        },
-      });
-      expect(rebuildSnapshotSpy).not.toHaveBeenCalled();
-    } finally {
-      await app.close();
-    }
   });
 
   it('returns 400 when tenantId is missing', async () => {
-    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r1', {});
-
-      expect(response.statusCode).toBe(400);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'bad_request',
-          reason: 'missing_tenant_id',
-          target: 'tenantId',
-        },
-      });
-    } finally {
-      await app.close();
-    }
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        payload: {},
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'bad_request',
+            reason: 'missing_tenant_id',
+            target: 'tenantId',
+          },
+        });
+      }
+    );
   });
 
   it('returns 400 when body is not an object', async () => {
-    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r1', ['tenant-a']);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'bad_request',
-          reason: 'invalid_body',
-        },
-      });
-    } finally {
-      await app.close();
-    }
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        payload: ['tenant-a'],
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'bad_request',
+            reason: 'invalid_body',
+          },
+        });
+      }
+    );
   });
 
   it.each([
     ['tenantId has invalid type', { tenantId: 123 }],
     ['tenantId is blank', { tenantId: '   ' }],
   ])('returns 400 when %s', async (_desc, payload) => {
-    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'));
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r1', payload);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'bad_request',
-          reason: 'invalid_tenant_id',
-          target: 'tenantId',
-        },
-      });
-    } finally {
-      await app.close();
-    }
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        payload,
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'bad_request',
+            reason: 'invalid_tenant_id',
+            target: 'tenantId',
+          },
+        });
+      }
+    );
   });
 
   it('returns 200 with rebuilt snapshot status', async () => {
-    const { app } = buildAuthorizedApp(async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'));
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r42', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual({ runId: 'r42', status: 'RUNNING' });
-    } finally {
-      await app.close();
-    }
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'),
+        runId: 'r42',
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(200);
+        expect(response.json()).toEqual({ runId: 'r42', status: 'RUNNING' });
+      }
+    );
   });
 
   it('returns 404 when the run does not exist for the tenant', async () => {
-    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => {
-      throw new RunNotFoundError('r404');
-    });
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r404', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(404);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'not_found',
-          reason: 'run_not_found',
-          details: { runId: 'r404' },
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, _runId) => {
+          throw new RunNotFoundError('r404');
         },
-      });
-    } finally {
-      await app.close();
-    }
+        runId: 'r404',
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(404);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'not_found',
+            reason: 'run_not_found',
+            details: { runId: 'r404' },
+          },
+        });
+      }
+    );
   });
 
   it('returns 500 for legacy stringly not-found errors', async () => {
-    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => {
-      throw new Error('RUN_NOT_FOUND: r404');
-    });
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r404', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(500);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'internal_server_error',
-          reason: 'internal_error',
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, _runId) => {
+          throw new Error('RUN_NOT_FOUND: r404');
         },
-      });
-    } finally {
-      await app.close();
-    }
+        runId: 'r404',
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(500);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'internal_server_error',
+            reason: 'internal_error',
+          },
+        });
+      }
+    );
   });
 
   it('returns 500 on unexpected rebuild failure', async () => {
-    const { app } = buildAuthorizedApp(async (_tenantId, _runId) => {
-      throw new Error('db down');
-    });
-
-    try {
-      const response = await injectRebuildSnapshot(app, 'r500', { tenantId: 'tenant-a' });
-
-      expect(response.statusCode).toBe(500);
-      expect(response.json()).toEqual({
-        error: {
-          type: 'internal_server_error',
-          reason: 'internal_error',
+    await withRebuildSnapshotRequest(
+      {
+        rebuildSnapshot: async (_tenantId, _runId) => {
+          throw new Error('db down');
         },
-      });
-    } finally {
-      await app.close();
-    }
+        runId: 'r500',
+      },
+      ({ response }) => {
+        expect(response.statusCode).toBe(500);
+        expect(response.json()).toEqual({
+          error: {
+            type: 'internal_server_error',
+            reason: 'internal_error',
+          },
+        });
+      }
+    );
   });
 });
