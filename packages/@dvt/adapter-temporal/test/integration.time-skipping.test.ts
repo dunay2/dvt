@@ -1043,24 +1043,8 @@ describe('temporal integration (time-skipping)', () => {
           eventTypes: string[];
         }> => {
           const runId = RunId.of(runIdValue);
-          const runCtx = createRunContext(runId);
-          const runPlanRef: PlanRef = {
-            uri: 'memory://plans/it-plan.json',
-            sha256: createHash('sha256').update(planBytes).digest('hex'),
-            schemaVersion: 'v1.2',
-            planId: 'it-plan',
-            planVersion: '1.0.0',
-            sizeBytes: planBytes.byteLength,
-          };
-          if (
-            !runPlanRef.uri ||
-            !runPlanRef.sha256 ||
-            !runPlanRef.planId ||
-            !runPlanRef.planVersion
-          ) {
-            throw new Error('CANCEL_SCENARIO_PLAN_REF_INVALID');
-          }
-          const runRef = await adapter.startRun(runPlanRef, runCtx);
+          const runPlanRef = createPlanRef('it-plan', planBytes);
+          const runRef = await adapter.startRun(runPlanRef, createRunContext(runId));
           await waitForCondition(
             () => store.listRunEvents(runId),
             (events) => events.some((event) => event.eventType === 'StepStarted'),
