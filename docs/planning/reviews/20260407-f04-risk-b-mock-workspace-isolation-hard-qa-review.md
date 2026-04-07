@@ -4,7 +4,6 @@ status: Review
 owner: Frontend / Architecture / QA
 last_reviewed: 2026-04-07
 planning_type: review
-qa_artifact: true
 ---
 
 # F-04-RISK-B mock workspace isolation hard QA review
