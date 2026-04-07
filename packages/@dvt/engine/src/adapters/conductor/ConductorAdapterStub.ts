@@ -10,6 +10,7 @@
  */
 import type {
   EngineRunRef,
+  ExecutionPlan,
   PlanRef,
   ResolvedRunContext,
   RunStatusSnapshot,
@@ -38,7 +39,11 @@ const CONDUCTOR_CAPABILITIES = [
 export class ConductorAdapterStub implements IProviderAdapter {
   readonly provider = 'conductor' as const;
 
-  async startRun(_planRef: PlanRef, _ctx: ResolvedRunContext): Promise<EngineRunRef> {
+  async startRun(
+    _plan: ExecutionPlan,
+    _planRef: PlanRef,
+    _ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
     throw new Error('NotImplemented: ConductorAdapter (Phase 2+)');
   }
   async cancelRun(_runRef: EngineRunRef): Promise<void> {

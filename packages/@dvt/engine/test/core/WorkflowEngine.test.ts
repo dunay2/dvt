@@ -31,6 +31,7 @@ import {
 } from './WorkflowEngine.helpers.js';
 
 type StoreEventInput = Parameters<InMemoryTxStore['appendAndEnqueueTx']>[1][number];
+const TEST_PLAN_REF = makePlanRef();
 
 async function expectContractValidationFailure(
   promise: Promise<unknown>
@@ -77,8 +78,8 @@ function makeRunEventInput(args: {
     tenantId: 't',
     projectId: 'p',
     environmentId: 'dev',
-    planId: 'plan-1',
-    planVersion: '1',
+    planId: TEST_PLAN_REF.planId,
+    planVersion: TEST_PLAN_REF.planVersion,
     logicalAttemptId: 1,
     engineAttemptId: 1,
     emittedAt: '2026-02-12T00:00:00.000Z',
@@ -101,8 +102,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const invalidPlanRef = {
       uri: '',
       sha256: 'deadbeef',
-      schemaVersion: 'v1.1',
-      planId: 'p',
+      schemaVersion: 'v1.2',
+      planId: TEST_PLAN_REF.planId,
       planVersion: '1.0',
     } as any;
 
@@ -142,27 +143,31 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('rejects runExecutionContextRef when no resolver is configured', async () => {
     const { engine } = createEngine({ adapters: makeAdapters() });
+    const planRef = makePlanRef();
     const contextWithRunExecutionContextRef = {
       ...makeContext('ctx-no-resolver-1'),
       runExecutionContextRef: {
         uri: 'dvt-runctx://t/ctx-no-resolver-1',
         sha256: 'ctxsha',
         schemaVersion: 'v1.0',
-        planId: 'p',
-        planVersion: '1.0',
+        planId: planRef.planId,
+        planVersion: planRef.planVersion,
       },
     };
 
-    await expect(
-      engine.startRun(makePlanRef(), contextWithRunExecutionContextRef)
-    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+    await expect(engine.startRun(planRef, contextWithRunExecutionContextRef)).rejects.toMatchObject(
+      {
+        code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+      }
+    );
   });
 
   it('allows aligned runExecutionContextRef and forwards it to adapter context', async () => {
     const seenContexts: unknown[] = [];
+    const planRef = makePlanRef();
     const { engine } = createEngine({
       adapters: makeAdapters({
-        async startRun(_planRef, ctx) {
+        async startRun(_plan, _planRef, ctx) {
           seenContexts.push(ctx);
           return {
             provider: 'temporal',
@@ -179,7 +184,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
             schemaVersion: 'v1.0',
             planId: ref.planId,
             planVersion: ref.planVersion,
-            planSha256: 'deadbeef',
+            planSha256: planRef.sha256,
             tenantId: 't',
             projectId: 'p',
             environmentId: 'dev',
@@ -202,14 +207,12 @@ describe('WorkflowEngine (basic failure modes)', () => {
         uri: 'dvt-runctx://t/ctx-ok-1',
         sha256: 'ctxsha',
         schemaVersion: 'v1.0',
-        planId: 'p',
-        planVersion: '1.0',
+        planId: planRef.planId,
+        planVersion: planRef.planVersion,
       },
     };
 
-    await expect(
-      engine.startRun(makePlanRef(), contextWithRunExecutionContextRef)
-    ).resolves.toBeTruthy();
+    await expect(engine.startRun(planRef, contextWithRunExecutionContextRef)).resolves.toBeTruthy();
     expect(seenContexts).toHaveLength(1);
     expect(seenContexts[0]).toMatchObject({
       runExecutionContextRef: {
@@ -333,7 +336,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_planRef, ctx) {
+      async startRun(_plan, _planRef, ctx) {
         const events = await store.listEvents(ctx.tenantId, ctx.runId);
         sawQueuedEventBeforeStart = events.some((event) => event.eventType === 'RunQueued');
         return {
@@ -378,7 +381,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_planRef, ctx) {
+      async startRun(_plan, _planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -424,7 +427,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_planRef, ctx) {
+      async startRun(_plan, _planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -457,7 +460,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_planRef, ctx) {
+      async startRun(_plan, _planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -639,8 +642,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
           tenantId: 't',
           projectId: 'p',
           environmentId: 'dev',
-          planId: 'plan-1',
-          planVersion: '1',
+          planId: TEST_PLAN_REF.planId,
+          planVersion: TEST_PLAN_REF.planVersion,
           logicalAttemptId: 1,
           engineAttemptId: 1,
           emittedAt: '2026-02-12T00:00:00.000Z',
@@ -655,8 +658,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
           tenantId: 't',
           projectId: 'p',
           environmentId: 'dev',
-          planId: 'plan-1',
-          planVersion: '1',
+          planId: TEST_PLAN_REF.planId,
+          planVersion: TEST_PLAN_REF.planVersion,
           logicalAttemptId: 1,
           engineAttemptId: 1,
           emittedAt: '2026-02-12T00:00:01.000Z',

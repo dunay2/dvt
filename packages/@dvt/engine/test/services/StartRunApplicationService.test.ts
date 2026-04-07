@@ -10,15 +10,14 @@ import type { StartRunTraceContext } from '../../src/services/startRun/StartRunT
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
+import {
+  makeDefaultExecutionPlan,
+  makePlanFetcherForPlan,
+  makePlanRefForPlan,
+} from '../helpers/workflowEngine.fixture.js';
 
 function makePlanRef(uri = 'https://example.com/plan'): PlanRef {
-  return {
-    uri,
-    sha256: 'deadbeef',
-    schemaVersion: 'v1.1',
-    planId: 'p',
-    planVersion: '1.0',
-  };
+  return makePlanRefForPlan(makeDefaultExecutionPlan(), uri);
 }
 
 function makeResolvedContext(runId = 's03-run-1'): ResolvedRunContext {
@@ -33,13 +32,13 @@ function makeResolvedContext(runId = 's03-run-1'): ResolvedRunContext {
   };
 }
 
-function makeTraceContext(runId: string): StartRunTraceContext {
+function makeTraceContext(runId: string, planId = makePlanRef().planId): StartRunTraceContext {
   return {
     tenantId: 't',
     projectId: 'p',
     environmentId: 'dev',
     runId,
-    planId: 'p',
+    planId,
     adapter: 'temporal',
   };
 }
@@ -47,7 +46,7 @@ function makeTraceContext(runId: string): StartRunTraceContext {
 function makeTemporalAdapter(): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef, ctx) {
+    async startRun(_plan, _planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -66,6 +65,7 @@ function makeTemporalAdapter(): IProviderAdapter {
 
 describe('StartRunApplicationService', () => {
   it('checks tenant access before planRef validation', async () => {
+    const planRef = makePlanRef('ftp://not-allowed.example/plan');
     const calls: string[] = [];
     const unauthorizedError = new Error('UNAUTHORIZED');
     const policy = {
@@ -95,13 +95,14 @@ describe('StartRunApplicationService', () => {
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
+      planFetcher: makePlanFetcherForPlan(makeDefaultExecutionPlan()),
     });
 
     await expect(
       service.startRun(
-        makePlanRef('ftp://not-allowed.example/plan'),
+        planRef,
         makeResolvedContext('s03-auth-first-1'),
-        makeTraceContext('s03-auth-first-1')
+        makeTraceContext('s03-auth-first-1', planRef.planId)
       )
     ).rejects.toBe(unauthorizedError);
 
@@ -110,6 +111,8 @@ describe('StartRunApplicationService', () => {
 
   it('starts a run directly through coordinator seam and persists metadata', async () => {
     const store = new InMemoryTxStore();
+    const plan = makeDefaultExecutionPlan();
+    const planRef = makePlanRefForPlan(plan);
     const service = new StartRunApplicationService({
       policy: {
         async assertTenantAccess() {},
@@ -131,13 +134,14 @@ describe('StartRunApplicationService', () => {
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
+      planFetcher: makePlanFetcherForPlan(plan),
     });
 
     const runId = 's03-direct-seam-1';
     const runRef = await service.startRun(
-      makePlanRef(),
+      planRef,
       makeResolvedContext(runId),
-      makeTraceContext(runId)
+      makeTraceContext(runId, planRef.planId)
     );
 
     const metadata = await store.getRunMetadataByRunId('t', runId);
@@ -157,6 +161,8 @@ describe('StartRunApplicationService', () => {
   });
 
   it('remains non-fatal when startup log emission fails', async () => {
+    const plan = makeDefaultExecutionPlan();
+    const planRef = makePlanRefForPlan(plan);
     const base = createNoopObservability();
     const observability = {
       ...base,
@@ -186,13 +192,14 @@ describe('StartRunApplicationService', () => {
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
       intentStore: new InMemoryStartRunIntentStore(),
       observability,
+      planFetcher: makePlanFetcherForPlan(plan),
     });
 
     await expect(
       service.startRun(
-        makePlanRef(),
+        planRef,
         makeResolvedContext('s03-log-fail-soft-1'),
-        makeTraceContext('s03-log-fail-soft-1')
+        makeTraceContext('s03-log-fail-soft-1', planRef.planId)
       )
     ).resolves.toEqual(
       expect.objectContaining({
@@ -203,6 +210,8 @@ describe('StartRunApplicationService', () => {
   });
 
   it('remains non-fatal when success metrics emission fails', async () => {
+    const plan = makeDefaultExecutionPlan();
+    const planRef = makePlanRefForPlan(plan);
     const base = createNoopObservability();
     const observability = {
       ...base,
@@ -232,13 +241,14 @@ describe('StartRunApplicationService', () => {
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
       intentStore: new InMemoryStartRunIntentStore(),
       observability,
+      planFetcher: makePlanFetcherForPlan(plan),
     });
 
     await expect(
       service.startRun(
-        makePlanRef(),
+        planRef,
         makeResolvedContext('s03-metric-fail-soft-1'),
-        makeTraceContext('s03-metric-fail-soft-1')
+        makeTraceContext('s03-metric-fail-soft-1', planRef.planId)
       )
     ).resolves.toEqual(
       expect.objectContaining({
@@ -249,6 +259,8 @@ describe('StartRunApplicationService', () => {
   });
 
   it('emits start metrics with expected tags on successful startRun', async () => {
+    const plan = makeDefaultExecutionPlan();
+    const planRef = makePlanRefForPlan(plan);
     const counterCalls: Array<{ name: string; tags: Record<string, string> }> = [];
     const histogramCalls: Array<{ name: string; tags: Record<string, string>; value: number }> = [];
     const base = createNoopObservability();
@@ -288,12 +300,13 @@ describe('StartRunApplicationService', () => {
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
       intentStore: new InMemoryStartRunIntentStore(),
       observability,
+      planFetcher: makePlanFetcherForPlan(plan),
     });
 
     await service.startRun(
-      makePlanRef(),
+      planRef,
       makeResolvedContext('s03-metrics-success-1'),
-      makeTraceContext('s03-metrics-success-1')
+      makeTraceContext('s03-metrics-success-1', planRef.planId)
     );
 
     expect(counterCalls).toContainEqual({

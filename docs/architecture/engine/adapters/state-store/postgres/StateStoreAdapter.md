@@ -59,7 +59,7 @@ idempotent step.
 
 ## Current Physical Objects
 
-The adapter manages five primary tables.
+The adapter manages six primary tables.
 
 ### `run_metadata`
 
@@ -140,6 +140,24 @@ Key fields:
 - `last_run_seq`
 - `updated_at`
 
+### `snapshot_work_queue`
+
+Purpose:
+
+- push-based discovery queue for runs whose materialized snapshot is missing or
+  stale relative to appended events
+
+Key fields:
+
+- `run_id`
+- `tenant_id`
+- `latest_run_seq`
+- `enqueued_at`
+- `claimed_at`
+- `attempts`
+- `next_attempt_at`
+- `last_error`
+
 ### `outbox_dead_letter`
 
 Purpose:
@@ -160,7 +178,7 @@ Key fields:
 `migrate()` currently:
 
 - ensures the schema exists;
-- creates the five primary tables if missing;
+- creates the six primary tables if missing;
 - adds compatibility columns such as `claimed_at`, `next_attempt_at`,
   `plan_id`, `plan_version`, and `persisted_at` if they are absent;
 - removes obsolete compatibility artifacts such as an old redundant outbox
@@ -187,8 +205,9 @@ Single transaction that:
 1. sets tenant context,
 2. inserts `run_metadata`,
 3. appends the first events,
-4. updates `run_snapshots`,
-5. enqueues outbox rows for appended events.
+4. seeds `run_snapshots` from the bootstrapped event set,
+5. upserts `snapshot_work_queue`,
+6. enqueues outbox rows for appended events.
 
 Duplicate `run_id` fails deterministically as `RUN_ALREADY_EXISTS`.
 
@@ -199,7 +218,7 @@ Single transaction that:
 1. resolves tenant from `run_metadata`,
 2. sets tenant context,
 3. appends events with idempotency handling,
-4. updates `run_snapshots`,
+4. upserts `snapshot_work_queue`,
 5. enqueues outbox rows for newly appended events only.
 
 This is the main steady-state append path.
@@ -229,19 +248,34 @@ Older docs that describe those patterns should be treated as historical.
 
 ## Snapshot Semantics
 
-The adapter performs snapshot write-through inside the same transaction as event
-append.
+The adapter uses hybrid snapshot freshness:
+
+- `bootstrapRunTx` seeds the first `run_snapshots` row synchronously so newly
+  started runs do not hit the null-snapshot replay path;
+- steady-state appends update `run_event_heads` and upsert
+  `snapshot_work_queue`, but do not persist snapshot projection inline;
+- `rebuildSnapshot()` remains the durable catch-up path used by projector and
+  repair flows;
+- `getSnapshot()` returns the persisted snapshot when current and applies only
+  the event tail in memory when `last_run_seq` lags the latest event.
 
 Current behavior:
 
-- bootstrap creates or seeds a `PENDING` snapshot;
-- appended events are applied in memory through adapter-local event handlers;
-- the snapshot is upserted into `run_snapshots`;
-- `getSnapshot()` reads the persisted JSON snapshot;
+- bootstrap seeds `run_snapshots` in the same transaction as the first event
+  append;
+- steady-state event append updates `run_event_heads` and upserts
+  `snapshot_work_queue`;
+- persisted `run_snapshots` advances durably when a projector or admin rebuild
+  path runs `rebuildSnapshot()`;
+- `getSnapshot()` reads the persisted JSON snapshot and incrementally applies
+  any unapplied event tail before returning;
 - when a snapshot is missing, callers are still expected to support replay
-  fallback via the higher-level state-store contract.
+  fallback via the higher-level state-store contract;
+- active runs are expected to stay warm via queue-backed projector rebuilds,
+  with read-time tail catch-up covering worker lag without full replay.
 
-This means the adapter currently uses a persisted table, not:
+This means the adapter currently uses a persisted table, queue-backed rebuild
+worker, and read-time tail catch-up, not:
 
 - a materialized view;
 - a database trigger projector;
@@ -341,7 +375,9 @@ That suite covers:
 
 - bootstrap atomicity;
 - idempotent append behavior;
-- snapshot write-through;
+- bootstrap snapshot seeding;
+- snapshot queue production and rebuild semantics;
+- fresh reads during worker lag via event-tail catch-up;
 - cancellation snapshot semantics;
 - outbox claim and delivery flow;
 - backoff and dead-letter behavior;

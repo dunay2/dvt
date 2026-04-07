@@ -72,6 +72,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -104,6 +105,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -126,6 +128,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -151,6 +154,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => undefined,
@@ -184,6 +188,7 @@ describe('PostgresRunStateCoordinator', () => {
         updateWithClient: async () => {
           calls.push('updateWithClient');
         },
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient: async () => {
@@ -207,6 +212,35 @@ describe('PostgresRunStateCoordinator', () => {
     ]);
   });
 
+  it('bootstrapRunTx does not enqueue when snapshot seed fails', async () => {
+    const enqueueWithClient = vi.fn(async () => undefined);
+    const coordinator = new PostgresRunStateCoordinator({
+      metadataRepo: {
+        resolveTenantWithClient: async () => TEST_TENANT_ID,
+        insertWithClient: async () => undefined,
+      },
+      runEventRepository: {
+        append: async () => makeAppendResult(),
+      },
+      snapshotStore: {
+        updateWithClient: async () => {
+          throw new Error('snapshot seed failed');
+        },
+        validateAppendedTransitionsWithClient: async () => undefined,
+      },
+      outboxStore: {
+        enqueueWithClient,
+      },
+      setTenantContext: async () => undefined,
+      withTransaction: async (fn) => fn({} as never),
+    });
+
+    await expect(coordinator.bootstrapRunTx(makeBootstrapInput())).rejects.toThrow(
+      /snapshot seed failed/
+    );
+    expect(enqueueWithClient).not.toHaveBeenCalled();
+  });
+
   it('enqueueTx happy path resolves tenant, sets context, and enqueues', async () => {
     const resolveTenantWithClient = vi.fn(async () => TEST_TENANT_ID);
     const setTenantContext = vi.fn(async () => undefined);
@@ -222,6 +256,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient,
@@ -250,6 +285,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient: async () => undefined,
+        validateAppendedTransitionsWithClient: async () => undefined,
       },
       outboxStore: {
         enqueueWithClient,
@@ -264,20 +300,45 @@ describe('PostgresRunStateCoordinator', () => {
     expect(enqueueWithClient).not.toHaveBeenCalled();
   });
 
-  it('appendAndEnqueueTx does not enqueue when snapshot update fails', async () => {
+  it('appendAndEnqueueTx enqueues appended events without requiring inline snapshot mutation', async () => {
+    const append = vi.fn(async () => ({
+      appended: [
+        {
+          eventId: 'evt-1',
+          eventType: 'RunStarted' as const,
+          runId: TEST_RUN_ID,
+          tenantId: TEST_TENANT_ID,
+          projectId: TEST_PROJECT_ID,
+          environmentId: TEST_ENVIRONMENT_ID,
+          planId: 'plan-1',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          engineAttemptId: 1,
+          emittedAt: TEST_CREATED_AT,
+          idempotencyKey: 'run-1:started',
+          payloadVersion: 1 as const,
+          runSeq: 2,
+          persistedAt: TEST_CREATED_AT,
+        },
+      ],
+      deduped: [],
+      lastAppendedRunSeq: 2,
+      baseRunSeq: 1,
+    }));
     const enqueueWithClient = vi.fn(async () => undefined);
+    const updateWithClient = vi.fn(async () => undefined);
+    const validateAppendedTransitionsWithClient = vi.fn(async () => undefined);
     const coordinator = new PostgresRunStateCoordinator({
       metadataRepo: {
         resolveTenantWithClient: async () => TEST_TENANT_ID,
         insertWithClient: async () => undefined,
       },
       runEventRepository: {
-        append: async () => makeAppendResult(),
+        append,
       },
       snapshotStore: {
-        updateWithClient: async () => {
-          throw new Error('snapshot update failed');
-        },
+        updateWithClient,
+        validateAppendedTransitionsWithClient,
       },
       outboxStore: {
         enqueueWithClient,
@@ -286,14 +347,19 @@ describe('PostgresRunStateCoordinator', () => {
       withTransaction: async (fn) => fn({} as never),
     });
 
-    await expect(coordinator.appendAndEnqueueTx(TEST_RUN_ID, EMPTY_EVENTS)).rejects.toThrow(
-      /snapshot update failed/
-    );
-    expect(enqueueWithClient).not.toHaveBeenCalled();
+    const result = await coordinator.appendAndEnqueueTx(TEST_RUN_ID, EMPTY_EVENTS);
+
+    expect(result.lastSeq).toBe(2);
+    expect(append).toHaveBeenCalledTimes(1);
+    expect(enqueueWithClient).toHaveBeenCalledTimes(1);
+    expect(enqueueWithClient).toHaveBeenCalledWith(expect.anything(), TEST_RUN_ID, result.appended);
+    expect(updateWithClient).not.toHaveBeenCalled();
+    expect(validateAppendedTransitionsWithClient).toHaveBeenCalledTimes(1);
   });
 
-  it('appendAndEnqueueTx does not update snapshot or enqueue when append fails', async () => {
+  it('appendAndEnqueueTx does not enqueue when append fails', async () => {
     const updateWithClient = vi.fn(async () => undefined);
+    const validateAppendedTransitionsWithClient = vi.fn(async () => undefined);
     const enqueueWithClient = vi.fn(async () => undefined);
     const coordinator = new PostgresRunStateCoordinator({
       metadataRepo: {
@@ -307,6 +373,7 @@ describe('PostgresRunStateCoordinator', () => {
       },
       snapshotStore: {
         updateWithClient,
+        validateAppendedTransitionsWithClient,
       },
       outboxStore: {
         enqueueWithClient,
@@ -319,6 +386,7 @@ describe('PostgresRunStateCoordinator', () => {
       /append failed/
     );
     expect(updateWithClient).not.toHaveBeenCalled();
+    expect(validateAppendedTransitionsWithClient).not.toHaveBeenCalled();
     expect(enqueueWithClient).not.toHaveBeenCalled();
   });
 });
