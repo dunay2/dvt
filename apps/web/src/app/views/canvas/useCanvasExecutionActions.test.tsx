@@ -93,6 +93,13 @@ describe('resolvePlanRefForStartRun', () => {
       environmentId: 'env',
       targetAdapter: 'mock',
     }),
+    getWorkspaceScopeSnapshot: () => ({
+      tenantId: 'tenant',
+      projectId: 'project',
+      environmentId: 'env',
+      targetAdapter: 'mock',
+    }),
+    subscribeWorkspaceScope: () => () => undefined,
     buildRunContext: (runId) => ({
       runId,
       tenantId: 'tenant',

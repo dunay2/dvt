@@ -9,5 +9,7 @@ export interface WorkspaceScope {
 
 export interface SessionContextPort {
   getWorkspaceScope(): WorkspaceScope;
+  getWorkspaceScopeSnapshot(): WorkspaceScope;
+  subscribeWorkspaceScope(onStoreChange: () => void): () => void;
   buildRunContext(runId: string): RunContext;
 }

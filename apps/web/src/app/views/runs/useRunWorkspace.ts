@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import type { IRunsPort, RunSummaryItem } from '../../ports/runs';
 import { queryKeys } from '../../queries/queryKeys';
@@ -29,7 +29,11 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
   const sessionContext = useSessionContext();
   const runWorkspaceFacade = useMemo(() => createRunWorkspaceFacade(runsService), [runsService]);
 
-  const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScope();
+  const { tenantId, projectId, environmentId } = useSyncExternalStore(
+    sessionContext.subscribeWorkspaceScope,
+    sessionContext.getWorkspaceScopeSnapshot,
+    sessionContext.getWorkspaceScopeSnapshot
+  );
   const workspaceLayoutKey = buildWorkspaceLayoutKey(tenantId, projectId, environmentId);
 
   const runsQuery = useQuery({

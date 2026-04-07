@@ -44,6 +44,13 @@ describe('buildAppServices', () => {
         environmentId: 'env-1',
         targetAdapter: 'temporal',
       }),
+      getWorkspaceScopeSnapshot: () => ({
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+        targetAdapter: 'temporal',
+      }),
+      subscribeWorkspaceScope: () => () => undefined,
       buildRunContext: (runId) => ({
         tenantId: 'tenant-1',
         projectId: 'project-1',
