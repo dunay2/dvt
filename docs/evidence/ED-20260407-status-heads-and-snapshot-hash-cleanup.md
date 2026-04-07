@@ -3,11 +3,11 @@ title: Status-head prewarm and runtime hash contract cleanup
 status: Accepted
 date: 2026-04-07
 owners:
-  - @dvt/adapter-postgres
-  - @dvt/contracts
-  - @dvt/engine
-  - dvt-api
-  - @dvt/web
+  - '@dvt/adapter-postgres'
+  - '@dvt/contracts'
+  - '@dvt/engine'
+  - 'dvt-api'
+  - '@dvt/web'
 arc_level: ARC-2
 breaking: false
 code_refs:
