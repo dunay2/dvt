@@ -332,9 +332,21 @@ const mockFileTree: WorkspaceFileEntry[] = [
     name: 'models',
     kind: 'directory',
     children: [
-      { path: 'models/staging/stg_orders.sql', name: 'stg_orders.sql', kind: 'file' },
-      { path: 'models/staging/stg_customers.sql', name: 'stg_customers.sql', kind: 'file' },
-      { path: 'models/marts/dim_store.sql', name: 'dim_store.sql', kind: 'file' },
+      {
+        path: 'models/staging',
+        name: 'staging',
+        kind: 'directory',
+        children: [
+          { path: 'models/staging/stg_orders.sql', name: 'stg_orders.sql', kind: 'file' },
+          { path: 'models/staging/stg_customers.sql', name: 'stg_customers.sql', kind: 'file' },
+        ],
+      },
+      {
+        path: 'models/marts',
+        name: 'marts',
+        kind: 'directory',
+        children: [{ path: 'models/marts/dim_store.sql', name: 'dim_store.sql', kind: 'file' }],
+      },
     ],
   },
   {

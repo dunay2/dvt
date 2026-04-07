@@ -126,6 +126,19 @@ describe('workspaceService source import', () => {
     expect(secondAfter.content).toBe(original.content);
   });
 
+  it('returns a unique default file tree without duplicated workspace paths', async () => {
+    const service = createWorkspaceService('mock');
+
+    const fileTree = flattenWorkspaceEntries(await service.listFiles());
+
+    expect(fileTree).toContain('models/staging');
+    expect(fileTree).toContain('models/marts');
+    expect(fileTree).toContain('models/staging/stg_orders.sql');
+    expect(fileTree).toContain('models/staging/stg_customers.sql');
+    expect(fileTree).toContain('models/marts/dim_store.sql');
+    expect(new Set(fileTree).size).toBe(fileTree.length);
+  });
+
   it('adds newly saved files to the instance-local file tree', async () => {
     const firstService = createWorkspaceService('mock');
     const secondService = createWorkspaceService('mock');
