@@ -56,6 +56,9 @@ The planner now returns:
 - persisted `PlanRecord` artifacts keep `canonicalPlanJson` for the full
   `ExecutionPlan` serialized as `JCS(canonical ExecutionPlan)` with
   `canonicalHash = sha256(canonicalPlanJson)`
+  - `canonicalPlanJson` preserves planner-emitted metadata, including
+    `createdAtIso`; store determinism comes from JCS canonicalization, not
+    mapper-side metadata rewriting
 
 The engine and API now consume execution policy from stored-plan sidecar
 metadata rather than from `PlanRef` or `ExecutionPlan.metadata`.

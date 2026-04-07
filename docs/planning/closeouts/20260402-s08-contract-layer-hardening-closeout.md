@@ -75,7 +75,7 @@ schema form.
   - `packages/@dvt/contracts/src/schemas.ts`
   - `packages/@dvt/contracts/src/validation.ts`
   - `packages/@dvt/contracts/test/validation.test.ts`
-  - `packages/@dvt/contracts/test/plan-store-records-schema-sync.test.ts`
+  - `packages/@dvt/contracts/test/plan-store-records-shape-sync.test.ts`
   - supporting ADR, contract-doc, evidence, risk, and lane-state surfaces
 - Expected outcome:
   - planner-record parsing rejects metadata drift and impossible state

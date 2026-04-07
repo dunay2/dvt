@@ -27,8 +27,9 @@ The repository already has the right identity rule:
 
 - `planId` is derived from `PlanCore`
 
-But the public `ExecutionPlan` still carries runtime-compatibility and
-admission fields in [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts).
+Before this slice, the public `ExecutionPlan` also carried
+runtime-compatibility and admission fields in
+[ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts).
 
 That means one public artifact changes for two unrelated reasons:
 
@@ -37,7 +38,7 @@ That means one public artifact changes for two unrelated reasons:
 
 That is a boundary smell.
 
-## Current state
+## Pre-slice state that motivated ADR-0046
 
 ```mermaid
 flowchart LR
@@ -49,19 +50,21 @@ flowchart LR
   engine[Engine admission] --> plan
 ```
 
-The problem is not that planner, API, and engine share one public plan type.
+That was the problem state. It is not the current implementation.
+
+The problem was not that planner, API, and engine shared one public plan type.
 `ADR-0042` was right about that.
 
-The problem is that the shared type still mixes ownership.
+The problem was that the shared type mixed ownership.
 
-## Target state
+## Implemented target state
 
 ```mermaid
 flowchart LR
   planner[Planner] --> build[PlannerBuildResult]
   build --> plan[ExecutionPlan]
   build --> policy[RunExecutionPolicy]
-  plan --> planmeta["metadata.planId\nmetadata.planVersion\nmetadata.schemaVersion\nmetadata.contractVersion\nmetadata.inputHashSha256"]
+  plan --> planmeta["metadata.planId\nmetadata.planVersion\nmetadata.schemaVersion\nmetadata.contractVersion\nmetadata.inputHashSha256\nmetadata.createdAtIso\nmetadata.plannerVersion?\nmetadata.plannerGitSha?"]
   plan --> steps[steps]
   api[API / PlanStore] --> plan
   api --> policy
@@ -78,7 +81,7 @@ The core rule is:
 
 ## Field-by-field ownership
 
-| Field                            | Current location         | Target location                     | Decision                                  |
+| Field                            | Pre-slice location       | Implemented location                | Decision                                  |
 | -------------------------------- | ------------------------ | ----------------------------------- | ----------------------------------------- |
 | `planId`                         | `ExecutionPlan.metadata` | `ExecutionPlan.metadata`            | keep on plan                              |
 | `planVersion`                    | `ExecutionPlan.metadata` | `ExecutionPlan.metadata`            | keep on plan                              |

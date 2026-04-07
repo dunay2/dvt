@@ -87,6 +87,31 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
     );
   });
 
+  test('toPersistedCanonicalPlanJson preserves planner-emitted createdAtIso', () => {
+    const createdAtIso = '2026-04-07T12:34:56.789Z';
+    const buildResult = {
+      plan: {
+        metadata: {
+          planVersion: '1.0',
+          schemaVersion: 'v1.2',
+          contractVersion: '1.0.0',
+          inputHashSha256: 'a'.repeat(64),
+          planId: 'b'.repeat(64),
+          createdAtIso,
+        },
+        steps: [],
+      },
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    };
+
+    const persisted = JSON.parse(toPersistedCanonicalPlanJson(buildResult)) as {
+      metadata: { createdAtIso: string };
+    };
+
+    expect(persisted.metadata.createdAtIso).toBe(createdAtIso);
+  });
+
   test('toPlanExecutabilityRecord rejects VALID rows without validated_at', () => {
     expect(() =>
       toPlanExecutabilityRecord({

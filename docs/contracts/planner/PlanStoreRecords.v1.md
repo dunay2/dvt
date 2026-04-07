@@ -2,7 +2,7 @@
 title: Plan store records v1
 status: Active
 owner: docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-07
 ---
 
 # Plan store records v1
@@ -54,6 +54,14 @@ Invariants:
   - `ARCHIVED`
 - `archivedAtIso` is required only when `state = 'ARCHIVED'`.
 
+JSON Schema vs runtime parser:
+
+- `PlanRecord.v1.schema.json` enforces structural shape only.
+- semantic invariants such as
+  `canonicalHash === sha256(canonicalPlanJson)` and
+  `canonicalPlanJson === JCS(canonical ExecutionPlan)` are enforced by the
+  runtime parser in `schemas.ts` / `validation.ts`, not by JSON Schema alone.
+
 ### `PlanExecutabilityRecord`
 
 `PlanExecutabilityRecord` captures adapter-scoped executability, not global plan
@@ -95,4 +103,4 @@ Invariants:
 - [ADR-0041](../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
 - [ADR-0042](../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
 - [ADR-0043](../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
-- [S08 execution plan](../../planning/proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [S08 execution plan](../../planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

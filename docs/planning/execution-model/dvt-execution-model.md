@@ -945,7 +945,7 @@ Recommended project artifacts beyond code:
 Before merging any execution architecture change, verify:
 
 - does it preserve planner purity?
-- does it preserve engine non-decision semantics?
+- does it preserve engine boundary governance without inventing plan topology or provider semantics?
 - does it preserve state authority?
 - does it preserve tenant isolation?
 - does it preserve idempotency?

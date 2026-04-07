@@ -21,7 +21,7 @@ function zodValid(
   return schema.safeParse(input).success;
 }
 
-describe('schema-sync: S08 plan store records', () => {
+describe('shape-sync: S08 plan store records', () => {
   const ajv = new Ajv({ strict: false });
   const validatePlanRecord = ajv.compile(planRecordSchemaJson);
   const validatePlanExecutabilityRecord = ajv.compile(planExecutabilityRecordSchemaJson);
@@ -29,7 +29,7 @@ describe('schema-sync: S08 plan store records', () => {
   const validCanonicalPlanJson = jcsCanonicalize(VALID_EXECUTION_PLAN_V2_FIXTURE);
   const validCanonicalHash = sha256HexUtf8(validCanonicalPlanJson);
 
-  it('keeps PlanRecord zod/json schema behavior in sync', () => {
+  it('keeps PlanRecord structural zod/json schema behavior in sync', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       canonicalPlanJson: validCanonicalPlanJson,
@@ -83,7 +83,7 @@ describe('schema-sync: S08 plan store records', () => {
     expect(validatePlanRecord(invalid)).toBe(false);
   });
 
-  it('keeps PlanExecutabilityRecord zod/json schema behavior in sync', () => {
+  it('keeps PlanExecutabilityRecord structural zod/json schema behavior in sync', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       adapterId: 'temporal',
@@ -128,7 +128,7 @@ describe('schema-sync: S08 plan store records', () => {
     expect(validatePlanExecutabilityRecord(invalidCode)).toBe(false);
   });
 
-  it('keeps PlanAdmissionLink zod/json schema behavior in sync', () => {
+  it('keeps PlanAdmissionLink structural zod/json schema behavior in sync', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       runId: 'run-1',

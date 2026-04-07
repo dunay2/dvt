@@ -68,7 +68,7 @@ Additional active QA:
 - [20260407 Execution plan and policy hard QA review](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
   - domain: `architecture-and-governance`
   - role: hard QA gate for the plan-definition vs execution-policy slice
-  - linkage: `QA-EP-5..QA-EP-8`
+  - linkage: `QA-EP-9..QA-EP-11`
   - status: `done`
   - progress: `100%`
 
