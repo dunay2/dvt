@@ -409,6 +409,109 @@ describe('buildApp', () => {
     }
   });
 
+  it('does not register the admin rebuild route when admin routes are flagged on without OIDC config', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_ADMIN_ROUTES_ENABLED = 'true';
+    delete process.env.DATABASE_URL;
+    delete process.env.OIDC_JWKS_URI;
+    delete process.env.OIDC_ISSUER;
+    delete process.env.OIDC_AUDIENCE;
+
+    try {
+      const { app } = await buildApp();
+
+      const adminResponse = await app.inject({
+        method: 'POST',
+        url: '/admin/runs/run-1/rebuild-snapshot',
+        payload: {
+          tenantId: 'tenant-a',
+        },
+      });
+      const protectedResponse = await app.inject({
+        method: 'POST',
+        url: '/runs/start',
+        payload: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'env-a',
+          selection: ['model.orders'],
+          planRef: {
+            uri: 'https://plans.example.com/plan.json',
+            sha256: 'a'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'plan-a',
+            planVersion: '1.0',
+          },
+          runId: 'run-1',
+          targetAdapter: 'mock',
+        },
+      });
+
+      expect(adminResponse.statusCode).toBe(404);
+      expect(protectedResponse.statusCode).toBe(404);
+
+      await app.close();
+    } finally {
+      delete process.env.DVT_ADMIN_ROUTES_ENABLED;
+      delete process.env.DATABASE_URL;
+      delete process.env.OIDC_JWKS_URI;
+      delete process.env.OIDC_ISSUER;
+      delete process.env.OIDC_AUDIENCE;
+    }
+  });
+
+  it('keeps the admin rebuild route disabled when OIDC configuration is only partially present', async () => {
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DVT_ADMIN_ROUTES_ENABLED = 'true';
+    delete process.env.DATABASE_URL;
+    process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
+    delete process.env.OIDC_ISSUER;
+    process.env.OIDC_AUDIENCE = 'dvt-api';
+
+    try {
+      const { app } = await buildApp();
+      const adminResponse = await app.inject({
+        method: 'POST',
+        url: '/admin/runs/run-2/rebuild-snapshot',
+        payload: {
+          tenantId: 'tenant-a',
+        },
+      });
+      const protectedResponse = await app.inject({
+        method: 'POST',
+        url: '/runs/start',
+        payload: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'env-a',
+          selection: ['model.orders'],
+          planRef: {
+            uri: 'https://plans.example.com/plan.json',
+            sha256: 'b'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'plan-b',
+            planVersion: '1.0',
+          },
+          runId: 'run-2',
+          targetAdapter: 'mock',
+        },
+      });
+
+      expect(adminResponse.statusCode).toBe(404);
+      expect(protectedResponse.statusCode).toBe(404);
+
+      await app.close();
+    } finally {
+      delete process.env.DVT_ADMIN_ROUTES_ENABLED;
+      delete process.env.DATABASE_URL;
+      delete process.env.OIDC_JWKS_URI;
+      delete process.env.OIDC_ISSUER;
+      delete process.env.OIDC_AUDIENCE;
+    }
+  });
+
   it('wires DVT_SIGNAL_ROUTE_ALLOW_CANCEL into /runs/:runId/signal parsing', async () => {
     const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
     const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;

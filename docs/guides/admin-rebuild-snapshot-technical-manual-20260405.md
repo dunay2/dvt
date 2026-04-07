@@ -15,6 +15,8 @@ endpoint in the API.
 - Route: `POST /admin/runs/:runId/rebuild-snapshot`
 - Boundary: API entrypoint + authorization + state-store maintenance port
 - Purpose: operational snapshot repair from persisted run events
+- Activation: route is registered only when protected-runtime OIDC composition
+  is complete and `DVT_ADMIN_ROUTES_ENABLED=true`
 
 ## Governing implementation
 
@@ -74,6 +76,8 @@ Failure envelopes:
 2. Effective authorized action must be a command with `admin:` prefix.
 3. Rebuild route uses command action name `admin:rebuild-snapshot`.
 4. Any non-admin action context is rejected as forbidden.
+5. If any OIDC prerequisite is missing, the route is not mounted at all and
+   requests resolve as `404`, not auth failures.
 
 ## Data and tenant invariants
 
@@ -107,6 +111,8 @@ Route-level:
 - 401/403/400/404/500 mappings
 - Admin-action prefix enforcement path
 - Unexpected runtime failure normalization
+- Composition guardrail for `DVT_ADMIN_ROUTES_ENABLED=true` with missing or
+  partial OIDC configuration
 
 ## Change checklist
 
