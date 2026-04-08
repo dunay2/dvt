@@ -41,14 +41,14 @@ export function guardTransformationAuthoringNode({
   if (!ALLOWED_ROLES.has(nextRole)) {
     return {
       allowed: false,
-      reason: 'Transformation draft supports only input, transform, and output nodes.',
+      reason: 'Transformation mode supports only input, transform, and output nodes.',
     };
   }
 
   if (existingRoles.length >= 3) {
     return {
       allowed: false,
-      reason: 'Transformation draft allows exactly 3 nodes: source, sql_transform, and sink.',
+      reason: 'Transformation mode allows exactly 3 nodes: source, sql_transform, and sink.',
     };
   }
 
@@ -60,7 +60,7 @@ export function guardTransformationAuthoringNode({
   ) {
     return {
       allowed: false,
-      reason: 'Transformation draft allows exactly one node per role (input, transform, output).',
+      reason: 'Transformation mode allows exactly one node per role (input, transform, output).',
     };
   }
 

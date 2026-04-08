@@ -31,21 +31,21 @@ describe('guardTransformationAuthoringNode', () => {
   it('rejects unsupported roles when transformation mode is enabled', () => {
     expect(evaluate([], 'check', true)).toEqual({
       allowed: false,
-      reason: 'Transformation draft supports only input, transform, and output nodes.',
+      reason: 'Transformation mode supports only input, transform, and output nodes.',
     });
   });
 
   it('rejects duplicate role when transformation mode is enabled', () => {
     expect(evaluate(['input'], 'input', true)).toEqual({
       allowed: false,
-      reason: 'Transformation draft allows exactly one node per role (input, transform, output).',
+      reason: 'Transformation mode allows exactly one node per role (input, transform, output).',
     });
   });
 
   it('rejects adding a fourth node in constrained transformation graph', () => {
     expect(evaluate(['input', 'transform', 'output'], 'input', true)).toEqual({
       allowed: false,
-      reason: 'Transformation draft allows exactly 3 nodes: source, sql_transform, and sink.',
+      reason: 'Transformation mode allows exactly 3 nodes: source, sql_transform, and sink.',
     });
   });
 });
