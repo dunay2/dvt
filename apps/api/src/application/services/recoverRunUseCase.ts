@@ -6,12 +6,8 @@ import {
   type RunContext,
 } from '@dvt/engine';
 
-import type {
-  AuthorizedCommandExecutionContext,
-  IRecoverRunUseCase,
-  RecoverRunCommand,
-  RecoverRunResult,
-} from '../ports/runtime.js';
+import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
+import type { IRecoverRunUseCase, RecoverRunCommand, RecoverRunResult } from '../ports/runtime.js';
 
 export class RecoverRunUseCase implements IRecoverRunUseCase {
   public constructor(
