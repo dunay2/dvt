@@ -216,6 +216,71 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('STEP_FAILURE');
   });
 
+  it('renders materialization evidence from timeline payload when snapshot omits it', async () => {
+    const workspace = buildWorkspace(
+      {
+        snapshot: {
+          runId: 'run_123',
+          status: 'completed',
+          startedAt: '2026-03-28T10:00:00Z',
+          completedAt: '2026-03-28T10:00:30Z',
+          environment: 'dev',
+          gitSha: 'abc123def',
+          failedStepId: undefined,
+          errorReason: undefined,
+          currentStepId: undefined,
+          materialization: undefined,
+        },
+      },
+      {
+        state: 'available',
+        events: [
+          {
+            eventId: 'evt-run-completed',
+            eventType: 'RunCompleted',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:30Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'id-run-completed',
+            payloadVersion: 1,
+            runSeq: 8,
+            persistedAt: '2026-03-28T10:00:30Z',
+            payload: {
+              materialization: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.daily_sales',
+                rowsWritten: 1284,
+                startedAt: '2026-03-28T10:00:05Z',
+                completedAt: '2026-03-28T10:00:28Z',
+                durationMs: 23000,
+              },
+            },
+          } as RunEvent,
+        ],
+      }
+    );
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Materialization evidence');
+    expect(container.textContent).toContain('postgres');
+    expect(container.textContent).toContain('analytics.daily_sales');
+    expect(container.textContent).toMatch(/1,?284/);
+  });
+
   it('renders execution provenance from step-started artifact refs', async () => {
     const workspace = buildWorkspace(undefined, {
       state: 'available',
