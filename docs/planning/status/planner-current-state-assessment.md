@@ -8,11 +8,36 @@ planning_type: status
 
 # Planner Current State Assessment
 
-This document is the planner-specific status baseline for the current
-repository. It exists because the planner bounded context is still reported as
-`Partial`, but the repository did not yet have one current artifact that
-quantified what is implemented, what is only governed in contracts, and what is
-still roadmap-only.
+This document is the planner-specific source of truth for current repository
+status. The first assessment was published on `2026-03-20`; the filename is now
+stable on purpose so links do not keep rotting every time the document is
+reviewed.
+
+It exists because the planner bounded context is still reported as `Partial`,
+but the repository did not yet have one current artifact that quantified what
+is implemented, what is only governed in contracts, and what is still
+roadmap-only.
+
+## Planner At A Glance
+
+```mermaid
+flowchart LR
+    Contracts[Planner contracts and ADRs]
+    Status[This current-state assessment]
+    Planner[@dvt/planner]
+    Verifier[@dvt/plan-verifier]
+    Interpreter[@dvt/plan-interpreter]
+    DSL[@dvt/dsl]
+    Runtime[API and engine runtime bridge]
+
+    Contracts --> Planner
+    Planner --> Verifier
+    Planner --> Interpreter
+    Planner --> DSL
+    Planner --> Runtime
+    Status -.measures and explains.-> Planner
+    Status -.tracks handoff risk.-> Runtime
+```
 
 Use this page with:
 
@@ -32,7 +57,7 @@ Use this page with:
   [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md),
   [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
 - `status_doc`:
-  [planner-current-state-assessment-20260320.md](planner-current-state-assessment-20260320.md)
+  [planner-current-state-assessment.md](planner-current-state-assessment.md)
 - `code_paths`:
   `packages/@dvt/planner/src/**`,
   `packages/@dvt/contracts/src/contracts/planner/**`,

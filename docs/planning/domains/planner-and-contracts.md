@@ -15,7 +15,7 @@ plan-version compatibility.
 
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Planner Current State Assessment](../status/planner-current-state-assessment-20260320.md)
+- [Planner Current State Assessment](../status/planner-current-state-assessment.md)
 - [Planner Local Doc Triage](../status/planner-local-doc-triage-20260320.md)
 - [Planning Control Tower](../state/planning-control-tower.md)
 

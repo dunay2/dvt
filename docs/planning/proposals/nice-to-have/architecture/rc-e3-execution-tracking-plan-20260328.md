@@ -49,10 +49,10 @@ Out of scope:
 ## Execution Plan
 
 1. In `startRunFacadeContract.ts`: remove `adapterNotConfigured` from
-   `StartRunFacadeResult` union — that kind is only reachable via
+   `StartRunFacadeResult` union â€” that kind is only reachable via
    `mapEngineErrorToFacade()` which is deleted in step 3.
 2. In `startRunFacadeContract.ts`: export `StartRunFacadeExecutionResult` as
-   `Result<StartRunFacadeResult, StartRunEngineError>` — the new return type of
+   `Result<StartRunFacadeResult, StartRunEngineError>` â€” the new return type of
    `execute()`.
 3. In `startRunAuthorizedFacade.ts`: update `execute()` return type to
    `Promise<StartRunFacadeExecutionResult>`, replace the final `return
@@ -61,11 +61,11 @@ mapEngineErrorToFacade(startRun.error)` with `return startRun` (pass the
    function entirely.
 4. In `authErrorMapper.ts`: add `mapStartRunEngineError(error:
 StartRunEngineError): HttpResponseModel` covering all three engine error
-   kinds: `adapterNotRegistered` → 422 `ADAPTER_NOT_CONFIGURED`,
-   `commandInvalid` → 422 `PLAN_REJECTED`, `unsupportedPlanVersion` → 422
+   kinds: `adapterNotRegistered` â†’ 422 `ADAPTER_NOT_CONFIGURED`,
+   `commandInvalid` â†’ 422 `PLAN_REJECTED`, `unsupportedPlanVersion` â†’ 422
    `PLAN_REJECTED`.
 5. In `startRunRoute.ts`: update `facade.execute()` call to handle
-   `StartRunFacadeExecutionResult`; branch on `ok` — call
+   `StartRunFacadeExecutionResult`; branch on `ok` â€” call
    `mapStartRunFacadeResult` on `ok: true`, `mapStartRunEngineError` on
    `ok: false`.
 6. In `startRunAuthorizedFacade.test.ts`: rewrite the three engine-error test
@@ -161,7 +161,7 @@ pnpm verify:prepush
 - Risk of hidden catch-all behavior is mitigated by explicit result branching.
 - `mapRuntimeDomainError` in `authErrorMapper.ts` handles `intentActiveConflict`
   as a throw-based path, but this is only used by non-start-run routes and is
-  already handled in `engineStartRunUseCase.ts` as a typed `duplicate` result —
+  already handled in `engineStartRunUseCase.ts` as a typed `duplicate` result â€”
   no change needed here; out of scope for RC-E3.
 - `adapterNotConfigured` removal from `StartRunFacadeResult` is a breaking
   contract change; verify no other consumer outside `startRunRoute.ts` reads

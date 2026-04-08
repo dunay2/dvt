@@ -1,4 +1,4 @@
----
+﻿---
 title: planner Build Sequence
 status: Active
 owner: Planning Domain / Architecture
@@ -64,4 +64,4 @@ engine surfaces, not to the planner package itself.
 
 - [Planner component entry](index.md)
 - [Planner contracts](../../../contracts/planner/index.md)
-- [Planner current state assessment](../../../planning/status/planner-current-state-assessment-20260320.md)
+- [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)

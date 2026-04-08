@@ -1,4 +1,4 @@
-# DVT Architecture Atlas
+﻿# DVT Architecture Atlas
 
 Code-aligned snapshot for architecture status, completion, and delivery planning.
 
