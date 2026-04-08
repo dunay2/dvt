@@ -5,7 +5,7 @@ date: 2026-04-08
 owners:
   - packages/@dvt/engine
 arc_level: ARC-2
-breaking: false
+breaking: true
 code_refs:
   - packages/@dvt/engine/src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts
   - packages/@dvt/engine/src/ports/IRunMaintenanceService.ts
@@ -13,7 +13,7 @@ code_refs:
   - docs/adr/ADR-0030-pre-dispatch-intent-log.md
 evidence:
   tests:
-    - pnpm --filter @dvt/engine test -- test/services/RunMaintenanceService.test.ts
+    - pnpm --filter @dvt/engine test -- test/services/RunMaintenanceService.test.ts test/workers/IntentReconcilerWorker.test.ts
     - pnpm docs:sync
     - pnpm verify:prepush
 ---
@@ -25,6 +25,10 @@ The intent reconciler classified a bootstrapped `DISPATCHED` intent as
 distinct `resolved` outcome for local intent cleanup after the run is already
 bootstrapped.
 
+This slice is a breaking public API change for `@dvt/engine` consumers because
+`ReconcileOrphanedIntentsResult` now requires a `resolved` array in addition to
+the existing outcome buckets.
+
 ## What changed
 
 - `DispatchedIntentReconciliationPolicy` now returns `resolved` when the run is
@@ -34,6 +38,15 @@ bootstrapped.
 - `IRunMaintenanceService`, ADR-0030, and the metrics catalog now document the
   explicit `resolved` outcome and the new `dvt.intent.reconcile.resolved_total`
   rollup metric.
+
+## Breaking change
+
+- `ReconcileOrphanedIntentsResult` is an exported engine port and now includes a
+  required `resolved: string[]` field.
+- Any in-repo or out-of-tree implementation of `IRunMaintenanceService` must be
+  updated to return `resolved`, even when the value is an empty array.
+- Mixed-version deployments or tests that pair the updated worker with an older
+  maintenance-service implementation are not compatible across this boundary.
 
 ## Expected effect
 
