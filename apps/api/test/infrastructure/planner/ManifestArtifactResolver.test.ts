@@ -38,14 +38,14 @@ describe('ManifestArtifactResolver', () => {
     expect(result.nodes).toEqual(
       expect.arrayContaining([
         {
-          nodeId: 'model.analytics.orders',
-          stepKind: 'DBT_MODEL',
-          dependsOn: [],
-        },
-        {
           nodeId: 'model.analytics.order_items',
           stepKind: 'DBT_MODEL',
           dependsOn: ['model.analytics.orders'],
+        },
+        {
+          nodeId: 'model.analytics.orders',
+          stepKind: 'DBT_MODEL',
+          dependsOn: [],
         },
         {
           nodeId: 'test.analytics.orders_not_null',

@@ -36,6 +36,39 @@ describe('derivePlannerGraphSourceFromManifest', () => {
     });
   });
 
+  it('sorts manifest node ids with binary comparison for deterministic graph source output', () => {
+    expect(
+      derivePlannerGraphSourceFromManifest({
+        nodes: {
+          'model.analytics.orders': {
+            resource_type: 'model',
+            depends_on: { nodes: [] },
+          },
+          'model.analytics.order_items': {
+            resource_type: 'model',
+            depends_on: { nodes: [] },
+          },
+        },
+      })
+    ).toEqual({
+      kind: 'generic-graph-v1',
+      sourceFamily: 'dbt',
+      sourceVersion: '1.0',
+      nodes: [
+        {
+          nodeId: 'model.analytics.order_items',
+          stepKind: 'DBT_MODEL',
+          dependsOn: [],
+        },
+        {
+          nodeId: 'model.analytics.orders',
+          stepKind: 'DBT_MODEL',
+          dependsOn: [],
+        },
+      ],
+    });
+  });
+
   it('preserves current invalid-input semantics for unsupported manifests', () => {
     expectInvalidInput(
       () => derivePlannerGraphSourceFromManifest({ nodes: {} }),
