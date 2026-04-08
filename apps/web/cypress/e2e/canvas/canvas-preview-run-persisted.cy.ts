@@ -3,7 +3,7 @@ type PlanPreviewResponseOptions = {
   planRefSha: string;
 };
 
-function stubCanvasRuntimeApis() {
+function stubCanvasRuntimeApis(): void {
   cy.intercept('GET', '**/capabilities*', {
     statusCode: 200,
     body: {
@@ -68,7 +68,7 @@ function stubCanvasRuntimeApis() {
   }).as('getWorkspaceGraph');
 }
 
-function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions) {
+function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions): void {
   cy.intercept('POST', '**/plans/preview', (req) => {
     expect(req.body.persist).to.equal(true);
     expect(req.body.selectedNodeIds).to.deep.equal([
