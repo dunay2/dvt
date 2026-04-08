@@ -71,7 +71,11 @@ function stubCanvasRuntimeApis() {
 function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions) {
   cy.intercept('POST', '**/plans/preview', (req) => {
     expect(req.body.persist).to.equal(true);
-    expect(req.body.selectedNodeIds).to.deep.equal(['src_orders', 'model_orders', 'orders_dashboard']);
+    expect(req.body.selectedNodeIds).to.deep.equal([
+      'src_orders',
+      'model_orders',
+      'orders_dashboard',
+    ]);
 
     req.reply({
       statusCode: 200,
@@ -172,9 +176,9 @@ describe('Canvas preview-run persisted path', () => {
     cy.wait('@previewPlan');
 
     cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains('Preview is not aligned with the active plan reference. Re-run Plan before starting.').should(
-      'be.visible'
-    );
+    cy.contains(
+      'Preview is not aligned with the active plan reference. Re-run Plan before starting.'
+    ).should('be.visible');
     cy.contains('button', 'Run').should('be.disabled');
     cy.contains('button', 'Start Run').should('be.disabled');
     cy.get('@startRun.all').should('have.length', 0);

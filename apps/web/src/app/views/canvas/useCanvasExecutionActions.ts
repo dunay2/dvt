@@ -58,7 +58,9 @@ function hasPersistedPreviewProof(plan: ExecutionPlan | null): boolean {
 }
 
 function hasPersistedPreviewRecord(plan: ExecutionPlan | null): boolean {
-  return Boolean(plan?.preview?.persisted?.planRecordId && plan.preview?.persisted?.canonicalPlanSha256);
+  return Boolean(
+    plan?.preview?.persisted?.planRecordId && plan.preview?.persisted?.canonicalPlanSha256
+  );
 }
 
 function hasPlanRefHashMismatch(plan: ExecutionPlan | null): boolean {
@@ -119,9 +121,9 @@ export function useCanvasExecutionActions({
           ? 'Plan reference is unavailable. Re-run Plan before starting.'
           : planRefHashMismatch
             ? 'Preview is not aligned with the active plan reference. Re-run Plan before starting.'
-          : !hasPersistedPlanForRun
-            ? 'Preview is not persisted. Re-run Plan to create a persisted plan.'
-            : 'Preview is current and ready to run.';
+            : !hasPersistedPlanForRun
+              ? 'Preview is not persisted. Re-run Plan to create a persisted plan.'
+              : 'Preview is current and ready to run.';
 
   useEffect(() => {
     if (currentPlan == null) {
