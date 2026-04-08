@@ -24,6 +24,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260407 Execution Plan And Run Execution Policy Separation](ED-20260407-execution-plan-and-run-execution-policy-separation.md)
 - [ED 20260407 Retry Step Boundary Narrowing](ED-20260407-retry-step-boundary-narrowing.md)
 - [ED 20260407 Signal Semantics Contract Versioning](ED-20260407-signal-semantics-contract-versioning.md)
+- [ED 20260408 Pr807 React Day Picker And Adapter Postgres Tests](ED-20260408-pr807-react-day-picker-and-adapter-postgres-tests.md)
 - [ED 20260408 Retry Run Boundary And Provider Signal Mapper](ED-20260408-retry-run-boundary-and-provider-signal-mapper.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
