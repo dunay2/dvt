@@ -2,18 +2,22 @@
 title: apps/web
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-08
 ---
 
 # apps/web
 
 `apps/web` is the deployable browser application for DVT.
 
+The shell composes plugin-contributed routes for most product views and keeps
+only a small set of shell-owned routes directly in the router.
+
 ## Current Responsibilities
 
 - bootstrap the browser application and router;
 - host the persistent shell;
-- render Canvas, Runs, Lineage, Diff, Artifacts, Plugins, and Admin routes;
+- render plugin-contributed Canvas, Runs, Lineage, Code, Diff, and Artifacts views;
+- render shell-owned Plugins and Admin routes;
 - provide health visibility and shell-level UX context;
 - compose client services, capabilities, and plugin-contributed views.
 
@@ -24,10 +28,26 @@ last_reviewed: 2026-04-03
 | `/canvas`               | graph workbench                      |
 | `/runs`, `/runs/:runId` | run-monitoring workbench             |
 | `/lineage`              | dependency and impact analysis       |
+| `/code`                 | code and compiled-source inspection  |
 | `/diff`                 | review and diff surface              |
 | `/artifacts`            | artifact browser and manifest import |
 | `/plugins`              | plugin management shell page         |
 | `/admin`                | admin shell page                     |
+
+## Current Shell Topology
+
+```mermaid
+flowchart LR
+  Browser["Browser / operator"] --> Router["React Router"]
+  Router --> Root["Root shell"]
+  Root --> Providers["AppServicesProvider + QueryClientProvider"]
+  Root --> ShellUi["TopAppBar + LeftNavigation + Console + Outlet"]
+  Root --> Health["platform-health capability"]
+  Router --> PluginViews["Plugin-contributed views"]
+  Router --> ShellViews["Shell-owned admin/plugins views"]
+  PluginViews --> Registry["PLUGIN_REGISTRY"]
+  Providers --> API["apps/api"]
+```
 
 ## Current Code Anchors
 
@@ -35,6 +55,7 @@ last_reviewed: 2026-04-03
 - [App.tsx](../../../../apps/web/src/app/App.tsx)
 - [Root.tsx](../../../../apps/web/src/app/Root.tsx)
 - [routes.ts](../../../../apps/web/src/app/routes.ts)
+- [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
 - [Canvas.tsx](../../../../apps/web/src/app/views/Canvas.tsx)
 - [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx)
 

@@ -57,7 +57,7 @@ plus regression evidence.
   This created drift risk between frontend-generated refs and backend canonical
   identity rules.
   Original review evidence:
-  [plansService.api.ts](/c:/dvt/apps/web/src/app/services/plans/plansService.api.ts:59)
+  [plansService.api.ts](../../../../apps/web/src/app/services/plans/plansService.api.ts:59)
   was flagged in the 2026-04-05 review as locally constructing `planRef`.
   Current status:
   Resolved on `main`.

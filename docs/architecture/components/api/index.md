@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-08
 ---
 
 # apps/api
@@ -16,6 +16,8 @@ process.
 ## Current Responsibilities
 
 - expose protected runtime routes for start, list, get, events, signal, and cancel;
+- expose plan preview/import routes used by the frontend planning flow;
+- expose optional admin rebuild routes when operationally enabled;
 - compose planner, engine, delivery, and operational dependencies;
 - surface readiness, health, version, and reconciler state;
 - keep auth and admission decisions at the entry boundary.
@@ -25,10 +27,13 @@ process.
 ```mermaid
 flowchart LR
   Clients["apps/web / operators / automation"] --> API["apps/api"]
+  API --> Auth["OIDC / JWKS / principal access"]
   API --> Planner["@dvt/planner"]
   API --> Engine["@dvt/engine"]
-  API --> Delivery["@dvt/delivery"]
-  API --> Auth["OIDC / JWKS / access repo"]
+  API --> Delivery["@dvt/delivery admission guard"]
+  API --> Postgres["@dvt/adapter-postgres state, intent, and plan stores"]
+  API --> Providers["mock / temporal provider adapters"]
+  API --> Observability["@dvt/observability"]
 ```
 
 ## Code Anchors
@@ -36,7 +41,10 @@ flowchart LR
 - [app.ts](../../../../apps/api/src/app.ts)
 - [server.ts](../../../../apps/api/src/server.ts)
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
 - [startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
+- [planRoutes.ts](../../../../apps/api/src/entrypoints/http/planRoutes.ts)
+- [adminRoutes.ts](../../../../apps/api/src/entrypoints/http/adminRoutes.ts)
 - [getRunRoute.ts](../../../../apps/api/src/entrypoints/http/getRunRoute.ts)
 
 ## Current Posture
@@ -59,6 +67,8 @@ shape, and the governed transition route:
 - keep the frontend-consumable contract explicit under `MVP-E1`;
 - preserve admission and health semantics that the UI health work (`F-03`)
   relies on.
+- keep planner preview/import and runtime command routes aligned so the API
+  stays the only browser-facing backend entry surface.
 
 ## Historical Deep Dives
 
