@@ -217,6 +217,22 @@ describe('runsService runtime contract', () => {
     });
   });
 
+  it('ignores non-integer nextCursor values in listRunEvents payload', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      items: [],
+      nextCursor: 11.5,
+    });
+
+    const service = createRunsService('api', apiClient);
+    const result = await service.listRunEvents('run_abc');
+
+    expect(result).toEqual({
+      events: [],
+      nextAfterSeq: undefined,
+    });
+  });
+
   it.each([401, 403, 404, 409, 422, 500])(
     'propagates runtime API error for startRun (%s)',
     async (statusCode) => {
