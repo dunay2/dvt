@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { CoreNodeRole } from '../../types/canonical';
 import { guardTransformationAuthoringNode } from './transformationAuthoringGuard';
 
-function evaluate(existingRoles: CoreNodeRole[], nextRole: CoreNodeRole) {
+function evaluate(
+  existingRoles: CoreNodeRole[],
+  nextRole: CoreNodeRole
+): ReturnType<typeof guardTransformationAuthoringNode> {
   return guardTransformationAuthoringNode({ existingRoles, nextRole });
 }
 
