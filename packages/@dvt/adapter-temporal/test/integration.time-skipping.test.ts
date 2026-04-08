@@ -800,7 +800,10 @@ function mkPlan(stepCount: number): unknown {
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
     },
-    steps: Array.from({ length: stepCount }, (_, i) => ({ stepId: `s-${i + 1}`, kind: 'noop' })),
+    steps: Array.from({ length: stepCount }, (_, i) => ({
+      stepId: `s-${i + 1}`,
+      kind: 'DBT_MODEL',
+    })),
   } as const;
 }
 
@@ -814,7 +817,7 @@ function mkLinearPlan(stepCount: number): unknown {
     },
     steps: Array.from({ length: stepCount }, (_, i) => ({
       stepId: `s-${i + 1}`,
-      kind: 'noop',
+      kind: 'DBT_MODEL',
       ...(i === 0 ? {} : { dependsOn: [`s-${i}`] }),
     })),
   } as const;
@@ -829,9 +832,9 @@ function mkLinearThreeStepPlan(): unknown {
       contractVersion: '1.0.0',
     },
     steps: [
-      { stepId: 's-1', kind: 'noop' },
-      { stepId: 's-2', kind: 'noop', dependsOn: ['s-1'] },
-      { stepId: 's-3', kind: 'noop', dependsOn: ['s-2'] },
+      { stepId: 's-1', kind: 'DBT_MODEL' },
+      { stepId: 's-2', kind: 'DBT_MODEL', dependsOn: ['s-1'] },
+      { stepId: 's-3', kind: 'DBT_MODEL', dependsOn: ['s-2'] },
     ],
   } as const;
 }
@@ -844,7 +847,7 @@ function mkPermanentFailurePlan(): unknown {
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
     },
-    steps: [{ stepId: 's-fail', kind: 'noop' }],
+    steps: [{ stepId: 's-fail', kind: 'DBT_MODEL' }],
   } as const;
 }
 
@@ -857,7 +860,7 @@ function mkGatewaySkipPlan(): unknown {
       contractVersion: '1.0.0',
     },
     steps: [
-      { stepId: 's-1', kind: 'noop' },
+      { stepId: 's-1', kind: 'DBT_MODEL' },
       {
         stepId: 'gw-1',
         type: 'gateway',
@@ -867,7 +870,7 @@ function mkGatewaySkipPlan(): unknown {
         },
         dependsOn: ['s-1'],
       },
-      { stepId: 's-2', kind: 'noop', dependsOn: ['gw-1'] },
+      { stepId: 's-2', kind: 'DBT_MODEL', dependsOn: ['gw-1'] },
     ],
   } as const;
 }
