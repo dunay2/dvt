@@ -65,9 +65,11 @@ function createDeps(): {
       }),
     },
     useCase: {
-      execute: vi
-        .fn()
-        .mockResolvedValue({ sourceRunId: 'source-run-1', recoveryRunId: 'recovery-run-1', accepted: true }),
+      execute: vi.fn().mockResolvedValue({
+        sourceRunId: 'source-run-1',
+        recoveryRunId: 'recovery-run-1',
+        accepted: true,
+      }),
     },
   };
 }

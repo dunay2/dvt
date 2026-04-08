@@ -4,8 +4,8 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { IRecoverRunUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
-import { executeAuthorizedRunCommandRoute } from './runCommandRouteExecutor.js';
 import { parseRecoverRunRequest } from './recoverRunRouteParser.js';
+import { executeAuthorizedRunCommandRoute } from './runCommandRouteExecutor.js';
 
 export async function recoverRunRoute(
   request: FastifyRequest<{ Params: { runId?: string }; Body: unknown }>,

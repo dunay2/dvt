@@ -1,15 +1,11 @@
+import type { RecoverRunCommand } from '../../application/ports/runtime.js';
 import type { TenantId } from '../../domain/auth/types.js';
 
-import type { RecoverRunCommand } from '../../application/ports/runtime.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import {
-  isBodyObject,
-  normalizeRunId,
-  parseTenantId,
-} from './runCommandFieldParsers.js';
+import { isBodyObject, normalizeRunId, parseTenantId } from './runCommandFieldParsers.js';
 import { RUN_COMMAND_ACTION } from './runCommandRoute.constants.js';
+import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 
 export interface ParsedRecoverRunRequest {
   readonly command: RecoverRunCommand;
@@ -54,7 +50,9 @@ export function parseRecoverRunRequest(input: {
     return badRequestResult(HTTP_ERROR_REASON.invalidTargetAdapter, { target: 'targetAdapter' });
   }
 
-  const runExecutionContextRef = parseOptionalRunExecutionContextRef(input.body.runExecutionContextRef);
+  const runExecutionContextRef = parseOptionalRunExecutionContextRef(
+    input.body.runExecutionContextRef
+  );
   if (runExecutionContextRef === 'INVALID') {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunExecutionContextRef, {
       target: 'runExecutionContextRef',
