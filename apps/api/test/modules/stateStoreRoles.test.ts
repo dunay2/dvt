@@ -7,6 +7,7 @@ function createStateStoreSource(): StateStoreRoleSource {
   return {
     bootstrapRunTx: async () => null as never,
     appendAndEnqueueTx: async () => null as never,
+    reserveRetryAttempt: async () => null as never,
     getRunMetadataByRunId: async () => null as never,
     listEvents: async () => [],
     listRuns: async () => [],
@@ -33,6 +34,7 @@ describe('bindStateStoreRoles', () => {
     const partialSource = {
       bootstrapRunTx: async () => null as never,
       appendAndEnqueueTx: async () => null as never,
+      reserveRetryAttempt: async () => null as never,
       getRunMetadataByRunId: async () => null as never,
       listEvents: async () => [],
       listRuns: async () => [],

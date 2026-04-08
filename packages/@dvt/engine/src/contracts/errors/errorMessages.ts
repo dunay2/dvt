@@ -12,6 +12,7 @@ export const ENGINE_ERROR_MESSAGE_KEY = {
   INVALID_RUN_ID: 'engine.error.invalid_run_id',
   PLAN_SCHEMA_VERSION_UNKNOWN: 'engine.error.plan_schema_version_unknown',
   RUN_METADATA_NOT_FOUND: 'engine.error.run_metadata_not_found',
+  RECOVERY_SOURCE_NOT_TERMINAL: 'engine.error.recovery_source_not_terminal',
   SIGNAL_NOT_IMPLEMENTED: 'engine.error.signal_not_implemented',
   OUTBOX_RATE_LIMIT_EXCEEDED: 'engine.error.outbox_rate_limit_exceeded',
   PLAN_URI_NOT_ALLOWED: 'engine.error.plan_uri_not_allowed',
@@ -35,6 +36,7 @@ interface EngineErrorMessageParamMap {
   INVALID_RUN_ID: { runId: string };
   PLAN_SCHEMA_VERSION_UNKNOWN: { schemaVersion: string };
   RUN_METADATA_NOT_FOUND: { runId: string };
+  RECOVERY_SOURCE_NOT_TERMINAL: { runId: string; status: string };
   SIGNAL_NOT_IMPLEMENTED: { signalType: string };
   OUTBOX_RATE_LIMIT_EXCEEDED: { tenantId: string };
   PLAN_URI_NOT_ALLOWED: { uri: string; reason: PlanUriPolicyReason; subject?: string };
@@ -95,6 +97,10 @@ export function defaultEngineErrorMessage<C extends EngineErrorCode>(
     case 'RUN_METADATA_NOT_FOUND': {
       const p = params as EngineErrorMessageParams<'RUN_METADATA_NOT_FOUND'>;
       return `Run metadata not found for runId: ${p.runId}`;
+    }
+    case 'RECOVERY_SOURCE_NOT_TERMINAL': {
+      const p = params as EngineErrorMessageParams<'RECOVERY_SOURCE_NOT_TERMINAL'>;
+      return `Recover source run is not terminal: runId=${p.runId} status=${p.status}`;
     }
     case 'SIGNAL_NOT_IMPLEMENTED': {
       const p = params as EngineErrorMessageParams<'SIGNAL_NOT_IMPLEMENTED'>;

@@ -8,6 +8,7 @@ import { CancelRunUseCase } from './application/services/cancelRunUseCase.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
+import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
@@ -15,6 +16,7 @@ import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
 import { importPlanRoute, previewPlanRoute } from './entrypoints/http/planRoutes.js';
+import { recoverRunRoute } from './entrypoints/http/recoverRunRoute.js';
 import {
   PROTECTED_RUNTIME_ROUTE_SUMMARY,
   RUNTIME_ROUTE_PATH,
@@ -198,6 +200,10 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.stateStore.read
     );
     const cancelRunUseCase = new CancelRunUseCase(signalRunUseCase);
+    const recoverRunUseCase = new RecoverRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore.read
+    );
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
@@ -248,6 +254,9 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
     app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
       cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })
+    );
+    app.post(RUNTIME_ROUTE_PATH.recover, async (request, reply) =>
+      recoverRunRoute(request as never, reply, { ...runtimeAuth, useCase: recoverRunUseCase })
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {

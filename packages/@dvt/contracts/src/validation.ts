@@ -62,6 +62,8 @@ import {
   type ResolvedRunContextSchemaT,
   RunContextSchema,
   type RunContextSchemaT,
+  RecoverRunCommandSchema,
+  type RecoverRunCommandSchemaT,
   RunEventWriteSchema,
   type RunEventWriteSchemaT,
   RunEventRecordSchema,
@@ -197,6 +199,10 @@ export function parseResolvedRunContext(input: unknown): ResolvedRunContextSchem
 
 export function parseSignalRequest(input: unknown): SignalRequestSchemaT {
   return parseWithSchema(SignalRequestSchema, input);
+}
+
+export function parseRecoverRunCommand(input: unknown): RecoverRunCommandSchemaT {
+  return parseWithSchema(RecoverRunCommandSchema, input);
 }
 
 export function parseEngineRunRef(input: unknown): EngineRunRefSchemaT {

@@ -16,6 +16,7 @@ import type {
 
 export interface IWorkflowEngine {
   startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
+  recoverRun(sourceRunId: string, planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
   cancelRun(engineRunRef: EngineRunRef): Promise<void>;
 
   /**

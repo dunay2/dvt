@@ -27,13 +27,16 @@ describe('ManifestArtifactResolver', () => {
   it('resolves file:// manifests outside production', async () => {
     const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
 
-    await expect(
-      resolver.resolveGraphSource({ uri: FIXTURE_URL.href, sha256: FIXTURE_SHA256 })
-    ).resolves.toEqual({
-      kind: 'generic-graph-v1',
-      sourceFamily: 'dbt',
-      sourceVersion: '1.0',
-      nodes: [
+    const result = await resolver.resolveGraphSource({
+      uri: FIXTURE_URL.href,
+      sha256: FIXTURE_SHA256,
+    });
+    expect(result.kind).toBe('generic-graph-v1');
+    expect(result.sourceFamily).toBe('dbt');
+    expect(result.sourceVersion).toBe('1.0');
+    expect(result.nodes).toHaveLength(3);
+    expect(result.nodes).toEqual(
+      expect.arrayContaining([
         {
           nodeId: 'model.analytics.orders',
           stepKind: 'DBT_MODEL',
@@ -49,8 +52,8 @@ describe('ManifestArtifactResolver', () => {
           stepKind: 'DBT_TEST',
           dependsOn: ['model.analytics.orders'],
         },
-      ],
-    });
+      ])
+    );
   });
 
   it('rejects file:// manifests in production', async () => {
