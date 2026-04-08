@@ -98,13 +98,13 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       providerWorkflowId: runRef.providerWorkflowId,
       providerRunId: runRef.providerRunId,
     };
-    if (runRef.providerNamespace) {
+    if (runRef.providerNamespace !== undefined) {
       updated.providerNamespace = runRef.providerNamespace;
     }
-    if (runRef.providerTaskQueue) {
+    if (runRef.providerTaskQueue !== undefined) {
       updated.providerTaskQueue = runRef.providerTaskQueue;
     }
-    if (runRef.providerConductorUrl) {
+    if (runRef.providerConductorUrl !== undefined) {
       updated.providerConductorUrl = runRef.providerConductorUrl;
     }
     this.metadataByRunId.set(runId, updated);

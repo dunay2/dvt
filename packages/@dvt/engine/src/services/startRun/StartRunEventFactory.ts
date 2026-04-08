@@ -69,7 +69,7 @@ export class StartRunEventFactory {
       providerWorkflowId: runRef.workflowId,
       providerRunId: runRef.runId,
       ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-      ...(runRef.provider === 'temporal' && runRef.taskQueue
+      ...(runRef.provider === 'temporal' && runRef.taskQueue !== undefined
         ? { providerTaskQueue: runRef.taskQueue }
         : {}),
       ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
@@ -84,7 +84,7 @@ export class StartRunEventFactory {
     };
     if (runRef.provider === 'temporal') {
       update.providerNamespace = runRef.namespace;
-      if (runRef.taskQueue) {
+      if (runRef.taskQueue !== undefined) {
         update.providerTaskQueue = runRef.taskQueue;
       }
     }
