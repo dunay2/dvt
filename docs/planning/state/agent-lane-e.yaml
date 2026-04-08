@@ -764,7 +764,7 @@ tasks:
   - task_id: F-05-CANVAS-CTRL-IMPL
     parent_task: F-05
     priority: P0
-    status: queued
+    status: review
     objective: >-
       extract the controller into focused graph, overlay, persistence, and navigation seams and
       reduce `useCanvasController` to a composition facade.
@@ -775,19 +775,24 @@ tasks:
       workflow remains unchanged.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/views/canvas/useCanvasController.ts
     status_reason: >-
-      Implementation is intentionally blocked behind the documentation and red-test hard gate.
+      Implementation is now present in code: `useCanvasController` delegates graph query and
+      canonical mapping to `useCanvasGraphModel`, overlay policy to `useCanvasOverlayModel`,
+      persistence guards to `useCanvasLayoutPersistence`, and route transitions to
+      `useCanvasNavigationActions`. Hot-path `console.debug` diagnostics are absent, graph sync uses
+      an identity map for current-node lookup, and route behavior for planning and run navigation
+      remains intact through the extracted seams.
     definition_of_done:
       - controller responsibilities match the documented seam model
       - hot-path debug logging is removed
       - graph sync uses stable identity-oriented lookup instead of repeated search
       - route behavior for planning and run navigation remains intact
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-08'
   - task_id: F-05-CANVAS-CTRL-CLOSEOUT
     parent_task: F-05
     priority: P1
