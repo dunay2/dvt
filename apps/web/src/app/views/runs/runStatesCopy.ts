@@ -30,6 +30,15 @@ export const runStatesCopy = {
   durationLabel: 'Duration',
   noResultEvidence:
     'Result evidence is not available yet for this run snapshot. This view only shows persisted fields returned by runtime read surfaces.',
+  provenanceTitle: 'Execution provenance',
+  artifactKindLabel: 'Artifact kind',
+  artifactUriLabel: 'Artifact URI',
+  artifactShaLabel: 'Artifact SHA-256',
+  artifactSizeLabel: 'Artifact size',
+  artifactEncodingLabel: 'Artifact encoding',
+  compiledCodeArtifactKind: 'compiled-code',
+  noProvenanceEvidence:
+    'Execution provenance is not available yet for this run timeline. This view only shows artifact refs emitted by runtime step events.',
   failureDiagnosticsTitle: 'Failure diagnostics',
   eventTimelineTitle: 'Event timeline',
   emptyTimeline: 'No runtime events are available yet for this run.',

@@ -9,12 +9,115 @@ type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
 };
 
+type ProvenanceArtifact = {
+  stepId: string;
+  emittedAt: string;
+  artifactKind: string;
+  storageUri: string;
+  sha256: string;
+  sizeBytes: number;
+  encoding?: string;
+};
+
 function formatDuration(durationMs: number): string {
   if (durationMs < 1000) {
     return `${durationMs} ms`;
   }
 
   return `${(durationMs / 1000).toFixed(1)} s`;
+}
+
+function formatByteSize(sizeBytes: number): string {
+  if (sizeBytes < 1024) {
+    return `${sizeBytes} B`;
+  }
+
+  if (sizeBytes < 1024 * 1024) {
+    return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object';
+}
+
+function readArtifactFields(
+  value: unknown
+): Omit<ProvenanceArtifact, 'stepId' | 'emittedAt' | 'artifactKind'> | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const storageUri = value.storageUri;
+  const sha256 = value.sha256;
+  const sizeBytes = value.sizeBytes;
+  const encoding = value.encoding;
+
+  if (
+    typeof storageUri !== 'string' ||
+    typeof sha256 !== 'string' ||
+    typeof sizeBytes !== 'number' ||
+    !Number.isFinite(sizeBytes)
+  ) {
+    return null;
+  }
+
+  return {
+    storageUri,
+    sha256,
+    sizeBytes,
+    ...(typeof encoding === 'string' ? { encoding } : {}),
+  };
+}
+
+function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
+  const seen = new Set<string>();
+  const provenance: ProvenanceArtifact[] = [];
+
+  for (const event of workspace.timeline.events) {
+    if (event.eventType !== 'StepStarted' || !event.stepId || !isRecord(event.payload)) {
+      continue;
+    }
+
+    const stepArtifactPayload = isRecord(event.payload.stepArtifactRef)
+      ? event.payload.stepArtifactRef
+      : null;
+    const stepArtifactRef = readArtifactFields(stepArtifactPayload);
+    const compiledCodeRef = stepArtifactRef ? null : readArtifactFields(event.payload.compiledCodeRef);
+
+    const artifact =
+      stepArtifactRef && typeof stepArtifactPayload?.artifactKind === 'string'
+        ? {
+            artifactKind: stepArtifactPayload.artifactKind,
+            ...stepArtifactRef,
+          }
+        : compiledCodeRef
+          ? {
+              artifactKind: copy.compiledCodeArtifactKind,
+              ...compiledCodeRef,
+            }
+          : null;
+
+    if (!artifact) {
+      continue;
+    }
+
+    const dedupeKey = `${event.stepId}|${artifact.storageUri}|${artifact.sha256}`;
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+    seen.add(dedupeKey);
+
+    provenance.push({
+      stepId: event.stepId,
+      emittedAt: event.emittedAt,
+      ...artifact,
+    });
+  }
+
+  return provenance;
 }
 
 function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
@@ -78,6 +181,7 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
+  const executionProvenance = deriveExecutionProvenance(workspace);
 
   return (
     <RunStateFrame title={`Run ${snapshot.runId}`}>
@@ -174,6 +278,55 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
             </div>
           ) : (
             <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
+          )}
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-900 p-5">
+          <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>
+          {executionProvenance.length > 0 ? (
+            <div className="space-y-3">
+              {executionProvenance.map((artifact) => (
+                <div
+                  key={`${artifact.stepId}-${artifact.storageUri}-${artifact.sha256}`}
+                  className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
+                >
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{copy.stepLabel.replace(':', '')}</Badge>
+                    <span className="font-mono text-xs">{artifact.stepId}</span>
+                    <Badge variant="outline">{artifact.artifactKind}</Badge>
+                    <span className="text-xs text-slate-400">
+                      {new Date(artifact.emittedAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <span className="text-slate-400">{copy.artifactKindLabel}</span>
+                      <div>{artifact.artifactKind}</div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{copy.artifactSizeLabel}</span>
+                      <div>{formatByteSize(artifact.sizeBytes)}</div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-slate-400">{copy.artifactUriLabel}</span>
+                      <div className="break-all font-mono text-xs">{artifact.storageUri}</div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-slate-400">{copy.artifactShaLabel}</span>
+                      <div className="break-all font-mono text-xs">{artifact.sha256}</div>
+                    </div>
+                    {artifact.encoding ? (
+                      <div>
+                        <span className="text-slate-400">{copy.artifactEncodingLabel}</span>
+                        <div>{artifact.encoding}</div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">{copy.noProvenanceEvidence}</p>
           )}
         </Card>
 
