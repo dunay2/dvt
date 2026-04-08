@@ -2,7 +2,7 @@
 title: Component Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 ---
 
 # DVT Component Map
@@ -22,8 +22,10 @@ three practical questions:
 
 1. [Reference Architecture](reference-architecture.md)
 2. [System Delivery Status](system-delivery-status.md)
-3. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
-4. [Planning Control Tower](../planning/state/planning-control-tower.md)
+3. [System Architecture](system/index.md)
+4. [Subsystem Architecture](subsystems/index.md)
+5. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
+6. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Current Topology
 
@@ -234,6 +236,8 @@ flowchart TB
 ## Related Pages
 
 - [DVT Domain Map](domain-map.md)
+- [System Architecture](system/index.md)
+- [Subsystem Architecture](subsystems/index.md)
 - [Architecture Component Surfaces](components/index.md)
 - [System Delivery Status](system-delivery-status.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)

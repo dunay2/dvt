@@ -2,7 +2,7 @@
 title: Canonical Doc Code Matrix
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-20
+last_reviewed: 2026-04-09
 planning_type: status
 ---
 
@@ -48,7 +48,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../archive/gaps/G4-TASK-SPECIFICATION.md)                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                                | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Web frontend shell and client routing          | `apps/web`                                                                             | [Frontend Architecture](../../architecture/frontend/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)                                                                 | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
+| Web frontend shell and client routing          | `apps/web`                                                                             | [web component](../../architecture/components/web/index.md), [Read subsystem](../../architecture/subsystems/read/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | Plan integrity and compatibility verification  | `@dvt/engine`, `@dvt/adapter-temporal`, `apps/api`, `@dvt/plan-verifier`               | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
 | Planner typed graph-source boundary            | `@dvt/contracts`, `@dvt/planner`, `apps/api`                                           | [Planner Contracts](../../contracts/planner/index.md), [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                                                                              | [Planner Current State Assessment](planner-current-state-assessment.md)                                                          |
 | Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                                        | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
@@ -462,7 +462,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 ### Web frontend shell and client routing
 
 - Canonical spec:
-  [Frontend Architecture](../../architecture/frontend/index.md)
+  [web component](../../architecture/components/web/index.md)
+  and
+  [Read subsystem](../../architecture/subsystems/read/index.md)
   and
   [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
 - Current status source:

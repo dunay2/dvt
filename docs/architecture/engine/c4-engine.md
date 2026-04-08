@@ -1,6 +1,6 @@
 # Engine C4 Architecture
 
-**Date**: 2026-03-06  
+**Last reviewed**: 2026-04-09  
 **Scope**: Logical architecture of `@dvt/engine` and direct collaborators.  
 **Note**: C4 containers are logical/runtime boundaries. `@dvt/engine` is a TypeScript library embedded by processes such as `apps/api`, reconciler workers, and outbox workers.
 
@@ -28,7 +28,7 @@ System_Boundary(dvt, "DVT+ execution domain") {
     System(engine, "@dvt/engine", "Orchestrates run lifecycle with event sourcing and explicit ports")
 }
 
-System_Ext(provider_runtime, "Provider runtime", "Temporal today, Conductor later")
+System_Ext(provider_runtime, "Provider runtime", "Temporal today; second runtime not on the active delivery path")
 System_Ext(state_store, "Run state store", "Snapshots, metadata, event log, outbox")
 System_Ext(intent_store, "StartRun intent store", "PENDING -> DISPATCHED -> RESOLVED/EXPIRED")
 System_Ext(obs, "Observability stack", "Logs, metrics, traces")
@@ -62,7 +62,7 @@ System_Ext(obs, "Observability stack", "Logs, metrics, tracing")
 System_Boundary(dvt, "DVT+ execution subsystem") {
     Container(api_app, "apps/api", "Node.js", "Exposes HTTP/API and calls engine use cases")
     Container(engine_lib, "@dvt/engine", "TypeScript", "Lifecycle orchestration, replay, maintenance, workers")
-    Container(provider_adapter, "@dvt/adapter-temporal", "TypeScript", "IProviderAdapter implementation and runtime control")
+    Container(provider_adapter, "@dvt/adapter-temporal", "TypeScript", "Implemented IProviderAdapter runtime path today")
     ContainerDb(pg_store, "@dvt/adapter-postgres", "PostgreSQL", "IRunStateStore + IOutboxStorage + intent persistence")
     Container(intent_store, "IStartRunIntentStore", "InMemory + Postgres", "Pre-dispatch intent log for crash consistency")
     Container(delivery_worker, "Outbox delivery process", "Node.js", "Embeds OutboxWorker to publish events and exposes health/metrics")
@@ -150,46 +150,32 @@ UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 - `@dvt/adapter-postgres` now covers state store, outbox, and persistent intent store (`PostgresStartRunIntentStore`).
 - `OutboxWorker` and `IntentReconcilerWorker` are operational components that embed `@dvt/engine`.
 
-## 5. Implementation Maturity Map
+## 5. Current delivery posture
 
-**Cutoff date**: 2026-03-06  
-**Basis**: current code in `packages/@dvt/engine`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, and local test coverage.
+This C4 view is structural. For delivery sequencing, use
+[Engine Roadmap](roadmap/engine-phases.md) and the active Lane A/Lane C tasks.
 
 ```mermaid
 flowchart LR
-  E["Engine lifecycle (95%)"] --> P["Postgres state + outbox storage (95%)"]
-  E --> I["Intent durability (85%)"]
-  E --> T["Temporal runtime adapter (80%)"]
-  E --> O["Independent outbox delivery process (72%)"]
-  E --> R["Standalone projection/read models (40%)"]
-  E --> C["Conductor adapter (15%)"]
+  Core["Implemented core: WorkflowEngine plus state-store plus Temporal"] --> Hex["WE-HX derivation and facade narrowing"]
+  Hex --> Runtime["MW-C1 plus TF-C2 runtime vertical"]
+  Hex --> Cleanup["AR-A8 Conductor illusion cleanup"]
 ```
 
-| Area                              | Implemented | Code evidence                                                               | Main gap                                                     |
-| --------------------------------- | ----------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Engine lifecycle core             | 95%         | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests | Operational hardening and integration debt                   |
-| Postgres state + outbox storage   | 95%         | `PostgresStateStoreAdapter` with snapshots/event log/outbox + DLQ           | Downstream contract hardening and operational hardening      |
-| Intent durability                 | 85%         | `PostgresStartRunIntentStore` + `IntentReconcilerWorker`                    | End-to-end wiring and production telemetry tuning            |
-| Temporal runtime adapter          | 80%         | `TemporalAdapter`, `TemporalWorkerHost`, workflow/activities                | Remaining phase capabilities + CI integration lane stability |
-| Standalone projection/read models | 40%         | In-process `SnapshotProjector` only                                         | Dedicated projector service and denormalized read models     |
-| Conductor adapter                 | 15%         | `ConductorAdapterStub`                                                      | Real adapter implementation and parity validation            |
+| Area                                                  | Current posture                         | Code evidence                                                                                                 | Current projection                                                      |
+| ----------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Engine lifecycle core                                 | Implemented                             | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests                                   | Keep hardening under `WE-HX`, not a new MVP phase                       |
+| Postgres state, outbox, and read-model path           | Implemented                             | `@dvt/adapter-postgres`, delivery runtime, projector/read-model ownership in current docs                     | Already absorbed into mainline; no longer a future engine roadmap claim |
+| Temporal runtime adapter                              | Implemented with ongoing hardening      | `@dvt/adapter-temporal`, `RunPlanWorkflow`, integration coverage                                              | Continue hardening via `WE-HX`, `AR-C*`, and `MW-C1`                    |
+| Compatibility facade and ownership seams              | In progress                             | `workflow-engine-subsystem-context.md`, `workflow-engine-target-architecture.v1.md`, `StartRunProtocol.v1.md` | Close `WE-HX-0..3`, then `WE-HX-5..6`                                   |
+| Conductor truthfulness                                | Residual debt, not active product phase | `ConductorAdapterStub`, provider typing, draft Conductor docs                                                 | Close `AR-A8` before treating a second runtime as live roadmap work     |
+| First execution-first transformation runtime vertical | Queued                                  | Lane C `MW-C1`, `TF-C2-A`, `TF-C2-B`                                                                          | This is the next real runtime value path                                |
 
-## 6. Missing Capabilities and Proposed Effort
+## 6. Current sequencing
 
-<!-- markdownlint-disable MD060 -->
-
-| Gap                                      | Why it matters                                                                | Proposed implementation                                                                                                  | Estimated effort    |
-| ---------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| Independent outbox delivery process      | Production reliability for async publication and isolation from API lifecycle | Formalize the minimal HTTP publisher contract, execute canary cutover, and harden scale-out/ordering                     | 4-6 engineer-days   |
-| Standalone projection/read model service | Scalable status queries and dashboard-friendly reads                          | Extract projector worker, add rebuild/replay tooling, introduce denormalized read models and indexes                     | 8-12 engineer-days  |
-| Temporal integration hardening           | Reduce runtime risk and CI blind spots                                        | Stabilize Temporal integration lane (time-skipping/dev server), strengthen failure injection tests and shutdown behavior | 3-5 engineer-days   |
-| Conductor real adapter                   | Multi-provider portability roadmap                                            | Replace `ConductorAdapterStub`, map signals/status/events, add capability parity tests                                   | 10-15 engineer-days |
-
-<!-- markdownlint-enable MD060 -->
-
-### Sequencing proposal
-
-1. Outbox delivery process
-2. Temporal hardening
-3. Standalone projection/read model service
-4. Conductor adapter
+1. close the remaining `WE-HX` derivation waves so the engine boundary is
+   truthful and easier to evolve;
+2. remove the Conductor illusion from runtime typing and documentation through
+   `AR-A8`;
+3. deliver `MW-C1` plus `TF-C2-A/B` so persisted plans can drive the first
+   PostgreSQL execution-first path with caller-visible evidence.

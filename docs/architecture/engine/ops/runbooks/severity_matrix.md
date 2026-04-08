@@ -1,167 +1,91 @@
-# Severity Matrix
-
-**Audience**: On-call SRE, engineering leads, incident commanders
-**Scope**: Severity definitions, alert mapping, escalation policy
-**Status**: Phase 1 MVP (informative, evolving)
-**Updated**: 2026-02-15
-**References**: [SLOs.md](../SLOs.md), [observability.md](../observability.md), [incident_response.md](./incident_response.md)
-
+---
+title: Engine Severity Matrix
+status: Active
+owner: Architecture / Engine / SRE
+last_reviewed: 2026-04-09
 ---
 
-## 1) Severity Definitions
+# Engine Severity Matrix
 
-| Severity | Description                           | Response Time | Impact                                     |
-| -------- | ------------------------------------- | ------------- | ------------------------------------------ |
-| **Sev0** | Total outage, no workaround           | 15 min        | All users affected, data at risk           |
-| **Sev1** | Major degradation, partial workaround | 1 hour        | Significant user impact, SLO breach likely |
-| **Sev2** | Minor degradation, workaround exists  | 4 hours       | Limited user impact, within SLO budget     |
-| **Sev3** | Cosmetic issue, no user impact        | 2 days        | No functional impact                       |
+This is the current severity interpretation surface for engine and runtime
+operations.
 
----
+Canonical threshold and signal sources live in:
 
-## 2) Severity Examples
+- [Engine SLO Posture](../SLOs.md)
+- [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)
+- [AR-C2 SLA signal threshold mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
+- [Incident response runbook](./incident_response.md)
 
-### Sev0 — Total Outage
+## Current posture
 
-- API down (health check fails for all endpoints)
-- Database unavailable (StateStore unreachable)
-- All runs failing (100 % error rate)
-- Data corruption detected (snapshot hash mismatch)
+- Only one implemented provider runtime exists today: Temporal.
+- Outbox delivery and snapshot freshness are first-class runtime concerns.
+- Severity decisions should be driven by the current SLA signal set, not by old
+  phase labels or imagined multi-provider failover.
 
-**Owner**: On-call SRE + Engineering lead (joint command)
+## Severity definitions
 
-### Sev1 — Major Degradation
+| Severity | Meaning now                                                                       | Response posture                    |
+| -------- | --------------------------------------------------------------------------------- | ----------------------------------- |
+| Sev0     | Control plane unavailable or state integrity at risk                              | Immediate incident command          |
+| Sev1     | Major runtime degradation or sustained SLA breach with user impact                | On-call response and mitigation     |
+| Sev2     | Limited degradation, noisy but bounded failures, or partial loss of observability | Business-hours operational response |
+| Sev3     | Documentation drift, low-risk tooling issues, or cosmetic observability gaps      | Backlog or next-sprint cleanup      |
 
-- Single adapter down (e.g. Temporal offline, but Conductor available)
-- Projection lag > 5 minutes (stale dashboard data)
-- Error rate > 1 % sustained
-- Signal processing latency > 5 s (PAUSE/CANCEL delayed)
-- Outbox delivery failure (events not reaching consumers)
+## Current examples
 
-**Owner**: On-call SRE
+### Sev0
 
-### Sev2 — Minor Degradation
+- API or protected runtime unavailable for all callers
+- state store unavailable for engine writes or authoritative reads
+- confirmed state corruption or projector/replay divergence that invalidates run truth
 
-- Single worker pod down (auto-recovery expected)
-- Error rate between 0.1 % and 1 %
-- Latency spike (p99 > 2x SLO for < 10 m)
-- Disk space below 20 %
-- Plugin sandbox memory pressure (single tenant)
+### Sev1
 
-**Owner**: SRE during business hours
+- Temporal runtime unavailable or unable to accept validated commands
+- outbox delivery failure causing sustained downstream event lag
+- snapshot freshness or unknown-rate breach at the canonical SLA thresholds
+- start-run or plan-compile latency sustained above critical threshold
 
-### Sev3 — Cosmetic / Non-Functional
+### Sev2
 
-- Dashboard metric missing or stale
-- Log noise (excessive debug output)
-- Flaky test (fails > 10 % of runs)
-- Documentation out of date
+- single worker degradation with bounded impact and available mitigation
+- transient latency spike above warning thresholds without full user-facing outage
+- claimed-lag or drain-lag growth without crossing the canonical critical posture
+- partial dashboard or alert degradation when the underlying signal still exists
 
-**Owner**: Engineering team (next sprint)
+### Sev3
 
----
+- stale or contradictory documentation
+- missing non-critical dashboard panel
+- noisy logging or low-risk ops ergonomics issue
 
-## 3) Alert → Severity Mapping
+## Alert interpretation
 
-| Alert                    | Severity | Trigger Condition                              | Runbook                                                    |
-| ------------------------ | -------- | ---------------------------------------------- | ---------------------------------------------------------- |
-| `APIDown`                | Sev0     | API health check fails 3x in 1 min             | [incident_response.md](./incident_response.md)             |
-| `StateStoreUnavailable`  | Sev0     | StateStore write failures for > 2 min          | [incident_response.md](./incident_response.md)             |
-| `DataCorruption`         | Sev0     | Snapshot hash mismatch detected                | [incident_response.md](./incident_response.md)             |
-| `AdapterHeartbeatLost`   | Sev1     | Adapter unhealthy > 5 min                      | [incident_response.md](./incident_response.md) (Section 1) |
-| `ProjectionGapDetected`  | Sev1     | Lag > 100 events OR > 5 min                    | [incident_response.md](./incident_response.md) (Section 2) |
-| `OutboxDeliveryFailure`  | Sev1     | Outbox delivery latency > 30 s sustained 5 min | [incident_response.md](./incident_response.md) (Section 3) |
-| `HighErrorRate`          | Sev2     | > 0.1 % error rate sustained 10 min            | [incident_response.md](./incident_response.md) (Section 4) |
-| `LatencySpike`           | Sev2     | p99 > 2x SLO for 5 min                         | [incident_response.md](./incident_response.md) (Section 5) |
-| `DiskSpaceLow`           | Sev2     | < 20 % free space on any node                  | Ops: expand volume or clean up                             |
-| `WorkerPodDown`          | Sev2     | Worker pod not ready > 5 min                   | Ops: `kubectl describe pod`, check node health             |
-| `PluginSandboxMemory`    | Sev2     | Plugin memory > 80 % of sandbox limit          | Ops: identify tenant, check plugin logs                    |
-| `TestFlaky`              | Sev3     | Test fails > 10 % of CI runs                   | Engineering: stabilize or quarantine test                  |
-| `DashboardMetricMissing` | Sev3     | Grafana panel shows no data > 1 h              | Ops: check Prometheus target, scrape config                |
-| `LogNoise`               | Sev3     | Log volume > 5x baseline for 30 min            | Engineering: adjust log level or filter                    |
+| Signal or event                                       | Default severity posture | Canonical threshold source                                                                     |
+| ----------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| API unavailable                                       | Sev0                     | incident + health policy                                                                       |
+| State-store unavailable                               | Sev0                     | incident + health policy                                                                       |
+| Start-run latency critical breach                     | Sev1                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)        |
+| Plan-compile latency critical breach                  | Sev1                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)        |
+| Snapshot stale-ratio or unknown-ratio critical breach | Sev1                     | [AR-C2 threshold mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) |
+| Outbox drain-lag critical breach                      | Sev1                     | [AR-C2 threshold mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) |
+| Event-delivery latency critical breach                | Sev1                     | [AR-C2 threshold mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) |
+| Warning-threshold breach with bounded impact          | Sev2                     | canonical SLA docs above                                                                       |
+| Documentation drift                                   | Sev3                     | docs governance process                                                                        |
 
----
+## What is not current severity logic
 
-## 4) Escalation Policy
+Do not use these outdated assumptions:
 
-### Notification channels
+- `Temporal offline, but Conductor available` as a Sev1 example;
+- phase-based escalation text from the February MVP plan;
+- quarter-specific budget examples as if they were the live incident policy.
 
-| Severity | Channel           | Timing                                       |
-| -------- | ----------------- | -------------------------------------------- |
-| **Sev0** | PagerDuty page    | Immediate (24/7)                             |
-| **Sev1** | PagerDuty + Slack | Business hours; page if unacknowledged > 2 h |
-| **Sev2** | Slack #ops-alerts | Business hours; ticket created automatically |
-| **Sev3** | Jira backlog      | Next sprint grooming                         |
+## Escalation rule
 
-### Escalation timeline
-
-```
-Sev0:
-  T+0 min   → Page on-call SRE
-  T+15 min  → Page engineering lead (if not acknowledged)
-  T+30 min  → Page VP Engineering
-  T+60 min  → Executive notification
-
-Sev1:
-  T+0 min   → Slack alert + PagerDuty (business hours)
-  T+2 hours → Page on-call SRE (if unacknowledged)
-  T+4 hours → Page engineering lead
-
-Sev2:
-  T+0 min   → Slack alert + Jira ticket
-  T+4 hours → Assign to SRE on-call (if unresolved)
-  T+24 hours → Escalate to engineering lead
-
-Sev3:
-  T+0       → Jira ticket created
-  Next sprint grooming → Prioritize and assign
-```
-
----
-
-## 5) Incident Lifecycle
-
-```
-Detection → Triage → Severity Assignment → Response → Mitigation → Resolution → Postmortem
-```
-
-### Triage checklist
-
-1. **Identify scope**: How many users/tenants affected?
-2. **Check SLO impact**: Is the error budget being consumed?
-3. **Assign severity**: Use the matrix in Section 1.
-4. **Notify**: Follow escalation policy (Section 4).
-5. **Start runbook**: Follow the linked runbook from Section 3.
-
-### Postmortem requirements
-
-| Severity | Postmortem Required | Timeline    | Audience                   |
-| -------- | ------------------- | ----------- | -------------------------- |
-| Sev0     | Yes (mandatory)     | Within 48 h | Engineering all-hands      |
-| Sev1     | Yes (mandatory)     | Within 5 d  | SRE team + affected squads |
-| Sev2     | Optional            | Within 10 d | SRE team                   |
-| Sev3     | No                  | —           | —                          |
-
----
-
-## 6) SLO ↔ Severity Relationship
-
-Severity levels are directly tied to [SLO targets](../SLOs.md):
-
-| SLO Breach                          | Severity | Rationale                          |
-| ----------------------------------- | -------- | ---------------------------------- |
-| Availability < 99 % (4 h window)    | Sev0     | Control plane effectively down     |
-| Completion latency p99 > 30 s (5 m) | Sev1     | Major degradation, runs stalling   |
-| Error rate > 1 % (10 m window)      | Sev1     | Significant user-facing failures   |
-| Projection lag > 100 events (5 m)   | Sev1     | Stale data for dashboards and APIs |
-| Error rate 0.1-1 % (10 m window)    | Sev2     | Within budget but needs attention  |
-| Pause latency p99 > 5 s (5 m)       | Sev2     | Signal processing degraded         |
-
----
-
-## References
-
-- [SLOs.md](../SLOs.md) — Service level objectives and error budgets
-- [observability.md](../observability.md) — Metrics, traces, alerts, dashboards
-- [incident_response.md](./incident_response.md) — Step-by-step incident procedures
-- [engine-phases.md](../../roadmap/engine-phases.md) — Phase roadmap and success criteria
+- use the incident response runbook for any Sev0 or Sev1 event
+- use the canonical SLA documents for threshold ownership
+- if the event is caused by stale or misleading documentation, treat the doc
+  correction itself as part of the incident follow-up

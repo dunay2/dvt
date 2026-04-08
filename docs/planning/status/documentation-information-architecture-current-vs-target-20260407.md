@@ -2,7 +2,7 @@
 title: Documentation information architecture current vs target
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-09
 planning_type: status
 ---
 
@@ -28,58 +28,42 @@ surface auditable against real code and planning sources.
 flowchart TB
   Repo["Repository truth: apps/, packages/, workflows/, scripts/"]
 
-  subgraph Active["Active docs surface"]
-    Canonical["Canonical specs and entrypoints
-    docs/architecture
-    docs/contracts
-    docs/concepts"]
-    Planning["Planning truth
-    docs/planning/status
-    docs/planning/reviews
-    docs/planning/state/*.yaml"]
-    Ops["Operational docs
-    docs/guides
-    docs/runbooks"]
-    Evidence["Evidence and risk
-    docs/evidence
-    docs/risk-register"]
+  subgraph Active["Active architecture surface"]
+    System["System entrypoint\ndocs/architecture/system"]
+    Subsystems["Subsystem flow docs\ndocs/architecture/subsystems"]
+    Components["Canonical component homes\ndocs/architecture/components"]
+    Domains["Domain and transverse views\ndocs/architecture/domain-*.md\ncomponent-map.md\ndomain-map.md"]
   end
 
-  subgraph Supporting["Supporting maps"]
-    ComponentMaps["docs/architecture/components/*"]
-    Matrices["canonical-doc-code-matrix.md
-    repository-map.md
-    system-delivery-status.md"]
+  subgraph Planning["Planning truth"]
+    PlanningState["docs/planning/status\ndocs/planning/reviews\ndocs/planning/state/*.yaml"]
   end
 
   subgraph Historical["Historical and archived"]
     Archive["docs/archive/**"]
     PlanningArchive["docs/planning/archive/**"]
-    HistoricalNotes["historical snapshots and superseded proposals"]
   end
 
-  Repo --> Canonical
-  Repo --> Planning
-  Repo --> Ops
-  Repo --> Evidence
-  Canonical --> ComponentMaps
-  Planning --> Matrices
-  ComponentMaps --> Archive
-  Matrices --> Archive
+  Repo --> System
+  Repo --> Components
+  System -.-> Subsystems
+  Subsystems --> Components
+  Components --> Domains
+  PlanningState --> Domains
   Archive -. reference only .-> Active
   PlanningArchive -. reference only .-> Planning
 ```
 
 ## Current code-alignment facts
 
-| Area                        | Current active entrypoint                                                | Code-alignment action in this slice                                                                    |
-| --------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| API runtime surface         | `docs/architecture/components/api/api-current-to-target-architecture.md` | promoted as the canonical repo-map and infra entrypoint instead of the old `G8` gap spec               |
-| Engine component map        | `docs/architecture/components/engine/*`                                  | rebuilt as summary-only navigation to canonical engine docs; removed dead local links                  |
-| Planner component map       | `docs/architecture/components/planner/*`                                 | rewritten around `PlannerFacade`, `PlannerInputEnvelopeV1`, and `ExecutionPlan.v1.ts`                  |
-| Archived architecture packs | `docs/archive/architecture/components/*`                                 | stale component packs moved out of the active tree                                                     |
-| Active planning reviews     | `docs/planning/reviews/*`                                                | repaired relative links after archive moves and proposal reclassification                              |
-| Docs validation             | `tools/docs/check-links.ts`                                              | checker now skips historical sources by taxonomy instead of surfacing archive noise as active failures |
+| Area                          | Current active entrypoint                    | Code-alignment action in this slice                                                                  |
+| ----------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| System routing                | `docs/architecture/system/index.md`          | added explicit system -> subsystem -> component navigation                                           |
+| Subsystem routing             | `docs/architecture/subsystems/index.md`      | introduced flow-oriented subsystem entrypoint distinct from component homes                          |
+| Read flow                     | `docs/architecture/subsystems/read/index.md` | documented real browser -> API -> engine/state-store read path with code anchors                     |
+| Engine component home         | `docs/architecture/components/engine/*`      | promoted as the canonical engine component home; top-level engine pack now treated as subsystem view |
+| Frontend component home       | `docs/architecture/components/web/*`         | consolidated `apps/web` and `@dvt/web` into one canonical component home                             |
+| Archived architecture aliases | `docs/archive/architecture/components/*`     | moved stale or duplicate aliases out of the active tree                                              |
 
 ## Target-state model
 
@@ -87,40 +71,42 @@ flowchart TB
 flowchart LR
   Change["Code, docs, or planning change"] --> Classify{"What changed?"}
 
-  Classify -->|runtime or contract behavior| CanonicalUpdate["Update canonical spec + supporting maps"]
-  Classify -->|planning posture| PlanningUpdate["Update lane YAML + status/review/closeout"]
-  Classify -->|historical or superseded material| ArchiveMove["Move to archive and add archive index route"]
-  Classify -->|docs structure| Sync["Run docs:sync and refresh indexes"]
+  Classify -->|component surface| ComponentDoc["Update canonical component home"]
+  Classify -->|end-to-end flow| SubsystemDoc["Update subsystem flow doc"]
+  Classify -->|system composition| SystemDoc["Update system entrypoint and maps"]
+  Classify -->|domain ownership| DomainDoc["Update domain page"]
+  Classify -->|historical alias or superseded pack| ArchiveMove["Move to archive and leave an explicit pointer if needed"]
 
-  CanonicalUpdate --> Matrix["Update canonical doc code matrix / repository map when routes change"]
-  PlanningUpdate --> Workboard["Regenerate workboard views from lane YAML"]
-  ArchiveMove --> Pointer["Keep only minimal active pointers from current docs"]
+  ComponentDoc --> Sync["Run docs:sync and refresh indexes"]
+  SubsystemDoc --> Sync
+  SystemDoc --> Sync
+  DomainDoc --> Sync
+  ArchiveMove --> Sync
   Sync --> Validate["Run docs checks and prepush baseline"]
-  Matrix --> Validate
-  Workboard --> Validate
-  Pointer --> Validate
-
-  Validate --> Ready["Ready: active docs route to current code and historical docs stay reference-only"]
+  Validate --> Ready["Ready: one component home, explicit subsystem flows, archive only for history"]
 ```
 
 ## Operational specification
 
-- Active component trees are summaries only. They must point to canonical docs
-  instead of reintroducing local structure packs.
-- Historical documents may remain link targets, but they are not maintained as
-  active source files and should not dominate link-check results.
-- When an active doc refers to code, the path must match the real shipped file
-  and the real contract version.
-- Archive moves require an archive index or active pointer so readers can still
-  discover historical context deliberately.
-- Planning execution truth lives in `docs/planning/state/agent-lane-*.yaml`;
-  generated workboard views are derived artifacts.
+- A real repo component gets exactly one active home under
+  `docs/architecture/components/`.
+- Subsystem docs explain flows across components and must link back to the
+  canonical component pages they compose.
+- System docs explain top-level composition and routing into subsystems.
+- Domain docs explain ownership and responsibility boundaries; they are not a
+  second subsystem tree.
+- Historical aliases and compatibility packs belong in archive once active
+  links are migrated.
 - Docs validation must prove the active tree, not overwhelm contributors with
   archive-only drift.
 
 ## Remaining follow-up space
 
+- top-level subsystem compatibility packs under `docs/architecture/engine/` and
+  `docs/architecture/frontend/` still need deeper migration into the
+  `subsystems/` tree.
 - Frontmatter normalization and `last_reviewed` coverage across the historical
   corpus remain broader `GOV-S2` work.
-- A few historical narrative docs still mention superseded names for context;
-  they are acceptable only when the file is explicitly historical or archived.
+- Several active docs still route to `frontend/index.md` or `engine/index.md`
+  as subsystem compatibility packs and should eventually route through the new
+  system/subsystem entrypoints first.

@@ -2,93 +2,69 @@
 title: Architecture Component Surfaces
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 ---
 
 # Architecture Component Surfaces
 
-This folder contains the current component entry pages for deployable apps and
-package-level architecture surfaces that benefit from a dedicated view.
+This subtree is the canonical catalog for real repo components.
 
-These pages are supporting architecture docs, not the normative source for
-behavioral invariants. They should describe the real current surface, its
-interfaces, and its queued deltas. They should not degrade into generic
-routing-only pages.
+A component page under `docs/architecture/components/` must map to a real app,
+worker, or package in the repository and it must be the single active home for
+that component's public surface.
 
 ## Read This With
 
-1. [Reference Architecture](../reference-architecture.md)
-2. [System Delivery Status](../system-delivery-status.md)
-3. [DVT Component Map](../component-map.md)
-4. [DVT Domain Map](../domain-map.md)
+1. [System Architecture](../system/index.md)
+2. [Subsystem Architecture](../subsystems/index.md)
+3. [Reference Architecture](../reference-architecture.md)
+4. [System Delivery Status](../system-delivery-status.md)
+5. [DVT Domain Map](../domain-map.md)
 
 ## Current Component Entry Points
 
-- [engine compatibility view](engine/index.md): the current engine-facing
-  component bridge into canonical engine docs.
-  Use it for subsystem-routing compatibility during the engine documentation
-  replacement and migration work.
-- [planner package surface](planner/index.md): the current planner package
-  boundary.
-  Use it for planner ingress truth, active invariants, and planning-domain
-  component anchors.
-- [apps/api](api/index.md): the API composition root and runtime entry surface.
-  Use it for current responsibilities, interfaces, and queued admission/API
-  deltas.
-- [@dvt/delivery](delivery/index.md): the delivery runtime library.
-  Use it for runtime ownership, worker-facing interfaces, and downstream event
-  processing.
-- [dvt-outbox-worker](outbox-worker/index.md): the delivery composition root
-  under `apps/outbox-worker`.
-  Use it for operational host wiring, shard ownership, retention, and purge
-  runtime posture.
-- [dvt-projector-worker](projector-worker/index.md): the read-model projector
-  composition root under `apps/projector-worker`.
-  Use it for snapshot rebuild wiring, lag exposure, and Postgres-backed
-  projector runtime posture.
-- [dvt-lineage-worker](lineage-worker/index.md): the lineage composition root
-  under `apps/lineage-worker`.
-  Use it for mapper/sink wiring, DLQ posture, and OpenLineage worker runtime
-  ownership.
-- [apps/web](web-app/index.md): the deployable browser application shell.
-  Use it for routing, platform health, run-monitoring UX, and backend
-  consumption posture.
-- [@dvt/web package surface](web/index.md): the same workspace viewed as the
-  package consumed by the browser build.
-  Use it for frontend module boundaries, package-level responsibilities, and
-  local UI architecture anchors.
+- [@dvt/engine](engine/index.md): canonical engine component home for public
+  operations, interfaces, and supporting engine subtopics.
+- [@dvt/planner](planner/index.md): planner package boundary and canonical
+  planner ingress truth.
+- [apps/api](api/index.md): authenticated HTTP composition root and runtime
+  entry surface.
+- [@dvt/delivery](delivery/index.md): delivery runtime library and downstream
+  processing surface.
+- [dvt-outbox-worker](outbox-worker/index.md): outbox delivery host,
+  retention, and purge runtime composition root.
+- [dvt-projector-worker](projector-worker/index.md): snapshot rebuild and
+  projector host composition root.
+- [dvt-lineage-worker](lineage-worker/index.md): lineage mapper/sink host and
+  operational surface.
+- [web](web/index.md): canonical frontend workspace component home for the
+  `apps/web` deployable shell and `@dvt/web` package surface.
+
+## Component Rules
+
+- one component, one active home;
+- component pages describe current responsibilities, interfaces, code anchors,
+  and queued deltas;
+- subsystem and domain pages may link to a component, but they must not become
+  a second component home;
+- compatibility aliases belong in archive once active links are migrated.
 
 ## Coverage Boundary
 
-- Execution core, provider adapters, and state-store internals already have a
-  richer canonical surface under [Engine](../engine/index.md). This subtree
-  does not duplicate that material.
-- Delivery worker composition roots are first-class active surfaces now that
-  projector and lineage run as standalone operational processes in code.
-- Several older template-driven component packs were moved to
-  [Archive](../../archive/architecture/components/index.md) once the active
-  component-entry model narrowed to the current supported surfaces.
-- The frontend appears twice on purpose:
-  `apps/web` is the deployable application view, while `@dvt/web` is the
-  package-level view of the same workspace.
-- Older deep-dive component narratives remain available below these entry pages,
-  but they are supporting detail only when the current entry page explicitly
-  keeps them in scope.
-
-## Required Shape For Component Pages
-
-Each current component page in this subtree should include:
-
-- current responsibilities;
-- inbound and outbound interfaces;
-- concrete code anchors;
-- current posture and limitations;
-- queued or accepted planned deltas.
+- System and subsystem composition live outside this tree under
+  [System Architecture](../system/index.md) and
+  [Subsystem Architecture](../subsystems/index.md).
+- Domain ownership and boundary rules live outside this tree under the
+  `domain-*.md` pages.
+- The old `web-app` alias has been removed from the active tree; `web/` is the
+  canonical frontend component home.
+- The current execution and frontend subsystem packs still live at
+  `docs/architecture/engine/` and `docs/architecture/frontend/`, but they are
+  flow/context surfaces, not a second component home.
 
 ## Related Pages
 
 - [DVT Component Map](../component-map.md)
 - [DVT Domain Map](../domain-map.md)
-- [System Delivery Status](../system-delivery-status.md)
-- [Engine](../engine/index.md)
-- [Frontend Architecture](../frontend/index.md)
+- [Execution subsystem compatibility pack](../engine/index.md)
+- [Frontend subsystem compatibility pack](../frontend/index.md)

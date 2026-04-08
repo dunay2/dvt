@@ -22,9 +22,15 @@ flowchart LR
 
 - [Temporal adapter specification](../../engine/adapters/temporal/TemporalAdapter.spec.md)
 - [Temporal engine policies](../../engine/adapters/temporal/EnginePolicies.md)
-- [Conductor adapter specification](../../engine/adapters/conductor/ConductorAdapter.spec.md)
+- [Conductor adapter draft](../../engine/adapters/conductor/ConductorAdapter.spec.md)
 - [Postgres state-store adapter](../../engine/adapters/state-store/postgres/StateStoreAdapter.md)
 - [Snowflake state-store adapter](../../engine/adapters/state-store/snowflake/StateStoreAdapter.md)
+
+Current reading rule:
+
+- treat Temporal as the only implemented provider-runtime adapter surface today;
+- treat the Conductor document as draft/reference material, not as an active
+  delivery commitment.
 
 ## Related contracts
 

@@ -2,7 +2,7 @@
 title: Domain Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-09
 ---
 
 # DVT Domain Map
@@ -20,8 +20,10 @@ in [System Delivery Status](system-delivery-status.md).
 
 1. [Reference Architecture](reference-architecture.md)
 2. [System Delivery Status](system-delivery-status.md)
-3. [DVT Component Map](component-map.md)
-4. [Planning Control Tower](../planning/state/planning-control-tower.md)
+3. [System Architecture](system/index.md)
+4. [Subsystem Architecture](subsystems/index.md)
+5. [DVT Component Map](component-map.md)
+6. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Current Domain Relationships
 
@@ -68,6 +70,8 @@ flowchart LR
 ## Related Pages
 
 - [DVT Component Map](component-map.md)
+- [System Architecture](system/index.md)
+- [Subsystem Architecture](subsystems/index.md)
 - [Architecture Component Surfaces](components/index.md)
 - [DVT System Architecture](system-overview.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)
