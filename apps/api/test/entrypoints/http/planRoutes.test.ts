@@ -425,6 +425,176 @@ describe('planRoutes', () => {
     expect(deps.planStore.storePlan).not.toHaveBeenCalled();
   });
 
+  it('forwards preview provenance into planner observability extra payload', async () => {
+    const reply = createReply();
+    const buildPlan = vi.fn(async () => ({
+      plan: {
+        metadata: {
+          planId: VALID_PLAN_REF.planId,
+          planVersion: VALID_PLAN_REF.planVersion,
+          schemaVersion: VALID_PLAN_REF.schemaVersion,
+          contractVersion: '1.0.0',
+          inputHashSha256: VALID_PLAN_REF.sha256,
+          createdAtIso: '2026-04-05T00:00:00.000Z',
+        },
+        steps: [],
+      },
+      canonicalPlanJson: '{}',
+    }));
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan },
+      planStore: {
+        storePlan: vi.fn(async () => VALID_PLAN_REF),
+        markValid: vi.fn(async () => undefined),
+        markInvalid: vi.fn(async () => undefined),
+      },
+      planValidator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK',
+          planId: VALID_PLAN_REF.planId,
+          adapterId: 'mock',
+        })),
+      },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-provenance',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+          provenance: {
+            graphArtifact: {
+              repo: 'org/repo',
+              gitRef: 'refs/heads/main',
+              path: 'models/graph.yml',
+              sha256: 'a'.repeat(64),
+            },
+            sqlArtifact: {
+              repo: 'org/repo',
+              gitRef: 'refs/heads/main',
+              path: 'models/model.sql',
+              sha256: 'b'.repeat(64),
+            },
+          },
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(200);
+    expect(buildPlan).toHaveBeenCalledOnce();
+    expect(buildPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        observability: expect.objectContaining({
+          extra: expect.objectContaining({
+            transformationFlowProvenance: {
+              graphArtifact: {
+                repo: 'org/repo',
+                gitRef: 'refs/heads/main',
+                path: 'models/graph.yml',
+                sha256: 'a'.repeat(64),
+              },
+              sqlArtifact: {
+                repo: 'org/repo',
+                gitRef: 'refs/heads/main',
+                path: 'models/model.sql',
+                sha256: 'b'.repeat(64),
+              },
+            },
+          }),
+        }),
+      })
+    );
+  });
+
+  it('returns 400 when preview provenance payload is malformed', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: {
+        buildPlan: vi.fn(async () => ({
+          plan: {
+            metadata: {
+              planId: VALID_PLAN_REF.planId,
+              planVersion: VALID_PLAN_REF.planVersion,
+              schemaVersion: VALID_PLAN_REF.schemaVersion,
+              contractVersion: '1.0.0',
+              inputHashSha256: VALID_PLAN_REF.sha256,
+              createdAtIso: '2026-04-05T00:00:00.000Z',
+            },
+            steps: [],
+          },
+          canonicalPlanJson: '{}',
+        })),
+      },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-provenance-invalid',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+          provenance: {
+            graphArtifact: {
+              repo: 'org/repo',
+              gitRef: 'refs/heads/main',
+              path: 'models/graph.yml',
+              sha256: 'not-a-sha256',
+            },
+            sqlArtifact: {
+              repo: 'org/repo',
+              gitRef: 'refs/heads/main',
+              path: 'models/model.sql',
+              sha256: 'b'.repeat(64),
+            },
+          },
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({ error: { type: 'bad_request', reason: 'invalid_plan_source' } });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+  });
+
   it('returns 500 on preview when planner throws an unexpected error', async () => {
     const reply = createReply();
     const logError = vi.fn();

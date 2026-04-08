@@ -28,6 +28,7 @@ import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapp
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 import { parseStartRunScope, type ParsedStartRunScope } from './startRunRouteScopeParser.js';
 import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
+import { parsePreviewProvenance } from './previewProvenanceParser.js';
 
 const START_RUN_ACTION = { kind: 'command', name: 'run:start' } as const;
 
@@ -87,13 +88,18 @@ export async function previewPlanRoute(
     sendHttpResponse(reply, mapRouteParseIssue(plannerEnvelope.issue));
     return;
   }
+  const provenance = parsePreviewProvenance(parsedBody.value.provenance);
+  if (!provenance.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(provenance.issue));
+    return;
+  }
 
   try {
     const requestedAtIso = authz.context.authorizedAt.toISOString();
     let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
     try {
       buildResult = await deps.planner.buildPlan({
-        ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext),
+        ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext, provenance.value),
         selection: { selectedNodeIds: selection.value },
         requestedBy: authz.context.principal.principalId,
         requestId: request.id,
@@ -250,8 +256,21 @@ function bindScopeToPlannerEnvelope(
   envelope: ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T>
     ? T
     : never,
-  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>
+  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>,
+  provenance: ReturnType<typeof parsePreviewProvenance> extends RouteParseResult<infer T>
+    ? T
+    : never
 ): ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T> ? T : never {
+  const observabilityExtra = envelope.observability?.extra ?? {};
+  const extraWithProvenance =
+    provenance === undefined
+      ? observabilityExtra
+      : {
+          ...observabilityExtra,
+          transformationFlowProvenance: provenance,
+        };
+  const hasExtra = Object.keys(extraWithProvenance).length > 0;
+
   return {
     ...envelope,
     observability: {
@@ -262,6 +281,7 @@ function bindScopeToPlannerEnvelope(
         'dvt.scope.projectId': context.projectId.value,
         'dvt.scope.environmentId': context.environmentId.value,
       },
+      ...(hasExtra ? { extra: extraWithProvenance } : {}),
     },
   };
 }
