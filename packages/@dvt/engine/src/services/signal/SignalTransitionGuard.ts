@@ -25,9 +25,8 @@ export class SignalTransitionGuard {
     req: SignalRequest,
     eventType: GuardedRunEventType
   ): Promise<'allowed' | 'already_applied'> {
-    const storedSnap = await this.deps.stateStoreRead.getSnapshot(meta.tenantId, meta.runId);
     const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
-    const baseSnap = storedSnap ?? this.rebuildWorkflowSnapshot(meta.runId, events);
+    const baseSnap = this.rebuildWorkflowSnapshot(meta.runId, events);
     if (this.isAlreadyApplied(baseSnap, events, req)) {
       return 'already_applied';
     }
@@ -77,15 +76,15 @@ export class SignalTransitionGuard {
     events: readonly EventEnvelope[],
     req: SignalRequest
   ): boolean {
+    const lastPauseResumeEvent = this.lastPauseResumeEventType(events);
+
     if (req.type === 'PAUSE') {
       return snapshot.status === 'PAUSED' || snapshot.paused;
     }
 
     if (req.type === 'RESUME') {
       return (
-        snapshot.status === 'RUNNING' &&
-        !snapshot.paused &&
-        this.lastPauseResumeEventType(events) === 'RunResumed'
+        snapshot.status === 'RUNNING' && !snapshot.paused && lastPauseResumeEvent === 'RunResumed'
       );
     }
 

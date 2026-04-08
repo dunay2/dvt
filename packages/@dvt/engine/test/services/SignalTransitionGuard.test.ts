@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import type { IRunStateStoreRead, WorkflowSnapshot } from '../../src/ports/IRunStateStore.js';
 import { SignalTransitionGuard } from '../../src/services/signal/SignalTransitionGuard.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -36,17 +37,43 @@ async function appendRunLifecycleEvent(
   ]);
 }
 
+function readStoreWithSnapshot(
+  store: InMemoryTxStore,
+  snapshot: WorkflowSnapshot
+): IRunStateStoreRead {
+  return {
+    getRunMetadataByRunId(tenantId, runId) {
+      return store.getRunMetadataByRunId(tenantId, runId);
+    },
+    listEvents(tenantId, runId, options) {
+      return store.listEvents(tenantId, runId, options);
+    },
+    listRuns(options) {
+      return store.listRuns(options);
+    },
+    async getSnapshot() {
+      return snapshot;
+    },
+  };
+}
+
 describe('SignalTransitionGuard', () => {
-  it('allows PAUSE on a running run without persisting a transient lifecycle event', async () => {
+  it('allows PAUSE from event-authoritative running state without persisting a transient lifecycle event', async () => {
     const store = new InMemoryTxStore();
     await bootstrapQueuedRun(store, 'guard-pause-1');
     await appendRunStarted(store, 'guard-pause-1');
     const meta = await store.getRunMetadataByRunId('t', 'guard-pause-1');
     if (!meta) throw new Error('expected run metadata');
+    const persistedSnapshot = await store.getSnapshot('t', 'guard-pause-1');
+    if (!persistedSnapshot) throw new Error('expected workflow snapshot');
 
     const beforeEventTypes = (await store.listEvents('t', 'guard-pause-1')).map((e) => e.eventType);
     const guard = new SignalTransitionGuard({
-      stateStoreRead: store,
+      stateStoreRead: readStoreWithSnapshot(store, {
+        ...persistedSnapshot,
+        status: 'PENDING',
+        paused: false,
+      }),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-04-07T00:00:00.000Z'),
     });
@@ -134,5 +161,77 @@ describe('SignalTransitionGuard', () => {
     await expect(
       guard.assertAllowed(meta, { signalId: 'sig-guard-pause-3', type: 'PAUSE' }, 'RunPaused')
     ).resolves.toBe('allowed');
+  });
+
+  it('returns already_applied for PAUSE when snapshot is stale but latest runtime event is RunPaused', async () => {
+    const store = new InMemoryTxStore();
+    await bootstrapQueuedRun(store, 'guard-pause-stale-1');
+    await appendRunStarted(store, 'guard-pause-stale-1');
+    await appendRunLifecycleEvent(
+      store,
+      'guard-pause-stale-1',
+      'RunPaused',
+      '2026-04-07T00:00:01.000Z'
+    );
+    const meta = await store.getRunMetadataByRunId('t', 'guard-pause-stale-1');
+    if (!meta) throw new Error('expected run metadata');
+
+    const persistedSnapshot = await store.getSnapshot('t', 'guard-pause-stale-1');
+    if (!persistedSnapshot) throw new Error('expected workflow snapshot');
+
+    const guard = new SignalTransitionGuard({
+      stateStoreRead: readStoreWithSnapshot(store, {
+        ...persistedSnapshot,
+        status: 'PENDING',
+        paused: false,
+      }),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-04-07T00:00:02.000Z'),
+    });
+
+    await expect(
+      guard.assertAllowed(meta, { signalId: 'sig-guard-pause-stale-1', type: 'PAUSE' }, 'RunPaused')
+    ).resolves.toBe('already_applied');
+  });
+
+  it('returns already_applied for RESUME when snapshot is stale but latest runtime event is RunResumed', async () => {
+    const store = new InMemoryTxStore();
+    await bootstrapQueuedRun(store, 'guard-resume-stale-1');
+    await appendRunStarted(store, 'guard-resume-stale-1');
+    await appendRunLifecycleEvent(
+      store,
+      'guard-resume-stale-1',
+      'RunPaused',
+      '2026-04-07T00:00:01.000Z'
+    );
+    await appendRunLifecycleEvent(
+      store,
+      'guard-resume-stale-1',
+      'RunResumed',
+      '2026-04-07T00:00:02.000Z'
+    );
+    const meta = await store.getRunMetadataByRunId('t', 'guard-resume-stale-1');
+    if (!meta) throw new Error('expected run metadata');
+
+    const persistedSnapshot = await store.getSnapshot('t', 'guard-resume-stale-1');
+    if (!persistedSnapshot) throw new Error('expected workflow snapshot');
+
+    const guard = new SignalTransitionGuard({
+      stateStoreRead: readStoreWithSnapshot(store, {
+        ...persistedSnapshot,
+        status: 'PAUSED',
+        paused: true,
+      }),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-04-07T00:00:03.000Z'),
+    });
+
+    await expect(
+      guard.assertAllowed(
+        meta,
+        { signalId: 'sig-guard-resume-stale-1', type: 'RESUME' },
+        'RunResumed'
+      )
+    ).resolves.toBe('already_applied');
   });
 });
