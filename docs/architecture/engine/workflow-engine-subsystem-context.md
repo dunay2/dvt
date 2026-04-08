@@ -36,6 +36,9 @@ Key governing boundaries:
   engine-owned resolver port where needed.
 - `apps/api` and other composition roots wire concrete adapters and pass them to
   engine-owned ports.
+- `@dvt/engine/src/**` must not import `@dvt/planner` or concrete provider
+  adapters such as `@dvt/adapter-temporal`; that boundary is enforced in lint so
+  it does not remain convention-only.
 
 ## Current inbound and outbound flows
 
@@ -51,6 +54,7 @@ Current southbound dependencies:
 
 - run state read/write stores
 - start-run intent store
+- executable plan fetcher
 - provider adapter map
 - run execution context resolver seam
 - observability facade
@@ -64,6 +68,7 @@ flowchart LR
   StartRun --> Ports["Engine ports"]
   Core --> Ports
   Ports --> State["Run state store adapter"]
+  Ports --> PlanStore["Plan fetcher / plan store adapter"]
   Ports --> Intent["StartRun intent store adapter"]
   Ports --> Provider["Provider adapter (Temporal/Conductor/Mock)"]
   Ports --> RunCtx["RunExecutionContext resolver seam"]
@@ -125,6 +130,7 @@ sequenceDiagram
   participant Engine as WorkflowEngine
   participant Guard as StartRunAdmissionGuard
   participant Coord as StartRunCoordinator
+  participant PlanStore as IPlanFetcher
   participant Intent as IStartRunIntentStore
   participant Adapter as IProviderAdapter
   participant State as IRunStateStoreWrite
@@ -133,8 +139,10 @@ sequenceDiagram
   Engine->>Guard: assertStartRunAllowed(planRef, resolvedContext)
   Guard->>Guard: validate preconditions + capabilities + rate limit
   Guard->>Coord: admission passed
+  Coord->>PlanStore: fetch executable plan bytes
+  Coord->>Coord: parse + validate metadata + recompute planId
   Coord->>Intent: createIntent(...)
-  Coord->>Adapter: startRun(planRef, resolvedContext)
+  Coord->>Adapter: startRun(verifiedPlan, planRef, resolvedContext)
   Coord->>State: persist run bootstrap/events
   Coord->>Intent: markDispatched/markResolved
   Coord-->>Engine: EngineRunRef
@@ -175,6 +183,7 @@ sequenceDiagram
 - event-sourced execution authority and replayable status model
 - explicit CQRS split (`getRunStatus` vs `enrichRunStatus`)
 - crash-consistency intent-log model around `startRun`
+- single engine-side proof that fetched bytes match `planId` before dispatch
 - provider runtimes remain behind adapter contract
 - policy-object direction already exists on start-run path
 - `runExecutionContextRef` admission hardening is now explicit

@@ -71,8 +71,8 @@ Code baseline used for this state snapshot:
 
 ## Evidence links
 
-- [ED-20260328-lineage-outbox-retry-scheduling](../../evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md)
-- [ED-20260328-adapter-runtime-sonar-closeout](../../evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md)
+- [ED-20260328-lineage-outbox-retry-scheduling](../../../evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md)
+- [ED-20260328-adapter-runtime-sonar-closeout](../../../evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md)
 
 ## Next steps
 

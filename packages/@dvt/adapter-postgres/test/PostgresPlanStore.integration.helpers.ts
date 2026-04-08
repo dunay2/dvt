@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { PlannerBuildResultV1 } from '@dvt/contracts';
+import { jcsCanonicalize, type PlannerBuildResultV1 } from '@dvt/contracts';
 import { Client } from 'pg';
 import { describe } from 'vitest';
 
@@ -62,28 +62,28 @@ export async function createPgClient(): Promise<Client> {
 }
 
 export function makeBuildResult(planId: string): PlannerBuildResultV1 {
-  return {
-    plan: {
-      metadata: {
-        planId,
-        planVersion: '1.0',
-        schemaVersion: 'v1.2',
-        contractVersion: '1.0.0',
-        inputHashSha256: '1'.repeat(64),
-        createdAtIso: NOW,
-      },
-      steps: [{ stepId: `${planId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
+  const steps = [{ stepId: `${planId}.step`, kind: 'DBT_MODEL', dependsOn: [] }];
+  const plan = {
+    metadata: {
+      planId,
+      planVersion: '1.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256: '1'.repeat(64),
+      createdAtIso: NOW,
     },
-    canonicalPlanJson: JSON.stringify({
+    steps,
+  };
+
+  return {
+    plan,
+    executionPolicy: {},
+    canonicalPlanCoreJson: jcsCanonicalize({
       metadata: {
-        planId,
-        planVersion: '1.0',
-        schemaVersion: 'v1.2',
-        contractVersion: '1.0.0',
-        inputHashSha256: '1'.repeat(64),
-        createdAtIso: NOW,
+        planVersion: plan.metadata.planVersion,
+        inputHashSha256: plan.metadata.inputHashSha256,
       },
-      steps: [{ stepId: `${planId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
+      steps,
     }),
   };
 }

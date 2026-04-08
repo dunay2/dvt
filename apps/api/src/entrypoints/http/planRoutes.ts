@@ -9,6 +9,11 @@ import type {
 import { parseRunContext } from '@dvt/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import {
+  formatManifestArtifactResolutionReason,
+  isManifestArtifactResolutionError,
+  mapManifestArtifactResolutionCause,
+} from '../../application/errors/ManifestArtifactResolutionError.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
@@ -85,13 +90,24 @@ export async function previewPlanRoute(
 
   try {
     const requestedAtIso = authz.context.authorizedAt.toISOString();
-    const buildResult = await deps.planner.buildPlan({
-      ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext),
-      selection: { selectedNodeIds: selection.value },
-      requestedBy: authz.context.principal.principalId,
-      requestId: request.id,
-      requestedAtIso,
-    });
+    let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
+    try {
+      buildResult = await deps.planner.buildPlan({
+        ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext),
+        selection: { selectedNodeIds: selection.value },
+        requestedBy: authz.context.principal.principalId,
+        requestId: request.id,
+        requestedAtIso,
+      });
+    } catch (error) {
+      const manifestResolutionResponse = mapManifestResolutionFailure(error);
+      if (manifestResolutionResponse !== null) {
+        sendHttpResponse(reply, manifestResolutionResponse);
+        return;
+      }
+      throw error;
+    }
+
     const planRef = await deps.planStore.storePlan(buildResult);
     const validation = await deps.planValidator.validatePlan(planRef, routeContext.targetAdapter);
     if (validation.status === 'ERROR') {
@@ -263,4 +279,21 @@ function isPlanOwnedByScope(
     tags['dvt.scope.projectId'] === context.projectId.value &&
     tags['dvt.scope.environmentId'] === context.environmentId.value
   );
+}
+
+function mapManifestResolutionFailure(
+  error: unknown
+): ReturnType<typeof createHttpErrorResponse> | null {
+  if (!isManifestArtifactResolutionError(error)) {
+    return null;
+  }
+
+  return createHttpErrorResponse({
+    type: HTTP_ERROR_TYPE.unprocessable,
+    reason: HTTP_ERROR_REASON.planRejected,
+    details: {
+      message: formatManifestArtifactResolutionReason(error.kind, error.detail),
+      cause: mapManifestArtifactResolutionCause(error.kind),
+    },
+  });
 }

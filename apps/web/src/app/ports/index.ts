@@ -20,3 +20,7 @@ export type {
   ImportSourcesInput,
   ImportSourcesResult,
 } from './workspace';
+
+export type { SessionContextPort, WorkspaceScope } from './sessionContext';
+export type { ShellFeedbackPort } from './shellFeedback';
+export type { CapabilitiesPort } from './capabilities';

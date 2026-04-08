@@ -53,7 +53,7 @@ Evidence:
 - `packages/@dvt/contracts/src/ports/artifact-store.ts`
 - `packages/@dvt/artifacts/src/ports/ICompiledCodeStorage.ts`
 - [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [Contracts domain ownership migration plan](../proposals/contracts-domain-ownership-migration-plan-20260327.md)
+- [Contracts domain ownership migration plan](../proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)
 
 Problem:
 
@@ -248,4 +248,4 @@ S08 is important and implementable, but the repository should not advance it as
 - [ADR-0040](../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
 - [ADR-0041](../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
 - [ADR-0042](../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
-- [S08 execution plan](../proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [S08 execution plan](../proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

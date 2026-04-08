@@ -1,5 +1,27 @@
 # Changelog
 
+## [5.11.0](https://github.com/dunay2/dvt/compare/v5.10.0...v5.11.0) (2026-04-07)
+
+
+### Features
+
+* **engine:** Centralize plan integrity verification at engine entry ([#819](https://github.com/dunay2/dvt/issues/819)) ([1aab09d](https://github.com/dunay2/dvt/commit/1aab09d6ecaf50cc1a48d60a78192bdee36f995e))
+* **planner:** Generalize runtime boundaries and planner hardening ([#813](https://github.com/dunay2/dvt/issues/813)) ([a9b5043](https://github.com/dunay2/dvt/commit/a9b50435fc6271405a17ecec352fcb0fa0e33a87))
+* **planner:** Generalize runtime boundaries and planner hardening ([#814](https://github.com/dunay2/dvt/issues/814)) ([f555d2a](https://github.com/dunay2/dvt/commit/f555d2ae4591cbf1cceb6bfcc4c0776571b436fc))
+* **web:** Add live run console terminal ([#811](https://github.com/dunay2/dvt/issues/811)) ([c51dbe2](https://github.com/dunay2/dvt/commit/c51dbe2fc5bc78790710dbac36462ee2597fbbb5))
+* **web:** Add workspace code explorer view ([#812](https://github.com/dunay2/dvt/issues/812)) ([37ddc68](https://github.com/dunay2/dvt/commit/37ddc68a953f4414079a913576c9dfba30982852))
+* **web:** Embed Monaco review surfaces and align runtime capabilities ([#809](https://github.com/dunay2/dvt/issues/809)) ([d976226](https://github.com/dunay2/dvt/commit/d9762261cd7e8e98a51747c19933a5ea1804a4b1))
+* **web:** Harden transformation flow and align F-23 docs ([#817](https://github.com/dunay2/dvt/issues/817)) ([dcd46af](https://github.com/dunay2/dvt/commit/dcd46af99d7983d15f3e0a9f77bc729b4ad55638))
+
+
+### Bug Fixes
+
+* **api:** Harden plan preview manifest errors and integration QA evidence ([#822](https://github.com/dunay2/dvt/issues/822)) ([1ba10f4](https://github.com/dunay2/dvt/commit/1ba10f4591f48cbc6fa54947813836a55b8b03a4))
+* **engine:** Preserve step-kind registry and plan fingerprint wiring ([#815](https://github.com/dunay2/dvt/issues/815)) ([a054d3a](https://github.com/dunay2/dvt/commit/a054d3a5a4a35c93e69220d2c49c978864b23ff3))
+* **engine:** Reinstate plan hash validation and guard Temporal start payloads ([#820](https://github.com/dunay2/dvt/issues/820)) ([6015290](https://github.com/dunay2/dvt/commit/60152907d3d44169fc0f25eb49e8fcbf7c963355))
+* **web:** Stabilize Cypress runtime contract tests in Docker ([#825](https://github.com/dunay2/dvt/issues/825)) ([31acb84](https://github.com/dunay2/dvt/commit/31acb845b9955d81883ac114cae9f46601ac4e7a))
+* **web:** Stabilize web tests and fix kafka proposal references ([#816](https://github.com/dunay2/dvt/issues/816)) ([9f5778b](https://github.com/dunay2/dvt/commit/9f5778bf3f6030a5f0ebfef495f610b4f5dbe66b))
+
 ## [5.10.0](https://github.com/dunay2/dvt/compare/v5.9.0...v5.10.0) (2026-04-05)
 
 

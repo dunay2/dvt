@@ -26,6 +26,7 @@ See also:
 | ------------------------------ | -------------------------------- | -------------------------------------------------------------- |
 | Full workspace build           | `pnpm build`                     | [`package.json`](../../package.json)                           |
 | Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                           |
+| Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                           |
 | Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                           |
 | Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                           |
 | Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                           |
@@ -49,6 +50,7 @@ See also:
 | Capability                         | Command                                                                    | Scope                                | Source                                                                             |
 | ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
 | Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web`                           | [`apps/web/package.json`](../../apps/web/package.json)                             |
+| Web app E2E (Cypress)              | `pnpm --filter @dvt/web test:e2e`                                          | `apps/web` browser runtime contract  | [`apps/web/package.json`](../../apps/web/package.json)                             |
 | Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json)                                               |
 | Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
 | Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |

@@ -8,7 +8,7 @@
  * Scope:
  *   - Engine rejects runs when adapter does not support required capabilities.
  *   - Engine accepts runs when adapter supports all required capabilities.
- *   - Engine skips validation when PlanRef has no requiresCapabilities.
+ *   - Engine skips validation when executionPolicy has no requiresCapabilities.
  *   - Engine skips validation when adapter omits capabilities() (graceful degradation).
  *   - Matrix drift gate: adapter.capabilities() must match adapters.capabilities.json.
  */
@@ -16,7 +16,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { PlanRef } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type PlanRef,
+  type RunExecutionPolicy,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
@@ -26,8 +30,13 @@ import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import { ENGINE_ERROR_MESSAGE_KEY } from '../../src/contracts/errors.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { sha256Hex } from '../../src/utils/sha256.js';
-import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanFetcherForPlan,
+  makePlanRefForPlan,
+  makeProviderMap,
+} from '../helpers/workflowEngine.fixture.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -47,23 +56,11 @@ function resolveMatrixPath(): string {
 
 const MATRIX_PATH = resolveMatrixPath();
 
-function utf8(s: string): Uint8Array {
-  return new TextEncoder().encode(s);
+function makePlanRef(): PlanRef {
+  return makePlanRefForPlan(CAPABILITY_PLAN, 'https://plans.example.com/cap-test.json');
 }
 
-function makePlanRef(requiresCapabilities?: string[]): PlanRef {
-  const body = JSON.stringify({ id: 'cap-test' });
-  const bytes = utf8(body);
-  return {
-    uri: 'https://plans.example.com/cap-test.json',
-    sha256: sha256Hex(bytes),
-    schemaVersion: 'v1.2',
-    planId: 'cap-test',
-    planVersion: '1.0',
-    sizeBytes: bytes.byteLength,
-    ...(requiresCapabilities === undefined ? {} : { requiresCapabilities }),
-  };
-}
+const CAPABILITY_PLAN = makeDefaultExecutionPlan();
 
 function makeCtx(runId: string): {
   tenantId: string;
@@ -81,7 +78,10 @@ function makeCtx(runId: string): {
   };
 }
 
-function createEngine(adapter?: IProviderAdapter): {
+function createEngine(
+  adapter?: IProviderAdapter,
+  executionPolicy: RunExecutionPolicy = {}
+): {
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   mock: MockAdapter;
 } {
@@ -97,6 +97,7 @@ function createEngine(adapter?: IProviderAdapter): {
     projector,
     observability: createNoopObservability(),
     adapters: makeProviderMap(effective),
+    planFetcher: makePlanFetcherForPlan(CAPABILITY_PLAN, executionPolicy),
   });
 
   return { engine, mock };
@@ -105,42 +106,43 @@ function createEngine(adapter?: IProviderAdapter): {
 // ─── Engine capability gate ───────────────────────────────────────────────────
 
 describe('capability gate — engine enforces requiresCapabilities', () => {
-  it('accepts a run when PlanRef has no requiresCapabilities', async () => {
+  it('accepts a run when executionPolicy has no requiresCapabilities', async () => {
     const { engine } = createEngine();
     await expect(engine.startRun(makePlanRef(), makeCtx('cap-none-1'))).resolves.toMatchObject({
       provider: 'mock',
     });
   });
 
-  it('accepts a run when PlanRef.requiresCapabilities is empty', async () => {
-    const { engine } = createEngine();
-    await expect(engine.startRun(makePlanRef([]), makeCtx('cap-empty-1'))).resolves.toMatchObject({
+  it('accepts a run when executionPolicy.requiresCapabilities is empty', async () => {
+    const { engine } = createEngine(undefined, { requiresCapabilities: [] });
+    await expect(engine.startRun(makePlanRef(), makeCtx('cap-empty-1'))).resolves.toMatchObject({
       provider: 'mock',
     });
   });
 
   it('accepts a run when adapter supports all required capabilities', async () => {
-    const { engine } = createEngine();
-    await expect(
-      engine.startRun(
-        makePlanRef(['basic-execution', 'workflow.fan.parallel']),
-        makeCtx('cap-ok-1')
-      )
-    ).resolves.toMatchObject({ provider: 'mock' });
+    const { engine } = createEngine(undefined, {
+      requiresCapabilities: ['basic-execution', 'workflow.fan.parallel'],
+    });
+    await expect(engine.startRun(makePlanRef(), makeCtx('cap-ok-1'))).resolves.toMatchObject({
+      provider: 'mock',
+    });
   });
 
   it('rejects with CAPABILITIES_NOT_SUPPORTED when adapter lacks a required capability', async () => {
-    const { engine } = createEngine();
-    await expect(
-      engine.startRun(makePlanRef(['signal.pause.emulated']), makeCtx('cap-bad-1'))
-    ).rejects.toMatchObject({ code: 'CAPABILITIES_NOT_SUPPORTED' });
+    const { engine } = createEngine(undefined, {
+      requiresCapabilities: ['signal.pause.emulated'],
+    });
+    await expect(engine.startRun(makePlanRef(), makeCtx('cap-bad-1'))).rejects.toMatchObject({
+      code: 'CAPABILITIES_NOT_SUPPORTED',
+    });
   });
 
   it('exposes i18n key and params for unsupported capability errors', async () => {
-    const { engine } = createEngine();
-    const err = await engine
-      .startRun(makePlanRef(['query.workflow.state']), makeCtx('cap-bad-2'))
-      .catch((e: unknown) => e);
+    const { engine } = createEngine(undefined, {
+      requiresCapabilities: ['query.workflow.state'],
+    });
+    const err = await engine.startRun(makePlanRef(), makeCtx('cap-bad-2')).catch((e: unknown) => e);
     expect(err).toMatchObject({ code: 'CAPABILITIES_NOT_SUPPORTED' });
     expect((err as { messageKey?: string }).messageKey).toBe(
       ENGINE_ERROR_MESSAGE_KEY.CAPABILITIES_NOT_SUPPORTED
@@ -163,13 +165,16 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
       cancelRun: base.cancelRun.bind(base),
       getRunStatus: base.getRunStatus.bind(base),
       signal: base.signal.bind(base),
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
       // capabilities intentionally absent
     };
-    const { engine } = createEngine(noCapAdapter);
+    const { engine } = createEngine(noCapAdapter, {
+      requiresCapabilities: ['any.capability.whatsoever'],
+    });
     // Engine should skip the capability check and proceed normally.
-    await expect(
-      engine.startRun(makePlanRef(['any.capability.whatsoever']), makeCtx('cap-skip-1'))
-    ).resolves.toMatchObject({ provider: 'mock' });
+    await expect(engine.startRun(makePlanRef(), makeCtx('cap-skip-1'))).resolves.toMatchObject({
+      provider: 'mock',
+    });
   });
 });
 

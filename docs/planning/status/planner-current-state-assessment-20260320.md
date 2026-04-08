@@ -174,7 +174,7 @@ That average is less important than the shape of the profile:
   `NodeSelector`, `PlanAssembler`, `resolvePolicies`, and `StepFactory`.
 - Determinism is treated as a first-class behavior:
   `planId = sha256(JCS(planCore))`,
-  `canonicalPlanJson` is returned,
+  `canonicalPlanCoreJson` is returned,
   and fixed-vector plus cross-runtime tests exist.
 - `IStepTypeRegistry` and `StepTypeRegistry` exist in `@dvt/contracts`.
 - `compiledCodeRef` enrichment exists via `attachCompiledCodeRefs`, with the
@@ -230,7 +230,7 @@ flowchart LR
     Factory[dbtStepFactory or custom StepFactory]
     Registry[IStepTypeRegistry]
     Assembler[PlanAssembler]
-    Plan[ExecutionPlanV2 + canonicalPlanJson]
+    Plan[ExecutionPlanV2 + canonicalPlanCoreJson]
     Enrich[attachCompiledCodeRefs]
     Verifier[@dvt/plan-verifier]
     Bridge[planner -> engine bridge]
@@ -354,8 +354,8 @@ sequenceDiagram
     Core->>Registry: validate stepTypeConfig for built steps
     Registry-->>Core: success or error
     Core->>Assembler: assemble plan core and canonical JSON
-    Assembler-->>Core: plan + canonicalPlanJson
-    Core-->>Facade: plan + canonicalPlanJson
+    Assembler-->>Core: plan + canonicalPlanCoreJson
+    Core-->>Facade: plan + canonicalPlanCoreJson
     Facade-->>Caller: PlannerBuildResultV2
 ```
 
@@ -374,7 +374,7 @@ stateDiagram-v2
 
     note right of CanonicalPlanBuilt
       The planner returns a canonical plan and
-      canonicalPlanJson, but the persisted
+      canonicalPlanCoreJson, but the persisted
       VALID / INVALID lifecycle is still
       mostly contract-level rather than runtime-level.
     end note

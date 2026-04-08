@@ -63,7 +63,7 @@ tasks:
     evidence_refs:
       - docs/evidence/supporting/ED-20260329-mvp-c1-backend-control-plane-runbook.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason:
       The runbook already had accepted evidence, and the final `MVP-A1`/`MVP-B1` dependency chain is
       now closed.
@@ -318,7 +318,7 @@ tasks:
   - task_id: AR-C1-T1
     parent_task: AR-C1
     priority: P0
-    status: queued
+    status: done
     objective: >-
       reduce duplication in admin route unit coverage by extracting reusable test builders for app
       setup and route injection while preserving the current authorization matrix assertions.
@@ -328,17 +328,18 @@ tasks:
       keeps behavior-equivalent assertions for 401/403/400/404/500/success paths.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t1-admin-route-test-harness-closeout.md
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
     status_reason: >-
-      The current test suite is behavior-correct but still has setup/injection duplication that
-      slows future policy changes.
-    last_verified: '2026-04-03'
+      The admin route unit suite now uses a reusable local request harness for setup, injection, and
+      teardown while preserving the existing authorization and error-path assertions.
+    last_verified: '2026-04-07'
   - task_id: AR-C1-T2
     parent_task: AR-C1
     priority: P0
-    status: queued
+    status: done
     objective: >-
       add negative contract coverage for AdminRebuildSnapshotAccess schema so governance detects
       invalid requiredAction/pipeline drift, not only happy-path constants.
@@ -348,18 +349,21 @@ tasks:
       admin action or pipeline order) against `AdminRebuildSnapshotAccess.v1.schema.json`.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t2-admin-rebuild-snapshot-contract-schema-closeout.md
+      - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
       - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.schema.json
       - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
     status_reason: >-
-      Current contract test coverage is positive-only and can miss schema regressions that still
-      parse as JSON.
-    last_verified: '2026-04-03'
+      The canonical access contract now exists as a governed Markdown/schema pair and the API
+      contract suite validates both the positive contract object and negative mutations for invalid
+      admin action and pipeline-order drift.
+    last_verified: '2026-04-07'
   - task_id: AR-C1-T3
     parent_task: AR-C1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       add protected-runtime composition tests proving admin routes stay disabled when OIDC runtime
       prerequisites are missing even if `DVT_ADMIN_ROUTES_ENABLED=true`.
@@ -369,14 +373,17 @@ tasks:
       path is reachable without protected-runtime auth composition.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md
+      - apps/api/test/app.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
       - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
     status_reason: >-
-      Route-level RBAC is implemented, but composition-level activation semantics still need an
-      explicit integration guardrail.
-    last_verified: '2026-04-03'
+      Composition-level bootstrap tests now prove protected and admin routes remain unmounted when
+      `DVT_ADMIN_ROUTES_ENABLED=true` but OIDC prerequisites are absent or partial, closing the
+      remaining admin-route activation guardrail.
+    last_verified: '2026-04-07'
   - task_id: AR-C1-T4
     parent_task: AR-C1
     priority: P1

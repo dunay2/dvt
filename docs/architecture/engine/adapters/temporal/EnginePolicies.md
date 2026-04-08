@@ -49,7 +49,8 @@ Primary implementation references:
   - `PAUSE` → workflow signal `pause`
   - `RESUME` → workflow signal `resume`
   - `CANCEL` → provider-native `workflow.cancel()`
-- `RETRY_STEP` and `RETRY_RUN` are explicitly not implemented and throw `NotImplemented`.
+- `RETRY_RUN` remains explicitly not implemented on the provider signal path and throws `NotImplemented`.
+- `RETRY_STEP` is no longer part of the canonical signal path; any future step retry must use a dedicated use-case boundary.
 
 ### 2.2 Workflow handlers
 
@@ -231,7 +232,7 @@ The following were previously documented as normative but are **not implemented*
 - Workflow history byte-size estimation and rotation thresholds.
 - Signal payload size/rate enforcement inside adapter/workflow.
 - Per-step activity timeout override matrix.
-- Implemented runtime handling for `RETRY_STEP` / `RETRY_RUN`.
+- Implemented runtime handling for canonical control signals; `RETRY_RUN` remains unsupported on `signal(...)`.
 
 These should be treated as backlog policies until corresponding code lands in `packages/@dvt/adapter-temporal/src`.
 

@@ -13,7 +13,7 @@ describe('IWorkflowEngine contract types', () => {
     const ref: PlanRef = {
       uri: 'https://example.com/plan',
       sha256: 'abc',
-      schemaVersion: 'v1.1',
+      schemaVersion: 'v1.2',
       planId: 'plan-1',
       planVersion: '1.0',
     };

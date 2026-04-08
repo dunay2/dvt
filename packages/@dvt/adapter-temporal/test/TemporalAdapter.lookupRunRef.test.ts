@@ -21,6 +21,7 @@ const BASE_CONFIG = {
   taskQueue: 'q-main',
   connectTimeoutMs: 5000,
   requestTimeoutMs: 10000,
+  maxStartPayloadBytes: 2_000_000,
   continueAsNewAfterLayerCount: 0,
 };
 

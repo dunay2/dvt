@@ -39,4 +39,4 @@ flowchart LR
 ## References
 
 - [Domain - Event Lifecycle And Retention](../../domains/event-lifecycle-and-retention.md)
-- [Gap 5 Event Lifecycle Design](../../proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+- [Gap 5 Event Lifecycle Design](../../archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)

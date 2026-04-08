@@ -3,6 +3,7 @@ import type {
   IPlanExecutabilityValidator,
   IStepTypeRegistry,
   PlanRefSchemaT,
+  RunExecutionPolicy,
 } from '@dvt/contracts';
 import {
   collectRequiredCapabilitiesForSteps,
@@ -46,9 +47,11 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     const stepTypeRegistry = this.deps.stepTypeRegistry ?? createDefaultStepTypeRegistry();
 
     let plan: ExecutionPlan;
+    let artifactExecutionPolicy: RunExecutionPolicy = {};
     try {
-      const bytes = await this.deps.fetcher.fetchForValidation(validatedRef);
-      plan = parseStoredExecutablePlan(bytes, {
+      const artifact = await this.deps.fetcher.fetchForValidation(validatedRef);
+      artifactExecutionPolicy = artifact.executionPolicy;
+      plan = parseStoredExecutablePlan(artifact.bytes, {
         stepTypeRegistry,
       });
     } catch (error) {
@@ -93,8 +96,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
 
     const requiredCapabilities = dedupeCapabilities([
       ...collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps),
-      ...(plan.metadata.requiresCapabilities ?? []),
-      ...(validatedRef.requiresCapabilities ?? []),
+      ...(artifactExecutionPolicy.requiresCapabilities ?? []),
     ]);
     const declaredCapabilities = adapter.capabilities?.();
     if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {
@@ -141,12 +143,6 @@ function validatePlanRefAlignment(plan: ExecutionPlan, planRef: PlanRefSchemaT):
   }
   if (plan.metadata.schemaVersion !== planRef.schemaVersion) {
     return 'PLAN_REF_MISMATCH: schemaVersion';
-  }
-  if (
-    planRef.pluginCompatibilityFingerprint !== undefined &&
-    plan.metadata.pluginCompatibilityFingerprint !== planRef.pluginCompatibilityFingerprint
-  ) {
-    return 'PLAN_REF_MISMATCH: pluginCompatibilityFingerprint';
   }
   return null;
 }

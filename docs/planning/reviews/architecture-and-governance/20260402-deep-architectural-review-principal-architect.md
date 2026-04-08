@@ -106,7 +106,11 @@ signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>
 
 The `getRunStatus` / `enrichRunStatus` split per ADR-0015 is correct: the former reads from state only (no adapter dependency), the latter enriches from the provider. This keeps the hot read path fast and the diagnostic path honest about its latency cost.
 
-The `signal` method accepts typed `SignalRequest` with `type: 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_STEP' | 'RETRY_RUN'`. RETRY\_\* is marked as Phase 2 in the Temporal adapter. This is honest.
+At the time of this review, the `signal` method accepted typed `SignalRequest`
+with `type: 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_STEP' | 'RETRY_RUN'`.
+That April 2026 snapshot is now superseded by
+[ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md),
+which narrows `RETRY_STEP` out of canonical `SignalType`.
 
 **One concern:** `startRun` takes `PlanRef` which carries `requiresCapabilities`. The engine validates these against `adapter.capabilities()`. If the adapter doesn't implement `capabilities()`, validation is skipped. This is fail-open, which is documented but risky if a plan requires a capability the adapter cannot provide.
 

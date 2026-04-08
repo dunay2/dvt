@@ -16,12 +16,12 @@ planning_type: review
 
 ## 1. Governing sources used
 
-- [ADR-0012 — Plan Integrity Ownership](../../adr/ADR-0012-plan-integrity-ownership.md)
-- [ADR-0035 — Planner Public Contract Evolution Protocol](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
-- [PlanExecutabilityValidation.v1](../../../packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts)
-- [PlanValidationLifecycle.v1](../../../packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts)
-- [ExecutionPlan.v2 / PlannerInputEnvelopeV2](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
-- [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)
+- [ADR-0012 — Plan Integrity Ownership](../../../adr/ADR-0012-plan-integrity-ownership.md)
+- [ADR-0035 — Planner Public Contract Evolution Protocol](../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
+- [PlanExecutabilityValidation.v1](../../../../packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts)
+- [PlanValidationLifecycle.v1](../../../../packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts)
+- [ExecutionPlan.v1 / PlannerInputEnvelopeV1](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
+- [Testing and CI Capabilities](../../../guides/testing-and-ci-capabilities.md)
 
 ## 2. Executive summary
 
@@ -59,8 +59,8 @@ That matches the one-active-source rule in the planner boundary contract.
 
 Relevant implementation:
 
-- [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts)
-- [packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+- [apps/api/src/entrypoints/http/startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
+- [packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 
 ### 3.2. The high-level lifecycle ordering is aligned with the contract
 
@@ -76,8 +76,8 @@ That matches the lifecycle contract's required caller sequence.
 
 Relevant implementation:
 
-- [apps/api/src/application/services/PlannerBackedStartRunUseCase.ts](../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
-- [packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts)
+- [apps/api/src/application/services/PlannerBackedStartRunUseCase.ts](../../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
+- [packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts)
 
 ### 3.3. The store correctly gates runnable fetches by validation state
 
@@ -87,7 +87,7 @@ That is consistent with the rule that `startRun` must not proceed on a plan that
 
 Relevant implementation:
 
-- [packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts](../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts)
+- [packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts](../../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts)
 
 ### 3.4. Local tests cover the implemented happy path well
 
@@ -111,16 +111,16 @@ ADR-0012 is explicit: the execution-side owner must fetch bytes and verify `sha2
 
 The Temporal worker path has that shape:
 
-- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts) calls `fetchAndValidate` and then `validatePlanAgainstRef`.
+- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts) calls `fetchAndValidate` and then `validatePlanAgainstRef`.
 
 The remediation patch closes that gap by verifying the fetched bytes before parsing and by rejecting metadata mismatches on the stored executable plan path.
 
 #### Evidence
 
-- [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md) states under adapter responsibilities that adapters must verify `sha256(bytes) == PlanRef.sha256`.
-- [packages/@dvt/engine/src/adapters/mock/MockAdapter.ts](../../../packages/@dvt/engine/src/adapters/mock/MockAdapter.ts) still consumes an already parsed `ExecutionPlan`.
-- [apps/api/src/application/services/StoredExecutablePlanResolver.ts](../../../apps/api/src/application/services/StoredExecutablePlanResolver.ts) now hashes the stored bytes against `planRef.sha256` and rejects `PLAN_REF_MISMATCH` before returning the parsed plan.
-- [apps/api/test/application/services/StoredExecutablePlanResolver.test.ts](../../../apps/api/test/application/services/StoredExecutablePlanResolver.test.ts) now covers both SHA mismatch and metadata mismatch cases.
+- [ADR-0012](../../../adr/ADR-0012-plan-integrity-ownership.md) states under adapter responsibilities that adapters must verify `sha256(bytes) == PlanRef.sha256`.
+- [packages/@dvt/engine/src/adapters/mock/MockAdapter.ts](../../../../packages/@dvt/engine/src/adapters/mock/MockAdapter.ts) still consumes an already parsed `ExecutionPlan`.
+- [apps/api/src/application/services/StoredExecutablePlanResolver.ts](../../../../apps/api/src/application/services/StoredExecutablePlanResolver.ts) now hashes the stored bytes against `planRef.sha256` and rejects `PLAN_REF_MISMATCH` before returning the parsed plan.
+- [apps/api/test/application/services/StoredExecutablePlanResolver.test.ts](../../../../apps/api/test/application/services/StoredExecutablePlanResolver.test.ts) now covers both SHA mismatch and metadata mismatch cases.
 
 #### Why this is a spec violation
 
@@ -147,9 +147,9 @@ The remediation patch now:
 
 #### Evidence
 
-- [packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts](../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts) now reads the row back on conflict and throws `PLAN_STORE_CONFLICT` when the stored canonical/executable content differs.
+- [packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts](../../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts) now reads the row back on conflict and throws `PLAN_STORE_CONFLICT` when the stored canonical/executable content differs.
 - The same file now throws `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED` when a caller tries to reuse a row that is already `VALID` or `INVALID` via `storePlan()`.
-- [packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts) now covers identical pending reuse, conflicting collisions, and validated-plan reuse rejection.
+- [packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts](../../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts) and [packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts](../../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts) now cover identical pending reuse, conflicting collisions, and validated-plan reuse rejection.
 
 #### Why this is a spec violation
 
@@ -175,8 +175,8 @@ That means there is no canonical persisted answer to:
 
 #### Evidence
 
-- [packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts) validates by `(planRef, adapterId)`.
-- [packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts) persists only a single lifecycle state and rejection report per plan.
+- [packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts) validates by `(planRef, adapterId)`.
+- [packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts) persists only a single lifecycle state and rejection report per plan.
 - The remediation patch therefore rejects `storePlan()` reuse for already validated rows instead of pretending the reuse semantics are known.
 
 #### QA interpretation
@@ -204,7 +204,7 @@ The new test evidence shows the currently implemented behavior is:
 
 #### Evidence
 
-- [packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts) now proves that duplicate pending admission returns the same `PlanRef`, only one `markValid()` succeeds, and the second transition attempt is rejected.
+- [packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts](../../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts) now proves that duplicate pending admission returns the same `PlanRef`, only one `markValid()` succeeds, and the second transition attempt is rejected.
 
 #### QA interpretation
 
@@ -226,11 +226,11 @@ That is a strong product claim: planner-backed stored plans are not just buildab
 
 #### Evidence
 
-- [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts) allows `dvt-plan` in `planRefAllowedSchemes`.
+- [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts) allows `dvt-plan` in `planRefAllowedSchemes`.
 - The same module wires `StoredPlanExecutabilityValidator` against the adapter map for admission-time acceptance.
 - The protected integration test only proves the path for `targetAdapter: 'mock'`.
-- [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) now executes a planner-backed `dvt-plan://postgres/...` ref through the Temporal runtime and asserts that the fetch path receives that stored-plan reference.
-- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts) remains the integrity-enforcing execution boundary that fetches bytes and validates the plan against the ref.
+- [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) now executes a planner-backed `dvt-plan://postgres/...` ref through the Temporal runtime and asserts that the fetch path receives that stored-plan reference.
+- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts) remains the integrity-enforcing execution boundary that fetches bytes and validates the plan against the ref.
 
 #### QA interpretation
 
@@ -250,8 +250,8 @@ The validator now rejects plans that require capabilities when the target adapte
 
 #### Evidence
 
-- [apps/api/src/application/services/StoredPlanExecutabilityValidator.ts](../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts) now rejects capability-required plans when the adapter does not declare capabilities.
-- [apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts](../../../apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts) now covers the undeclared-capabilities case explicitly.
+- [apps/api/src/application/services/StoredPlanExecutabilityValidator.ts](../../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts) now rejects capability-required plans when the adapter does not declare capabilities.
+- [apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts](../../../../apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts) now covers the undeclared-capabilities case explicitly.
 
 #### QA interpretation
 
@@ -308,14 +308,14 @@ The most severe original evidence gaps were closed, but the protected-runtime Te
 
 ### 6.1. Code surfaces
 
-- [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts)
-- [apps/api/src/application/services/PlannerBackedStartRunUseCase.ts](../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
-- [apps/api/src/application/services/StoredPlanExecutabilityValidator.ts](../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts)
-- [apps/api/src/application/services/StoredExecutablePlanResolver.ts](../../../apps/api/src/application/services/StoredExecutablePlanResolver.ts)
-- [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
-- [packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts](../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts)
-- [packages/@dvt/engine/src/adapters/mock/MockAdapter.ts](../../../packages/@dvt/engine/src/adapters/mock/MockAdapter.ts)
-- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts)
+- [apps/api/src/entrypoints/http/startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
+- [apps/api/src/application/services/PlannerBackedStartRunUseCase.ts](../../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
+- [apps/api/src/application/services/StoredPlanExecutabilityValidator.ts](../../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts)
+- [apps/api/src/application/services/StoredExecutablePlanResolver.ts](../../../../apps/api/src/application/services/StoredExecutablePlanResolver.ts)
+- [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts](../../../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts)
+- [packages/@dvt/engine/src/adapters/mock/MockAdapter.ts](../../../../packages/@dvt/engine/src/adapters/mock/MockAdapter.ts)
+- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts)
 
 ### 6.2. Tests executed locally during this review
 

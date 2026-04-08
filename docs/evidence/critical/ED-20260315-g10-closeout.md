@@ -62,9 +62,9 @@ Fail-open is enforced at three boundaries:
 
 ## 3. Canonical spec
 
-- [G10 AI Execution Tracker](../archive/planning/gaps/G10-AI-EXECUTION-TRACKER.md)
-- [Gap Execution Plans - G10](../planning/gaps/GAP_EXECUTION_PLANS.md)
-- [G6 OpenLineage CI Schema Pin Plan](../planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+- [G10 AI Execution Tracker](../../archive/planning/gaps/G10-AI-EXECUTION-TRACKER.md)
+- [Gap Execution Plans - G10](../../planning/archive/gaps/GAP_EXECUTION_PLANS.md)
+- [G6 OpenLineage CI Schema Pin Plan](../../planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 
 ## 4. Code paths
 

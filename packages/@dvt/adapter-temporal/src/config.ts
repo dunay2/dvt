@@ -15,6 +15,11 @@ export interface TemporalAdapterConfig {
   connectTimeoutMs: number;
   requestTimeoutMs: number;
   /**
+   * Maximum serialized workflow start payload size accepted by the adapter
+   * before dispatching to Temporal.
+   */
+  maxStartPayloadBytes: number;
+  /**
    * Number of execution layers processed in a single workflow run before
    * triggering continue-as-new. `0` disables rollover.
    */
@@ -27,6 +32,7 @@ const DEFAULTS: TemporalAdapterConfig = {
   taskQueue: 'dvt-temporal',
   connectTimeoutMs: 5000,
   requestTimeoutMs: 10000,
+  maxStartPayloadBytes: 2_000_000,
   continueAsNewAfterLayerCount: 0,
 };
 
@@ -40,6 +46,10 @@ export function loadTemporalAdapterConfig(
     identity: toOptionalTrimmed(env.TEMPORAL_IDENTITY),
     connectTimeoutMs: parsePositiveInt(env.TEMPORAL_CONNECT_TIMEOUT_MS, DEFAULTS.connectTimeoutMs),
     requestTimeoutMs: parsePositiveInt(env.TEMPORAL_REQUEST_TIMEOUT_MS, DEFAULTS.requestTimeoutMs),
+    maxStartPayloadBytes: parsePositiveInt(
+      env.TEMPORAL_MAX_START_PAYLOAD_BYTES,
+      DEFAULTS.maxStartPayloadBytes
+    ),
     continueAsNewAfterLayerCount: parseNonNegativeInt(
       env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
       DEFAULTS.continueAsNewAfterLayerCount
@@ -62,6 +72,9 @@ export function validateTemporalAdapterConfig(cfg: TemporalAdapterConfig): void 
   }
   if (!Number.isInteger(cfg.requestTimeoutMs) || cfg.requestTimeoutMs <= 0) {
     throw new Error('TEMPORAL_CONFIG_INVALID: requestTimeoutMs must be a positive integer');
+  }
+  if (!Number.isInteger(cfg.maxStartPayloadBytes) || cfg.maxStartPayloadBytes <= 0) {
+    throw new Error('TEMPORAL_CONFIG_INVALID: maxStartPayloadBytes must be a positive integer');
   }
   if (!Number.isInteger(cfg.continueAsNewAfterLayerCount) || cfg.continueAsNewAfterLayerCount < 0) {
     throw new Error(

@@ -1,4 +1,4 @@
-﻿# Engine Operations
+# Engine Operations
 
 ## Purpose
 
@@ -21,4 +21,4 @@ readers to the canonical operational docs.
 - [Security](security.md)
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
-- [C4 Engine Diagram](c4-engine.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)

@@ -45,7 +45,7 @@ rebuilding an engine snapshot locally.
 
 ## Architectural intent
 
-- Aligns with [ADR-0015](../adr/ADR-0015-getRunStatus-read-model-separation.md):
+- Aligns with [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md):
   the authoritative run status remains the event-log projection on the engine
   path, while provider reads are enrichment-only and provider-native.
 - Keeps the adapter focused on provider concerns instead of duplicating engine

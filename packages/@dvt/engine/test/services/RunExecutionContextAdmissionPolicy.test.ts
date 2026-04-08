@@ -1,4 +1,9 @@
-import type { PlanRef, ResolvedRunContext, RunExecutionContext } from '@dvt/contracts';
+import type {
+  PlanRef,
+  ResolvedRunContext,
+  RunExecutionContext,
+  RunExecutionPolicy,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { RunExecutionContextAdmissionPolicy } from '../../src/services/startRun/RunExecutionContextAdmissionPolicy.js';
@@ -10,8 +15,14 @@ function makePlanRef(): PlanRef {
     schemaVersion: 'v1.2',
     planId: 'plan-1',
     planVersion: '1.0',
+  };
+}
+
+function makeExecutionPolicy(overrides?: Partial<RunExecutionPolicy>): RunExecutionPolicy {
+  return {
     pluginCompatibilityFingerprint:
       '1111111111111111111111111111111111111111111111111111111111111111',
+    ...overrides,
   };
 }
 
@@ -67,14 +78,16 @@ describe('RunExecutionContextAdmissionPolicy', () => {
       },
     });
 
-    await expect(policy.assertAllowed(makePlanRef(), makeContext())).resolves.toBeUndefined();
+    await expect(
+      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).resolves.toBeUndefined();
   });
 
   it('rejects when runExecutionContextRef is provided without resolver', async () => {
     const policy = new RunExecutionContextAdmissionPolicy();
-    await expect(policy.assertAllowed(makePlanRef(), makeContext())).rejects.toMatchObject({
-      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
-    });
+    await expect(
+      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
   it.each([
@@ -92,12 +105,12 @@ describe('RunExecutionContextAdmissionPolicy', () => {
       },
     });
 
-    await expect(policy.assertAllowed(makePlanRef(), makeContext())).rejects.toMatchObject({
-      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
-    });
+    await expect(
+      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
-  it('rejects pluginCompatibilityFingerprint mismatch against planRef', async () => {
+  it('rejects pluginCompatibilityFingerprint mismatch against executionPolicy', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
       async resolve() {
         return makeRunExecutionContext({
@@ -107,9 +120,9 @@ describe('RunExecutionContextAdmissionPolicy', () => {
       },
     });
 
-    await expect(policy.assertAllowed(makePlanRef(), makeContext())).rejects.toMatchObject({
-      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
-    });
+    await expect(
+      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
   it('rejects compatibility-checked plan when resolved context omits fingerprint', async () => {
@@ -121,8 +134,27 @@ describe('RunExecutionContextAdmissionPolicy', () => {
       },
     });
 
-    await expect(policy.assertAllowed(makePlanRef(), makeContext())).rejects.toMatchObject({
-      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+    await expect(
+      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+  });
+
+  it('ignores context fingerprints when executionPolicy has no compatibility fingerprint', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      async resolve() {
+        return makeRunExecutionContext({
+          pluginCompatibilityFingerprint:
+            '2222222222222222222222222222222222222222222222222222222222222222',
+        });
+      },
     });
+
+    await expect(
+      policy.assertAllowed(
+        makePlanRef(),
+        makeExecutionPolicy({ pluginCompatibilityFingerprint: undefined }),
+        makeContext()
+      )
+    ).resolves.toBeUndefined();
   });
 });

@@ -12,6 +12,7 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
+import { AppServicesProvider } from './services/AppServicesContext';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
 
@@ -112,8 +113,10 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
 export default function Root() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RootShell />
-    </QueryClientProvider>
+    <AppServicesProvider>
+      <QueryClientProvider client={queryClient}>
+        <RootShell />
+      </QueryClientProvider>
+    </AppServicesProvider>
   );
 }

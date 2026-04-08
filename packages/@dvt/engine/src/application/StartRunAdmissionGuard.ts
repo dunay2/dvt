@@ -1,4 +1,4 @@
-import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, ResolvedRunContext, RunExecutionPolicy } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
@@ -31,14 +31,22 @@ export class StartRunAdmissionGuard {
 
   async assertStartRunAllowed(planRef: PlanRef, context: ResolvedRunContext): Promise<void> {
     await this.validationPolicy.validateStartRunPreconditions(planRef, context);
-    await this.runExecutionContextPolicy.assertAllowed(planRef, context);
     this.deps.policy.checkRateLimit(context.tenantId);
   }
 
-  resolveAdapter(planRef: PlanRef, context: ResolvedRunContext): IProviderAdapter {
+  async assertExecutionPolicyAllowed(
+    planRef: PlanRef,
+    executionPolicy: RunExecutionPolicy,
+    context: ResolvedRunContext,
+    adapter: IProviderAdapter
+  ): Promise<void> {
+    this.validationPolicy.validateCapabilitiesOrThrow(executionPolicy, adapter);
+    await this.runExecutionContextPolicy.assertAllowed(planRef, executionPolicy, context);
+  }
+
+  resolveAdapter(context: ResolvedRunContext): IProviderAdapter {
     const adapter = this.deps.adapters.get(context.targetAdapter);
     if (adapter === undefined) throw new AdapterNotRegisteredError(context.targetAdapter);
-    this.validationPolicy.validateCapabilitiesOrThrow(planRef, adapter);
     return adapter;
   }
 }

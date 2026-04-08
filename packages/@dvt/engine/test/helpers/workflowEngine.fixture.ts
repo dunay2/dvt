@@ -1,4 +1,12 @@
-import type { EngineRunRef } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type EngineRunRef,
+  type ExecutionPlan,
+  type PlanRef,
+  type RunExecutionPolicy,
+  type StoredPlanArtifact,
+} from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
@@ -20,7 +28,7 @@ import { SequenceClock } from '../../src/utils/clock.js';
 export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
   const base: IProviderAdapter = {
     provider: 'temporal',
-    async startRun(_planRef, ctx) {
+    async startRun(_plan, _planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -34,6 +42,9 @@ export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IPro
       return { runId: runRef.runId, status: 'RUNNING' } as const;
     },
     async signal() {},
+    signalSemanticsVersions() {
+      return [CURRENT_SIGNAL_SEMANTICS_VERSION];
+    },
   };
 
   return overrides ? { ...base, ...overrides } : base;
@@ -61,6 +72,7 @@ export function createWorkflowEngineFixture(input?: {
   requiredProviders?: EngineRunRef['provider'][];
   observabilityFallbackThrottleMs?: number;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  planFetcher?: { fetch(planRef: PlanRef): Promise<StoredPlanArtifact> };
 }): {
   engine: WorkflowEngine;
   store: InMemoryTxStore;
@@ -84,6 +96,17 @@ export function createWorkflowEngineFixture(input?: {
     (input?.adapter
       ? makeProviderMap(input.adapter)
       : new Map<EngineRunRef['provider'], IProviderAdapter>());
+  const defaultPlan = makeDefaultExecutionPlan();
+  const planFetcher =
+    input?.planFetcher ??
+    ({
+      async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+        return {
+          bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
+          executionPolicy: {},
+        };
+      },
+    } as const);
 
   const engine = new WorkflowEngine({
     stateStoreRead,
@@ -96,6 +119,7 @@ export function createWorkflowEngineFixture(input?: {
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
     }),
     intentStore,
+    planFetcher,
     observability: input?.observability ?? createNoopObservability(),
     adapters,
     requiredProviders: input?.requiredProviders,
@@ -113,6 +137,62 @@ export function createWorkflowEngineFixture(input?: {
     projector,
     idempotency,
     clock,
+  };
+}
+
+export function makePlanRefForPlan(
+  plan: ExecutionPlan,
+  uri = `https://example.com/plans/${plan.metadata.planId}.json`
+): PlanRef {
+  const bytes = Buffer.from(JSON.stringify(plan), 'utf8');
+  return {
+    uri,
+    sha256: sha256Hex(bytes),
+    schemaVersion: plan.metadata.schemaVersion,
+    planId: plan.metadata.planId,
+    planVersion: plan.metadata.planVersion,
+    sizeBytes: bytes.byteLength,
+  };
+}
+
+export function makePlanFetcherForPlan(
+  plan: ExecutionPlan,
+  executionPolicy: RunExecutionPolicy = {}
+): {
+  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
+} {
+  return {
+    async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+      return {
+        bytes: Buffer.from(JSON.stringify(plan), 'utf8'),
+        executionPolicy,
+      };
+    },
+  };
+}
+
+export function makeDefaultExecutionPlan(): ExecutionPlan {
+  const inputHashSha256 = '1'.repeat(64);
+  const steps: ExecutionPlan['steps'] = [];
+  const planId = sha256Hex(
+    jcsCanonicalize({
+      metadata: {
+        planVersion: '1.0',
+        inputHashSha256,
+      },
+      steps,
+    })
+  );
+  return {
+    metadata: {
+      planId,
+      planVersion: '1.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256,
+      createdAtIso: '2026-02-12T00:00:00.000Z',
+    },
+    steps,
   };
 }
 

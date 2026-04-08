@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-07'
+last_reviewed: '2026-04-08'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -155,7 +155,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md
       - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
@@ -248,20 +248,32 @@ tasks:
       of direct mode or service factory ownership from route-level view code.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 88
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
+      - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+      - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
     status_reason: >-
-      The F-04 plan and architecture pack are now explicit and linked to Lane E; implementation
-      remains intentionally paused until TDD-first scaffolding is in place for D/E/F.
+      TDD-first implementation is now active: the composition root was extracted into a dedicated
+      module, `SessionContextPort` and `ShellFeedbackPort` were formalized, and `Canvas`/`Runs`
+      route seams now consume composition-owned accessors instead of hidden runtime globals.
+      `CapabilitiesPort` is now formalized and `useCapabilitiesQuery` is composition-owned. `QA-03`
+      under `F-04-RISK-A` is now closed with backend-owned `planRef` payloads on preview/import, and
+      `F-04-RISK-B` now isolates mutable mock workspace state per service instance with an explicit
+      shared-state seam plus instance-local file-tree discoverability with unique workspace paths
+      for newly saved files. Documentary hard QA found no blocking issues. The remaining open work
+      is final residual cleanup under `F-04-RESIDUAL`.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
       - frontend docs and roadmap entrypoints link to canonical F-04 pack
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-A
     parent_task: F-04
     priority: P0
@@ -344,7 +356,7 @@ tasks:
   - task_id: F-04-D
     parent_task: F-04
     priority: P0
-    status: queued
+    status: review
     objective: >-
       define explicit frontend ports and split hybrid service surfaces into domain ports, adapters,
       and mapping boundaries.
@@ -354,23 +366,34 @@ tasks:
       consumed by application facades rather than by route-local service factories.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 85
     evidence_refs:
       - docs/architecture/frontend/frontend-data-boundary-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+      - apps/web/src/app/ports/capabilities.ts
+      - apps/web/src/app/ports/sessionContext.ts
+      - apps/web/src/app/ports/shellFeedback.ts
+      - apps/web/src/app/services/capabilities/capabilitiesPort.ts
+      - apps/web/src/app/services/runs/runsService.api.ts
+      - apps/web/src/app/services/runs/runsService.mock.ts
+      - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
     status_reason: >-
-      Port model is documented but implementation split has not been completed yet.
+      `SessionContextPort` and `ShellFeedbackPort` now exist as explicit runtime seams and the Runs
+      adapters consume injected session context rather than reading hidden globals directly.
+      `CapabilitiesPort` is now formalized and composition-owned; remaining closure depends on final
+      adapter-parity acceptance across the wider F-04 convergence chain.
     definition_of_done:
       - named ports exist and are typed in frontend domain/application layers
       - api and mock adapters implement the same port contracts
       - route-level code depends on facades or hooks, not adapter factories
       - failing port/adapter tests are introduced before implementation (TDD red phase)
       - tests pass after implementation and refactor (green + refactor phases)
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-E
     parent_task: F-04
     priority: P0
-    status: queued
+    status: review
     objective: >-
       introduce composition-root wiring so data-source mode and adapter selection happen at boot,
       then expose route-safe service accessors.
@@ -380,24 +403,34 @@ tasks:
       composition accessors.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 95
     evidence_refs:
       - apps/web/src/app/services/composition/appServices.ts
+      - apps/web/src/app/services/AppServicesContext.tsx
+      - apps/web/src/app/services/composition/appServices.test.ts
+      - apps/web/src/app/queries/useCapabilitiesQuery.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/runs/useRunWorkspace.ts
+      - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
     status_reason: >-
-      Awaiting TDD-first start: composition-root tests must be defined before wiring changes.
+      Composition-root tests now exist and pass, `resolveDataSource` moved under
+      `services/composition/appServices.ts`, and the React provider is reduced to a thin delivery
+      wrapper over composition-built services. Core `Canvas` and `Runs` paths plus the capabilities
+      query boundary now consume composition-owned seams; final closure depends on broader F-04
+      acceptance and residual cleanup, not missing composition wiring.
     definition_of_done:
       - VITE_DATA_SOURCE is read in one composition boundary for route-facing services
       - views/controllers no longer instantiate create*Service directly
       - core routes build and typecheck with composition-root accessors
       - failing composition-root tests exist before implementation (TDD red phase)
       - composition tests pass after implementation and refactor (green + refactor phases)
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-F
     parent_task: F-04
     priority: P0
-    status: queued
+    status: review
     objective: >-
       remove direct resolveDataSource, createRunsService, createWorkspaceService,
       createPlansService, and raw fetch usage from route-level view and query surfaces.
@@ -407,29 +440,36 @@ tasks:
       direct mode/factory ownership.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/queries/useCapabilitiesQuery.ts
+      - apps/web/src/app/queries/useCapabilitiesQuery.test.tsx
+      - apps/web/src/app/ports/capabilities.ts
+      - apps/web/src/app/services/capabilities/capabilitiesPort.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/AdminView.tsx
       - apps/web/src/app/views/DiffView.tsx
       - apps/web/src/app/views/LineageView.tsx
       - apps/web/src/app/views/CostView.tsx
+      - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+      - docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md
     status_reason: >-
-      Direct mode/factory usage is mapped; implementation is deferred until TDD-first checks are
-      authored for affected routes and query hooks.
+      TDD-first guard tests now exist and pass, `useCapabilitiesQuery` consumes a composition-owned
+      `CapabilitiesPort`, and route/query surfaces no longer rely on raw capability transport or
+      direct mode/service-factory ownership. Documentary hard QA found no blocking issues; the slice
+      remains in `review` pending normal commit/PR publication rather than further implementation.
     definition_of_done:
       - no route-level view or controller imports resolveDataSource
       - no route-level view imports createRunsService/createWorkspaceService/createPlansService
       - capabilities query uses governed client boundary instead of raw fetch
       - failing guard tests are defined before code rewiring (TDD red phase)
       - route/query tests and typecheck pass after implementation (green + refactor phases)
-    last_verified: '2026-04-03'
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK
     parent_task: F-04
     priority: P1
-    status: queued
+    status: review
     objective: >-
       close the active risk findings from the hard QA pass of the data-source service boundary
       implementation.
@@ -439,20 +479,28 @@ tasks:
       state is deterministic across provider instances and tests.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+      - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/services/plans/plansService.mock.ts
       - apps/web/src/app/services/workspace/workspaceService.mock.ts
     status_reason: >-
-      Hard QA found active functional and determinism risks that are not yet represented as
-      executable lane tasks.
-    last_verified: '2026-04-04'
+      Hard QA risk intake is now represented by executable lane tasks. The `planRef` contract-drift
+      branch (`F-04-RISK-A`) is closed in code and review, and `F-04-RISK-B` now hardens the mock
+      workspace adapter so mutable state is isolated by default and shared only through an explicit,
+      tested seam, including unique file-tree paths and discoverability for newly saved paths.
+      Documentary hard QA found no blocking issues. The parent risk chain is ready for normal
+      review/PR flow.
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK-A
     parent_task: F-04-RISK
     priority: P1
-    status: in_progress
+    status: review
     objective: >-
       remove mock-only PlanRef semantics from the shared start-run flow so API mode no longer
       depends on placeholder plan identity fields.
@@ -462,20 +510,22 @@ tasks:
       API mode emits a contract-safe plan reference path with explicit tests.
     complexity: S
     effort_points: 2
-    progress_pct: 75
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/services/plans/plansService.mock.ts
       - apps/web/src/app/services/plans/plansService.test.ts
+      - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
     status_reason: >-
-      QA-01 and QA-02 are closed in code and tests, and QA-04 documentation alignment is closed. The
-      remaining blocker is QA-03: API mode still synthesizes PlanRef client-side because backend
-      preview/import payload does not yet expose canonical planRef.
-    last_verified: '2026-04-05'
+      QA-01 through QA-04 are now closed. The shared start-run path no longer depends on mock-only
+      `PlanRef` construction, preview/import payloads carry backend-owned canonical `planRef`, and
+      the web adapter path is regression-tested for both preview and import envelopes.
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK-A-QA-03
     parent_task: F-04-RISK-A
     priority: P1
-    status: in_progress
+    status: review
     objective: >-
       move planRef ownership to backend plan preview/import payload and remove frontend PlanRef
       synthesis from the API plans adapter.
@@ -485,24 +535,30 @@ tasks:
       `uri`/`sha256`/`schemaVersion` locally from metadata fields.
     complexity: M
     effort_points: 3
-    progress_pct: 10
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+      - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+      - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/test/entrypoints/http/planRoutes.test.ts
       - apps/web/src/app/services/plans/plansService.api.ts
-      - apps/api/src/entrypoints/http/startRunRoute.ts
+      - apps/web/src/app/services/plans/plansService.test.ts
     status_reason: >-
-      Opened from hard QA as the remaining high-severity contract-drift risk: frontend synthesis of
-      PlanRef can diverge from backend canonical identity rules.
+      Closed on current repo truth: `/plans/preview` and `/plans/import` now return canonical
+      backend-owned `planRef`, `plansService.api` parses it directly and rejects missing envelopes,
+      and adapter coverage now proves both preview and import paths without local synthesis.
     definition_of_done:
       - backend plan payload used by web includes canonical `planRef`
       - frontend API adapter does not synthesize PlanRef
       - start-run path remains fail-closed when planRef is absent
       - '`@dvt/web` tests and typecheck pass and `pnpm verify:prepush` is green'
-    last_verified: '2026-04-05'
+    last_verified: '2026-04-07'
   - task_id: F-04-RISK-B
     parent_task: F-04-RISK
     priority: P1
-    status: queued
+    status: review
     objective: >-
       isolate mock workspace graph state per service or per test seam to prevent cross-instance
       mutation bleed.
@@ -512,17 +568,25 @@ tasks:
       instances unless an explicit, tested shared-state policy is declared.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
       - apps/web/src/app/services/workspace/workspaceService.mock.ts
       - apps/web/src/app/services/workspace/workspaceService.test.ts
+      - apps/web/src/app/services/composition/appServices.test.ts
     status_reason: >-
-      Hard QA identified global mutable state as a determinism and test isolation risk.
-    last_verified: '2026-04-04'
+      TDD-first regression coverage now proves that default mock workspace services do not share
+      mutable graph or file-content state across instances, while `createMockWorkspaceState()`
+      provides an explicit opt-in shared-state seam for tests that require it. Newly saved file
+      paths now enter the instance-local file tree, and the default mock tree no longer duplicates
+      nested workspace paths. Documentary hard QA found no blocking issues.
+    last_verified: '2026-04-07'
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       close residual quality drifts after the boundary refactor, focused on test seam policy and
       shell UX contract consistency.
@@ -532,20 +596,26 @@ tasks:
       override seams instead of global module mocking, and API-mode console copy is product-safe.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 67
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
-      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/components/Console.tsx
+      - docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md
+      - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
+      - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Residual drifts are non-blocking for compile/test green status but remain governance and UX
-      debt if left untracked.
-    last_verified: '2026-04-04'
+      Residual cleanup is now active: `F-04-RESIDUAL-A` moved Root-level provider ownership to the
+      real shell entrypoint and added a direct integration guard. `F-04-RESIDUAL-B` now rewires
+      `useCanvasController` consumer tests to the real `AppServicesProvider` override seam instead
+      of globally mocking `AppServicesContext` exports. Documentary hard QA found no blocking issues
+      for residual-A. Remaining work is API-mode console copy normalization in `F-04-RESIDUAL-C`.
+    last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: queued
+    status: review
     objective: >-
       add a Root-level shell integration guard so provider wiring regressions fail fast.
     dependency: F-04-RESIDUAL
@@ -553,19 +623,22 @@ tasks:
       A dedicated test mounts `Root` and fails when `AppServicesProvider` is removed or bypassed.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/Root.tsx
       - apps/web/src/app/Root.test.tsx
       - apps/web/src/app/services/AppServicesContext.tsx
+      - docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md
+      - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Current shell tests exercise `RootShell` directly and do not protect provider composition
-      ownership at the real root.
-    last_verified: '2026-04-04'
+      `Root` now owns `AppServicesProvider` in runtime code, `App` no longer shadows that ownership,
+      and the dedicated integration guard mounts `Root` directly so provider regression fails fast
+      at the real shell boundary. Documentary hard QA found no blocking residual-A defects.
+    last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-B
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: queued
+    status: review
     objective: >-
       refit canvas controller tests to provider overrides so test seams match the documented
       boundary contract.
@@ -575,15 +648,18 @@ tasks:
       provider-level injection helpers.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/services/AppServicesContext.test.tsx
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
     status_reason: >-
-      Hard QA found seam-policy drift between the documented provider-injection strategy and the
-      current consumer test implementation.
-    last_verified: '2026-04-04'
+      The shared canvas-controller harness now mounts `AppServicesProvider` with explicit service
+      overrides, the controller tests assert those provider-owned identities reach execution seams,
+      and `AppServicesContext` override coverage now includes session and feedback ports. Hard QA
+      follow-up remains separate.
+    last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-C
     parent_task: F-04-RESIDUAL
     priority: P3
@@ -671,7 +747,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
-      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
     status_reason: >-
       The controller slice currently lacks invariant-driven tests and must enter a red phase before
       implementation work starts.
@@ -1614,11 +1690,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-07'
-  total_tasks: 43
-  total_effort_points: 174
-  completed_weighted_points: 27.38
-  lane_progress_pct: 16
+  verified_on: '2026-04-08'
+  total_tasks: 58
+  total_effort_points: 205
+  completed_weighted_points: 71.17
+  lane_progress_pct: 35
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7

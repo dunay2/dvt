@@ -1,8 +1,10 @@
 import type {
   EngineRunRef,
+  ExecutionPlan,
   PlanRef,
   ResolvedRunContext,
   RunStatusSnapshot,
+  SignalSemanticsVersion,
   SignalRequest,
 } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
@@ -39,8 +41,8 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     this.observability = resolveTemporalObservability(deps.observability);
   }
 
-  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
-    return this.deps.adapter.startRun(planRef, ctx);
+  startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
+    return this.deps.adapter.startRun(plan, planRef, ctx);
   }
 
   cancelRun(runRef: EngineRunRef): Promise<void> {
@@ -53,6 +55,10 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
 
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
     return this.deps.adapter.signal(runRef, request);
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return this.deps.adapter.signalSemanticsVersions();
   }
 
   capabilities(): readonly string[] {

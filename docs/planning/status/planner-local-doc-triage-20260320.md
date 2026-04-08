@@ -15,7 +15,7 @@ canonical repo docs surface.
 Use this page with:
 
 - [Planner Current State Assessment](planner-current-state-assessment-20260320.md)
-- [Planner Target State And Hardening Roadmap](../proposals/planner-target-state-roadmap-20260320.md)
+- [Planner Target State And Hardening Roadmap](../archive/proposals/planner-target-state-roadmap-20260320.md)
 - [Current Status](../../architecture/system-delivery-status.md)
 - [Planner Contracts](../../contracts/planner/index.md)
 - [Roadmap Of Record](../roadmap/index.md)
@@ -94,7 +94,7 @@ After `R1`, the planner reader path should be:
 1. `docs/architecture/system-delivery-status.md`
 2. `docs/planning/status/planner-current-state-assessment-20260320.md`
 3. `docs/planning/status/planner-local-doc-triage-20260320.md`
-4. `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
+4. `docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md`
 5. `docs/contracts/planner/index.md`
 
 Package-local docs remain allowed only as implementation notes and historical

@@ -4,8 +4,10 @@ import {
   type RunStatus as ContractRunStatus,
 } from '@dvt/contracts';
 
+import type { SessionContextPort } from '../../ports/sessionContext';
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
+import { createSessionContextPort } from '../session/sessionContextPort';
 import type {
   MaterializationEvidence,
   RunEventTimelinePage,
@@ -105,7 +107,6 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     completedAt: asString(candidate.completedAt) ?? asString(candidate.endTime),
     substatus: asString(candidate.substatus),
     message: asString(candidate.message),
-    hash: asString(candidate.hash),
     snapshotStaleness: asString(candidate.snapshotStaleness) as
       | 'FRESH'
       | 'STALE'
@@ -129,7 +130,6 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     completedAt: snapshot.completedAt,
     substatus: snapshot.substatus,
     message: snapshot.message,
-    hash: snapshot.hash,
     snapshotStaleness: snapshot.snapshotStaleness,
     currentStepId: snapshot.currentStepId,
     failedStepId: snapshot.failedStepId,
@@ -159,10 +159,29 @@ function extractEventsPayload(payload: unknown): { events: unknown[]; nextAfterS
   };
 }
 
-export function createApiRunsService(apiClient: ApiClient): RunsService {
+function buildTenantScopeQuery(
+  sessionContext: SessionContextPort,
+  includeWorkspaceScope: boolean
+): string {
+  const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScope();
+  const query = new URLSearchParams({ tenantId });
+
+  if (includeWorkspaceScope) {
+    query.set('projectId', projectId);
+    query.set('environmentId', environmentId);
+  }
+
+  return query.toString();
+}
+
+export function createApiRunsService(
+  apiClient: ApiClient,
+  sessionContext: SessionContextPort = createSessionContextPort()
+): RunsService {
   async function getRunSnapshotById(runId: string): Promise<RunSnapshot | null> {
     try {
-      const payload = await apiClient.getJson<unknown>(`/runs/${runId}`);
+      const scopeQuery = buildTenantScopeQuery(sessionContext, false);
+      const payload = await apiClient.getJson<unknown>(`/runs/${runId}?${scopeQuery}`);
       return mapUnknownRecordToSnapshot(payload);
     } catch (error) {
       if (error instanceof ApiError && error.statusCode === 404) {
@@ -174,7 +193,8 @@ export function createApiRunsService(apiClient: ApiClient): RunsService {
 
   return {
     listRunSummaries: async () => {
-      const payload = await apiClient.getJson<unknown>('/runs');
+      const scopeQuery = buildTenantScopeQuery(sessionContext, true);
+      const payload = await apiClient.getJson<unknown>(`/runs?${scopeQuery}`);
       return extractRunListPayload(payload)
         .map(mapUnknownRecordToSnapshot)
         .filter((snapshot): snapshot is RunSnapshot => snapshot !== null)
@@ -186,8 +206,11 @@ export function createApiRunsService(apiClient: ApiClient): RunsService {
       return parseEngineRunRef(payload);
     },
     listRunEvents: async (runId, afterSeq): Promise<RunEventTimelinePage> => {
-      const query = afterSeq === undefined ? '' : `?afterSeq=${afterSeq}`;
-      const payload = await apiClient.getJson<unknown>(`/runs/${runId}/events${query}`);
+      const query = new URLSearchParams(buildTenantScopeQuery(sessionContext, false));
+      if (afterSeq !== undefined) {
+        query.set('afterSeq', String(afterSeq));
+      }
+      const payload = await apiClient.getJson<unknown>(`/runs/${runId}/events?${query.toString()}`);
       const normalized = extractEventsPayload(payload);
       return {
         events: normalized.events.map((event) => parseRunEventRecord(event)) as RunEvent[],

@@ -5,6 +5,7 @@
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: Planner, State, UI, adapter implementers  
 **Sub-Contracts**: [RunEvents.v2.0.md](./RunEvents.v2.0.md), SignalsAndAuth v1.1 (pending publication), [ExecutionSemantics.v2.0.md](./ExecutionSemantics.v2.0.md)
+**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md), [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
 
 ---
 
@@ -13,7 +14,7 @@
 ### MUST
 
 - Accept a versioned execution plan **by reference** (`PlanRef`) and execute it reliably.
-- Emit run/step lifecycle events persisted in Append Authority (`IRunStateStore`).
+- Emit run/step lifecycle events persisted in Append Authority (`IRunStateStore`) through the engine domain boundary, including adapter-owned runtime execution contexts.
 - Support retries/backoff according to planner policy.
 - Support cancellation and resume semantics.
 - Include correlation and attempt identifiers in emitted lifecycle events.
@@ -39,6 +40,14 @@ interface IWorkflowEngine {
 
 `startRun` MUST accept `PlanRef` (not full `ExecutionPlan`) in normative production mode.
 
+`signal(...)` is the canonical run-control boundary. `RETRY_STEP` is not part
+of that boundary; step-scoped retry requires a dedicated use case per
+[ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
+
+For the current end-to-end `startRun()` protocol, including admission,
+integrity verification, intent logging, dispatch, bootstrap, and compensation,
+see [StartRunProtocol.v1.md](./StartRunProtocol.v1.md).
+
 ---
 
 ## 3) Lifecycle Event Summary
@@ -57,6 +66,18 @@ Engine domain MUST emit compatible lifecycle events from [RunEvents.v2.0.md](./R
 - `RunCancelled`
 
 `RunQueued` MAY be emitted by admission control if applicable.
+
+For signal-driven realized lifecycle facts:
+
+- `RunPaused`
+- `RunResumed`
+- `RunCancelled`
+
+the runtime execution context is the realized-event owner.
+
+The engine core MAY validate and dispatch the signal or cancellation command,
+but it MUST NOT append those realized lifecycle `EventType`s merely because the
+command was submitted.
 
 ---
 

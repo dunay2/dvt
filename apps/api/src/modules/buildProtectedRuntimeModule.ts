@@ -103,9 +103,6 @@ export async function buildProtectedRuntimeModule(
       return {
         schemaVersion: plan.metadata.schemaVersion,
         text: JSON.stringify(plan),
-        ...(plan.metadata.requiresCapabilities === undefined
-          ? {}
-          : { requiresCapabilities: plan.metadata.requiresCapabilities }),
       };
     },
   });
@@ -164,7 +161,6 @@ export async function buildProtectedRuntimeModule(
     clock: systemClock,
     projector,
     observability,
-    planFetcher: executablePlanResolver,
   });
   const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
     adapters.keys()
@@ -183,6 +179,7 @@ export async function buildProtectedRuntimeModule(
       stateStoreRead: stateStoreRoles.read,
       stateStoreWrite: stateStoreRoles.write,
       intentStore,
+      planFetcher: planStore,
     },
     runtime: { adapters },
     infrastructure: {

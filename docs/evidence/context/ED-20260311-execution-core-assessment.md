@@ -104,7 +104,7 @@ of end-to-end wiring in the product-facing path.
 
 Today the main blocker is explicit:
 
-- [apps/api/src/application/services/notImplementedStartRunUseCase.ts](../../apps/api/src/application/services/notImplementedStartRunUseCase.ts)
+- [apps/api/src/application/services/notImplementedStartRunUseCase.ts](../../../apps/api/src/application/services/notImplementedStartRunUseCase.ts)
 
 That means the main runtime route can authenticate and authorize, but it still
 does not dispatch into a real `WorkflowEngine` composition root.

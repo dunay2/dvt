@@ -25,7 +25,11 @@ import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
-import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
+import type {
+  IPlanFetcher,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+} from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import type { IClock } from '../utils/clock.js';
@@ -59,6 +63,7 @@ export interface WorkflowEngineDeps {
   policy?: IRunAccessPolicy;
   intentStore?: IStartRunIntentStore;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  planFetcher?: IPlanFetcher;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
   observability: IObservability;
@@ -196,6 +201,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     if (this.deps.startRunApplicationService === undefined) {
       if (this.deps.policy === undefined) throw new Error('policy is required');
       if (this.deps.intentStore === undefined) throw new Error('intentStore is required');
+      if (this.deps.planFetcher === undefined) throw new Error('planFetcher is required');
     }
     if (this.deps.core === undefined && this.deps.policy === undefined) {
       throw new Error('policy is required');
@@ -228,6 +234,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       idempotency: this.deps.idempotency,
       clock: this.deps.clock,
       intentStore,
+      planFetcher: this.requirePlanFetcher(),
       observability: this.deps.observability,
       ...(this.deps.timeouts ? { timeouts: this.deps.timeouts } : {}),
       ...(this.deps.observabilityFallbackThrottleMs === undefined
@@ -260,6 +267,12 @@ export class WorkflowEngine implements IWorkflowEngine {
     const intentStore = this.deps.intentStore;
     if (intentStore === undefined) throw new Error('intentStore is required');
     return intentStore;
+  }
+
+  private requirePlanFetcher(): IPlanFetcher {
+    const planFetcher = this.deps.planFetcher;
+    if (planFetcher === undefined) throw new Error('planFetcher is required');
+    return planFetcher;
   }
 }
 
@@ -300,12 +313,6 @@ function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
   };
   if (input.sizeBytes !== undefined) planRef.sizeBytes = input.sizeBytes;
   if (input.expiresAt !== undefined) planRef.expiresAt = input.expiresAt;
-  if (input.pluginCompatibilityFingerprint !== undefined) {
-    planRef.pluginCompatibilityFingerprint = input.pluginCompatibilityFingerprint;
-  }
-  if (input.requiresCapabilities !== undefined) {
-    planRef.requiresCapabilities = input.requiresCapabilities;
-  }
   return planRef;
 }
 

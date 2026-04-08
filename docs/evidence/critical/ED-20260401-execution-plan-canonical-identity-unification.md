@@ -50,7 +50,7 @@ API persistence, and engine consumption all converging on the same public type.
   compatibility re-export, not a second public interface.
 - Planner emission now includes canonical `schemaVersion`,
   `contractVersion`, and `createdAtIso` metadata while preserving the existing
-  `planId` and `canonicalPlanJson` hashing rules.
+  `planId` and `canonicalPlanCoreJson` hashing rules.
 - API storage and reload paths now persist the planner-emitted plan directly
   and parse it through `parseExecutionPlan`.
 - Adapter-temporal and engine contract tests were aligned to the governed
@@ -64,7 +64,7 @@ API persistence, and engine consumption all converging on the same public type.
 - Implementation then converged planner, contracts, engine, adapter, and API
   paths until those stricter tests passed.
 - Planner determinism coverage was extended so volatile metadata fields still do
-  not affect `canonicalPlanJson` or `planId`.
+  not affect `canonicalPlanCoreJson` or `planId`.
 
 ## Drift prevented by this slice
 

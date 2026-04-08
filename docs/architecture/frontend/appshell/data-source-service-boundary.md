@@ -2,7 +2,7 @@
 title: Data Source Service Boundary
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-07
 ---
 
 # Data Source Service Boundary
@@ -139,7 +139,18 @@ This allows:
 
 - route or component tests to inject deterministic service fakes;
 - service tests to validate composer routing by mode;
+- shared canvas-controller harnesses to mount the real provider with explicit
+  service overrides instead of globally mocking `AppServicesContext` exports;
 - no module-level implicit coupling in consumer tests.
+
+For the workspace mock adapter specifically, instance-local mutable state is
+now part of the boundary contract:
+
+- `createMockWorkspaceService()` allocates isolated workspace state by default;
+- mutable graph imports, editable file contents, and discoverable file-tree
+  paths do not bleed across service instances;
+- deliberate shared state requires an explicit test seam via
+  `createMockWorkspaceState()`.
 
 ## Affected Frontend Surfaces
 

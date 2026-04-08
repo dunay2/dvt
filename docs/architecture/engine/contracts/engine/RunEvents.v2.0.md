@@ -5,7 +5,8 @@
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: StateStore (Append Authority), Projectors, UI, Audit Systems  
 **Parent Contract**: [`IWorkflowEngine.v2.0.md`](./IWorkflowEngine.v2.0.md)  
-**References**: [`ExecutionSemantics.v2.0.md`](./ExecutionSemantics.v2.0.md), [`IRunStateStore.v2.0.md`](../state-store/IRunStateStore.v2.0.md), SignalsAndAuth v1.1 (pending publication), [`AgnosticEventLayerStrategy.v2.0.1.md`](./AgnosticEventLayerStrategy.v2.0.1.md)
+**References**: [`ExecutionSemantics.v2.0.md`](./ExecutionSemantics.v2.0.md), [`IRunStateStore.v2.0.md`](../state-store/IRunStateStore.v2.0.md), SignalsAndAuth v1.1 (pending publication), [`AgnosticEventLayerStrategy.v2.0.1.md`](./AgnosticEventLayerStrategy.v2.0.1.md)  
+**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 
 **Normative keywords**: The key words “MUST”, “MUST NOT”, “SHOULD”, “SHOULD NOT”, “MAY” in this document are to be interpreted as described in BCP 14 (RFC 2119 and RFC 8174).
 
@@ -21,6 +22,11 @@ This contract governs run and step lifecycle events emitted by the Engine domain
 - workers/activities owned by the engine adapter.
 
 Signal decision events (`SignalAccepted`, `SignalRejected`) are out of scope and remain defined in SignalsAndAuth v1.1 (pending publication).
+
+For signal-driven realized lifecycle events, the authoritative producer is the
+runtime execution context that actually reaches the lifecycle state. The engine
+core MAY validate and dispatch the command, but it MUST NOT append the same
+realized lifecycle `EventType` on submission.
 
 ### 1.2 Known Lifecycle Events (NORMATIVE)
 

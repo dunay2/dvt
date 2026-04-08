@@ -33,7 +33,7 @@ service, starts the compiled `dvt-outbox-worker` host in `active` mode, inserts
 one outbox record through the canary helper trigger path, and verifies that the
 worker claims and delivers it without runtime errors.
 
-Environment: `local-docker` using [`infra/docker/postgres/docker-compose.yml`](../../infra/docker/postgres/docker-compose.yml)
+Environment: `local-docker` using [`infra/docker/postgres/docker-compose.yml`](../../../infra/docker/postgres/docker-compose.yml)
 with `postgres:16` on `localhost:5432`.
 
 ## Commands Executed

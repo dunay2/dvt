@@ -29,3 +29,12 @@ not the live contract baseline:
 
 When historical markdown conflicts with accepted ADRs or code, ADRs and code
 win.
+
+## 3) Append Authority Pattern
+
+`IRunStateStore` is the append authority for persisted run events and snapshots.
+
+- sequence assignment lives at the store boundary, not in callers
+- callers must treat persisted order as the canonical replay order
+- adapter-specific mechanics belong in the live TypeScript port and adapter
+  implementations linked above

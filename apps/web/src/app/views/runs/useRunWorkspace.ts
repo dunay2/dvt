@@ -1,15 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import type { IRunsPort, RunSummaryItem } from '../../ports/runs';
 import { queryKeys } from '../../queries/queryKeys';
+import { useRunsService, useSessionContext } from '../../services/AppServicesContext';
 import {
   createRunWorkspaceFacade,
   RunWorkspaceLoadError,
   type RunWorkspaceViewModel,
 } from '../../services/runs/runWorkspaceFacade';
-import { useRunsService } from '../../services/AppServicesContext';
-import { useSessionStore } from '../../stores/sessionStore';
 
 function buildWorkspaceLayoutKey(tenantId: string, projectId: string, environmentId: string) {
   return `${tenantId}::${projectId}::${environmentId}`;
@@ -27,11 +26,14 @@ type UseRunWorkspaceResult = {
 
 export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResult {
   const runsService: IRunsPort = useRunsService();
+  const sessionContext = useSessionContext();
   const runWorkspaceFacade = useMemo(() => createRunWorkspaceFacade(runsService), [runsService]);
 
-  const tenantId = useSessionStore((state) => state.tenantId);
-  const projectId = useSessionStore((state) => state.projectId);
-  const environmentId = useSessionStore((state) => state.environmentId);
+  const { tenantId, projectId, environmentId } = useSyncExternalStore(
+    sessionContext.subscribeWorkspaceScope,
+    sessionContext.getWorkspaceScopeSnapshot,
+    sessionContext.getWorkspaceScopeSnapshot
+  );
   const workspaceLayoutKey = buildWorkspaceLayoutKey(tenantId, projectId, environmentId);
 
   const runsQuery = useQuery({

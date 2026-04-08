@@ -1,4 +1,8 @@
-import type { ResolvedRunContext, RunContext } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type ResolvedRunContext,
+  type RunContext,
+} from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
@@ -6,7 +10,13 @@ import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { AuthorizationError } from '../../src/security/AuthorizationError.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { createWorkflowEngineFixture } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanRefForPlan,
+} from '../helpers/workflowEngine.fixture.js';
+
+const TEST_PLAN_REF = makePlanRefForPlan(makeDefaultExecutionPlan(), 'https://plans/example.json');
 
 class DenyAuthorizer {
   async assertTenantAccess(): Promise<void> {
@@ -30,7 +40,8 @@ class CountingAdapter implements IProviderAdapter {
   public cancelCalls = 0;
 
   async startRun(
-    planRef: import('@dvt/contracts').PlanRef,
+    _plan: import('@dvt/contracts').ExecutionPlan,
+    _planRef: import('@dvt/contracts').PlanRef,
     ctx: ResolvedRunContext
   ): Promise<{ provider: 'mock'; tenantId: string; workflowId: string; runId: string }> {
     this.startCalls += 1;
@@ -62,6 +73,10 @@ class CountingAdapter implements IProviderAdapter {
   ): Promise<void> {
     this.signalCalls += 1;
   }
+
+  signalSemanticsVersions(): readonly (typeof CURRENT_SIGNAL_SEMANTICS_VERSION)[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
+  }
 }
 
 function makeEngine(
@@ -89,11 +104,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const { engine } = makeEngine(new DenyAuthorizer(), adapter);
 
     const planRef: import('@dvt/contracts').PlanRef = {
-      uri: 'https://plans/example.json',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.2',
-      planId: 'p',
-      planVersion: '1.0',
+      ...TEST_PLAN_REF,
     };
 
     const ctx: RunContext = {
@@ -118,8 +129,8 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-1',
-      planId: 'p',
-      planVersion: '1.0',
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -148,8 +159,8 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-tenant-locked-1',
-      planId: 'p',
-      planVersion: '1.0',
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -177,8 +188,8 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-tenant-locked-2',
-      planId: 'p',
-      planVersion: '1.0',
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -205,8 +216,8 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-tenant-locked-3',
-      planId: 'p',
-      planVersion: '1.0',
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -231,11 +242,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const { engine } = makeEngine(authorizer, adapter);
 
     const planRef: import('@dvt/contracts').PlanRef = {
-      uri: 'https://plans/example.json',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.2',
-      planId: 'p',
-      planVersion: '1.0',
+      ...TEST_PLAN_REF,
     };
 
     const ctx: RunContext = {
@@ -256,10 +263,10 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
 
     const planRef: import('@dvt/contracts').PlanRef = {
       uri: 'file:///etc/passwd',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.2',
-      planId: 'p',
-      planVersion: '1.0',
+      sha256: TEST_PLAN_REF.sha256,
+      schemaVersion: TEST_PLAN_REF.schemaVersion,
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
     };
 
     const ctx: RunContext = {

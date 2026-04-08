@@ -44,26 +44,26 @@ describe('determinism', () => {
     expect(a.plan.metadata.planId).toEqual(c.plan.metadata.planId);
   });
 
-  it('planId equals sha256(canonicalPlanJson) â€” caller-verifiable', async () => {
+  it('planId equals sha256(canonicalPlanCoreJson) - caller-verifiable', async () => {
     const planner = new Planner();
-    const { plan, canonicalPlanJson } = await planner.buildPlan({
+    const { plan, canonicalPlanCoreJson } = await planner.buildPlan({
       graphSource: { nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     });
 
-    const recomputed = sha256Sync(canonicalPlanJson);
+    const recomputed = sha256Sync(canonicalPlanCoreJson);
     expect(recomputed).toBe(plan.metadata.planId);
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it('canonicalPlanJson does NOT contain planId, createdAtIso, schemaVersion, or contractVersion', async () => {
+  it('canonicalPlanCoreJson does NOT contain planId, createdAtIso, schemaVersion, or contractVersion', async () => {
     const planner = new Planner();
-    const { canonicalPlanJson } = await planner.buildPlan({
+    const { canonicalPlanCoreJson } = await planner.buildPlan({
       graphSource: { nodes: [{ nodeId: 'model.a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
       selection: { selectedNodeIds: ['model.a'] },
     });
 
-    const parsed = JSON.parse(canonicalPlanJson) as Record<string, unknown>;
+    const parsed = JSON.parse(canonicalPlanCoreJson) as Record<string, unknown>;
     const meta = parsed['metadata'] as Record<string, unknown> | undefined;
     expect(meta).toBeDefined();
     expect(meta?.['planId']).toBeUndefined();

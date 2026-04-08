@@ -1,3 +1,4 @@
+import { jcsCanonicalize } from '@dvt/contracts';
 import { afterAll, expect, test } from 'vitest';
 
 import {
@@ -78,20 +79,25 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       const base = makeBuildResult(PLAN_ID.r4_6);
       await store.storePlan(base);
 
+      const conflictingSteps = [
+        { stepId: `${PLAN_ID.r4_6}.step.changed`, kind: 'DBT_MODEL' as const, dependsOn: [] },
+      ];
       const conflicting = {
         ...base,
         plan: {
           ...base.plan,
-          steps: [{ stepId: `${PLAN_ID.r4_6}.step.changed`, kind: 'DBT_MODEL', dependsOn: [] }],
+          steps: conflictingSteps,
         },
+        canonicalPlanCoreJson: jcsCanonicalize({
+          metadata: {
+            planVersion: base.plan.metadata.planVersion,
+            inputHashSha256: base.plan.metadata.inputHashSha256,
+          },
+          steps: conflictingSteps,
+        }),
       };
 
-      await expect(
-        store.storePlan({
-          ...conflicting,
-          canonicalPlanJson: JSON.stringify(conflicting.plan),
-        })
-      ).rejects.toThrow('PLAN_STORE_CONFLICT');
+      await expect(store.storePlan(conflicting)).rejects.toThrow('PLAN_STORE_CONFLICT');
     }));
 
   test('rejects reuse of already validated plan', () =>

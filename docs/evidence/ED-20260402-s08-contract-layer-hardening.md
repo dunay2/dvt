@@ -14,7 +14,7 @@ code_refs:
   - packages/@dvt/contracts/src/schemas.ts
   - packages/@dvt/contracts/src/validation.ts
   - packages/@dvt/contracts/test/validation.test.ts
-  - packages/@dvt/contracts/test/plan-store-records-schema-sync.test.ts
+  - packages/@dvt/contracts/test/plan-store-records-shape-sync.test.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts build

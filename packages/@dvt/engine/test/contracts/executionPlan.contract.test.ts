@@ -9,9 +9,10 @@
  *   - Shape of ExecutionPlan: required vs optional fields compile and satisfy the TypeScript interface.
  *   - contractVersion validation: MockAdapter rejects plans with unknown versions.
  *   - Provenance fields: plannerVersion and plannerGitSha are optional and structurally inert.
- *   - Step metadata passthrough: extra step fields are rejected by the mock adapter narrowing rule.
+ *   - Runtime policy fields are not carried inside canonical plan metadata.
  */
 import type { ExecutionPlan, PlanRef } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
@@ -20,7 +21,11 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
-import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makePlanFetcherForPlan,
+  makeProviderMap,
+} from '../helpers/workflowEngine.fixture.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -70,7 +75,6 @@ function createEngine(plan: ExecutionPlan): {
     stateStore: store,
     clock,
     projector,
-    planFetcher: { fetch: async () => plan },
   });
 
   const { engine } = createWorkflowEngineFixture({
@@ -78,22 +82,33 @@ function createEngine(plan: ExecutionPlan): {
     projector,
     observability: createNoopObservability(),
     adapters: makeProviderMap(mock),
+    planFetcher: makePlanFetcherForPlan(plan),
   });
 
   return { engine, planRef };
 }
 
 function makeMinimalPlan(): ExecutionPlan {
+  const inputHashSha256 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  const steps: ExecutionPlan['steps'] = [];
   return {
     metadata: {
-      planId: 'cp2-minimal',
+      planId: sha256Hex(
+        jcsCanonicalize({
+          metadata: {
+            planVersion: '1.0',
+            inputHashSha256,
+          },
+          steps,
+        })
+      ),
       planVersion: '1.0',
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
-      inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      inputHashSha256,
       createdAtIso: '2026-02-23T00:00:00.000Z',
     },
-    steps: [],
+    steps,
   };
 }
 
@@ -140,14 +155,11 @@ describe('ExecutionPlan — interface shape', (): void => {
     expect(plan.metadata.createdAtIso).toBe('2026-02-23T00:00:00.000Z');
   });
 
-  it('requiresCapabilities is optional', (): void => {
-    const withCaps: ExecutionPlan = {
-      ...makeMinimalPlan(),
-      metadata: { ...makeMinimalPlan().metadata, requiresCapabilities: ['basic-execution'] },
-    };
-    const withoutCaps: ExecutionPlan = makeMinimalPlan();
-    expect(withCaps.metadata.requiresCapabilities).toEqual(['basic-execution']);
-    expect(withoutCaps.metadata.requiresCapabilities).toBeUndefined();
+  it('does not carry runtime policy fields in metadata', (): void => {
+    const metadata = makeMinimalPlan().metadata as Record<string, unknown>;
+    expect(metadata).not.toHaveProperty('requiresCapabilities');
+    expect(metadata).not.toHaveProperty('targetAdapter');
+    expect(metadata).not.toHaveProperty('fallbackBehavior');
   });
 
   it('steps array uses the governed shared shape', (): void => {
@@ -178,7 +190,7 @@ describe('ExecutionPlan — contractVersion validation', (): void => {
     };
     const { engine, planRef } = createEngine(plan);
     await expect(engine.startRun(planRef, makeCtx('cv-bad-1'))).rejects.toThrow(
-      'PLAN_CONTRACT_VERSION_UNKNOWN'
+      'INVALID_EXECUTABLE_PLAN'
     );
   });
 });
@@ -189,7 +201,15 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
   it('plan with all provenance fields executes without error', async (): Promise<void> => {
     const plan: ExecutionPlan = {
       metadata: {
-        planId: 'cp2-full',
+        planId: sha256Hex(
+          jcsCanonicalize({
+            metadata: {
+              planVersion: '1.0',
+              inputHashSha256: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            },
+            steps: [{ stepId: 's1', kind: 'noop', dependsOn: [] }],
+          })
+        ),
         planVersion: '1.0',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
@@ -197,11 +217,8 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
         createdAtIso: '2026-02-23T00:00:00.000Z',
         plannerVersion: '3.1.4',
         plannerGitSha: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
-        requiresCapabilities: ['basic-execution'],
-        targetAdapter: 'mock',
-        fallbackBehavior: 'reject',
       },
-      steps: [{ stepId: 's1', kind: 'noop' }],
+      steps: [{ stepId: 's1', kind: 'noop', dependsOn: [] }],
     };
     const { engine, planRef } = createEngine(plan);
     await expect(engine.startRun(planRef, makeCtx('prov-1'))).resolves.toMatchObject({

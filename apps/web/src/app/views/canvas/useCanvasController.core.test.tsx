@@ -52,6 +52,14 @@ describe('useCanvasController core', () => {
     expect(result?.planStatusSummary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.confirmEdgeCreation).toBe(harness.state.graphHandlersResult.confirmEdgeCreation);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        plansService: harness.state.services.plansService,
+        runsService: harness.state.services.runsService,
+        sessionContext: harness.state.services.sessionContext,
+        shellFeedback: harness.state.services.shellFeedback,
+      })
+    );
   });
 
   it('keeps hide or show panel commands idempotent', async () => {

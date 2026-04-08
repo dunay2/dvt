@@ -9,6 +9,8 @@ import {
   PlanExecutabilityRecordSchema,
   PlanRecordShapeSchema,
 } from '../src/index.js';
+import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
+import { sha256HexUtf8 } from '../src/utils/sha256HexUtf8.js';
 
 import { VALID_EXECUTION_PLAN_V2_FIXTURE } from './fixtures/planner-contract.fixtures.js';
 
@@ -19,18 +21,19 @@ function zodValid(
   return schema.safeParse(input).success;
 }
 
-describe('schema-sync: S08 plan store records', () => {
+describe('shape-sync: S08 plan store records', () => {
   const ajv = new Ajv({ strict: false });
   const validatePlanRecord = ajv.compile(planRecordSchemaJson);
   const validatePlanExecutabilityRecord = ajv.compile(planExecutabilityRecordSchemaJson);
   const validatePlanAdmissionLink = ajv.compile(planAdmissionLinkSchemaJson);
-  const validCanonicalPlanJson = JSON.stringify(VALID_EXECUTION_PLAN_V2_FIXTURE);
+  const validCanonicalPlanJson = jcsCanonicalize(VALID_EXECUTION_PLAN_V2_FIXTURE);
+  const validCanonicalHash = sha256HexUtf8(validCanonicalPlanJson);
 
-  it('keeps PlanRecord zod/json schema behavior in sync', () => {
+  it('keeps PlanRecord structural zod/json schema behavior in sync', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       canonicalPlanJson: validCanonicalPlanJson,
-      canonicalHash: 'a'.repeat(64),
+      canonicalHash: validCanonicalHash,
       planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
       schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
       contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
@@ -51,7 +54,7 @@ describe('schema-sync: S08 plan store records', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       canonicalPlanJson: validCanonicalPlanJson,
-      canonicalHash: 'a'.repeat(64),
+      canonicalHash: validCanonicalHash,
       planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
       schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
       contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
@@ -64,7 +67,7 @@ describe('schema-sync: S08 plan store records', () => {
     const invalid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       canonicalPlanJson: validCanonicalPlanJson,
-      canonicalHash: 'a'.repeat(64),
+      canonicalHash: validCanonicalHash,
       planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
       schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
       contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
@@ -80,7 +83,7 @@ describe('schema-sync: S08 plan store records', () => {
     expect(validatePlanRecord(invalid)).toBe(false);
   });
 
-  it('keeps PlanExecutabilityRecord zod/json schema behavior in sync', () => {
+  it('keeps PlanExecutabilityRecord structural zod/json schema behavior in sync', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       adapterId: 'temporal',
@@ -125,7 +128,7 @@ describe('schema-sync: S08 plan store records', () => {
     expect(validatePlanExecutabilityRecord(invalidCode)).toBe(false);
   });
 
-  it('keeps PlanAdmissionLink zod/json schema behavior in sync', () => {
+  it('keeps PlanAdmissionLink structural zod/json schema behavior in sync', () => {
     const valid = {
       planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
       runId: 'run-1',

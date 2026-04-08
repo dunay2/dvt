@@ -35,6 +35,7 @@ export type {
   RetryAttemptReservation,
   RunBootstrapInput,
   RunStateCommandPort,
+  StoredPlanArtifact,
   StepEventInput,
 } from './ports/IRunStateStore.js';
 export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './ports/IRunStateStore.js';

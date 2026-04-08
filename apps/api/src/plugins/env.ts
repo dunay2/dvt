@@ -49,6 +49,7 @@ const EnvSchema = z.object({
   TEMPORAL_IDENTITY: z.string().optional(),
   TEMPORAL_CONNECT_TIMEOUT_MS: z.string().optional(),
   TEMPORAL_REQUEST_TIMEOUT_MS: z.string().optional(),
+  TEMPORAL_MAX_START_PAYLOAD_BYTES: z.string().optional(),
   TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: z.string().optional(),
   // OIDC / auth -- all three required together when auth is enabled
   OIDC_JWKS_URI: z.string().optional(),

@@ -8,6 +8,8 @@ import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import {
   usePlansService,
   useRunsService,
+  useSessionContext,
+  useShellFeedback,
   useWorkspaceService,
 } from '../../services/AppServicesContext';
 import type { ExecutionPlan } from '../../types/dbt';
@@ -31,6 +33,8 @@ export function useCanvasController() {
   const workspaceService = useWorkspaceService();
   const plansService = usePlansService();
   const runsService = useRunsService();
+  const sessionContext = useSessionContext();
+  const shellFeedback = useShellFeedback();
   const navigationActions = useCanvasNavigationActions();
 
   const store = useCanvasStoreFacade();
@@ -87,6 +91,8 @@ export function useCanvasController() {
     workspaceNodeIds: graphModel.workspaceNodes.map((node) => node.id),
     canPlan: store.userPermissions.canPlan,
     canRun: store.userPermissions.canRun,
+    sessionContext,
+    shellFeedback,
     consolePanelVisible: store.consolePanelVisible,
     currentPlan: store.currentPlan as ExecutionPlan | null,
     setCurrentPlan: store.setCurrentPlan,

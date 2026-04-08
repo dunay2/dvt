@@ -1,3 +1,4 @@
+import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
   StartRunApplicationService,
@@ -51,7 +52,7 @@ describe('buildWorkflowEngine', () => {
   it('wires StartRunApplicationService and not the deprecated alias', () => {
     const adapter: IProviderAdapter = {
       provider: 'temporal',
-      async startRun(_planRef, context: ResolvedRunContext) {
+      async startRun(_plan, _planRef, context: ResolvedRunContext) {
         return {
           provider: 'temporal',
           tenantId: context.tenantId,
@@ -65,6 +66,7 @@ describe('buildWorkflowEngine', () => {
         throw new Error('not used');
       },
       async signal(_engineRunRef, _request: SignalRequest) {},
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
     const engine = buildWorkflowEngine({
@@ -76,6 +78,7 @@ describe('buildWorkflowEngine', () => {
         stateStoreRead: {} as never,
         stateStoreWrite: {} as never,
         intentStore: {} as never,
+        planFetcher: {} as never,
       },
       runtime: {
         adapters: new Map([['temporal', adapter]]),

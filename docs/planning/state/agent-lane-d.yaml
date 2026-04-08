@@ -63,7 +63,7 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason: >-
       Residual-risk ownership is documented and the only remaining dependency-gated blocker
       (`MVP-A1`/`MVP-B1` acceptance) is now resolved.

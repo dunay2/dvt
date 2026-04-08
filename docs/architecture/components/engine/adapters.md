@@ -1,4 +1,4 @@
-﻿# Engine Adapters
+# Engine Adapters
 
 ## Purpose
 
@@ -27,4 +27,4 @@ canonical adapter specifications.
 - [Operations](operations.md)
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
-- [C4 Engine Diagram](c4-engine.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)

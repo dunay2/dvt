@@ -12,8 +12,9 @@ import {
   parsePlanRecord,
   parsePlanRef,
   type PlannerBuildResultV1,
+  type RunExecutionPolicy,
 } from '@dvt/contracts';
-import type { IPlanFetcher } from '@dvt/engine';
+import type { IPlanFetcher, StoredPlanArtifact } from '@dvt/engine';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresPlanAdmissionRepository } from './PostgresPlanStore.admission-repository.js';
@@ -21,6 +22,7 @@ import { PostgresPlanExecutabilityRepository } from './PostgresPlanStore.executa
 import { PostgresExecutableBlobRepository } from './PostgresPlanStore.executable-blob-repository.js';
 import {
   assertStoredPlanMatchesRequest,
+  buildExecutionPolicyFromStoredRow,
   buildPlanRecord,
   buildPlanRef,
   buildPlanRefFromStoredRow,
@@ -34,7 +36,6 @@ import { composePostgresPlanStore } from './PostgresPlanStoreComposer.js';
 export interface ExecutablePlanArtifact {
   readonly text: string;
   readonly schemaVersion: string;
-  readonly requiresCapabilities?: readonly string[];
 }
 
 export interface PostgresPlanStoreConfig {
@@ -93,17 +94,9 @@ export class PostgresPlanStore
       planVersion: buildResult.plan.metadata.planVersion,
       schemaVersion: executable.schemaVersion,
       executableBytes,
-      ...(buildResult.plan.metadata.pluginCompatibilityFingerprint === undefined
-        ? {}
-        : {
-            pluginCompatibilityFingerprint:
-              buildResult.plan.metadata.pluginCompatibilityFingerprint,
-          }),
       uriScheme: PLAN_URI_SCHEME,
-      ...(executable.requiresCapabilities === undefined
-        ? {}
-        : { requiresCapabilities: executable.requiresCapabilities }),
     });
+    const executionPolicy = buildResult.executionPolicy;
 
     return this.withTransaction(async (client) => {
       const persistedSizeBytes = planRef.sizeBytes ?? executableBytes.byteLength;
@@ -112,9 +105,12 @@ export class PostgresPlanStore
         planVersion: planRef.planVersion,
         planUri: planRef.uri,
         planSha256: planRef.sha256,
+        ...(executionPolicy.pluginCompatibilityFingerprint === undefined
+          ? {}
+          : { pluginCompatibilityFingerprint: executionPolicy.pluginCompatibilityFingerprint }),
         schemaVersion: planRef.schemaVersion,
         sizeBytes: persistedSizeBytes,
-        requiresCapabilitiesJson: JSON.stringify(planRef.requiresCapabilities ?? null),
+        requiresCapabilitiesJson: JSON.stringify(executionPolicy.requiresCapabilities ?? null),
         canonicalPlanJson,
         executablePlanJson: executable.text,
       });
@@ -128,6 +124,7 @@ export class PostgresPlanStore
 
       assertStoredPlanMatchesRequest(persisted, {
         planRef,
+        executionPolicy,
         canonicalPlanJson,
         executablePlanJson: executable.text,
       });
@@ -265,12 +262,12 @@ export class PostgresPlanStore
     };
   }
 
-  public async fetch(planRef: PlanRefSchemaT): Promise<Uint8Array> {
+  public async fetch(planRef: PlanRefSchemaT): Promise<StoredPlanArtifact> {
     const validated = parsePlanRef(planRef);
     return this.loadExecutablePlan(validated, ['VALID']);
   }
 
-  public async fetchForValidation(planRef: PlanRefSchemaT): Promise<Uint8Array> {
+  public async fetchForValidation(planRef: PlanRefSchemaT): Promise<StoredPlanArtifact> {
     const validated = parsePlanRef(planRef);
     return this.loadExecutablePlan(validated, ['PENDING_VALIDATION', 'VALID']);
   }
@@ -278,7 +275,7 @@ export class PostgresPlanStore
   private async loadExecutablePlan(
     validated: PlanRefSchemaT,
     allowedStates: ReadonlyArray<'PENDING_VALIDATION' | 'VALID' | 'INVALID'>
-  ): Promise<Uint8Array> {
+  ): Promise<StoredPlanArtifact> {
     const row = await this.withClient(async (client) =>
       this.executableBlobRepository.getExecutablePlanRow(client, validated.planId)
     );
@@ -290,7 +287,15 @@ export class PostgresPlanStore
       throw new Error(`PLAN_NOT_VALID: ${validated.planId}:${row.validation_state}`);
     }
 
-    return Buffer.from(row.executable_plan_json, 'utf8');
+    const executionPolicy: RunExecutionPolicy = buildExecutionPolicyFromStoredRow({
+      plugin_compatibility_fingerprint: row.plugin_compatibility_fingerprint,
+      requires_capabilities: row.requires_capabilities,
+    });
+
+    return {
+      bytes: Buffer.from(row.executable_plan_json, 'utf8'),
+      executionPolicy,
+    };
   }
 
   private async transition(

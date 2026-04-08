@@ -1,4 +1,4 @@
-﻿# Engine Contracts
+# Engine Contracts
 
 ## Purpose
 
@@ -34,4 +34,4 @@ normative sources remain under `docs/architecture/engine/contracts/`.
 - [Security](security.md)
 - [Operations](operations.md)
 - [Capabilities](capabilities.md)
-- [C4 Engine Diagram](c4-engine.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)

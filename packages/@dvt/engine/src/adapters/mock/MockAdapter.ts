@@ -8,18 +8,20 @@
  * @date 2026-02-21
  */
 import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
   type EngineRunRef,
+  type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
+  type SignalSemanticsVersion,
   type SignalRequest,
 } from '@dvt/contracts';
 
 import { RunMetadataNotFoundError } from '../../contracts/errors.js';
-import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { buildRunEvents } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
@@ -33,9 +35,6 @@ export interface MockAdapterDeps {
   clock: Pick<IClock, 'nowIsoUtc'>;
   idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
-  planFetcher?: {
-    fetch(planRef: PlanRef): Promise<ExecutionPlan>;
-  };
 }
 
 /** Contract versions this adapter implementation can execute. */
@@ -67,22 +66,24 @@ export class MockAdapter implements IProviderAdapter {
     };
   }
 
-  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
-    const plan: ExecutionPlan = this.deps.planFetcher
-      ? await this.deps.planFetcher.fetch(planRef)
-      : {
-          metadata: {
-            planId: planRef.planId,
-            planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-            schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
-            contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
-            inputHashSha256: planRef.sha256,
-            createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
-          },
-          steps: [],
-        };
+  async startRun(
+    plan: ExecutionPlan,
+    planRef: PlanRef,
+    ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
+    const effectivePlan: ExecutionPlan = plan ?? {
+      metadata: {
+        planId: planRef.planId,
+        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+        inputHashSha256: planRef.sha256,
+        createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
+      },
+      steps: [],
+    };
 
-    validateMockPlanMetadata(plan.metadata);
+    validateMockPlanMetadata(effectivePlan.metadata);
 
     const runRef: EngineRunRef = {
       provider: 'mock',
@@ -91,7 +92,7 @@ export class MockAdapter implements IProviderAdapter {
       runId: ctx.runId,
     };
 
-    for (const step of plan.steps) {
+    for (const step of effectivePlan.steps) {
       validateMockStep(step);
     }
 
@@ -108,13 +109,27 @@ export class MockAdapter implements IProviderAdapter {
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    if (request.type === 'CANCEL') {
-      await this.appendCancelLifecycle(runRef);
+    switch (request.type) {
+      case 'CANCEL':
+        await this.appendCancelLifecycle(runRef);
+        return;
+      case 'PAUSE':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunPaused');
+        return;
+      case 'RESUME':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunResumed');
+        return;
+      default:
+        return;
     }
   }
 
   capabilities(): readonly string[] {
     return MOCK_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
   private async appendCancelLifecycle(runRef: EngineRunRef): Promise<void> {
@@ -143,6 +158,52 @@ export class MockAdapter implements IProviderAdapter {
         payloadVersion: 1,
       }))
     );
+  }
+
+  private async appendPauseResumeLifecycle(
+    runRef: EngineRunRef,
+    request: SignalRequest,
+    eventType: 'RunPaused' | 'RunResumed'
+  ): Promise<void> {
+    const meta = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    if (!meta) {
+      throw new RunMetadataNotFoundError(runRef.runId);
+    }
+
+    const snapshot = await this.deps.stateStore.getSnapshot(runRef.tenantId, runRef.runId);
+    if (eventType === 'RunPaused') {
+      if (!snapshot || snapshot.status !== 'RUNNING' || snapshot.paused) {
+        return;
+      }
+    } else if (!snapshot || snapshot.status !== 'PAUSED' || !snapshot.paused) {
+      return;
+    }
+
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(runRef.runId, [
+      {
+        eventId: this.idempotency.eventId(),
+        eventType,
+        payloadVersion: 1,
+        emittedAt: this.clock.nowIsoUtc(),
+        tenantId: meta.tenantId,
+        projectId: meta.projectId,
+        environmentId: meta.environmentId,
+        runId: meta.runId,
+        planId: meta.planId,
+        planVersion: meta.planVersion,
+        engineAttemptId: 1,
+        logicalAttemptId: meta.logicalAttemptId,
+        idempotencyKey: this.idempotency.signalKey(
+          {
+            runId: meta.runId,
+            logicalAttemptId: meta.logicalAttemptId,
+            planId: meta.planId,
+            planVersion: meta.planVersion,
+          },
+          request
+        ),
+      },
+    ]);
   }
 }
 

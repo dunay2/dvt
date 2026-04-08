@@ -1,4 +1,4 @@
-﻿# Engine Capabilities
+# Engine Capabilities
 
 ## Purpose
 
@@ -25,4 +25,4 @@ to the canonical capability definitions.
 - [Security](security.md)
 - [Operations](operations.md)
 - [Contracts](contracts.md)
-- [C4 Engine Diagram](c4-engine.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)

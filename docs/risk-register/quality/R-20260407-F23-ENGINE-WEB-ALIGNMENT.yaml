@@ -1,0 +1,25 @@
+---
+id: R-20260407-F23-ENGINE-WEB-ALIGNMENT
+title: F-23 web transformation flow can drift from engine run-lifecycle contracts
+status: Open
+date: 2026-04-07
+owners:
+  - apps/web
+  - packages/@dvt/engine
+severity: Medium
+probability: Medium
+context: >
+  PR 817 hardens the web transformation flow while also touching engine contract fixtures and
+  frontend planning/architecture documentation. The slice spans UX behavior and lifecycle contract
+  expectations across route state, run status transitions, and adapter selection surfaces.
+risk: >
+  Future frontend iterations can reintroduce behavior that diverges from canonical engine run
+  lifecycle semantics (status progression, cancellation, or target-adapter assumptions), causing
+  user-visible state inconsistencies even when backend contracts remain valid.
+mitigations:
+  - Keep web run-state transitions aligned with canonical engine contracts and fixtures.
+  - Maintain integration and route-level tests for transformation graph validation and run flow.
+  - Require ARC-2 evidence plus risk updates for cross-surface slices touching engine boundaries.
+  - Revalidate docs-to-code alignment through PR Quality Gate and docs sync surfaces.
+review_after: 2026-05-15
+---

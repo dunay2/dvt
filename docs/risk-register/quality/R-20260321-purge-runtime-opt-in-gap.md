@@ -60,7 +60,7 @@ grow silently with no alert unless `dvt.outbox.retained_rows` and
 
 ## References
 
-- [G5-PR3 Closeout](../planning/closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
+- [G5-PR3 Closeout](../../planning/closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
   — runtime wiring section documents `DeliveryBufferPurgeRuntime` and all 6 env vars
 - `apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts`
 - `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`

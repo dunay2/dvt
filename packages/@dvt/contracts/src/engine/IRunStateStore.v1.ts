@@ -1,5 +1,11 @@
 import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
-import type { IsoUtcString, PlanRef, Provider, RunStatus } from '../types/contracts.js';
+import type {
+  IsoUtcString,
+  PlanRef,
+  Provider,
+  RunExecutionPolicy,
+  RunStatus,
+} from '../types/contracts.js';
 
 export type EventType =
   | 'RunQueued'
@@ -281,9 +287,17 @@ export interface IIdempotencyKeyBuilder {
 }
 
 export interface IPlanFetcher {
-  fetch(planRef: PlanRef): Promise<Uint8Array>;
+  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
 }
 
 export interface IPlanIntegrityValidator {
-  fetchAndValidate(planRef: PlanRef, fetcher: IPlanFetcher): Promise<Uint8Array>;
+  fetchAndValidate(
+    planRef: PlanRef,
+    fetcher: IPlanFetcher
+  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }>;
+}
+
+export interface StoredPlanArtifact {
+  bytes: Uint8Array;
+  executionPolicy: RunExecutionPolicy;
 }

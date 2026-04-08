@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      allowedHosts: ['host.docker.internal'],
       proxy: {
         '/api': {
           target: proxyTarget,
@@ -29,6 +30,9 @@ export default defineConfig(({ mode }) => {
           rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
         },
       },
+    },
+    preview: {
+      allowedHosts: ['host.docker.internal'],
     },
 
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.

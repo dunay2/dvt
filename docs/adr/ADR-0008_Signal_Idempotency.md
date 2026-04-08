@@ -13,7 +13,10 @@
 ## Context
 
 Signals are used to send out-of-band instructions to running workflows
-(PAUSE, RESUME, CANCEL, RETRY_STEP, RETRY_RUN).
+(`PAUSE`, `RESUME`, `CANCEL`, `RETRY_RUN`).
+
+`RETRY_STEP` is no longer part of canonical `SignalType`; see
+`ADR-0048`.
 
 Without a deterministic idempotency key:
 
@@ -37,8 +40,7 @@ signalType + '|' +
 signalId + '|' +
 logicalAttemptId + '|' +
 planId + '|' +
-planVersion +
-(stepId ? '|' + stepId : '')
+planVersion
 )
 
 ### Notes
@@ -53,8 +55,8 @@ Implementations MUST match these SHA256 outputs exactly:
 
 - `run-1|SIGNAL|CANCEL|sig-1|1|plan-abc|3`  
   → `f416e54fb621cf612b2e00ddc80b77427c7a4e9161477e0e3c0b87be8cf6968d`
-- `run-42|SIGNAL|RETRY_STEP|sig-999|2|plan-sales|7|model.orders`  
-  → `2378af3967a757ac180e92def46f181a813315290373d03a6d906ad26f2bfeb5`
+- `run-42|SIGNAL|RETRY_RUN|sig-999|2|plan-sales|7`  
+  → `6782a443429b2e4b4049f0fa92218db60df29134e3a7426c4067ea58cb9c8a02`
 - `run-prod|SIGNAL|PAUSE|sig-pause|1|plan-prod|12`  
   → `94fcc1967da2e5db233eb936e54bbf67645cc36947cdcfaf88ec487d5793d187`
 

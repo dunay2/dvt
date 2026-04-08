@@ -121,7 +121,7 @@ describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
     ).resolves.toBeDefined();
   });
 
-  it('projects required capabilities from step-kind execution profile into plan metadata', async () => {
+  it('projects required capabilities from step-kind execution profile into executionPolicy', async () => {
     const profileRegistry = new StepTypeRegistry(
       new Map([['SPARK_JOB', SparkJobSchema]]),
       new Map([
@@ -135,12 +135,12 @@ describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
       ])
     );
 
-    const { plan } = await buildPlanWithSingleStep(
+    const { executionPolicy } = await buildPlanWithSingleStep(
       'SPARK_JOB',
       { sparkVersion: '3.5' },
       profileRegistry
     );
 
-    expect(plan.metadata.requiresCapabilities).toEqual(['spark.observe', 'spark.submit']);
+    expect(executionPolicy.requiresCapabilities).toEqual(['spark.observe', 'spark.submit']);
   });
 });

@@ -1,5 +1,16 @@
-export {
+import { useQuery } from '@tanstack/react-query';
+
+import {
+  createRuntimeCapabilitiesQueryOptions,
   isPluginAvailableFromCapabilities,
-  useRuntimeCapabilitiesQuery as useCapabilitiesQuery,
+  type RuntimeCapabilitiesDto,
 } from '../../capabilities/runtime-capabilities';
-export type { RuntimeCapabilitiesDto as CapabilitiesResponse } from '../../capabilities/runtime-capabilities';
+import { useCapabilitiesPort } from '../services/AppServicesContext';
+
+export { isPluginAvailableFromCapabilities };
+export type CapabilitiesResponse = RuntimeCapabilitiesDto;
+
+export function useCapabilitiesQuery() {
+  const capabilitiesPort = useCapabilitiesPort();
+  return useQuery(createRuntimeCapabilitiesQueryOptions(capabilitiesPort));
+}

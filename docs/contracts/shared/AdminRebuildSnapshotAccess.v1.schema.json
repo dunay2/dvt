@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dvt.local/contracts/shared/AdminRebuildSnapshotAccess.v1.schema.json",
+  "$comment": "Canonical caller-visible access contract for POST /admin/runs/:runId/rebuild-snapshot.",
+  "title": "Admin Rebuild Snapshot Access v1",
+  "description": "Machine-readable contract for the admin rebuild snapshot route access invariants and governed pipeline order.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "route",
+    "requiredAction",
+    "adminActionPrefix",
+    "pipeline",
+    "responses"
+  ],
+  "properties": {
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/admin/runs/:runId/rebuild-snapshot"
+        }
+      }
+    },
+    "requiredAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "command"
+        },
+        "name": {
+          "type": "string",
+          "const": "admin:rebuild-snapshot"
+        }
+      }
+    },
+    "adminActionPrefix": {
+      "type": "string",
+      "const": "admin:"
+    },
+    "pipeline": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "prefixItems": [
+        { "const": "parse_body.tenant_id" },
+        { "const": "validate_body.tenant_id" },
+        { "const": "authenticate_bearer_token" },
+        { "const": "authorize_execution_scope" },
+        { "const": "enforce_admin_action_prefix" },
+        { "const": "rebuild_snapshot" }
+      ],
+      "items": false
+    },
+    "responses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "errors"],
+      "properties": {
+        "success": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["statusCode", "body"],
+          "properties": {
+            "statusCode": {
+              "type": "integer",
+              "const": 200
+            },
+            "body": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["runId", "status"],
+              "properties": {
+                "runId": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "APPROVED",
+                    "RUNNING",
+                    "PAUSED",
+                    "COMPLETED",
+                    "FAILED",
+                    "CANCELLED"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "errors": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["statusCode", "reason"],
+              "properties": {
+                "statusCode": { "const": 400 },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "invalid_body",
+                    "missing_tenant_id",
+                    "invalid_tenant_id"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["statusCode", "reason"],
+              "properties": {
+                "statusCode": { "const": 401 },
+                "reason": {
+                  "type": "string",
+                  "enum": ["missing_token", "invalid_token", "token_expired"]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["statusCode", "reason"],
+              "properties": {
+                "statusCode": { "const": 403 },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "principal_suspended",
+                    "tenant_not_granted",
+                    "project_not_granted",
+                    "environment_not_granted",
+                    "action_not_granted",
+                    "token_assertion_conflict"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["statusCode", "reason"],
+              "properties": {
+                "statusCode": { "const": 404 },
+                "reason": {
+                  "type": "string",
+                  "const": "run_not_found"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["statusCode", "reason"],
+              "properties": {
+                "statusCode": { "const": 500 },
+                "reason": {
+                  "type": "string",
+                  "const": "internal_error"
+                }
+              }
+            }
+          ],
+          "items": false
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "route": {
+        "method": "POST",
+        "path": "/admin/runs/:runId/rebuild-snapshot"
+      },
+      "requiredAction": {
+        "kind": "command",
+        "name": "admin:rebuild-snapshot"
+      },
+      "adminActionPrefix": "admin:",
+      "pipeline": [
+        "parse_body.tenant_id",
+        "validate_body.tenant_id",
+        "authenticate_bearer_token",
+        "authorize_execution_scope",
+        "enforce_admin_action_prefix",
+        "rebuild_snapshot"
+      ],
+      "responses": {
+        "success": {
+          "statusCode": 200,
+          "body": {
+            "runId": "run-123",
+            "status": "RUNNING"
+          }
+        },
+        "errors": [
+          {
+            "statusCode": 400,
+            "reason": "missing_tenant_id"
+          },
+          {
+            "statusCode": 401,
+            "reason": "missing_token"
+          },
+          {
+            "statusCode": 403,
+            "reason": "action_not_granted"
+          },
+          {
+            "statusCode": 404,
+            "reason": "run_not_found"
+          },
+          {
+            "statusCode": 500,
+            "reason": "internal_error"
+          }
+        ]
+      }
+    }
+  ]
+}
