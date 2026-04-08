@@ -52,7 +52,7 @@ contains:
 - identity
 - context
 - ordered execution steps
-- executor selection
+- one provider or executor binding for the whole plan
 - provenance
 
 ### Step
@@ -114,6 +114,30 @@ type GitArtifactRef = {
   contentSha256: string;
 };
 ```
+
+### Preview profile
+
+`previewProfile` is the explicit request discriminator for `POST /plans/preview`.
+It is required. There is no implicit default.
+
+In v1 this document governs exactly one profile:
+
+```ts
+type PreviewProfile = 'transformation-sql-first-v1';
+
+type TransformationSqlFirstPreviewPolicy = {
+  previewProfile: 'transformation-sql-first-v1';
+  executionProvider: 'postgres';
+  provenance: 'required';
+  persistWhenValid: true;
+  providerModel: 'one-provider-per-plan';
+};
+```
+
+Future profiles may add other whole-plan providers such as dbt or NiFi, but a
+single persisted plan still binds exactly one provider profile for that run.
+Non-transformation preview profiles, if exposed by the generic planner route,
+are outside the scope of this vertical document and must be governed elsewhere.
 
 ### Nodes
 
@@ -179,15 +203,22 @@ type DesignGraphDraft = {
 3. exactly one sink node
 4. exactly two edges: `source -> sql_transform` and `sql_transform -> sink`
 5. no cycles
-6. SQL artifact provenance is required
-7. execution target is `postgres` only
-8. preview must persist when valid
-9. start is blocked without a real `PlanRef`
+6. `previewProfile` is required and explicit
+7. `transformation-sql-first-v1` requires SQL artifact provenance
+8. `transformation-sql-first-v1` binds execution to `postgres` only
+9. one persisted plan binds exactly one provider profile
+10. preview must persist when valid
+11. start is blocked without a real `PlanRef`
+12. multi-provider dispatch inside a single run is out of scope
 
 ## Graph to plan compiler mapping
 
 The compiler is deterministic. It does not invent business logic. It maps the
 three-node graph into an ordered execution plan.
+
+The canonical `ExecutionPlan` contract remains open to heterogeneous step kinds,
+but this vertical still binds one provider profile for the whole plan. All
+emitted steps must therefore be executable on that single provider.
 
 ### Step kinds for v1
 
@@ -233,69 +264,50 @@ type PersistedTransformationPlan = {
 
 ## Preview and persistence contract
 
+The preview route contract is explicit-profile-based, not inferred from the
+compiled plan.
+
+### Preview profile rules
+
+| Preview profile               | Provider binding | Provenance | Notes                                     |
+| ----------------------------- | ---------------- | ---------- | ----------------------------------------- |
+| `transformation-sql-first-v1` | `postgres`       | required   | current v1 profile for the first vertical |
+
 ### Request
 
-```json
-{
-  "draft": {
-    "context": {
-      "tenantId": "tenant-a",
-      "projectId": "sales",
-      "environmentId": "dev",
-      "executionTarget": "postgres",
-      "graphArtifact": {
-        "repo": "dunay2/dvt",
-        "path": "graphs/orders-daily.json",
-        "ref": "refs/heads/main",
-        "commitSha": "abc123",
-        "contentSha256": "sha256-graph"
-      }
-    },
-    "nodes": [
-      {
-        "id": "src",
-        "type": "source",
-        "payload": {
-          "kind": "postgres_table",
-          "schema": "raw",
-          "table": "orders",
-          "alias": "orders"
-        }
-      },
-      {
-        "id": "tx",
-        "type": "sql_transform",
-        "payload": {
-          "dialect": "postgres",
-          "sqlArtifact": {
-            "repo": "dunay2/dvt",
-            "path": "sql/orders_daily.sql",
-            "ref": "refs/heads/main",
-            "commitSha": "abc123",
-            "contentSha256": "sha256-sql"
-          },
-          "entrypoint": "main"
-        }
-      },
-      {
-        "id": "sink",
-        "type": "sink",
-        "payload": {
-          "kind": "postgres_table",
-          "schema": "analytics",
-          "table": "orders_daily",
-          "materialization": "table",
-          "writeMode": "replace"
-        }
-      }
-    ],
-    "edges": [
-      { "fromNodeId": "src", "toNodeId": "tx" },
-      { "fromNodeId": "tx", "toNodeId": "sink" }
-    ]
-  },
-  "persist": true
-}
+```ts
+type PlanPreviewRequest = {
+  previewProfile: 'transformation-sql-first-v1';
+  context: {
+    runId: string;
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    targetAdapter: string;
+  };
+  selectedNodeIds: string[];
+  graphSource: {
+    kind: 'generic-graph-v1';
+    sourceFamily: 'transformation-design-graph';
+    sourceVersion: 'transformation-sql-first-v1';
+    nodes: {
+      nodeId: string;
+      stepKind: string;
+      dependsOn: string[];
+      stepTypeConfig?: Record<string, unknown>;
+      metadata?: {
+        displayName?: string;
+        sourceRef?: string;
+        tags?: Record<string, string>;
+      };
+    }[];
+  };
+  provenance: {
+    graphArtifact: GitArtifactRef;
+    sqlArtifact: GitArtifactRef;
+  };
+  persist: true;
+};
 ```
 
 ### Response
@@ -313,6 +325,8 @@ type PlanRef = {
 };
 
 type PlanPreviewPersistResponse = {
+  previewProfile: 'transformation-sql-first-v1';
+  plan: ExecutionPlan;
   planRef: PlanRef;
   planSummary: {
     executor: 'postgres';
@@ -338,13 +352,13 @@ type PlanPreviewPersistResponse = {
 
 ### Error contract
 
-| Status | Meaning                          |
-| ------ | -------------------------------- |
-| `400`  | malformed request envelope       |
-| `401`  | unauthenticated                  |
-| `403`  | authenticated but not authorized |
-| `422`  | graph or SQL contract invalid    |
-| `500`  | persistence or internal failure  |
+| Status | Meaning                                                   |
+| ------ | --------------------------------------------------------- |
+| `400`  | malformed request envelope or unsupported preview profile |
+| `401`  | unauthenticated                                           |
+| `403`  | authenticated but not authorized                          |
+| `422`  | graph, provenance, or profile contract invalid            |
+| `500`  | persistence or internal failure                           |
 
 ## Preview and persist sequence
 
@@ -463,17 +477,19 @@ sequenceDiagram
 
 ## Phase 2 dbt compatibility rule
 
-Phase 2 may replace the executor implementation for some plans, but it must not
-replace the outer contract.
+Phase 2 may add new whole-plan provider profiles, but it must not replace the
+outer contract.
 
 Allowed in phase 2:
 
-- compiler emits dbt-backed execution steps
-- runtime dispatches to dbt executor
+- compiler emits dbt-backed execution steps for a dbt profile
+- runtime dispatches the run to the dbt profile executor
 - result surfaces show `executor: dbt`
 
 Not allowed in phase 2:
 
 - bypassing preview persistence
 - bypassing `PlanRef`
+- inferring profile requirements from compiled step regexes
+- mixing multiple providers inside the same run
 - creating a second user-facing flow for dbt runs

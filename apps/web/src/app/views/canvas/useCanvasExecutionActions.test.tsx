@@ -365,6 +365,54 @@ describe('resolvePlanRefForStartRun', () => {
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
+        previewProfile: 'planner-generic-v1',
+        graphSource: expect.objectContaining({
+          kind: 'generic-graph-v1',
+          sourceFamily: 'canvas-canonical-graph',
+          sourceVersion: 'planner-generic-v1',
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'source-node',
+              stepKind: 'CANVAS_SOURCE',
+              dependsOn: [],
+              metadata: expect.objectContaining({
+                displayName: 'Source',
+                tags: {
+                  pluginId: 'dvt',
+                  role: 'input',
+                  kind: 'dvt:source',
+                },
+              }),
+            }),
+            expect.objectContaining({
+              nodeId: 'transform-node',
+              stepKind: 'CANVAS_TRANSFORM',
+              dependsOn: ['source-node'],
+              metadata: expect.objectContaining({
+                displayName: 'Transform',
+                tags: {
+                  pluginId: 'dvt',
+                  role: 'transform',
+                  kind: 'dvt:sql_transform',
+                },
+              }),
+            }),
+            expect.objectContaining({
+              nodeId: 'sink-node',
+              stepKind: 'CANVAS_SINK',
+              dependsOn: ['transform-node'],
+              metadata: expect.objectContaining({
+                displayName: 'Sink',
+                tags: {
+                  pluginId: 'dvt',
+                  role: 'output',
+                  kind: 'dvt:sink',
+                },
+              }),
+            }),
+          ]),
+        }),
+        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
         context: expect.objectContaining({
           tenantId: 'tenant',
           projectId: 'project',
@@ -450,6 +498,197 @@ describe('resolvePlanRefForStartRun', () => {
       'Preview is stale. Re-run Plan before starting.'
     );
     expect(onRunStarted).not.toHaveBeenCalled();
+  });
+
+  it('keeps preview current when only raw metadata changes without changing the projected graph source', async () => {
+    const plansService: IPlansPort = {
+      previewPlan: vi.fn(async () => mockExecutionPlan),
+      importPlan: vi.fn(async () => mockExecutionPlan),
+    };
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+    const onRunStarted = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={null}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const updatedNodes = canonicalNodes.map((node) =>
+      node.id === 'transform-node'
+        ? {
+            ...node,
+            metadata: { uiHint: 'changed' },
+          }
+        : node
+    );
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={mockExecutionPlan}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={updatedNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('true');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Preview is current and ready to run.'
+    );
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(plansService.previewPlan).mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'canvas-canonical-graph',
+          sourceVersion: 'planner-generic-v1',
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'transform-node',
+              stepKind: 'CANVAS_TRANSFORM',
+            }),
+          ]),
+        },
+      })
+    );
+  });
+
+  it('marks preview stale and rebuilds payload when node kind changes without id changes', async () => {
+    const plansService: IPlansPort = {
+      previewPlan: vi.fn(async () => mockExecutionPlan),
+      importPlan: vi.fn(async () => mockExecutionPlan),
+    };
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+    const onRunStarted = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={null}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const updatedNodes = canonicalNodes.map((node) =>
+      node.id === 'transform-node'
+        ? {
+            ...node,
+            pluginId: 'dbt',
+            kind: 'dbt:model' as const,
+            name: 'Transform renamed',
+            path: 'models/transform.sql',
+          }
+        : node
+    );
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={mockExecutionPlan}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={updatedNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Preview is stale. Re-run Plan before starting.'
+    );
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(plansService.previewPlan).mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'canvas-canonical-graph',
+          sourceVersion: 'planner-generic-v1',
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'transform-node',
+              stepKind: 'DBT_MODEL',
+              metadata: expect.objectContaining({
+                displayName: 'Transform renamed',
+                sourceRef: 'models/transform.sql',
+              }),
+            }),
+          ]),
+        },
+      })
+    );
   });
 
   it('starts run with persisted plan and forwards run id to navigation', async () => {

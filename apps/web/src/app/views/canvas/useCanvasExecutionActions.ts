@@ -7,6 +7,7 @@ import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ExecutionPlan } from '../../types/dbt';
 import type { PlanRef } from '../../types/engine';
+import { buildPreviewGraphSource } from './previewGraphSource';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
 type UseCanvasExecutionActionsParams = {
@@ -75,6 +76,7 @@ export function useCanvasExecutionActions({
     nodes: canonicalNodes,
     edges: canonicalEdges,
     selectedNodeIds,
+    workspaceNodeIds,
   });
   const isCurrentPlanStale =
     currentPlan != null &&
@@ -113,7 +115,14 @@ export function useCanvasExecutionActions({
 
     try {
       const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
+      const graphSource = buildPreviewGraphSource(
+        canonicalNodes,
+        canonicalEdges,
+        selectedForPlan
+      );
       const plan = await plansService.previewPlan({
+        previewProfile: 'planner-generic-v1',
+        graphSource,
         selectedNodeIds: selectedForPlan,
         context: sessionContext.buildRunContext(`run_ui_${Date.now()}`),
         persist: true,
@@ -128,6 +137,8 @@ export function useCanvasExecutionActions({
     }
   }, [
     canPlan,
+    canonicalEdges,
+    canonicalNodes,
     plansService,
     selectedNodeIds,
     sessionContext,

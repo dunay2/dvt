@@ -3,9 +3,10 @@ import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 type GitArtifactRef = {
   readonly repo: string;
-  readonly gitRef: string;
   readonly path: string;
-  readonly sha256: string;
+  readonly ref: string;
+  readonly commitSha: string;
+  readonly contentSha256: string;
 };
 
 export type PreviewProvenance = {
@@ -48,11 +49,19 @@ function parseGitArtifactRef(raw: unknown): RouteParseResult<GitArtifactRef> {
   }
 
   const repo = asNonEmptyTrimmedString(raw.repo);
-  const gitRef = asNonEmptyTrimmedString(raw.gitRef);
   const path = asNonEmptyTrimmedString(raw.path);
-  const sha256 = asLowerHexSha256(raw.sha256);
+  const ref = asNonEmptyTrimmedString(raw.ref) ?? asNonEmptyTrimmedString(raw.gitRef);
+  const commitSha =
+    asNonEmptyTrimmedString(raw.commitSha) ?? asNonEmptyTrimmedString(raw.commitSha1);
+  const contentSha256 = asLowerHexSha256(raw.contentSha256) ?? asLowerHexSha256(raw.sha256);
 
-  if (repo === undefined || gitRef === undefined || path === undefined || sha256 === undefined) {
+  if (
+    repo === undefined ||
+    ref === undefined ||
+    path === undefined ||
+    commitSha === undefined ||
+    contentSha256 === undefined
+  ) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
@@ -60,9 +69,10 @@ function parseGitArtifactRef(raw: unknown): RouteParseResult<GitArtifactRef> {
     ok: true,
     value: {
       repo,
-      gitRef,
       path,
-      sha256,
+      ref,
+      commitSha,
+      contentSha256,
     },
   };
 }

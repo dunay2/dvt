@@ -1,3 +1,4 @@
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -61,6 +62,50 @@ const VALID_PLAN_REF = {
   planVersion: '1.0',
 };
 
+const PREVIEW_PROFILE_GENERIC = 'planner-generic-v1' as const;
+const PREVIEW_PROFILE_TRANSFORMATION = 'transformation-sql-first-v1' as const;
+
+const VALID_PREVIEW_PROVENANCE = {
+  graphArtifact: {
+    repo: 'org/repo',
+    ref: 'refs/heads/main',
+    path: 'models/graph.yml',
+    commitSha: 'commit-graph-1',
+    contentSha256: 'c'.repeat(64),
+  },
+  sqlArtifact: {
+    repo: 'org/repo',
+    ref: 'refs/heads/main',
+    path: 'models/model.sql',
+    commitSha: 'commit-sql-1',
+    contentSha256: 'd'.repeat(64),
+  },
+} as const;
+
+function buildStoredPlan(): {
+  readonly metadata: {
+    readonly planId: string;
+    readonly planVersion: string;
+    readonly schemaVersion: string;
+    readonly contractVersion: string;
+    readonly inputHashSha256: string;
+    readonly createdAtIso: string;
+  };
+  readonly steps: readonly [];
+} {
+  return {
+    metadata: {
+      planId: VALID_PLAN_REF.planId,
+      planVersion: VALID_PLAN_REF.planVersion,
+      schemaVersion: VALID_PLAN_REF.schemaVersion,
+      contractVersion: '1.0.0',
+      inputHashSha256: VALID_PLAN_REF.sha256,
+      createdAtIso: '2026-04-05T00:00:00.000Z',
+    },
+    steps: [],
+  } as const;
+}
+
 describe('planRoutes', () => {
   it('returns 400 on preview when body.context is missing', async () => {
     const reply = createReply();
@@ -111,6 +156,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',
@@ -164,6 +210,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',
@@ -186,18 +233,9 @@ describe('planRoutes', () => {
 
   it('returns plan and planRef from preview route', async () => {
     const reply = createReply();
+    const plan = buildStoredPlan();
     const buildPlan = vi.fn(async () => ({
-      plan: {
-        metadata: {
-          planId: VALID_PLAN_REF.planId,
-          planVersion: VALID_PLAN_REF.planVersion,
-          schemaVersion: VALID_PLAN_REF.schemaVersion,
-          contractVersion: '1.0.0',
-          inputHashSha256: VALID_PLAN_REF.sha256,
-          createdAtIso: '2026-04-05T00:00:00.000Z',
-        },
-        steps: [],
-      },
+      plan,
       canonicalPlanJson: '{}',
     }));
     const storePlan = vi.fn(async () => VALID_PLAN_REF);
@@ -228,6 +266,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',
@@ -244,18 +283,17 @@ describe('planRoutes', () => {
 
     expect(reply.statusCode).toBe(200);
     expect(reply.payload).toEqual({
-      plan: {
-        metadata: {
-          planId: VALID_PLAN_REF.planId,
-          planVersion: VALID_PLAN_REF.planVersion,
-          schemaVersion: VALID_PLAN_REF.schemaVersion,
-          contractVersion: '1.0.0',
-          inputHashSha256: VALID_PLAN_REF.sha256,
-          createdAtIso: '2026-04-05T00:00:00.000Z',
-        },
-        steps: [],
-      },
+      previewProfile: PREVIEW_PROFILE_GENERIC,
+      plan,
       planRef: VALID_PLAN_REF,
+      persisted: {
+        planRecordId: VALID_PLAN_REF.planId,
+        canonicalPlanSha256: sha256HexUtf8(jcsCanonicalize(plan)),
+      },
+      validation: {
+        valid: true,
+        warnings: [],
+      },
     });
     expect(buildPlan).toHaveBeenCalledOnce();
     expect(storePlan).toHaveBeenCalledOnce();
@@ -348,6 +386,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',
@@ -399,6 +438,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
           selectedNodeIds: ['node_1'],
           manifestRef: {
             uri: 'file://manifest.json',
@@ -425,20 +465,179 @@ describe('planRoutes', () => {
     expect(deps.planStore.storePlan).not.toHaveBeenCalled();
   });
 
+  it('returns 422 when postgres transformation preview omits required provenance', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: {
+        buildPlan: vi.fn(async () => ({
+          plan: {
+            metadata: {
+              planId: VALID_PLAN_REF.planId,
+              planVersion: VALID_PLAN_REF.planVersion,
+              schemaVersion: VALID_PLAN_REF.schemaVersion,
+              contractVersion: '1.0.0',
+              inputHashSha256: VALID_PLAN_REF.sha256,
+              createdAtIso: '2026-04-05T00:00:00.000Z',
+            },
+            steps: [
+              {
+                stepId: 'postgres-transform',
+                kind: 'POSTGRES_SQL_TRANSFORM',
+                dependsOn: [],
+              },
+            ],
+          },
+          canonicalPlanJson: '{}',
+        })),
+      },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-provenance-required',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          cause: 'missing_preview_provenance',
+          message: 'transformation-sql-first-v1 requires graphArtifact and sqlArtifact provenance.',
+        },
+      },
+    });
+    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planValidator.validatePlan).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when previewProfile is missing', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-profile-missing',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_preview_profile',
+        target: 'previewProfile',
+      },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+  });
+
+  it('returns 422 when previewProfile does not allow manifestRef input', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-profile-manifest-ref-rejected',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+          selectedNodeIds: ['node_1'],
+          manifestRef: {
+            uri: 'file://manifest.json',
+            sha256: 'f'.repeat(64),
+          },
+          provenance: VALID_PREVIEW_PROVENANCE,
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          cause: 'preview_profile_source_not_allowed',
+          message: 'transformation-sql-first-v1 does not allow manifestRef plan input.',
+        },
+      },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+  });
+
   it('forwards preview provenance into planner observability extra payload', async () => {
     const reply = createReply();
+    const plan = buildStoredPlan();
     const buildPlan = vi.fn(async () => ({
-      plan: {
-        metadata: {
-          planId: VALID_PLAN_REF.planId,
-          planVersion: VALID_PLAN_REF.planVersion,
-          schemaVersion: VALID_PLAN_REF.schemaVersion,
-          contractVersion: '1.0.0',
-          inputHashSha256: VALID_PLAN_REF.sha256,
-          createdAtIso: '2026-04-05T00:00:00.000Z',
-        },
-        steps: [],
-      },
+      plan,
       canonicalPlanJson: '{}',
     }));
     const deps = {
@@ -471,6 +670,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',
@@ -478,20 +678,7 @@ describe('planRoutes', () => {
             sourceVersion: 'manifest-v10',
             nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
-          provenance: {
-            graphArtifact: {
-              repo: 'org/repo',
-              gitRef: 'refs/heads/main',
-              path: 'models/graph.yml',
-              sha256: 'a'.repeat(64),
-            },
-            sqlArtifact: {
-              repo: 'org/repo',
-              gitRef: 'refs/heads/main',
-              path: 'models/model.sql',
-              sha256: 'b'.repeat(64),
-            },
-          },
+          provenance: VALID_PREVIEW_PROVENANCE,
         },
         log: { error: vi.fn() },
       } as never,
@@ -500,25 +687,35 @@ describe('planRoutes', () => {
     );
 
     expect(reply.statusCode).toBe(200);
+    expect(reply.payload).toEqual(
+      expect.objectContaining({
+        previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+        plan,
+        planRef: VALID_PLAN_REF,
+        planSummary: {
+          executor: 'postgres',
+          nodeCount: 1,
+          stepCount: 0,
+          sourceTables: [],
+          sinkTables: [],
+        },
+        persisted: {
+          planRecordId: VALID_PLAN_REF.planId,
+          canonicalPlanSha256: sha256HexUtf8(jcsCanonicalize(plan)),
+        },
+        validation: {
+          valid: true,
+          warnings: [],
+        },
+        provenance: VALID_PREVIEW_PROVENANCE,
+      })
+    );
     expect(buildPlan).toHaveBeenCalledOnce();
     expect(buildPlan).toHaveBeenCalledWith(
       expect.objectContaining({
         observability: expect.objectContaining({
           extra: expect.objectContaining({
-            transformationFlowProvenance: {
-              graphArtifact: {
-                repo: 'org/repo',
-                gitRef: 'refs/heads/main',
-                path: 'models/graph.yml',
-                sha256: 'a'.repeat(64),
-              },
-              sqlArtifact: {
-                repo: 'org/repo',
-                gitRef: 'refs/heads/main',
-                path: 'models/model.sql',
-                sha256: 'b'.repeat(64),
-              },
-            },
+            transformationFlowProvenance: VALID_PREVIEW_PROVENANCE,
           }),
         }),
       })
@@ -562,6 +759,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',
@@ -572,16 +770,12 @@ describe('planRoutes', () => {
           provenance: {
             graphArtifact: {
               repo: 'org/repo',
-              gitRef: 'refs/heads/main',
+              ref: 'refs/heads/main',
               path: 'models/graph.yml',
-              sha256: 'not-a-sha256',
+              commitSha: 'commit-graph-1',
+              contentSha256: 'not-a-sha256',
             },
-            sqlArtifact: {
-              repo: 'org/repo',
-              gitRef: 'refs/heads/main',
-              path: 'models/model.sql',
-              sha256: 'b'.repeat(64),
-            },
+            sqlArtifact: VALID_PREVIEW_PROVENANCE.sqlArtifact,
           },
         },
       } as never,
@@ -590,7 +784,9 @@ describe('planRoutes', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: { type: 'bad_request', reason: 'invalid_plan_source' } });
+    expect(reply.payload).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
     expect(deps.planStore.storePlan).not.toHaveBeenCalled();
   });
@@ -622,6 +818,7 @@ describe('planRoutes', () => {
             environmentId: 'env-1',
             targetAdapter: 'mock',
           },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
           selectedNodeIds: ['node_1'],
           graphSource: {
             kind: 'generic-graph-v1',

@@ -1,4 +1,4 @@
-import type { CanonicalNode } from '../../types/canonical';
+import type { PlanPreviewInput as ShellPlanPreviewInput } from '../../ports/plans';
 import type {
   EngineRunRef,
   PlanRef,
@@ -6,6 +6,7 @@ import type {
   RunEvent,
   RunStatusSnapshot,
 } from '../../types/engine';
+import type { ExecutionPlan } from '../../types/dbt';
 import type { NodeBadgeContribution, NodeRendererRegistration } from './NodeRendering';
 import type { CanvasOverlayContribution } from './NodeRendering';
 import type { LocalizableString } from './PluginManifest';
@@ -43,13 +44,10 @@ export interface RunOperations {
 // Plan operations
 // ---------------------------------------------------------------------------
 
-export interface PlanPreviewInput {
-  nodes: CanonicalNode[];
-  runContext: RunContext;
-}
+export type PlanPreviewInput = ShellPlanPreviewInput;
 
 export interface PlanOperations {
-  preview?: (input: PlanPreviewInput) => Promise<PlanRef>;
+  preview?: (input: PlanPreviewInput) => Promise<ExecutionPlan>;
 }
 
 // ---------------------------------------------------------------------------

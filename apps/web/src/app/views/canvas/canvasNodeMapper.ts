@@ -26,7 +26,7 @@ export function mapCanonicalNodeToCanvasNode(
     position: persistedPosition ?? { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
     data: {
       name: canonicalNode.name,
-      type: (canonicalNode.metadata?.dbtType as string | undefined) ?? kindRegistration.label,
+      type: kindRegistration.label,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,
@@ -86,10 +86,6 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     typeof canonicalNode.metadata?.typeLabel === 'string'
       ? canonicalNode.metadata.typeLabel
       : undefined;
-  const dbtTypeFromMetadata =
-    typeof canonicalNode.metadata?.dbtType === 'string'
-      ? canonicalNode.metadata.dbtType
-      : undefined;
 
   return {
     id: canonicalNode.id,
@@ -97,7 +93,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     position,
     data: {
       name: canonicalNode.name,
-      type: typeLabelFromMetadata ?? dbtTypeFromMetadata ?? kindRegistration.label,
+      type: typeLabelFromMetadata ?? kindRegistration.label,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,

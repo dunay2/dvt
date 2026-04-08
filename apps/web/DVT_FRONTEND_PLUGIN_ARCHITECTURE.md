@@ -127,6 +127,10 @@ export type PluginContributions = {
 };
 ```
 
+`nodeKinds[]` puede declarar `previewStepKind` cuando un kind necesita una
+proyección planner-facing específica durante el preview genérico. Si no se
+declara, la shell usa el mapping base por `role`.
+
 ```typescript
 export const PLUGIN_REGISTRY: PluginContributions[] = [
   dbtContributions,

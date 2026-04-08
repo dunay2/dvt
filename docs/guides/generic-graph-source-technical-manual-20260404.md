@@ -144,6 +144,9 @@ export interface GenericGraphNodeV1 {
 - `sourceFamily` identifies the producer family, not the execution runtime.
 - `stepKind` is explicit in the target node shape even if per-kind schema
   enforcement lands in `MW-A1`.
+- authoring adapters must derive `stepKind` from an explicit source-owned
+  mapping seam such as a typed node-kind registry. Free-form metadata is not a
+  governed `stepKind` authority.
 - `stepTypeConfig` stays open at the shared-kernel contract level. Per-kind
   semantic validation remains registry-owned.
 - `dependsOn` is the only dependency authority. No implicit ordering is

@@ -57,7 +57,6 @@ export function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
     lastDuration: node.lastDuration,
     lastCost: node.lastCost,
     metadata: {
-      dbtType: node.type,
       package: node.package,
       dependencies: node.dependencies,
       compiledSql: node.compiledSql,
@@ -73,9 +72,6 @@ export function mapDbtEdgeToCanonical(edge: DbtEdge): CanonicalEdge {
     sourceId: edge.source,
     targetId: edge.target,
     relation: EDGE_RELATION_BY_TYPE[edge.type],
-    metadata: {
-      dbtType: edge.type,
-    },
   };
 }
 

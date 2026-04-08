@@ -7,6 +7,7 @@ export type NodeKindRegistration = {
   pluginId: string;
   label: string;
   role: CoreNodeRole;
+  previewStepKind?: string;
   icon: LucideIcon;
   borderClass: string;
   minimapColor: string;
