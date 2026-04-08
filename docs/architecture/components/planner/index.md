@@ -1,4 +1,4 @@
----
+﻿---
 title: @dvt/planner
 status: Active
 owner: Planning Domain / Architecture / Docs
@@ -9,7 +9,7 @@ last_reviewed: 2026-04-07
 
 ## Canonical reading order
 
-1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment-20260320.md)
+1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
 2. [Planner contracts](../../../contracts/planner/index.md)
 3. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
 4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)

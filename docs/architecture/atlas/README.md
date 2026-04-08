@@ -1,4 +1,4 @@
-# DVT Architecture Atlas
+﻿# DVT Architecture Atlas
 
 Code-aligned snapshot under `docs/architecture/`.
 

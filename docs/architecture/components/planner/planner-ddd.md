@@ -1,4 +1,4 @@
----
+﻿---
 title: planner Structure and Module Map
 status: Active
 owner: Planning Domain / Architecture
@@ -51,5 +51,5 @@ flowchart LR
 ## Canonical references
 
 - [Planner component entry](index.md)
-- [Planner current state assessment](../../../planning/status/planner-current-state-assessment-20260320.md)
+- [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
 - [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)

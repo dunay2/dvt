@@ -89,7 +89,7 @@ planning_type: closeout
   both cases asserting the admin route is unregistered (`404`) rather than
   merely unauthorized.
 - Libraries evaluated:
-  None evaluated — no custom implementation.
+  None evaluated â€” no custom implementation.
 
 ## Implementation Summary
 

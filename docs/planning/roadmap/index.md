@@ -25,11 +25,13 @@ Concept anchors for this page:
 - Roadmap of record: this page
 - Current implementation state:
   [System Delivery Status](../../architecture/system-delivery-status.md)
+- Current planning dashboard:
+  [Planning Dashboard](../state/planning-dashboard.md)
 - Current planning hub: [Planning Control Tower](../state/planning-control-tower.md)
 - Current planning status:
   [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 - Current execution tracking:
-  [Planning Control Tower](../state/planning-control-tower.md)
+  [Execution Workboard](../state/execution-workboard.md)
 
 ## Document Classification
 
@@ -92,9 +94,10 @@ Concept anchors for this page:
 Repository-wide planning should currently be read in this order:
 
 1. [System Delivery Status](../../architecture/system-delivery-status.md)
-2. [Planning Control Tower](../state/planning-control-tower.md)
-3. [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
-4. Relevant proposals under [Proposal Portfolio Map](../proposals/portfolio-map-20260403.md)
+2. [Planning Dashboard](../state/planning-dashboard.md)
+3. [Planning Control Tower](../state/planning-control-tower.md)
+4. [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
+5. Relevant proposals under [Proposal Portfolio Map](../proposals/portfolio-map-20260403.md)
 
 Current subsystem roadmaps worth consulting:
 

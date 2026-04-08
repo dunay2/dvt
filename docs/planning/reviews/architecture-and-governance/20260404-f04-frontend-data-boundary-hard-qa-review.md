@@ -63,7 +63,7 @@ Canonical execution tracking remains in:
 - Title: Encoding/mojibake regression in source comments.
   Why it matters: Reduces maintainability and is a quality-gate smell for docs/code hygiene.
   Evidence:
-  - [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts:11) contains malformed characters (`ï¿½`).
+  - [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts:11) contains malformed characters (`Ã¯Â¿Â½`).
     Risk: Review noise and copy/paste defects in docs/comments.
     Recommendation: Replace malformed comment text and enforce UTF-8 clean comments.
 
@@ -106,7 +106,7 @@ Canonical execution tracking remains in:
 ## Test Assessment
 
 - Negative paths present: Existing web suite has negative tests for canvas and health.
-- Negative paths missing: No explicit tests asserting “no inline query keys” or “single mode resolution owner”.
+- Negative paths missing: No explicit tests asserting â€œno inline query keysâ€ or â€œsingle mode resolution ownerâ€.
 - Regression status: No runtime regression observed in executed suite.
 - Determinism: Stable in current test run; store dual-write pattern still a latent determinism risk.
 - Local suite vs meaningful global confidence: Good local confidence for touched web runtime; architectural invariant confidence is still weak.

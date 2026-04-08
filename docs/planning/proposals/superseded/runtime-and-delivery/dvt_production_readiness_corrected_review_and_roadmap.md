@@ -28,7 +28,7 @@ This version corrects five problems in the prior plan.
 - [`docs/planning/status/generated-code-state.md`](../status/generated-code-state.md)
 - [`apps/web/package.json`](../../../apps/web/package.json)
 - [`package.json`](../../../package.json)
-- [`docs/planning/status/planner-current-state-assessment-20260320.md`](../status/planner-current-state-assessment-20260320.md)
+- [`docs/planning/status/planner-current-state-assessment.md`](../status/planner-current-state-assessment.md)
 
 ### External references used as design benchmarks
 
@@ -931,7 +931,7 @@ It also avoids the previous mistake of staying too generic.
 - <https://github.com/dunay2/dvt>
 - [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)
 - [docs/planning/status/generated-code-state.md](../status/generated-code-state.md)
-- [docs/planning/status/planner-current-state-assessment-20260320.md](../status/planner-current-state-assessment-20260320.md)
+- [docs/planning/status/planner-current-state-assessment.md](../status/planner-current-state-assessment.md)
 - [apps/web/package.json](../../../apps/web/package.json)
 - [package.json](../../../package.json)
 

@@ -10,8 +10,12 @@ planning_type: operational
 
 Single operational entry point for all planning documentation.
 
-Use this page first when a task affects planning, roadmap, proposals, reviews,
-or closeouts.
+Use this page when a task affects planning, roadmap, proposals, reviews, or
+closeouts and you need to update the planning system correctly.
+
+If you only need to understand what is active, blocked, or next, start at
+[Planning Dashboard](planning-dashboard.md). The dashboard is the reading
+surface. This control tower is the update protocol.
 
 ## Mandatory Update Map By Task Type
 
@@ -55,6 +59,7 @@ or closeouts.
 
 ## Canonical Planning Navigation
 
+- Human entrypoint: [Planning Dashboard](planning-dashboard.md)
 - Strategy and classification: [Roadmap Of Record](../roadmap/index.md)
 - Cross-domain roadmap view: [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - Planning entrypoint: [Planning Control Tower](planning-control-tower.md)
@@ -76,15 +81,18 @@ or closeouts.
 
 When there is confusion about "what is active now" vs "where to continue":
 
-1. [System Delivery Status](../../architecture/system-delivery-status.md)
+1. [Planning Dashboard](planning-dashboard.md): one-screen navigation to board,
+   blockers, lanes, and next reading surface.
+2. [System Delivery Status](../../architecture/system-delivery-status.md)
    (`last_reviewed: 2026-04-02`): current implementation truth.
-2. [Agent Lane YAML registry](agent-lane-a.yaml)
+3. [Agent Lane YAML registry](agent-lane-a.yaml)
    (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): active tasks, owners,
    execution status, blockers, and next actions.
-3. [Review Status Board](../reviews/review-status-board.md)
+4. [Review Status Board](../reviews/review-status-board.md)
    (`last_reviewed: 2026-04-04`): which reviews are active/reference and which
    tasks they feed.
-4. [Roadmap Of Record](../roadmap/index.md): ordering and sequencing of delivery.
+5. [Roadmap Of Record](../roadmap/index.md): ordering and sequencing of
+   delivery.
 
 Interpretation rule:
 
@@ -106,8 +114,9 @@ Interpretation rule:
 ## Recommended Reading Order For Any Planning Task
 
 1. [Planning Control Tower](planning-control-tower.md)
-2. Relevant [Agent Lane YAML](agent-lane-a.yaml)
-3. [Roadmap Of Record](../roadmap/index.md)
-4. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
-5. [Domain Status Board](domain-status-board.md)
-6. Relevant proposal or review document for the specific slice
+2. [Planning Dashboard](planning-dashboard.md)
+3. Relevant [Agent Lane YAML](agent-lane-a.yaml)
+4. [Roadmap Of Record](../roadmap/index.md)
+5. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
+6. [Domain Status Board](domain-status-board.md)
+7. Relevant proposal or review document for the specific slice
