@@ -303,6 +303,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.visit('/canvas');
     cy.wait('@getCapabilities');
     cy.wait('@getWorkspaceGraph');
+    cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
     cy.wait('@previewPlan');
@@ -341,6 +342,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.visit('/canvas');
     cy.wait('@getCapabilities');
     cy.wait('@getWorkspaceGraph');
+    cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
     cy.wait('@previewPlan');

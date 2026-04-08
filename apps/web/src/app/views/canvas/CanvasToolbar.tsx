@@ -15,6 +15,7 @@ type CanvasToolbarProps = {
   readonly onRun: () => void;
   readonly canStartRun: boolean;
   readonly planStatusSummary: string;
+  readonly canvasAuthoringMode: 'transformation' | 'dbt';
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
   readonly canUseCostOverlay: boolean;
   readonly impactOverlayEnabled: boolean;
@@ -34,6 +35,7 @@ export default function CanvasToolbar({
   onRun,
   canStartRun,
   planStatusSummary,
+  canvasAuthoringMode,
   exclusiveOverlayMode,
   canUseCostOverlay,
   impactOverlayEnabled,
@@ -43,6 +45,10 @@ export default function CanvasToolbar({
   edgeCount,
 }: CanvasToolbarProps) {
   const canPlanTransformation = transformationValidation.valid;
+  const modeSummary =
+    canvasAuthoringMode === 'transformation'
+      ? 'Mode: source -> sql_transform -> sink'
+      : 'Mode: dbt graph';
 
   return (
     <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3">
@@ -120,18 +126,20 @@ export default function CanvasToolbar({
 
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-300 select-none tabular-nums">
+          <span className="text-cyan-300">{modeSummary}</span>
+          <span className="text-slate-400">|</span>
           <span>
             {nodeCount} node{nodeCount !== 1 ? 's' : ''}
           </span>
-          <span className="text-slate-400">·</span>
+          <span className="text-slate-400">|</span>
           <span>
             {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
           </span>
-          <span className="text-slate-400">Â·</span>
+          <span className="text-slate-400">|</span>
           <span className={cn(canPlanTransformation ? 'text-emerald-300' : 'text-amber-300')}>
             {transformationValidation.summary}
           </span>
-          <span className="text-slate-400">Â·</span>
+          <span className="text-slate-400">|</span>
           <span className={cn(canStartRun ? 'text-emerald-300' : 'text-slate-300')}>
             {planStatusSummary}
           </span>
