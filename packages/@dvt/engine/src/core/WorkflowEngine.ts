@@ -364,34 +364,11 @@ export class WorkflowEngine implements IWorkflowEngine {
     originRunId: string;
     logicalAttemptId: number;
   }> {
-    if (this.deps.stateStoreWrite.reserveRetryAttempt !== undefined) {
-      return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
+    if (this.deps.stateStoreWrite.reserveRetryAttempt === undefined) {
+      throw new Error('stateStoreWrite.reserveRetryAttempt is required for recoverRun');
     }
 
-    const originRunId = sourceMetadata.originRunId ?? sourceMetadata.runId;
-    const lineageMaxAttempt = await this.findLineageMaxLogicalAttemptId(tenantId, originRunId);
-    return {
-      parentRunId: sourceMetadata.runId,
-      originRunId,
-      logicalAttemptId: lineageMaxAttempt + 1,
-    };
-  }
-
-  private async findLineageMaxLogicalAttemptId(
-    tenantId: string,
-    originRunId: string
-  ): Promise<number> {
-    const lineageRuns = await this.deps.stateStoreRead.listRuns({
-      tenantId,
-      limit: Number.MAX_SAFE_INTEGER,
-    });
-    const lineageAttempts = lineageRuns
-      .filter((run) => (run.originRunId ?? run.runId) === originRunId)
-      .map((run) => run.logicalAttemptId);
-    if (lineageAttempts.length === 0) {
-      return 1;
-    }
-    return Math.max(...lineageAttempts);
+    return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
   }
 }
 

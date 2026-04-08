@@ -398,7 +398,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(metadata?.originRunId).toBe(runId);
   });
 
-  it('recoverRun fallback derives next logicalAttemptId from lineage max', async () => {
+  it('recoverRun fails closed when retry reservation support is unavailable', async () => {
     const { engine, store } = createEngine({ adapters: makeAdapters() });
     const rootRunId = 'recover-fallback-root-1';
     const firstRecoveryRunId = 'recover-fallback-child-1';
@@ -408,12 +408,12 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await engine.recoverRun(rootRunId, makePlanRef(), makeContext(firstRecoveryRunId));
 
     (store as { reserveRetryAttempt?: unknown }).reserveRetryAttempt = undefined;
-    await engine.recoverRun(rootRunId, makePlanRef(), makeContext(secondRecoveryRunId));
+    await expect(
+      engine.recoverRun(rootRunId, makePlanRef(), makeContext(secondRecoveryRunId))
+    ).rejects.toThrow(/stateStoreWrite\.reserveRetryAttempt is required for recoverRun/);
 
     const secondRecovery = await store.getRunMetadataByRunId('t', secondRecoveryRunId);
-    expect(secondRecovery?.logicalAttemptId).toBe(3);
-    expect(secondRecovery?.parentRunId).toBe(rootRunId);
-    expect(secondRecovery?.originRunId).toBe(rootRunId);
+    expect(secondRecovery).toBeNull();
   });
 
   it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {
