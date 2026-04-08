@@ -1661,7 +1661,7 @@ tasks:
     last_verified: '2026-04-08'
   - task_id: TF-E1-B
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       wire preview and start-run UX to the real persisted-plan path so the UI no longer depends on
       mock plan state.
@@ -1671,15 +1671,19 @@ tasks:
       runtime detail flow using the persisted plan path.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/ux-implementation-guide.md
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx
     status_reason: >-
-      The API boundary is now defined, but the frontend handoff from preview to run is not yet
-      isolated as a concrete Lane E work item.
-    last_verified: '2026-04-05'
+      Frontend handoff now enforces persisted preview proof before run start and routes successful
+      starts through the existing run navigation callback. Remaining TF-E1-B work depends on TF-C1-B
+      runtime persistence readiness to validate the full real PlanRef path against backend
+      contracts.
+    last_verified: '2026-04-08'
   - task_id: TF-E1-C
     priority: P0
     status: queued

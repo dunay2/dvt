@@ -1,9 +1,7 @@
 import type { Edge } from '@xyflow/react';
 import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 
-type TransformationConnectionGuardResult =
-  | { allowed: true }
-  | { allowed: false; reason: string };
+type TransformationConnectionGuardResult = { allowed: true } | { allowed: false; reason: string };
 
 type GuardArgs = {
   sourceNode: CanonicalNode;
