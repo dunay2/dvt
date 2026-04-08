@@ -398,6 +398,24 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(metadata?.originRunId).toBe(runId);
   });
 
+  it('recoverRun fallback derives next logicalAttemptId from lineage max', async () => {
+    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const rootRunId = 'recover-fallback-root-1';
+    const firstRecoveryRunId = 'recover-fallback-child-1';
+    const secondRecoveryRunId = 'recover-fallback-child-2';
+
+    await engine.startRun(makePlanRef(), makeContext(rootRunId));
+    await engine.recoverRun(rootRunId, makePlanRef(), makeContext(firstRecoveryRunId));
+
+    (store as { reserveRetryAttempt?: unknown }).reserveRetryAttempt = undefined;
+    await engine.recoverRun(rootRunId, makePlanRef(), makeContext(secondRecoveryRunId));
+
+    const secondRecovery = await store.getRunMetadataByRunId('t', secondRecoveryRunId);
+    expect(secondRecovery?.logicalAttemptId).toBe(3);
+    expect(secondRecovery?.parentRunId).toBe(rootRunId);
+    expect(secondRecovery?.originRunId).toBe(rootRunId);
+  });
+
   it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {
     const savedRefs: Array<{ runId: string; update: unknown }> = [];
     const store = new InMemoryTxStore();

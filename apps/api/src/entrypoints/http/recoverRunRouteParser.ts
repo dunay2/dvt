@@ -6,6 +6,7 @@ import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import { isBodyObject, normalizeRunId, parseTenantId } from './runCommandFieldParsers.js';
 import { RUN_COMMAND_ACTION } from './runCommandRoute.constants.js';
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
+import { parseStartRunRunExecutionContextRef } from './startRunRouteRunExecutionContextRefParser.js';
 
 export interface ParsedRecoverRunRequest {
   readonly command: RecoverRunCommand;
@@ -102,17 +103,9 @@ function parseOptionalRunExecutionContextRef(
   if (raw === undefined) {
     return undefined;
   }
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+  const parsed = parseStartRunRunExecutionContextRef(raw);
+  if (!parsed.ok) {
     return 'INVALID';
   }
-  const record = raw as Record<string, unknown>;
-  const uri = readString(record.uri)?.trim();
-  const sha256 = readString(record.sha256)?.trim();
-  const schemaVersion = readString(record.schemaVersion)?.trim();
-  const planId = readString(record.planId)?.trim();
-  const planVersion = readString(record.planVersion)?.trim();
-  if (!uri || !sha256 || !schemaVersion || !planId || !planVersion) {
-    return 'INVALID';
-  }
-  return { uri, sha256, schemaVersion, planId, planVersion };
+  return parsed.value;
 }

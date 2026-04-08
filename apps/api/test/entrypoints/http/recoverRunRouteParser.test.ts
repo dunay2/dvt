@@ -43,6 +43,60 @@ describe('parseRecoverRunRequest', () => {
     });
   });
 
+  it('preserves pluginCompatibilityFingerprint in runExecutionContextRef', () => {
+    const parsed = parseRecoverRunRequest({
+      sourceRunId: 'source-run-1',
+      body: {
+        tenantId: 'tenant-a',
+        recoveryRunId: 'recovery-run-1',
+        runExecutionContextRef: {
+          uri: 'dvt-runctx://tenant-a/recovery-run-1',
+          sha256: 'b'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-a',
+          planVersion: '1.0.0',
+          pluginCompatibilityFingerprint: 'c'.repeat(64),
+        },
+        planRef: {
+          uri: 'https://plans.example/plan.json',
+          sha256: 'a'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-a',
+          planVersion: '1.0.0',
+        },
+      },
+    });
+
+    expect(parsed).toEqual({
+      ok: true,
+      value: {
+        command: {
+          sourceRunId: 'source-run-1',
+          recoveryRunId: 'recovery-run-1',
+          runExecutionContextRef: {
+            uri: 'dvt-runctx://tenant-a/recovery-run-1',
+            sha256: 'b'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'plan-a',
+            planVersion: '1.0.0',
+            pluginCompatibilityFingerprint: 'c'.repeat(64),
+          },
+          planRef: {
+            uri: 'https://plans.example/plan.json',
+            sha256: 'a'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'plan-a',
+            planVersion: '1.0.0',
+          },
+        },
+        authorization: {
+          tenantId: { value: 'tenant-a' },
+          actionName: RUN_COMMAND_ACTION.RETRY,
+        },
+      },
+    });
+  });
+
   it('rejects invalid source run id', () => {
     const parsed = parseRecoverRunRequest({
       sourceRunId: '  ',
