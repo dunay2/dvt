@@ -30,7 +30,8 @@ const nodeTypes: NodeTypes = {
 export function useCanvasController() {
   const { data: capabilities } = useCapabilitiesQuery();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const canvasAuthoringMode = graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
+  const canvasAuthoringMode: 'transformation' | 'dbt' =
+    graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
   const workspaceService = useWorkspaceService();
   const plansService = usePlansService();
   const runsService = useRunsService();
