@@ -1,3 +1,11 @@
+---
+title: Propuesta técnica: CLI AI-first para DVT
+status: Draft
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # Propuesta técnica: CLI AI-first para DVT
 
 **Fecha:** 2026-04-03  

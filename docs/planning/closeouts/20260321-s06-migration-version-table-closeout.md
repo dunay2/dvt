@@ -1,6 +1,7 @@
 ---
 title: S06 — Migration Version Table Closeout
 date: 2026-03-21
+last_reviewed: 2026-03-21
 author: Architecture
 planning_type: closeout
 parent_plan: phase2-arch-debt-roadmap-20260315

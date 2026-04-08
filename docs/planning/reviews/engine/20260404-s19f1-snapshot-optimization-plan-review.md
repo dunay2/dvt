@@ -1,4 +1,4 @@
-﻿---
+---
 title: 20260404 S19-F1 Snapshot Optimization Plan Review
 status: Review
 owner: engine / contracts / qa

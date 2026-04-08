@@ -1,6 +1,7 @@
 ---
 slice: phase2-arch-roadmap
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: planning-phase2-roadmap
 author: AI (GPT-5)
 ---

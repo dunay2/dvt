@@ -1,6 +1,7 @@
 ---
 slice: 20260324-schema-migration-rollback
 date: 2026-03-24
+last_reviewed: 2026-03-24
 work_item: schema-migration-rollback
 status: Done
 ---

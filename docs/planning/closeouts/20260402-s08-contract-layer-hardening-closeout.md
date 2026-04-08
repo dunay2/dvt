@@ -1,6 +1,7 @@
 ---
 slice: 20260402-s08-contract-layer-hardening
 date: 2026-04-02
+last_reviewed: 2026-04-02
 work_item: S08 / S08-2
 status: Done
 ---

@@ -1,3 +1,11 @@
+---
+title: Propuesta de arquitectura para RavenPlan/DVT sobre Temporal + Kubernetes
+status: Draft
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # Propuesta de arquitectura para RavenPlan/DVT sobre Temporal + Kubernetes
 
 ## Resumen ejecutivo

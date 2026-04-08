@@ -1,6 +1,7 @@
 ---
 slice: proposal-set-alignment
 date: 2026-03-17
+last_reviewed: 2026-03-17
 gap: planning-governance
 author: AI (Codex)
 ---

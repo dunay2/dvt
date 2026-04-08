@@ -1,6 +1,7 @@
 ---
 slice: 20260318-stage-1-1-planner-canonicalization-companion-boundary
 date: 2026-03-18
+last_reviewed: 2026-03-18
 gap: planner-stage-1-1 G-01.1 G-01.2 G-01.3 G-01.6 G-01.8 G-01.9
 author: AI (Claude Sonnet 4.6)
 ---

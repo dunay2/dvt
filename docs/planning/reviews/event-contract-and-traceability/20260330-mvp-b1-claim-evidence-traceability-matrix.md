@@ -1,4 +1,4 @@
-﻿---
+---
 title: MVP-B1 Claim-To-Evidence Traceability Matrix
 status: Review
 owner: Product / Architecture / Delivery / Docs

@@ -1,6 +1,7 @@
 ---
 slice: docs-governance-hardening
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: docs-governance
 author: AI (GPT-5)
 ---

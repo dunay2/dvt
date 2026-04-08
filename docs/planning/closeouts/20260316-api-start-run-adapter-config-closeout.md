@@ -1,6 +1,7 @@
 ---
 slice: api-start-run-adapter-config
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: api-start-run-surface
 author: AI (GPT-5)
 ---

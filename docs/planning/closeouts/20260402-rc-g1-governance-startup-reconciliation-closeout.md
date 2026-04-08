@@ -1,6 +1,7 @@
 ---
 slice: 20260402-rc-g1-governance-startup-reconciliation
 date: 2026-04-02
+last_reviewed: 2026-04-02
 work_item: RC-G1 / GOV-S1
 status: Done
 ---

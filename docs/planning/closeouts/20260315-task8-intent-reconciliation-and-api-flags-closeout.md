@@ -1,6 +1,7 @@
 ---
 slice: intent-reconciliation-and-api-flags
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: domain-cohesion-refactor
 author: AI (Codex)
 ---
