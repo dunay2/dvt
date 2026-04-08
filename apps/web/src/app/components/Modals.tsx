@@ -256,7 +256,6 @@ export function PlanPreviewModal({
             disabled={startRunDisabled}
             onClick={() => {
               onStartRun();
-              onClose();
             }}
           >
             Start Run
