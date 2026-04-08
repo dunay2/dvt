@@ -1,4 +1,4 @@
-﻿---
+---
 title: RC-C1 HTTP Error Envelope Normalization Plan
 status: Superseded
 owner: API / Architecture / Delivery / Docs

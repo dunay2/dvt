@@ -1,4 +1,4 @@
-﻿---
+---
 title: 20260404 S05 Envelope Boundary Fowler QA Review
 status: Review
 owner: adapters / contracts / qa

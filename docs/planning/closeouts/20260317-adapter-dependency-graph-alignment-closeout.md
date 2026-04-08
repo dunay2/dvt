@@ -1,6 +1,7 @@
 ---
 slice: adapter-dependency-graph-alignment
 date: 2026-03-17
+last_reviewed: 2026-03-17
 gap: maintenance
 author: AI (Codex)
 ---

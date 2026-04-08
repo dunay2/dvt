@@ -1,6 +1,7 @@
 ---
 slice: 20260324-s18-explicit-state-store-root-bindings
 date: 2026-03-24
+last_reviewed: 2026-03-24
 work_item: S18
 status: Done
 ---

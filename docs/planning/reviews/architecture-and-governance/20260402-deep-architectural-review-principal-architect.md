@@ -2,6 +2,7 @@
 title: 'DVT+ Deep Architectural Review — Principal Architect'
 status: Complete
 date: 2026-04-02
+last_reviewed: 2026-04-02
 reviewer: Principal / Staff Architect (AI-assisted)
 scope: Full system — engine, planner, contracts, adapters, state-store, API, workers
 review_type: architecture-and-governance

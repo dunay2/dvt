@@ -1,4 +1,4 @@
-﻿---
+---
 title: AR-A9 Planner cycle fail-closed plan
 status: Superseded
 owner: Planning Domain / Architecture / Docs

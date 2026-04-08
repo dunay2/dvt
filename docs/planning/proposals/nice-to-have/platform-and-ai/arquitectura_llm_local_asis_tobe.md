@@ -1,3 +1,11 @@
+---
+title: Arquitectura propuesta para una app LLM local, ligera y específica
+status: Draft
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # Arquitectura propuesta para una app LLM local, ligera y específica
 
 ## 1. Objetivo

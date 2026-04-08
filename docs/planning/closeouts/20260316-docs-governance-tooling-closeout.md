@@ -1,6 +1,7 @@
 ---
 slice: docs-governance-tooling
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: docs-governance
 author: AI (GPT-5)
 ---

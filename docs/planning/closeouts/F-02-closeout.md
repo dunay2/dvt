@@ -1,8 +1,12 @@
-﻿---
+---
 slice: F-02
 date: 2026-03-31
 lane: E
 author: AI (Codex)
+title: Closeout: F-02 - platform-health capability refactor
+status: Completed
+owner: docs
+last_reviewed: 2026-03-31
 ---
 
 # Closeout: F-02 - platform-health capability refactor

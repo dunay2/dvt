@@ -1,6 +1,7 @@
 ---
 slice: intent-store-bug-fixes
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: G3
 author: AI (GPT-5)
 ---

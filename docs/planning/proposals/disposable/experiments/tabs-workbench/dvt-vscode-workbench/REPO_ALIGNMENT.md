@@ -1,3 +1,11 @@
+---
+title: DVT VSCode workbench alignment notes
+status: Disposable
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # DVT VSCode workbench alignment notes
 
 This subfolder mirrors the same alignment assessment captured in:

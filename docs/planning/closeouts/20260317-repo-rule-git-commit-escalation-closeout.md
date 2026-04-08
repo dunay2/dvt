@@ -1,6 +1,7 @@
 ---
 slice: 20260317-repo-rule-git-commit-escalation
 date: 2026-03-17
+last_reviewed: 2026-03-17
 gap: operational-governance
 author: AI (GPT-5)
 ---

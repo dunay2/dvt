@@ -1,4 +1,4 @@
-﻿---
+---
 title: Intent Store and Reconciliation Gaps
 status: Draft
 last_reviewed: 2026-03-15

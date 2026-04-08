@@ -1,3 +1,11 @@
+---
+title: Repo alignment notes
+status: Disposable
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # Repo alignment notes
 
 ## Verified repo surfaces this bundle aligns to
