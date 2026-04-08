@@ -278,6 +278,7 @@ export function configureDefaultCanvasHarnessMocks(
   mocks.useUiLayoutStore.mockImplementation(selectFromStore);
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
   mocks.resolveCanvasGraphStrategy.mockReturnValue({
+    id: 'transformation',
     mapNodeToCanonical: vi.fn(
       (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
     ),

@@ -19,6 +19,7 @@ export type CanvasShellProps = {
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;
+  canvasAuthoringMode: 'transformation' | 'dbt';
   nodesWithImpact: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;

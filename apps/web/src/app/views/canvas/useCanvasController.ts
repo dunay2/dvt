@@ -30,6 +30,8 @@ const nodeTypes: NodeTypes = {
 export function useCanvasController() {
   const { data: capabilities } = useCapabilitiesQuery();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
+  const canvasAuthoringMode: 'transformation' | 'dbt' =
+    graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
   const workspaceService = useWorkspaceService();
   const plansService = usePlansService();
   const runsService = useRunsService();
@@ -164,6 +166,7 @@ export function useCanvasController() {
     activeRunId: overlayModel.activeRunId,
     registeredPlugins: getRegisteredPluginIds(capabilities),
     userPermissions: store.userPermissions,
+    canvasAuthoringMode,
     nodesWithImpact,
     edges: graphModel.edges,
     nodeTypes,

@@ -39,6 +39,7 @@ describe('useCanvasController core', () => {
     const result = harness.getLatestResult();
     expect(result?.inspectorNode).toEqual(harness.state.canonicalNodes[0]);
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
+    expect(result?.canvasAuthoringMode).toBe('transformation');
     expect(result?.transformationValidation).toEqual(
       expect.objectContaining({
         valid: false,

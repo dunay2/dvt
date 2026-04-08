@@ -20,6 +20,7 @@ export default function CanvasShell({
   activeRunId,
   registeredPlugins,
   userPermissions,
+  canvasAuthoringMode,
   nodesWithImpact,
   edges,
   nodeTypes,
@@ -91,6 +92,7 @@ export default function CanvasShell({
             onRun={onRun}
             canStartRun={canStartRun}
             planStatusSummary={planStatusSummary}
+            canvasAuthoringMode={canvasAuthoringMode}
             exclusiveOverlayMode={exclusiveOverlayMode}
             canUseCostOverlay={canUseCostOverlay}
             impactOverlayEnabled={impactOverlayEnabled}
