@@ -155,7 +155,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md
       - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
@@ -600,7 +600,7 @@ tasks:
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
-      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/components/Console.tsx
     status_reason: >-
       Residual drifts are non-blocking for compile/test green status but remain governance and UX
@@ -641,7 +641,7 @@ tasks:
     effort_points: 2
     progress_pct: 0
     evidence_refs:
-      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/services/AppServicesContext.test.tsx
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
     status_reason: >-
@@ -735,7 +735,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
-      - apps/web/src/app/views/canvas/useCanvasController.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
     status_reason: >-
       The controller slice currently lacks invariant-driven tests and must enter a red phase before
       implementation work starts.

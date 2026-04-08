@@ -22,14 +22,14 @@ code-grounded plan that is aligned with:
 
 ## Governing sources
 
-- [ADR-0018](../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
-- [ADR-0039](../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
-- [ADR-0040](../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
-- [ADR-0041](../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
-- [ADR-0042](../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
-- [S08 gap review](../reviews/20260402-s08-plan-record-plan-store-gap-review.md)
+- [ADR-0018](../../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0034](../../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0035](../../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
+- [ADR-0039](../../../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
+- [ADR-0040](../../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
+- [ADR-0041](../../../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
+- [ADR-0042](../../../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
+- [S08 gap review](../../../reviews/20260402-s08-plan-record-plan-store-gap-review.md)
 
 ## Problem statement
 
@@ -335,5 +335,5 @@ Definition of done:
 
 ## Related
 
-- [S08 gap review](../reviews/20260402-s08-plan-record-plan-store-gap-review.md)
-- [ADR-0043](../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
+- [S08 gap review](../../../reviews/20260402-s08-plan-record-plan-store-gap-review.md)
+- [ADR-0043](../../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)

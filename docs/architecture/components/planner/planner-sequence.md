@@ -1,59 +1,67 @@
 ---
-title: planner Sequence
-status: Draft
-owner: Planning Domain
-last_reviewed: 2026-03-28
+title: planner Build Sequence
+status: Active
+owner: Planning Domain / Architecture
+last_reviewed: 2026-04-07
 ---
 
-# planner Sequence
+# planner Build Sequence
 
-## Main Flow: Plan Creation, Validation, and Compilation
+## Current `buildPlan()` flow
 
 ```mermaid
 sequenceDiagram
-  participant Caller as API / DSL Consumer
+  participant Caller as API or integrator
+  participant Facade as PlannerFacade
+  participant Resolver as IArtifactResolver
+  participant Mapper as PlannerEnvelopeMapper
   participant Planner
-  participant InputEnvelopeValidator
-  participant GraphBuilder
-  participant TopoSort
-  participant StepFactory
-  participant Verifier
-  participant PlanAssembler
-  participant Interpreter as plan-interpreter
+  participant Validator as InputEnvelopeValidator
+  participant Deriver as Manifest derivation
+  participant Graph as GraphBuilder
+  participant Selector as NodeSelector
+  participant Assembler as PlanAssembler
 
-  Caller->>Planner: createPlan(inputEnvelope)
-  Planner->>InputEnvelopeValidator: validate(inputEnvelope)
-  InputEnvelopeValidator-->>Planner: valid
-
-  Planner->>StepFactory: createStep(stepDef) [for each step]
-  StepFactory-->>Planner: StepAggregate
-
-  Planner->>GraphBuilder: build(steps)
-  GraphBuilder-->>Planner: dependencyGraph
-
-  Planner->>TopoSort: sort(dependencyGraph)
-  TopoSort-->>Planner: orderedSteps
-
-  Planner->>Verifier: validatePlan(plan)
-  Verifier-->>Planner: validationResult
-
-  Planner->>PlanAssembler: assemble(plan)
-  PlanAssembler-->>Planner: ExecutionPlanV2
-
-  Planner->>Interpreter: compilePlan(ExecutionPlanV2)
-  Interpreter-->>Planner: compiledArtifacts
-  Planner->>Caller: compiledPlan
+  Caller->>Facade: buildPlan(contract input)
+  opt referenced graph artifact
+    Facade->>Resolver: resolveGraphSource(manifestRef or artifact ref)
+    Resolver-->>Facade: graphSource
+  end
+  Facade->>Mapper: map contract input
+  Facade->>Planner: buildPlan(domain input)
+  Planner->>Validator: validate(input)
+  opt manifest compatibility path
+    Planner->>Deriver: derivePlannerGraphSourceFromManifest(...)
+    Deriver-->>Planner: graphSource
+  end
+  Planner->>Graph: execute(command)
+  Graph-->>Planner: dependency graph
+  Planner->>Selector: execute(selection)
+  Selector-->>Planner: selected graph
+  Planner->>Assembler: execute(command)
+  Assembler-->>Planner: PlannerBuildResultV1
+  Planner-->>Facade: build result
+  Facade-->>Caller: canonical plan artifact
 ```
 
-## Global Flow Position
+## Boundary note
 
-`@dvt/planner` is the entry point of the Planning Domain in the DVT system. It is invoked by the API layer or DSL consumers to create and compile plans. It drives the entire planning pipeline: validating input, building the dependency graph, ordering steps, running constraint checks via the Verifier, assembling the final plan, and handing it off to `@dvt/plan-interpreter` for compilation into engine-executable artifacts. The interpreter delivers those artifacts to `@dvt/engine`, which takes over for workflow orchestration.
+Planner stops at canonical plan construction. Runtime compatibility validation,
+stored-plan lifecycle, and execution dispatch belong to API, verifier, and
+engine surfaces, not to the planner package itself.
 
-## Key Files
+## Current code anchors
 
-- `packages/@dvt/planner/src/domain/Planner.ts` — Main orchestration entry point
-- `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts` — Dependency graph construction
-- `packages/@dvt/planner/src/domain/graph/TopoSort.ts` — Topological ordering
-- `packages/@dvt/planner/src/domain/PlanAssembler.ts` — Final plan assembly
-- `packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts` — Step instantiation
-- `packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts` — Input validation
+- `packages/@dvt/planner/src/application/PlannerFacade.ts`
+- `packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts`
+- `packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts`
+- `packages/@dvt/planner/src/domain/Planner.ts`
+- `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts`
+- `packages/@dvt/planner/src/domain/NodeSelector.ts`
+- `packages/@dvt/planner/src/domain/PlanAssembler.ts`
+
+## Canonical references
+
+- [Planner component entry](index.md)
+- [Planner contracts](../../../contracts/planner/index.md)
+- [Planner current state assessment](../../../planning/status/planner-current-state-assessment-20260320.md)

@@ -73,4 +73,4 @@ Pause lifecycle processing if:
 ## Related Documents
 
 - [Gap 5 Operator Guide](../guides/gap-5-operator-guide-20260319.md)
-- [Gap 5 Event Lifecycle And Archival Design](../planning/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+- [Gap 5 Event Lifecycle And Archival Design](../planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)

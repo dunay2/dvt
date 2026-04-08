@@ -18,8 +18,8 @@ validation command.
 
 Claims come from:
 
-- [MVP Backend Operability Baseline Roadmap](../proposals/mvp-backend-operability-baseline-roadmap-20260329.md)
-- [Backend MVP Control-Plane Runbook](../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
+- [MVP Backend Operability Baseline Roadmap](../../proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md)
+- [Backend MVP Control-Plane Runbook](../../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
 
 This matrix does not expand runtime behavior. It only traces currently claimed
 MVP capability.

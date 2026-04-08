@@ -32,7 +32,7 @@ Concept anchors for this page:
 
 1. [infra/README.md](../../../infra/README.md)
 2. [packages/@dvt/adapter-postgres/DESIGN.md](../../../packages/@dvt/adapter-postgres/DESIGN.md)
-3. [G8 Real Auth Final Spec](../../planning/archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
+3. [API current-to-target architecture](../components/api/api-current-to-target-architecture.md)
 4. [System Delivery Status](../system-delivery-status.md)
 5. [R-20260308 G5 state-store outbox worker drift](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md)
 

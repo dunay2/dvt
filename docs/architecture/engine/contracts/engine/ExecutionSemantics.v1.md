@@ -469,7 +469,7 @@ interface StepOutput {
 
 ---
 
-## 3) Backpressure & Run Queue (Execution-Time)
+## 3) Backpressure and Admission Control
 
 Engine response to overload:
 
@@ -599,6 +599,14 @@ stateStore:
 ---
 
 ## 6) Engine-Specific Policies
+
+### 2) Resume Semantics
+
+Pause and resume behavior is adapter-specific, but the contract remains:
+
+- `RunPaused` records the paused state transition in StateStore
+- `RunResumed` records resumption and preserves prior completed work
+- provider-native retries do not create new logical attempts during resume
 
 Execution engines (Temporal, Conductor, etc.) have platform-specific constraints that affect implementation:
 

@@ -77,8 +77,8 @@ plus regression evidence.
 - Title: Behavioral negative test for full `handleStartRun` path was missing (resolved in this slice).
   Why it matters: Side effects (`toast`, modal reopen, start-run short-circuit) must be protected at hook level.
   Evidence:
-  - [useCanvasExecutionActions.test.tsx](/c:/dvt/apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx:104) exercises `handleStartRun` with missing `planRef`.
-  - [useCanvasExecutionActions.ts](/c:/dvt/apps/web/src/app/views/canvas/useCanvasExecutionActions.ts:89) contains modal + toast + early-return behavior.
+  - [useCanvasExecutionActions.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx:104) exercises `handleStartRun` with missing `planRef`.
+  - [useCanvasExecutionActions.ts](../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts:89) contains modal + toast + early-return behavior.
     Risk: Reduced for this boundary after test hardening.
     Recommendation: Keep this test as mandatory guard when evolving run-start UX flow.
 
@@ -87,7 +87,7 @@ plus regression evidence.
 - Title: `ExecutionPlan` UI type gained `planRef` without companion manual/architecture update.
   Why it matters: Contract understanding can drift between docs and code for frontend contributors.
   Evidence:
-  - [dbt.ts](/c:/dvt/apps/web/src/app/types/dbt.ts:48)
+  - [dbt.ts](../../../../apps/web/src/app/types/dbt.ts:48)
   - no paired update in frontend architecture/manual docs in this slice.
     Risk: Minor onboarding confusion and future duplicate fixes.
     Recommendation: Add a short doc note in the next `F04` closeout or architecture update.

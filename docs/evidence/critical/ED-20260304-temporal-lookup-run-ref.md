@@ -33,10 +33,10 @@ evidence:
 
 ## Evidence (paths/links)
 
-- Tests: [`packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`](../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts)
+- Tests: [`packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`](../../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts)
   - 6 cases: workflow exists → returns EngineRunRef; WorkflowNotFoundError → null; ServiceError NOT_FOUND → null; network error → propagates; non-Error thrown → propagates; workflowId/taskQueue derivation consistent with startRun.
-- Code: [`packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
-- Interface contract: [`packages/@dvt/engine/src/adapters/IProviderAdapter.ts`](../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts) — `lookupRunRef?` already declared as optional on `IProviderAdapter`.
+- Code: [`packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`](../../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
+- Interface contract: [`packages/@dvt/engine/src/adapters/IProviderAdapter.ts`](../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts) — `lookupRunRef?` already declared as optional on `IProviderAdapter`.
 
 ## Risks (only real ones)
 

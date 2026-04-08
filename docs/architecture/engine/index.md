@@ -13,7 +13,7 @@ last_reviewed: 2026-04-03
 2. [WorkflowEngine target architecture v1](workflow-engine-target-architecture.v1.md)
 3. [Engine contracts index](../../contracts/engine/index.md)
 4. [Engine C4 architecture](c4-engine.md)
-5. [Scheduler release and claim semantics](contracts/engine/SchedulerReleaseAndClaimSemantics.v1.md)
+5. [Execution-time queue and admission semantics](contracts/engine/ExecutionSemantics.v1.md#3-backpressure-and-admission-control)
 6. [Engine class review and gaps](engine-class-review-and-gaps-2026-03-31.md)
 
 ## What is canonical vs reference

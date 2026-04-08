@@ -333,7 +333,7 @@ tasks:
     effort_points: 2
     progress_pct: 25
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
@@ -354,7 +354,7 @@ tasks:
       Every contract family affected by the review is classified as either `stay shared` or `move to
       owner`, with no intermediate category.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
     status_reason: >-
@@ -374,7 +374,7 @@ tasks:
       Engine-owned behavioral ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
       and any compatibility alias is explicit, temporary, and validated.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Engine ownership migration is now tracked and ready for execution.
     last_verified: '2026-04-02'
@@ -391,7 +391,7 @@ tasks:
       Delivery, traceability, and artifacts ownership matches the bounded context and
       `@dvt/contracts` retains only shared transport shapes for those areas.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Delivery/traceability/artifacts ownership migration is queued behind engine.
     last_verified: '2026-04-02'
@@ -409,7 +409,7 @@ tasks:
       Planner-private ports leave `@dvt/contracts`, ADR-0035 public planner contracts stay shared,
       and final import guards prevent regression.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
     last_verified: '2026-04-02'
@@ -445,17 +445,20 @@ tasks:
       transition from isolated governance scripts to a coherent doc-driven operating system.
     complexity: M
     effort_points: 5
-    progress_pct: 15
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
       - docs/planning/status/governance-document-rule-inventory.md
       - docs/guides/ai-work-protocol.md
       - docs/planning/state/planning-control-tower.md
+      - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
+      - docs/guides/documentation-maintenance-guide-20260407.md
     status_reason: >-
-      Governance routing and generated-planning extraction are already in place, but the repo still
-      lacks a unified framework for authoring, planning-data validation, and traceability
-      automation. The proposal is now published and execution waves need decomposition.
-    last_verified: '2026-04-04'
+      Governance routing, generated-planning extraction, and the governing proposal are already in
+      place. This slice added a current-vs-target documentation information architecture spec and a
+      contributor maintenance guide, but the broader framework still needs wave decomposition,
+      authoring scaffolds, and traceability automation follow-through.
+    last_verified: '2026-04-07'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -1388,7 +1391,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: DOC-ARCH-01
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       reconcile repository-wide architecture docs with current code, simplify overlapping
       architecture surfaces, and archive stale snapshots that no longer describe the shipped
@@ -1400,21 +1403,21 @@ tasks:
       guide for keeping architecture docs aligned after runtime changes.
     complexity: M
     effort_points: 3
-    progress_pct: 92
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/architecture-doc-reconciliation-plan-20260402.md
+      - docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md
       - docs/architecture/architecture-surface-inventory-20260402.md
       - docs/architecture/system-delivery-status.md
       - docs/architecture/components/api/api-current-to-target-architecture.md
-      - docs/architecture/atlas/architecture/architecture_atlas.md
-      - docs/planning/execution-model/index.md
+      - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
+      - docs/guides/documentation-maintenance-guide-20260407.md
+      - docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md
     status_reason: >-
-      Waves 1 to 4 are now delivered: canonical reading order is published, planning-domain drift is
-      corrected, the architecture atlas is historical, supporting architecture maps are
-      non-canonical, the component subtree now routes through explicit supporting entrypoints, and
-      the API component now has a code-grounded current-to-target walkthrough, but final archive
-      consolidation and a contributor maintenance guide remain open.
-    last_verified: '2026-04-03'
+      Canonical reading order is explicit, stale architecture component packs were archived out of
+      the active tree, active component routes were rewritten as summary navigation to canonical
+      docs, broken active planning-domain references were repaired, and contributors now have a
+      maintenance guide plus a current-vs-target information architecture spec.
+    last_verified: '2026-04-07'
   - task_id: WE-HX
     priority: P1
     status: in_progress
