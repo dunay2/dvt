@@ -6,6 +6,7 @@ import {
   createActivities,
   type Activities,
   type ActivityDeps,
+  type StepActivity,
   type StepExecutor,
   type StepInput,
 } from '../src/activities/stepActivities.js';
@@ -219,13 +220,14 @@ function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
 
 function setupActivities(
   store: TestTxStore = new TestTxStore(),
-  stepExecutors?: readonly StepExecutor[]
+  stepExecutors?: readonly StepExecutor[],
+  stepActivitiesByKind?: ReadonlyMap<string, StepActivity>
 ): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
   const deps = buildDeps(store);
-  const acts = createActivities(deps, stepExecutors);
+  const acts = createActivities(deps, stepExecutors, stepActivitiesByKind);
   return { deps, acts };
 }
 
@@ -528,6 +530,26 @@ describe('stepActivities', () => {
         EXPECTED_ERRORS.unsupportedStepKind
       )
     );
+
+    it('executes a registered non-DBT step kind without changing workflow logic', async () => {
+      const pythonActivity: StepActivity = {
+        async execute(step) {
+          return { stepId: step.stepId, status: 'COMPLETED' };
+        },
+      };
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        new Map([['PYTHON_SCRIPT', pythonActivity]])
+      );
+
+      const result = await acts.executeStep({
+        step: { stepId: 's-python', kind: 'PYTHON_SCRIPT', dependsOn: [] },
+        ctx: CTX,
+      });
+
+      expect(result).toEqual({ stepId: 's-python', status: 'COMPLETED' });
+    });
 
     it('throws transient error when executor raises retryable failure', async () => {
       const { acts } = setupActivities(undefined, withErrorExecutors(transientErrorExecutor('s1')));

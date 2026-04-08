@@ -8,13 +8,15 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
+  - packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
   - packages/@dvt/adapter-temporal/test/activities.test.ts
+  - packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
   - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
   - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
 evidence:
   tests:
-    - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts test/TemporalAdapter.startRun.test.ts test/workflow-literals.test.ts test/workflow-retry-policy.test.ts
-    - pnpm --filter @dvt/adapter-temporal exec vitest run test/integration.time-skipping.test.ts -t "golden path: linear 3-step plan reaches COMPLETED with deterministic event order"
+    - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts test/TemporalWorkerHost.lifecycle.test.ts test/TemporalAdapter.startRun.test.ts test/workflow-literals.test.ts test/workflow-retry-policy.test.ts
+    - 'pnpm --filter @dvt/adapter-temporal exec vitest run test/integration.time-skipping.test.ts -t "golden path: linear 3-step plan reaches COMPLETED with deterministic event order"'
     - pnpm verify:prepush
 ---
 
@@ -28,14 +30,21 @@ execution no longer relies on a catch-all executor path.
 - Added `StepActivityDispatcher` to route runtime task steps by `step.kind`.
 - Added dedicated `DbtStepActivity` for `DBT_MODEL`, `DBT_TEST`, and
   `DBT_SNAPSHOT`.
+- Added explicit `stepActivitiesByKind` registry wiring from `TemporalWorkerHost`
+  into `createActivities`, so new kinds can be registered without workflow edits.
+- Dispatcher now snapshots the supplied registry at construction time so late
+  registry mutation cannot alter dispatch behavior for already-created workers.
 - Added `UnsupportedStepKindError` and non-retryable failure behavior for
   unregistered kinds.
 - Kept test override executors as an optional layer for fault-injection tests.
 - Updated adapter-temporal test plans to use canonical DBT kinds instead of
   legacy `noop` or generic `test`.
+- Added positive tests proving a registered non-DBT kind executes through the
+  existing workflow/activity boundary.
 
 ## Expected effect
 
 - Adding support for a new `StepKind` requires registering a step activity
   implementation, not editing workflow logic.
+- Registered step-kind dispatch stays stable after worker/activity construction.
 - Unknown runtime `StepKind` now fails closed with explicit error semantics.

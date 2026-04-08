@@ -15,8 +15,13 @@ risk: >
   of unsupported kinds and hiding integration gaps.
 mitigations:
   - 'StepActivityDispatcher now routes task steps by step.kind and fails closed for unknown kinds.'
+  - 'TemporalWorkerHost now accepts an explicit stepActivitiesByKind registry so new kinds are
+    registered at composition, not by editing workflow code.'
+  - 'StepActivityDispatcher snapshots the supplied registry at construction so late mutation does
+    not change dispatch for already-created workers.'
   - 'UnsupportedStepKindError is emitted as non-retryable PermanentStepError semantics.'
-  - 'Unit tests assert step kind required and unsupported-kind failure paths.'
+  - 'Unit tests assert step kind required, unsupported-kind failure paths, and positive
+    registered-kind execution.'
   - 'Time-skipping golden-path integration test remains in validation baseline.'
 review_after: 2026-06-01
 ---

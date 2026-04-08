@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadTemporalAdapterConfig, TemporalWorkerHost } from '../src/index.js';
+import {
+  DEFAULT_STEP_ACTIVITY_REGISTRY,
+  loadTemporalAdapterConfig,
+  TemporalWorkerHost,
+  type StepActivity,
+} from '../src/index.js';
 
 import { makeTrackingObservability } from './helpers/mockObservability.js';
 
@@ -87,6 +92,18 @@ function mkActivityDeps(): {
   };
 }
 
+function mkResolvedRunContext() {
+  return {
+    tenantId: 'tenant-1',
+    projectId: 'proj-1',
+    environmentId: 'env-1',
+    runId: 'run-1',
+    targetAdapter: 'temporal' as const,
+    logicalAttemptId: 1,
+    originRunId: 'run-1',
+  };
+}
+
 describe('TemporalWorkerHost lifecycle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,6 +139,60 @@ describe('TemporalWorkerHost lifecycle', () => {
 
     await host.shutdown();
     expect(host.isRunning()).toBe(false);
+  });
+
+  it('wires registered step activities by kind into Worker.create activities', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+    const pythonActivityExecute = vi.fn(async (step: { stepId: string }) => ({
+      stepId: step.stepId,
+      status: 'COMPLETED' as const,
+    }));
+    const pythonActivity: StepActivity = {
+      execute: pythonActivityExecute,
+    };
+    const replacementActivityExecute = vi.fn(async (step: { stepId: string }) => ({
+      stepId: step.stepId,
+      status: 'FAILED' as const,
+    }));
+    const sourceRegistry = new Map(DEFAULT_STEP_ACTIVITY_REGISTRY).set(
+      'PYTHON_SCRIPT',
+      pythonActivity
+    );
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+      workflowsPath: '/tmp/workflows.js',
+      stepActivitiesByKind: sourceRegistry,
+    });
+
+    await host.start({} as never);
+    sourceRegistry.set('PYTHON_SCRIPT', {
+      execute: replacementActivityExecute,
+    });
+
+    const created = getLastCreateArgs() as {
+      activities: {
+        executeStep(input: {
+          step: { stepId: string; kind: string; dependsOn?: string[] };
+          ctx: ReturnType<typeof mkResolvedRunContext>;
+        }): Promise<{ stepId: string; status: 'COMPLETED' | 'FAILED' }>;
+      };
+    };
+
+    const result = await created.activities.executeStep({
+      step: { stepId: 'py-1', kind: 'PYTHON_SCRIPT', dependsOn: [] },
+      ctx: mkResolvedRunContext(),
+    });
+
+    expect(result).toEqual({ stepId: 'py-1', status: 'COMPLETED' });
+    expect(pythonActivityExecute).toHaveBeenCalledTimes(1);
+    expect(replacementActivityExecute).not.toHaveBeenCalled();
+    await host.shutdown();
   });
 
   it('emits observability for worker start and shutdown', async () => {

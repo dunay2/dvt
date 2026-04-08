@@ -104,6 +104,8 @@ export interface StepActivity {
   execute(step: ExecutionPlan['steps'][number], context: StepExecutionContext): Promise<StepResult>;
 }
 
+export type StepActivityRegistry = ReadonlyMap<string, StepActivity>;
+
 export class UnsupportedStepKindError extends Error {
   constructor(
     readonly stepKind: string,
@@ -138,10 +140,6 @@ class GatewayStepActivity implements StepActivity {
 export class DbtStepActivity implements StepActivity {
   static readonly SUPPORTED_STEP_KINDS = new Set(['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT']);
 
-  supportsStepKind(stepKind: string): boolean {
-    return DbtStepActivity.SUPPORTED_STEP_KINDS.has(stepKind);
-  }
-
   async execute(
     step: ExecutionPlan['steps'][number],
     _context: StepExecutionContext
@@ -150,11 +148,33 @@ export class DbtStepActivity implements StepActivity {
   }
 }
 
+const DEFAULT_DBT_STEP_ACTIVITY = new DbtStepActivity();
+
+const DEFAULT_STEP_ACTIVITY_ENTRIES = Object.freeze(
+  Array.from(
+    DbtStepActivity.SUPPORTED_STEP_KINDS,
+    (stepKind) => [stepKind, DEFAULT_DBT_STEP_ACTIVITY] as const
+  )
+);
+
+export function createDefaultStepActivityRegistry(): StepActivityRegistry {
+  return new Map(DEFAULT_STEP_ACTIVITY_ENTRIES);
+}
+
+export const DEFAULT_STEP_ACTIVITY_REGISTRY: StepActivityRegistry =
+  createDefaultStepActivityRegistry();
+
 export class StepActivityDispatcher {
+  private readonly stepActivitiesByKind: StepActivityRegistry;
+
   constructor(
     private readonly gatewayActivity: StepActivity = new GatewayStepActivity(),
-    private readonly dbtStepActivity: DbtStepActivity = new DbtStepActivity()
-  ) {}
+    stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
+  ) {
+    // Snapshot the registry on construction so later mutations cannot change
+    // dispatch behavior for already-created workers/activities.
+    this.stepActivitiesByKind = new Map(stepActivitiesByKind);
+  }
 
   async execute(
     step: ExecutionPlan['steps'][number],
@@ -178,8 +198,9 @@ export class StepActivityDispatcher {
       });
     }
 
-    if (this.dbtStepActivity.supportsStepKind(step.kind)) {
-      return this.dbtStepActivity.execute(step, context);
+    const activity = this.stepActivitiesByKind.get(step.kind);
+    if (activity) {
+      return activity.execute(step, context);
     }
 
     throw ApplicationFailure.create({
@@ -202,12 +223,13 @@ export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [];
 
 export function createActivities(
   deps: ActivityDeps,
-  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS
+  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS,
+  stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
 } {
-  const dispatcher = new StepActivityDispatcher();
+  const dispatcher = new StepActivityDispatcher(new GatewayStepActivity(), stepActivitiesByKind);
   return {
     /**
      * Execute a single step.
