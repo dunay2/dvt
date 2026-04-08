@@ -32,21 +32,25 @@ without forcing a full event replay on every signal.
 - `SignalTransitionGuard.assertAllowed()` now uses `getSnapshot()` as the hot
   path when the snapshot is fresh and falls back to event replay only when the
   snapshot is missing or the store marks it stale via
-  `IRunSnapshotStalenessQuery`.
+  `IRunSnapshotStalenessQuery`, with one targeted event-history read for the
+  ambiguous fresh `RESUME` + `RUNNING` case.
 - `isAlreadyApplied()` keeps PAUSE/RESUME semantics aligned with runtime-owned
   realized lifecycle events (`RunPaused`/`RunResumed`) while using the
   event-derived snapshot state on the stale fallback path.
 - Regression coverage now includes stale-snapshot scenarios for both PAUSE and
   RESUME to ensure duplicate signals are not re-dispatched when event history
   already contains the realized transition, plus a fast-path assertion that a
-  fresh snapshot does not trigger `listEvents()`.
+  fresh `PAUSE` path does not trigger `listEvents()` and a fresh `RUNNING`
+  `RESUME` path still rejects invalid transitions.
 
 ## Expected effect
 
 - PAUSE/RESUME idempotency decisions are consistent even when materialized
   snapshots lag event append.
 - Fresh snapshots keep the signal guard on the intended hot-read path instead
-  of forcing an event scan per signal.
+  of forcing an event scan per signal, except for the ambiguous fresh
+  `RUNNING` `RESUME` case that still needs event history to distinguish
+  invalid from already-applied.
 - The guard remains aligned with ADR-0047 runtime-owned lifecycle boundaries.
 - Adapter signal dispatch is protected from duplicate PAUSE/RESUME caused by
   snapshot drift.

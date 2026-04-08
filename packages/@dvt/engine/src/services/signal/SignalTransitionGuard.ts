@@ -39,7 +39,12 @@ export class SignalTransitionGuard {
 
     const replayFromEvents = await this.shouldReplayFromEvents(meta);
     if (!replayFromEvents) {
-      if (this.isAlreadyAppliedFromSnapshot(storedSnap, req)) {
+      if (this.requiresEventHistoryForFreshSnapshot(storedSnap, req)) {
+        const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
+        if (this.isAlreadyApplied(storedSnap, events, req)) {
+          return 'already_applied';
+        }
+      } else if (this.isAlreadyAppliedFromSnapshot(storedSnap, req)) {
         return 'already_applied';
       }
       this.assertTransitionAllowed(storedSnap, meta, req, eventType);
@@ -113,11 +118,14 @@ export class SignalTransitionGuard {
       return snapshot.status === 'PAUSED' || snapshot.paused;
     }
 
-    if (req.type === 'RESUME') {
-      return snapshot.status === 'RUNNING' && !snapshot.paused;
-    }
-
     return false;
+  }
+
+  private requiresEventHistoryForFreshSnapshot(
+    snapshot: WorkflowSnapshot,
+    req: SignalRequest
+  ): boolean {
+    return req.type === 'RESUME' && snapshot.status === 'RUNNING' && !snapshot.paused;
   }
 
   private lastPauseResumeEventType(events: readonly EventEnvelope[]): GuardedRunEventType | null {
