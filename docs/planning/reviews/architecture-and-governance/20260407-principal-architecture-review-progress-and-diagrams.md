@@ -11,7 +11,7 @@ planning_type: review
 Companion to the 2026-04-07 principal architecture review. This document is a
 status and rationale companion only. It does not override ADRs, contracts, or
 the generated planning surfaces. It is updated here to reflect the current
-merged state on `origin/main` as of 2026-04-08.
+repository working state as of 2026-04-08.
 
 ## 1. Global Effort Summary
 
@@ -68,17 +68,47 @@ that matter for the review conclusions.
 | `b9bf4576` | engine    | Narrowed `RETRY_STEP` out of the canonical signal boundary and codified the separate-use-case direction.     |
 | `0df3dda3` | web       | Hardened Root provider ownership guard.                                                                      |
 
-### Concrete review deltas now true on main
+### Concrete review deltas now true in the current working tree
 
-| Boundary / system area                  | Initial review concern                                           | Current merged state                                                                                                                    | Status                      |
-| --------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `ExecutionPlan` vs `RunExecutionPolicy` | Mixed identity and runtime policy fields                         | Separated; policy is governed independently of plan identity                                                                            | **Done**                    |
-| Signal lifecycle ownership              | Engine and runtime could both imply realized lifecycle ownership | `RunPaused`, `RunResumed`, and `RunCancelled` are runtime-owned facts governed by ADR-0047                                              | **Done**                    |
-| `startRun()` protocol clarity           | Reviewers had to reconstruct protocol across multiple classes    | [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md) codifies the current protocol end to end | **Done**                    |
-| Operational use of `PlanCore` split     | Needed design clarification                                      | Spike completed; recommendation is not to operationalize a separate public `PlanCore` artifact now                                      | **Done, no implementation** |
-| `RETRY_STEP` boundary                   | Signal surface was wider than the product truth                  | `RETRY_STEP` removed from canonical `SignalType`; governed by ADR-0048 as a separate engine use case direction                          | **Done**                    |
-| Engine import boundary enforcement      | Separation was convention-only                                   | Lint now blocks `@dvt/engine/src/**` from importing `@dvt/planner` or concrete adapters such as `@dvt/adapter-temporal`                 | **Done**                    |
-| `RETRY_RUN` ownership                   | Still semantically unresolved                                    | Still present in canonical contracts but not exposed as a completed product surface                                                     | **Open**                    |
+- `ExecutionPlan` vs `RunExecutionPolicy`
+  - initial review concern: mixed identity and runtime policy fields
+  - current merged state: separated; policy is governed independently of plan
+    identity
+  - status: **Done**
+- Signal lifecycle ownership
+  - initial review concern: engine and runtime could both imply realized
+    lifecycle ownership
+  - current merged state: `RunPaused`, `RunResumed`, and `RunCancelled` are
+    runtime-owned facts governed by ADR-0047
+  - status: **Done**
+- `startRun()` protocol clarity
+  - initial review concern: reviewers had to reconstruct protocol across
+    multiple classes
+  - current merged state:
+    [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
+    codifies the current protocol end to end
+  - status: **Done**
+- Operational use of `PlanCore` split
+  - initial review concern: needed design clarification
+  - current merged state: spike completed; recommendation is not to
+    operationalize a separate public `PlanCore` artifact now
+  - status: **Done, no implementation**
+- `RETRY_STEP` boundary
+  - initial review concern: signal surface was wider than the product truth
+  - current merged state: `RETRY_STEP` removed from canonical `SignalType`;
+    governed by ADR-0048 as a separate engine use case direction
+  - status: **Done**
+- Engine import boundary enforcement
+  - initial review concern: separation was convention-only
+  - current merged state: lint now blocks `@dvt/engine/src/**` from importing
+    `@dvt/planner` or concrete adapters such as `@dvt/adapter-temporal`
+  - status: **Done**
+- `RETRY_RUN` ownership
+  - initial review concern: canonical signal surface was still wider than
+    product truth
+  - current merged state: `RETRY_RUN` is now governed by ADR-0049 as a
+    dedicated recover-run use case, outside generic `signal(...)`
+  - status: **Done**
 
 ## 3. Architecture Diagrams - Current State
 
@@ -269,25 +299,50 @@ flowchart TD
 
 ## 4. Current Status Of Review Recommendations
 
-| Recommendation                                                                                      | Current status                                | Governing artifact(s)                                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Codify the existing `startRun()` protocol                                                           | **Done**                                      | [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)                                                                                                               |
-| Move `PAUSE` / `RESUME` realized lifecycle ownership to runtime                                     | **Done**                                      | [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)                                                                                                          |
-| Keep speculative `SignalTransitionGuard` as validation-only                                         | **Done**                                      | [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md), `SignalTransitionGuard` tests                                                                           |
-| Spike the operational use of existing `PlanCore` split                                              | **Done, recommendation is no implementation** | [PlanCore operational consumption design spike](20260407-plan-core-operational-consumption-design-spike.md)                                                                                                  |
-| Remove `RETRY_STEP` from the canonical signal boundary and document the separate use-case direction | **Done**                                      | [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)                                                                                                                                  |
-| Add build-time boundary enforcement for engine imports                                              | **Done on main**                              | [reference-architecture.md](../../../architecture/reference-architecture.md), [workflow-engine-subsystem-context.md](../../../architecture/engine/workflow-engine-subsystem-context.md), `eslint.config.cjs` |
-| Decide `RETRY_RUN` ownership and product posture                                                    | **Open**                                      | [ADR-0040](../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md) follow-up remains needed                                                                                                          |
+| Recommendation | Current status | Governing artifact(s) |
+
+- Codify the existing `startRun()` protocol
+  - status: **Done**
+  - material:
+    [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
+- Move `PAUSE` / `RESUME` realized lifecycle ownership to runtime
+  - status: **Done**
+  - material:
+    [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+- Keep speculative `SignalTransitionGuard` as validation-only
+  - status: **Done**
+  - material:
+    [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md),
+    `SignalTransitionGuard` tests
+- Spike the operational use of existing `PlanCore` split
+  - status: **Done, recommendation is no implementation**
+  - material:
+    [PlanCore operational consumption design spike](20260407-plan-core-operational-consumption-design-spike.md)
+- Remove `RETRY_STEP` from the canonical signal boundary and document the
+  separate use-case direction
+  - status: **Done**
+  - material:
+    [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
+- Add build-time boundary enforcement for engine imports
+  - status: **Done on main**
+  - material:
+    [reference-architecture.md](../../../architecture/reference-architecture.md),
+    [workflow-engine-subsystem-context.md](../../../architecture/engine/workflow-engine-subsystem-context.md),
+    `eslint.config.cjs`
+- Decide `RETRY_RUN` ownership and product posture
+  - status: **Done**
+  - material:
+    [ADR-0049](../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md),
+    [ADR-0040](../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
 
 ## 5. Residual Deviations And Risks
 
 ### Still open
 
-| Item                                                                                                                    | Severity | Current impact                                                    |
-| ----------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------- |
-| `RETRY_RUN` remains in canonical contracts while product/API surface still exposes only `PAUSE`, `RESUME`, and `CANCEL` | Medium   | Contract surface is still wider than the shipped operator surface |
-| Lane D remains at 22% verified completion                                                                               | High     | Scale and go-to-market work is still materially blocked or queued |
-| Lane C remains at 38% verified completion                                                                               | Medium   | Runtime resilience and admission follow-through is incomplete     |
+| Item                                      | Severity | Current impact                                                    |
+| ----------------------------------------- | -------- | ----------------------------------------------------------------- |
+| Lane D remains at 22% verified completion | High     | Scale and go-to-market work is still materially blocked or queued |
+| Lane C remains at 38% verified completion | Medium   | Runtime resilience and admission follow-through is incomplete     |
 
 ### Resolved since the initial 2026-04-07 review draft
 
@@ -301,9 +356,9 @@ flowchart TD
 
 ### Next architectural priority implied by the review
 
-1. Decide the `RETRY_RUN` boundary and whether it belongs in canonical product semantics.
-2. Continue closing Lane C runtime safety work now that the main signal and start-run boundaries are governed.
-3. Keep architecture companion docs synchronized with generated workboard truth rather than hand-maintained point summaries.
+1. Continue closing Lane C runtime safety work now that the main signal and start-run boundaries are governed.
+2. Keep architecture companion docs synchronized with generated workboard truth rather than hand-maintained point summaries.
+3. Decide whether the future recover-run use case should ship as a dedicated command surface or remain roadmap-only.
 
 ## References
 
@@ -313,6 +368,7 @@ flowchart TD
 - [StartRun protocol](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
 - [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
+- [ADR-0049](../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 - [Execution Workboard](../../state/execution-workboard.md)
 - [Lane A YAML](../../state/agent-lane-a.yaml)
 - [Lane B YAML](../../state/agent-lane-b.yaml)

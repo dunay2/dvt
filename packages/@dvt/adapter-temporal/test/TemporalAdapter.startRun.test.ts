@@ -198,4 +198,25 @@ describe('TemporalAdapter.signal', () => {
 
     expect(signal).toHaveBeenCalledWith(WorkflowSignals.RESUME, 'sig-resume-1');
   });
+
+  it('forwards CANCEL through the canonical provider mapper', async () => {
+    const signal = vi.fn(async () => undefined);
+    const { adapter, workflowClient } = makeAdapter();
+    workflowClient.getHandle.mockReturnValue({
+      signal,
+    });
+
+    await adapter.signal(
+      {
+        provider: 'temporal',
+        tenantId: 'tenant-1',
+        namespace: 'dvt-test',
+        workflowId: 'run-1',
+        runId: 'run-1',
+      },
+      { signalId: 'sig-cancel-1', type: 'CANCEL', reason: 'operator-request' }
+    );
+
+    expect(signal).toHaveBeenCalledWith(WorkflowSignals.CANCEL, 'operator-request');
+  });
 });

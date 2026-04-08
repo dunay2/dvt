@@ -90,6 +90,15 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
+  it('rejects RETRY_RUN because recovery is no longer part of canonical SignalType', () => {
+    expect(() =>
+      parseSignalRequest({
+        signalId: 'sig-retry-run-1',
+        type: 'RETRY_RUN',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunContext with valid provider', () => {
     const ctx = parseRunContext({
       tenantId: 'tenant-a',

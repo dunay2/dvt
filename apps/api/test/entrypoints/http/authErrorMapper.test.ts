@@ -209,8 +209,10 @@ describe('mapRuntimeDomainError', () => {
     });
   });
 
-  it('maps unsupported phase-2 signals to 422', () => {
-    const result = mapRuntimeDomainError(new SignalNotImplementedError('RETRY_RUN'));
+  it('maps unsupported provider-private commands to 422', () => {
+    const result = mapRuntimeDomainError(
+      new SignalNotImplementedError('PROVIDER_PRIVATE_COMMAND')
+    );
     expect(result).toEqual({
       status: 422,
       body: {

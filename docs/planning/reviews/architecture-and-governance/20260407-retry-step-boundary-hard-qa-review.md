@@ -14,6 +14,10 @@ qa_artifact: true
 This artifact is the hard QA gate for the 2026-04-07 slice that narrowed
 `RETRY_STEP` out of canonical `SignalType`.
 
+Historical note: `RETRY_RUN` was unresolved when this QA artifact closed. It is
+now governed separately by `ADR-0049` and is no longer part of canonical
+generic `SignalType`.
+
 Canonical execution tracking remains in:
 
 - [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
@@ -45,9 +49,10 @@ No critical findings remain in the reviewed slice.
 
 ### Residual note
 
-- `RETRY_RUN` still remains outside the shipped HTTP/API runtime surface.
-  That is not a regression from this slice and remains governed separately by
-  [ADR-0040](C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md).
+- `RETRY_RUN` remains outside the shipped HTTP/API runtime surface.
+  This artifact predates the later boundary decision that moved `RETRY_RUN`
+  out of canonical `SignalType`; see
+  [ADR-0049](C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
 
 ## Alignment
 
@@ -60,8 +65,9 @@ No critical findings remain in the reviewed slice.
   scoped contract and engine tests support the narrowing slice, and doc truth is
   now consistent with the shipped contract.
 - Current truth vs planned truth:
-  current truth is explicit: canonical engine signals are `PAUSE`, `RESUME`,
-  `CANCEL`, `RETRY_RUN`; `RETRY_STEP` is not canonical.
+  at the time of this QA artifact, canonical engine signals were `PAUSE`,
+  `RESUME`, `CANCEL`, `RETRY_RUN`; `RETRY_STEP` was not canonical. Current
+  canonical signals are now `PAUSE`, `RESUME`, and `CANCEL`.
 - Documentation update status:
   corrected.
 - Evidence and risk-doc status when applicable:

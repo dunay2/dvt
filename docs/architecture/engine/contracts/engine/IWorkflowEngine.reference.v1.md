@@ -142,7 +142,7 @@ All operations and events MUST include these identifiers for traceability:
   - Increments on: workflow restart, worker crash recovery, continue-as-new
   - Used for: debugging, infra failure detection, cost attribution
 - **`logicalAttemptId`**: Business attempt counter resolved by the engine/application layer
-  - Increments on: business recovery lineage (`RETRY_RUN`) and future engine-owned partial-retry semantics
+  - Increments on: business recovery lineage (dedicated recover-run use case governed by ADR-0040 and ADR-0049) and any future dedicated engine-owned retry or recovery use case
   - MUST NOT increment for provider-native technical retries
   - Used for: deterministic replay, idempotency key generation, user-visible business attempt count
 
@@ -182,7 +182,8 @@ The resolution mechanism is adapter-specific. Each adapter MUST implement correl
 
 **Summary**:
 
-- Engine emits lifecycle events: `RunStarted`, `StepStarted`, `StepCompleted`, `StepFailed`, `RunPaused`, `RunResumed`, `RunCompleted`, `RunFailed`, `RunCancelled`
+- The execution domain emits lifecycle events: `RunStarted`, `StepStarted`, `StepCompleted`, `StepFailed`, `RunPaused`, `RunResumed`, `RunCompleted`, `RunFailed`, `RunCancelled`
+  - `RunPaused`, `RunResumed`, and `RunCancelled` are runtime-owned realized lifecycle facts in the current model
 - Events MUST include: `runId`, `stepId` (if applicable), `engineAttemptId`, `logicalAttemptId`, `runSeq`, `idempotencyKey`
 - Event naming: PascalCase without `on` prefix (e.g., `RunStarted`, not `onRunStarted`)
 - StateStore assigns `runSeq` during write; engine receives assigned seq in write response

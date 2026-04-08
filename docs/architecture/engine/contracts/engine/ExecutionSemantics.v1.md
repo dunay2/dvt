@@ -3,6 +3,8 @@
 > Historical note: references in this v1 surface to a `RETRY_STEP` signal are
 > superseded by [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
 > The current canonical signal boundary no longer includes `RETRY_STEP`.
+> Business run recovery is also outside the generic signal boundary; see
+> [ADR-0049](../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
 > References to engine-owned realized lifecycle events for `RunPaused`,
 > `RunResumed`, or `RunCancelled` are superseded by
 > [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
@@ -195,8 +197,9 @@ stateDiagram-v2
 
 **Implementation scope note (NORMATIVE)**:
 
-- `RETRY_RUN` creates a new `runId` and consumes the next `logicalAttemptId`
-  in the recovery chain.
+- a dedicated recover-run use case creates a new `runId` and consumes the next
+  `logicalAttemptId` in the recovery chain; this is governed by ADR-0040 and
+  ADR-0049 rather than by canonical `SignalType`.
 - Step-scoped retry is not part of canonical `SignalType`; a dedicated
   step-retry use case requires its own ADR and contract surface.
 - Provider-native retries MUST keep the same `logicalAttemptId` and MUST NOT

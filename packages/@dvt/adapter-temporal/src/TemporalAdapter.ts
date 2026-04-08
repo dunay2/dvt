@@ -164,25 +164,8 @@ export class TemporalAdapter implements IProviderAdapter {
     const validatedRequest = parseSignalRequest(request);
     const workflowClient = await this.getClient();
     const workflow = workflowClient.getHandle(validatedRunRef.workflowId) as WorkflowHandleLike;
-
-    switch (validatedRequest.type) {
-      case 'PAUSE':
-        await workflow.signal(WorkflowSignals.PAUSE, validatedRequest.signalId);
-        return;
-      case 'RESUME':
-        await workflow.signal(WorkflowSignals.RESUME, validatedRequest.signalId);
-        return;
-      case 'CANCEL':
-        await workflow.signal(WorkflowSignals.CANCEL, validatedRequest.reason);
-        return;
-      case 'RETRY_RUN':
-        throw new Error(
-          'NotImplemented: RETRY_RUN signal remains unsupported in provider signal()'
-        );
-      default: {
-        throw new Error(`Unknown signal type: ${String(validatedRequest.type)}`);
-      }
-    }
+    const dispatch = mapCanonicalSignalToTemporalDispatch(validatedRequest);
+    await workflow.signal(dispatch.signalName, ...dispatch.args);
   }
 
   capabilities(): readonly string[] {
@@ -278,6 +261,33 @@ export class TemporalAdapter implements IProviderAdapter {
       this.deps.config.requestTimeoutMs,
       'lookupRunRef.describe'
     );
+  }
+}
+
+function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
+  signalName: (typeof WorkflowSignals)[keyof typeof WorkflowSignals];
+  args: unknown[];
+} {
+  switch (request.type) {
+    case 'PAUSE':
+      return {
+        signalName: WorkflowSignals.PAUSE,
+        args: [request.signalId],
+      };
+    case 'RESUME':
+      return {
+        signalName: WorkflowSignals.RESUME,
+        args: [request.signalId],
+      };
+    case 'CANCEL':
+      return {
+        signalName: WorkflowSignals.CANCEL,
+        args: [request.reason],
+      };
+    default: {
+      const exhaustive: never = request.type;
+      throw new Error(`TEMPORAL_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
+    }
   }
 }
 

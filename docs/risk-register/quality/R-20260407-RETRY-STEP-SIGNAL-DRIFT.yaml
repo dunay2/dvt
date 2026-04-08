@@ -1,7 +1,7 @@
 ---
 id: R-20260407-RETRY-STEP-SIGNAL-DRIFT
 title: Active docs or consumers may continue treating RETRY_STEP as a canonical signal
-status: Open
+status: Closed
 date: 2026-04-07
 owners:
   - packages/@dvt/contracts
@@ -24,6 +24,6 @@ mitigations:
   - 'Active engine contract docs now point future step retry to a dedicated use case boundary.'
   - 'Contracts and engine tests cover RETRY_STEP rejection and the updated signal idempotency
     vectors.'
-  - 'Planning state tracks WE-HX-4-C as in progress until RETRY_RUN ownership is also resolved.'
-review_after: 2026-05-31
+  - 'ADR-0049 now resolves the remaining RETRY_RUN ownership question, so WE-HX-4-C is fully closed.'
+review_after: 2026-04-08
 ---

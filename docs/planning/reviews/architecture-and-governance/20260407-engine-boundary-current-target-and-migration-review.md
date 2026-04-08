@@ -2,7 +2,7 @@
 title: Engine boundary current state, target state, and migration review
 status: Active
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-08
 planning_type: review
 ---
 
@@ -394,13 +394,51 @@ with no stable ownership rule.
 This matrix captures the recommended ownership model, the current code reality,
 and whether there is a real problem today.
 
-| Signal or operation | Recommended classification                                                                                         | Engine responsibility                                                      | Runtime or adapter responsibility                                                              | Current code reality                                                                                                                | Current problem                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `PAUSE`             | canonical DVT signal                                                                                               | authorize, validate transition, check capability, dispatch                 | realize `RunPaused` when the workflow actually pauses                                          | engine and Temporal workflow both emit `RunPaused`                                                                                  | yes: duplicate realized lifecycle emission                                               |
-| `RESUME`            | canonical DVT signal                                                                                               | authorize, validate transition, check capability, dispatch                 | realize `RunResumed` when the workflow actually resumes                                        | engine and Temporal workflow both emit `RunResumed`                                                                                 | yes: duplicate realized lifecycle emission                                               |
-| `CANCEL`            | canonical DVT signal                                                                                               | authorize, validate, dispatch cancel intent                                | realize `RunCancelRequested` and `RunCancelled` in workflow order                              | runtime-owned and aligned                                                                                                           | no material boundary defect currently                                                    |
-| `RETRY_RUN`         | canonical only if DVT defines new logical-attempt or lineage semantics; otherwise remove from canonical signal set | if canonical: govern authorization, idempotency, and semantic retry policy | if canonical: realize resulting lifecycle facts; if not canonical: keep it provider-private    | contract type exists, API does not expose it, Temporal throws `NotImplemented`, engine direct path delegates without derived events | yes: contract shape is ahead of product semantics and adapter support                    |
-| `RETRY_STEP`        | separate engine use case; not part of canonical `SignalType`                                                       | engine owns future step-retry semantics if the feature is promoted         | adapter or runtime realizes the new attempt if the provider supports it; otherwise fail closed | ADR-0048 and contract narrowing remove `RETRY_STEP` from the canonical signal path                                                  | no: signal ownership is now explicit; future implementation is a dedicated feature slice |
+- `PAUSE`
+  - classification: canonical DVT signal
+  - engine responsibility: authorize, validate transition, check capability,
+    dispatch
+  - runtime or adapter responsibility: realize `RunPaused` when the workflow
+    actually pauses
+  - current code reality: engine and Temporal workflow both emit `RunPaused`
+  - current problem: yes, duplicate realized lifecycle emission
+- `RESUME`
+  - classification: canonical DVT signal
+  - engine responsibility: authorize, validate transition, check capability,
+    dispatch
+  - runtime or adapter responsibility: realize `RunResumed` when the workflow
+    actually resumes
+  - current code reality: engine and Temporal workflow both emit `RunResumed`
+  - current problem: yes, duplicate realized lifecycle emission
+- `CANCEL`
+  - classification: canonical DVT signal
+  - engine responsibility: authorize, validate, dispatch cancel intent
+  - runtime or adapter responsibility: realize `RunCancelRequested` and
+    `RunCancelled` in workflow order
+  - current code reality: runtime-owned and aligned
+  - current problem: no material boundary defect currently
+- `RETRY_RUN`
+  - classification: separate engine or application recovery use case; not part
+    of canonical `SignalType`
+  - engine responsibility: own future recovery authorization, idempotency, and
+    lineage semantics
+  - runtime or adapter responsibility: realize a new run attempt only through
+    an explicit recover-run boundary
+  - current code reality: `ADR-0049` removes `RETRY_RUN` from canonical
+    `SignalType`; generic `signal(...)` now covers only run-control operations
+  - current problem: no, the generic signal boundary is explicit and future
+    recovery remains a separate slice
+- `RETRY_STEP`
+  - classification: separate engine use case; not part of canonical
+    `SignalType`
+  - engine responsibility: own future step-retry semantics if the feature is
+    promoted
+  - runtime or adapter responsibility: realize the new attempt if the provider
+    supports it; otherwise fail closed
+  - current code reality: `ADR-0048` and contract narrowing remove
+    `RETRY_STEP` from the canonical signal path
+  - current problem: no, signal ownership is explicit and future implementation
+    is a dedicated feature slice
 
 ### H. Real current problems in the repository
 
@@ -412,16 +450,15 @@ There are three relevant findings here.
    - Temporal workflow path also appends realized events
    - this is the only immediate semantic defect in the current signal model
 
-2. `RETRY_*` is a real contract and boundary drift issue, but not yet a public
-   product break.
-   - canonical contract had included `RETRY_STEP` and `RETRY_RUN`
-   - `ADR-0048` now narrows `RETRY_STEP` out of canonical `SignalType`
-   - API runtime surface currently exposes only `PAUSE`, `RESUME`, and
-     `CANCEL`
-   - Temporal adapter rejects `RETRY_*` as phase-2 `NotImplemented`
-   - engine direct calls already allow delegation with no derived run events
-   - this means the product surface is narrower than the canonical signal type
-     set, which reduces immediate blast radius but leaves architectural drift
+2. Retry-oriented signal drift has now been resolved at the canonical signal
+   boundary.
+   - canonical `SignalType` now includes only `PAUSE`, `RESUME`, and `CANCEL`
+   - `ADR-0048` narrows `RETRY_STEP` into a future dedicated step-retry use case
+   - `ADR-0049` narrows `RETRY_RUN` into a future dedicated recover-run use case
+   - adapters translate only canonical run-control signals through explicit
+     provider mapping helpers
+   - remaining recovery semantics stay governed by `ADR-0040`, outside generic
+     `signal(...)`
 
 3. There is still no explicit provider-mapper seam between canonical signals
    and provider-private commands.
@@ -434,12 +471,22 @@ There are three relevant findings here.
 The action plan should be sequenced against the existing Lane A tracker rather
 than restated as free-floating recommendations.
 
-| Current issue                                            | Planning task | Expected outcome                                                                                                                        |
-| -------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Duplicate realized `PAUSE/RESUME` emission               | `WE-HX-4-D`   | runtime becomes the sole producer of `RunPaused` and `RunResumed`; `SignalSemantics` and `SignalTransitionGuard` are updated coherently |
-| Canonical signals mixed with provider-private commands   | `WE-HX-4-A`   | canonical `SignalType` is narrowed to DVT-owned semantics and provider-private operations move behind a separate boundary               |
-| Missing canonical-signal to provider-command mapper seam | `WE-HX-4-B`   | provider mapper translates engine-owned semantics fail-closed instead of leaking provider-private commands into the contract            |
-| Narrow `RETRY_STEP` out of canonical `SignalType`        | `WE-HX-4-C`   | step retry uses a dedicated engine use-case boundary instead of the generic signal surface                                              |
+- Duplicate realized `PAUSE/RESUME` emission
+  - planning task: `WE-HX-4-D`
+  - expected outcome: runtime becomes the sole producer of `RunPaused` and
+    `RunResumed`; `SignalSemantics` and `SignalTransitionGuard` stay coherent
+- Canonical signals mixed with provider-private commands
+  - planning task: `WE-HX-4-A`
+  - expected outcome: canonical `SignalType` is narrowed to DVT-owned semantics
+    and provider-private operations move behind a separate boundary
+- Missing canonical-signal to provider-command mapper seam
+  - planning task: `WE-HX-4-B`
+  - expected outcome: provider mapper translates engine-owned semantics
+    fail-closed instead of leaking provider-private commands into the contract
+- Narrow `RETRY_STEP` and `RETRY_RUN` out of canonical `SignalType`
+  - planning task: `WE-HX-4-C`
+  - expected outcome: step retry and run recovery use dedicated engine use-case
+    boundaries instead of the generic signal surface
 
 ## 4. Correct target shape
 

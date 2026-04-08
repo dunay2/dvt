@@ -14,7 +14,6 @@ export const WorkflowSignals = {
   PAUSE: 'pause',
   RESUME: 'resume',
   CANCEL: 'cancel',
-  RETRY_RUN: 'retry_run',
 } as const;
 
 export type WorkflowSignal = (typeof WorkflowSignals)[keyof typeof WorkflowSignals];

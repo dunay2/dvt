@@ -109,17 +109,16 @@ export class MockAdapter implements IProviderAdapter {
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    switch (request.type) {
-      case 'CANCEL':
+    const dispatch = mapCanonicalSignalToMockDispatch(request);
+    switch (dispatch.kind) {
+      case 'cancel':
         await this.appendCancelLifecycle(runRef);
         return;
-      case 'PAUSE':
+      case 'pause':
         await this.appendPauseResumeLifecycle(runRef, request, 'RunPaused');
         return;
-      case 'RESUME':
+      case 'resume':
         await this.appendPauseResumeLifecycle(runRef, request, 'RunResumed');
-        return;
-      default:
         return;
     }
   }
@@ -204,6 +203,23 @@ export class MockAdapter implements IProviderAdapter {
         ),
       },
     ]);
+  }
+}
+
+function mapCanonicalSignalToMockDispatch(request: SignalRequest): {
+  kind: 'cancel' | 'pause' | 'resume';
+} {
+  switch (request.type) {
+    case 'CANCEL':
+      return { kind: 'cancel' };
+    case 'PAUSE':
+      return { kind: 'pause' };
+    case 'RESUME':
+      return { kind: 'resume' };
+    default: {
+      const exhaustive: never = request.type;
+      throw new Error(`MOCK_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
+    }
   }
 }
 

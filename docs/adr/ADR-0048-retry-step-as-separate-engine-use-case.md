@@ -2,7 +2,7 @@
 title: ADR-0048 - RETRY_STEP is a separate engine use case, not a canonical signal
 status: Accepted
 owner: Architecture / Engine / Contracts / API
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-08
 ---
 
 # ADR-0048 - RETRY_STEP is a separate engine use case, not a canonical signal
@@ -10,6 +10,10 @@ last_reviewed: 2026-04-07
 ## Status
 
 Accepted.
+
+Historical note: this ADR remains the decision of record for `RETRY_STEP`.
+`RETRY_RUN` was still open when this ADR was accepted and was later resolved by
+`ADR-0049` as a separate recover-run use case outside canonical `SignalType`.
 
 ## Context
 
@@ -61,7 +65,6 @@ Canonical `SignalType` remains reserved for the current run-control signal set:
 - `PAUSE`
 - `RESUME`
 - `CANCEL`
-- `RETRY_RUN`
 
 The contract MUST NOT advertise `RETRY_STEP` as part of the generic signal
 boundary.
@@ -102,15 +105,15 @@ MUST remain runtime-owned, consistent with `ADR-0047`.
 The engine MAY record request or audit facts, but it MUST NOT fabricate the
 realized lifecycle events of the retried step attempt.
 
-### 5. This ADR does not change `RETRY_RUN`
+### 5. Later ADRs narrowed `RETRY_RUN` separately
 
-`RETRY_RUN` remains governed by `ADR-0040`.
+At acceptance time, this ADR intentionally left `RETRY_RUN` outside its scope.
+That residual boundary question was later resolved by `ADR-0049`.
 
-This ADR is intentionally narrow:
+This ADR remains intentionally narrow:
 
 - it removes `RETRY_STEP` from canonical signals;
-- it does not resolve whether `RETRY_RUN` should later move to a dedicated use
-  case surface.
+- it does not govern the dedicated recover-run boundary introduced later.
 
 ## Consequences
 
@@ -119,7 +122,8 @@ This ADR is intentionally narrow:
 - canonical signal vocabulary is narrower and no longer advertises speculative step retry;
 - step-level recovery stops masquerading as a simple control signal;
 - engine and adapter responsibilities for future step retry become clearer;
-- contract drift is reduced immediately, while `RETRY_RUN` posture remains governed separately by ADR-0040.
+- contract drift is reduced immediately, while run-recovery posture is now
+  governed separately by `ADR-0040` and `ADR-0049`.
 
 ### Negative
 
@@ -136,16 +140,16 @@ The first implementation slice for this ADR is contract narrowing:
 1. remove `RETRY_STEP` from `SignalType` and `SignalRequest` validation;
 2. remove runtime signal literals and tests that imply canonical support;
 3. update active docs so they no longer present `RETRY_STEP` as a signal;
-4. keep `RETRY_RUN` unchanged in this slice.
+4. keep `RETRY_RUN` unchanged in this slice at the time of acceptance.
 
 That migration MUST happen before any new provider expansion or signal-surface
 work reuses the stale vocabulary.
 
 ## Related
 
-- `ADR-0040` governs `RETRY_RUN` attempt authority and explicitly left
-  `RETRY_STEP` for a separate decision.
+- `ADR-0040` governs business retry ownership and attempt authority.
 - `ADR-0047` governs runtime-owned realized lifecycle for signal-driven
   transitions and applies to any future step-retry lifecycle facts.
+- `ADR-0049` later moved `RETRY_RUN` to a dedicated recover-run boundary.
 - This ADR supersedes any active contract or guidance that still treats
   `RETRY_STEP` as part of canonical `SignalType`.
