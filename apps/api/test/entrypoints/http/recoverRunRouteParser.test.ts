@@ -95,4 +95,30 @@ describe('parseRecoverRunRequest', () => {
       },
     });
   });
+
+  it('rejects when recoveryRunId equals sourceRunId', () => {
+    const parsed = parseRecoverRunRequest({
+      sourceRunId: 'same-run-id',
+      body: {
+        tenantId: 'tenant-a',
+        recoveryRunId: 'same-run-id',
+        planRef: {
+          uri: 'https://plans.example/plan.json',
+          sha256: 'a'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-a',
+          planVersion: '1.0.0',
+        },
+      },
+    });
+
+    expect(parsed).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.conflictingRunIds,
+        target: 'recoveryRunId',
+      },
+    });
+  });
 });

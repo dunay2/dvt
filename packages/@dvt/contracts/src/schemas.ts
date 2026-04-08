@@ -125,6 +125,15 @@ export const RecoverRunCommandSchema = z
     planRef: PlanRefSchema,
     context: RunContextSchema,
   })
+  .superRefine((input, ctx) => {
+    if (input.sourceRunId === input.context.runId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['context', 'runId'],
+        message: 'Recovery runId must differ from sourceRunId',
+      });
+    }
+  })
   .strict();
 
 export const RunStatusSnapshotSchema = z.object({

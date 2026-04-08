@@ -382,6 +382,22 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(recovery?.originRunId).toBe(sourceRunId);
   });
 
+  it('recoverRun rejects when sourceRunId equals recovery runId', async () => {
+    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const runId = 'recover-same-id-1';
+
+    await engine.startRun(makePlanRef(), makeContext(runId));
+
+    await expect(engine.recoverRun(runId, makePlanRef(), makeContext(runId))).rejects.toThrow(
+      ContractValidationError
+    );
+
+    const metadata = await store.getRunMetadataByRunId('t', runId);
+    expect(metadata?.logicalAttemptId).toBe(1);
+    expect(metadata?.parentRunId).toBeUndefined();
+    expect(metadata?.originRunId).toBe(runId);
+  });
+
   it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {
     const savedRefs: Array<{ runId: string; update: unknown }> = [];
     const store = new InMemoryTxStore();

@@ -39,6 +39,9 @@ export function parseRecoverRunRequest(input: {
   if (!recoveryRunId) {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'recoveryRunId' });
   }
+  if (recoveryRunId === sourceRunId) {
+    return badRequestResult(HTTP_ERROR_REASON.conflictingRunIds, { target: 'recoveryRunId' });
+  }
 
   const planRef = parseStartRunPlanRef(input.body.planRef);
   if (!planRef.ok) {
