@@ -40,6 +40,16 @@ export type RunSubstatus =
 
 export type AdapterScopedSubstatus = `${Provider}/${string}`;
 
+export interface MaterializationEvidence {
+  executor: 'postgres' | 'dbt';
+  environmentId: string;
+  sinkTable: string;
+  rowsWritten: number;
+  startedAt: IsoUtcString;
+  completedAt: IsoUtcString;
+  durationMs: number;
+}
+
 export interface RunStatusSnapshot {
   runId: string;
   status: RunStatus;
@@ -47,6 +57,10 @@ export interface RunStatusSnapshot {
   message?: string;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: MaterializationEvidence;
 }
 
 export interface PlanRef {

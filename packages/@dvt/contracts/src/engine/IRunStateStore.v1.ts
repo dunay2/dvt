@@ -1,6 +1,7 @@
 import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type {
   IsoUtcString,
+  MaterializationEvidence,
   PlanRef,
   Provider,
   RunExecutionPolicy,
@@ -142,7 +143,7 @@ export interface ListEventsOptions {
  * Version marker for persisted WorkflowSnapshot shape.
  * Bump this value whenever the WorkflowSnapshot contract changes.
  */
-export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 1 as const;
+export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 2 as const;
 
 export interface WorkflowSnapshot {
   schemaVersion: number;
@@ -150,6 +151,10 @@ export interface WorkflowSnapshot {
   status: RunStatus;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: MaterializationEvidence;
   paused: boolean;
   cancelling: boolean;
   /**

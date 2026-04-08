@@ -15,6 +15,28 @@ describe('engine-types', () => {
     expect(snap.message).toBe('error');
   });
 
+  it('RunStatusSnapshot accepts TF-C2-B outcome fields', () => {
+    const snap: RunStatusSnapshot = {
+      runId: 'r',
+      status: 'COMPLETED',
+      failedStepId: 'step-transform',
+      errorReason: 'SINK_WRITE_FAILED',
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'env-1',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-08T10:00:00.000Z',
+        completedAt: '2026-04-08T10:00:05.000Z',
+        durationMs: 5000,
+      },
+    };
+
+    expect(snap.failedStepId).toBe('step-transform');
+    expect(snap.materialization?.executor).toBe('postgres');
+    expect(snap.materialization?.rowsWritten).toBe(42);
+  });
+
   it('AdapterScopedSubstatus accepts adapter/value format', () => {
     const sub: AdapterScopedSubstatus = 'temporal/WORKFLOW_TASK_BACKLOG';
     expect(sub.startsWith('temporal/')).toBe(true);

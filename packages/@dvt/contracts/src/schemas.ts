@@ -145,6 +145,20 @@ export const RunStatusSnapshotSchema = z.object({
   message: z.string().optional(),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
+  currentStepId: NonBlankStringSchema.optional(),
+  failedStepId: NonBlankStringSchema.optional(),
+  errorReason: z.string().min(1).optional(),
+  materialization: z
+    .object({
+      executor: z.union([z.literal('postgres'), z.literal('dbt')]),
+      environmentId: NonBlankStringSchema,
+      sinkTable: NonBlankStringSchema,
+      rowsWritten: z.number().nonnegative(),
+      startedAt: z.string().min(1),
+      completedAt: z.string().min(1),
+      durationMs: z.number().nonnegative(),
+    })
+    .optional(),
 });
 
 // ─── EngineRunRef (discriminated union) ──────────────────────────────────────
@@ -242,9 +256,30 @@ const StepStartedPayloadSchema = z
     }
   )
   .strict();
+const MaterializationEvidenceEventSchema = z
+  .object({
+    executor: z.union([z.literal('postgres'), z.literal('dbt')]),
+    environmentId: NonBlankStringSchema,
+    sinkTable: NonBlankStringSchema,
+    rowsWritten: z.number().nonnegative(),
+    startedAt: z.string().min(1),
+    completedAt: z.string().min(1),
+    durationMs: z.number().nonnegative(),
+  })
+  .strict();
+
 const StepCompletedPayloadSchema = z
   .object({
-    gatewayDecision: z.boolean(),
+    gatewayDecision: z.boolean().optional(),
+    materialization: MaterializationEvidenceEventSchema.optional(),
+  })
+  .strict();
+
+const StepFailedPayloadSchema = z
+  .object({
+    reason: z.string().min(1).optional(),
+    message: z.string().min(1).optional(),
+    failedAt: z.string().min(1).optional(),
   })
   .strict();
 
@@ -319,7 +354,7 @@ const StepCompletedEventWriteSchema = RunEventCommonSchema.extend({
 const StepFailedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepFailed'),
   stepId: z.string().min(1),
-  payload: EmptyEventPayloadSchema.optional(),
+  payload: StepFailedPayloadSchema.optional(),
 }).strict();
 
 const StepSkippedEventWriteSchema = RunEventCommonSchema.extend({

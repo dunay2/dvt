@@ -1,0 +1,30 @@
+---
+id: R-20260408-TF-C2-B-READ-SURFACE-EVIDENCE-DRIFT
+title: TF-C2-B runtime outcome evidence could drift between events, snapshots, and API reads
+status: Closed
+date: 2026-04-08
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/run-domain
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  TF-C2-B requires executor identity, rows written, sink target, and failed-step diagnostics to be
+  visible on `GET /runs/:runId` and `GET /runs/:runId/events`. Before this slice, those fields were
+  described in planning docs and frontend consumers but not carried by the shared runtime read
+  contract or projector.
+risk: >
+  A future change could emit transformation outcome payloads in step events without updating the
+  canonical snapshot projection or API read contract, causing caller-visible drift where event
+  detail exists but the authoritative run snapshot omits the same evidence.
+mitigations:
+  - RunStatusSnapshot now exposes optional-first TF-C2-B outcome fields.
+  - StepCompleted and StepFailed validators now accept materialization and failure-diagnostic
+    payloads needed by the read path.
+  - The shared run-domain projector derives current step, failed step, error reason, and
+    materialization evidence from canonical events.
+  - API get-run responses now return the projected fields directly from snapshot state.
+  - Contract, projector, engine, and API tests lock the widened read-surface shape.
+---

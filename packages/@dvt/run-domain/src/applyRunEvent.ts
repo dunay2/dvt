@@ -70,12 +70,14 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
     case 'RunCompleted':
       assertRunNotTerminal(snap, e.eventType);
       snap.status = 'COMPLETED';
+      delete snap.currentStepId;
       snap.completedAt = e.emittedAt;
       break;
 
     case 'RunFailed':
       assertRunNotTerminal(snap, e.eventType);
       snap.status = 'FAILED';
+      delete snap.currentStepId;
       snap.completedAt = e.emittedAt;
       break;
 
@@ -85,6 +87,9 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
         step.startedAt = step.startedAt ?? emittedAt;
         step.attempts += 1;
       });
+      snap.currentStepId = getStepId(e);
+      delete snap.failedStepId;
+      delete snap.errorReason;
       break;
     }
 
@@ -99,6 +104,13 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
         snap.gatewayDecisions ??= {};
         snap.gatewayDecisions[stepId] = decision;
       }
+      if (snap.currentStepId === stepId) {
+        delete snap.currentStepId;
+      }
+      const materialization = extractMaterializationEvidence(e);
+      if (materialization !== undefined) {
+        snap.materialization = materialization;
+      }
       break;
     }
 
@@ -107,6 +119,14 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
         step.status = 'FAILED';
         step.completedAt = emittedAt;
       });
+      delete snap.currentStepId;
+      snap.failedStepId = getStepId(e);
+      const errorReason = extractFailureReason(e);
+      if (errorReason !== undefined) {
+        snap.errorReason = errorReason;
+      } else {
+        delete snap.errorReason;
+      }
       break;
     }
 
@@ -115,6 +135,9 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
         step.status = 'SKIPPED';
         step.completedAt = emittedAt;
       });
+      if (snap.currentStepId === getStepId(e)) {
+        delete snap.currentStepId;
+      }
       break;
     }
 
@@ -212,4 +235,67 @@ function extractGatewayDecision(e: EventEnvelope): boolean | undefined {
 
   const maybeDecision = (payload as Record<string, unknown>)['gatewayDecision'];
   return typeof maybeDecision === 'boolean' ? maybeDecision : undefined;
+}
+
+function extractMaterializationEvidence(
+  event: EventEnvelope
+): WorkflowSnapshot['materialization'] | undefined {
+  const payload = event.payload;
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+
+  const candidate = (payload as Record<string, unknown>)['materialization'];
+  if (!candidate || typeof candidate !== 'object') {
+    return undefined;
+  }
+
+  const value = candidate as Record<string, unknown>;
+  const executor = value['executor'];
+  const environmentId = value['environmentId'];
+  const sinkTable = value['sinkTable'];
+  const rowsWritten = value['rowsWritten'];
+  const startedAt = value['startedAt'];
+  const completedAt = value['completedAt'];
+  const durationMs = value['durationMs'];
+
+  if (
+    (executor !== 'postgres' && executor !== 'dbt') ||
+    typeof environmentId !== 'string' ||
+    typeof sinkTable !== 'string' ||
+    typeof rowsWritten !== 'number' ||
+    !Number.isFinite(rowsWritten) ||
+    typeof startedAt !== 'string' ||
+    typeof completedAt !== 'string' ||
+    typeof durationMs !== 'number' ||
+    !Number.isFinite(durationMs)
+  ) {
+    return undefined;
+  }
+
+  return {
+    executor,
+    environmentId,
+    sinkTable,
+    rowsWritten,
+    startedAt,
+    completedAt,
+    durationMs,
+  };
+}
+
+function extractFailureReason(event: EventEnvelope): string | undefined {
+  const payload = event.payload;
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+
+  const record = payload as Record<string, unknown>;
+  if (typeof record['reason'] === 'string' && record['reason'].length > 0) {
+    return record['reason'];
+  }
+  if (typeof record['message'] === 'string' && record['message'].length > 0) {
+    return record['message'];
+  }
+  return undefined;
 }

@@ -38,7 +38,16 @@ export interface IRunStatusStalenessTelemetry {
 
 export type GetRunStatusResult = Pick<
   RunStatusSnapshot,
-  'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt'
+  | 'runId'
+  | 'status'
+  | 'substatus'
+  | 'message'
+  | 'startedAt'
+  | 'completedAt'
+  | 'currentStepId'
+  | 'failedStepId'
+  | 'errorReason'
+  | 'materialization'
 > & {
   readonly tenantId: string;
   readonly enriched: boolean;

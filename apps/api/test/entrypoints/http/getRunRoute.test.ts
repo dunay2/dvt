@@ -14,6 +14,18 @@ const DEFAULT_RESULT: {
   status: string;
   enriched: boolean;
   snapshotStaleness: string;
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: {
+    executor: 'postgres' | 'dbt';
+    environmentId: string;
+    sinkTable: string;
+    rowsWritten: number;
+    startedAt: string;
+    completedAt: string;
+    durationMs: number;
+  };
 } = {
   runId: 'run-1',
   tenantId: 'tenant-a',
@@ -134,6 +146,40 @@ describe('getRunRoute', () => {
       expect.anything()
     );
     expect(reply.code).toHaveBeenCalledWith(200);
+  });
+
+  it('returns TF-C2-B outcome fields unchanged from the use case result', async () => {
+    const result = {
+      ...DEFAULT_RESULT,
+      status: 'FAILED',
+      currentStepId: 'step-evidence',
+      failedStepId: 'step-transform',
+      errorReason: 'SINK_WRITE_FAILED',
+      materialization: {
+        executor: 'postgres' as const,
+        environmentId: 'env-1',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-08T10:00:00.000Z',
+        completedAt: '2026-04-08T10:00:04.000Z',
+        durationMs: 4000,
+      },
+    };
+    const deps = createDeps(result);
+    const reply = createReply();
+
+    await getRunRoute(
+      {
+        id: 'req-2b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: 'tenant-a' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.send).toHaveBeenCalledWith(result);
   });
 
   it('returns 400 when runId is missing', async () => {

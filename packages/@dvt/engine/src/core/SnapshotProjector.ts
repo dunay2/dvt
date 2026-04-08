@@ -42,6 +42,10 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
     ...(snap.cancelling ? { substatus: 'CANCELLING' as const } : {}),
     ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
     ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
+    ...(snap.currentStepId ? { currentStepId: snap.currentStepId } : {}),
+    ...(snap.failedStepId ? { failedStepId: snap.failedStepId } : {}),
+    ...(snap.errorReason ? { errorReason: snap.errorReason } : {}),
+    ...(snap.materialization ? { materialization: snap.materialization } : {}),
   };
 }
 
