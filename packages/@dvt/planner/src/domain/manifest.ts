@@ -100,9 +100,11 @@ export class ManifestGraphDeriver {
   execute(command: DeriveNodesCommand): readonly GraphNode[] {
     const root = command.manifest as ManifestLike;
     const rawNodes = this.validator.assertNodes(root);
+    const sortedNodeIds = Object.keys(rawNodes).sort((left, right) => left.localeCompare(right));
 
     const result: GraphNode[] = [];
-    for (const [nodeId, raw] of Object.entries(rawNodes)) {
+    for (const nodeId of sortedNodeIds) {
+      const raw = rawNodes[nodeId];
       if (raw === null || typeof raw !== 'object') continue;
       const node = this.parser.parse(nodeId, raw);
       if (node !== undefined) result.push(node);

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Planner } from '../../src/domain/Planner.js';
 import type { PlannerInputEnvelopeV1 } from '../../src/domain/types.js';
+import { derivePlannerGraphSourceFromManifest } from '../../src/index.js';
 import { FIXED_VECTOR } from '../vectors/fixed-vector.inline.js';
 
 /** Helper: sha256 sync for test verification (do not use in planner). */
@@ -118,6 +119,60 @@ describe('determinism', () => {
 
     expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
     expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
+  });
+
+  it('keeps planId stable across dbt manifest node-key ordering (AR-B3 golden vector)', async () => {
+    const planner = new Planner();
+
+    const manifestA = {
+      nodes: {
+        'model.analytics.base_orders': { resource_type: 'model', depends_on: { nodes: [] } },
+        'model.analytics.order_rollup': {
+          resource_type: 'model',
+          depends_on: { nodes: ['model.analytics.base_orders'] },
+        },
+        'test.analytics.order_rollup_not_null': {
+          resource_type: 'test',
+          depends_on: { nodes: ['model.analytics.order_rollup'] },
+        },
+      },
+    };
+
+    const manifestB = {
+      nodes: {
+        'test.analytics.order_rollup_not_null': {
+          resource_type: 'test',
+          depends_on: { nodes: ['model.analytics.order_rollup'] },
+        },
+        'model.analytics.order_rollup': {
+          resource_type: 'model',
+          depends_on: { nodes: ['model.analytics.base_orders'] },
+        },
+        'model.analytics.base_orders': { resource_type: 'model', depends_on: { nodes: [] } },
+      },
+    };
+
+    const first = await planner.buildPlan({
+      graphSource: derivePlannerGraphSourceFromManifest(manifestA),
+      selection: {
+        selectedNodeIds: ['test.analytics.order_rollup_not_null'],
+        includeUpstream: true,
+      },
+    });
+
+    const second = await planner.buildPlan({
+      graphSource: derivePlannerGraphSourceFromManifest(manifestB),
+      selection: {
+        selectedNodeIds: ['test.analytics.order_rollup_not_null'],
+        includeUpstream: true,
+      },
+    });
+
+    expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
+    expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
+    expect(first.plan.metadata.planId).toBe(
+      'd990399e350492d320c7f3114fb3863a3f50e25972ba8f10486f3a30e673b866'
+    );
   });
 
   it('ignores provenance-only node metadata for inputHash and planId', async () => {
