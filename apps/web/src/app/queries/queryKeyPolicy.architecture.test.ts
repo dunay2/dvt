@@ -126,4 +126,21 @@ describe('Query key policy (architecture)', () => {
       /export\s*\{\s*[\s\S]*useRuntimeCapabilitiesQuery\s+as\s+useCapabilitiesQuery[\s\S]*\}\s*from\s*['"][^'"]*capabilities\/runtime-capabilities['"]/
     );
   });
+
+  it('forbids direct useQuery ownership in selected operator views', () => {
+    const governedViewFiles = [
+      'views/CodeView.tsx',
+      'views/diff/useDiffData.ts',
+      'views/cost/useCostData.ts',
+      'views/lineage/useLineageViewData.ts',
+    ].map((relativePath) => path.join(ROOT_DIR, relativePath));
+
+    const offenders = governedViewFiles
+      .filter((filePath) =>
+        /from\s+['"]@tanstack\/react-query['"]/.test(readFileSync(filePath, 'utf8'))
+      )
+      .map(toRelativePath);
+
+    expect(offenders).toEqual([]);
+  });
 });
