@@ -115,11 +115,7 @@ export function useCanvasExecutionActions({
 
     try {
       const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
-      const graphSource = buildPreviewGraphSource(
-        canonicalNodes,
-        canonicalEdges,
-        selectedForPlan
-      );
+      const graphSource = buildPreviewGraphSource(canonicalNodes, canonicalEdges, selectedForPlan);
       const plan = await plansService.previewPlan({
         previewProfile: 'planner-generic-v1',
         graphSource,
