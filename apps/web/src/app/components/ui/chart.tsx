@@ -240,11 +240,11 @@ function ChartLegendContent({
   verticalAlign = 'bottom',
   nameKey,
 }: React.ComponentProps<'div'> & {
-    payload?: ReadonlyArray<LegendPayload>;
-    verticalAlign?: RechartsPrimitive.LegendProps['verticalAlign'];
-    hideIcon?: boolean;
-    nameKey?: string;
-  }) {
+  payload?: ReadonlyArray<LegendPayload>;
+  verticalAlign?: RechartsPrimitive.LegendProps['verticalAlign'];
+  hideIcon?: boolean;
+  nameKey?: string;
+}) {
   const { config } = useChart();
 
   if (!payload?.length) {
