@@ -103,6 +103,12 @@ Additional active QA:
   - linkage: `F-04-RISK-B`
   - status: `review`
   - progress: `100%`
+- [20260408 F-04-RESIDUAL-A Root provider guard hard QA review](20260408-f04-residual-a-root-provider-guard-hard-qa-review.md)
+  - domain: `frontend-and-ui`
+  - role: documentary hard QA gate for the Root-level provider ownership guard
+  - linkage: `F-04-RESIDUAL-A`
+  - status: `review`
+  - progress: `100%`
 
 - [20260407 Retry-step boundary hard QA review](architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md)
   - domain: `architecture-and-governance`
