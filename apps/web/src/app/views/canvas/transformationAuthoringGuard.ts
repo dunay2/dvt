@@ -18,7 +18,9 @@ function isTransformationAuthoringContext(existingRoles: CoreNodeRole[]): boolea
   return existingRoles.every((role) => ALLOWED_ROLES.has(role));
 }
 
-function countRoles(existingRoles: CoreNodeRole[]): Record<'input' | 'transform' | 'output', number> {
+function countRoles(
+  existingRoles: CoreNodeRole[]
+): Record<'input' | 'transform' | 'output', number> {
   return existingRoles.reduce(
     (acc, role) => {
       if (role === 'input' || role === 'transform' || role === 'output') {

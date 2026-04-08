@@ -259,13 +259,16 @@ export function useCanvasGraphHandlers({
 
         const existingRoles = existingNodes
           .map((node) => node.data)
-          .map((data) => (data && typeof data === 'object' ? (data as { role?: unknown }).role : null))
-          .filter((role): role is CoreNodeRole =>
-            role === 'input' ||
-            role === 'transform' ||
-            role === 'check' ||
-            role === 'output' ||
-            role === 'control'
+          .map((data) =>
+            data && typeof data === 'object' ? (data as { role?: unknown }).role : null
+          )
+          .filter(
+            (role): role is CoreNodeRole =>
+              role === 'input' ||
+              role === 'transform' ||
+              role === 'check' ||
+              role === 'output' ||
+              role === 'control'
           );
         const authoringGuard = guardTransformationAuthoringNode({
           existingRoles,
