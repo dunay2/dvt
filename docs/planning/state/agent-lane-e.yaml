@@ -1635,7 +1635,7 @@ tasks:
     last_verified: '2026-04-05'
   - task_id: TF-E1-A
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       implement basic Canvas authoring for one source, one SQL transform, and one sink with inline
       graph validation.
@@ -1645,15 +1645,20 @@ tasks:
       graph in a valid editable state before preview is allowed.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 30
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/ux-implementation-guide.md
+      - apps/web/src/app/views/canvas/transformationConnectionGuard.ts
+      - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
     status_reason: >-
-      The design graph is now frozen in docs, but the basic Canvas authoring surface is not yet a
-      dedicated Lane E slice.
-    last_verified: '2026-04-05'
+      Initial implementation started in Canvas: connection-time guard now enforces constrained
+      transformation edge shape (`source -> sql_transform -> sink`) when the graph is in the
+      three-node transformation mode, with dedicated unit coverage. Remaining TF-E1-A work is node
+      composition constraints and full UX alignment.
+    last_verified: '2026-04-08'
   - task_id: TF-E1-B
     priority: P0
     status: queued

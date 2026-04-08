@@ -16,6 +16,7 @@ import {
   createCanvasEdgeFromConnection,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
+import { guardTransformationConnection } from './transformationConnectionGuard';
 import type {
   ConfirmEdgeModalState,
   UseCanvasGraphHandlersParams,
@@ -123,6 +124,17 @@ export function useCanvasGraphHandlers({
       const sourceNode = canonicalNodesById.get(connection.source);
       const targetNode = canonicalNodesById.get(connection.target);
       if (!sourceNode || !targetNode) {
+        return;
+      }
+
+      const transformationGuard = guardTransformationConnection({
+        sourceNode,
+        targetNode,
+        canonicalNodes: canonicalNodesById.values(),
+        edges,
+      });
+      if (!transformationGuard.allowed) {
+        toast.error(transformationGuard.reason);
         return;
       }
 
