@@ -1,6 +1,7 @@
 ---
 title: Gap 5 PR2 — Deferred Deletion and Restore Closeout
 date: 2026-03-21
+last_reviewed: 2026-03-21
 author: Architecture
 planning_type: closeout
 parent_plan: gap-5-pr2-deferred-deletion-and-restore-20260319

@@ -1,3 +1,11 @@
+---
+title: DVT+ State Machine Adoption Proposal
+status: Draft
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # DVT+ State Machine Adoption Proposal
 
 ## Executive summary

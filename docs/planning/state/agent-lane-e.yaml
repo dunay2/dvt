@@ -1612,7 +1612,7 @@ tasks:
     last_verified: '2026-04-07'
   - task_id: TF-E1
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       implement the basic Canvas transformation UX for `source -> sql_transform -> sink`, wired to
       preview-persist, start-run, and result inspection so the first product vertical is operator
@@ -1624,20 +1624,25 @@ tasks:
       outcome and materialization evidence.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 65
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
       - docs/architecture/frontend/ux-implementation-guide.md
+      - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
     status_reason: >-
-      The roadmap now freezes the execution-first UI loop, but the basic Canvas authoring and
-      result-reading surface has not yet been sliced into implemented Lane E work.
-    last_verified: '2026-04-05'
+      Lane E now ships explicit transformation authoring mode in Canvas, persisted-preview gating
+      before `Start run`, and snapshot-owned result evidence rendering in run detail. The parent
+      slice remains open until Lane A finishes the transformation contract pack and Lane C publishes
+      the runtime-side materialization and failure evidence needed for full end-to-end closure.
+    last_verified: '2026-04-08'
   - task_id: TF-E1-A
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       implement basic Canvas authoring for one source, one SQL transform, and one sink with inline
       graph validation.
@@ -1647,23 +1652,25 @@ tasks:
       graph in a valid editable state before preview is allowed.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/ux-implementation-guide.md
+      - apps/web/src/app/plugins/graphStrategyRegistry.ts
+      - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.ts
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.test.ts
-      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
+      - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
     status_reason: >-
-      Canvas now keeps the constrained transformation rules in explicit-context seams instead of
-      inferring draft mode from generic dbt canvas composition. Connection-time edge guard remains
-      active, preview-time graph validation still enforces the one-source/one-transform/one-sink
-      contract, and the node-composition guard is now gated behind a future dedicated transformation
-      strategy id rather than blocking generic dbt authoring. Remaining TF-E1-A work is to introduce
-      that explicit transformation authoring mode and align the operator copy.
+      Canvas authoring now exposes an explicit transformation strategy and toolbar mode, while
+      keeping the one-source/one-transform/one-sink guards active at composition, connection, and
+      preview time. Remaining work sits in downstream preview or runtime slices rather than in the
+      authoring surface itself.
     last_verified: '2026-04-08'
   - task_id: TF-E1-B
     priority: P0
@@ -1677,18 +1684,22 @@ tasks:
       runtime detail flow using the persisted plan path.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
       - docs/architecture/frontend/ux-implementation-guide.md
+      - apps/web/src/app/components/Modals.tsx
+      - apps/web/src/app/components/Modals.test.tsx
+      - apps/web/src/app/data/mockDbtData.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx
     status_reason: >-
-      Frontend handoff now enforces persisted preview proof bound to the active `planRef` hash
-      before run start and routes successful starts through the existing run navigation callback.
-      Remaining TF-E1-B work depends on TF-C1-B runtime persistence readiness to validate the full
-      real PlanRef path against backend contracts.
+      Frontend handoff now enforces persisted preview proof bound to the active `planRef` hash,
+      keeps the preview modal open when re-plan is required, and routes successful starts through
+      the governed run navigation callback. Remaining closure is to prove the full transformation
+      profile plus provenance path once the upstream Lane A or B contract pack is implemented.
     last_verified: '2026-04-08'
   - task_id: TF-E1-C
     priority: P0
@@ -1702,18 +1713,19 @@ tasks:
       attribution so operators can decide what happened without backend log inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 30
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/ux-implementation-guide.md
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
       - apps/web/src/app/views/runs/RunStates.test.tsx
+      - apps/web/src/app/views/runs/runStatesCopy.ts
     status_reason: >-
-      Result diagnostics implementation started in run detail: failure attribution now derives from
-      snapshot and event payloads (including StepFailed reason/message fallback) and surfaces a
-      failure timestamp for operator triage without backend log inspection. Full closure still
-      depends on TF-C2-B runtime result payload readiness.
+      Run detail now consumes result evidence and failure diagnostics only from the governed
+      snapshot read model, leaving timeline events for chronology and artifact refs instead of
+      frontend-side outcome inference. Full closure still depends on TF-C2-B publishing
+      materialization payloads and failure timestamps on the runtime read surfaces.
     last_verified: '2026-04-08'
 dependency_notes:
   - >-

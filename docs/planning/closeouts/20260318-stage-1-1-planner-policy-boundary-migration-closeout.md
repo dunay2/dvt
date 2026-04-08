@@ -1,3 +1,10 @@
+---
+title: 2026-03-18 Stage 1.1 Planner Policy Boundary Migration Closeout
+status: Completed
+owner: docs
+last_reviewed: 2026-03-18
+---
+
 # 2026-03-18 Stage 1.1 Planner Policy Boundary Migration Closeout
 
 ## Summary

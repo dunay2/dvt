@@ -2,6 +2,7 @@
 title: F04-W4 decomposition manifest
 status: Draft
 date: 2026-04-04
+last_reviewed: 2026-04-04
 owner: Frontend / Architecture
 planning_type: closeout
 ---

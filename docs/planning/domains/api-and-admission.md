@@ -2,7 +2,7 @@
 title: Domain - API And Admission
 status: Review
 owner: API / Product / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 planning_type: reference
 ---
 
@@ -22,6 +22,8 @@ and auth-runtime integration.
 
 - [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
 - [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
+- [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
+- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 
 ## Historical Proposal Inputs
 
@@ -40,6 +42,7 @@ archived planning inputs rather than active proposal authorities.
 - [20260321 Planner-Backed StartRun QA Review](../reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md)
 - [20260316 API Start Run Adapter Config Closeout](../closeouts/20260316-api-start-run-adapter-config-closeout.md)
 - [20260320 API Runtime Query Integration Closeout](../closeouts/20260320-api-runtime-query-integration-closeout.md)
+- [20260408 TF-C1-B preview profile contract closeout](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
 
 ## Risk And Evidence Links
 

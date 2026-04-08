@@ -1,16 +1,21 @@
 ---
 title: Domain Cohesion Refactor Subplans
-status: Draft
+status: Archived
 owner: docs
-last_reviewed: 2026-03-14
+last_reviewed: 2026-04-08
 planning_type: proposal
 ---
 
 # Domain Cohesion Refactor Subplans
 
+Archived on 2026-04-08. These subplans remain historical rationale only; live
+execution ownership moved to the lane registry and current workflow-engine
+architecture work.
+
 ## Source
 
-- Review of record: [20260314 Domain Cohesion Review](reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
+- Review of record:
+  [20260314 Domain Cohesion Review](../reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
 - Parent plan: [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
 
 ## P1. Run Aggregate Root

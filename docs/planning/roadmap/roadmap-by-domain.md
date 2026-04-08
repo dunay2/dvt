@@ -1,8 +1,8 @@
-﻿---
+---
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-08
 planning_type: proposal
 ---
 
@@ -40,42 +40,49 @@ flowchart LR
 
 - `Execution Runtime`
   Current sources: [Execution Runtime domain view](../domains/execution-runtime.md),
-  [Review Remediation Roadmap 2026-04-02](review-remediation-roadmap-20260402.md),
+  [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md),
+  [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: close residual runtime and hardening slices with
-  evidence-backed closeouts while opening the SQL-first execution seam required
-  by the transformation vertical.
+  Near-term target: close the remaining `WE-HX` hardening waves while opening
+  `TF-C2` for the PostgreSQL executor path and caller-visible runtime evidence.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
-  [RC-C1 HTTP Error Envelope Normalization Plan](../proposals/superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
-  Near-term target: deliver admission/backpressure sequence with rollout
-  observability.
+  [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
+  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Closeout: TF-C1-B preview profile contract](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
+  Near-term target: keep preview-persist truthful on the protected route while
+  converging callers onto explicit preview profiles, provenance rules, and the
+  real persisted `PlanRef` path.
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
-  [Planner Assessment](../status/planner-current-state-assessment-20260320.md),
+  [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
-  Near-term target: stage compatibility, policy vocabulary, and contract
-  evolution hardening plus the first design-graph-to-plan compiler boundary for
-  the SQL-first transformation slice.
+  Near-term target: freeze the first `DesignGraphDraft`, `GitArtifactRef`, and
+  compiler mapping so downstream API, runtime, and UI work stop depending on
+  local assumptions.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
-  [Review Remediation Roadmap 2026-04-02](review-remediation-roadmap-20260402.md)
-  Near-term target: retention, archival, restore, and purge controls aligned
-  with ADR-backed policy, including repeatable reset and cleanup discipline for
-  the Docker PostgreSQL proof environment.
+  [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),
+  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+  Near-term target: keep the shipped retention baseline explicit while adding a
+  repeatable Docker PostgreSQL reset/cleanup lifecycle for transformation proof
+  runs.
 - `UI and Frontend`
   Current sources: [Frontend Architecture](../../architecture/frontend/index.md),
   [UI / Visualization Domain](../../architecture/domain-ui.md),
-  [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md),
-  [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
-  Near-term target: converge Lane E on contract truth, mock-versus-api
-  boundaries, state and query cleanup, and a real Design -> Plan -> Run ->
-  Result path for the first transformation vertical.
+  [Documentation and UX implementation guide](../../architecture/frontend/ux-implementation-guide.md),
+  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+  Near-term target: keep Lane E aligned around explicit transformation
+  authoring, persisted preview-to-run handoff, and snapshot-owned result
+  surfaces while runtime evidence work catches up.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
-  [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
-  Near-term target: keep the planning map coherent and reduce navigation
-  friction by domain.
+  [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md),
+  [Documentation maintenance guide](../../guides/documentation-maintenance-guide-20260407.md),
+  [Documentation information architecture current vs target 2026-04-07](../status/documentation-information-architecture-current-vs-target-20260407.md)
+  Near-term target: keep archives, lane registries, roadmaps, and generated
+  boards synchronized with mainline truth, and reduce `docs:doctor` noise so it
+  signals semantic drift instead of missing metadata.
 
 ## Related Diagrams
 

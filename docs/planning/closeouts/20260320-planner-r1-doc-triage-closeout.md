@@ -131,7 +131,7 @@ Deliver `R1` as a documentation/governance slice:
 - `docs/DOCS_README.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/system-delivery-status.md`
-- `docs/planning/status/planner-current-state-assessment-20260320.md`
+- `docs/planning/status/planner-current-state-assessment.md`
 - `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
@@ -140,7 +140,7 @@ Deliver `R1` as a documentation/governance slice:
 
 - Created branch `docs/planner-r1-status-triage`
 - Created `docs/planning/status/planner-local-doc-triage-20260320.md`
-- Updated `docs/planning/status/planner-current-state-assessment-20260320.md`
+- Updated `docs/planning/status/planner-current-state-assessment.md`
   so the governance-surface score reflects the delivered `R1` outputs
 - Updated `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
   with explicit owner/date targets for the remaining roadmap slices
@@ -169,7 +169,7 @@ Passed:
 
 Failed, but not because of the `R1` files:
 
-- `pnpm exec markdownlint-cli2 "docs/planning/closeouts/20260320-planner-r1-doc-triage-closeout.md" "docs/planning/status/planner-local-doc-triage-20260320.md" "docs/planning/status/planner-current-state-assessment-20260320.md" "docs/planning/proposals/planner-target-state-roadmap-20260320.md" "docs/architecture/system-delivery-status.md" "packages/@dvt/planner/docs/README.md" "docs/planning/index.md" "docs/planning/status/index.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+- `pnpm exec markdownlint-cli2 "docs/planning/closeouts/20260320-planner-r1-doc-triage-closeout.md" "docs/planning/status/planner-local-doc-triage-20260320.md" "docs/planning/status/planner-current-state-assessment.md" "docs/planning/proposals/planner-target-state-roadmap-20260320.md" "docs/architecture/system-delivery-status.md" "packages/@dvt/planner/docs/README.md" "docs/planning/index.md" "docs/planning/status/index.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
   - failed because the local `pnpm exec` path could not resolve module
     `fastq`
 - `pnpm lint:md`

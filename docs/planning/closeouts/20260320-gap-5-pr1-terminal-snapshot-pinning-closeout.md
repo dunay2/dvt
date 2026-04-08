@@ -1,6 +1,7 @@
 ---
 slice: 20260320-gap-5-pr1-terminal-snapshot-pinning
 date: 2026-03-20
+last_reviewed: 2026-03-20
 gap: gap-5-pr1
 author: AI (GPT-5)
 ---

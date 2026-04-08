@@ -1,3 +1,11 @@
+---
+title: DVT workbench layer aligned to `dunay2/dvt`
+status: Disposable
+owner: docs
+last_reviewed: 2026-04-03
+planning_type: proposal
+---
+
 # DVT workbench layer aligned to `dunay2/dvt`
 
 This bundle adds a VS Code-like workbench **on top of the existing `apps/web` canvas route** instead of replacing the whole shell.

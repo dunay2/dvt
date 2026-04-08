@@ -1,6 +1,7 @@
 ---
 title: Gap 5 PR1 — Archive Export and Verifier Closeout
 date: 2026-03-21
+last_reviewed: 2026-03-21
 author: Architecture
 planning_type: closeout
 parent_plan: gap-5-pr1-minimal-usable-archival-20260319

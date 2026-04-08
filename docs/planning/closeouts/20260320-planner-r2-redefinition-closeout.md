@@ -80,7 +80,7 @@ direction already visible in the code review and architecture assessment.
 - Touched files or paths:
   - `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
   - `docs/planning/proposals/phase2-arch-debt-roadmap-20260315.md`
-  - `docs/planning/status/planner-current-state-assessment-20260320.md`
+  - `docs/planning/status/planner-current-state-assessment.md`
   - this closeout file
 - Expected outcome:
   - the next planner slice is defined as a generic graph-source boundary
@@ -115,7 +115,7 @@ direction already visible in the code review and architecture assessment.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
 - `docs/planning/proposals/phase2-arch-debt-roadmap-20260315.md`
-- `docs/planning/status/planner-current-state-assessment-20260320.md`
+- `docs/planning/status/planner-current-state-assessment.md`
 - `docs/planning/roadmap/index.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`

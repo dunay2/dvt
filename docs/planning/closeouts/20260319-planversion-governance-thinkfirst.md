@@ -2,6 +2,7 @@
 slice: planversion-governance
 status: in-progress
 date: 2026-03-19
+last_reviewed: 2026-03-19
 gap: top-5-gap-3
 author: AI (Codex)
 ---

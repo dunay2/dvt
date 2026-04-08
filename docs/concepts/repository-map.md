@@ -1,4 +1,4 @@
----
+﻿---
 title: Repository Map
 status: Active
 owner: Architecture / Docs
@@ -50,7 +50,7 @@ Concept anchors for this page:
 | Workspace                   | Responsibility                                                | Primary documentation entry point                                                                                                                                                       | Coverage       |
 | --------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
 | `@dvt/contracts`            | Shared contracts, schemas, execution interfaces               | [Contracts Index](../contracts/index.md), [Engine Contracts](../contracts/engine/index.md)                                                                                              | `canonical`    |
-| `@dvt/planner`              | Plan construction, compiledCode attachment, planner contracts | [Planner component surface](../architecture/components/planner/index.md), [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md)           | `canonical`    |
+| `@dvt/planner`              | Plan construction, compiledCode attachment, planner contracts | [Planner component surface](../architecture/components/planner/index.md), [Planner Current State Assessment](../planning/status/planner-current-state-assessment.md)                    | `canonical`    |
 | `@dvt/plan-interpreter`     | Shared DAG analysis and plan interpretation helpers           | [Plan Interpreter Package](../architecture/shared/plan-interpreter.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                    | `canonical`    |
 | `@dvt/plan-verifier`        | Plan integrity, schema compatibility, hash verification       | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [ADR-0017](../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                            | `canonical`    |
 | `@dvt/dsl`                  | Gateway expression AST, parser, evaluator                     | [Gateway DSL Package](../architecture/shared/dsl.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                      | `canonical`    |

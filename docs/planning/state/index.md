@@ -17,16 +17,20 @@ without replacing canonical status artifacts.
 
 Use this decision order to avoid searching blindly:
 
-1. [System Delivery Status](../../architecture/system-delivery-status.md)
+1. [Planning Dashboard](planning-dashboard.md)
+   for "where is the board and what do I open next".
+2. [System Delivery Status](../../architecture/system-delivery-status.md)
    for "what is true now in code".
-2. [Planning Control Tower](planning-control-tower.md)
-   for "where planning execution is managed".
-3. `agent-lane-*.yaml` files for "what is active now, what is blocked,
+3. [Planning Control Tower](planning-control-tower.md)
+   for "how planning execution is updated correctly".
+4. `agent-lane-*.yaml` files for "what is active now, what is blocked,
    and what continues next".
-4. [Roadmap Of Record](../roadmap/index.md) for "in which order it should ship".
+5. [Roadmap Of Record](../roadmap/index.md) for "in which order it should
+   ship".
 
 ## State Views
 
+- [Planning Dashboard](planning-dashboard.md)
 - [Planning Control Tower](planning-control-tower.md)
 - [Domain Status Board](domain-status-board.md)
 - [Inventory and Coverage](inventory-and-coverage.md)

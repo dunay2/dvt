@@ -1,4 +1,4 @@
----
+﻿---
 title: ED-20260320 - Planner R2 typed graph-source boundary
 status: accepted
 date: 2026-03-20
@@ -15,7 +15,7 @@ code_refs:
   - packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts
   - packages/@dvt/planner/src/domain/Planner.ts
   - packages/@dvt/planner/src/ports/IArtifactResolver.ts
-  - docs/planning/status/planner-current-state-assessment-20260320.md
+  - docs/planning/status/planner-current-state-assessment.md
   - docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md
 evidence:
   tests: []

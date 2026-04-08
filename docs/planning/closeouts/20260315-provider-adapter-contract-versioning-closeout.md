@@ -1,6 +1,7 @@
 ---
 slice: provider-adapter-contract-versioning
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: contract-versioning
 author: AI (Codex)
 ---

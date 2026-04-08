@@ -166,13 +166,13 @@ Execute a targeted documentation-governance pass that:
 
 ### Validation evidence
 
-- `pnpm docs:sync` — passed
-- `pnpm docs:workboard:generate` — passed
-- `pnpm docs:doctor` — passed with pre-existing warnings in archived/historical closeouts and proposals missing `last_reviewed`
-- `pnpm docs:quality:check` — passed with pre-existing non-English-content warnings concentrated in archive/historical surfaces
-- `pnpm docs:canonical:check` — passed
-- `pnpm docs:gov:links` — passed with `0 error(s) 0 warning(s)`
-- `pnpm verify:prepush` — passed
+- `pnpm docs:sync` â€” passed
+- `pnpm docs:workboard:generate` â€” passed
+- `pnpm docs:doctor` â€” passed with pre-existing warnings in archived/historical closeouts and proposals missing `last_reviewed`
+- `pnpm docs:quality:check` â€” passed with pre-existing non-English-content warnings concentrated in archive/historical surfaces
+- `pnpm docs:canonical:check` â€” passed
+- `pnpm docs:gov:links` â€” passed with `0 error(s) 0 warning(s)`
+- `pnpm verify:prepush` â€” passed
 
 ### No-debt evidence
 

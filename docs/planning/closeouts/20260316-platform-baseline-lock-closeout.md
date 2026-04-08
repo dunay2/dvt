@@ -1,6 +1,7 @@
 ---
 slice: 20260316-platform-baseline-lock
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: M01
 author: AI (GPT-5)
 ---

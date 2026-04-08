@@ -1,6 +1,7 @@
 ---
 slice: PI-ENTRYPOINT
 date: 2026-04-07
+last_reviewed: 2026-04-07
 author: Codex
 status: Completed
 ---

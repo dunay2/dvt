@@ -1,6 +1,7 @@
 ---
 slice: 20260317-principal-architecture-review-execution-plan
 date: 2026-03-17
+last_reviewed: 2026-03-17
 gap: architecture-review-followup
 author: AI (GPT-5)
 ---

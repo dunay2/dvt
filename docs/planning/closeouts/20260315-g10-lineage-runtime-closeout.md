@@ -1,6 +1,7 @@
 ---
 slice: g10-lineage-runtime
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: G10
 author: AI (GPT-5)
 ---
