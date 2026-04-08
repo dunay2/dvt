@@ -227,7 +227,7 @@ Two new error classes extending `DvtError`:
 - **Closes the crash-consistency gap**: orphaned provider workflows are detected and cancelled automatically.
 - **Reconciliation is automated and idempotent**: the sweep can run repeatedly without side effects on already-resolved intents.
 - **Required dependency**: ensures the consistency guarantee cannot be accidentally omitted.
-- **Observable**: metrics (`dvt.intent.expired_total`, `dvt.intent.expired_after_cancel_total`, `dvt.intent.cancelled_total`, `dvt.intent.reconcile.resolved_total`) and structured logs provide operational visibility into orphan detection and cleanup.
+- **Observable**: metrics (`dvt.intent.expired_total`, `dvt.intent.expired_after_cancel_total`, `dvt.intent.cancelled_total`, `dvt.intent.resolved_total`, `dvt.intent.reconcile.resolved_total`) and structured logs provide operational visibility into orphan detection and cleanup.
 - **Extends the existing `RunMaintenanceService`** (ADR-0029) pattern: no new service class needed.
 
 ### Negative / Trade-offs

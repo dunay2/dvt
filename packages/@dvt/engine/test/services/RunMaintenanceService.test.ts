@@ -219,6 +219,7 @@ function createContextFailingObservability(): IObservability {
 function createStatusSignalObservability(spy: {
   warnMessages: string[];
   counterNames: string[];
+  counterCalls: Array<{ name: string; labels: Record<string, string> }>;
 }): IObservability {
   const base = createNoopObservability();
   return {
@@ -230,6 +231,7 @@ function createStatusSignalObservability(spy: {
         return {
           add(value: number) {
             spy.counterNames.push(name);
+            spy.counterCalls.push({ name, labels: { ...labels } });
             counter.add(value);
           },
         };
@@ -656,7 +658,11 @@ describe('RunMaintenanceService', () => {
     });
 
     it('signals unexpected intent status with warn and metric without failing the sweep', async () => {
-      const spy = { warnMessages: [] as string[], counterNames: [] as string[] };
+      const spy = {
+        warnMessages: [] as string[],
+        counterNames: [] as string[],
+        counterCalls: [] as Array<{ name: string; labels: Record<string, string> }>,
+      };
       const { service } = createFixtureWithIntentStore(
         new UnknownStatusIntentStore(),
         createStatusSignalObservability(spy)
@@ -674,6 +680,66 @@ describe('RunMaintenanceService', () => {
       });
       expect(spy.warnMessages).toContain(RUN_MAINTENANCE_MESSAGE.unexpectedIntentStatus);
       expect(spy.counterNames).toContain(RUN_MAINTENANCE_METRIC.intentUnexpectedStatusTotal);
+    });
+
+    it('emits provider-labelled resolved metric for DISPATCHED bootstrapped intent cleanup', async () => {
+      const cancelLog: string[] = [];
+      const spy = {
+        warnMessages: [] as string[],
+        counterNames: [] as string[],
+        counterCalls: [] as Array<{ name: string; labels: Record<string, string> }>,
+      };
+      const observability = createStatusSignalObservability(spy);
+      const store = new InMemoryTxStore();
+      const intentStore = new InMemoryStartRunIntentStore();
+      const service = new RunMaintenanceService({
+        stateStoreRead: store,
+        stateStoreWrite: store,
+        intentStore,
+        adapters: makeProviderMap(makeAdapterWithLookup(new Set(), cancelLog)),
+        authorizer: new AllowAllAuthorizer(),
+        clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+        idempotency: new IdempotencyKeyBuilder(),
+        observability,
+      });
+
+      await makePendingIntent(intentStore, 'dispatched-bootstrapped-metric', 'i-d-metric');
+      await intentStore.markDispatched('i-d-metric', {
+        provider: 'temporal',
+        tenantId: 't',
+        namespace: 'default',
+        workflowId: 'wf-dispatched-bootstrapped-metric',
+        runId: 'dispatched-bootstrapped-metric',
+      } as EngineRunRef);
+      await store.bootstrapRunTx({
+        metadata: {
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          runId: 'dispatched-bootstrapped-metric',
+          planId: 'plan',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          provider: 'temporal',
+          providerWorkflowId: 'wf-dispatched-bootstrapped-metric',
+          providerRunId: 'dispatched-bootstrapped-metric',
+          createdAt: '1970-01-01T00:00:00.000Z',
+        },
+        firstEvents: [],
+      });
+
+      const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
+
+      expect(result.resolved).toEqual(['i-d-metric']);
+      expect(result.cancelled).toEqual([]);
+      expect(cancelLog).toHaveLength(0);
+      expect(spy.counterCalls).toContainEqual({
+        name: RUN_MAINTENANCE_METRIC.intentResolvedTotal,
+        labels: {
+          provider: 'temporal',
+          operation: 'reconcileOrphanedIntents',
+        },
+      });
     });
 
     it('keeps PENDING intent unresolved when adapter does not implement lookupRunRef', async () => {
