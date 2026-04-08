@@ -111,7 +111,9 @@ function readMaterializationFields(value: unknown): MaterializationEvidence | nu
   };
 }
 
-function deriveMaterializationEvidence(workspace: RunWorkspaceViewModel): MaterializationEvidence | undefined {
+function deriveMaterializationEvidence(
+  workspace: RunWorkspaceViewModel
+): MaterializationEvidence | undefined {
   if (workspace.snapshot.materialization) {
     return workspace.snapshot.materialization;
   }
