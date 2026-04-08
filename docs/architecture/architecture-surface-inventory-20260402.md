@@ -2,7 +2,7 @@
 title: Architecture Surface Inventory 2026-04-02
 status: Active
 owner: Architecture / Docs / Delivery
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 ---
 
 # Architecture Surface Inventory 2026-04-02
@@ -54,11 +54,12 @@ history, domain-specific navigation, or a component-level map.
 These files talk about architecture, but they live under planning and must not
 compete with the canonical architecture sources above.
 
-| Surface                                                                                        | Classification | Role                                                   | Current handling                                                      |
-| ---------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------ | --------------------------------------------------------------------- |
-| [Planning Execution Model Index](../planning/execution-model/index.md)                         | `historical`   | draft working area for execution-model notes           | keep only as non-canonical working area until archived or rewritten   |
-| [Domain - Execution Runtime](../planning/domains/execution-runtime.md)                         | `supporting`   | planning-domain navigation for runtime work            | truth-corrected; keep as planning context, not architecture authority |
-| [Domain - Event Lifecycle And Retention](../planning/domains/event-lifecycle-and-retention.md) | `supporting`   | planning-domain navigation for archival/retention work | truth-corrected; keep as planning context, not architecture authority |
+| Surface                                                                                                                                                                                                     | Classification | Role                                                           | Current handling                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Planning Execution Model Index](../planning/execution-model/index.md)                                                                                                                                      | `historical`   | draft working area for execution-model notes                   | keep only as non-canonical working area until archived or rewritten   |
+| [Domain - Execution Runtime](../planning/domains/execution-runtime.md)                                                                                                                                      | `supporting`   | planning-domain navigation for runtime work                    | truth-corrected; keep as planning context, not architecture authority |
+| [Domain - Event Lifecycle And Retention](../planning/domains/event-lifecycle-and-retention.md)                                                                                                              | `supporting`   | planning-domain navigation for archival/retention work         | truth-corrected; keep as planning context, not architecture authority |
+| [Domain Cohesion Refactor Plan](../planning/archive/proposals/domain-cohesion-refactor-plan.md) and [Domain Cohesion Refactor Subplans](../planning/archive/proposals/domain-cohesion-refactor-subplans.md) | `historical`   | superseded refactor draft pack from the pre-lane planning wave | archived on 2026-04-08; do not cite as current execution authority    |
 
 ## Confirmed Drift Closed In This Pass
 
@@ -70,6 +71,9 @@ compete with the canonical architecture sources above.
 - [Architecture Component Surfaces](components/index.md) now defines what each
   current component page must contain and no longer frames the subtree as a
   holding area for routing-only pages.
+- The standalone domain-cohesion refactor draft pack was moved out of active
+  planning indexes and explicitly classified as historical context rather than
+  current architecture authority.
 
 ## Wave 1 Outcome
 
