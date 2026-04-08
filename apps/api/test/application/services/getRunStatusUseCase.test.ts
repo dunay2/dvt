@@ -382,17 +382,23 @@ describe('GetRunStatusUseCase', () => {
         return {
           runId: 'provider-run-1',
           status: 'FAILED' as const,
-          currentStepId: 'step-evidence',
-          failedStepId: 'step-transform',
-          errorReason: 'SINK_WRITE_FAILED',
-          materialization: {
-            executor: 'postgres' as const,
-            environmentId: 'env-1',
-            sinkTable: 'analytics.orders_daily',
-            rowsWritten: 42,
-            startedAt: '2026-04-08T10:00:00.000Z',
-            completedAt: '2026-04-08T10:00:04.000Z',
-            durationMs: 4000,
+          execution: {
+            activeStepId: 'step-evidence',
+            failure: {
+              stepId: 'step-transform',
+              reason: 'SINK_WRITE_FAILED',
+              message: 'duplicate key value violates unique constraint',
+              failedAt: '2026-04-08T10:00:03.000Z',
+            },
+            materialization: {
+              executor: 'postgres' as const,
+              environmentId: 'env-1',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T10:00:00.000Z',
+              completedAt: '2026-04-08T10:00:04.000Z',
+              durationMs: 4000,
+            },
           },
         };
       },
@@ -419,13 +425,17 @@ describe('GetRunStatusUseCase', () => {
       runId: 'provider-run-1',
       status: 'FAILED',
       snapshotStaleness: 'FRESH',
-      currentStepId: 'step-evidence',
-      failedStepId: 'step-transform',
-      errorReason: 'SINK_WRITE_FAILED',
-      materialization: {
-        executor: 'postgres',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
+      execution: {
+        activeStepId: 'step-evidence',
+        failure: {
+          stepId: 'step-transform',
+          reason: 'SINK_WRITE_FAILED',
+        },
+        materialization: {
+          executor: 'postgres',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+        },
       },
     });
   });

@@ -251,9 +251,8 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     const snap = makeSnap('RUNNING');
 
     applyRunEvent(snap, makeStepEvent('StepStarted', 'step-transform'));
-    expect(snap.currentStepId).toBe('step-transform');
-    expect(snap.failedStepId).toBeUndefined();
-    expect(snap.errorReason).toBeUndefined();
+    expect(snap.execution?.activeStepId).toBe('step-transform');
+    expect(snap.execution?.failure).toBeUndefined();
 
     applyRunEvent(snap, {
       ...makeStepEvent('StepFailed', 'step-transform'),
@@ -263,9 +262,12 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
       },
     } as unknown as EventEnvelope);
 
-    expect(snap.currentStepId).toBeUndefined();
-    expect(snap.failedStepId).toBe('step-transform');
-    expect(snap.errorReason).toBe('SINK_WRITE_FAILED');
+    expect(snap.execution?.activeStepId).toBeUndefined();
+    expect(snap.execution?.failure).toMatchObject({
+      stepId: 'step-transform',
+      reason: 'SINK_WRITE_FAILED',
+      message: 'duplicate key value violates unique constraint',
+    });
   });
 
   it('captures materialization evidence from step completion payloads', () => {
@@ -287,8 +289,8 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
       },
     } as unknown as EventEnvelope);
 
-    expect(snap.currentStepId).toBeUndefined();
-    expect(snap.materialization).toEqual({
+    expect(snap.execution?.activeStepId).toBeUndefined();
+    expect(snap.execution?.materialization).toEqual({
       executor: 'postgres',
       environmentId: 'env-1',
       sinkTable: 'analytics.orders_daily',

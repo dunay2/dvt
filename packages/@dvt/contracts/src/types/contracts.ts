@@ -50,6 +50,19 @@ export interface MaterializationEvidence {
   durationMs: number;
 }
 
+export interface RunFailureEvidence {
+  stepId: string;
+  reason?: string;
+  message?: string;
+  failedAt: IsoUtcString;
+}
+
+export interface RunExecutionEvidence {
+  activeStepId?: string;
+  failure?: RunFailureEvidence;
+  materialization?: MaterializationEvidence;
+}
+
 export interface RunStatusSnapshot {
   runId: string;
   status: RunStatus;
@@ -57,10 +70,7 @@ export interface RunStatusSnapshot {
   message?: string;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  execution?: RunExecutionEvidence;
 }
 
 export interface PlanRef {

@@ -822,7 +822,7 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 85
+    progress_pct: 95
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
@@ -830,8 +830,9 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
     status_reason: >-
-      Shared contracts, projector state, and API read surfaces now carry TF-C2-B outcome evidence;
-      remaining dependency closure is the real executor payload emission from TF-C2-A or TF-B1-B.
+      Shared contracts, projector state, API responses, and web consumers now carry TF-C2-B evidence
+      under a normalized `execution` object with mapper-first projection; remaining dependency
+      closure is the real executor payload emission from TF-C2-A or TF-B1-B.
     last_verified: '2026-04-08'
   - task_id: TF-C3
     priority: P1

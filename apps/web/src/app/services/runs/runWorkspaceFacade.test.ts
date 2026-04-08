@@ -45,10 +45,7 @@ describe('runWorkspaceFacade', () => {
         planId: 'plan_1',
         status: 'running',
         startedAt: '2026-04-04T00:00:00.000Z',
-        currentStepId: undefined,
-        failedStepId: undefined,
-        errorReason: undefined,
-        materialization: undefined,
+        execution: undefined,
       },
       timeline: {
         state: 'empty',
@@ -155,25 +152,24 @@ describe('runWorkspaceFacade', () => {
       status: 'completed',
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
-      materialization: {
-        executor: 'postgres',
-        environmentId: 'env-1',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
-        startedAt: '2026-04-04T00:00:02.000Z',
-        completedAt: '2026-04-04T00:00:10.000Z',
-        durationMs: 8000,
+      execution: {
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-04T00:00:02.000Z',
+          completedAt: '2026-04-04T00:00:10.000Z',
+          durationMs: 8000,
+        },
       },
-      failedStepId: undefined,
-      errorReason: undefined,
-      currentStepId: undefined,
     });
     vi.mocked(service.listRunEvents).mockResolvedValue({ events: [] });
 
     const facade = createRunWorkspaceFacade(service);
     const workspace = await facade.loadRunWorkspace('run_1');
 
-    expect(workspace?.snapshot.materialization).toMatchObject({
+    expect(workspace?.snapshot.execution?.materialization).toMatchObject({
       executor: 'postgres',
       sinkTable: 'analytics.orders_daily',
       rowsWritten: 42,

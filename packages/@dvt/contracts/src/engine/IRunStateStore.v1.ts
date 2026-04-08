@@ -1,9 +1,9 @@
 import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type {
   IsoUtcString,
-  MaterializationEvidence,
   PlanRef,
   Provider,
+  RunExecutionEvidence,
   RunExecutionPolicy,
   RunStatus,
 } from '../types/contracts.js';
@@ -151,10 +151,7 @@ export interface WorkflowSnapshot {
   status: RunStatus;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  execution?: RunExecutionEvidence;
   paused: boolean;
   cancelling: boolean;
   /**

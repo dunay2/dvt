@@ -14,17 +14,23 @@ const DEFAULT_RESULT: {
   status: string;
   enriched: boolean;
   snapshotStaleness: string;
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: {
-    executor: 'postgres' | 'dbt';
-    environmentId: string;
-    sinkTable: string;
-    rowsWritten: number;
-    startedAt: string;
-    completedAt: string;
-    durationMs: number;
+  execution?: {
+    activeStepId?: string;
+    failure?: {
+      stepId: string;
+      reason?: string;
+      message?: string;
+      failedAt: string;
+    };
+    materialization?: {
+      executor: 'postgres' | 'dbt';
+      environmentId: string;
+      sinkTable: string;
+      rowsWritten: number;
+      startedAt: string;
+      completedAt: string;
+      durationMs: number;
+    };
   };
 } = {
   runId: 'run-1',
@@ -152,17 +158,23 @@ describe('getRunRoute', () => {
     const result = {
       ...DEFAULT_RESULT,
       status: 'FAILED',
-      currentStepId: 'step-evidence',
-      failedStepId: 'step-transform',
-      errorReason: 'SINK_WRITE_FAILED',
-      materialization: {
-        executor: 'postgres' as const,
-        environmentId: 'env-1',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
-        startedAt: '2026-04-08T10:00:00.000Z',
-        completedAt: '2026-04-08T10:00:04.000Z',
-        durationMs: 4000,
+      execution: {
+        activeStepId: 'step-evidence',
+        failure: {
+          stepId: 'step-transform',
+          reason: 'SINK_WRITE_FAILED',
+          message: 'duplicate key value violates unique constraint',
+          failedAt: '2026-04-08T10:00:03.000Z',
+        },
+        materialization: {
+          executor: 'postgres' as const,
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:04.000Z',
+          durationMs: 4000,
+        },
       },
     };
     const deps = createDeps(result);

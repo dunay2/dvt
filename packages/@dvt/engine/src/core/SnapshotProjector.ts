@@ -36,16 +36,15 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): Workflo
  * stored snapshot without a full event replay.
  */
 export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
+  const execution = toRunExecutionEvidence(snap);
+
   return {
     runId: snap.runId,
     status: snap.status,
     ...(snap.cancelling ? { substatus: 'CANCELLING' as const } : {}),
     ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
     ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
-    ...(snap.currentStepId ? { currentStepId: snap.currentStepId } : {}),
-    ...(snap.failedStepId ? { failedStepId: snap.failedStepId } : {}),
-    ...(snap.errorReason ? { errorReason: snap.errorReason } : {}),
-    ...(snap.materialization ? { materialization: snap.materialization } : {}),
+    ...(execution ? { execution } : {}),
   };
 }
 
@@ -67,4 +66,21 @@ export class SnapshotProjector {
 
     return snapshotToStatus(snap);
   }
+}
+
+function toRunExecutionEvidence(snap: WorkflowSnapshot): RunStatusSnapshot['execution'] {
+  const execution = snap.execution;
+  if (!execution) {
+    return undefined;
+  }
+
+  const normalized = {
+    ...(execution.activeStepId !== undefined ? { activeStepId: execution.activeStepId } : {}),
+    ...(execution.failure !== undefined ? { failure: execution.failure } : {}),
+    ...(execution.materialization !== undefined
+      ? { materialization: execution.materialization }
+      : {}),
+  };
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 }

@@ -8,14 +8,16 @@ owners:
   - packages/@dvt/engine
   - apps/api
 arc_level: ARC-2
-breaking: false
+breaking: true
 evidence_class: critical
 code_refs:
   - packages/@dvt/contracts/src/types/contracts.ts
   - packages/@dvt/contracts/src/schemas.ts
   - packages/@dvt/run-domain/src/applyRunEvent.ts
+  - packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts
   - packages/@dvt/engine/src/core/SnapshotProjector.ts
   - apps/api/src/application/services/getRunStatusUseCase.ts
+  - apps/web/src/app/services/runs/runsService.api.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts build
@@ -24,6 +26,8 @@ evidence:
     - pnpm --filter @dvt/engine test
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api test
+    - pnpm --filter @dvt/web typecheck
+    - pnpm --filter @dvt/web test
     - pnpm verify:prepush
 ---
 
@@ -35,14 +39,16 @@ projection or ADR-0015 read-model separation.
 
 ## What changed
 
-- Added optional-first TF-C2-B outcome fields to `RunStatusSnapshot`:
-  `currentStepId`, `failedStepId`, `errorReason`, and `materialization`.
+- Replaced the flat TF-C2-B outcome fields on `RunStatusSnapshot` with a nested
+  `execution` object carrying `activeStepId`, `failure`, and `materialization`.
 - Added materialization and failure-diagnostic payload shapes to the canonical
   event validators for `StepCompleted` and `StepFailed`.
-- Extended the shared run-domain projector so canonical events can populate the
-  new snapshot evidence fields deterministically.
-- Extended API run-status responses so `GET /runs/:runId` returns the projected
-  TF-C2-B fields when the snapshot carries them.
+- Introduced a dedicated run-domain mapper so raw `EventEnvelope` payload
+  parsing happens before projection instead of inside `applyRunEvent`.
+- Extended the shared run-domain projector so canonical events populate
+  `snapshot.execution` deterministically.
+- Extended API and web run-status consumers so `GET /runs/:runId` now carries
+  the projected `execution` object end to end.
 - Locked the contract with shared-contract, projector, engine, and API tests.
 
 ## Architectural intent
@@ -53,6 +59,9 @@ projection or ADR-0015 read-model separation.
 - Preserves [ADR-0015](../adr/ADR-0015-getRunStatus-read-model-separation.md):
   `GET /runs/:runId` still reads projected state and does not call the provider
   to fabricate diagnostics.
+- Improves SRP/OCP posture in the projector: normalization lives in one mapper
+  module and projection handlers mutate the snapshot without payload-record
+  inspection.
 - Makes the runtime read surface ready for TF-C2-A executor payload emission
   without forcing the API or frontend into route-local heuristics.
 
@@ -64,4 +73,6 @@ projection or ADR-0015 read-model separation.
 - `pnpm --filter @dvt/engine test` passed.
 - `pnpm --filter dvt-api typecheck` passed.
 - `pnpm --filter dvt-api test` passed.
+- `pnpm --filter @dvt/web typecheck` passed.
+- `pnpm --filter @dvt/web test` passed.
 - `pnpm verify:prepush` is recorded as the final gate for the branch closeout.

@@ -20,11 +20,15 @@ risk: >
   canonical snapshot projection or API read contract, causing caller-visible drift where event
   detail exists but the authoritative run snapshot omits the same evidence.
 mitigations:
-  - RunStatusSnapshot now exposes optional-first TF-C2-B outcome fields.
+  - RunStatusSnapshot now exposes a nested `execution` evidence object instead of flat outcome
+    fields.
   - StepCompleted and StepFailed validators now accept materialization and failure-diagnostic
     payloads needed by the read path.
-  - The shared run-domain projector derives current step, failed step, error reason, and
-    materialization evidence from canonical events.
-  - API get-run responses now return the projected fields directly from snapshot state.
+  - The shared run-domain mapper normalizes raw event envelopes before projection so payload parsing
+    no longer leaks into `applyRunEvent`.
+  - The shared run-domain projector derives active step, failure diagnostics, and materialization
+    evidence from canonical events.
+  - API get-run responses and web run consumers now return the projected `execution` object directly
+    from snapshot state.
   - Contract, projector, engine, and API tests lock the widened read-surface shape.
 ---
