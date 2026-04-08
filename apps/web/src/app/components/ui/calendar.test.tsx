@@ -26,7 +26,9 @@ describe('CalendarChevron', () => {
     container.remove();
   });
 
-  async function renderChevron(orientation?: 'left' | 'right' | 'up' | 'down') {
+  async function renderChevron(
+    orientation?: 'left' | 'right' | 'up' | 'down'
+  ): Promise<SVGElement> {
     await act(async () => {
       root.render(<CalendarChevron orientation={orientation} />);
     });
