@@ -11,6 +11,7 @@ export const queryKeys = {
   // Shell
   // -------------------------------------------------------------------------
   shell: {
+    platformHealthSnapshot: () => ['shell', 'platform-health', 'snapshot'] as const,
     capabilities: () => ['shell', 'capabilities'] as const,
   },
 
