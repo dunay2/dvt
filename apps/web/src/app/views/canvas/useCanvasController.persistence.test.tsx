@@ -63,7 +63,9 @@ describe('useCanvasController persistence guards', () => {
     };
     await harness.renderProbe();
 
-    const node = harness.getLatestResult()?.nodesWithImpact.find((candidate) => candidate.id === 'node_1');
+    const node = harness
+      .getLatestResult()
+      ?.nodesWithImpact.find((candidate) => candidate.id === 'node_1');
     expect(node?.position).toEqual({ x: 320, y: 240 });
   });
 });

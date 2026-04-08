@@ -738,7 +738,7 @@ tasks:
   - task_id: F-05-CANVAS-CTRL-TDD
     parent_task: F-05
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       add failing tests that freeze controller invariants before any code extraction starts.
     dependency: F-05-CANVAS-CTRL-DOC
@@ -747,15 +747,15 @@ tasks:
       overlay fallback, guarded persistence, and isolated post-run navigation side effects.
     complexity: S
     effort_points: 2
-    progress_pct: 40
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
     status_reason: >-
-      Invariant coverage is now being expanded for persisted-position determinism and isolated
-      route-side run navigation handoff. Existing controller decomposition is already present in
-      code, so this slice is focused on freezing behavior with explicit tests before further
-      extraction or cleanup.
+      The hard-gate invariant matrix is now covered in tests: pending graph queries do not persist
+      node positions or viewport updates, query error returns safe route state, persisted positions
+      are preserved deterministically, cost overlay falls back to runtime, and run-start navigation
+      remains isolated through the route-side `onRunStarted` seam.
     definition_of_done:
       - red tests fail for the intended controller invariants
       - tests do not depend on fragile private implementation details
