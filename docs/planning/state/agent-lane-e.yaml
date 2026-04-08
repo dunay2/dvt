@@ -586,7 +586,7 @@ tasks:
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2
-    status: in_progress
+    status: review
     objective: >-
       close residual quality drifts after the boundary refactor, focused on test seam policy and
       shell UX contract consistency.
@@ -596,7 +596,7 @@ tasks:
       override seams instead of global module mocking, and API-mode console copy is product-safe.
     complexity: M
     effort_points: 3
-    progress_pct: 67
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
@@ -606,11 +606,11 @@ tasks:
       - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
       - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Residual cleanup is now active: `F-04-RESIDUAL-A` moved Root-level provider ownership to the
-      real shell entrypoint and added a direct integration guard. `F-04-RESIDUAL-B` now rewires
-      `useCanvasController` consumer tests to the real `AppServicesProvider` override seam instead
-      of globally mocking `AppServicesContext` exports. Documentary hard QA found no blocking issues
-      for residual-A. Remaining work is API-mode console copy normalization in `F-04-RESIDUAL-C`.
+      Residual cleanup is now functionally complete and pending final acceptance review:
+      `F-04-RESIDUAL-A` moved Root-level provider ownership to the real shell entrypoint and added a
+      direct integration guard, `F-04-RESIDUAL-B` rewired `useCanvasController` consumer tests to
+      provider overrides, and `F-04-RESIDUAL-C` normalized API-mode console empty-state copy to
+      product language without internal planning terminology.
     last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
@@ -663,7 +663,7 @@ tasks:
   - task_id: F-04-RESIDUAL-C
     parent_task: F-04-RESIDUAL
     priority: P3
-    status: queued
+    status: review
     objective: >-
       normalize API-mode console copy to product language and remove process-internal roadmap
       wording.
@@ -673,13 +673,15 @@ tasks:
       slices or internal planning terminology.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/components/Console.tsx
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
     status_reason: >-
-      Current fallback copy is operationally correct but includes internal delivery language.
-    last_verified: '2026-04-04'
+      API-mode console empty-state copy now uses product-facing wording about run events and
+      explicitly states that live log streaming is not yet available in API mode, without exposing
+      internal roadmap or implementation-slice language.
+    last_verified: '2026-04-08'
   - task_id: F-05
     priority: P0
     status: in_progress
@@ -708,7 +710,7 @@ tasks:
   - task_id: F-05-CANVAS-CTRL-DOC
     parent_task: F-05
     priority: P0
-    status: review
+    status: done
     objective: >-
       freeze the current truth, target controller decomposition, and user-facing Canvas guarantees
       for the `useCanvasController` hardening slice.
@@ -719,23 +721,24 @@ tasks:
       to the implementer.
     complexity: S
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
     status_reason: >-
-      The controller remediation now has a dedicated architecture page, user-manual update, and
-      proposal-level execution handoff; final closure depends on docs validation and acceptance.
+      Documentation hard-gate acceptance is complete: the frontend architecture entrypoint links the
+      controller current-to-target architecture page, the Canvas user manual states current journey,
+      guarantees, and non-promises, and the proposal freezes the hard-gate sequence and seam names.
     definition_of_done:
       - technical current-to-target doc is linked from the frontend architecture entrypoint
       - Canvas user manual states current journey, guarantees, and non-promises
       - the proposal freezes the hard-gate sequence and extracted seam names
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-08'
   - task_id: F-05-CANVAS-CTRL-TDD
     parent_task: F-05
     priority: P0
-    status: queued
+    status: review
     objective: >-
       add failing tests that freeze controller invariants before any code extraction starts.
     dependency: F-05-CANVAS-CTRL-DOC
@@ -744,22 +747,24 @@ tasks:
       overlay fallback, guarded persistence, and isolated post-run navigation side effects.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
     status_reason: >-
-      The controller slice currently lacks invariant-driven tests and must enter a red phase before
-      implementation work starts.
+      The hard-gate invariant matrix is now covered in tests: pending graph queries do not persist
+      node positions or viewport updates, query error returns safe route state, persisted positions
+      are preserved deterministically, cost overlay falls back to runtime, and run-start navigation
+      remains isolated through the route-side `onRunStarted` seam.
     definition_of_done:
       - red tests fail for the intended controller invariants
       - tests do not depend on fragile private implementation details
       - provider or route seams remain testable after extraction
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-08'
   - task_id: F-05-CANVAS-CTRL-IMPL
     parent_task: F-05
     priority: P0
-    status: queued
+    status: review
     objective: >-
       extract the controller into focused graph, overlay, persistence, and navigation seams and
       reduce `useCanvasController` to a composition facade.
@@ -770,19 +775,24 @@ tasks:
       workflow remains unchanged.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/views/canvas/useCanvasController.ts
     status_reason: >-
-      Implementation is intentionally blocked behind the documentation and red-test hard gate.
+      Implementation is now present in code: `useCanvasController` delegates graph query and
+      canonical mapping to `useCanvasGraphModel`, overlay policy to `useCanvasOverlayModel`,
+      persistence guards to `useCanvasLayoutPersistence`, and route transitions to
+      `useCanvasNavigationActions`. Hot-path `console.debug` diagnostics are absent, graph sync uses
+      an identity map for current-node lookup, and route behavior for planning and run navigation
+      remains intact through the extracted seams.
     definition_of_done:
       - controller responsibilities match the documented seam model
       - hot-path debug logging is removed
       - graph sync uses stable identity-oriented lookup instead of repeated search
       - route behavior for planning and run navigation remains intact
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-08'
   - task_id: F-05-CANVAS-CTRL-CLOSEOUT
     parent_task: F-05
     priority: P1
@@ -832,6 +842,41 @@ tasks:
       TanStack Query is already installed and used across health, canvas, runs, diff, lineage, and
       admin, but query keys, mutation boundaries, and invalidation rules are still inconsistent.
     last_verified: '2026-04-03'
+  - task_id: F-06-A
+    parent_task: F-06
+    priority: P0
+    status: queued
+    objective: >-
+      establish the governed query-key registry and ownership map for health, runs, and canvas
+      before broader query-boundary normalization lands.
+    dependency: F-05
+    target: >-
+      A typed query-key registry and domain ownership reference replace inline key arrays in the
+      highest-churn frontend surfaces, with explicit invalidation rules for platform health, run
+      snapshot and events, and workspace graph reads.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - apps/web/src/app/Root.tsx
+      - apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    status_reason: >-
+      This is the highest-value first cut inside F-06 because health, runs, and canvas already
+      exercise TanStack Query in active operator flows. Normalizing their query keys and ownership
+      rules removes the current ad-hoc orchestration pattern and unlocks the dependent frontend
+      slices that still wait on governed query boundaries.
+    definition_of_done:
+      - typed query-key registry exists for health, runs, and workspace graph reads
+      - inline query key arrays are removed from the covered surfaces
+      - invalidation ownership is documented for health, run snapshot and events, and workspace
+        graph
+      - route views stop defining ad-hoc query orchestration for the covered paths
+      - targeted web tests and prepush validation pass
+    last_verified: '2026-04-08'
   - task_id: F-07
     priority: P0
     status: review

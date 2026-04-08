@@ -120,6 +120,9 @@ const state = vi.hoisted(() => ({
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),
   },
+  navigationActionsResult: {
+    handleRunStarted: vi.fn(),
+  },
 })) as CanvasHarnessState;
 const mocks = vi.hoisted(() => ({
   useQuery: vi.fn(),
@@ -138,6 +141,7 @@ const mocks = vi.hoisted(() => ({
   buildNodesWithImpact: vi.fn(),
   useCanvasExecutionActions: vi.fn(),
   useCanvasGraphHandlers: vi.fn(),
+  useCanvasNavigationActions: vi.fn(),
 })) as CanvasHarnessMocks;
 vi.mock('@tanstack/react-query', () => ({ useQuery: mocks.useQuery }));
 vi.mock('@xyflow/react', async () => {
@@ -184,6 +188,9 @@ vi.mock('./useCanvasExecutionActions', () => ({
 }));
 vi.mock('./useCanvasGraphHandlers', () => ({
   useCanvasGraphHandlers: mocks.useCanvasGraphHandlers,
+}));
+vi.mock('./useCanvasNavigationActions', () => ({
+  useCanvasNavigationActions: mocks.useCanvasNavigationActions,
 }));
 
 export function setupCanvasControllerHarness() {

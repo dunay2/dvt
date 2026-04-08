@@ -50,6 +50,8 @@ The user always understands:
 - Source import remains mock-capable, while API mode reports unimplemented
   backend import support explicitly.
 - The console no longer pretends mock log lines are real in `api` mode.
+- In `api` mode, the console empty state uses product wording about run events
+  and explicitly states that live log streaming is not yet available.
 
 ```mermaid
 flowchart LR
