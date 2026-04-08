@@ -1,4 +1,4 @@
-import { RunMetadataNotFoundError } from '@dvt/engine';
+import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
@@ -26,6 +26,7 @@ const commandContext: AuthorizedCommandExecutionContext = {
 describe('RecoverRunUseCase', () => {
   it('maps recover command to engine.recoverRun using source run context', async () => {
     const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-source-1', status: 'FAILED' }),
       recoverRun: vi.fn().mockResolvedValue({
         provider: 'mock',
         runId: 'run-recovery-1',
@@ -86,11 +87,12 @@ describe('RecoverRunUseCase', () => {
         targetAdapter: 'temporal',
       }
     );
+    expect(engine.getRunStatus).toHaveBeenCalledTimes(1);
   });
 
   it('throws run-not-found when source metadata does not exist', async () => {
     const useCase = new RecoverRunUseCase(
-      { recoverRun: vi.fn() } as never,
+      { recoverRun: vi.fn(), getRunStatus: vi.fn() } as never,
       { getRunMetadataByRunId: vi.fn().mockResolvedValue(null) } as never
     );
 
@@ -110,5 +112,47 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toBeInstanceOf(RunMetadataNotFoundError);
+  });
+
+  it('rejects recover when the source run is not terminal', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({ runId: 'provider-run-1', status: 'RUNNING' }),
+      recoverRun: vi.fn(),
+    };
+    const stateStore = {
+      getRunMetadataByRunId: vi.fn().mockResolvedValue({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'env-a',
+        runId: 'run-source-1',
+        planId: 'plan-a',
+        planVersion: '1.0.0',
+        logicalAttemptId: 1,
+        provider: 'temporal' as const,
+        providerWorkflowId: 'wf-1',
+        providerRunId: 'provider-run-1',
+      }),
+    };
+
+    const useCase = new RecoverRunUseCase(engine as never, stateStore as never);
+
+    await expect(
+      useCase.execute(
+        {
+          sourceRunId: 'run-source-1',
+          recoveryRunId: 'run-recovery-1',
+          planRef: {
+            uri: 'https://plans.example/plan.json',
+            sha256: 'a'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'plan-a',
+            planVersion: '1.0.0',
+          },
+        },
+        commandContext
+      )
+    ).rejects.toBeInstanceOf(RecoverySourceNotTerminalError);
+
+    expect(engine.recoverRun).not.toHaveBeenCalled();
   });
 });

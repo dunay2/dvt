@@ -25,6 +25,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   planRejected: 'plan_rejected',
   runAlreadyExists: 'run_already_exists',
   runNotFound: 'run_not_found',
+  sourceRunNotTerminal: 'source_run_not_terminal',
   tenantAccessDenied: 'tenant_access_denied',
   unsupportedCursor: 'unsupported_cursor',
   unsupportedPlanVersion: 'unsupported_plan_version',

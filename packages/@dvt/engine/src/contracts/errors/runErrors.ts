@@ -87,6 +87,19 @@ export class RunMetadataNotFoundError extends DvtError {
   }
 }
 
+export class RecoverySourceNotTerminalError extends DvtError {
+  constructor(runId: string, status: string) {
+    const messageKey = ENGINE_ERROR_MESSAGE_KEY.RECOVERY_SOURCE_NOT_TERMINAL;
+    const messageParams = { runId, status };
+    super(ENGINE_ERROR_CODE.RECOVERY_SOURCE_NOT_TERMINAL, messageKey, runId, {
+      details: messageParams,
+      messageKey,
+      messageParams,
+    });
+    this.name = 'RecoverySourceNotTerminalError';
+  }
+}
+
 export interface InvalidStateTransitionParams {
   runId: string;
   fromStatus: string;

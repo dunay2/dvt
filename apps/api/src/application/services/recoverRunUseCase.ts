@@ -1,5 +1,11 @@
-import type { IRunStateStoreRead, IWorkflowEngine, PlanRef, RunContext } from '@dvt/engine';
-import { RunMetadataNotFoundError } from '@dvt/engine';
+import {
+  RecoverySourceNotTerminalError,
+  RunMetadataNotFoundError,
+  type IRunStateStoreRead,
+  type IWorkflowEngine,
+  type PlanRef,
+  type RunContext,
+} from '@dvt/engine';
 
 import type {
   AuthorizedCommandExecutionContext,
@@ -7,6 +13,8 @@ import type {
   RecoverRunCommand,
   RecoverRunResult,
 } from '../ports/runtime.js';
+
+import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 
 export class RecoverRunUseCase implements IRecoverRunUseCase {
   public constructor(
@@ -24,6 +32,10 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     );
     if (!source) {
       throw new RunMetadataNotFoundError(command.sourceRunId);
+    }
+    const sourceStatus = await this.engine.getRunStatus(runMetadataToEngineRunRef(source));
+    if (isTerminalRunStatus(sourceStatus.status) === false) {
+      throw new RecoverySourceNotTerminalError(command.sourceRunId, sourceStatus.status);
     }
 
     await this.engine.recoverRun(
@@ -54,6 +66,10 @@ function toEnginePlanRef(input: RecoverRunCommand['planRef']): PlanRef {
     planId: input.planId,
     planVersion: input.planVersion,
   };
+}
+
+function isTerminalRunStatus(status: string): boolean {
+  return status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
 }
 
 function toEngineRunContext(

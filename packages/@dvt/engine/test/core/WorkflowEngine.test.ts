@@ -17,6 +17,10 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  RecoverySourceNotTerminalError,
+  RunAlreadyExistsError,
+} from '../../src/contracts/errors.js';
 import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
@@ -87,6 +91,27 @@ function makeRunEventInput(args: {
     payloadVersion: 1,
   };
 }
+
+async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promise<void> {
+  const event: StoreEventInput = {
+    eventId: `evt-${runId}-completed`,
+    eventType: 'RunCompleted',
+    runId,
+    tenantId: 't',
+    projectId: 'p',
+    environmentId: 'dev',
+    planId: TEST_PLAN_REF.planId,
+    planVersion: TEST_PLAN_REF.planVersion,
+    logicalAttemptId: 1,
+    engineAttemptId: 1,
+    emittedAt: '2026-02-12T00:00:01.000Z',
+    idempotencyKey: `idemp-${runId}-completed`,
+    payloadVersion: 1,
+  };
+
+  await store.appendAndEnqueueTx(runId, [event]);
+}
+
 describe('WorkflowEngine (basic failure modes)', () => {
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
@@ -368,6 +393,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const recoveryRunId = 'recover-target-1';
 
     await engine.startRun(makePlanRef(), makeContext(sourceRunId));
+    await appendRunCompleted(store, sourceRunId);
 
     await engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId));
 
@@ -398,6 +424,21 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(metadata?.originRunId).toBe(runId);
   });
 
+  it('recoverRun rejects when source run is not terminal', async () => {
+    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const sourceRunId = 'recover-running-source-1';
+    const recoveryRunId = 'recover-running-target-1';
+
+    await engine.startRun(makePlanRef(), makeContext(sourceRunId));
+
+    await expect(
+      engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId))
+    ).rejects.toBeInstanceOf(RecoverySourceNotTerminalError);
+
+    const recovery = await store.getRunMetadataByRunId('t', recoveryRunId);
+    expect(recovery).toBeNull();
+  });
+
   it('recoverRun fails closed when retry reservation support is unavailable', async () => {
     const { engine, store } = createEngine({ adapters: makeAdapters() });
     const rootRunId = 'recover-fallback-root-1';
@@ -405,6 +446,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const secondRecoveryRunId = 'recover-fallback-child-2';
 
     await engine.startRun(makePlanRef(), makeContext(rootRunId));
+    await appendRunCompleted(store, rootRunId);
     await engine.recoverRun(rootRunId, makePlanRef(), makeContext(firstRecoveryRunId));
 
     (store as { reserveRetryAttempt?: unknown }).reserveRetryAttempt = undefined;
@@ -414,6 +456,28 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
     const secondRecovery = await store.getRunMetadataByRunId('t', secondRecoveryRunId);
     expect(secondRecovery).toBeNull();
+  });
+
+  it('recoverRun does not consume retry lineage on duplicate preflight rejection', async () => {
+    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const sourceRunId = 'recover-preflight-source-1';
+    const duplicateRecoveryRunId = 'recover-preflight-dup-1';
+    const validRecoveryRunId = 'recover-preflight-valid-1';
+
+    await engine.startRun(makePlanRef(), makeContext(sourceRunId));
+    await appendRunCompleted(store, sourceRunId);
+    await engine.startRun(makePlanRef(), makeContext(duplicateRecoveryRunId));
+
+    await expect(
+      engine.recoverRun(sourceRunId, makePlanRef(), makeContext(duplicateRecoveryRunId))
+    ).rejects.toBeInstanceOf(RunAlreadyExistsError);
+
+    await engine.recoverRun(sourceRunId, makePlanRef(), makeContext(validRecoveryRunId));
+
+    const recovery = await store.getRunMetadataByRunId('t', validRecoveryRunId);
+    expect(recovery?.logicalAttemptId).toBe(2);
+    expect(recovery?.parentRunId).toBe(sourceRunId);
+    expect(recovery?.originRunId).toBe(sourceRunId);
   });
 
   it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {

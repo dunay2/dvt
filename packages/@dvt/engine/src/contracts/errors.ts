@@ -25,6 +25,7 @@ export {
   InvalidRunEventInputError,
   InvalidRunIdError,
   InvalidStateTransitionError,
+  RecoverySourceNotTerminalError,
   RunSequenceOverflowError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
