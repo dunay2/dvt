@@ -32,8 +32,9 @@ describe('CanvasToolbar', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
-      true;
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   afterEach(() => {
@@ -104,6 +105,8 @@ describe('CanvasToolbar', () => {
     );
     expect(planButton).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(container.textContent).toContain('Plan requires exactly 3 nodes: source, sql_transform, and sink.');
+    expect(container.textContent).toContain(
+      'Plan requires exactly 3 nodes: source, sql_transform, and sink.'
+    );
   });
 });
