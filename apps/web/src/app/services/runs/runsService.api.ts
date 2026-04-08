@@ -107,6 +107,7 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     completedAt: asString(candidate.completedAt) ?? asString(candidate.endTime),
     substatus: asString(candidate.substatus),
     message: asString(candidate.message),
+    hash: asString(candidate.hash),
     snapshotStaleness: asString(candidate.snapshotStaleness) as
       | 'FRESH'
       | 'STALE'
@@ -130,6 +131,7 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     completedAt: snapshot.completedAt,
     substatus: snapshot.substatus,
     message: snapshot.message,
+    hash: snapshot.hash,
     snapshotStaleness: snapshot.snapshotStaleness,
     currentStepId: snapshot.currentStepId,
     failedStepId: snapshot.failedStepId,
