@@ -3,7 +3,21 @@ import { describe, expect, it } from 'vitest';
 import { InMemoryRunStateStore } from '../../src/state/InMemoryRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
-function makeBootstrap(runId: string) {
+function makeBootstrap(runId: string): {
+  metadata: {
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    runId: string;
+    planId: string;
+    planVersion: string;
+    logicalAttemptId: number;
+    provider: 'temporal';
+    providerWorkflowId: string;
+    providerRunId: string;
+  };
+  firstEvents: [];
+} {
   return {
     metadata: {
       tenantId: 'tenant-1',
