@@ -1645,19 +1645,23 @@ tasks:
       graph in a valid editable state before preview is allowed.
     complexity: S
     effort_points: 3
-    progress_pct: 30
+    progress_pct: 60
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/ux-implementation-guide.md
       - apps/web/src/app/views/canvas/transformationConnectionGuard.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
+      - apps/web/src/app/views/canvas/transformationAuthoringGuard.ts
+      - apps/web/src/app/views/canvas/transformationAuthoringGuard.test.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
     status_reason: >-
-      Initial implementation started in Canvas: connection-time guard now enforces constrained
-      transformation edge shape (`source -> sql_transform -> sink`) when the graph is in the
-      three-node transformation mode, with dedicated unit coverage. Remaining TF-E1-A work is node
-      composition constraints and full UX alignment.
+      Canvas now keeps the constrained transformation rules in explicit-context seams instead of
+      inferring draft mode from generic dbt canvas composition. Connection-time edge guard remains
+      active, preview-time graph validation still enforces the one-source/one-transform/one-sink
+      contract, and the node-composition guard is now gated behind a future dedicated transformation
+      strategy id rather than blocking generic dbt authoring. Remaining TF-E1-A work is to introduce
+      that explicit transformation authoring mode and align the operator copy.
     last_verified: '2026-04-08'
   - task_id: TF-E1-B
     priority: P0

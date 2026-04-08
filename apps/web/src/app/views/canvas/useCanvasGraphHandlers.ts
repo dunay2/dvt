@@ -16,6 +16,7 @@ import {
   createCanvasEdgeFromConnection,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
+import { guardTransformationAuthoringNode } from './transformationAuthoringGuard';
 import { guardTransformationConnection } from './transformationConnectionGuard';
 import type {
   ConfirmEdgeModalState,
@@ -255,6 +256,31 @@ export function useCanvasGraphHandlers({
           toast.info('Node already on canvas');
           return existingNodes;
         }
+
+        const transformationAuthoringModeEnabled = graphStrategy.id === 'transformation';
+        const existingRoles = existingNodes
+          .map((node) => node.data)
+          .map((data) =>
+            data && typeof data === 'object' ? (data as { role?: unknown }).role : null
+          )
+          .filter(
+            (role): role is CoreNodeRole =>
+              role === 'input' ||
+              role === 'transform' ||
+              role === 'check' ||
+              role === 'output' ||
+              role === 'control'
+          );
+        const authoringGuard = guardTransformationAuthoringNode({
+          authoringModeEnabled: transformationAuthoringModeEnabled,
+          existingRoles,
+          nextRole: canonicalNode.role,
+        });
+        if (!authoringGuard.allowed) {
+          toast.error(authoringGuard.reason);
+          return existingNodes;
+        }
+
         toast.success(`Added ${canonicalNode.name} to canvas`);
         return [...existingNodes, newNode];
       });
