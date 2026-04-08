@@ -21,6 +21,8 @@
     "type-check:apps": "pnpm --filter @dvt/web typecheck && pnpm --filter dvt-api typecheck && pnpm --filter dvt-outbox-worker typecheck",
     "build:apps": "pnpm --filter @dvt/web build && pnpm --filter dvt-api build && pnpm --filter dvt-outbox-worker build",
     "dev:web": "pnpm --filter @dvt/web dev",
+    "dev:api": "pnpm --filter dvt-api dev",
+    "dev:app": "pnpm --parallel --filter dvt-api --filter @dvt/web dev",
     "ci:docs": "pnpm docs:workboard:check && pnpm docs:sync:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:gov:locations && pnpm docs:canonical:check && pnpm docs:status:check && pnpm docs:capability:check",
     "ci:code": "pnpm type-check && pnpm test && pnpm lint:determinism",
     "ci:full": "pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine",
