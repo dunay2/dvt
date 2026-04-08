@@ -1,5 +1,6 @@
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
+import type { MaterializationEvidence } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 import { RunStateFrame } from './RunStateFrame';
 import { runStatesCopy as copy } from './runStatesCopy';
@@ -70,6 +71,68 @@ function readArtifactFields(
     sizeBytes,
     ...(typeof encoding === 'string' ? { encoding } : {}),
   };
+}
+
+function readMaterializationFields(value: unknown): MaterializationEvidence | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const executor = value.executor;
+  const environmentId = value.environmentId;
+  const sinkTable = value.sinkTable;
+  const rowsWritten = value.rowsWritten;
+  const startedAt = value.startedAt;
+  const completedAt = value.completedAt;
+  const durationMs = value.durationMs;
+
+  if (
+    (executor !== 'postgres' && executor !== 'dbt') ||
+    typeof environmentId !== 'string' ||
+    typeof sinkTable !== 'string' ||
+    typeof rowsWritten !== 'number' ||
+    !Number.isFinite(rowsWritten) ||
+    typeof startedAt !== 'string' ||
+    typeof completedAt !== 'string' ||
+    typeof durationMs !== 'number' ||
+    !Number.isFinite(durationMs)
+  ) {
+    return null;
+  }
+
+  return {
+    executor,
+    environmentId,
+    sinkTable,
+    rowsWritten,
+    startedAt,
+    completedAt,
+    durationMs,
+  };
+}
+
+function deriveMaterializationEvidence(workspace: RunWorkspaceViewModel): MaterializationEvidence | undefined {
+  if (workspace.snapshot.materialization) {
+    return workspace.snapshot.materialization;
+  }
+
+  for (const event of [...workspace.timeline.events].reverse()) {
+    if (!isRecord(event.payload)) {
+      continue;
+    }
+
+    const fromPayloadMaterialization = readMaterializationFields(event.payload.materialization);
+    if (fromPayloadMaterialization) {
+      return fromPayloadMaterialization;
+    }
+
+    const fromPayloadResultEvidence = readMaterializationFields(event.payload.resultEvidence);
+    if (fromPayloadResultEvidence) {
+      return fromPayloadResultEvidence;
+    }
+  }
+
+  return undefined;
 }
 
 function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
@@ -184,6 +247,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
   const executionProvenance = deriveExecutionProvenance(workspace);
+  const materializationEvidence = deriveMaterializationEvidence(workspace);
 
   return (
     <RunStateFrame title={`Run ${snapshot.runId}`}>
@@ -247,35 +311,35 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
 
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
-          {snapshot.materialization ? (
+          {materializationEvidence ? (
             <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
               <div>
                 <span className="text-slate-400">{copy.executorLabel}</span>
-                <div>{snapshot.materialization.executor}</div>
+                <div>{materializationEvidence.executor}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.environmentLabel}</span>
-                <div>{snapshot.materialization.environmentId}</div>
+                <div>{materializationEvidence.environmentId}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.sinkTableLabel}</span>
-                <div className="font-mono">{snapshot.materialization.sinkTable}</div>
+                <div className="font-mono">{materializationEvidence.sinkTable}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                <div>{snapshot.materialization.rowsWritten.toLocaleString()}</div>
+                <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.startedLabel}</span>
-                <div>{new Date(snapshot.materialization.startedAt).toLocaleString()}</div>
+                <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.completedLabel}</span>
-                <div>{new Date(snapshot.materialization.completedAt).toLocaleString()}</div>
+                <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.durationLabel}</span>
-                <div>{formatDuration(snapshot.materialization.durationMs)}</div>
+                <div>{formatDuration(materializationEvidence.durationMs)}</div>
               </div>
             </div>
           ) : (
