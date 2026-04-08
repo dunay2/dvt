@@ -5,7 +5,7 @@
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: Engine runtime, adapters, StateStore (Append Authority), projectors, audit pipelines  
 **Related Contracts**: [IWorkflowEngine.v2.0.md](./IWorkflowEngine.v2.0.md), [RunEvents.v2.0.md](./RunEvents.v2.0.md), [IRunStateStore.v2.0.md](../state-store/IRunStateStore.v2.0.md)  
-**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+**Related ADRs**: [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md), [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md), [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
 
 ---
 
@@ -116,6 +116,10 @@ short-term mechanism for that validation path.
 
 Any future canonical `SignalType` that maps to a realized lifecycle fact MUST
 follow the same runtime-owned model.
+
+Step-scoped retry is not part of the canonical signal surface. If introduced
+later, it MUST use a dedicated engine/application use case rather than
+`signal(...)`.
 
 ---
 

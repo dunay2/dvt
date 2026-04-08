@@ -107,7 +107,6 @@ export function normalizeSignalRequest(
     signalId: input.signalId,
     type: input.type,
   };
-  if (input.stepId !== undefined) request.stepId = input.stepId;
   if (input.reason !== undefined) request.reason = input.reason;
   if (input.requestedAt !== undefined) request.requestedAt = input.requestedAt;
   return request;

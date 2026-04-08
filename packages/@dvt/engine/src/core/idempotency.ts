@@ -46,7 +46,8 @@ export class IdempotencyKeyBuilder {
   /**
    * Derives the idempotency key for a signal event.
    *
-   * ADR-0008: SHA256(runId | 'SIGNAL' | signalType | signalId | logicalAttemptId | planId | planVersion [| stepId])
+   * ADR-0008 / ADR-0048:
+   * SHA256(runId | 'SIGNAL' | signalType | signalId | logicalAttemptId | planId | planVersion)
    *
    * Invariants:
    * - INV-SIGNAL-003: schemaVersion MUST NOT influence hash
@@ -64,7 +65,6 @@ export class IdempotencyKeyBuilder {
       String(params.logicalAttemptId),
       params.planId,
       params.planVersion,
-      ...(req.stepId ? [req.stepId] : []),
     ].join('|');
     return sha256Hex(preimage);
   }

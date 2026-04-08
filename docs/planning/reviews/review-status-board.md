@@ -70,6 +70,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260407 Retry-step boundary and use-case review](architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md)
+  - domain: `architecture-and-governance`
+  - role: boundary rationale and implementation review for narrowing `RETRY_STEP` out of canonical `SignalType`
+  - linkage: `WE-HX-4-C`
+  - status: `done`
+  - progress: `100%`
+
 Additional active QA:
 
 - [20260407 Execution plan and policy hard QA review](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
@@ -95,6 +102,13 @@ Additional active QA:
   - role: documentary hard QA gate for the mock workspace determinism hardening slice
   - linkage: `F-04-RISK-B`
   - status: `review`
+  - progress: `100%`
+
+- [20260407 Retry-step boundary hard QA review](architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for narrowing `RETRY_STEP` out of canonical `SignalType`
+  - linkage: `QA-RS-1..QA-RS-4`
+  - status: `done`
   - progress: `100%`
 
 ## Newly Classified Review

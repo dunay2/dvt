@@ -1574,10 +1574,10 @@ tasks:
   - task_id: WE-HX-4-C
     parent_task: WE-HX-4
     priority: P1
-    status: queued
+    status: in_progress
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 50
     objective:
       resolve ownership of `RETRY_RUN` and `RETRY_STEP` and lock the tests and docs to that
       decision.
@@ -1588,11 +1588,14 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
       - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md
+      - docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
       - packages/@dvt/contracts/src/types/contracts.ts
       - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
     status_reason: >-
-      The current release keeps retry signal shape stable, but ownership remains intentionally
-      deferred until the broader signal-boundary cleanup is executed.
+      `RETRY_STEP` is now being narrowed out of canonical `SignalType` and governed by ADR-0048 as a
+      future dedicated engine use case. `RETRY_RUN` remains intentionally unresolved in this task
+      until the broader retry boundary is closed.
     last_verified: '2026-04-07'
   - task_id: WE-HX-4-D
     parent_task: WE-HX-4
