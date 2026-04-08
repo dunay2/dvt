@@ -21,7 +21,6 @@ export const runStatesCopy = {
   startedLabel: 'Started',
   completedLabel: 'Completed',
   gitShaLabel: 'Git SHA',
-  snapshotHashLabel: 'Snapshot hash',
   materializationTitle: 'Materialization evidence',
   executorLabel: 'Executor',
   sinkTableLabel: 'Sink table',

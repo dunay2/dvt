@@ -100,12 +100,6 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div className="font-mono">{snapshot.currentStepId}</div>
               </div>
             ) : null}
-            {snapshot.hash ? (
-              <div className="md:col-span-2">
-                <span className="text-slate-400">{copy.snapshotHashLabel}</span>
-                <div className="break-all font-mono text-xs">{snapshot.hash}</div>
-              </div>
-            ) : null}
           </div>
         </Card>
 
