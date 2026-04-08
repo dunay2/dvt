@@ -362,6 +362,26 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(meta?.parentRunId).toBeUndefined();
   });
 
+  it('recoverRun reserves retry lineage for recovery runs', async () => {
+    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const sourceRunId = 'recover-source-1';
+    const recoveryRunId = 'recover-target-1';
+
+    await engine.startRun(makePlanRef(), makeContext(sourceRunId));
+
+    await engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId));
+
+    const source = await store.getRunMetadataByRunId('t', sourceRunId);
+    const recovery = await store.getRunMetadataByRunId('t', recoveryRunId);
+
+    expect(source).not.toBeNull();
+    expect(recovery).not.toBeNull();
+    expect(source?.logicalAttemptId).toBe(1);
+    expect(recovery?.logicalAttemptId).toBe(2);
+    expect(recovery?.parentRunId).toBe(sourceRunId);
+    expect(recovery?.originRunId).toBe(sourceRunId);
+  });
+
   it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {
     const savedRefs: Array<{ runId: string; update: unknown }> = [];
     const store = new InMemoryTxStore();

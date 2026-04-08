@@ -5,18 +5,29 @@ date: 2026-04-08
 owners:
   - packages/@dvt/contracts
   - packages/@dvt/engine
+  - apps/api
   - packages/@dvt/adapter-temporal
 arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/contracts/src/types/contracts.ts
   - packages/@dvt/contracts/src/schemas.ts
+  - packages/@dvt/contracts/src/validation.ts
   - packages/@dvt/contracts/src/workflows.ts
+  - apps/api/src/entrypoints/http/recoverRunRoute.ts
+  - apps/api/src/entrypoints/http/recoverRunRouteParser.ts
+  - apps/api/src/application/services/recoverRunUseCase.ts
+  - packages/@dvt/engine/src/contracts/IWorkflowEngine.v1_1_1.ts
+  - packages/@dvt/engine/src/core/WorkflowEngine.ts
   - packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
   - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
   - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
   - packages/@dvt/engine/test/idempotency.vectors.test.ts
   - packages/@dvt/contracts/test/validation.test.ts
+  - apps/api/test/application/services/recoverRunUseCase.test.ts
+  - apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts
+  - apps/api/test/entrypoints/http/recoverRunRoute.test.ts
   - docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md
   - docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md
 evidence:
@@ -27,8 +38,11 @@ evidence:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/engine build
     - pnpm --filter @dvt/engine test -- test/idempotency.vectors.test.ts test/core/WorkflowEngineCoreService.test.ts test/adapters/MockAdapter.cancel.test.ts
+    - pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts
+    - pnpm --filter dvt-api test
     - pnpm --filter @dvt/adapter-temporal build
     - pnpm --filter @dvt/adapter-temporal test -- test/TemporalAdapter.startRun.test.ts test/workflow-literals.test.ts
+    - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
     - pnpm docs:arc:evidence:check
     - pnpm docs:gov:locations
     - pnpm verify:prepush
@@ -45,18 +59,25 @@ now the run-control surface only:
 - `RESUME`
 - `CANCEL`
 
-Business run recovery remains governed by `ADR-0040`, but it must be expressed
-through a future dedicated recovery use case rather than through generic
-`signal(...)`.
+Business run recovery remains governed by `ADR-0040`, and is now expressed
+through a dedicated recovery command boundary instead of generic `signal(...)`.
 
 ## What changed
 
 - Removed `RETRY_RUN` from shared `SignalType`, Zod validation, and
   `WorkflowSignals`.
+- Added canonical `RecoverRunCommand` validation in `@dvt/contracts`.
+- Added `IWorkflowEngine.recoverRun(...)` with lineage reservation in the
+  engine boundary.
+- Added protected API endpoint `POST /runs/:runId/recover` with explicit
+  `run:retry` authorization and tenant-scoped source metadata lookup.
 - Added provider mapping helpers in Temporal and mock adapters so canonical
   run-control signals translate explicitly to provider-native commands.
 - Updated contract tests and idempotency golden vectors to the narrowed signal
   surface.
+- Added API and engine test coverage for recover-run parsing, authorization, use
+  case wiring, and retry lineage (`logicalAttemptId`, `parentRunId`,
+  `originRunId`).
 - Updated active architecture and contract docs so they no longer present
   `RETRY_RUN` as a generic signal.
 - Closed planning task `WE-HX-4-C` and the broader `WE-HX-4` signal-boundary
@@ -67,5 +88,5 @@ through a future dedicated recovery use case rather than through generic
 - Generic signal surfaces now match the shipped run-control product posture.
 - Adapters fail closed on unsupported signal semantics instead of carrying a
   speculative retry branch.
-- Future run recovery can be designed as an explicit recovery command without
-  reopening signal ownership drift.
+- Run recovery now ships as an explicit recovery command without reopening
+  signal ownership drift.

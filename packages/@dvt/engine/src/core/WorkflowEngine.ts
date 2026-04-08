@@ -7,7 +7,7 @@
  *   startRun to StartRunApplicationService and lifecycle operations to WorkflowEngineCoreService.
  * @consequence Runtime orchestration responsibilities are split into focused collaborators.
  */
-import { parsePlanRef, parseRunContext } from '@dvt/contracts';
+import { parsePlanRef, parseRecoverRunCommand, parseRunContext } from '@dvt/contracts';
 import type {
   EngineRunRef,
   PlanRef,
@@ -21,7 +21,7 @@ import type { IObservability } from '@dvt/observability';
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { StartRunAdmissionGuard } from '../application/StartRunAdmissionGuard.js';
 import { StartRunApplicationService } from '../application/StartRunApplicationService.js';
-import { AdapterNotRegisteredError } from '../contracts/errors.js';
+import { AdapterNotRegisteredError, RunMetadataNotFoundError } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
@@ -114,6 +114,65 @@ export class WorkflowEngine implements IWorkflowEngine {
         {
           context: traceContext,
           attributes: {
+            provider: resolvedContext.targetAdapter,
+            planUri: validatedPlanRef.uri,
+          },
+        },
+        async (span) => {
+          try {
+            const runRef = await this.startRunApplicationService.startRun(
+              validatedPlanRef,
+              resolvedContext,
+              traceContext
+            );
+            span.setStatus('ok');
+            return runRef;
+          } catch (error) {
+            span.recordException(error);
+            span.setStatus('error', toErrorMessage(error));
+            throw error;
+          }
+        }
+      )
+    );
+  }
+
+  async recoverRun(
+    sourceRunId: string,
+    planRef: PlanRef,
+    context: RunContext
+  ): Promise<EngineRunRef> {
+    const validated = parseRecoverRunCommand({
+      sourceRunId,
+      planRef,
+      context,
+    });
+    const validatedPlanRef = normalizePlanRef(validated.planRef);
+    const validatedContext = normalizeRunContext(validated.context);
+    const sourceMetadata = await this.resolveRecoverySourceMetadata(
+      validatedContext.tenantId,
+      validated.sourceRunId
+    );
+    const reservedAttempt = await this.reserveRetryAttempt(
+      sourceMetadata,
+      validatedContext.tenantId
+    );
+    const resolvedContext: ResolvedRunContext = {
+      ...validatedContext,
+      logicalAttemptId: reservedAttempt.logicalAttemptId,
+      parentRunId: reservedAttempt.parentRunId,
+      originRunId: reservedAttempt.originRunId,
+    };
+    const traceContext = buildTraceContext(resolvedContext, validatedPlanRef.planId);
+
+    return this.observability.withContext(traceContext, () =>
+      this.observability.traces.withSpan(
+        'engine.recoverRun',
+        {
+          context: traceContext,
+          attributes: {
+            sourceRunId: validated.sourceRunId,
+            logicalAttemptId: String(resolvedContext.logicalAttemptId),
             provider: resolvedContext.targetAdapter,
             planUri: validatedPlanRef.uri,
           },
@@ -273,6 +332,48 @@ export class WorkflowEngine implements IWorkflowEngine {
     const planFetcher = this.deps.planFetcher;
     if (planFetcher === undefined) throw new Error('planFetcher is required');
     return planFetcher;
+  }
+
+  private async resolveRecoverySourceMetadata(
+    tenantId: string,
+    sourceRunId: string
+  ): Promise<{
+    runId: string;
+    logicalAttemptId: number;
+    originRunId?: string;
+  }> {
+    const sourceMetadata = await this.deps.stateStoreRead.getRunMetadataByRunId(
+      tenantId,
+      sourceRunId
+    );
+    if (sourceMetadata === null) {
+      throw new RunMetadataNotFoundError(sourceRunId);
+    }
+    return sourceMetadata;
+  }
+
+  private async reserveRetryAttempt(
+    sourceMetadata: {
+      runId: string;
+      logicalAttemptId: number;
+      originRunId?: string;
+    },
+    tenantId: string
+  ): Promise<{
+    parentRunId: string;
+    originRunId: string;
+    logicalAttemptId: number;
+  }> {
+    if (this.deps.stateStoreWrite.reserveRetryAttempt !== undefined) {
+      return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
+    }
+
+    const originRunId = sourceMetadata.originRunId ?? sourceMetadata.runId;
+    return {
+      parentRunId: sourceMetadata.runId,
+      originRunId,
+      logicalAttemptId: sourceMetadata.logicalAttemptId + 1,
+    };
   }
 }
 

@@ -119,6 +119,14 @@ export const SignalRequestSchema = z.object({
   requestedAt: z.string().optional(),
 });
 
+export const RecoverRunCommandSchema = z
+  .object({
+    sourceRunId: NonBlankStringSchema,
+    planRef: PlanRefSchema,
+    context: RunContextSchema,
+  })
+  .strict();
+
 export const RunStatusSnapshotSchema = z.object({
   runId: NonBlankStringSchema,
   status: RunStatusSchema,
@@ -811,6 +819,7 @@ export type RunExecutionContextSchemaT = z.infer<typeof RunExecutionContextSchem
 export type RunContextSchemaT = z.infer<typeof RunContextSchema>;
 export type ResolvedRunContextSchemaT = z.infer<typeof ResolvedRunContextSchema>;
 export type SignalRequestSchemaT = z.infer<typeof SignalRequestSchema>;
+export type RecoverRunCommandSchemaT = z.infer<typeof RecoverRunCommandSchema>;
 export type RunStatusSnapshotSchemaT = z.infer<typeof RunStatusSnapshotSchema>;
 export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;
 
