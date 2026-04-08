@@ -596,19 +596,21 @@ tasks:
       override seams instead of global module mocking, and API-mode console copy is product-safe.
     complexity: M
     effort_points: 3
-    progress_pct: 33
+    progress_pct: 67
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/components/Console.tsx
       - docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md
+      - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
       - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
       Residual cleanup is now active: `F-04-RESIDUAL-A` moved Root-level provider ownership to the
-      real shell entrypoint and added a direct integration guard. Documentary hard QA found no
-      blocking issues for residual-A. Remaining work is the provider-override test seam cleanup in
-      `F-04-RESIDUAL-B` and API-mode console copy normalization in `F-04-RESIDUAL-C`.
+      real shell entrypoint and added a direct integration guard. `F-04-RESIDUAL-B` now rewires
+      `useCanvasController` consumer tests to the real `AppServicesProvider` override seam instead
+      of globally mocking `AppServicesContext` exports. Documentary hard QA found no blocking issues
+      for residual-A. Remaining work is API-mode console copy normalization in `F-04-RESIDUAL-C`.
     last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
@@ -636,7 +638,7 @@ tasks:
   - task_id: F-04-RESIDUAL-B
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: queued
+    status: review
     objective: >-
       refit canvas controller tests to provider overrides so test seams match the documented
       boundary contract.
@@ -646,15 +648,18 @@ tasks:
       provider-level injection helpers.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/services/AppServicesContext.test.tsx
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
     status_reason: >-
-      Hard QA found seam-policy drift between the documented provider-injection strategy and the
-      current consumer test implementation.
-    last_verified: '2026-04-04'
+      The shared canvas-controller harness now mounts `AppServicesProvider` with explicit service
+      overrides, the controller tests assert those provider-owned identities reach execution seams,
+      and `AppServicesContext` override coverage now includes session and feedback ports. Hard QA
+      follow-up remains separate.
+    last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-C
     parent_task: F-04-RESIDUAL
     priority: P3

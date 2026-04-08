@@ -139,6 +139,8 @@ This allows:
 
 - route or component tests to inject deterministic service fakes;
 - service tests to validate composer routing by mode;
+- shared canvas-controller harnesses to mount the real provider with explicit
+  service overrides instead of globally mocking `AppServicesContext` exports;
 - no module-level implicit coupling in consumer tests.
 
 For the workspace mock adapter specifically, instance-local mutable state is
