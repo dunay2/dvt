@@ -1,0 +1,22 @@
+---
+id: R-20260408-PR850-ADAPTER-POSTGRES-TEST-ORDER-DRIFT
+title: Adapter-postgres integration tests can drift from deterministic manifest node ordering rules
+status: Open
+date: 2026-04-08
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  PR-850 updates adapter-postgres integration assertions after mainline planner changes enforced
+  deterministic manifest node ordering and aligned canonical-hash expectations.
+risk: >
+  If integration assertions keep stale node-order assumptions, CI can fail on non-functional order
+  differences and hide real regressions in adapter behavior.
+mitigations:
+  - 'records-core integration assertions now match deterministic manifest ordering from main.'
+  - 'Duplicate canonicalHash key usage was removed from the records-core fixture assertion shape.'
+  - 'Adapter Postgres Integration Smoke and Run Tests gates execute on every PR for this path.'
+  - 'verify:prepush was executed before push to catch local drift early.'
+review_after: 2026-05-31
+---
