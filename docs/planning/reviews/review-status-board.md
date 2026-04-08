@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 planning_type: review
 ---
 
@@ -123,6 +123,12 @@ Additional active QA:
   - linkage: `F-04-RESIDUAL-A`
   - status: `review`
   - progress: `100%`
+- [20260409 TF-C2-B runtime read-surface hard QA review](execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md)
+  - domain: `execution-runtime`
+  - role: documentary hard QA gate for TF-C2-B execution evidence projection and contract closure
+  - linkage: `TF-C2-B`, `TF-C2-B-QA-01..05`
+  - status: `review`
+  - progress: `80%`
 
 - [20260407 Retry-step boundary hard QA review](architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md)
   - domain: `architecture-and-governance`

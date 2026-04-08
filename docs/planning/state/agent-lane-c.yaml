@@ -822,18 +822,24 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 95
+    progress_pct: 80
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
+      - docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
+      - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
     status_reason: >-
-      Shared contracts, projector state, API responses, and web consumers now carry TF-C2-B evidence
-      under a normalized `execution` object with mapper-first projection; remaining dependency
-      closure is the real executor payload emission from TF-C2-A or TF-B1-B.
-    last_verified: '2026-04-08'
+      Hard QA found one remaining runtime blocker after the mapper-first `execution` refactor: the
+      persisted WorkflowSnapshot schema version was not bumped despite a shape change. Two follow-up
+      items were explicitly accepted as debt and logged in the quality risk register: canonical
+      contract/architecture doc drift and failed-run materialization semantics. Real executor
+      payload emission from TF-C2-A or TF-B1-B remains a downstream dependency after the
+      schema-version blocker is resolved.
+    last_verified: '2026-04-09'
   - task_id: TF-C3
     priority: P1
     status: queued
