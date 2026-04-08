@@ -1,16 +1,22 @@
 ---
 title: Domain Cohesion Refactor Plan
-status: Draft
+status: Archived
 owner: docs
-last_reviewed: 2026-03-14
+last_reviewed: 2026-04-08
 planning_type: proposal
 ---
 
 # Domain Cohesion Refactor Plan
 
+Archived on 2026-04-08. Active execution now routes through lane-owned work in
+[Planning Control Tower](../../state/planning-control-tower.md),
+[WorkflowEngine hexagonal derivation plan 2026-04-03](../../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
+and the current review set rather than through this standalone draft pack.
+
 ## Source
 
-- Review of record: [20260314 Domain Cohesion Review](reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
+- Review of record:
+  [20260314 Domain Cohesion Review](../reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
 
 ## Problem Summary
 

@@ -2,7 +2,7 @@
 title: Domain - Event Lifecycle And Retention
 status: Review
 owner: Engine / Adapters / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 planning_type: reference
 ---
 
@@ -22,7 +22,8 @@ flows, and operational lifecycle governance.
 
 - [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
 - [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
-- [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
+- [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)
+- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 
 ## Historical Proposal Inputs
 

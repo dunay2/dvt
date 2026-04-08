@@ -2,7 +2,7 @@
 title: Planning Domains
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 planning_type: reference
 ---
 
