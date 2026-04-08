@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-07'
+last_reviewed: '2026-04-08'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -586,7 +586,7 @@ tasks:
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       close residual quality drifts after the boundary refactor, focused on test seam policy and
       shell UX contract consistency.
@@ -596,20 +596,24 @@ tasks:
       override seams instead of global module mocking, and API-mode console copy is product-safe.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 33
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.test.tsx
       - apps/web/src/app/components/Console.tsx
+      - docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md
+      - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Residual drifts are non-blocking for compile/test green status but remain governance and UX
-      debt if left untracked.
-    last_verified: '2026-04-04'
+      Residual cleanup is now active: `F-04-RESIDUAL-A` moved Root-level provider ownership to the
+      real shell entrypoint and added a direct integration guard. Documentary hard QA found no
+      blocking issues for residual-A. Remaining work is the provider-override test seam cleanup in
+      `F-04-RESIDUAL-B` and API-mode console copy normalization in `F-04-RESIDUAL-C`.
+    last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: queued
+    status: review
     objective: >-
       add a Root-level shell integration guard so provider wiring regressions fail fast.
     dependency: F-04-RESIDUAL
@@ -617,15 +621,18 @@ tasks:
       A dedicated test mounts `Root` and fails when `AppServicesProvider` is removed or bypassed.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/Root.tsx
       - apps/web/src/app/Root.test.tsx
       - apps/web/src/app/services/AppServicesContext.tsx
+      - docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md
+      - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Current shell tests exercise `RootShell` directly and do not protect provider composition
-      ownership at the real root.
-    last_verified: '2026-04-04'
+      `Root` now owns `AppServicesProvider` in runtime code, `App` no longer shadows that ownership,
+      and the dedicated integration guard mounts `Root` directly so provider regression fails fast
+      at the real shell boundary. Documentary hard QA found no blocking residual-A defects.
+    last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-B
     parent_task: F-04-RESIDUAL
     priority: P2
@@ -1678,7 +1685,7 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-07'
+  verified_on: '2026-04-08'
   total_tasks: 58
   total_effort_points: 205
   completed_weighted_points: 71.17

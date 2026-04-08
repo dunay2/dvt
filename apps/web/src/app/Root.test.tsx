@@ -240,17 +240,15 @@ describe('RootShell platform health UX', () => {
 });
 
 describe('Root integration guard', () => {
-  it('keeps service wiring available when Root is mounted under AppServicesProvider', async () => {
+  it('keeps service wiring available when Root owns the app-services provider', async () => {
     const mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock' }}>
-        <MemoryRouter initialEntries={['/']}>
-          <Routes>
-            <Route element={<Root />} path="/">
-              <Route element={<RootServicesProbe />} index />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      </AppServicesProvider>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route element={<Root />} path="/">
+            <Route element={<RootServicesProbe />} index />
+          </Route>
+        </Routes>
+      </MemoryRouter>
     );
 
     try {
