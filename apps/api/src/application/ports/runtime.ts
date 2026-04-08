@@ -1,4 +1,4 @@
-import type { EventEnvelope, RunStatusSnapshot } from '@dvt/contracts';
+import type { EventEnvelope, RunExecutionContextRef, RunStatusSnapshot } from '@dvt/contracts';
 
 import type { AuthorizationAction } from '../../domain/auth/types.js';
 
@@ -124,4 +124,35 @@ export interface ICancelRunUseCase {
     command: CancelRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<SignalRunResult>;
+}
+
+export type RecoverRunTargetAdapter = 'temporal' | 'conductor' | 'mock';
+
+export interface RecoverRunPlanRef {
+  readonly uri: string;
+  readonly sha256: string;
+  readonly schemaVersion: string;
+  readonly planId: string;
+  readonly planVersion: string;
+}
+
+export interface RecoverRunCommand {
+  readonly sourceRunId: string;
+  readonly recoveryRunId: string;
+  readonly targetAdapter?: RecoverRunTargetAdapter;
+  readonly runExecutionContextRef?: RunExecutionContextRef;
+  readonly planRef: RecoverRunPlanRef;
+}
+
+export interface RecoverRunResult {
+  readonly sourceRunId: string;
+  readonly recoveryRunId: string;
+  readonly accepted: boolean;
+}
+
+export interface IRecoverRunUseCase {
+  execute(
+    command: RecoverRunCommand,
+    context: AuthorizedCommandExecutionContext
+  ): Promise<RecoverRunResult>;
 }

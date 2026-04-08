@@ -16,6 +16,8 @@ import {
   createCanvasEdgeFromConnection,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
+import { guardTransformationAuthoringNode } from './transformationAuthoringGuard';
+import { guardTransformationConnection } from './transformationConnectionGuard';
 import type {
   ConfirmEdgeModalState,
   UseCanvasGraphHandlersParams,
@@ -123,6 +125,17 @@ export function useCanvasGraphHandlers({
       const sourceNode = canonicalNodesById.get(connection.source);
       const targetNode = canonicalNodesById.get(connection.target);
       if (!sourceNode || !targetNode) {
+        return;
+      }
+
+      const transformationGuard = guardTransformationConnection({
+        sourceNode,
+        targetNode,
+        canonicalNodes: canonicalNodesById.values(),
+        edges,
+      });
+      if (!transformationGuard.allowed) {
+        toast.error(transformationGuard.reason);
         return;
       }
 
@@ -243,6 +256,31 @@ export function useCanvasGraphHandlers({
           toast.info('Node already on canvas');
           return existingNodes;
         }
+
+        const transformationAuthoringModeEnabled = graphStrategy.id === 'transformation';
+        const existingRoles = existingNodes
+          .map((node) => node.data)
+          .map((data) =>
+            data && typeof data === 'object' ? (data as { role?: unknown }).role : null
+          )
+          .filter(
+            (role): role is CoreNodeRole =>
+              role === 'input' ||
+              role === 'transform' ||
+              role === 'check' ||
+              role === 'output' ||
+              role === 'control'
+          );
+        const authoringGuard = guardTransformationAuthoringNode({
+          authoringModeEnabled: transformationAuthoringModeEnabled,
+          existingRoles,
+          nextRole: canonicalNode.role,
+        });
+        if (!authoringGuard.allowed) {
+          toast.error(authoringGuard.reason);
+          return existingNodes;
+        }
+
         toast.success(`Added ${canonicalNode.name} to canvas`);
         return [...existingNodes, newNode];
       });

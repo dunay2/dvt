@@ -29,6 +29,7 @@ import type {
 const ActivityErrorCode = {
   INVALID_STEP_SCHEMA: 'INVALID_STEP_SCHEMA',
   INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
+  UNSUPPORTED_STEP_KIND: 'UNSUPPORTED_STEP_KIND',
   TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
   PERMANENT_STEP_ERROR: 'PERMANENT_STEP_ERROR',
 } as const;
@@ -99,11 +100,27 @@ export interface StepExecutor {
   execute(step: ExecutionPlan['steps'][number], context: StepExecutionContext): Promise<StepResult>;
 }
 
-const gatewayStepExecutor: StepExecutor = {
-  canExecute(step) {
-    return step.type === 'gateway';
-  },
-  async execute(step, context) {
+export interface StepActivity {
+  execute(step: ExecutionPlan['steps'][number], context: StepExecutionContext): Promise<StepResult>;
+}
+
+export type StepActivityRegistry = ReadonlyMap<string, StepActivity>;
+
+export class UnsupportedStepKindError extends Error {
+  constructor(
+    readonly stepKind: string,
+    readonly stepId: string
+  ) {
+    super(`${ActivityErrorCode.UNSUPPORTED_STEP_KIND}:${stepKind}:${stepId}`);
+    this.name = 'UnsupportedStepKindError';
+  }
+}
+
+class GatewayStepActivity implements StepActivity {
+  async execute(
+    step: ExecutionPlan['steps'][number],
+    context: StepExecutionContext
+  ): Promise<StepResult> {
     const gateway = parseGatewayConfigOrThrow(step);
     try {
       const parsed = parseDslV1(gateway.expression);
@@ -117,23 +134,88 @@ const gatewayStepExecutor: StepExecutor = {
         nonRetryable: true,
       });
     }
-  },
-};
+  }
+}
 
-const defaultStepExecutor: StepExecutor = {
-  canExecute() {
-    return true;
-  },
-  async execute(step) {
+export class DbtStepActivity implements StepActivity {
+  static readonly SUPPORTED_STEP_KINDS = new Set(['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT']);
+
+  async execute(
+    step: ExecutionPlan['steps'][number],
+    _context: StepExecutionContext
+  ): Promise<StepResult> {
     return { stepId: step.stepId, status: 'COMPLETED' };
-  },
-};
+  }
+}
 
-/** Default executor chain: gateway first, catch-all last. */
-export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [
-  gatewayStepExecutor,
-  defaultStepExecutor,
-];
+const DEFAULT_DBT_STEP_ACTIVITY = new DbtStepActivity();
+
+const DEFAULT_STEP_ACTIVITY_ENTRIES = Object.freeze(
+  Array.from(
+    DbtStepActivity.SUPPORTED_STEP_KINDS,
+    (stepKind) => [stepKind, DEFAULT_DBT_STEP_ACTIVITY] as const
+  )
+);
+
+export function createDefaultStepActivityRegistry(): StepActivityRegistry {
+  return new Map(DEFAULT_STEP_ACTIVITY_ENTRIES);
+}
+
+export const DEFAULT_STEP_ACTIVITY_REGISTRY: StepActivityRegistry =
+  createDefaultStepActivityRegistry();
+
+export class StepActivityDispatcher {
+  private readonly stepActivitiesByKind: StepActivityRegistry;
+
+  constructor(
+    private readonly gatewayActivity: StepActivity = new GatewayStepActivity(),
+    stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
+  ) {
+    // Snapshot the registry on construction so later mutations cannot change
+    // dispatch behavior for already-created workers/activities.
+    this.stepActivitiesByKind = new Map(stepActivitiesByKind);
+  }
+
+  async execute(
+    step: ExecutionPlan['steps'][number],
+    context: StepExecutionContext,
+    overrideExecutors: readonly StepExecutor[]
+  ): Promise<StepResult> {
+    const overrideExecutor = overrideExecutors.find((executor) => executor.canExecute(step));
+    if (overrideExecutor) {
+      return overrideExecutor.execute(step, context);
+    }
+
+    if (step.type === 'gateway') {
+      return this.gatewayActivity.execute(step, context);
+    }
+
+    if (typeof step.kind !== 'string' || step.kind.length === 0) {
+      throw ApplicationFailure.create({
+        type: PERMANENT_STEP_ERROR_TYPE,
+        message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: step_kind_required:${step.stepId}`,
+        nonRetryable: true,
+      });
+    }
+
+    const activity = this.stepActivitiesByKind.get(step.kind);
+    if (activity) {
+      return activity.execute(step, context);
+    }
+
+    throw ApplicationFailure.create({
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: new UnsupportedStepKindError(step.kind, step.stepId).message,
+      nonRetryable: true,
+    });
+  }
+}
+
+/**
+ * Optional override executors intended for tests.
+ * Runtime dispatch is owned by StepActivityDispatcher.
+ */
+export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [];
 
 // ---------------------------------------------------------------------------
 // Activity factory — creates closures over shared deps
@@ -141,11 +223,13 @@ export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [
 
 export function createActivities(
   deps: ActivityDeps,
-  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS
+  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS,
+  stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
 } {
+  const dispatcher = new StepActivityDispatcher(new GatewayStepActivity(), stepActivitiesByKind);
   return {
     /**
      * Execute a single step.
@@ -153,7 +237,11 @@ export function createActivities(
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-      return dispatchStep(input.step, { gatewayContext: input.gatewayContext }, stepExecutors);
+      return dispatcher.execute(
+        input.step,
+        { gatewayContext: input.gatewayContext },
+        stepExecutors
+      );
     },
 
     /**
@@ -250,22 +338,6 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
       `${ActivityErrorCode.INVALID_STEP_SCHEMA}: dependsOn_values_must_be_string`
     );
   }
-}
-
-async function dispatchStep(
-  step: ExecutionPlan['steps'][number],
-  context: StepExecutionContext,
-  executors: readonly StepExecutor[]
-): Promise<StepResult> {
-  const executor = executors.find((e) => e.canExecute(step));
-  if (!executor) {
-    throw ApplicationFailure.create({
-      type: PERMANENT_STEP_ERROR_TYPE,
-      message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: no_executor_for_step_type:${step.type ?? 'unknown'}`,
-      nonRetryable: true,
-    });
-  }
-  return executor.execute(step, context);
 }
 
 function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {

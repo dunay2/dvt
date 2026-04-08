@@ -2,6 +2,7 @@ import {
   AdapterNotRegisteredError,
   AuthorizationError,
   OutboxRateLimitExceededError,
+  RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
   RunNotFoundError,
@@ -166,6 +167,10 @@ function isRunAlreadyExistsError(error: unknown): boolean {
   return error instanceof RunAlreadyExistsError;
 }
 
+function isRecoverySourceNotTerminalError(error: unknown): error is RecoverySourceNotTerminalError {
+  return error instanceof RecoverySourceNotTerminalError;
+}
+
 function isOutboxRateLimitExceededError(error: unknown): error is OutboxRateLimitExceededError {
   return error instanceof OutboxRateLimitExceededError;
 }
@@ -208,6 +213,19 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
       type: HTTP_ERROR_TYPE.conflict,
       reason: HTTP_ERROR_REASON.runAlreadyExists,
       ...withDetails(runAlreadyExistsDetails),
+    });
+  }
+
+  if (isRecoverySourceNotTerminalError(error)) {
+    return createHttpErrorResponse({
+      type: HTTP_ERROR_TYPE.unprocessable,
+      reason: HTTP_ERROR_REASON.sourceRunNotTerminal,
+      ...withDetails(
+        compactDetails({
+          ...readMessageParams(error, 'runId', 'runId'),
+          ...readMessageParams(error, 'status', 'status'),
+        })
+      ),
     });
   }
 

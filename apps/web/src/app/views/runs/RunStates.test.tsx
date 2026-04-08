@@ -212,6 +212,64 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('STEP_FAILURE');
   });
 
+  it('falls back to StepFailed payload reason when snapshot error reason is missing', async () => {
+    const workspace = buildWorkspace(
+      {
+        snapshot: {
+          runId: 'run_123',
+          status: 'failed',
+          startedAt: '2026-03-28T10:00:00Z',
+          completedAt: '2026-03-28T10:00:30Z',
+          environment: 'dev',
+          gitSha: 'abc123def',
+          failedStepId: undefined,
+          errorReason: undefined,
+          currentStepId: undefined,
+          materialization: undefined,
+        },
+      },
+      {
+        state: 'available',
+        events: [
+          {
+            eventId: 'evt-step-failed',
+            eventType: 'StepFailed',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:20Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'id-step-failed',
+            payloadVersion: 1,
+            stepId: 'step-load',
+            runSeq: 5,
+            persistedAt: '2026-03-28T10:00:20Z',
+            payload: {
+              reason: 'SINK_WRITE_FAILED',
+            },
+          },
+        ],
+      }
+    );
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Failure diagnostics');
+    expect(container.textContent).toContain('step-load');
+    expect(container.textContent).toContain('SINK_WRITE_FAILED');
+    expect(container.textContent).toContain('Failure detected at');
+  });
+
   it('renders error and not-found states', async () => {
     await act(async () => {
       root.render(

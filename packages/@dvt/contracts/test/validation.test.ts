@@ -13,6 +13,7 @@ import {
   parsePlanRef,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
+  parseRecoverRunCommand,
   parseResolvedRunContext,
   parseRunContext,
   parseSignalRequest,
@@ -95,6 +96,28 @@ describe('contracts: validation helpers', () => {
       parseSignalRequest({
         signalId: 'sig-retry-run-1',
         type: 'RETRY_RUN',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RecoverRunCommand when recovery runId equals source runId', () => {
+    expect(() =>
+      parseRecoverRunCommand({
+        sourceRunId: 'run-1',
+        planRef: {
+          uri: 'https://plans.example/plan.json',
+          sha256: 'a'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0.0',
+        },
+        context: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+          runId: 'run-1',
+          targetAdapter: 'temporal',
+        },
       })
     ).toThrow(ContractValidationError);
   });

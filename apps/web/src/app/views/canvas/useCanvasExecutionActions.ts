@@ -42,6 +42,14 @@ export function resolvePlanRefForStartRun(plan: ExecutionPlan): PlanRef | null {
   return plan.planRef ?? null;
 }
 
+function hasPersistedPreviewProof(plan: ExecutionPlan | null): boolean {
+  if (!plan?.preview?.persisted) {
+    return false;
+  }
+
+  return Boolean(plan.preview.persisted.planRecordId && plan.preview.persisted.canonicalPlanSha256);
+}
+
 export function useCanvasExecutionActions({
   plansService,
   runsService,
@@ -62,6 +70,7 @@ export function useCanvasExecutionActions({
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
+  const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
   const transformationValidation = validateTransformationGraph({
     nodes: canonicalNodes,
     edges: canonicalEdges,
@@ -71,13 +80,19 @@ export function useCanvasExecutionActions({
     currentPlan != null &&
     lastPlannedDraftSignature != null &&
     lastPlannedDraftSignature !== transformationValidation.draftSignature;
-  const canStartRun = currentPlan != null && transformationValidation.valid && !isCurrentPlanStale;
+  const canStartRun =
+    currentPlan != null &&
+    hasPersistedPlanForRun &&
+    transformationValidation.valid &&
+    !isCurrentPlanStale;
   const planStatusSummary =
     currentPlan == null
       ? 'Preview required before running.'
       : isCurrentPlanStale
         ? 'Preview is stale. Re-run Plan before starting.'
-        : 'Preview is current and ready to run.';
+        : !hasPersistedPlanForRun
+          ? 'Preview is not persisted. Re-run Plan to create a persisted plan.'
+          : 'Preview is current and ready to run.';
 
   useEffect(() => {
     if (currentPlan == null) {
@@ -141,6 +156,12 @@ export function useCanvasExecutionActions({
       return;
     }
 
+    if (!hasPersistedPlanForRun) {
+      shellFeedback.error('Run start requires a persisted preview plan. Re-run Plan first.');
+      setPlanModalOpen(true);
+      return;
+    }
+
     setPlanModalOpen(false);
 
     try {
@@ -171,6 +192,7 @@ export function useCanvasExecutionActions({
     canRun,
     consolePanelVisible,
     currentPlan,
+    hasPersistedPlanForRun,
     isCurrentPlanStale,
     onRunStarted,
     runsService,

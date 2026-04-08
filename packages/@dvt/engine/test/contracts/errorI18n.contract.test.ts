@@ -10,6 +10,7 @@ import {
   InvalidStateTransitionError,
   OutboxRateLimitExceededError,
   PlanUriNotAllowedError,
+  RecoverySourceNotTerminalError,
   RunSequenceOverflowError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
@@ -57,6 +58,11 @@ describe('Error i18n contract', () => {
         error: new RunMetadataNotFoundError('run-3'),
         key: ENGINE_ERROR_MESSAGE_KEY.RUN_METADATA_NOT_FOUND,
         params: { runId: 'run-3' },
+      },
+      {
+        error: new RecoverySourceNotTerminalError('run-3', 'RUNNING'),
+        key: ENGINE_ERROR_MESSAGE_KEY.RECOVERY_SOURCE_NOT_TERMINAL,
+        params: { runId: 'run-3', status: 'RUNNING' },
       },
       {
         error: new AdapterNotRegisteredError('temporal'),

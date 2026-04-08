@@ -1,7 +1,7 @@
 ---
 id: R-20260408-RECOVER-RUN-BOUNDARY-DRIFT
 title: Future recover-run feature could leak back into the generic signal boundary
-status: Open
+status: Closed
 date: 2026-04-08
 owners:
   - packages/@dvt/contracts
@@ -9,21 +9,23 @@ owners:
 severity: Medium
 probability: Low
 context: >
-  ADR-0049 narrows RETRY_RUN out of canonical SignalType and reserves business run recovery for a
-  future dedicated use case. The current slice closes the generic signal drift, but a later recovery
-  implementation could regress if it reuses signal(...) instead of defining its own governed
-  boundary.
+  ADR-0049 narrowed RETRY_RUN out of canonical SignalType and reserved business run recovery for a
+  dedicated use case. The follow-up slice now implements recover-run as its own governed boundary in
+  contracts, engine, and protected API.
 risk: >
-  If a future recover-run feature is reintroduced through the generic signal enum or provider signal
-  mappers, contracts, adapters, and API surfaces can drift again and recreate the mixed ownership
-  problem that this slice removed.
+  If recover-run were reintroduced through generic signal surfaces, contracts, adapters, and API
+  behavior could drift and recreate mixed ownership. This risk is now closed for the current
+  boundary because recovery is implemented as a dedicated command (`recoverRun`) plus explicit
+  `run:retry` authorization.
 mitigations:
   - 'ADR-0049 explicitly forbids reintroducing RETRY_RUN through generic signal(...).'
   - 'SignalType, SignalRequest validation, and WorkflowSignals now reject RETRY_RUN.'
+  - 'RecoverRunCommand is validated in @dvt/contracts and exposed as a dedicated boundary.'
+  - 'WorkflowEngine exposes recoverRun(...) and reserves retry lineage via reserveRetryAttempt.'
+  - 'Protected API exposes POST /runs/:runId/recover with run:retry authorization.'
   - 'Temporal and mock adapters translate only canonical run-control signals through explicit
     mapping helpers.'
-  - 'Planning state marks WE-HX-4 and WE-HX-4-C as completed, documenting the closure posture.'
-  - 'A future recover-run feature must ship as a dedicated engine or application use case with its
-    own ADR and contract tests.'
-review_after: 2026-05-31
+  - 'API and engine tests cover recover-run parser, route authorization, use case mapping, and retry
+    lineage.'
+review_after: 2026-06-30
 ---

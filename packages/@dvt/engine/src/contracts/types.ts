@@ -11,6 +11,7 @@ export type {
   IsoUtcString,
   PlanRef,
   Provider,
+  RecoverRunCommand,
   ResolvedRunContext,
   RunContext,
   RunStatus,

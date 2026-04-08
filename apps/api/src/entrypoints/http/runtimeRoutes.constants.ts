@@ -7,6 +7,7 @@ export const RUNTIME_ROUTE_PATH = {
   events: '/runs/:runId/events',
   signal: '/runs/:runId/signal',
   cancel: '/runs/:runId/cancel',
+  recover: '/runs/:runId/recover',
 } as const;
 
 export const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
@@ -18,4 +19,5 @@ export const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
   `GET ${RUNTIME_ROUTE_PATH.events}`,
   `POST ${RUNTIME_ROUTE_PATH.signal}`,
   `POST ${RUNTIME_ROUTE_PATH.cancel}`,
+  `POST ${RUNTIME_ROUTE_PATH.recover}`,
 ].join(', ');

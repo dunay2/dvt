@@ -12,7 +12,11 @@
 import type { IObservability } from '@dvt/observability';
 import { NativeConnection, Worker } from '@temporalio/worker';
 
-import type { ActivityDeps, StepExecutor } from './activities/stepActivities.js';
+import type {
+  ActivityDeps,
+  StepActivityRegistry,
+  StepExecutor,
+} from './activities/stepActivities.js';
 import { createActivities } from './activities/stepActivities.js';
 import type { TemporalAdapterConfig } from './config.js';
 import {
@@ -35,6 +39,11 @@ export interface TemporalWorkerHostConfig {
    * without using the `simulateError` plan field.
    */
   stepExecutors?: readonly StepExecutor[];
+  /**
+   * Register runtime step activities by StepKind without changing workflow code.
+   * Clone DEFAULT_STEP_ACTIVITY_REGISTRY and append custom kinds for non-DBT execution.
+   */
+  stepActivitiesByKind?: StepActivityRegistry;
 }
 
 interface WorkerRunState {
@@ -61,7 +70,11 @@ export class TemporalWorkerHost {
     }
 
     const context = buildTemporalContext(this.config.temporalConfig);
-    const activities = createActivities(this.config.activityDeps, this.config.stepExecutors);
+    const activities = createActivities(
+      this.config.activityDeps,
+      this.config.stepExecutors,
+      this.config.stepActivitiesByKind
+    );
     const attributes = {
       namespace: this.config.temporalConfig.namespace,
       identity: this.config.temporalConfig.identity ?? '',

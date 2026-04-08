@@ -138,6 +138,16 @@ export interface ResolvedRunContext extends RunContext {
   originRunId?: string;
 }
 
+/**
+ * Dedicated recovery command boundary (ADR-0049).
+ * Recovery is NOT part of generic signal(...) semantics.
+ */
+export interface RecoverRunCommand {
+  sourceRunId: string;
+  planRef: PlanRef;
+  context: RunContext;
+}
+
 export type EngineRunRef =
   | {
       provider: 'temporal';

@@ -16,6 +16,10 @@ export default function Console() {
   const currentRun = useExecutionStore((state) => state.currentRun);
   const dataSourceMode = useAppDataSourceMode();
   const { lines, isLoading, runId } = useConsoleLogStream();
+  const idleCopy =
+    dataSourceMode === 'api'
+      ? 'Start a run to see run events here. Live log streaming is not available in API mode yet.'
+      : 'Start a run to see execution output here.';
 
   return (
     <div className="h-full bg-slate-900 border-t border-slate-700 flex flex-col">
@@ -49,17 +53,17 @@ export default function Console() {
       <div className="flex-1 min-h-0">
         {!runId ? (
           <div className="flex items-center justify-center h-full text-sm text-slate-400">
-            Start a run to see live output here.
+            {idleCopy}
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center h-full text-sm text-slate-400">
-            Loading run events…
+            Loading run events...
           </div>
         ) : (
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-full text-sm text-slate-400">
-                Loading terminal…
+                Loading terminal...
               </div>
             }
           >

@@ -189,7 +189,7 @@ export interface IRunStateStoreWrite {
    * Atomically reserves the next business retry lineage slot for a new run
    * derived from `sourceRunId`.
    */
-  reserveRetryAttempt?(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
+  reserveRetryAttempt(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
 
   /**
    * Updates the provider-assigned references on an already-bootstrapped run.

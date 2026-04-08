@@ -44,6 +44,7 @@ const TENANT_ACTIONS_FULL = [
   'run:logs:view',
   'run:signal',
   'run:cancel',
+  'run:retry',
 ] as const;
 const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [
   ...TENANT_ACTIONS_FULL,
@@ -531,6 +532,66 @@ describeIfPg('protected runtime integration', () => {
           tenantId: TENANT_ID,
           signalType: 'CANCEL',
           reason: 'permission-check',
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
+  });
+
+  it('rejects /runs/:runId/recover when principal lacks run:retry permission', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: [
+        'run:start',
+        'run:list',
+        'run:view',
+        'run:logs:view',
+        'run:signal',
+        'run:cancel',
+      ],
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+
+      const response = await app!.inject({
+        method: 'POST',
+        url: '/runs/non-authorized-recover/recover',
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          tenantId: TENANT_ID,
+          recoveryRunId: 'recover-target-1',
+          planRef: {
+            uri: 'https://plans.example/recover-plan.json',
+            sha256: 'a'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'recover-plan',
+            planVersion: '1.0.0',
+          },
         },
       });
 
