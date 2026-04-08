@@ -36,8 +36,9 @@ the existing outcome buckets.
 - `RunMaintenanceService` and `IntentReconcilerWorker` regression coverage now
   lock the split between `resolved` and `cancelled`.
 - `IRunMaintenanceService`, ADR-0030, and the metrics catalog now document the
-  explicit `resolved` outcome and the new `dvt.intent.reconcile.resolved_total`
-  rollup metric.
+  explicit `resolved` outcome, the provider-labelled
+  `dvt.intent.resolved_total` service metric, and the
+  `dvt.intent.reconcile.resolved_total` worker rollup metric.
 
 ## Breaking change
 
@@ -52,6 +53,8 @@ the existing outcome buckets.
 
 - `dvt.intent.reconcile.cancelled_total` only counts intents that triggered a
   real provider cancellation.
+- `dvt.intent.resolved_total` preserves provider-scoped observability for
+  bootstrapped `DISPATCHED` intents that only required local resolution.
 - `dvt.intent.reconcile.resolved_total` counts bootstrapped `DISPATCHED`
   intents that only required local resolution.
 - Bootstrapped `DISPATCHED` intents remain resolved in storage without being

@@ -49,15 +49,25 @@ injected into background workers such as `IntentReconcilerWorker`.
 | Description | A DISPATCHED intent was reported in `cancelled[]` after the reconciler cancelled the orphaned provider workflow (run was never bootstrapped). |
 | Invariant   | INV-INTENT-013                                                                                                                                |
 
+### `dvt.intent.resolved_total`
+
+| Field       | Value                                                                                                                             |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Type        | Counter                                                                                                                           |
+| Labels      | `provider`, `operation`                                                                                                           |
+| Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                                |
+| Description | A DISPATCHED intent was reported in `resolved[]` after existing run metadata was found and no provider cancellation was required. |
+| Invariant   | INV-INTENT-014                                                                                                                    |
+
 ### `dvt.intent.reconcile.resolved_total`
 
-| Field       | Value                                                                                                                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type        | Counter                                                                                                                                                                             |
-| Labels      | None                                                                                                                                                                                |
-| Emitted by  | `IntentReconcilerWorker`                                                                                                                                                            |
-| Description | Count of `ReconcileOrphanedIntentsResult.resolved` entries, where a DISPATCHED intent was resolved after detecting existing run metadata and no provider cancellation was required. |
-| Invariant   | INV-INTENT-014                                                                                                                                                                      |
+| Field       | Value                                                                   |
+| ----------- | ----------------------------------------------------------------------- |
+| Type        | Counter                                                                 |
+| Labels      | None                                                                    |
+| Emitted by  | `IntentReconcilerWorker`                                                |
+| Description | Worker rollup count of `resolved[]` entries from reconciliation sweeps. |
+| Invariant   | INV-INTENT-014                                                          |
 
 ---
 
