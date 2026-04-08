@@ -3,6 +3,143 @@ type PlanPreviewResponseOptions = {
   planRefSha: string;
 };
 
+function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
+  cy.intercept('GET', '**/runs?*', {
+    statusCode: 200,
+    body: {
+      items: [
+        {
+          runId,
+          planId: 'plan_e2e_1',
+          status: 'FAILED',
+          environmentId: 'e2e-env',
+          startedAt: '2026-04-08T00:00:00.000Z',
+          completedAt: '2026-04-08T00:00:30.000Z',
+          failedStepId: 'step-transform',
+          errorReason: 'STEP_FAILURE',
+          materialization: {
+            executor: 'postgres',
+            environmentId: 'e2e-env',
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 42,
+            startedAt: '2026-04-08T00:00:05.000Z',
+            completedAt: '2026-04-08T00:00:25.000Z',
+            durationMs: 20000,
+          },
+        },
+      ],
+      nextCursor: null,
+    },
+  }).as('listRuns');
+
+  cy.intercept(`GET`, `**/runs/${runId}?*`, {
+    statusCode: 200,
+    body: {
+      runId,
+      planId: 'plan_e2e_1',
+      status: 'FAILED',
+      environmentId: 'e2e-env',
+      gitSha: 'abc123def',
+      startedAt: '2026-04-08T00:00:00.000Z',
+      completedAt: '2026-04-08T00:00:30.000Z',
+      failedStepId: 'step-transform',
+      errorReason: 'STEP_FAILURE',
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'e2e-env',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-08T00:00:05.000Z',
+        completedAt: '2026-04-08T00:00:25.000Z',
+        durationMs: 20000,
+      },
+    },
+  }).as('getRun');
+
+  cy.intercept(`GET`, `**/runs/${runId}/events*`, {
+    statusCode: 200,
+    body: {
+      items: [
+        {
+          eventId: 'evt-step-started-1',
+          eventType: 'StepStarted',
+          runId,
+          emittedAt: '2026-04-08T00:00:10.000Z',
+          tenantId: 'e2e-tenant',
+          projectId: 'e2e-project',
+          environmentId: 'e2e-env',
+          planId: 'plan_e2e_1',
+          planVersion: '1.0.0',
+          engineAttemptId: 1,
+          logicalAttemptId: 1,
+          idempotencyKey: 'id-1',
+          payloadVersion: 1,
+          stepId: 'step-transform',
+          runSeq: 1,
+          persistedAt: '2026-04-08T00:00:10.000Z',
+          payload: {
+            stepArtifactRef: {
+              artifactKind: 'dbt.compiled-sql',
+              storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
+              sha256: 'a'.repeat(64),
+              sizeBytes: 2048,
+              encoding: 'utf-8',
+            },
+          },
+        },
+        {
+          eventId: 'evt-step-started-2',
+          eventType: 'StepStarted',
+          runId,
+          emittedAt: '2026-04-08T00:00:12.000Z',
+          tenantId: 'e2e-tenant',
+          projectId: 'e2e-project',
+          environmentId: 'e2e-env',
+          planId: 'plan_e2e_1',
+          planVersion: '1.0.0',
+          engineAttemptId: 1,
+          logicalAttemptId: 1,
+          idempotencyKey: 'id-2',
+          payloadVersion: 1,
+          stepId: 'step-evidence',
+          runSeq: 2,
+          persistedAt: '2026-04-08T00:00:12.000Z',
+          payload: {
+            compiledCodeRef: {
+              storageUri: 's3://dvt-artifacts/dev/compiled/evidence.sql',
+              sha256: 'b'.repeat(64),
+              sizeBytes: 128,
+              encoding: 'utf-8',
+            },
+          },
+        },
+        {
+          eventId: 'evt-step-failed',
+          eventType: 'StepFailed',
+          runId,
+          emittedAt: '2026-04-08T00:00:20.000Z',
+          tenantId: 'e2e-tenant',
+          projectId: 'e2e-project',
+          environmentId: 'e2e-env',
+          planId: 'plan_e2e_1',
+          planVersion: '1.0.0',
+          engineAttemptId: 1,
+          logicalAttemptId: 1,
+          idempotencyKey: 'id-3',
+          payloadVersion: 1,
+          stepId: 'step-transform',
+          runSeq: 3,
+          persistedAt: '2026-04-08T00:00:20.000Z',
+          payload: {
+            reason: 'SINK_WRITE_FAILED',
+          },
+        },
+      ],
+      nextCursor: null,
+    },
+  }).as('getRunEvents');
+}
+
 function stubCanvasRuntimeApis(): void {
   cy.intercept('GET', '**/capabilities*', {
     statusCode: 200,
@@ -123,6 +260,7 @@ function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewRespon
 describe('Canvas preview-run persisted path', () => {
   it('starts run when persisted preview hash matches active planRef', () => {
     stubCanvasRuntimeApis();
+    stubRunWorkspaceApis('run_e2e_1');
     stubPlanPreviewResponse({
       persistedSha: 'c'.repeat(64),
       planRefSha: 'c'.repeat(64),
@@ -137,6 +275,7 @@ describe('Canvas preview-run persisted path', () => {
           provider: 'temporal',
           runId: 'run_e2e_1',
           tenantId: 'e2e-tenant',
+          namespace: 'default',
           workflowId: 'wf_e2e_1',
         },
       });
@@ -154,6 +293,18 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('button', 'Start Run').should('be.enabled').click({ force: true });
 
     cy.wait('@startRun');
+    cy.location('pathname').should('eq', '/runs/run_e2e_1');
+
+    cy.contains('Run run_e2e_1').should('exist');
+    cy.contains('Materialization evidence').should('exist');
+    cy.contains('Executor').should('exist');
+    cy.contains('postgres').should('exist');
+    cy.contains('Sink table').should('exist');
+    cy.contains('analytics.orders_daily').should('exist');
+    cy.contains('Rows written').should('exist');
+    cy.contains('42').should('exist');
+    cy.contains('Failure diagnostics').should('exist');
+    cy.contains('STEP_FAILURE').should('exist');
   });
 
   it('blocks run when persisted preview hash is not aligned with planRef', () => {
