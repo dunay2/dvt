@@ -25,29 +25,26 @@ export class SignalTransitionGuard {
     req: SignalRequest,
     eventType: GuardedRunEventType
   ): Promise<'allowed' | 'already_applied'> {
+    const storedSnap = await this.deps.stateStoreRead.getSnapshot(meta.tenantId, meta.runId);
     const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
-    const baseSnap = this.rebuildWorkflowSnapshot(meta.runId, events);
+    const baseSnap = storedSnap ?? this.rebuildWorkflowSnapshot(meta.runId, events);
     if (this.isAlreadyApplied(baseSnap, events, req)) {
       return 'already_applied';
     }
-    const transientSnap = cloneWorkflowSnapshot(baseSnap);
-    // Validation-only simulation: the engine no longer persists pause/resume
-    // realized lifecycle events, but it still validates whether the transition
-    // would be legal if the runtime later realized it.
-    const event = buildSignalDerivedRunEventInput({
-      idempotency: this.deps.idempotency,
-      clock: this.deps.clock,
-      meta,
-      req,
-      eventType,
-    });
-
-    applyRunEvent(transientSnap, {
-      ...event,
-      runSeq: 0,
-      persistedAt: event.emittedAt,
-    });
-    return 'allowed';
+    try {
+      this.assertTransitionAllowed(baseSnap, meta, req, eventType);
+      return 'allowed';
+    } catch (error) {
+      if (storedSnap === null) {
+        throw error;
+      }
+      const rebuiltSnap = this.rebuildWorkflowSnapshot(meta.runId, events);
+      if (this.isAlreadyApplied(rebuiltSnap, events, req)) {
+        return 'already_applied';
+      }
+      this.assertTransitionAllowed(rebuiltSnap, meta, req, eventType);
+      return 'allowed';
+    }
   }
 
   private rebuildWorkflowSnapshot(
@@ -79,10 +76,22 @@ export class SignalTransitionGuard {
     const lastPauseResumeEvent = this.lastPauseResumeEventType(events);
 
     if (req.type === 'PAUSE') {
-      return snapshot.status === 'PAUSED' || snapshot.paused;
+      if (snapshot.status === 'PAUSED' || snapshot.paused) {
+        return true;
+      }
+      return (
+        snapshot.status === 'RUNNING' && !snapshot.paused && lastPauseResumeEvent === 'RunPaused'
+      );
     }
 
     if (req.type === 'RESUME') {
+      if (
+        snapshot.status === 'PAUSED' &&
+        snapshot.paused &&
+        lastPauseResumeEvent === 'RunResumed'
+      ) {
+        return true;
+      }
       return (
         snapshot.status === 'RUNNING' && !snapshot.paused && lastPauseResumeEvent === 'RunResumed'
       );
@@ -99,6 +108,30 @@ export class SignalTransitionGuard {
       }
     }
     return null;
+  }
+
+  private assertTransitionAllowed(
+    snapshot: WorkflowSnapshot,
+    meta: RunMetadata,
+    req: SignalRequest,
+    eventType: GuardedRunEventType
+  ): void {
+    const transientSnap = cloneWorkflowSnapshot(snapshot);
+    // Validation-only simulation: the engine no longer persists pause/resume
+    // realized lifecycle events, but it still validates whether the transition
+    // would be legal if the runtime later realized it.
+    const event = buildSignalDerivedRunEventInput({
+      idempotency: this.deps.idempotency,
+      clock: this.deps.clock,
+      meta,
+      req,
+      eventType,
+    });
+    applyRunEvent(transientSnap, {
+      ...event,
+      runSeq: 0,
+      persistedAt: event.emittedAt,
+    });
   }
 }
 
