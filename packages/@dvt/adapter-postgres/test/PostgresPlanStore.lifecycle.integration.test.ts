@@ -42,7 +42,8 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       await expect(store.fetch(planRef)).rejects.toThrow('PLAN_NOT_VALID');
       await store.markValid(planRef);
       expect((await store.getValidationRecord(PLAN_ID.r4_2))?.state).toBe('VALID');
-      expect(JSON.parse(Buffer.from(await store.fetch(planRef)).toString('utf8'))).toMatchObject({
+      const artifact = await store.fetch(planRef);
+      expect(JSON.parse(Buffer.from(artifact.bytes).toString('utf8'))).toMatchObject({
         metadata: { planId: PLAN_ID.r4_2 },
       });
     }));
