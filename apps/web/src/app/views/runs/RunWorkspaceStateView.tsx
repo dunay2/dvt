@@ -85,7 +85,9 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
       ? event.payload.stepArtifactRef
       : null;
     const stepArtifactRef = readArtifactFields(stepArtifactPayload);
-    const compiledCodeRef = stepArtifactRef ? null : readArtifactFields(event.payload.compiledCodeRef);
+    const compiledCodeRef = stepArtifactRef
+      ? null
+      : readArtifactFields(event.payload.compiledCodeRef);
 
     const artifact =
       stepArtifactRef && typeof stepArtifactPayload?.artifactKind === 'string'

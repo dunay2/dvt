@@ -259,7 +259,9 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('step-transform');
     expect(container.textContent).toContain('dbt.compiled-sql');
     expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/orders_daily.sql');
-    expect(container.textContent).toContain('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    expect(container.textContent).toContain(
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    );
     expect(container.textContent).toContain('2.0 KB');
     expect(container.textContent).toContain('step-evidence');
     expect(container.textContent).toContain('compiled-code');
