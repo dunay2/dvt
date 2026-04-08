@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.12.0](https://github.com/dunay2/dvt/compare/v5.11.0...v5.12.0) (2026-04-08)
+
+
+### Features
+
+* **engine:** Separate retry-run recovery from step-level signals ([#840](https://github.com/dunay2/dvt/issues/840)) ([87bc79a](https://github.com/dunay2/dvt/commit/87bc79af83f339314b2aea82947e1a2eb72c8333))
+* **web:** Advance TF-E1 end-to-end run flow ([#845](https://github.com/dunay2/dvt/issues/845)) ([bb71527](https://github.com/dunay2/dvt/commit/bb715276f345c5975c837b04a1a8bf8eb72f7ea6))
+* **web:** Harden transformation flow and align F-23 docs ([#839](https://github.com/dunay2/dvt/issues/839)) ([72a2035](https://github.com/dunay2/dvt/commit/72a203594b5a3bee943fe544c0449d11aca6aa05))
+* **web:** Surface snapshot hash in run workspace ([#844](https://github.com/dunay2/dvt/issues/844)) ([71d79ea](https://github.com/dunay2/dvt/commit/71d79ea9a88d8af04c9231bdfa9e3a10c9a867a5))
+
+
+### Bug Fixes
+
+* **contracts:** Harden execution plan and signal contract boundaries ([#826](https://github.com/dunay2/dvt/issues/826)) ([a7a116e](https://github.com/dunay2/dvt/commit/a7a116eb31b70e0cc795e76958fe220a8b33da21))
+* **planner:** Sort manifest node keys for deterministic graph derivation ([#843](https://github.com/dunay2/dvt/issues/843)) ([02f6ce3](https://github.com/dunay2/dvt/commit/02f6ce3933b667d1cf0113f04feb8de77082cb42))
+* **web:** Harden frontend runtime seam boundaries ([#831](https://github.com/dunay2/dvt/issues/831)) ([fcec05c](https://github.com/dunay2/dvt/commit/fcec05ce5442416d28c3149eb031a23871179e7c))
+* **web:** Harden Root provider ownership guard ([#836](https://github.com/dunay2/dvt/issues/836)) ([0df3dda](https://github.com/dunay2/dvt/commit/0df3dda3a01961bf0bba2497aa707905bfe3d029))
+* **web:** Remove duplicate mock workspace paths ([#833](https://github.com/dunay2/dvt/issues/833)) ([a458af7](https://github.com/dunay2/dvt/commit/a458af759925c76d1dab9a25fc7399b2d80f6bb3))
+* **web:** Use provider overrides in canvas controller tests ([#838](https://github.com/dunay2/dvt/issues/838)) ([91ef77a](https://github.com/dunay2/dvt/commit/91ef77a000e3d919fb592dde3cabd0bd7c1904b9))
+
 ## [5.11.0](https://github.com/dunay2/dvt/compare/v5.10.0...v5.11.0) (2026-04-07)
 
 
