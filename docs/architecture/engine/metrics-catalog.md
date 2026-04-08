@@ -3,13 +3,17 @@
 - **Version**: 1.0.0
 - **Date**: 2026-03-04
 - **Owner**: Engine Domain
-- **Related**: ADR-0030 §3.9
+- **Related**: ADR-0030 sections 3.4 and 5
 
-All metrics are emitted via `IObservability.metrics` from `@dvt/observability` using the pattern:
+Service-level metrics are emitted via `IObservability.metrics` from
+`@dvt/observability` using the pattern:
 
 ```typescript
 this.observability.metrics.counter(name, baseLabels).add(value);
 ```
+
+Worker rollup metrics are emitted through the worker-specific metrics sink
+injected into background workers such as `IntentReconcilerWorker`.
 
 ---
 
@@ -23,27 +27,47 @@ this.observability.metrics.counter(name, baseLabels).add(value);
 | Labels      | `operation`                                                                                                                            |
 | Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                                     |
 | Description | A PENDING intent was expired after no provider workflow was detected (adapter has no `lookupRunRef`, or `lookupRunRef` returned null). |
-| Invariant   | INV-INTENT-013                                                                                                                         |
+| Invariant   | INV-INTENT-007                                                                                                                         |
 
 ### `dvt.intent.expired_after_cancel_total`
 
-| Field       | Value                                                                                                                            |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Type        | Counter                                                                                                                          |
-| Labels      | `provider`, `operation`                                                                                                          |
-| Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                               |
-| Description | A PENDING intent was expired after the reconciler detected a provider workflow via `lookupRunRef` and successfully cancelled it. |
-| Invariant   | INV-INTENT-011                                                                                                                   |
+| Field       | Value                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Type        | Counter                                                                                                                            |
+| Labels      | `provider`, `operation`                                                                                                            |
+| Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                                 |
+| Description | A PENDING intent was expired after the reconciler detected a provider workflow via `lookupRunRef()` and successfully cancelled it. |
+| Invariant   | INV-INTENT-012                                                                                                                     |
 
 ### `dvt.intent.cancelled_total`
 
-| Field       | Value                                                                                                                        |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Type        | Counter                                                                                                                      |
-| Labels      | `provider`, `operation`                                                                                                      |
-| Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                           |
-| Description | A DISPATCHED intent was resolved after the reconciler cancelled the orphaned provider workflow (run was never bootstrapped). |
-| Invariant   | INV-INTENT-008                                                                                                               |
+| Field       | Value                                                                                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type        | Counter                                                                                                                                       |
+| Labels      | `provider`, `operation`                                                                                                                       |
+| Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                                            |
+| Description | A DISPATCHED intent was reported in `cancelled[]` after the reconciler cancelled the orphaned provider workflow (run was never bootstrapped). |
+| Invariant   | INV-INTENT-013                                                                                                                                |
+
+### `dvt.intent.resolved_total`
+
+| Field       | Value                                                                                                                             |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Type        | Counter                                                                                                                           |
+| Labels      | `provider`, `operation`                                                                                                           |
+| Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                                |
+| Description | A DISPATCHED intent was reported in `resolved[]` after existing run metadata was found and no provider cancellation was required. |
+| Invariant   | INV-INTENT-014                                                                                                                    |
+
+### `dvt.intent.reconcile.resolved_total`
+
+| Field       | Value                                                                   |
+| ----------- | ----------------------------------------------------------------------- |
+| Type        | Counter                                                                 |
+| Labels      | None                                                                    |
+| Emitted by  | `IntentReconcilerWorker`                                                |
+| Description | Worker rollup count of `resolved[]` entries from reconciliation sweeps. |
+| Invariant   | INV-INTENT-014                                                          |
 
 ---
 
@@ -75,7 +99,7 @@ this.observability.metrics.counter(name, baseLabels).add(value);
 | ----------- | ------------------------------------------------------------------------------- |
 | `operation` | Method name on the service (e.g. `reconcileOrphanedIntents`, `detectStuckRuns`) |
 | `provider`  | Adapter provider ID: `temporal`, `mock`, `conductor`, etc.                      |
-| `tenantId`  | Tenant identifier — present when the operation is tenant-scoped                 |
+| `tenantId`  | Tenant identifier present when the operation is tenant-scoped                   |
 
 ---
 

@@ -40,6 +40,16 @@ flowchart TB
 - mode-resolution leakage outside owner modules is blocked by architecture test.
 - `startRun` must use `ExecutionPlan.planRef`; runtime start is rejected in UI when `planRef` is missing.
 
+## Query-Key Ownership And Invalidation Baseline
+
+All runtime query keys are defined in `apps/web/src/app/queries/queryKeys.ts`.
+
+| Domain                | Query-key owner                                     | Read keys                                                                                                                                                   | Invalidation owner                      | Invalidation rule                                                                                    |
+| --------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| platform health       | shell capability (`usePlatformHealthSnapshotQuery`) | `queryKeys.shell.platformHealthSnapshot()`                                                                                                                  | shell health capability only            | passive polling; no cross-feature manual invalidation                                                |
+| runs list + detail    | runs route hooks/facade                             | `queryKeys.runs.summaries(workspaceLayoutKey)`, `queryKeys.runs.workspace(workspaceLayoutKey, runId)`, `queryKeys.runs.snapshot(workspaceLayoutKey, runId)` | runs domain hooks and run-start actions | invalidate affected workspace-scoped runs keys after successful run-start or explicit refresh action |
+| workspace graph reads | canvas and analysis workbench hooks                 | `queryKeys.workspace.graph(workspaceLayoutKey)`, `queryKeys.workspace.graphForView(viewId)`                                                                 | workspace graph owner hooks/services    | invalidate workspace graph keys only when graph-mutating actions complete                            |
+
 ## StartRun PlanRef Boundary
 
 `ExecutionPlan` in the web app now carries optional `planRef` metadata for

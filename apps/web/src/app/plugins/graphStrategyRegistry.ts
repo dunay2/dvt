@@ -1,9 +1,14 @@
-import { dbtCanvasGraphStrategy, type CanvasGraphStrategy } from './dbt/dbtNodeAdapter';
+import {
+  dbtCanvasGraphStrategy,
+  transformationCanvasGraphStrategy,
+  type CanvasGraphStrategy,
+} from './dbt/dbtNodeAdapter';
 
-const DEFAULT_STRATEGY_ID = 'dbt';
+const DEFAULT_STRATEGY_ID = 'transformation';
 
 const STRATEGIES: Record<string, CanvasGraphStrategy> = {
   dbt: dbtCanvasGraphStrategy,
+  transformation: transformationCanvasGraphStrategy,
 };
 
 function normalizeStrategyId(value: unknown): string {

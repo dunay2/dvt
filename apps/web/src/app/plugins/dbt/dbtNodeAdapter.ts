@@ -109,8 +109,8 @@ function isDbtEdge(value: unknown): value is DbtEdge {
   );
 }
 
-export const dbtCanvasGraphStrategy: CanvasGraphStrategy = {
-  id: 'dbt',
+const buildDbtCanvasGraphStrategy = (id: string): CanvasGraphStrategy => ({
+  id,
   mapNodeToCanonical: (node) => {
     if (!isDbtNode(node)) {
       return null;
@@ -139,4 +139,8 @@ export const dbtCanvasGraphStrategy: CanvasGraphStrategy = {
       return null;
     }
   },
-};
+});
+
+export const dbtCanvasGraphStrategy: CanvasGraphStrategy = buildDbtCanvasGraphStrategy('dbt');
+export const transformationCanvasGraphStrategy: CanvasGraphStrategy =
+  buildDbtCanvasGraphStrategy('transformation');

@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router';
 
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 import type { RunSummaryItem } from '../../ports/runs';
+import type { RunEvent } from '../../types/engine';
 import {
   RunDetailErrorState,
   RunListState,
@@ -26,32 +27,35 @@ function buildSummary(overrides?: Partial<RunSummaryItem>): RunSummaryItem {
   };
 }
 
+function buildStepStartedEvent(overrides?: Partial<RunEvent>): RunEvent {
+  return {
+    eventId: 'evt-step-started',
+    eventType: 'StepStarted' as const,
+    runId: 'run_123',
+    emittedAt: '2026-03-28T10:01:00Z',
+    tenantId: 'tenant-1',
+    projectId: 'project-1',
+    environmentId: 'env-1',
+    planId: 'plan_123',
+    planVersion: '1.0.0',
+    engineAttemptId: 1,
+    logicalAttemptId: 1,
+    idempotencyKey: 'id-1',
+    payloadVersion: 1 as const,
+    stepId: 'step-1',
+    runSeq: 1,
+    persistedAt: '2026-03-28T10:01:00Z',
+    ...overrides,
+  } as RunEvent;
+}
+
 function buildWorkspace(
   overrides?: Partial<RunWorkspaceViewModel>,
   timelineOverrides?: Partial<RunWorkspaceViewModel['timeline']>
 ): RunWorkspaceViewModel {
   const timeline = {
     state: 'available',
-    events: [
-      {
-        eventId: 'evt-1',
-        eventType: 'StepStarted',
-        runId: 'run_123',
-        emittedAt: '2026-03-28T10:01:00Z',
-        tenantId: 'tenant-1',
-        projectId: 'project-1',
-        environmentId: 'env-1',
-        planId: 'plan_123',
-        planVersion: '1.0.0',
-        engineAttemptId: 1,
-        logicalAttemptId: 1,
-        idempotencyKey: 'id-1',
-        payloadVersion: 1,
-        stepId: 'step-1',
-        runSeq: 1,
-        persistedAt: '2026-03-28T10:01:00Z',
-      },
-    ],
+    events: [buildStepStartedEvent()],
     ...timelineOverrides,
   } as RunWorkspaceViewModel['timeline'];
 
@@ -210,6 +214,123 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('Failure diagnostics');
     expect(container.textContent).toContain('step-transform');
     expect(container.textContent).toContain('STEP_FAILURE');
+  });
+
+  it('renders materialization evidence from timeline payload when snapshot omits it', async () => {
+    const workspace = buildWorkspace(
+      {
+        snapshot: {
+          runId: 'run_123',
+          status: 'completed',
+          startedAt: '2026-03-28T10:00:00Z',
+          completedAt: '2026-03-28T10:00:30Z',
+          environment: 'dev',
+          gitSha: 'abc123def',
+          failedStepId: undefined,
+          errorReason: undefined,
+          currentStepId: undefined,
+          materialization: undefined,
+        },
+      },
+      {
+        state: 'available',
+        events: [
+          {
+            eventId: 'evt-run-completed',
+            eventType: 'RunCompleted',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:30Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'id-run-completed',
+            payloadVersion: 1,
+            runSeq: 8,
+            persistedAt: '2026-03-28T10:00:30Z',
+            payload: {
+              materialization: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.daily_sales',
+                rowsWritten: 1284,
+                startedAt: '2026-03-28T10:00:05Z',
+                completedAt: '2026-03-28T10:00:28Z',
+                durationMs: 23000,
+              },
+            },
+          } as RunEvent,
+        ],
+      }
+    );
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Materialization evidence');
+    expect(container.textContent).toContain('postgres');
+    expect(container.textContent).toContain('analytics.daily_sales');
+    expect(container.textContent).toMatch(/1,?284/);
+  });
+
+  it('renders execution provenance from step-started artifact refs', async () => {
+    const workspace = buildWorkspace(undefined, {
+      state: 'available',
+      events: [
+        buildStepStartedEvent({
+          stepId: 'step-transform',
+          payload: {
+            stepArtifactRef: {
+              artifactKind: 'dbt.compiled-sql',
+              storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
+              sha256: 'a'.repeat(64),
+              sizeBytes: 2048,
+              encoding: 'utf-8',
+            },
+          },
+        }),
+        buildStepStartedEvent({
+          eventId: 'evt-step-started-2',
+          stepId: 'step-evidence',
+          payload: {
+            compiledCodeRef: {
+              storageUri: 's3://dvt-artifacts/dev/compiled/evidence.sql',
+              sha256: 'b'.repeat(64),
+              sizeBytes: 128,
+              encoding: 'utf-8',
+            },
+          },
+        }),
+      ],
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Execution provenance');
+    expect(container.textContent).toContain('step-transform');
+    expect(container.textContent).toContain('dbt.compiled-sql');
+    expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/orders_daily.sql');
+    expect(container.textContent).toContain(
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    );
+    expect(container.textContent).toContain('2.0 KB');
+    expect(container.textContent).toContain('step-evidence');
+    expect(container.textContent).toContain('compiled-code');
+    expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/evidence.sql');
   });
 
   it('falls back to StepFailed payload reason when snapshot error reason is missing', async () => {

@@ -30,12 +30,16 @@ export class DispatchedIntentReconciliationPolicy {
 
     if (existingMeta !== null) {
       await this.deps.intentStore.markResolved(intent.intentId);
+      this.deps.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentResolvedTotal, {
+        provider: intent.provider,
+        operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+      });
       this.deps.observability.info({
         msg: RUN_MAINTENANCE_MESSAGE.dispatchedIntentResolvedBootstrapped,
         context: traceContext,
         attributes: { intentId: intent.intentId, runId: intent.runId },
       });
-      return { cancelled: intent.intentId };
+      return { resolved: intent.intentId };
     }
 
     const adapter = this.deps.adapters.get(intent.provider);

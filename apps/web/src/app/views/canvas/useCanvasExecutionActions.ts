@@ -44,11 +44,37 @@ export function resolvePlanRefForStartRun(plan: ExecutionPlan): PlanRef | null {
 }
 
 function hasPersistedPreviewProof(plan: ExecutionPlan | null): boolean {
-  if (!plan?.preview?.persisted) {
+  if (!plan?.preview?.persisted || !plan.planRef) {
     return false;
   }
 
-  return Boolean(plan.preview.persisted.planRecordId && plan.preview.persisted.canonicalPlanSha256);
+  const hasPersistenceRecord = Boolean(
+    plan.preview.persisted.planRecordId && plan.preview.persisted.canonicalPlanSha256
+  );
+  if (!hasPersistenceRecord) {
+    return false;
+  }
+
+  return plan.preview.persisted.canonicalPlanSha256 === plan.planRef.sha256;
+}
+
+function hasPersistedPreviewRecord(plan: ExecutionPlan | null): boolean {
+  return Boolean(
+    plan?.preview?.persisted?.planRecordId && plan.preview?.persisted?.canonicalPlanSha256
+  );
+}
+
+function hasPlanRefHashMismatch(plan: ExecutionPlan | null): boolean {
+  if (!plan?.planRef || !hasPersistedPreviewRecord(plan)) {
+    return false;
+  }
+
+  const persistedSha = plan.preview?.persisted?.canonicalPlanSha256;
+  if (!persistedSha) {
+    return false;
+  }
+
+  return persistedSha !== plan.planRef.sha256;
 }
 
 export function useCanvasExecutionActions({
@@ -72,6 +98,7 @@ export function useCanvasExecutionActions({
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
+  const planRefHashMismatch = hasPlanRefHashMismatch(currentPlan);
   const transformationValidation = validateTransformationGraph({
     nodes: canonicalNodes,
     edges: canonicalEdges,
@@ -92,9 +119,13 @@ export function useCanvasExecutionActions({
       ? 'Preview required before running.'
       : isCurrentPlanStale
         ? 'Preview is stale. Re-run Plan before starting.'
-        : !hasPersistedPlanForRun
-          ? 'Preview is not persisted. Re-run Plan to create a persisted plan.'
-          : 'Preview is current and ready to run.';
+        : !currentPlan?.planRef
+          ? 'Plan reference is unavailable. Re-run Plan before starting.'
+          : planRefHashMismatch
+            ? 'Preview is not aligned with the active plan reference. Re-run Plan before starting.'
+            : !hasPersistedPlanForRun
+              ? 'Preview is not persisted. Re-run Plan to create a persisted plan.'
+              : 'Preview is current and ready to run.';
 
   useEffect(() => {
     if (currentPlan == null) {
@@ -163,8 +194,17 @@ export function useCanvasExecutionActions({
       return;
     }
 
+    const planRef = resolvePlanRefForStartRun(currentPlan);
+    if (!planRef) {
+      shellFeedback.error('Plan reference is unavailable for this mode');
+      setPlanModalOpen(true);
+      return;
+    }
+
     if (!hasPersistedPlanForRun) {
-      shellFeedback.error('Run start requires a persisted preview plan. Re-run Plan first.');
+      shellFeedback.error(
+        'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.'
+      );
       setPlanModalOpen(true);
       return;
     }
@@ -174,12 +214,6 @@ export function useCanvasExecutionActions({
     try {
       const runId = `run_ui_${Date.now()}`;
       const context = sessionContext.buildRunContext(runId);
-      const planRef = resolvePlanRefForStartRun(currentPlan);
-      if (!planRef) {
-        shellFeedback.error('Plan reference is unavailable for this mode');
-        setPlanModalOpen(true);
-        return;
-      }
       const runRef = await runsService.startRun({ planRef, context });
 
       if (!consolePanelVisible) {

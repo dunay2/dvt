@@ -1,5 +1,6 @@
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
+import type { MaterializationEvidence } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 import { RunStateFrame } from './RunStateFrame';
 import { runStatesCopy as copy } from './runStatesCopy';
@@ -9,12 +10,181 @@ type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
 };
 
+type ProvenanceArtifact = {
+  stepId: string;
+  emittedAt: string;
+  artifactKind: string;
+  storageUri: string;
+  sha256: string;
+  sizeBytes: number;
+  encoding?: string;
+};
+
 function formatDuration(durationMs: number): string {
   if (durationMs < 1000) {
     return `${durationMs} ms`;
   }
 
   return `${(durationMs / 1000).toFixed(1)} s`;
+}
+
+function formatByteSize(sizeBytes: number): string {
+  if (sizeBytes < 1024) {
+    return `${sizeBytes} B`;
+  }
+
+  if (sizeBytes < 1024 * 1024) {
+    return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object';
+}
+
+function readArtifactFields(
+  value: unknown
+): Omit<ProvenanceArtifact, 'stepId' | 'emittedAt' | 'artifactKind'> | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const storageUri = value.storageUri;
+  const sha256 = value.sha256;
+  const sizeBytes = value.sizeBytes;
+  const encoding = value.encoding;
+
+  if (
+    typeof storageUri !== 'string' ||
+    typeof sha256 !== 'string' ||
+    typeof sizeBytes !== 'number' ||
+    !Number.isFinite(sizeBytes)
+  ) {
+    return null;
+  }
+
+  return {
+    storageUri,
+    sha256,
+    sizeBytes,
+    ...(typeof encoding === 'string' ? { encoding } : {}),
+  };
+}
+
+function readMaterializationFields(value: unknown): MaterializationEvidence | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const executor = value.executor;
+  const environmentId = value.environmentId;
+  const sinkTable = value.sinkTable;
+  const rowsWritten = value.rowsWritten;
+  const startedAt = value.startedAt;
+  const completedAt = value.completedAt;
+  const durationMs = value.durationMs;
+
+  if (
+    (executor !== 'postgres' && executor !== 'dbt') ||
+    typeof environmentId !== 'string' ||
+    typeof sinkTable !== 'string' ||
+    typeof rowsWritten !== 'number' ||
+    !Number.isFinite(rowsWritten) ||
+    typeof startedAt !== 'string' ||
+    typeof completedAt !== 'string' ||
+    typeof durationMs !== 'number' ||
+    !Number.isFinite(durationMs)
+  ) {
+    return null;
+  }
+
+  return {
+    executor,
+    environmentId,
+    sinkTable,
+    rowsWritten,
+    startedAt,
+    completedAt,
+    durationMs,
+  };
+}
+
+function deriveMaterializationEvidence(
+  workspace: RunWorkspaceViewModel
+): MaterializationEvidence | undefined {
+  if (workspace.snapshot.materialization) {
+    return workspace.snapshot.materialization;
+  }
+
+  for (const event of [...workspace.timeline.events].reverse()) {
+    if (!isRecord(event.payload)) {
+      continue;
+    }
+
+    const fromPayloadMaterialization = readMaterializationFields(event.payload.materialization);
+    if (fromPayloadMaterialization) {
+      return fromPayloadMaterialization;
+    }
+
+    const fromPayloadResultEvidence = readMaterializationFields(event.payload.resultEvidence);
+    if (fromPayloadResultEvidence) {
+      return fromPayloadResultEvidence;
+    }
+  }
+
+  return undefined;
+}
+
+function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
+  const seen = new Set<string>();
+  const provenance: ProvenanceArtifact[] = [];
+
+  for (const event of workspace.timeline.events) {
+    if (event.eventType !== 'StepStarted' || !event.stepId || !isRecord(event.payload)) {
+      continue;
+    }
+
+    const stepArtifactPayload = isRecord(event.payload.stepArtifactRef)
+      ? event.payload.stepArtifactRef
+      : null;
+    const stepArtifactRef = readArtifactFields(stepArtifactPayload);
+    const compiledCodeRef = stepArtifactRef
+      ? null
+      : readArtifactFields(event.payload.compiledCodeRef);
+
+    const artifact =
+      stepArtifactRef && typeof stepArtifactPayload?.artifactKind === 'string'
+        ? {
+            artifactKind: stepArtifactPayload.artifactKind,
+            ...stepArtifactRef,
+          }
+        : compiledCodeRef
+          ? {
+              artifactKind: copy.compiledCodeArtifactKind,
+              ...compiledCodeRef,
+            }
+          : null;
+
+    if (!artifact) {
+      continue;
+    }
+
+    const dedupeKey = `${event.stepId}|${artifact.storageUri}|${artifact.sha256}`;
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+    seen.add(dedupeKey);
+
+    provenance.push({
+      stepId: event.stepId,
+      emittedAt: event.emittedAt,
+      ...artifact,
+    });
+  }
+
+  return provenance;
 }
 
 function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
@@ -78,6 +248,8 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
+  const executionProvenance = deriveExecutionProvenance(workspace);
+  const materializationEvidence = deriveMaterializationEvidence(workspace);
 
   return (
     <RunStateFrame title={`Run ${snapshot.runId}`}>
@@ -130,44 +302,99 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div className="font-mono">{snapshot.currentStepId}</div>
               </div>
             ) : null}
+            {isKnownRunField(snapshot.hash) ? (
+              <div className="md:col-span-2">
+                <span className="text-slate-400">{copy.snapshotHashLabel}</span>
+                <div className="break-all font-mono text-xs">{snapshot.hash}</div>
+              </div>
+            ) : null}
           </div>
         </Card>
 
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
-          {snapshot.materialization ? (
+          {materializationEvidence ? (
             <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
               <div>
                 <span className="text-slate-400">{copy.executorLabel}</span>
-                <div>{snapshot.materialization.executor}</div>
+                <div>{materializationEvidence.executor}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.environmentLabel}</span>
-                <div>{snapshot.materialization.environmentId}</div>
+                <div>{materializationEvidence.environmentId}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.sinkTableLabel}</span>
-                <div className="font-mono">{snapshot.materialization.sinkTable}</div>
+                <div className="font-mono">{materializationEvidence.sinkTable}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                <div>{snapshot.materialization.rowsWritten.toLocaleString()}</div>
+                <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.startedLabel}</span>
-                <div>{new Date(snapshot.materialization.startedAt).toLocaleString()}</div>
+                <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.completedLabel}</span>
-                <div>{new Date(snapshot.materialization.completedAt).toLocaleString()}</div>
+                <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
               </div>
               <div>
                 <span className="text-slate-400">{copy.durationLabel}</span>
-                <div>{formatDuration(snapshot.materialization.durationMs)}</div>
+                <div>{formatDuration(materializationEvidence.durationMs)}</div>
               </div>
             </div>
           ) : (
             <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
+          )}
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-900 p-5">
+          <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>
+          {executionProvenance.length > 0 ? (
+            <div className="space-y-3">
+              {executionProvenance.map((artifact) => (
+                <div
+                  key={`${artifact.stepId}-${artifact.storageUri}-${artifact.sha256}`}
+                  className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
+                >
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{copy.stepLabel.replace(':', '')}</Badge>
+                    <span className="font-mono text-xs">{artifact.stepId}</span>
+                    <Badge variant="outline">{artifact.artifactKind}</Badge>
+                    <span className="text-xs text-slate-400">
+                      {new Date(artifact.emittedAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <span className="text-slate-400">{copy.artifactKindLabel}</span>
+                      <div>{artifact.artifactKind}</div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{copy.artifactSizeLabel}</span>
+                      <div>{formatByteSize(artifact.sizeBytes)}</div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-slate-400">{copy.artifactUriLabel}</span>
+                      <div className="break-all font-mono text-xs">{artifact.storageUri}</div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-slate-400">{copy.artifactShaLabel}</span>
+                      <div className="break-all font-mono text-xs">{artifact.sha256}</div>
+                    </div>
+                    {artifact.encoding ? (
+                      <div>
+                        <span className="text-slate-400">{copy.artifactEncodingLabel}</span>
+                        <div>{artifact.encoding}</div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">{copy.noProvenanceEvidence}</p>
           )}
         </Card>
 

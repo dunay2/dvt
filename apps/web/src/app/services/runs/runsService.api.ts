@@ -26,6 +26,14 @@ function asFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
+function asFiniteInteger(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value)) {
+    return undefined;
+  }
+
+  return value;
+}
+
 function parseMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
   if (!value || typeof value !== 'object') {
     return undefined;
@@ -107,6 +115,7 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     completedAt: asString(candidate.completedAt) ?? asString(candidate.endTime),
     substatus: asString(candidate.substatus),
     message: asString(candidate.message),
+    hash: asString(candidate.hash),
     snapshotStaleness: asString(candidate.snapshotStaleness) as
       | 'FRESH'
       | 'STALE'
@@ -130,6 +139,7 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     completedAt: snapshot.completedAt,
     substatus: snapshot.substatus,
     message: snapshot.message,
+    hash: snapshot.hash,
     snapshotStaleness: snapshot.snapshotStaleness,
     currentStepId: snapshot.currentStepId,
     failedStepId: snapshot.failedStepId,
@@ -155,7 +165,7 @@ function extractEventsPayload(payload: unknown): { events: unknown[]; nextAfterS
   const record = payload as { items?: unknown[]; nextCursor?: unknown };
   return {
     events: Array.isArray(record.items) ? record.items : [],
-    nextAfterSeq: typeof record.nextCursor === 'number' ? record.nextCursor : undefined,
+    nextAfterSeq: asFiniteInteger(record.nextCursor),
   };
 }
 

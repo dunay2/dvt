@@ -1,0 +1,24 @@
+---
+id: R-20260408-PR807-ADAPTER-POSTGRES-TEST-CONTRACT-DRIFT
+title:
+  Adapter-postgres integration tests can drift from artifact fetch and lineage validation contracts
+status: Open
+date: 2026-04-08
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  PR-807 updates dependency and test wiring where adapter-postgres integration tests were no longer
+  aligned with the current PlanStore fetch artifact shape and lineage validation path preconditions.
+risk: >
+  If future changes reintroduce stale assumptions in integration tests, CI can fail late with
+  misleading diagnostics or miss regressions in plan-store fetch payload handling and lineage
+  integrity enforcement.
+mitigations:
+  - 'Lifecycle integration test now asserts against artifact.bytes from fetch().'
+  - 'Missing-lineage integration test now uses a hash consistent with the modified canonical plan.'
+  - 'Adapter Postgres Integration Smoke check gates merges for this path.'
+  - 'verify:prepush is required before push to catch cross-workspace drift.'
+review_after: 2026-05-31
+---

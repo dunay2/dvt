@@ -11,6 +11,7 @@ import {
   createHealthzProbe,
   createPlatformHealthSnapshot,
 } from '../capabilities/platform-health/testing/platformHealthFixtures';
+import { queryKeys } from './queries/queryKeys';
 import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHarness';
 import Root, { RootShell } from './Root';
 import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
@@ -166,7 +167,8 @@ describe('RootShell platform health UX', () => {
     try {
       await waitForReactQuery(
         () =>
-          mounted.queryClient.getQueryState(['platform-health', 'snapshot'])?.status === 'success',
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
         {
           description: 'healthy platform health query',
         }

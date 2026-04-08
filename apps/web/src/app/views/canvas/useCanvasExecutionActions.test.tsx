@@ -274,7 +274,67 @@ describe('resolvePlanRefForStartRun', () => {
     expect(runsService.startRun).not.toHaveBeenCalled();
     expect(onRunStarted).not.toHaveBeenCalled();
     expect(shellFeedback.error).toHaveBeenCalledWith(
-      'Run start requires a persisted preview plan. Re-run Plan first.'
+      'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.'
+    );
+  });
+
+  it('blocks startRun when persisted proof hash does not match planRef hash', async () => {
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+    const plansService: IPlansPort = {
+      previewPlan: vi.fn(async () => mockExecutionPlan),
+      importPlan: vi.fn(async () => mockExecutionPlan),
+    };
+    const onRunStarted = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={{
+            ...mockExecutionPlan,
+            preview: {
+              ...mockExecutionPlan.preview,
+              persisted: {
+                planRecordId: 'plan-record-mismatch',
+                canonicalPlanSha256: 'f'.repeat(64),
+              },
+            },
+          }}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Preview is not aligned with the active plan reference. Re-run Plan before starting.'
+    );
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[1]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(runsService.startRun).not.toHaveBeenCalled();
+    expect(onRunStarted).not.toHaveBeenCalled();
+    expect(shellFeedback.error).toHaveBeenCalledWith(
+      'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.'
     );
   });
 
@@ -553,7 +613,13 @@ describe('resolvePlanRefForStartRun', () => {
         <HookHost
           plansService={plansService}
           runsService={runsService}
-          currentPlan={mockExecutionPlan}
+          currentPlan={{
+            ...mockExecutionPlan,
+            planRef: {
+              ...mockExecutionPlan.planRef!,
+              sha256: 'c'.repeat(64),
+            },
+          }}
           onRunStarted={onRunStarted}
           sessionContext={sessionContext}
           shellFeedback={shellFeedback}
@@ -714,7 +780,13 @@ describe('resolvePlanRefForStartRun', () => {
         <HookHost
           plansService={plansService}
           runsService={runsService}
-          currentPlan={mockExecutionPlan}
+          currentPlan={{
+            ...mockExecutionPlan,
+            planRef: {
+              ...mockExecutionPlan.planRef!,
+              sha256: 'c'.repeat(64),
+            },
+          }}
           onRunStarted={onRunStarted}
           sessionContext={sessionContext}
           shellFeedback={shellFeedback}
@@ -738,7 +810,10 @@ describe('resolvePlanRefForStartRun', () => {
     expect(runsService.startRun).toHaveBeenCalledTimes(1);
     expect(runsService.startRun).toHaveBeenCalledWith(
       expect.objectContaining({
-        planRef: mockExecutionPlan.planRef,
+        planRef: {
+          ...mockExecutionPlan.planRef,
+          sha256: 'c'.repeat(64),
+        },
       })
     );
     expect(shellFeedback.success).toHaveBeenCalledWith('Run started');

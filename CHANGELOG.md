@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.13.0](https://github.com/dunay2/dvt/compare/v5.12.0...v5.13.0) (2026-04-08)
+
+
+### Features
+
+* **engine:** Add dedicated recover-run command boundary ([#841](https://github.com/dunay2/dvt/issues/841)) ([6ca5def](https://github.com/dunay2/dvt/commit/6ca5def47c602bb2f1dcafddbf5b96927bfec48a))
+* **web:** Enforce TF-E1-A node composition constraints ([#848](https://github.com/dunay2/dvt/issues/848)) ([d41badd](https://github.com/dunay2/dvt/commit/d41badd604ed1e7d3efa742514bbbb42f8a61a7d))
+
+
+### Bug Fixes
+
+* **adapters:** Snapshot step-activity registry for deterministic dispatch ([#846](https://github.com/dunay2/dvt/issues/846)) ([6922b49](https://github.com/dunay2/dvt/commit/6922b49fb36a1d171744a27748263eb9c33e5b0e))
+* **planner:** Use binary manifest node ordering ([#849](https://github.com/dunay2/dvt/issues/849)) ([216534e](https://github.com/dunay2/dvt/commit/216534e4992e3d741be72f09e31fb7786f6e2a1b))
+* **web:** Bind persisted preview hash to planRef and add Cypress coverage ([#852](https://github.com/dunay2/dvt/issues/852)) ([a7a7510](https://github.com/dunay2/dvt/commit/a7a7510d3d2ca843f148ddc195f4b21df4d0ccad))
+* **web:** Expose snapshot hash in run workspace view ([#851](https://github.com/dunay2/dvt/issues/851)) ([40835a1](https://github.com/dunay2/dvt/commit/40835a13487fe9afde57850619c6149227c2878f))
+
 ## [5.12.0](https://github.com/dunay2/dvt/compare/v5.11.0...v5.12.0) (2026-04-08)
 
 
