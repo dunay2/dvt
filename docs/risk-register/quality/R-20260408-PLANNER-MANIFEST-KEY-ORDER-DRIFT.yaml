@@ -15,8 +15,10 @@ risk: >
   equivalent manifests may produce divergent intermediate graph node ordering and destabilize
   downstream plan identity behavior.
 mitigations:
-  - 'ManifestGraphDeriver now sorts manifest node IDs before parsing.'
+  - 'ManifestGraphDeriver now sorts manifest node IDs with binaryCompare before parsing.'
   - 'Determinism test compares planId and inputHash across two manifest key orders.'
+  - 'Manifest graph-source unit coverage locks underscore-sensitive node ordering.'
+  - 'API ManifestArtifactResolver coverage asserts the planner-facing node ordering contract.'
   - 'AR-B3 golden vector locks expected planId for the manifest-ordering scenario.'
   - 'verify:prepush remains required before push to detect drift early.'
 review_after: 2026-06-01

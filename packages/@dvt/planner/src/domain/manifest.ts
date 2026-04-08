@@ -11,6 +11,7 @@
  *   - ManifestGraphDeriver → Domain Service coordinating the above
  */
 import { PlannerError, PlannerErrorCode } from './errors.js';
+import { binaryCompare } from './sorting.js';
 import type { GraphNode } from './types.js';
 
 // ── Internal types ─────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ export class ManifestGraphDeriver {
   execute(command: DeriveNodesCommand): readonly GraphNode[] {
     const root = command.manifest as ManifestLike;
     const rawNodes = this.validator.assertNodes(root);
-    const sortedNodeIds = Object.keys(rawNodes).sort((left, right) => left.localeCompare(right));
+    const sortedNodeIds = Object.keys(rawNodes).sort(binaryCompare);
 
     const result: GraphNode[] = [];
     for (const nodeId of sortedNodeIds) {
