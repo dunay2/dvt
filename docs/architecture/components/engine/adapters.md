@@ -1,9 +1,22 @@
-﻿# Engine Adapters
+# Engine Adapters
 
 ## Purpose
 
 Summarizes adapter integration points for the engine component map and links to
 canonical adapter specifications.
+
+## Current adapter topology
+
+```mermaid
+flowchart LR
+  Engine["@dvt/engine"] --> ProviderPort["Provider adapter port"]
+  ProviderPort --> Mock["Mock adapter (testing)"]
+  ProviderPort --> Temporal["Temporal adapter"]
+  Engine --> StatePorts["State-store and intent ports"]
+  StatePorts --> Postgres["Postgres state-store adapter"]
+  Engine --> PlanPorts["Plan fetch / persistence seam"]
+  PlanPorts --> Postgres
+```
 
 ## Canonical adapter specs
 
@@ -27,4 +40,4 @@ canonical adapter specifications.
 - [Operations](operations.md)
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
-- [C4 Engine Diagram](c4-engine.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)

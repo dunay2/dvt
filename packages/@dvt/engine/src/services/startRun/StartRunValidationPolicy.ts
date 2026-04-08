@@ -1,4 +1,4 @@
-import type { PlanRef, RunContext } from '@dvt/contracts';
+import type { PlanRef, RunContext, RunExecutionPolicy } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import {
@@ -28,15 +28,18 @@ export class StartRunValidationPolicy {
     await this.ensureRunDoesNotExist(context.tenantId, context.runId);
   }
 
-  validateCapabilitiesOrThrow(planRef: PlanRef, adapter: IProviderAdapter): void {
-    const required = planRef.requiresCapabilities ?? [];
+  validateCapabilitiesOrThrow(
+    executionPolicy: RunExecutionPolicy,
+    adapter: IProviderAdapter
+  ): void {
+    const required = executionPolicy.requiresCapabilities ?? [];
     if (required.length === 0) return;
 
     const adapterCaps = adapter.capabilities?.();
     if (adapterCaps === undefined) return;
 
     const supported = new Set(adapterCaps);
-    const unsupported = required.filter((capability) => !supported.has(capability));
+    const unsupported = required.filter((capability: string) => !supported.has(capability));
     if (unsupported.length > 0) {
       throw new CapabilitiesNotSupportedError({
         capabilities: unsupported,

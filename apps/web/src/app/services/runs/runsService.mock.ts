@@ -1,7 +1,8 @@
 import { mockRun } from '../../data/mockDbtData';
-import { useSessionStore } from '../../stores/sessionStore';
+import type { SessionContextPort } from '../../ports/sessionContext';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
-import type { RunContext, RunEvent } from '../../types/engine';
+import type { RunEvent } from '../../types/engine';
+import { createSessionContextPort } from '../session/sessionContextPort';
 import type {
   RunEventTimelinePage,
   RunSnapshot,
@@ -75,8 +76,11 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
   };
 }
 
-function buildMockRunEvents(runId: string): RunEventTimelinePage {
-  const { tenantId, projectId, environmentId } = useSessionStore.getState();
+function buildMockRunEvents(
+  sessionContext: SessionContextPort,
+  runId: string
+): RunEventTimelinePage {
+  const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScope();
   return {
     events: mockRun.events.map((event, index) => {
       return {
@@ -107,7 +111,9 @@ function buildMockRunEvents(runId: string): RunEventTimelinePage {
   };
 }
 
-export function createMockRunsService(): RunsService {
+export function createMockRunsService(
+  sessionContext: SessionContextPort = createSessionContextPort()
+): RunsService {
   return {
     listRunSummaries: async () =>
       buildMockRunList().map(mapDbtRunToSnapshot).map(mapSnapshotToSummary),
@@ -143,10 +149,6 @@ export function createMockRunsService(): RunsService {
         ...base,
       };
     },
-    listRunEvents: async (runId) => buildMockRunEvents(runId),
+    listRunEvents: async (runId) => buildMockRunEvents(sessionContext, runId),
   };
-}
-
-export function buildSessionRunContext(runId: string): RunContext {
-  return useSessionStore.getState().buildRunContext(runId);
 }

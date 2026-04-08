@@ -53,11 +53,11 @@ The delivered scope is:
 ## Verification tuple
 
 - Canonical spec:
-  [G7 - AI Execution Tracker](../planning/gaps/G7-AI-EXECUTION-TRACKER.md)
+  [G7 - AI Execution Tracker](../../planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md)
   and
-  [ADR-0004](../adr/ADR-0004-event-sourcing-strategy.md)
+  [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md)
   and
-  [ADR-0015](../adr/ADR-0015-getRunStatus-read-model-separation.md)
+  [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
 - Code paths:
   `packages/@dvt/engine/src/core/WorkflowEngine.ts`,
   `packages/@dvt/engine/src/ports/IRunStateStore.ts`,

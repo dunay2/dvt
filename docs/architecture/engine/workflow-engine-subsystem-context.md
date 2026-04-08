@@ -36,6 +36,9 @@ Key governing boundaries:
   engine-owned resolver port where needed.
 - `apps/api` and other composition roots wire concrete adapters and pass them to
   engine-owned ports.
+- `@dvt/engine/src/**` must not import `@dvt/planner` or concrete provider
+  adapters such as `@dvt/adapter-temporal`; that boundary is enforced in lint so
+  it does not remain convention-only.
 
 ## Current inbound and outbound flows
 

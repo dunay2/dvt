@@ -25,22 +25,27 @@ flowchart LR
 
 ## Current Topology (As-Is)
 
-The current code already has service factories and a mode flag, but route/view code still owns part of the data-source decision.
+The current code now routes service and capability wiring through one governed
+composition root, but the frontend still carries mixed presentation/store
+responsibilities outside that boundary.
 
 ```mermaid
 flowchart LR
-  View["View / Controller hook"] --> Mode["resolveDataSource()"]
-  Mode --> Factory["createWorkspaceService/createRunsService/createPlansService"]
+  View["View / Controller hook"] --> Hook["Facade / query hook"]
+  Hook --> Composition["buildAppServices() / AppServicesContext"]
+  Composition --> Factory["createWorkspaceService/createRunsService/createPlansService"]
   Factory --> ApiOrMock["API adapter OR mock adapter"]
-  View --> RawFetch["useCapabilitiesQuery -> fetch('/api/capabilities')"]
+  Hook --> Capabilities["useCapabilitiesQuery -> CapabilitiesPort"]
+  Capabilities --> ApiClient["governed API client"]
   View --> AppStore["appStore (mixed concerns)"]
 ```
 
 Current friction points:
 
 - `workspaceService`, `runsService`, `plansService` are hybrid boundaries (ports, adapter selection, and mapping in one module).
-- route/view/controller modules still instantiate services directly.
-- `useCapabilitiesQuery` bypasses the governed API client.
+- store responsibilities are still mixed across shell, graph, run, and permission concerns.
+- not every route uses a dedicated application facade yet; some still depend on app-level hooks directly.
+- capability querying is now composition-owned, but broader query standardization remains a later slice.
 - `appStore` still carries shell + graph + run + permission responsibilities.
 - `stores/index.ts` is a legacy parallel store surface and should remain outside active architecture.
 

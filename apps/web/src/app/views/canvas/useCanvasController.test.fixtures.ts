@@ -1,4 +1,9 @@
 import { vi } from 'vitest';
+import type { IPlansPort } from '../../ports/plans';
+import type { IRunsPort } from '../../ports/runs';
+import type { SessionContextPort } from '../../ports/sessionContext';
+import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type { IWorkspacePort } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ExecutionPlan } from '../../types/dbt';
 
@@ -12,6 +17,13 @@ export type CanvasHarnessState = {
   canonicalEdges: CanonicalEdge[];
   overlayDecorations: Map<string, OverlayDecoration>;
   currentPlan: ExecutionPlan | null;
+  services: {
+    workspaceService: IWorkspacePort;
+    plansService: IPlansPort;
+    runsService: IRunsPort;
+    sessionContext: SessionContextPort;
+    shellFeedback: ShellFeedbackPort;
+  };
   store: {
     setCanvasViewport: MockFn;
     setCanvasNodePositions: MockFn;
@@ -31,9 +43,6 @@ export type CanvasHarnessState = {
 export type CanvasHarnessMocks = {
   useQuery: MockFn;
   resolveCanvasGraphStrategy: MockFn;
-  useWorkspaceService: MockFn;
-  usePlansService: MockFn;
-  useRunsService: MockFn;
   useCanvasInteractionStore: MockFn;
   useExecutionStore: MockFn;
   useSessionStore: MockFn;
@@ -87,6 +96,83 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
   const canonicalEdges: CanonicalEdge[] = [
     { id: 'edge_1', sourceId: 'node_1', targetId: 'node_2', relation: 'lineage' },
   ];
+  const workspaceService: IWorkspacePort = {
+    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+    getDiffChanges: vi.fn(async () => []),
+    getPlugins: vi.fn(async () => []),
+    getRoles: vi.fn(async () => []),
+    getAuditLog: vi.fn(async () => []),
+    listWarehouseConnections: vi.fn(async () => []),
+    listWarehouseTables: vi.fn(async () => []),
+    importSources: vi.fn(async () => ({
+      success: true as const,
+      sourcesCreated: 0,
+      tablesImported: 0,
+      yamlFiles: [],
+      grouping: 'schema' as const,
+      options: {
+        includeColumns: false,
+        addTests: false,
+        addFreshness: false,
+      },
+    })),
+    listFiles: vi.fn(async () => []),
+    getFileContent: vi.fn(async (path: string) => ({
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'sql',
+      content: '',
+      lastModified: '2026-04-08T00:00:00Z',
+    })),
+    saveFileContent: vi.fn(async (path: string, content: string) => ({
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'sql',
+      content,
+      lastModified: '2026-04-08T00:00:00Z',
+    })),
+  };
+  const sessionContext: SessionContextPort = {
+    getWorkspaceScope: () => ({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
+      targetAdapter: 'mock',
+    }),
+    getWorkspaceScopeSnapshot: () => ({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
+      targetAdapter: 'mock',
+    }),
+    subscribeWorkspaceScope: () => () => undefined,
+    buildRunContext: (runId: string) => ({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
+      targetAdapter: 'mock',
+      runId,
+    }),
+  };
+  const shellFeedback: ShellFeedbackPort = {
+    success: vi.fn(),
+    error: vi.fn(),
+  };
+  const plansService: IPlansPort = {
+    previewPlan: vi.fn(async () => currentPlan),
+    importPlan: vi.fn(async () => currentPlan),
+  };
+  const runsService: IRunsPort = {
+    listRunSummaries: vi.fn(async () => []),
+    getRunSnapshot: vi.fn(async () => null),
+    startRun: vi.fn(async () => ({
+      provider: 'mock' as const,
+      tenantId: 'tenant-a',
+      workflowId: 'workflow_ui_1',
+      runId: 'run_ui_1',
+    })),
+    listRunEvents: vi.fn(async () => ({ events: [] })),
+  };
 
   return {
     currentPlan,
@@ -97,6 +183,13 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       ['node_1', { borderColor: '#ef4444' }],
       ['node_2', null],
     ]),
+    services: {
+      workspaceService,
+      plansService,
+      runsService,
+      sessionContext,
+      shellFeedback,
+    },
     store: {
       _hasHydrated: true,
       focusMode: false,
@@ -170,9 +263,6 @@ export function configureDefaultCanvasHarnessMocks(
   mocks: CanvasHarnessMocks
 ): void {
   mocks.useQuery.mockReturnValue({ data: state.graphData, isPending: false, isError: false });
-  mocks.useWorkspaceService.mockReturnValue({ getGraphSnapshot: vi.fn() });
-  mocks.usePlansService.mockReturnValue({ previewPlan: vi.fn() });
-  mocks.useRunsService.mockReturnValue({ listRuns: vi.fn() });
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);

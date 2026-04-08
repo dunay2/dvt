@@ -122,7 +122,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason:
       The matrix remains aligned with the final `MVP-A1` inventory and now provides equivalent

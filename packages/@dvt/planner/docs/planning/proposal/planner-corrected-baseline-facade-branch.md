@@ -591,7 +591,7 @@ classDiagram
 
     class PlannerBuildResultV2 {
       +plan
-      +canonicalPlanJson
+      +canonicalPlanCoreJson
     }
 
     class StepFactory {

@@ -1,49 +1,15 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
+import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
+import type { SessionContextPort } from '../ports/sessionContext';
+import type { ShellFeedbackPort } from '../ports/shellFeedback';
 import type { IWorkspacePort } from '../ports/workspace';
-import { createApiClient, type ApiClient } from './api/createApiClient';
-import { resolveDataSource, type DataSourceMode } from './config/dataSource';
-import { setRuntimeDataSourceMode } from './config/runtimeDataSourceMode';
-import { createPlansService } from './plans/plansService';
-import { createRunsService } from './runs/runsService';
-import { createWorkspaceService } from './workspace/workspaceService';
+import type { AppServices, AppServicesOverrides } from './composition/appServices';
+import { buildAppServices } from './composition/appServices';
 
-type AppServicesContextValue = {
-  readonly dataSourceMode: DataSourceMode;
-  readonly apiClient: ApiClient;
-  readonly workspaceService: IWorkspacePort;
-  readonly runsService: IRunsPort;
-  readonly plansService: IPlansPort;
-};
-
-type AppServicesOverrides = {
-  readonly mode?: DataSourceMode;
-  readonly apiClient?: ApiClient;
-  readonly workspaceService?: IWorkspacePort;
-  readonly runsService?: IRunsPort;
-  readonly plansService?: IPlansPort;
-};
-
-const AppServicesContext = createContext<AppServicesContextValue | null>(null);
-
-function buildAppServicesContextValue(
-  overrides: AppServicesOverrides = {}
-): AppServicesContextValue {
-  const dataSourceMode = overrides.mode ?? resolveDataSource();
-  setRuntimeDataSourceMode(dataSourceMode);
-  const apiClient = overrides.apiClient ?? createApiClient();
-
-  return {
-    dataSourceMode,
-    apiClient,
-    workspaceService:
-      overrides.workspaceService ?? createWorkspaceService(dataSourceMode, apiClient),
-    runsService: overrides.runsService ?? createRunsService(dataSourceMode, apiClient),
-    plansService: overrides.plansService ?? createPlansService(dataSourceMode, apiClient),
-  };
-}
+const AppServicesContext = createContext<AppServices | null>(null);
 
 export function AppServicesProvider({
   children,
@@ -53,20 +19,23 @@ export function AppServicesProvider({
   overrides?: AppServicesOverrides;
 }>) {
   const value = useMemo(
-    () => buildAppServicesContextValue(overrides),
+    () => buildAppServices(overrides),
     [
       overrides?.apiClient,
       overrides?.mode,
       overrides?.plansService,
       overrides?.runsService,
       overrides?.workspaceService,
+      overrides?.capabilitiesPort,
+      overrides?.sessionContext,
+      overrides?.shellFeedback,
     ]
   );
 
   return <AppServicesContext.Provider value={value}>{children}</AppServicesContext.Provider>;
 }
 
-function useRequiredAppServicesContext(): AppServicesContextValue {
+function useRequiredAppServicesContext(): AppServices {
   const context = useContext(AppServicesContext);
   if (!context) {
     throw new Error('AppServicesProvider is required to consume app services.');
@@ -74,7 +43,7 @@ function useRequiredAppServicesContext(): AppServicesContextValue {
   return context;
 }
 
-export function useAppDataSourceMode(): DataSourceMode {
+export function useAppDataSourceMode(): AppServices['dataSourceMode'] {
   return useRequiredAppServicesContext().dataSourceMode;
 }
 
@@ -88,4 +57,16 @@ export function useRunsService(): IRunsPort {
 
 export function usePlansService(): IPlansPort {
   return useRequiredAppServicesContext().plansService;
+}
+
+export function useCapabilitiesPort(): CapabilitiesPort {
+  return useRequiredAppServicesContext().capabilitiesPort;
+}
+
+export function useSessionContext(): SessionContextPort {
+  return useRequiredAppServicesContext().sessionContext;
+}
+
+export function useShellFeedback(): ShellFeedbackPort {
+  return useRequiredAppServicesContext().shellFeedback;
 }

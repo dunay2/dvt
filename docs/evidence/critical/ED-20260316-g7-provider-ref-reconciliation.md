@@ -41,12 +41,12 @@ without converting the run into a lifecycle failure.
 
 ## Governing sources
 
-- [ADR-0004 - Event Sourcing Strategy](../adr/ADR-0004-event-sourcing-strategy.md)
-- [ADR-0013 - run-state-store bootstrapRunTx](../adr/ADR-0013-run-state-store-bootstrapRunTx.md)
-- [ADR-0015 - getRunStatus read-model separation](../adr/ADR-0015-getRunStatus-read-model-separation.md)
-- [ADR-0030 - pre-dispatch intent log](../adr/ADR-0030-pre-dispatch-intent-log.md)
-- [ADR-0031 - adapter tenant isolation](../adr/ADR-0031-adapter-tenant-isolation.md)
-- [G7 - AI Execution Tracker](../planning/gaps/G7-AI-EXECUTION-TRACKER.md)
+- [ADR-0004 - Event Sourcing Strategy](../../adr/ADR-0004-event-sourcing-strategy.md)
+- [ADR-0013 - run-state-store bootstrapRunTx](../../adr/ADR-0013-run-state-store-bootstrapRunTx.md)
+- [ADR-0015 - getRunStatus read-model separation](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
+- [ADR-0030 - pre-dispatch intent log](../../adr/ADR-0030-pre-dispatch-intent-log.md)
+- [ADR-0031 - adapter tenant isolation](../../adr/ADR-0031-adapter-tenant-isolation.md)
+- [G7 - AI Execution Tracker](../../planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md)
 
 ## Changes
 

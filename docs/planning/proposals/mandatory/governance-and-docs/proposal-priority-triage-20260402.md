@@ -35,13 +35,13 @@ boards, review status board, and active governance/docs tracks).
   Rationale: the repo already has strong governance controls, but still lacks a unified
   framework for document taxonomy, planning data, authoring scaffolds, and traceability
   automation.
-- [RC-C1 HTTP Error Envelope Normalization Plan](../runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
+- [RC-C1 HTTP Error Envelope Normalization Plan](../../superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
   Rationale: active API contract normalization track.
 - [RC-C2 Shared Preflight And CI Log-First Triage Plan](../runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md)
   Rationale: active CI/runtime delivery reliability track and sprint linkage.
 - [S08 Plan Record And Plan Store Execution Plan](../runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
   Rationale: active execution-model closure and contractual runtime integrity.
-- [MVP-A1 Backend Contractual Inventory](../runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
+- [MVP-A1 Backend Contractual Inventory](../../superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
   Rationale: review-stage contractual inventory still drives lane and review work.
 
 ## Nice To Have
@@ -64,7 +64,7 @@ boards, review status board, and active governance/docs tracks).
 ## Superseded
 
 - [G4-PR4: Admission Control Operability - Plan B](../../superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md)
-  Superseded by: [G4-PR4: Admission Control Operability - Implementation Plan](../runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md)
+  Superseded by: [G4-PR4: Admission Control Operability - Implementation Plan](../../superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md)
   Rationale: alternative strategy replaced by implementation-oriented plan.
 - [DVT Production Readiness Review - Corrected Top 3 Gaps And Roadmap](../../superseded/runtime-and-delivery/dvt_production_readiness_corrected_review_and_roadmap.md)
   Superseded by: [Review Remediation Roadmap 20260402](../../../roadmap/review-remediation-roadmap-20260402.md)

@@ -4,6 +4,7 @@ import type {
   PlanRef,
   ResolvedRunContext,
   RunStatusSnapshot,
+  SignalSemanticsVersion,
   SignalRequest,
 } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
@@ -54,6 +55,10 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
 
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
     return this.deps.adapter.signal(runRef, request);
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return this.deps.adapter.signalSemanticsVersions();
   }
 
   capabilities(): readonly string[] {

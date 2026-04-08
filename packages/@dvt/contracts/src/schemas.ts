@@ -20,12 +20,14 @@ import {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
 } from './contracts/engine/RunExecutionContext.v1.js';
+import { RunExecutionPolicySchema } from './contracts/engine/RunExecutionPolicy.v1.js';
 import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v1.js';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GENERIC_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v1.js';
+export { RunExecutionPolicySchema } from './contracts/engine/RunExecutionPolicy.v1.js';
 export {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
@@ -43,6 +45,8 @@ import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/StepTypeRegistry.js';
+import { jcsCanonicalize } from './utils/jcsCanonicalize.js';
+import { sha256HexUtf8 } from './utils/sha256HexUtf8.js';
 
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
@@ -69,7 +73,7 @@ export const RunSubstatusSchema = z.enum([
 
 export const StepStatusSchema = z.enum(['PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'SKIPPED']);
 
-export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL', 'RETRY_STEP', 'RETRY_RUN']);
+export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL']);
 
 export const StepOutputStatusSchema = z.enum(['SUCCESS', 'FAILED', 'SKIPPED']);
 const NonBlankStringSchema = z
@@ -87,13 +91,8 @@ export const PlanRefSchema = z.object({
   schemaVersion: z.string().min(1),
   planId: z.string().min(1),
   planVersion: z.string().min(1),
-  pluginCompatibilityFingerprint: z
-    .string()
-    .regex(/^[a-f0-9]{64}$/)
-    .optional(),
   sizeBytes: z.number().int().nonnegative().optional(),
   expiresAt: z.string().optional(),
-  requiresCapabilities: z.array(z.string().min(1)).optional(),
 });
 
 export const RunContextSchema = z
@@ -116,7 +115,6 @@ export const ResolvedRunContextSchema = RunContextSchema.extend({
 export const SignalRequestSchema = z.object({
   signalId: z.string().min(1),
   type: SignalTypeSchema,
-  stepId: z.string().optional(),
   reason: z.string().optional(),
   requestedAt: z.string().optional(),
 });
@@ -548,10 +546,6 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
       createdAtIso: z.string().min(1),
       plannerVersion: z.string().min(1).optional(),
       plannerGitSha: z.string().length(40).optional(),
-      pluginCompatibilityFingerprint: HexSha256Schema.optional(),
-      requiresCapabilities: z.array(z.string().min(1)).optional(),
-      fallbackBehavior: z.enum(['reject', 'emulate', 'degrade']).optional(),
-      targetAdapter: z.enum(['temporal', 'conductor', 'any', 'mock']).optional(),
     })
     .strict(),
   observability: ExecutionPlanObservabilitySchema,
@@ -599,9 +593,63 @@ export const PlannerInputEnvelopeV1Schema = z
 export const PlannerBuildResultV1Schema = z
   .object({
     plan: ExecutionPlanSchema,
-    canonicalPlanJson: z.string().min(1),
+    executionPolicy: RunExecutionPolicySchema,
+    canonicalPlanCoreJson: NonBlankStringSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((result, ctx) => {
+    let canonicalPlanCoreInput: unknown;
+
+    try {
+      canonicalPlanCoreInput = JSON.parse(result.canonicalPlanCoreJson);
+    } catch {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanCoreJson'],
+        message: 'canonicalPlanCoreJson must contain valid JSON',
+      });
+      return;
+    }
+
+    const canonicalPlanCoreResult = PlanCoreSchema.safeParse(canonicalPlanCoreInput);
+    if (!canonicalPlanCoreResult.success) {
+      for (const issue of canonicalPlanCoreResult.error.issues) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['canonicalPlanCoreJson', ...issue.path],
+          message: issue.message,
+        });
+      }
+      return;
+    }
+
+    const expectedPlanCore = {
+      metadata: {
+        planVersion: result.plan.metadata.planVersion,
+        inputHashSha256: result.plan.metadata.inputHashSha256,
+      },
+      steps: result.plan.steps,
+    } satisfies PlanCore;
+    const expectedCanonicalPlanCoreJson = jcsCanonicalize(expectedPlanCore);
+
+    if (result.canonicalPlanCoreJson !== expectedCanonicalPlanCoreJson) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanCoreJson'],
+        message:
+          'canonicalPlanCoreJson must equal JCS(planCore) derived from plan.metadata.{planVersion,inputHashSha256} and plan.steps',
+      });
+      return;
+    }
+
+    if (sha256HexUtf8(result.canonicalPlanCoreJson) !== result.plan.metadata.planId.toLowerCase()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['plan', 'metadata', 'planId'],
+        message: 'plan.metadata.planId must match sha256(canonicalPlanCoreJson)',
+      });
+    }
+  });
 
 export const PlanRecordStateSchema = z.enum(['ACTIVE', 'SUPERSEDED', 'ARCHIVED']);
 const PlanRecordCommonSchema = z
@@ -660,7 +708,26 @@ export const PlanRecordSchema: z.ZodType<PlanRecord> = PlanRecordShapeSchema.sup
       return;
     }
 
-    const canonicalMetadata = canonicalPlanResult.data.metadata;
+    const canonicalPlan = canonicalPlanResult.data;
+    const expectedCanonicalPlanJson = jcsCanonicalize(canonicalPlan);
+    if (record.canonicalPlanJson !== expectedCanonicalPlanJson) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalPlanJson'],
+        message: 'canonicalPlanJson must equal JCS(canonical ExecutionPlan)',
+      });
+      return;
+    }
+
+    if (record.canonicalHash !== sha256HexUtf8(record.canonicalPlanJson)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canonicalHash'],
+        message: 'canonicalHash must match sha256(canonicalPlanJson)',
+      });
+    }
+
+    const canonicalMetadata = canonicalPlan.metadata;
     if (record.planId !== canonicalMetadata.planId) {
       ctx.addIssue({
         code: 'custom',
@@ -738,6 +805,7 @@ export const PlanAdmissionLinkSchema: z.ZodType<PlanAdmissionLink> = z
 // ─── Inferred types from schemas (B1) ────────────────────────────────────────
 
 export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
+export type RunExecutionPolicySchemaT = z.infer<typeof RunExecutionPolicySchema>;
 export type RunExecutionContextRefSchemaT = z.infer<typeof RunExecutionContextRefSchema>;
 export type RunExecutionContextSchemaT = z.infer<typeof RunExecutionContextSchema>;
 export type RunContextSchemaT = z.infer<typeof RunContextSchema>;

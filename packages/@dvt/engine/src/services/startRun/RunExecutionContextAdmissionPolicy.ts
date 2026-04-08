@@ -1,4 +1,9 @@
-import type { PlanRef, ResolvedRunContext, RunExecutionContextRef } from '@dvt/contracts';
+import type {
+  PlanRef,
+  ResolvedRunContext,
+  RunExecutionContextRef,
+  RunExecutionPolicy,
+} from '@dvt/contracts';
 
 import { RunExecutionContextRejectedError } from '../../contracts/errors.js';
 import type { IRunExecutionContextResolver } from '../../ports/IRunExecutionContextResolver.js';
@@ -6,7 +11,11 @@ import type { IRunExecutionContextResolver } from '../../ports/IRunExecutionCont
 export class RunExecutionContextAdmissionPolicy {
   constructor(private readonly resolver?: IRunExecutionContextResolver) {}
 
-  async assertAllowed(planRef: PlanRef, context: ResolvedRunContext): Promise<void> {
+  async assertAllowed(
+    planRef: PlanRef,
+    executionPolicy: RunExecutionPolicy,
+    context: ResolvedRunContext
+  ): Promise<void> {
     const ref = context.runExecutionContextRef;
     if (ref === undefined) return;
 
@@ -56,7 +65,7 @@ export class RunExecutionContextAdmissionPolicy {
     }
 
     this.assertPluginCompatibilityFingerprint(
-      planRef,
+      executionPolicy,
       ref,
       resolved.pluginCompatibilityFingerprint
     );
@@ -73,23 +82,14 @@ export class RunExecutionContextAdmissionPolicy {
         `planVersion mismatch: contextRef=${ref.planVersion} planRef=${planRef.planVersion}`
       );
     }
-    if (
-      planRef.pluginCompatibilityFingerprint !== undefined &&
-      ref.pluginCompatibilityFingerprint !== undefined &&
-      ref.pluginCompatibilityFingerprint !== planRef.pluginCompatibilityFingerprint
-    ) {
-      throw new RunExecutionContextRejectedError(
-        `pluginCompatibilityFingerprint mismatch: contextRef=${ref.pluginCompatibilityFingerprint} planRef=${planRef.pluginCompatibilityFingerprint}`
-      );
-    }
   }
 
   private assertPluginCompatibilityFingerprint(
-    planRef: PlanRef,
+    executionPolicy: RunExecutionPolicy,
     ref: RunExecutionContextRef,
     resolvedFingerprint: string | undefined
   ): void {
-    const expected = planRef.pluginCompatibilityFingerprint ?? ref.pluginCompatibilityFingerprint;
+    const expected = executionPolicy.pluginCompatibilityFingerprint;
     if (expected === undefined) {
       return;
     }

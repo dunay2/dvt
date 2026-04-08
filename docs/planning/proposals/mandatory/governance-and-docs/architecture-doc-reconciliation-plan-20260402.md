@@ -19,15 +19,15 @@ required to keep future architecture docs aligned with shipped behavior.
 The repository currently has multiple documents that describe "the
 architecture", but they do not carry the same truth level:
 
-- [System Delivery Status](../../architecture/system-delivery-status.md) is the
+- [System Delivery Status](../../../../architecture/system-delivery-status.md) is the
   current implementation truth surface and already reflects runtime/API changes.
-- [Architecture Atlas](../../architecture/atlas/architecture/architecture_atlas.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
   still says the API exposes only infra endpoints and that engine orchestration
   is not composed as a runtime API service.
-- [Planning Execution Model Index](../execution-model/index.md) is still a draft
+- [Planning Execution Model Index](../../../execution-model/index.md) is still a draft
   working area that overlaps with active architecture and planning surfaces.
-- [Execution Runtime Domain](../domains/execution-runtime.md) and
-  [Event Lifecycle And Retention Domain](../domains/event-lifecycle-and-retention.md)
+- [Execution Runtime Domain](../../../domains/execution-runtime.md) and
+  [Event Lifecycle And Retention Domain](../../../domains/event-lifecycle-and-retention.md)
   still point to proposal files that now live under `docs/planning/archive/`.
 
 This creates three practical failures:
@@ -51,10 +51,10 @@ The active tree should end with:
 
 For repository-wide architecture questions, the source order should be:
 
-1. [Reference Architecture](../../architecture/reference-architecture.md)
-2. [System Delivery Status](../../architecture/system-delivery-status.md)
-3. [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-4. [Concept System Map](../../concepts/system-map.md)
+1. [Reference Architecture](../../../../architecture/reference-architecture.md)
+2. [System Delivery Status](../../../../architecture/system-delivery-status.md)
+3. [Canonical Doc Code Matrix](../../../status/canonical-doc-code-matrix.md)
+4. [Concept System Map](../../../../concepts/system-map.md)
 
 Supporting or derived surfaces must link back to that order instead of acting
 as competing summaries.
@@ -71,12 +71,12 @@ as competing summaries.
 
 Primary files to classify first:
 
-- [Reference Architecture](../../architecture/reference-architecture.md)
-- [System Delivery Status](../../architecture/system-delivery-status.md)
-- [Architecture Index](../../architecture/index.md)
-- [Concept System Map](../../concepts/system-map.md)
-- [Architecture Atlas](../../architecture/atlas/architecture/architecture_atlas.md)
-- [Planning Execution Model Index](../execution-model/index.md)
+- [Reference Architecture](../../../../architecture/reference-architecture.md)
+- [System Delivery Status](../../../../architecture/system-delivery-status.md)
+- [Architecture Index](../../../../architecture/index.md)
+- [Concept System Map](../../../../concepts/system-map.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
+- [Planning Execution Model Index](../../../execution-model/index.md)
 
 ### Wave 2: Truth-correct active documents
 
@@ -87,16 +87,16 @@ Primary files to classify first:
 
 Known drift candidates already confirmed:
 
-- [Architecture Atlas](../../architecture/atlas/architecture/architecture_atlas.md)
-- [Execution Runtime Domain](../domains/execution-runtime.md)
-- [Event Lifecycle And Retention Domain](../domains/event-lifecycle-and-retention.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
+- [Execution Runtime Domain](../../../domains/execution-runtime.md)
+- [Event Lifecycle And Retention Domain](../../../domains/event-lifecycle-and-retention.md)
 
 Additional system-level docs to review in the same pass:
 
-- [DVT System Architecture](../../architecture/system-overview.md)
-- [DVT Component Map](../../architecture/component-map.md)
-- [DVT Domain Map](../../architecture/domain-map.md)
-- [Planning Execution Model folder](../execution-model/index.md)
+- [DVT System Architecture](../../../../architecture/system-overview.md)
+- [DVT Component Map](../../../../architecture/component-map.md)
+- [DVT Domain Map](../../../../architecture/domain-map.md)
+- [Planning Execution Model folder](../../../execution-model/index.md)
 
 ### Wave 3: Simplify and archive duplicate surfaces
 
@@ -107,10 +107,10 @@ Additional system-level docs to review in the same pass:
 
 Candidate archive-or-rewrite set:
 
-- [Architecture Atlas](../../architecture/atlas/architecture/architecture_atlas.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
   if retained only as a dated historical snapshot
 - planning execution-model drafts under
-  [docs/planning/execution-model/](../execution-model/index.md) if they remain
+  [docs/planning/execution-model/](../../../execution-model/index.md) if they remain
   exploratory rather than canonical
 
 ### Wave 4: Add missing contributor guides
@@ -171,7 +171,7 @@ Candidate archive-or-rewrite set:
 
 - no active architecture index points to missing proposal files
 - no active repository-wide architecture page contradicts
-  [System Delivery Status](../../architecture/system-delivery-status.md) on
+  [System Delivery Status](../../../../architecture/system-delivery-status.md) on
   already shipped behavior
 - one reader can distinguish `principles`, `current truth`, `supporting
 diagrams`, and `historical snapshots` without guessing

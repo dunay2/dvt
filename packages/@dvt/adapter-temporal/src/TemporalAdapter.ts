@@ -13,11 +13,13 @@
 import { Buffer } from 'node:buffer';
 
 import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
+  type SignalSemanticsVersion,
   type SignalRequest,
   parseEngineRunRef,
   parsePlanRef,
@@ -162,28 +164,16 @@ export class TemporalAdapter implements IProviderAdapter {
     const validatedRequest = parseSignalRequest(request);
     const workflowClient = await this.getClient();
     const workflow = workflowClient.getHandle(validatedRunRef.workflowId) as WorkflowHandleLike;
-
-    switch (validatedRequest.type) {
-      case 'PAUSE':
-        await workflow.signal(WorkflowSignals.PAUSE);
-        return;
-      case 'RESUME':
-        await workflow.signal(WorkflowSignals.RESUME);
-        return;
-      case 'CANCEL':
-        await workflow.signal(WorkflowSignals.CANCEL, validatedRequest.reason);
-        return;
-      case 'RETRY_STEP':
-      case 'RETRY_RUN':
-        throw new Error('NotImplemented: RETRY_* signals are Phase 2');
-      default: {
-        throw new Error(`Unknown signal type: ${String(validatedRequest.type)}`);
-      }
-    }
+    const dispatch = mapCanonicalSignalToTemporalDispatch(validatedRequest);
+    await workflow.signal(dispatch.signalName, ...dispatch.args);
   }
 
   capabilities(): readonly string[] {
     return TEMPORAL_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
   /**
@@ -271,6 +261,33 @@ export class TemporalAdapter implements IProviderAdapter {
       this.deps.config.requestTimeoutMs,
       'lookupRunRef.describe'
     );
+  }
+}
+
+function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
+  signalName: (typeof WorkflowSignals)[keyof typeof WorkflowSignals];
+  args: unknown[];
+} {
+  switch (request.type) {
+    case 'PAUSE':
+      return {
+        signalName: WorkflowSignals.PAUSE,
+        args: [request.signalId],
+      };
+    case 'RESUME':
+      return {
+        signalName: WorkflowSignals.RESUME,
+        args: [request.signalId],
+      };
+    case 'CANCEL':
+      return {
+        signalName: WorkflowSignals.CANCEL,
+        args: [request.reason],
+      };
+    default: {
+      const exhaustive: never = request.type;
+      throw new Error(`TEMPORAL_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
+    }
   }
 }
 

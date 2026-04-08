@@ -1,33 +1,34 @@
-﻿# Engine Core
+# Engine Core
 
 ## Purpose
 
-Summarizes the core orchestration role of `@dvt/engine` inside the component map.
-The detailed normative and operational material stays in the canonical engine docs.
+Summarizes the shipped `@dvt/engine` core surface inside the component map.
+Normative architecture, contracts, and target decomposition live under
+`docs/architecture/engine/`.
 
 ## Responsibilities
 
-- workflow orchestration
-- state management
-- persistence and crash consistency
-- validation and determinism
-- aggregate-level execution invariants
+- workflow lifecycle orchestration
+- command and signal semantics
+- snapshot projection and read-model updates
+- authorization and runtime policy enforcement through explicit seams
+- coordination of provider-facing execution from engine-owned contracts
 
 ## Canonical references
 
 - [Canonical engine index](../../engine/index.md)
+- [WorkflowEngine subsystem context](../../engine/workflow-engine-subsystem-context.md)
+- [WorkflowEngine target architecture v1](../../engine/workflow-engine-target-architecture.v1.md)
 - [Canonical C4 architecture](../../engine/c4-engine.md)
-- [Versioning policy](../../engine/VERSIONING.md)
 - [Execution semantics](../../engine/contracts/engine/ExecutionSemantics.v1.md)
 - [Workflow engine contract](../../engine/contracts/engine/IWorkflowEngine.v1.md)
 
-## Local structure notes
+## Current code anchors
 
-- [Constraints and invariants](structure/engine-constraints.md)
-- [DDD structure](structure/engine-ddd.md)
-- [Functional notes](structure/engine-functional.md)
-- [Sequence notes](structure/engine-sequence.md)
-- [Metrics catalog](structure/metrics-catalog.md)
+- `packages/@dvt/engine/src/core/WorkflowEngine.ts`
+- `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
+- `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
+- `packages/@dvt/engine/src/security/RunAccessPolicy.ts`
 
 ## Navigation
 
@@ -37,4 +38,4 @@ The detailed normative and operational material stays in the canonical engine do
 - [Operations](operations.md)
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
-- [C4 Engine Diagram](c4-engine.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)

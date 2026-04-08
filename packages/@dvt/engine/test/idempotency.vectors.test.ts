@@ -67,6 +67,54 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
     }
   });
 
+  it('matches canonical signal vectors after retry boundary narrowing', () => {
+    const vectors = [
+      {
+        params: {
+          runId: 'run-1',
+          logicalAttemptId: 1,
+          planId: 'plan-abc',
+          planVersion: '3',
+        },
+        request: {
+          signalId: 'sig-1',
+          type: 'CANCEL' as const,
+        },
+        expected: 'f416e54fb621cf612b2e00ddc80b77427c7a4e9161477e0e3c0b87be8cf6968d',
+      },
+      {
+        params: {
+          runId: 'run-42',
+          logicalAttemptId: 2,
+          planId: 'plan-sales',
+          planVersion: '7',
+        },
+        request: {
+          signalId: 'sig-999',
+          type: 'RESUME' as const,
+        },
+        expected: '8b41b7babbe79b1f1587514f8a7bd32a26674ceadb0896f206ce78c966856c3f',
+      },
+      {
+        params: {
+          runId: 'run-prod',
+          logicalAttemptId: 1,
+          planId: 'plan-prod',
+          planVersion: '12',
+        },
+        request: {
+          signalId: 'sig-pause',
+          type: 'PAUSE' as const,
+        },
+        expected: '94fcc1967da2e5db233eb936e54bbf67645cc36947cdcfaf88ec487d5793d187',
+      },
+    ];
+
+    for (const v of vectors) {
+      expect(builder.signalKey(v.params, v.request)).toBe(v.expected);
+    }
+  });
+
   it('startRunIntentId is deterministic and delimiter-safe via canonical payload', () => {
     const a = builder.startRunIntentId('tenant-a|x', 'run-y', 1, 'temporal');
     const b = builder.startRunIntentId('tenant-a', 'x|run-y', 1, 'temporal');

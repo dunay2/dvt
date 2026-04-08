@@ -12,6 +12,7 @@ import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
   type StartRunCommand,
+  type StartRunPlanRef,
 } from '../../../src/application/ports/startRunContract.js';
 import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
@@ -111,7 +112,7 @@ describe('EngineStartRunUseCase', () => {
     });
   });
 
-  it('forwards planRef pluginCompatibilityFingerprint to engine boundary', async () => {
+  it('forwards only canonical planRef fields to engine boundary', async () => {
     let capturedPlanRef: unknown;
     const fakeEngine = {
       async startRun(planRef: unknown) {
@@ -126,23 +127,24 @@ describe('EngineStartRunUseCase', () => {
     };
 
     const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const noisyPlanRef: StartRunPlanRef & {
+      pluginCompatibilityFingerprint: string;
+      requiresCapabilities: string[];
+    } = {
+      ...PLAN_REF,
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
+      requiresCapabilities: ['basic-execution'],
+    };
     await useCase.execute(
       {
         ...mkCommand(),
-        planRef: {
-          ...PLAN_REF,
-          pluginCompatibilityFingerprint:
-            '1111111111111111111111111111111111111111111111111111111111111111',
-        },
+        planRef: noisyPlanRef,
       },
       mkContext()
     );
 
-    expect(capturedPlanRef).toEqual({
-      ...PLAN_REF,
-      pluginCompatibilityFingerprint:
-        '1111111111111111111111111111111111111111111111111111111111111111',
-    });
+    expect(capturedPlanRef).toEqual(PLAN_REF);
   });
 
   it('passes runExecutionContextRef through to engine RunContext', async () => {

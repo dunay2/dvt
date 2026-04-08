@@ -2,7 +2,7 @@
 title: dvt-outbox-worker
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 ---
 
 # dvt-outbox-worker
@@ -26,9 +26,12 @@ operational endpoints, retention wiring, and purge support around the shared
 ```mermaid
 flowchart LR
   Ops["Ops / deployment"] --> Worker["apps/outbox-worker"]
-  Worker --> Delivery["@dvt/delivery"]
-  Worker --> Postgres["@dvt/adapter-postgres"]
+  Worker --> Delivery["@dvt/delivery OutboxWorkerRuntime"]
+  Worker --> Ownership["PgShardOwnershipGate"]
+  Worker --> Retention["Retention + purge runtimes"]
   Worker --> EventBus["HTTP / logging event bus"]
+  Delivery --> Postgres["@dvt/adapter-postgres"]
+  Retention --> State["@dvt/state-store"]
 ```
 
 ## Code Anchors

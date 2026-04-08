@@ -20,19 +20,19 @@ Use this for examples like `PYTHON_SCRIPT`, `SPARK_JOB`, or `API_CALL`.
 ## Protocol
 
 1. Define schema and execution profile in contracts:
-   - Add schema in [StepTypeRegistry.ts](/c:/dvt/packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts).
+   - Add schema in [StepTypeRegistry.ts](../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts).
    - Register kind using `createDefaultStepTypeRegistry(...)` extension path.
    - Set `supportedAdapters` and `requiredCapabilities` for the new kind.
 2. Add contract tests:
-   - Extend [step-registry.test.ts](/c:/dvt/packages/@dvt/contracts/test/step-registry.test.ts) for schema/profile validation.
+   - Extend [step-registry.test.ts](../../packages/@dvt/contracts/test/step-registry.test.ts) for schema/profile validation.
    - Add event payload tests if the kind emits artifacts (StepStarted payload shape).
 3. Planner integration:
    - Ensure planner build path accepts the kind via injected/registered registry.
-   - Validate required capabilities projection into `ExecutionPlan.metadata.requiresCapabilities`.
-   - Add planner integration tests in [step-registry-integration.test.ts](/c:/dvt/packages/@dvt/planner/test/unit/step-registry-integration.test.ts).
+   - Validate required capabilities projection into `RunExecutionPolicy.requiresCapabilities`.
+   - Add planner integration tests in [step-registry-integration.test.ts](../../packages/@dvt/planner/test/unit/step-registry-integration.test.ts).
 4. Admission and executability checks:
    - Ensure executability gate rejects unsupported adapter-kind combinations.
-   - Ensure capabilities are enforced through validator in [StoredPlanExecutabilityValidator.ts](/c:/dvt/apps/api/src/application/services/StoredPlanExecutabilityValidator.ts).
+   - Ensure capabilities are enforced through validator in [StoredPlanExecutabilityValidator.ts](../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts).
    - Add negative-path tests for unsupported adapter and missing capability.
 5. Adapter implementation:
    - Implement step execution path in the adapter runtime.

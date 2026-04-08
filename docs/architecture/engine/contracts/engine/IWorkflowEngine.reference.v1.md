@@ -52,7 +52,7 @@ interface RunContext {
 }
 
 // Adapter selection MUST be resolved before invoking startRun()
-// (e.g., by a higher-level coordinator using deployment config and/or plan.metadata.targetAdapter)
+// (e.g., by a higher-level coordinator using deployment config and RunContext.targetAdapter)
 ```
 
 **Internal dispatch rule (NORMATIVE)**:
@@ -142,7 +142,7 @@ All operations and events MUST include these identifiers for traceability:
   - Increments on: workflow restart, worker crash recovery, continue-as-new
   - Used for: debugging, infra failure detection, cost attribution
 - **`logicalAttemptId`**: Business attempt counter resolved by the engine/application layer
-  - Increments on: business recovery lineage (`RETRY_RUN`) and future engine-owned partial-retry semantics
+  - Increments on: business recovery lineage (dedicated recover-run use case governed by ADR-0040 and ADR-0049) and any future dedicated engine-owned retry or recovery use case
   - MUST NOT increment for provider-native technical retries
   - Used for: deterministic replay, idempotency key generation, user-visible business attempt count
 
@@ -182,7 +182,8 @@ The resolution mechanism is adapter-specific. Each adapter MUST implement correl
 
 **Summary**:
 
-- Engine emits lifecycle events: `RunStarted`, `StepStarted`, `StepCompleted`, `StepFailed`, `RunPaused`, `RunResumed`, `RunCompleted`, `RunFailed`, `RunCancelled`
+- The execution domain emits lifecycle events: `RunStarted`, `StepStarted`, `StepCompleted`, `StepFailed`, `RunPaused`, `RunResumed`, `RunCompleted`, `RunFailed`, `RunCancelled`
+  - `RunPaused`, `RunResumed`, and `RunCancelled` are runtime-owned realized lifecycle facts in the current model
 - Events MUST include: `runId`, `stepId` (if applicable), `engineAttemptId`, `logicalAttemptId`, `runSeq`, `idempotencyKey`
 - Event naming: PascalCase without `on` prefix (e.g., `RunStarted`, not `onRunStarted`)
 - StateStore assigns `runSeq` during write; engine receives assigned seq in write response
@@ -244,7 +245,7 @@ When the Engine's Worker fetches a plan via `fetchPlan(PlanRef)` Activity:
 
 **Rationale**: This prevents execution of plans that have been modified after approval (e.g., cache poisoning, storage corruption, or malicious tampering).
 
-**See**: [TemporalAdapter § 2.1](../../adapters/temporal/TemporalAdapter.spec.md#21-fetchplan-activity-normative-validation) for reference implementation.
+**See**: [TemporalAdapter § 2.1](../../adapters/temporal/TemporalAdapter.spec.md#21-entry-point-verification-boundary) for reference implementation.
 
 #### 3.1.1 PlanRef URI Allowlist (Security - NORMATIVE)
 
@@ -265,9 +266,10 @@ interface ExecutionPlan {
   metadata: {
     planId: string;
     planVersion: string;
-    requiresCapabilities?: string[];
-    fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
-    targetAdapter?: 'temporal' | 'conductor' | 'any';
+    schemaVersion: string;
+    contractVersion: string;
+    inputHashSha256: string;
+    createdAtIso: string;
   };
   steps: Array<{
     stepId: string;
@@ -276,7 +278,9 @@ interface ExecutionPlan {
 }
 ```
 
-**Note**: Full plan schema is defined by Planner contract (out of scope for this doc). Engine validates `metadata.requiresCapabilities` only.
+**Note**: Full plan schema is defined by Planner contract (out of scope for this doc).
+Engine validates runtime admission requirements from `RunExecutionPolicy`, not
+from `ExecutionPlan.metadata`.
 
 **Adapter narrowing rule (NORMATIVE)**:
 
@@ -300,32 +304,25 @@ interface ValidationReport {
 }
 
 async function startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
-  // Step 1: Fetch plan from planRef.uri (via Activity)
-  const plan = await fetchPlan(planRef);
+  // Step 1: Fetch verified plan artifact from planRef.uri (via Activity)
+  const artifact = await fetchStoredPlanArtifact(planRef);
 
   // Step 2: Validate capabilities
-  const report = await validatePlan(plan, ctx.targetAdapter);
-
-  if (report.status === 'ERRORS' && plan.metadata.fallbackBehavior === 'reject') {
+  const report = await validatePlan(artifact.plan, artifact.executionPolicy, ctx.targetAdapter);
+  if (report.status === 'ERRORS') {
     throw new PlanValidationError('Plan validation failed', report);
   }
 
-  // For emulate/degrade: Engine MUST emit RunStarted with warnings
-  if (report.status === 'WARNINGS' && plan.metadata.fallbackBehavior !== 'reject') {
-    // Include ValidationReport reference in artifacts/metadata
-    // Emit RunStarted with degraded mode indicator
-  }
-
   // Step 3: Execute
-  return await adapter.startRun(plan, ctx);
+  return await adapter.startRun(artifact.plan, planRef, ctx);
 }
 ```
 
 **Capability declarations**:
 
-- `plan.metadata.requiresCapabilities: Capability[]`
-- `plan.metadata.fallbackBehavior: "reject" | "emulate" | "degrade"`
-- `plan.metadata.targetAdapter: "temporal" | "conductor" | "any"`
+- `executionPolicy.requiresCapabilities: Capability[]`
+- `RunContext.targetAdapter: "temporal" | "conductor" | "mock"`
+- `fallbackBehavior` is not part of the active contract model
 
 See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 

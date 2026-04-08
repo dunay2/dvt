@@ -46,10 +46,12 @@ Primary implementation references:
 ### 2.1 Supported control surface
 
 - Supported control requests in adapter:
-  - `PAUSE` → workflow signal `pause`
-  - `RESUME` → workflow signal `resume`
-  - `CANCEL` → provider-native `workflow.cancel()`
-- `RETRY_STEP` and `RETRY_RUN` are explicitly not implemented and throw `NotImplemented`.
+  - `PAUSE` -> workflow signal `pause`
+  - `RESUME` -> workflow signal `resume`
+  - `CANCEL` -> workflow signal `cancel`
+- Business run recovery is not part of `signal(...)`; a future recover-run use
+  case must be governed separately by the engine/application boundary.
+- `RETRY_STEP` is no longer part of the canonical signal path; any future step retry must use a dedicated use-case boundary.
 
 ### 2.2 Workflow handlers
 
@@ -57,17 +59,24 @@ Workflow defines and handles:
 
 - `pause` signal
 - `resume` signal
-- `cancel` signal (with reason payload)
+- `cancel` signal (with optional reason payload)
 - `status` query
 
-Current adapter policy for cancel is canonicalized on `cancel()` instead of the `cancel` signal path so both cancellation entry points share provider-native behavior.
+Current adapter policy canonicalizes cancellation on the workflow signal path so
+both `cancelRun()` and `signal(CANCEL)` share the same runtime-owned lifecycle
+behavior.
 
 ### 2.3 Cancellation reason semantics (CURRENT)
 
 - Workflow defines a `cancel` signal with `reason` payload.
-- Current adapter cancellation path uses provider-native `workflow.cancel()` and does **not** send a reason payload first.
-- Therefore, `cancelReason` should be treated as **best-effort** and may be empty in runs cancelled through provider-native cancellation.
-- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter, so reason persistence requires explicit signal + state-store eventing when needed.
+- Current adapter cancellation path sends the workflow `cancel` signal.
+- `signal(CANCEL)` can forward a reason payload; `cancelRun()` uses the same
+  workflow signal path without a reason payload.
+- Therefore, `cancelReason` should be treated as **best-effort** and may be
+  empty in runs cancelled through `cancelRun()`.
+- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter. The
+  current adapter avoids that path so cancellation stays aligned with the
+  workflow-owned signal semantics.
 
 Consumer guidance for v1.1:
 
@@ -231,7 +240,6 @@ The following were previously documented as normative but are **not implemented*
 - Workflow history byte-size estimation and rotation thresholds.
 - Signal payload size/rate enforcement inside adapter/workflow.
 - Per-step activity timeout override matrix.
-- Implemented runtime handling for `RETRY_STEP` / `RETRY_RUN`.
 
 These should be treated as backlog policies until corresponding code lands in `packages/@dvt/adapter-temporal/src`.
 

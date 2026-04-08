@@ -33,9 +33,9 @@ Canonical execution tracking remains in:
 - Title: Monolithic `appStore` remains the dominant runtime boundary, so `F04-W2/W3` is not closure-ready.
   Why it matters: The slice claims decomposition, but read/write ownership still routes through one large deprecated store, preserving coupling and hidden state-sync risks.
   Evidence:
-  - [appStore.ts](/c:/dvt/apps/web/src/app/stores/appStore.ts:34) still defines the full aggregate state.
-  - [appStore.ts](/c:/dvt/apps/web/src/app/stores/appStore.ts:168) still mirrors writes into both legacy and sliced stores.
-  - [useAppStore usage scan](/c:/dvt/apps/web/src/app/views/canvas/useCanvasStoreFacade.ts:49) shows broad consumer dependency on the monolith.
+  - [appStore.ts](../../../../apps/web/src/app/stores/appStore.ts:34) still defines the full aggregate state.
+  - [appStore.ts](../../../../apps/web/src/app/stores/appStore.ts:168) still mirrors writes into both legacy and sliced stores.
+  - [useAppStore usage scan](../../../../apps/web/src/app/views/canvas/useCanvasStoreFacade.ts:49) shows broad consumer dependency on the monolith.
     Risk: Behavior drift between slices and legacy mirror state; future refactors can break invariants silently.
     Recommendation: Make sliced stores authoritative and reduce `useAppStore` to a temporary thin adapter with explicit decommission plan.
 
@@ -44,17 +44,17 @@ Canonical execution tracking remains in:
 - Title: Query key registry governance is incomplete.
   Why it matters: `F04-W4` requires centralized query keys; inline arrays keep cache invalidation policy fragmented.
   Evidence:
-  - [LineageView.tsx](/c:/dvt/apps/web/src/app/views/LineageView.tsx:139) uses inline `queryKey`.
-  - [DbtNodeRenderer.tsx](/c:/dvt/apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx:355) and [DbtNodeRenderer.tsx](/c:/dvt/apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx:362) use inline `queryKey`.
+  - [LineageView.tsx](../../../../apps/web/src/app/views/LineageView.tsx:139) uses inline `queryKey`.
+  - [DbtNodeRenderer.tsx](../../../../apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx:355) and [DbtNodeRenderer.tsx](../../../../apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx:362) use inline `queryKey`.
     Risk: Invalidation and stale-data bugs when route-level keys diverge.
     Recommendation: Migrate all query keys to `queryKeys.ts` and enforce with a lint/architecture guard.
 
 - Title: Mode resolution is not fully owned by composition root.
   Why it matters: `F04-W1` requires single ownership; runtime mode is still resolved in non-composition modules.
   Evidence:
-  - [sessionStore.ts](/c:/dvt/apps/web/src/app/stores/sessionStore.ts:24) calls `resolveDataSource()`.
-  - [workspaceConfig.ts](/c:/dvt/apps/web/src/app/services/config/workspaceConfig.ts:109) calls `resolveDataSource()`.
-  - [httpPlatformHealthClient.ts](/c:/dvt/apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.ts:255) calls `resolveDataSource()`.
+  - [sessionStore.ts](../../../../apps/web/src/app/stores/sessionStore.ts:24) calls `resolveDataSource()`.
+  - [workspaceConfig.ts](../../../../apps/web/src/app/services/config/workspaceConfig.ts:109) calls `resolveDataSource()`.
+  - [httpPlatformHealthClient.ts](../../../../apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.ts:255) calls `resolveDataSource()`.
     Risk: API/mock mode drift between subsystems and inconsistent observability metadata.
     Recommendation: Pass mode from composition root into these collaborators instead of resolving locally.
 
@@ -63,15 +63,15 @@ Canonical execution tracking remains in:
 - Title: Encoding/mojibake regression in source comments.
   Why it matters: Reduces maintainability and is a quality-gate smell for docs/code hygiene.
   Evidence:
-  - [plansService.ts](/c:/dvt/apps/web/src/app/services/plans/plansService.ts:11) contains malformed characters (`ï¿½`).
+  - [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts:11) contains malformed characters (`ï¿½`).
     Risk: Review noise and copy/paste defects in docs/comments.
     Recommendation: Replace malformed comment text and enforce UTF-8 clean comments.
 
 - Title: `any` remains in `appStore` API surface.
   Why it matters: Violates strict typing expectations in Lane E constraints and weakens SRP-safe refactors.
   Evidence:
-  - [appStore.ts](/c:/dvt/apps/web/src/app/stores/appStore.ts:66) `data?: any`.
-  - [appStore.ts](/c:/dvt/apps/web/src/app/stores/appStore.ts:107) `data?: any`.
+  - [appStore.ts](../../../../apps/web/src/app/stores/appStore.ts:66) `data?: any`.
+  - [appStore.ts](../../../../apps/web/src/app/stores/appStore.ts:107) `data?: any`.
     Risk: Hidden type regressions and non-deterministic UI payload shape usage.
     Recommendation: Replace `any` with a typed tab payload union or `unknown` plus narrowing.
 
@@ -80,8 +80,8 @@ Canonical execution tracking remains in:
 - Title: Backward-compatibility aliasing remains broad in service modules.
   Why it matters: Useful short-term, but it can prolong coexistence of old/new boundaries.
   Evidence:
-  - [runsService.ts](/c:/dvt/apps/web/src/app/services/runs/runsService.ts:19) deprecated alias.
-  - [workspaceService.ts](/c:/dvt/apps/web/src/app/services/workspace/workspaceService.ts:22) deprecated alias.
+  - [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts:19) deprecated alias.
+  - [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts:22) deprecated alias.
     Risk: Migration stalls with dual contracts.
     Recommendation: Add a dated removal checkpoint tied to `F04-W6`.
 

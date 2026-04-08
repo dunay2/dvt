@@ -19,7 +19,7 @@ target decomposition aligned with SRP, hexagonal boundaries, and ADR ownership.
 - [ADR-0034](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0039](../../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
 - [ADR-0043](../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
-- [S08 execution plan](../../proposals/s08-plan-record-plan-store-execution-plan-20260402.md)
+- [S08 execution plan](../../proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 
 ## Current state (as of 2026-04-03)
 

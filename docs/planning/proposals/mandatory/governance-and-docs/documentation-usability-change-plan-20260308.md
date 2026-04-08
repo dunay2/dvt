@@ -12,11 +12,11 @@ planning_type: proposal
 
 This document is part of the repository governance proposal set.
 
-- Set entry point: [Repository Governance Proposal Set 2026-03-17](../archive/proposals/repository-governance-proposal-set-20260317.md)
+- Set entry point: [Repository Governance Proposal Set 2026-03-17](../../../archive/proposals/repository-governance-proposal-set-20260317.md)
 - Role in set: documentation governance and usability plan
 - Complementary proposals:
-  - [Documentation Restructuring Diagnostic And Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md) is the diagnostic precursor
-  - [Package Module Build Policy v2](../archive/proposals/package-module-build-policy-v2-20260317.md) defines the technical target model for packages and builds
+  - [Documentation Restructuring Diagnostic And Roadmap](../../../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md) is the diagnostic precursor
+  - [Package Module Build Policy v2](../../../archive/proposals/package-module-build-policy-v2-20260317.md) defines the technical target model for packages and builds
   - [CI Delivery Governance Consolidated Action Plan](ci-delivery-governance-consolidated-action-plan-20260331.md) defines enforcement strategy for reusable CI checks
 
 ## Execution Status
@@ -339,7 +339,7 @@ Usability validation:
 
 ## References
 
-- [Documentation Restructuring Diagnostic And Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)
-- [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Repository Map](../../concepts/repository-map.md)
-- [Roadmap Of Record](../roadmap/index.md)
+- [Documentation Restructuring Diagnostic And Roadmap](../../../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)
+- [Canonical Doc Code Matrix](../../../status/canonical-doc-code-matrix.md)
+- [Repository Map](../../../../concepts/repository-map.md)
+- [Roadmap Of Record](../../../roadmap/index.md)

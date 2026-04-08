@@ -139,7 +139,8 @@ ExecuteStep --> GatewayDSL["gateway DSL evaluation"]
 
 Current limits from code:
 
-- `RETRY_STEP` and `RETRY_RUN` signals are explicitly not implemented in adapter.
+- business run recovery is now treated as a separate recovery use case, not as a provider `signal(...)` path.
+- `RETRY_STEP` is no longer part of the canonical signal boundary.
 - `executeStep` still states real step dispatch is Phase 2+.
 
 ## Multi-Tenant Boundary (Implemented)

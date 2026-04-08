@@ -1,6 +1,16 @@
 # IWorkflowEngine Contract (Normative v1)
 
-[← Back to Contracts Registry](../README.md)
+> Historical note: references in this v1 surface to `retryStep` as a signal are
+> superseded by [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
+> The current canonical signal boundary no longer includes `RETRY_STEP`.
+> Business run recovery is also outside the generic signal boundary; see
+> [ADR-0049](../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
+> References in this v1 surface to engine-owned realized lifecycle events for
+> `RunPaused`, `RunResumed`, or `RunCancelled` are superseded by
+> [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
+> Those realized lifecycle facts are runtime-owned in the current model.
+
+[Back to Contracts Registry](../README.md)
 
 **Status**: DRAFT  
 **Version**: v1  
@@ -15,20 +25,22 @@
 
 Define the minimum, unambiguous contract for workflow execution orchestration.
 
-This baseline is intentionally small and normative for the blocked base-contract workstream (#133).
+This baseline is intentionally small and normative for the blocked base-contract
+workstream (#133).
 
 ---
 
-## 2) Engine Boundary
+## 2) Engine boundary
 
 ### MUST
 
 - Start a run from a validated plan reference.
 - Cancel a run.
 - Return run status.
-- Accept runtime signals (`pause`, `resume`, `retryStep`).
-- Emit run and step lifecycle events through the event pipeline.
-- Include correlation identifiers on operations/events: `tenantId`, `projectId`, `environmentId`, `runId`.
+- Accept runtime signals (`PAUSE`, `RESUME`, `CANCEL`).
+- Persist run and step lifecycle events through the event pipeline.
+- Include correlation identifiers on operations/events: `tenantId`,
+  `projectId`, `environmentId`, `runId`.
 
 ### MUST NOT
 
@@ -38,7 +50,7 @@ This baseline is intentionally small and normative for the blocked base-contract
 
 ---
 
-## 3) Minimal Contract Surface
+## 3) Minimal contract surface
 
 ```ts
 interface IWorkflowEngine {
@@ -109,7 +121,7 @@ interface RunStatusSnapshot {
 
 ---
 
-## 4) Plan Input Contract (v1)
+## 4) Plan input contract (v1)
 
 `startRun()` accepts `PlanRef`.
 
@@ -127,13 +139,14 @@ type PlanRef = {
 
 - Engine MUST reject unknown `schemaVersion`.
 - Engine MUST validate plan integrity (`sha256`) before execution.
-- Engine MUST reject disallowed URI schemes (`file://`, `ftp://`, link-local metadata endpoints).
+- Engine MUST reject disallowed URI schemes (`file://`, `ftp://`, link-local
+  metadata endpoints).
 
 ---
 
-## 5) Event and Idempotency Baseline
+## 5) Event and idempotency baseline
 
-Engine MUST emit at least:
+The execution system MUST persist at least:
 
 - `RunStarted`
 - `StepStarted`
@@ -145,6 +158,12 @@ Engine MUST emit at least:
 - `RunCompleted`
 - `RunFailed`
 - `RunCancelled`
+
+For signal-driven realized lifecycle events:
+
+- `RunPaused`, `RunResumed`, and `RunCancelled` are runtime-owned facts;
+- the engine core validates and dispatches the command, but MUST NOT append the
+  same realized lifecycle event on submission.
 
 Minimum event envelope fields:
 
@@ -165,41 +184,51 @@ Minimum event envelope fields:
 
 Idempotency rule (normative):
 
-- `idempotencyKey` MUST be derived from `logicalAttemptId` (not `engineAttemptId`).
+- `idempotencyKey` MUST be derived from `logicalAttemptId` (not
+  `engineAttemptId`).
 
 ---
 
-## 6) Signals Baseline
+## 6) Signals baseline
 
 ```ts
-type SignalType = 'pause' | 'resume' | 'retryStep';
+type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 
 interface SignalRequest {
   signalId: string;
   type: SignalType;
-  stepId?: string; // required for retryStep
   reason?: string;
 }
 ```
 
 Rules:
 
-- `retryStep` MUST include `stepId`.
+- `RETRY_RUN` is not part of canonical `SignalType`; business recovery
+  requires a dedicated engine or application use case per ADR-0040 and
+  ADR-0049.
+- `RETRY_STEP` is not part of canonical `SignalType`; future step retry
+  requires a dedicated use case per ADR-0048.
 - Signal operations MUST be tenant-authorized before execution.
 - Signal idempotency key MUST include `(tenantId, runId, signalId)`.
 
 ---
 
-## 7) Out of Scope for v1
+## 7) Out of scope for v1
 
 - Substatus taxonomy and adapter-scoped substatus extensions.
-- Full capability validation matrix and fallback policies (`emulate`/`degrade`).
+- Full capability validation matrix and fallback policies (`emulate` /
+  `degrade`).
 - Extended glossary governance.
 
-These are formalized in [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md) and linked sub-contracts.
+These are formalized in [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
+and linked sub-contracts.
 
 ---
 
-## 8) Change Log
+## 8) Change log
 
-- **v1 (2026-02-16)**: Initial draft baseline contract for domain-contract bootstrap (#133).
+- **v1 (2026-02-16)**: Initial draft baseline contract for domain-contract
+  bootstrap (#133).
+- **v1 (2026-04-08)**: Clarified runtime-owned realized lifecycle ownership for
+  signal-driven events and aligned the baseline signal contract with ADR-0047,
+  ADR-0048, and ADR-0049.

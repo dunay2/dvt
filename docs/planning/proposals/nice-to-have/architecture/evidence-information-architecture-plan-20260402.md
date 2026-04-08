@@ -17,13 +17,13 @@ The result is a mixed proof catalog where materially different artifact types
 sit side by side:
 
 - closure evidence such as
-  [ED-20260401-executionplanv2-canonical-name-phase2.md](../../evidence/critical/ED-20260401-executionplanv2-canonical-name-phase2.md)
+  [ED-20260401-executionplanv2-canonical-name-phase2.md](../../../../evidence/critical/ED-20260401-executionplanv2-canonical-name-phase2.md)
 - contextual inventories such as
-  [ED-20260331-api-parse-error-coupling-inventory.md](../../evidence/context/ED-20260331-api-parse-error-coupling-inventory.md)
+  [ED-20260331-api-parse-error-coupling-inventory.md](../../../../evidence/context/ED-20260331-api-parse-error-coupling-inventory.md)
 - rationale-style notes such as
-  [ED-20260321-planner-start-run-qa-rationale.md](../../evidence/context/ED-20260321-planner-start-run-qa-rationale.md)
+  [ED-20260321-planner-start-run-qa-rationale.md](../../../../evidence/context/ED-20260321-planner-start-run-qa-rationale.md)
 - operationally adjacent records such as
-  [ED-20260329-mvp-c1-backend-control-plane-runbook.md](../../evidence/supporting/ED-20260329-mvp-c1-backend-control-plane-runbook.md)
+  [ED-20260329-mvp-c1-backend-control-plane-runbook.md](../../../../evidence/supporting/ED-20260329-mvp-c1-backend-control-plane-runbook.md)
 
 This creates five concrete failure modes:
 
@@ -452,7 +452,7 @@ This proposal is acceptable only if all of the following are true:
 
 ## References
 
-- [Evidence](../../evidence/index.md)
-- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
-- [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
+- [Evidence](../../../../evidence/index.md)
+- [Governance Document And Rule Inventory](../../../status/governance-document-rule-inventory.md)
+- [Planning Control Tower](../../../state/planning-control-tower.md)
+- [Documentation Usability Change Plan](../../mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md)

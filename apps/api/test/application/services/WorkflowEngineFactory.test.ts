@@ -1,3 +1,4 @@
+import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
   StartRunApplicationService,
@@ -65,6 +66,7 @@ describe('buildWorkflowEngine', () => {
         throw new Error('not used');
       },
       async signal(_engineRunRef, _request: SignalRequest) {},
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
     const engine = buildWorkflowEngine({

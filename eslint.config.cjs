@@ -230,6 +230,28 @@ module.exports = [
   {
     files: ['packages/@dvt/engine/src/**/*.ts'],
     rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@dvt/planner', '@dvt/planner/*'],
+              message:
+                '@dvt/engine source MUST NOT import @dvt/planner. Planner consumption belongs in composition roots and planner-owned boundaries.',
+            },
+            {
+              group: ['@dvt/adapter-temporal', '@dvt/adapter-temporal/*'],
+              message:
+                '@dvt/engine source MUST NOT import concrete provider adapters. Depend on IProviderAdapter and wire adapters only in composition roots.',
+            },
+            {
+              group: ['../**/planner/**', '../**/adapter-temporal/**'],
+              message:
+                '@dvt/engine source MUST NOT reach planner or concrete adapter internals by relative path.',
+            },
+          ],
+        },
+      ],
       'no-restricted-syntax': [
         'error',
         {

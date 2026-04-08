@@ -52,6 +52,8 @@ import {
   type PlanCoreSchemaT,
   PlanRefSchema,
   type PlanRefSchemaT,
+  RunExecutionPolicySchema,
+  type RunExecutionPolicySchemaT,
   RunExecutionContextRefSchema,
   type RunExecutionContextRefSchemaT,
   RunExecutionContextSchema,
@@ -173,6 +175,10 @@ export function parsePlanRef(input: unknown): PlanRefSchemaT {
   return parseWithSchema(PlanRefSchema, input);
 }
 
+export function parseRunExecutionPolicy(input: unknown): RunExecutionPolicySchemaT {
+  return parseWithSchema(RunExecutionPolicySchema, input);
+}
+
 export function parseRunExecutionContextRef(input: unknown): RunExecutionContextRefSchemaT {
   return parseWithSchema(RunExecutionContextRefSchema, input);
 }
@@ -283,7 +289,9 @@ export function parsePlannerInputEnvelopeV1(input: unknown): PlannerInputEnvelop
   return parseWithSchema(PlannerInputEnvelopeV1Schema, input);
 }
 
-export function parsePlannerBuildResultV1(input: unknown): PlannerBuildResultV1SchemaT {
+export async function parsePlannerBuildResultV1(
+  input: unknown
+): Promise<PlannerBuildResultV1SchemaT> {
   return parseWithSchema(PlannerBuildResultV1Schema, input);
 }
 

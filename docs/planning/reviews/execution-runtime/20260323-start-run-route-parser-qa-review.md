@@ -18,7 +18,7 @@ planning_type: review
 - [Governance Document And Rule Inventory](../../status/governance-document-rule-inventory.md)
 - [Planning Control Tower](../../state/planning-control-tower.md)
 - [Roadmap Of Record](../../roadmap/index.md)
-- [ExecutionPlan.v2 / PlannerInputEnvelopeV2](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+- [ExecutionPlan.v1 / PlannerInputEnvelopeV1](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 - [Planner Input Envelope Validator](../../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts)
 - [StartRun route](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
 - [StartRun planner-backed use case](../../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts)
@@ -69,7 +69,7 @@ Severity: **Resolved in this slice**
 
 ### 3.3. No type drift found in the start-run orchestration path
 
-`PlannerBackedStartRunUseCase` still maps the command into `PlannerInputEnvelopeV2` without introducing new ad hoc types.
+`PlannerBackedStartRunUseCase` still maps the command into `PlannerInputEnvelopeV1` without introducing new ad hoc types.
 `WorkflowEngine` remains the execution boundary and does not leak planner parsing logic into the core.
 
 Severity: **None**

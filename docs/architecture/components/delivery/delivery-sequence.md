@@ -1,42 +1,40 @@
 ---
 title: Delivery Sequence
-status: Draft
-owner: Delivery Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Delivery / Docs
+last_reviewed: 2026-04-07
 topics:
   - Sequence Diagram
-  - Global Flow Position
+  - Runtime Flow Position
   - Key Files & References
 ---
 
 # Delivery Sequence
 
-## Sequence Diagram
+## Sequence diagram
 
 ```mermaid
 sequenceDiagram
-  participant Engine
-  participant Delivery
-  participant Outbox
-  Engine->>Delivery: publish RunStarted event
-  Delivery->>Outbox: publish event
-  Outbox-->>Delivery: confirm delivery
-  Delivery-->>Engine: delivery confirmation
+  participant Runtime as Engine/API Runtime
+  participant Delivery as @dvt/delivery
+  participant Outbox as Outbox Worker
+  participant Projector as Projector Worker
+  participant Lineage as Lineage Worker
+
+  Runtime->>Delivery: emit execution-side facts / admission signals
+  Delivery->>Outbox: schedule delivery work
+  Delivery->>Projector: schedule projection updates
+  Delivery->>Lineage: schedule lineage publication
 ```
 
-## Global Flow Position
+## Runtime flow position
 
-Delivery receives events from Engine, manages publication and ownership, coordinates retries via Outbox, and confirms delivery to Engine.
+Delivery consumes execution-side facts and pushes them into delivery,
+projection, and lineage runtimes. It does not become the source of truth for
+execution or planning state.
 
-## Key Files & References
+## Code anchors
 
-- [DeliveryAggregate.ts](../../../../packages/@dvt/delivery/src/core/DeliveryAggregate.ts)
-- [OutboxAggregate.ts](../../../../packages/@dvt/delivery/src/core/OutboxAggregate.ts)
-
-## Component File List
-
-List of all files in the delivery component folder:
-
-- DeliveryAggregate.ts
-- OutboxAggregate.ts
-- ...
+- [OutboxWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
+- [ProjectorWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
+- [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)

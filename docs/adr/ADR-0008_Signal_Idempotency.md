@@ -6,14 +6,20 @@
 - **Related**:
   - ADR-0007: Run Cancellation Semantics (cross-references this ADR for signal-based cancel)
   - ADR-0004: Event Sourcing Strategy
-  - RunEvents.v2.0.1.md (envelope split — tenantId excluded from derivation)
+  - ADR-0049: Retry-run as separate recovery use case
+  - RunEvents.v2.0.1.md (envelope split - tenantId excluded from derivation)
 
 ---
 
 ## Context
 
 Signals are used to send out-of-band instructions to running workflows
-(PAUSE, RESUME, CANCEL, RETRY_STEP, RETRY_RUN).
+(`PAUSE`, `RESUME`, `CANCEL`).
+
+`RETRY_STEP` is no longer part of canonical `SignalType`; see `ADR-0048`.
+
+`RETRY_RUN` is also outside canonical `SignalType`; business recovery now
+belongs to a dedicated recover-run use case per `ADR-0049`.
 
 Without a deterministic idempotency key:
 
@@ -37,8 +43,7 @@ signalType + '|' +
 signalId + '|' +
 logicalAttemptId + '|' +
 planId + '|' +
-planVersion +
-(stepId ? '|' + stepId : '')
+planVersion
 )
 
 ### Notes
@@ -51,19 +56,19 @@ planVersion +
 
 Implementations MUST match these SHA256 outputs exactly:
 
-- `run-1|SIGNAL|CANCEL|sig-1|1|plan-abc|3`  
-  → `f416e54fb621cf612b2e00ddc80b77427c7a4e9161477e0e3c0b87be8cf6968d`
-- `run-42|SIGNAL|RETRY_STEP|sig-999|2|plan-sales|7|model.orders`  
-  → `2378af3967a757ac180e92def46f181a813315290373d03a6d906ad26f2bfeb5`
-- `run-prod|SIGNAL|PAUSE|sig-pause|1|plan-prod|12`  
-  → `94fcc1967da2e5db233eb936e54bbf67645cc36947cdcfaf88ec487d5793d187`
+- `run-1|SIGNAL|CANCEL|sig-1|1|plan-abc|3`
+  -> `f416e54fb621cf612b2e00ddc80b77427c7a4e9161477e0e3c0b87be8cf6968d`
+- `run-42|SIGNAL|RESUME|sig-999|2|plan-sales|7`
+  -> `8b41b7babbe79b1f1587514f8a7bd32a26674ceadb0896f206ce78c966856c3f`
+- `run-prod|SIGNAL|PAUSE|sig-pause|1|plan-prod|12`
+  -> `94fcc1967da2e5db233eb936e54bbf67645cc36947cdcfaf88ec487d5793d187`
 
 ---
 
 ## Invariants
 
-- INV-SIGNAL-001: Same inputs → same hash
-- INV-SIGNAL-002: Different signalId → different hash
+- INV-SIGNAL-001: Same inputs -> same hash
+- INV-SIGNAL-002: Different signalId -> different hash
 - INV-SIGNAL-003: schemaVersion MUST NOT influence hash
 - INV-SIGNAL-004: tenantId MUST NOT influence hash
 

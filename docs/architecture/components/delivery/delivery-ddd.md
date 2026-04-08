@@ -1,46 +1,36 @@
 ---
 title: Delivery DDD Structure
-status: Draft
-owner: Delivery Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Delivery / Docs
+last_reviewed: 2026-04-07
 topics:
-  - DDD Diagram
-  - Aggregates & Entities
-  - Main Methods
+  - Runtime Structure
+  - Bounded Responsibilities
   - Key Files & References
 ---
 
 # Delivery DDD Structure
 
-## DDD Diagram
+The current package does not expose a central `DeliveryAggregate`. It groups
+runtime concerns that consume already-authoritative execution facts.
+
+## Current bounded responsibilities
 
 ```mermaid
-classDiagram
-  class DeliveryAggregate
-  class OutboxAggregate
-  DeliveryAggregate --> OutboxAggregate : owns
+flowchart LR
+  Events["Execution / outbox events"] --> Outbox["Outbox worker runtime"]
+  Events --> Projector["Projector worker runtime"]
+  Events --> Lineage["Lineage worker runtime"]
+  Admission["API admission checks"] --> Guard["StartRunAdmissionGuard"]
 ```
 
-## Aggregates & Entities
+- `application/` owns worker orchestration and downstream event handling
+- `backpressure/` owns delivery-side admission helpers
+- canonical execution state remains outside this package in engine/state-store
 
-- DeliveryAggregate: Central delivery model, manages event publication and ownership.
-- OutboxAggregate: Handles event publishing and retry logic.
+## Code anchors
 
-## Main Methods
-
-- publishEvent(event): Publishes event to external systems.
-- manageRetry(event): Handles retry logic for failed events.
-- trackOwnership(event): Tracks delivery ownership and status.
-
-## Key Files & References
-
-- [DeliveryAggregate.ts](../../../../packages/@dvt/delivery/src/core/DeliveryAggregate.ts)
-- [OutboxAggregate.ts](../../../../packages/@dvt/delivery/src/core/OutboxAggregate.ts)
-
-## Component File List
-
-List of all files in the delivery component folder:
-
-- DeliveryAggregate.ts
-- OutboxAggregate.ts
-- ...
+- [OutboxWorker.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorker.ts)
+- [OutboxWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
+- [ProjectorWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
+- [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)

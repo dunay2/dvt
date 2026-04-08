@@ -30,9 +30,9 @@ async function main(): Promise<void> {
     requestId: 'req-1',
   };
 
-  const { plan, canonicalPlanJson } = await planner.buildPlan(input);
+  const { plan, canonicalPlanCoreJson } = await planner.buildPlan(input);
   console.warn(plan.metadata.planId);
-  console.warn(canonicalPlanJson.length);
+  console.warn(canonicalPlanCoreJson.length);
 }
 
 void main();

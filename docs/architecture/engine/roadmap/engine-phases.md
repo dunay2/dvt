@@ -50,7 +50,7 @@
 - [ ] IWorkflowEngine interface (startRun, cancelRun, getRunStatus [debug-only], signal)
 - [ ] RunStateStore impl (PostgreSQL, append-only events, idempotent writes)
 - [ ] SnapshotProjector (event replay, state derivation, immutable artifacts)
-- [ ] Signal handler (PAUSE, RESUME, RETRY_STEP, CANCEL, custom signals)
+- [ ] Signal handler (PAUSE, RESUME, CANCEL)
 - [ ] PlanFetcher + validator (schema versioning, capability checks)
 - [ ] Authorization enforcement (API-boundary RBAC; engine consumes pre-authorized commands; emits auditable SignalDecisionRecord to StateStore)
 - [ ] StateStore retention baseline (event archival after 90 days to cold storage; latest-status denormalized index for queries)

@@ -16,6 +16,7 @@ export class PostgresExecutableBlobRepository {
       planVersion: string;
       planUri: string;
       planSha256: string;
+      pluginCompatibilityFingerprint?: string;
       schemaVersion: string;
       sizeBytes: number;
       requiresCapabilitiesJson: string;
@@ -30,6 +31,7 @@ export class PostgresExecutableBlobRepository {
           plan_version,
           plan_uri,
           plan_sha256,
+          plugin_compatibility_fingerprint,
           schema_version,
           size_bytes,
           requires_capabilities,
@@ -40,7 +42,7 @@ export class PostgresExecutableBlobRepository {
           stored_at,
           updated_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, 'PENDING_VALIDATION', NULL, NOW(), NOW()
+          $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, 'PENDING_VALIDATION', NULL, NOW(), NOW()
         )
         ON CONFLICT (plan_id) DO NOTHING
         RETURNING
@@ -48,6 +50,7 @@ export class PostgresExecutableBlobRepository {
           plan_version,
           plan_uri,
           plan_sha256,
+          plugin_compatibility_fingerprint,
           schema_version,
           size_bytes,
           requires_capabilities,
@@ -63,6 +66,7 @@ export class PostgresExecutableBlobRepository {
         input.planVersion,
         input.planUri,
         input.planSha256,
+        input.pluginCompatibilityFingerprint ?? null,
         input.schemaVersion,
         input.sizeBytes,
         input.requiresCapabilitiesJson,
@@ -84,6 +88,7 @@ export class PostgresExecutableBlobRepository {
           plan_version,
           plan_uri,
           plan_sha256,
+          plugin_compatibility_fingerprint,
           schema_version,
           size_bytes,
           requires_capabilities,
@@ -184,16 +189,24 @@ export class PostgresExecutableBlobRepository {
   ): Promise<
     | {
         executable_plan_json: string;
+        plugin_compatibility_fingerprint: string | null;
+        requires_capabilities: unknown;
         validation_state: StoredPlanValidationState;
       }
     | undefined
   > {
     const result = await client.query<{
       executable_plan_json: string;
+      plugin_compatibility_fingerprint: string | null;
+      requires_capabilities: unknown;
       validation_state: StoredPlanValidationState;
     }>(
       `
-        SELECT executable_plan_json, validation_state
+        SELECT
+          executable_plan_json,
+          plugin_compatibility_fingerprint,
+          requires_capabilities,
+          validation_state
         FROM ${quoteIdentifier(this.schema)}.stored_plans
         WHERE plan_id = $1
       `,

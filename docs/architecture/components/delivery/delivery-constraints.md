@@ -1,48 +1,29 @@
-﻿---
+---
 title: Delivery Constraints & Invariants
-status: Draft
-owner: Delivery Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Delivery / Docs
+last_reviewed: 2026-04-07
 topics:
   - Constraints & Invariants
-  - Validation Examples
+  - Runtime Boundaries
   - Key Files & References
 ---
 
 # Delivery Constraints & Invariants
 
-## DDD Diagram
+The active delivery package is runtime-oriented, not aggregate-oriented.
 
-```mermaid
-classDiagram
-  class DeliveryAggregate
-  class OutboxAggregate
-  DeliveryAggregate --> OutboxAggregate : owns
-```
+## Current invariants
 
-## Constraints and Invariants
+| Constraint                                       | Code surface                                        | Why it matters                                                                       |
+| ------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Delivery workers stay outside engine ownership   | `application/*.ts` runtimes                         | downstream emission and projection must not reclaim execution authority              |
+| Admission helpers remain explicit                | `backpressure/StartRunAdmissionGuard.ts`            | API admission policy can evolve without moving delivery logic into planner or engine |
+| Outbox and lineage processing remain retry-aware | `OutboxWorkerRuntime.ts`, `LineageWorkerRuntime.ts` | delayed delivery must not mutate canonical execution truth                           |
 
-| Constraint / Invariant | Where Enforced                         | Description                                            |
-| ---------------------- | -------------------------------------- | ------------------------------------------------------ |
-| Event publication      | `DeliveryAggregate`, `OutboxAggregate` | Events must be published reliably to external systems. |
-| Ownership tracking     | `DeliveryAggregate`                    | Delivery ownership must be tracked and confirmed.      |
-| Retry logic            | `OutboxAggregate`                      | Failed events must be retried according to policy.     |
-| Contract compliance    | `DeliveryAggregate`                    | Must comply with delivery contract definitions.        |
+## Code anchors
 
-## Validation Examples
-
-- Event publication: `publishEvent` validates the event and confirms delivery.
-- Ownership tracking: `trackOwnership` ensures ownership is recorded.
-- Retry logic: `manageRetry` applies retry policy and confirms success.
-
-## Key Files & References
-
-- [DeliveryAggregate.ts](../../../../packages/@dvt/delivery/src/core/DeliveryAggregate.ts)
-- [OutboxAggregate.ts](../../../../packages/@dvt/delivery/src/core/OutboxAggregate.ts)
-
-## Component File List
-
-List of all files in the delivery component folder:
-
-- `DeliveryAggregate.ts`
-- `OutboxAggregate.ts`
+- [OutboxWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
+- [ProjectorWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
+- [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)
+- [StartRunAdmissionGuard.ts](../../../../packages/@dvt/delivery/src/backpressure/StartRunAdmissionGuard.ts)

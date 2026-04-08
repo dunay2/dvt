@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-08
 planning_type: review
 ---
 
@@ -28,6 +28,8 @@ Sprint execution board:
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------ | ------------------------------------------ | ---------------- | ------------------ |
 | [20260326 DVT principal architectural review](architecture-and-governance/20260326-dvt-principal-architectural-review.md)                       | `architecture-and-governance`     | reference baseline for cross-cutting architecture      | `none`                                     | reference        | `n/a`              |
 | [20260331 Principal architecture deep review](architecture-and-governance/20260331-principal-architecture-deep-review.md)                       | `architecture-and-governance`     | latest deep architectural reference                    | `none`                                     | reference        | `n/a`              |
+| [20260407 Engine boundary current/target review](architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)   | `architecture-and-governance`     | current engine-boundary and migration reference        | `none`                                     | reference        | `n/a`              |
+| [20260407 Principles and target-state review](architecture-and-governance/20260407-dvt-principles-boundaries-and-target-state-review.md)        | `architecture-and-governance`     | current product-principles and target-state reference  | `none`                                     | reference        | `n/a`              |
 | [20260322 DDD and hexagonal port audit](architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)                                | `architecture-and-governance`     | active architecture reference cited by ADRs            | `none`                                     | reference        | `n/a`              |
 | [20260314 Domain cohesion review](architecture-and-governance/20260314-domain-cohesion-review.md)                                               | `architecture-and-governance`     | active domain-boundary reference                       | `none`                                     | reference        | `n/a`              |
 | [20260321 Planner-backed StartRun QA review](execution-runtime/20260321-planner-backed-start-run-qa-review.md)                                  | `execution-runtime`               | runtime/planner QA reference                           | `none`                                     | reference        | `n/a`              |
@@ -51,6 +53,90 @@ Sprint execution board:
 | [20260401 CI process review](ci-and-delivery/20260401-ci-process-review.md)                                                                     | `ci-and-delivery`                 | current CI process baseline review                     | `none`                                     | reference        | `n/a`              |
 | [20260401 Lane C RC-C2 efficiency institutionalization review](ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | `ci-and-delivery`                 | RC-C2 phase-2 institutionalization review              | `RC-C2`                                    | `review`         | `67%`              |
 | [20260402 RC-C2 operational friction intake review](ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
+
+Additional active rationale:
+
+- [20260407 Execution plan and run execution policy rationale](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md)
+  - domain: `architecture-and-governance`
+  - role: current plan-definition vs execution-policy rationale
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260407 Principal architecture review - progress, effort, and diagrams](architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md)
+  - domain: `architecture-and-governance`
+  - role: current status-and-diagrams companion to the 2026-04-07 principal architecture review
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260407 PlanCore operational consumption design spike](architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md)
+  - domain: `architecture-and-governance`
+  - role: design spike on whether existing `PlanCore` should become an operationally consumed split
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260407 Retry-step boundary and use-case review](architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md)
+  - domain: `architecture-and-governance`
+  - role: historical boundary rationale for narrowing `RETRY_STEP`; `RETRY_RUN` is superseded separately by ADR-0049
+  - linkage: `WE-HX-4-C`
+  - status: `done`
+  - progress: `100%`
+
+- [20260408 Retry-run boundary and provider signal mapper review](architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
+  - domain: `architecture-and-governance`
+  - role: boundary rationale and implementation review for narrowing `RETRY_RUN` out of canonical `SignalType` and making provider signal mapping explicit
+  - linkage: `WE-HX-4-A`, `WE-HX-4-B`, `WE-HX-4-C`
+  - status: `done`
+  - progress: `100%`
+
+Additional active QA:
+
+- [20260407 Execution plan and policy hard QA review](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for the plan-definition vs execution-policy slice
+  - linkage: `QA-EP-9..QA-EP-11`
+  - status: `done`
+  - progress: `100%`
+- [20260405 F04-RISK-A PlanRef runtime boundary hard QA review](architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA intake and closure record for backend-owned `planRef` handoff
+  - linkage: `F-04-RISK-A`, `F-04-RISK-A-QA-03`
+  - status: `review`
+  - progress: `100%`
+- [20260407 F-04-F capabilities-port hard QA review](20260407-f04-f-capabilities-port-hard-qa-review.md)
+  - domain: `frontend-and-ui`
+  - role: documentary hard QA gate for the governed capabilities-boundary slice
+  - linkage: `F-04-F`
+  - status: `review`
+  - progress: `100%`
+- [20260407 F-04-RISK-B mock workspace isolation hard QA review](20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md)
+  - domain: `frontend-and-ui`
+  - role: documentary hard QA gate for the mock workspace determinism hardening slice
+  - linkage: `F-04-RISK-B`
+  - status: `review`
+  - progress: `100%`
+- [20260408 F-04-RESIDUAL-A Root provider guard hard QA review](20260408-f04-residual-a-root-provider-guard-hard-qa-review.md)
+  - domain: `frontend-and-ui`
+  - role: documentary hard QA gate for the Root-level provider ownership guard
+  - linkage: `F-04-RESIDUAL-A`
+  - status: `review`
+  - progress: `100%`
+
+- [20260407 Retry-step boundary hard QA review](architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for narrowing `RETRY_STEP` out of canonical `SignalType`
+  - linkage: `QA-RS-1..QA-RS-4`
+  - status: `done`
+  - progress: `100%`
+
+- [20260408 Retry-run boundary hard QA review](architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for narrowing `RETRY_RUN` out of canonical `SignalType` and closing the provider signal mapper seam
+  - linkage: `QA-RR-1..QA-RR-5`
+  - status: `done`
+  - progress: `100%`
 
 ## Newly Classified Review
 

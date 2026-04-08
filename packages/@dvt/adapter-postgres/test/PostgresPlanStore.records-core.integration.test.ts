@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/contracts';
 import { expect, test } from 'vitest';
 
 import type { PostgresPlanStore } from '../src/PostgresPlanStore.js';
@@ -103,7 +104,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
       await expect(store.createPlanRecord(record)).rejects.toThrow('PLAN_RECORD_ALREADY_EXISTS');
       const missingLineagePlanId = toCanonicalPlanId('new-plan-with-missing-ref');
       const missingLineageSourceRef = `dvt-plan://postgres/${missingLineagePlanId}`;
-      const missingLineageCanonicalPlanJson = JSON.stringify({
+      const missingLineageCanonicalPlanJson = jcsCanonicalize({
         metadata: {
           planId: missingLineagePlanId,
           planVersion: record.planVersion,
@@ -129,7 +130,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
     withIsolatedStore(async (store, schema) => {
       const client = await createPgClient();
       const legacyPlanId = toCanonicalPlanId('legacy-backfill-plan');
-      const canonicalPlanJson = JSON.stringify({
+      const canonicalPlanJson = jcsCanonicalize({
         metadata: {
           planId: legacyPlanId,
           planVersion: '1.0',
@@ -140,7 +141,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
         },
         steps: [{ stepId: `${legacyPlanId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
       });
-      const canonicalHash = createHash('sha256').update(canonicalPlanJson).digest('hex');
+      const canonicalHash = sha256HexUtf8(canonicalPlanJson);
       const executablePlanJson = JSON.stringify({ metadata: { planId: legacyPlanId }, steps: [] });
       const wrongHash = createHash('sha256').update(executablePlanJson).digest('hex');
       try {

@@ -1,5 +1,9 @@
 import type { ExecutionPlan, PlanRef, ResolvedRunContext } from '@dvt/contracts';
-import { RUN_PLAN_WORKFLOW } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  RUN_PLAN_WORKFLOW,
+  WorkflowSignals,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TemporalAdapter } from '../src/TemporalAdapter.js';
@@ -143,5 +147,76 @@ describe('TemporalAdapter.startRun', () => {
     ).rejects.toThrow('TEMPORAL_START_PAYLOAD_TOO_LARGE');
 
     expect(workflowClient.start).not.toHaveBeenCalled();
+  });
+});
+
+describe('TemporalAdapter.signal', () => {
+  it('declares support for the current signal semantics version', () => {
+    const { adapter } = makeAdapter();
+
+    expect(adapter.signalSemanticsVersions?.()).toEqual([CURRENT_SIGNAL_SEMANTICS_VERSION]);
+  });
+
+  it('forwards PAUSE with the caller-provided signalId', async () => {
+    const signal = vi.fn(async () => undefined);
+    const { adapter, workflowClient } = makeAdapter();
+    workflowClient.getHandle.mockReturnValue({
+      signal,
+    });
+
+    await adapter.signal(
+      {
+        provider: 'temporal',
+        tenantId: 'tenant-1',
+        namespace: 'dvt-test',
+        workflowId: 'run-1',
+        runId: 'run-1',
+      },
+      { signalId: 'sig-pause-1', type: 'PAUSE' }
+    );
+
+    expect(signal).toHaveBeenCalledWith(WorkflowSignals.PAUSE, 'sig-pause-1');
+  });
+
+  it('forwards RESUME with the caller-provided signalId', async () => {
+    const signal = vi.fn(async () => undefined);
+    const { adapter, workflowClient } = makeAdapter();
+    workflowClient.getHandle.mockReturnValue({
+      signal,
+    });
+
+    await adapter.signal(
+      {
+        provider: 'temporal',
+        tenantId: 'tenant-1',
+        namespace: 'dvt-test',
+        workflowId: 'run-1',
+        runId: 'run-1',
+      },
+      { signalId: 'sig-resume-1', type: 'RESUME' }
+    );
+
+    expect(signal).toHaveBeenCalledWith(WorkflowSignals.RESUME, 'sig-resume-1');
+  });
+
+  it('forwards CANCEL through the canonical provider mapper', async () => {
+    const signal = vi.fn(async () => undefined);
+    const { adapter, workflowClient } = makeAdapter();
+    workflowClient.getHandle.mockReturnValue({
+      signal,
+    });
+
+    await adapter.signal(
+      {
+        provider: 'temporal',
+        tenantId: 'tenant-1',
+        namespace: 'dvt-test',
+        workflowId: 'run-1',
+        runId: 'run-1',
+      },
+      { signalId: 'sig-cancel-1', type: 'CANCEL', reason: 'operator-request' }
+    );
+
+    expect(signal).toHaveBeenCalledWith(WorkflowSignals.CANCEL, 'operator-request');
   });
 });

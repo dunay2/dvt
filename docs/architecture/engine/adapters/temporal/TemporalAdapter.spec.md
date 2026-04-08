@@ -62,8 +62,11 @@ Temporal is code-first. The adapter MUST implement a **generic interpreter workf
 2. Walks the plan, scheduling Activities according to dependencies (DAG walker, deterministic order).
 3. Uses `PlanRef` for event identity/audit metadata, not as a runtime fetch authority.
 4. Emits lifecycle events to StateStore.
-5. Handles signals (PAUSE, RESUME, RETRY_STEP, etc.).
+5. Handles canonical runtime-control signals (PAUSE, RESUME, CANCEL).
 6. Calls `continueAsNew()` when history exceeds limits.
+
+Business run recovery is a separate engine or application use case and MUST
+NOT be reintroduced through the generic signal boundary.
 
 **Interpreter workflow signature** (TypeScript):
 

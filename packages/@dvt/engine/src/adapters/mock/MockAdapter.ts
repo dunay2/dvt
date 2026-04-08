@@ -8,6 +8,7 @@
  * @date 2026-02-21
  */
 import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -16,6 +17,7 @@ import {
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
+  type SignalSemanticsVersion,
   type SignalRequest,
 } from '@dvt/contracts';
 
@@ -107,13 +109,26 @@ export class MockAdapter implements IProviderAdapter {
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    if (request.type === 'CANCEL') {
-      await this.appendCancelLifecycle(runRef);
+    const dispatch = mapCanonicalSignalToMockDispatch(request);
+    switch (dispatch.kind) {
+      case 'cancel':
+        await this.appendCancelLifecycle(runRef);
+        return;
+      case 'pause':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunPaused');
+        return;
+      case 'resume':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunResumed');
+        return;
     }
   }
 
   capabilities(): readonly string[] {
     return MOCK_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
   private async appendCancelLifecycle(runRef: EngineRunRef): Promise<void> {
@@ -142,6 +157,69 @@ export class MockAdapter implements IProviderAdapter {
         payloadVersion: 1,
       }))
     );
+  }
+
+  private async appendPauseResumeLifecycle(
+    runRef: EngineRunRef,
+    request: SignalRequest,
+    eventType: 'RunPaused' | 'RunResumed'
+  ): Promise<void> {
+    const meta = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    if (!meta) {
+      throw new RunMetadataNotFoundError(runRef.runId);
+    }
+
+    const snapshot = await this.deps.stateStore.getSnapshot(runRef.tenantId, runRef.runId);
+    if (eventType === 'RunPaused') {
+      if (!snapshot || snapshot.status !== 'RUNNING' || snapshot.paused) {
+        return;
+      }
+    } else if (!snapshot || snapshot.status !== 'PAUSED' || !snapshot.paused) {
+      return;
+    }
+
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(runRef.runId, [
+      {
+        eventId: this.idempotency.eventId(),
+        eventType,
+        payloadVersion: 1,
+        emittedAt: this.clock.nowIsoUtc(),
+        tenantId: meta.tenantId,
+        projectId: meta.projectId,
+        environmentId: meta.environmentId,
+        runId: meta.runId,
+        planId: meta.planId,
+        planVersion: meta.planVersion,
+        engineAttemptId: 1,
+        logicalAttemptId: meta.logicalAttemptId,
+        idempotencyKey: this.idempotency.signalKey(
+          {
+            runId: meta.runId,
+            logicalAttemptId: meta.logicalAttemptId,
+            planId: meta.planId,
+            planVersion: meta.planVersion,
+          },
+          request
+        ),
+      },
+    ]);
+  }
+}
+
+function mapCanonicalSignalToMockDispatch(request: SignalRequest): {
+  kind: 'cancel' | 'pause' | 'resume';
+} {
+  switch (request.type) {
+    case 'CANCEL':
+      return { kind: 'cancel' };
+    case 'PAUSE':
+      return { kind: 'pause' };
+    case 'RESUME':
+      return { kind: 'resume' };
+    default: {
+      const exhaustive: never = request.type;
+      throw new Error(`MOCK_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
+    }
   }
 }
 

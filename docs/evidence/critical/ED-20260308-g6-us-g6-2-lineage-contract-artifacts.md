@@ -61,14 +61,14 @@ compatibility:
 ## What changed
 
 - Added a canonical Zensical-visible contract home for emitted lineage facets in
-  [Traceability Contracts](../contracts/traceability/index.md).
+  [Traceability Contracts](../../contracts/traceability/index.md).
 - Vendored the pinned OpenLineage SQL job facet schema version used by the
   package as a repo-local artifact.
 - Added a normative schema for the custom `dvt_dbt_details` job facet under
   repo control.
 - Anchored `dvt_dbt_details.compiledCodeRef` to a self-contained mirror of the
   shared-kernel
-  [CompiledCodeRef v1](../contracts/shared/CompiledCodeRef.v1.schema.json)
+  [CompiledCodeRef v1](../../contracts/shared/CompiledCodeRef.v1.schema.json)
   contract artifact so the schema remains offline-compilable without losing the
   shared contract linkage.
 - Added a provenance page for the vendored SQL facet so source URL, artifact

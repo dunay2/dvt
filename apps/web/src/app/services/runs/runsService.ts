@@ -1,4 +1,5 @@
 import type { IRunsPort } from '../../ports/runs';
+import type { SessionContextPort } from '../../ports/sessionContext';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
 import type { DataSourceMode } from '../config/dataSource';
 import { createApiRunsService } from './runsService.api';
@@ -20,13 +21,18 @@ export type {
  */
 export type RunsService = IRunsPort;
 
+export interface RunsServiceDependencies {
+  sessionContext?: SessionContextPort;
+}
+
 export function createRunsService(
   mode: DataSourceMode,
-  apiClient: ApiClient = createApiClient()
+  apiClient: ApiClient = createApiClient(),
+  dependencies: RunsServiceDependencies = {}
 ): IRunsPort {
   if (mode === 'api') {
-    return createApiRunsService(apiClient);
+    return createApiRunsService(apiClient, dependencies.sessionContext);
   }
 
-  return createMockRunsService();
+  return createMockRunsService(dependencies.sessionContext);
 }

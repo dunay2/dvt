@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlatformHealthCapabilityApi } from '../capabilities/platform-health';
+import type { CapabilitiesPort } from './ports/capabilities';
 import {
   createHealthzProbe,
   createPlatformHealthSnapshot,
@@ -16,14 +17,24 @@ import { AppServicesProvider, useAppDataSourceMode } from './services/AppService
 import { useAppStore } from './stores/appStore';
 
 function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
+  const capabilitiesPort: CapabilitiesPort = {
+    loadCapabilities: vi.fn().mockResolvedValue({
+      apiVersion: '1.0.0',
+      minFrontendVersion: '1.0.0',
+      plugins: {},
+    }),
+  };
+
   return (
-    <MemoryRouter>
-      <Routes>
-        <Route element={<RootShell platformHealthCapability={capability} />} path="/">
-          <Route element={<div>Workspace route</div>} index />
-        </Route>
-      </Routes>
-    </MemoryRouter>
+    <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <MemoryRouter>
+        <Routes>
+          <Route element={<RootShell platformHealthCapability={capability} />} path="/">
+            <Route element={<div>Workspace route</div>} index />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </AppServicesProvider>
   );
 }
 
@@ -229,17 +240,15 @@ describe('RootShell platform health UX', () => {
 });
 
 describe('Root integration guard', () => {
-  it('keeps service wiring available when Root is mounted under AppServicesProvider', async () => {
+  it('keeps service wiring available when Root owns the app-services provider', async () => {
     const mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock' }}>
-        <MemoryRouter initialEntries={['/']}>
-          <Routes>
-            <Route element={<Root />} path="/">
-              <Route element={<RootServicesProbe />} index />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      </AppServicesProvider>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route element={<Root />} path="/">
+            <Route element={<RootServicesProbe />} index />
+          </Route>
+        </Routes>
+      </MemoryRouter>
     );
 
     try {

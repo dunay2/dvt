@@ -24,9 +24,9 @@ Canonical repo sources:
 
 - [20260328 Lane C AI Efficiency And Cost Review](20260328-lane-c-ai-efficiency-and-cost-review.md)
 - [20260330 CI, Prepush & PR Process Observations](20260330-ci-prepush-pr-process-observations.md)
-- [20260401 RC-C2 Preflight And Log-First Triage Rollout Closeout](../closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
-- [20260324 S18 Follow-Up Proposal Capture Closeout](../closeouts/20260324-s18-follow-up-proposal-capture-closeout.md)
-- [20260324 Schema Migration Rollback Closeout](../closeouts/20260324-schema-migration-rollback-closeout.md)
+- [20260401 RC-C2 Preflight And Log-First Triage Rollout Closeout](../../closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
+- [20260324 S18 Follow-Up Proposal Capture Closeout](../../closeouts/20260324-s18-follow-up-proposal-capture-closeout.md)
+- [20260324 Schema Migration Rollback Closeout](../../closeouts/20260324-schema-migration-rollback-closeout.md)
 - current enforcement surfaces in `scripts/check-changed.cjs`,
   `scripts/lint-markdown-changed.cjs`, `scripts/fix-changed.cjs`, and
   `package.json`
@@ -101,7 +101,7 @@ Generalization rule:
   remains the main bug/debt inventory for the 2026-03-30 hardening pass.
 - [20260328 Lane C AI Efficiency And Cost Review](20260328-lane-c-ai-efficiency-and-cost-review.md)
   remains the baseline cost model and target-setting document.
-- [20260401 RC-C2 Preflight And Log-First Triage Rollout Closeout](../closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
+- [20260401 RC-C2 Preflight And Log-First Triage Rollout Closeout](../../closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
   remains the canonical record for the shipped tooling.
 
 This review adds one thing those sources did not centralize: a stable taxonomy

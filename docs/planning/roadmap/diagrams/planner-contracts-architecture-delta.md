@@ -37,4 +37,4 @@ flowchart LR
 ## References
 
 - [Domain - Planner And Contracts](../../domains/planner-and-contracts.md)
-- [Planner Target State Roadmap](../../proposals/planner-target-state-roadmap-20260320.md)
+- [Planner Target State Roadmap](../../archive/proposals/planner-target-state-roadmap-20260320.md)

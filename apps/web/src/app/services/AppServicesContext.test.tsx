@@ -4,14 +4,18 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { CapabilitiesPort } from '../ports/capabilities';
 import type { PlansService } from './plans/plansService';
 import type { RunsService } from './runs/runsService';
 import type { WorkspaceService } from './workspace/workspaceService';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
+  useCapabilitiesPort,
   usePlansService,
   useRunsService,
+  useSessionContext,
+  useShellFeedback,
   useWorkspaceService,
 } from './AppServicesContext';
 
@@ -25,11 +29,17 @@ describe('AppServicesProvider', () => {
     workspaceService: WorkspaceService | null;
     runsService: RunsService | null;
     plansService: PlansService | null;
+    capabilitiesPort: CapabilitiesPort | null;
+    sessionContext: ReturnType<typeof useSessionContext> | null;
+    shellFeedback: ReturnType<typeof useShellFeedback> | null;
   } = {
     mode: null,
     workspaceService: null,
     runsService: null,
     plansService: null,
+    capabilitiesPort: null,
+    sessionContext: null,
+    shellFeedback: null,
   };
 
   function Probe(): null {
@@ -37,6 +47,9 @@ describe('AppServicesProvider', () => {
     captured.workspaceService = useWorkspaceService();
     captured.runsService = useRunsService();
     captured.plansService = usePlansService();
+    captured.capabilitiesPort = useCapabilitiesPort();
+    captured.sessionContext = useSessionContext();
+    captured.shellFeedback = useShellFeedback();
     return null;
   }
 
@@ -58,6 +71,9 @@ describe('AppServicesProvider', () => {
     captured.workspaceService = null;
     captured.runsService = null;
     captured.plansService = null;
+    captured.capabilitiesPort = null;
+    captured.sessionContext = null;
+    captured.shellFeedback = null;
 
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
     if (previousActEnvironment === undefined) {
@@ -80,6 +96,7 @@ describe('AppServicesProvider', () => {
     expect(captured.workspaceService).not.toBeNull();
     expect(captured.runsService).not.toBeNull();
     expect(captured.plansService).not.toBeNull();
+    expect(captured.capabilitiesPort).not.toBeNull();
   });
 
   it('uses explicit overrides when provided', async () => {
@@ -119,6 +136,70 @@ describe('AppServicesProvider', () => {
         lastModified: '2026-04-06T00:00:00Z',
       }),
     };
+    const plansService = {
+      previewPlan: async () => ({
+        planId: 'plan_1',
+        planVersion: '1',
+        generatedAt: '2026-04-06T00:00:00Z',
+        adapter: 'dbt',
+        target: 'dev',
+        steps: [],
+        capabilities: [],
+      }),
+      importPlan: async () => ({
+        planId: 'plan_1',
+        planVersion: '1',
+        generatedAt: '2026-04-06T00:00:00Z',
+        adapter: 'dbt',
+        target: 'dev',
+        steps: [],
+        capabilities: [],
+      }),
+    };
+    const runsService = {
+      listRunSummaries: async () => [],
+      getRunSnapshot: async () => null,
+      startRun: async () => ({
+        provider: 'mock' as const,
+        tenantId: 'tenant-a',
+        workflowId: 'workflow_1',
+        runId: 'run_1',
+      }),
+      listRunEvents: async () => ({ events: [] }),
+    };
+    const sessionContext = {
+      getWorkspaceScope: () => ({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock' as const,
+      }),
+      getWorkspaceScopeSnapshot: () => ({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock' as const,
+      }),
+      subscribeWorkspaceScope: () => () => undefined,
+      buildRunContext: (runId: string) => ({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock' as const,
+        runId,
+      }),
+    };
+    const shellFeedback = {
+      success: () => undefined,
+      error: () => undefined,
+    };
+    const capabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: async () => ({
+        apiVersion: '1.0.0',
+        minFrontendVersion: '1.0.0',
+        plugins: {},
+      }),
+    };
 
     await act(async () => {
       root.render(
@@ -126,6 +207,11 @@ describe('AppServicesProvider', () => {
           overrides={{
             mode: 'api',
             workspaceService,
+            plansService,
+            runsService,
+            capabilitiesPort,
+            sessionContext,
+            shellFeedback,
           }}
         >
           <Probe />
@@ -135,5 +221,10 @@ describe('AppServicesProvider', () => {
 
     expect(captured.mode).toBe('api');
     expect(captured.workspaceService).toBe(workspaceService);
+    expect(captured.plansService).toBe(plansService);
+    expect(captured.runsService).toBe(runsService);
+    expect(captured.capabilitiesPort).toBe(capabilitiesPort);
+    expect(captured.sessionContext).toBe(sessionContext);
+    expect(captured.shellFeedback).toBe(shellFeedback);
   });
 });

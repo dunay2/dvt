@@ -2,6 +2,11 @@ import type { EngineRunRef, RunStatusSnapshot } from '@dvt/contracts';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it, vi } from 'vitest';
 
+import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 import {
   appendRunStarted,
   bootstrapQueuedRun,
@@ -145,15 +150,52 @@ describe('WorkflowEngineCoreService', () => {
     ).toEqual(['RunQueued']);
   });
 
-  it('signal(PAUSE) then signal(RESUME) still append engine-owned lifecycle events', async () => {
+  it('signal(PAUSE) does not append a derived lifecycle event when the runtime does not emit one', async () => {
     const signal = vi.fn(async () => {});
     const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
         signal,
       },
     });
-    await bootstrapQueuedRun(store, 'core-signal-pause-resume-1');
-    const ref: EngineRunRef = makeRunRef('core-signal-pause-resume-1');
+    await bootstrapQueuedRun(store, 'core-signal-pause-no-derive-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-no-derive-1');
+    await appendRunStarted(store, 'core-signal-pause-no-derive-1');
+
+    await core.signal(ref, {
+      signalId: 'sig-pause-no-derive-1',
+      type: 'PAUSE',
+    });
+
+    expect(signal).toHaveBeenCalledTimes(1);
+    expect(
+      (await store.listEvents('t', 'core-signal-pause-no-derive-1')).map((event) => event.eventType)
+    ).toEqual(['RunQueued', 'RunStarted']);
+  });
+
+  it('signal(PAUSE) then signal(RESUME) relies on runtime-owned lifecycle events', async () => {
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const clock = new SequenceClock('2026-03-31T00:00:00.000Z');
+    const idempotency = new IdempotencyKeyBuilder();
+    const adapter = new MockAdapter({
+      stateStore: store,
+      stateStoreWrite: store,
+      projector,
+      clock,
+      idempotency,
+    });
+    const signal = vi.spyOn(adapter, 'signal');
+    const { core } = createWorkflowEngineCoreFixture({
+      adapter,
+      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      projector,
+      idempotency,
+      clock,
+    });
+    await bootstrapQueuedRun(store, 'core-signal-pause-resume-1', { provider: 'mock' });
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-resume-1', { provider: 'mock' });
     await appendRunStarted(store, 'core-signal-pause-resume-1');
 
     await core.signal(ref, {
@@ -172,14 +214,29 @@ describe('WorkflowEngineCoreService', () => {
   });
 
   it('signal(PAUSE) retry with same signalId is a no-op and does not call adapter again', async () => {
-    const signal = vi.fn(async () => {});
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        signal,
-      },
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const clock = new SequenceClock('2026-03-31T00:00:00.000Z');
+    const idempotency = new IdempotencyKeyBuilder();
+    const adapter = new MockAdapter({
+      stateStore: store,
+      stateStoreWrite: store,
+      projector,
+      clock,
+      idempotency,
     });
-    await bootstrapQueuedRun(store, 'core-signal-pause-retry-1');
-    const ref: EngineRunRef = makeRunRef('core-signal-pause-retry-1');
+    const signal = vi.spyOn(adapter, 'signal');
+    const { core } = createWorkflowEngineCoreFixture({
+      adapter,
+      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      projector,
+      idempotency,
+      clock,
+    });
+    await bootstrapQueuedRun(store, 'core-signal-pause-retry-1', { provider: 'mock' });
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-retry-1', { provider: 'mock' });
     await appendRunStarted(store, 'core-signal-pause-retry-1');
 
     const pauseReq = { signalId: 'sig-pause-retry-1', type: 'PAUSE' as const };
@@ -200,14 +257,29 @@ describe('WorkflowEngineCoreService', () => {
   });
 
   it('signal(PAUSE) on PENDING run rejects before adapter side effects', async () => {
-    const signal = vi.fn(async () => {});
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        signal,
-      },
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const clock = new SequenceClock('2026-03-31T00:00:00.000Z');
+    const idempotency = new IdempotencyKeyBuilder();
+    const adapter = new MockAdapter({
+      stateStore: store,
+      stateStoreWrite: store,
+      projector,
+      clock,
+      idempotency,
     });
-    await bootstrapQueuedRun(store, 'core-signal-pause-invalid-1');
-    const ref: EngineRunRef = makeRunRef('core-signal-pause-invalid-1');
+    const signal = vi.spyOn(adapter, 'signal');
+    const { core } = createWorkflowEngineCoreFixture({
+      adapter,
+      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      projector,
+      idempotency,
+      clock,
+    });
+    await bootstrapQueuedRun(store, 'core-signal-pause-invalid-1', { provider: 'mock' });
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-invalid-1', { provider: 'mock' });
 
     await expect(
       core.signal(ref, {
@@ -220,5 +292,30 @@ describe('WorkflowEngineCoreService', () => {
     expect(
       (await store.listEvents('t', 'core-signal-pause-invalid-1')).map((event) => event.eventType)
     ).toEqual(['RunQueued']);
+  });
+
+  it('signal(RETRY_RUN) rejects before adapter side effects because recovery is not canonical', async () => {
+    const signal = vi.fn(async () => {});
+    const { core, store } = createWorkflowEngineCoreFixture({
+      adapterOverrides: {
+        signal,
+      },
+    });
+    await bootstrapQueuedRun(store, 'core-signal-retry-run-1');
+    const ref: EngineRunRef = makeRunRef('core-signal-retry-run-1');
+    await appendRunStarted(store, 'core-signal-retry-run-1');
+
+    await expect(
+      core.signal(ref, {
+        signalId: 'sig-retry-run-1',
+        type: 'RETRY_RUN',
+        reason: 'operator-request',
+      })
+    ).rejects.toThrow(/Validation failed/);
+
+    expect(signal).not.toHaveBeenCalled();
+    expect(
+      (await store.listEvents('t', 'core-signal-retry-run-1')).map((event) => event.eventType)
+    ).toEqual(['RunQueued', 'RunStarted']);
   });
 });

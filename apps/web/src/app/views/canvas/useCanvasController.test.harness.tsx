@@ -2,6 +2,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
+import { AppServicesProvider } from '../../services/AppServicesContext';
 import { useCanvasController } from './useCanvasController';
 import {
   configureDefaultCanvasHarnessMocks,
@@ -16,6 +17,101 @@ const state = vi.hoisted(() => ({
   canonicalEdges: [],
   overlayDecorations: new Map(),
   currentPlan: null,
+  services: {
+    workspaceService: {
+      getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+      getDiffChanges: vi.fn(async () => []),
+      getPlugins: vi.fn(async () => []),
+      getRoles: vi.fn(async () => []),
+      getAuditLog: vi.fn(async () => []),
+      listWarehouseConnections: vi.fn(async () => []),
+      listWarehouseTables: vi.fn(async () => []),
+      importSources: vi.fn(async () => ({
+        success: true as const,
+        sourcesCreated: 0,
+        tablesImported: 0,
+        yamlFiles: [],
+        grouping: 'schema' as const,
+        options: {
+          includeColumns: false,
+          addTests: false,
+          addFreshness: false,
+        },
+      })),
+      listFiles: vi.fn(async () => []),
+      getFileContent: vi.fn(async (path: string) => ({
+        path,
+        name: path,
+        language: 'sql',
+        content: '',
+        lastModified: '2026-04-08T00:00:00Z',
+      })),
+      saveFileContent: vi.fn(async (path: string, content: string) => ({
+        path,
+        name: path,
+        language: 'sql',
+        content,
+        lastModified: '2026-04-08T00:00:00Z',
+      })),
+    },
+    plansService: {
+      previewPlan: vi.fn(async () => ({
+        planId: 'plan_1',
+        planVersion: '1',
+        generatedAt: '2026-04-08T00:00:00Z',
+        adapter: 'dbt',
+        target: 'dev',
+        steps: [],
+        capabilities: [],
+      })),
+      importPlan: vi.fn(async () => ({
+        planId: 'plan_1',
+        planVersion: '1',
+        generatedAt: '2026-04-08T00:00:00Z',
+        adapter: 'dbt',
+        target: 'dev',
+        steps: [],
+        capabilities: [],
+      })),
+    },
+    runsService: {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        tenantId: 'tenant-a',
+        workflowId: 'workflow_ui_1',
+        runId: 'run_ui_1',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    },
+    sessionContext: {
+      getWorkspaceScope: () => ({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock' as const,
+      }),
+      getWorkspaceScopeSnapshot: () => ({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock' as const,
+      }),
+      subscribeWorkspaceScope: () => () => undefined,
+      buildRunContext: (runId: string) => ({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock' as const,
+        runId,
+      }),
+    },
+    shellFeedback: {
+      success: vi.fn(),
+      error: vi.fn(),
+    },
+  },
   store: { setCanvasViewport: vi.fn(), setCanvasNodePositions: vi.fn() },
   graphHandlersResult: { handleDrop: vi.fn(), confirmEdgeCreation: vi.fn() },
   executionActionsResult: {
@@ -28,9 +124,6 @@ const state = vi.hoisted(() => ({
 const mocks = vi.hoisted(() => ({
   useQuery: vi.fn(),
   resolveCanvasGraphStrategy: vi.fn(),
-  useWorkspaceService: vi.fn(),
-  usePlansService: vi.fn(),
-  useRunsService: vi.fn(),
   useCanvasInteractionStore: vi.fn(),
   useExecutionStore: vi.fn(),
   useSessionStore: vi.fn(),
@@ -63,11 +156,6 @@ vi.mock('@xyflow/react', async () => {
 vi.mock('../../components/canvas/DbtNodeComponent', () => ({ default: () => null }));
 vi.mock('../../plugins/graphStrategyRegistry', () => ({
   resolveCanvasGraphStrategy: mocks.resolveCanvasGraphStrategy,
-}));
-vi.mock('../../services/AppServicesContext', () => ({
-  useWorkspaceService: mocks.useWorkspaceService,
-  usePlansService: mocks.usePlansService,
-  useRunsService: mocks.useRunsService,
 }));
 vi.mock('../../stores/canvasInteractionStore', () => ({
   useCanvasInteractionStore: mocks.useCanvasInteractionStore,
@@ -147,7 +235,18 @@ export function setupCanvasControllerHarness() {
       act(async () => {
         root?.render(
           <MemoryRouter>
-            <Probe />
+            <AppServicesProvider
+              overrides={{
+                mode: 'mock',
+                workspaceService: state.services.workspaceService,
+                plansService: state.services.plansService,
+                runsService: state.services.runsService,
+                sessionContext: state.services.sessionContext,
+                shellFeedback: state.services.shellFeedback,
+              }}
+            >
+              <Probe />
+            </AppServicesProvider>
           </MemoryRouter>
         );
       }),

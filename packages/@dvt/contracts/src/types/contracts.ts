@@ -55,20 +55,22 @@ export interface PlanRef {
   schemaVersion: string;
   planId: string;
   planVersion: string;
+  sizeBytes?: number;
+  expiresAt?: IsoUtcString;
+}
+
+export interface RunExecutionPolicy {
   /**
    * Deterministic fingerprint of the plan-level plugin compatibility surface.
    * When present, admission-time runExecutionContext artifacts MUST align with
    * this value.
    */
   pluginCompatibilityFingerprint?: string | undefined;
-  sizeBytes?: number;
-  expiresAt?: IsoUtcString;
   /**
-   * Capabilities this plan requires from the target adapter.
+   * Capabilities this run requires from the selected adapter.
    * Strings MUST be drawn from the normative enum in capabilities.schema.json.
-   * The engine rejects the run if the adapter does not declare all required capabilities.
    */
-  requiresCapabilities?: string[];
+  requiresCapabilities?: string[] | undefined;
 }
 
 export interface RunExecutionContextRef {
@@ -159,12 +161,11 @@ export type EngineRunRef =
       runId: string;
     };
 
-export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_STEP' | 'RETRY_RUN';
+export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 
 export interface SignalRequest {
   signalId: string; // caller-provided idempotency id
   type: SignalType;
-  stepId?: string;
   reason?: string;
   requestedAt?: IsoUtcString;
 }

@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-07'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -333,7 +333,7 @@ tasks:
     effort_points: 2
     progress_pct: 25
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
@@ -354,7 +354,7 @@ tasks:
       Every contract family affected by the review is classified as either `stay shared` or `move to
       owner`, with no intermediate category.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
     status_reason: >-
@@ -374,7 +374,7 @@ tasks:
       Engine-owned behavioral ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
       and any compatibility alias is explicit, temporary, and validated.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Engine ownership migration is now tracked and ready for execution.
     last_verified: '2026-04-02'
@@ -391,7 +391,7 @@ tasks:
       Delivery, traceability, and artifacts ownership matches the bounded context and
       `@dvt/contracts` retains only shared transport shapes for those areas.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Delivery/traceability/artifacts ownership migration is queued behind engine.
     last_verified: '2026-04-02'
@@ -409,7 +409,7 @@ tasks:
       Planner-private ports leave `@dvt/contracts`, ADR-0035 public planner contracts stay shared,
       and final import guards prevent regression.
     evidence_refs:
-      - docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
     last_verified: '2026-04-02'
@@ -445,17 +445,20 @@ tasks:
       transition from isolated governance scripts to a coherent doc-driven operating system.
     complexity: M
     effort_points: 5
-    progress_pct: 15
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
       - docs/planning/status/governance-document-rule-inventory.md
       - docs/guides/ai-work-protocol.md
       - docs/planning/state/planning-control-tower.md
+      - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
+      - docs/guides/documentation-maintenance-guide-20260407.md
     status_reason: >-
-      Governance routing and generated-planning extraction are already in place, but the repo still
-      lacks a unified framework for authoring, planning-data validation, and traceability
-      automation. The proposal is now published and execution waves need decomposition.
-    last_verified: '2026-04-04'
+      Governance routing, generated-planning extraction, and the governing proposal are already in
+      place. This slice added a current-vs-target documentation information architecture spec and a
+      contributor maintenance guide, but the broader framework still needs wave decomposition,
+      authoring scaffolds, and traceability automation follow-through.
+    last_verified: '2026-04-07'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -1388,7 +1391,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: DOC-ARCH-01
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       reconcile repository-wide architecture docs with current code, simplify overlapping
       architecture surfaces, and archive stale snapshots that no longer describe the shipped
@@ -1400,21 +1403,21 @@ tasks:
       guide for keeping architecture docs aligned after runtime changes.
     complexity: M
     effort_points: 3
-    progress_pct: 92
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/architecture-doc-reconciliation-plan-20260402.md
+      - docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md
       - docs/architecture/architecture-surface-inventory-20260402.md
       - docs/architecture/system-delivery-status.md
       - docs/architecture/components/api/api-current-to-target-architecture.md
-      - docs/architecture/atlas/architecture/architecture_atlas.md
-      - docs/planning/execution-model/index.md
+      - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
+      - docs/guides/documentation-maintenance-guide-20260407.md
+      - docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md
     status_reason: >-
-      Waves 1 to 4 are now delivered: canonical reading order is published, planning-domain drift is
-      corrected, the architecture atlas is historical, supporting architecture maps are
-      non-canonical, the component subtree now routes through explicit supporting entrypoints, and
-      the API component now has a code-grounded current-to-target walkthrough, but final archive
-      consolidation and a contributor maintenance guide remain open.
-    last_verified: '2026-04-03'
+      Canonical reading order is explicit, stale architecture component packs were archived out of
+      the active tree, active component routes were rewritten as summary navigation to canonical
+      docs, broken active planning-domain references were repaired, and contributors now have a
+      maintenance guide plus a current-vs-target information architecture spec.
+    last_verified: '2026-04-07'
   - task_id: WE-HX
     priority: P1
     status: in_progress
@@ -1509,10 +1512,10 @@ tasks:
   - task_id: WE-HX-4
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: completed
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: split runtime query, command, signal, and enrichment paths.
     dependency: WE-HX-2
     target: >-
@@ -1520,8 +1523,120 @@ tasks:
       ADR-0015 read-path discipline is structurally explicit.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Includes former AR-A3 objective as part of this wave.
-    last_verified: '2026-04-03'
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+    status_reason: >-
+      Completed. Signal ownership, canonical-signal narrowing, provider mapping, and read-path
+      discipline are now explicitly governed across `WE-HX-4-A..D`.
+    last_verified: '2026-04-08'
+  - task_id: WE-HX-4-A
+    parent_task: WE-HX-4
+    priority: P1
+    status: completed
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    objective: separate DVT-governed canonical signals from provider-private runtime commands.
+    dependency: WE-HX-2
+    target: >-
+      `SignalType` only represents engine-owned semantics, while provider-private retry and recovery
+      operations move to a dedicated adapter command boundary instead of remaining mixed into the
+      canonical contract.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/contracts/src/types/contracts.ts
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+    status_reason: >-
+      Completed. Canonical `SignalType` is now limited to DVT-governed run-control semantics and
+      retry-oriented business recovery no longer leaks through the generic signal contract.
+    last_verified: '2026-04-08'
+  - task_id: WE-HX-4-B
+    parent_task: WE-HX-4
+    priority: P1
+    status: completed
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective:
+      add an explicit provider mapper seam between canonical signals and native adapter commands.
+    dependency: WE-HX-4-A
+    target: >-
+      Engine-owned signals translate through a provider mapper, adapter-private commands do not leak
+      into canonical contracts, and signal or command negotiation fails closed instead of silently
+      falling back.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/engine/src/adapters/IProviderAdapter.ts
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+    status_reason: >-
+      Completed. Canonical run-control signals now translate through explicit provider mapping
+      helpers in the Temporal and mock adapters, and unsupported semantics fail closed before
+      leaking provider-private commands into shared contracts.
+    last_verified: '2026-04-08'
+  - task_id: WE-HX-4-C
+    parent_task: WE-HX-4
+    priority: P1
+    status: completed
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    objective:
+      resolve ownership of `RETRY_RUN` and `RETRY_STEP` and lock the tests and docs to that
+      decision.
+    dependency: WE-HX-4-B
+    target: >-
+      Retry-oriented signal semantics are explicitly classified as engine-owned or adapter-owned,
+      and contract or runtime coverage prevents those concerns from being mixed again.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md
+      - docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
+      - packages/@dvt/contracts/src/types/contracts.ts
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+    status_reason: >-
+      Completed. `RETRY_STEP` is governed by ADR-0048 as a future dedicated step-retry use case and
+      `RETRY_RUN` is now governed by ADR-0049 as a future dedicated recover-run use case outside
+      canonical `SignalType`.
+    last_verified: '2026-04-08'
+  - task_id: WE-HX-4-D
+    parent_task: WE-HX-4
+    priority: P1
+    status: completed
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective:
+      move `PAUSE/RESUME` realized lifecycle ownership to the runtime and retire duplicate engine
+      emission.
+    dependency: WE-HX-2
+    target: >-
+      `WorkflowEngineCoreService` no longer appends `RunPaused` or `RunResumed`, Temporal runtime
+      remains the sole producer of those realized lifecycle facts, and `SignalSemantics` plus
+      `SignalTransitionGuard` are updated without silent semantic drift.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+      - packages/@dvt/engine/src/services/signal/SignalTransitionGuard.ts
+      - packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
+      - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+      - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+      - packages/@dvt/engine/test/adapters/MockAdapter.cancel.test.ts
+      - packages/@dvt/contracts/test/signalSemantics.test.ts
+      - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
+      - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
+    status_reason: >-
+      Completed. `WorkflowEngineCoreService` now validates and dispatches `PAUSE/RESUME` without
+      appending realized lifecycle events, the runtime remains the sole producer of `RunPaused` and
+      `RunResumed`, Temporal and mock runtimes deduplicate stale `signalId` replays across
+      pause-resume cycles without collapsing legitimate repeated pause cycles, and the current
+      `SignalSemantics` version no longer encodes stale engine-derived mappings.
+    last_verified: '2026-04-07'
   - task_id: WE-HX-5
     parent_task: WE-HX
     priority: P1
@@ -1694,6 +1809,10 @@ dependency_notes:
     `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
     folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.
   - >-
+    `WE-HX-4-A..D` are now closed. The engine/runtime signal boundary is governed by runtime-owned
+    realized lifecycle facts, canonical run-control signals, explicit provider mapping helpers, and
+    dedicated future use-case boundaries for step retry and run recovery.
+  - >-
     `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
     planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
     traceability waves instead of continuing script-by-script growth.
@@ -1704,11 +1823,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 60
-  total_effort_points: 214
-  completed_weighted_points: 86.79
-  lane_progress_pct: 41
+  verified_on: '2026-04-07'
+  total_tasks: 82
+  total_effort_points: 279
+  completed_weighted_points: 167.15
+  lane_progress_pct: 60
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

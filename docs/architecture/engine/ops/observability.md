@@ -104,7 +104,7 @@ dvt_plugin_sandbox_memory_bytes{tenantId, plugin_type} = gauge
 ```prometheus
 # Counter: signals received (by type)
 dvt_signals_received_total{signal_type, status} = counter
-  signal_types: [PAUSE, RESUME, RETRY_STEP, CANCEL, CUSTOM_1, ...]
+  signal_types: [PAUSE, RESUME, CANCEL]
   statuses: [accepted, rejected, deferred]
 
 # Histogram: signal processing latency
