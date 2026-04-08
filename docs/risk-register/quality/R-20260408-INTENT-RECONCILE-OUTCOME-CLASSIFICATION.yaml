@@ -18,6 +18,8 @@ mitigations:
   - 'DispatchedIntentReconciliationPolicy now returns resolved when the run is already bootstrapped.'
   - 'RunMaintenanceService and IntentReconcilerWorker regression coverage assert the bootstrapped
     DISPATCHED path is counted as resolved, not cancelled.'
+  - 'RunMaintenanceService emits dvt.intent.resolved_total with provider and operation labels so
+    resolved outcomes keep provider-scoped observability.'
   - 'IRunMaintenanceService, ADR-0030, and the metrics catalog now reserve cancelled for real
     provider cleanup.'
   - 'verify:prepush remains required before presenting the slice as ready.'
