@@ -1686,7 +1686,7 @@ tasks:
     last_verified: '2026-04-08'
   - task_id: TF-E1-C
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       implement the result UX that shows executor identity, sink materialization evidence, and
       failed-step diagnostics.
@@ -1696,15 +1696,19 @@ tasks:
       attribution so operators can decide what happened without backend log inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 30
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/frontend/ux-implementation-guide.md
+      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+      - apps/web/src/app/views/runs/RunStates.test.tsx
     status_reason: >-
-      The result model is now frozen in docs, but the caller-visible evidence and failure UI remains
-      unimplemented.
-    last_verified: '2026-04-05'
+      Result diagnostics implementation started in run detail: failure attribution now derives from
+      snapshot and event payloads (including StepFailed reason/message fallback) and surfaces a
+      failure timestamp for operator triage without backend log inspection. Full closure still
+      depends on TF-C2-B runtime result payload readiness.
+    last_verified: '2026-04-08'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in
