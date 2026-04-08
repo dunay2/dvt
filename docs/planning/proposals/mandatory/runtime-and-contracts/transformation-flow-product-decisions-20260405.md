@@ -45,18 +45,20 @@ flowchart TD
 
 ## Decision register
 
-| Decision area           | Accepted decision                                               | Rejected now                                   | Why this is the right cut                                                    |
-| ----------------------- | --------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| Product promise         | first product value is execution of a real transformation       | broad authoring platform                       | execution is the shortest path to demonstrable value                         |
-| First payload           | SQL is the first executable artifact                            | model generation as the core value proposition | SQL is inspectable, testable, and executable against PostgreSQL now          |
-| Authoring source        | planning input is derived from the design graph                 | hand-built raw plan payloads from the client   | the graph is the user-level intent we can validate and persist               |
-| Preview contract        | preview validates and persists immutable plans                  | preview as a transient estimate                | runtime already wants `PlanRef`, so preview must produce it                  |
-| Runtime start boundary  | execution starts by `PlanRef`                                   | execution starts by raw client plan bytes      | preserves runtime immutability and provenance                                |
-| First executor          | PostgreSQL is the first real execution target                   | multi-target executor matrix in v1             | Postgres is the cheapest truthful environment for proof                      |
-| Local proof environment | Docker PostgreSQL is required for acceptance                    | cloud-only or manual env setup                 | the first vertical must be repeatable by developers and CI-like local checks |
-| Artifact policy         | authoring artifacts are Git-first                               | UI-only state or runtime-invented SQL          | Git-first gives provenance and repeatability                                 |
-| Canvas scope            | basic `source -> sql_transform -> sink` only                    | generic workbench with many node types         | narrow graph is the only realistic way to close the loop now                 |
-| Phase 2                 | dbt is added as an executor mode behind the same outer contract | separate dbt product flow                      | preserves the investment in preview, `PlanRef`, and result UX                |
+| Decision area           | Accepted decision                                                             | Rejected now                                   | Why this is the right cut                                                    |
+| ----------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| Product promise         | first product value is execution of a real transformation                     | broad authoring platform                       | execution is the shortest path to demonstrable value                         |
+| First payload           | SQL is the first executable artifact                                          | model generation as the core value proposition | SQL is inspectable, testable, and executable against PostgreSQL now          |
+| Authoring source        | planning input is derived from the design graph                               | hand-built raw plan payloads from the client   | the graph is the user-level intent we can validate and persist               |
+| Preview contract        | preview validates and persists immutable plans                                | preview as a transient estimate                | runtime already wants `PlanRef`, so preview must produce it                  |
+| Preview discriminator   | every preview request declares an explicit `previewProfile`                   | inferring preview semantics from compiled plan | caller-visible rules must be governed at the request boundary                |
+| Runtime start boundary  | execution starts by `PlanRef`                                                 | execution starts by raw client plan bytes      | preserves runtime immutability and provenance                                |
+| Provider model          | one provider or executor profile per persisted plan in v1                     | multi-provider dispatch inside a single run    | fits the current runtime and keeps the first vertical finishable             |
+| First executor          | PostgreSQL is the first real execution target                                 | multi-target executor matrix in v1             | Postgres is the cheapest truthful environment for proof                      |
+| Local proof environment | Docker PostgreSQL is required for acceptance                                  | cloud-only or manual env setup                 | the first vertical must be repeatable by developers and CI-like local checks |
+| Artifact policy         | authoring artifacts are Git-first                                             | UI-only state or runtime-invented SQL          | Git-first gives provenance and repeatability                                 |
+| Canvas scope            | basic `source -> sql_transform -> sink` only                                  | generic workbench with many node types         | narrow graph is the only realistic way to close the loop now                 |
+| Phase 2                 | dbt is added as a provider or executor profile behind the same outer contract | separate dbt product flow                      | preserves the investment in preview, `PlanRef`, and result UX                |
 
 ## What the product is and is not
 
@@ -101,6 +103,7 @@ These statements are intentionally hard limits.
 - basic Canvas graph with one source, one SQL transform, one sink
 - SQL artifact reference in Git
 - graph-derived preview request
+- explicit `previewProfile` on the request boundary
 - preview validates and persists immutable plan
 - `PlanRef` returned to the caller
 - run started by `PlanRef`
@@ -113,6 +116,7 @@ These statements are intentionally hard limits.
 - autonomous SQL generation
 - multi-source or multi-sink graphs
 - non-PostgreSQL executor targets in phase 1
+- multi-provider dispatch inside a single run
 - graph types beyond `source`, `sql_transform`, and `sink`
 - scheduling, SLA, dashboard, or scale work beyond what is needed to prove the vertical
 
@@ -154,7 +158,8 @@ Add dbt execution without changing the outer loop.
 
 Required rule:
 
-- dbt is an executor mode behind the same `design -> preview -> PlanRef -> run -> result` contract
+- dbt is a provider or executor profile behind the same `design -> preview -> PlanRef -> run -> result` contract
+- each persisted plan still binds exactly one provider profile for that run
 
 ## Benchmark posture
 
@@ -172,10 +177,11 @@ instead of trying to clone one whole platform.
 These consequences are accepted as part of the decision set:
 
 1. preview is heavier because it persists
-2. the API boundary must carry Git provenance, not just SQL text
-3. the runtime must expose executor identity and materialization evidence
-4. Canvas scope is intentionally constrained to make the vertical finishable
-5. phase 2 dbt work must reuse the same preview and run surfaces rather than creating a fork
+2. the API boundary must declare preview intent explicitly via `previewProfile`
+3. the API boundary must carry Git provenance, not just SQL text
+4. the runtime must expose executor identity and materialization evidence
+5. Canvas scope is intentionally constrained to make the vertical finishable
+6. phase 2 dbt work must reuse the same preview and run surfaces rather than creating a fork
 
 ## Decision closeout rule
 

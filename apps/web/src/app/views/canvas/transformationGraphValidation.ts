@@ -1,4 +1,5 @@
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildPreviewGraphSignature } from './previewGraphSource';
 
 export type TransformationNodeRole = 'source' | 'sql_transform' | 'sink';
 
@@ -15,7 +16,34 @@ type ValidateTransformationGraphArgs = {
   nodes: CanonicalNode[];
   edges: CanonicalEdge[];
   selectedNodeIds?: string[];
+  workspaceNodeIds?: string[];
 };
+
+function buildDraftSignature(
+  allNodes: readonly CanonicalNode[],
+  allEdges: readonly CanonicalEdge[],
+  scopedNodeIds: readonly string[]
+): string {
+  return buildPreviewGraphSignature(allNodes, allEdges, scopedNodeIds);
+}
+
+function buildInvalidResult(
+  summary: string,
+  allNodes: readonly CanonicalNode[],
+  allEdges: readonly CanonicalEdge[],
+  scopedNodeIds: string[],
+  scopedEdgeIds: string[] = []
+): TransformationGraphValidationResult {
+  const signature = buildDraftSignature(allNodes, allEdges, scopedNodeIds);
+  return {
+    valid: false,
+    summary,
+    draftSignature: signature,
+    scopedNodeIds,
+    scopedEdgeIds,
+    nodeRolesById: {},
+  };
+}
 
 function mapCanonicalRole(node: CanonicalNode): TransformationNodeRole | null {
   switch (node.role) {
@@ -30,29 +58,20 @@ function mapCanonicalRole(node: CanonicalNode): TransformationNodeRole | null {
   }
 }
 
-function buildInvalidResult(
-  summary: string,
-  scopedNodeIds: string[],
-  scopedEdgeIds: string[] = []
-): TransformationGraphValidationResult {
-  const signature = `nodes:${[...scopedNodeIds].sort().join(',')}|edges:${[...scopedEdgeIds].sort().join(',')}`;
-  return {
-    valid: false,
-    summary,
-    draftSignature: signature,
-    scopedNodeIds,
-    scopedEdgeIds,
-    nodeRolesById: {},
-  };
-}
-
 export function validateTransformationGraph({
   nodes,
   edges,
   selectedNodeIds = [],
+  workspaceNodeIds = [],
 }: ValidateTransformationGraphArgs): TransformationGraphValidationResult {
-  const scopedNodes =
-    selectedNodeIds.length > 0 ? nodes.filter((node) => selectedNodeIds.includes(node.id)) : nodes;
+  const scopeNodeIds =
+    selectedNodeIds.length > 0
+      ? selectedNodeIds
+      : workspaceNodeIds.length > 0
+        ? workspaceNodeIds
+        : nodes.map((node) => node.id);
+  const scopeNodeIdSet = new Set(scopeNodeIds);
+  const scopedNodes = nodes.filter((node) => scopeNodeIdSet.has(node.id));
   const scopedNodeIds = scopedNodes.map((node) => node.id);
   const scopedNodeIdSet = new Set(scopedNodeIds);
   const scopedEdges = edges.filter(
@@ -63,6 +82,8 @@ export function validateTransformationGraph({
   if (scopedNodes.length !== 3) {
     return buildInvalidResult(
       'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+      nodes,
+      edges,
       scopedNodeIds,
       scopedEdgeIds
     );
@@ -74,6 +95,8 @@ export function validateTransformationGraph({
     if (!mappedRole) {
       return buildInvalidResult(
         'Plan supports only input, transform, and output nodes in this vertical.',
+        nodes,
+        edges,
         scopedNodeIds,
         scopedEdgeIds
       );
@@ -100,6 +123,8 @@ export function validateTransformationGraph({
   if (roleCounts.source !== 1 || roleCounts.sql_transform !== 1 || roleCounts.sink !== 1) {
     return buildInvalidResult(
       'Plan requires exactly 1 source, 1 sql_transform, and 1 sink.',
+      nodes,
+      edges,
       scopedNodeIds,
       scopedEdgeIds
     );
@@ -108,6 +133,8 @@ export function validateTransformationGraph({
   if (scopedEdges.length !== 2) {
     return buildInvalidResult(
       'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
+      nodes,
+      edges,
       scopedNodeIds,
       scopedEdgeIds
     );
@@ -125,12 +152,14 @@ export function validateTransformationGraph({
   if (!hasSourceToTransform || !hasTransformToSink) {
     return buildInvalidResult(
       'Plan edges must follow source -> sql_transform -> sink.',
+      nodes,
+      edges,
       scopedNodeIds,
       scopedEdgeIds
     );
   }
 
-  const draftSignature = `nodes:${[...scopedNodeIds].sort().join(',')}|edges:${[...scopedEdgeIds].sort().join(',')}`;
+  const draftSignature = buildDraftSignature(nodes, edges, scopedNodeIds);
 
   return {
     valid: true,

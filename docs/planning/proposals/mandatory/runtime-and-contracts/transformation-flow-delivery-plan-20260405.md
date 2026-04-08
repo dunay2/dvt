@@ -141,6 +141,7 @@ Freeze the authoring, provenance, and compiler inputs before API and UI work.
 - `DesignGraphDraft`
 - node, edge, and invariant rules
 - `GitArtifactRef`
+- explicit `previewProfile` contract
 - graph-to-step mapping
 - canonical plan shape for persisted SQL-first plans
 
@@ -154,6 +155,7 @@ Freeze the authoring, provenance, and compiler inputs before API and UI work.
 1. no implementation still depends on UI-local hidden state
 2. the compiler output shape is defined before route work begins
 3. provenance requirements are explicit and non-optional
+4. one-provider-per-plan is frozen as the v1 execution model
 
 ## Phase 2. Preview validates and persists
 
@@ -170,6 +172,7 @@ Turn preview into the real immutable plan boundary.
 ### Required outputs
 
 - protected `POST /plans/preview`
+- explicit `previewProfile` validation before planner build
 - typed `400`, `401`, `403`, `422`, and `500` behavior
 - persisted immutable plan bytes
 - real `PlanRef` issuance
@@ -177,7 +180,7 @@ Turn preview into the real immutable plan boundary.
 ### Validation expectation
 
 - package tests for `apps/api`
-- negative-path contract coverage for invalid graph and SQL inputs
+- negative-path contract coverage for invalid graph, preview profile, and SQL inputs
 - end-to-end proof that `POST /runs/start` can consume the returned `PlanRef`
 
 ### Exit criteria
@@ -185,6 +188,7 @@ Turn preview into the real immutable plan boundary.
 1. preview is no longer ephemeral
 2. the runtime start boundary stays `PlanRef`-based
 3. the persisted plan captures provenance and canonical identity
+4. the route no longer infers provenance requirements from compiled step kinds
 
 ## Phase 3. PostgreSQL execution and proof environment
 
@@ -289,7 +293,7 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 ### Required outputs
 
-- dbt executor behind the same preview and run boundary
+- dbt preview profile and executor behind the same preview and run boundary
 - `executor: dbt` visible in result surfaces
 - no second product flow for dbt users
 
@@ -303,7 +307,8 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 1. dbt uses the same `PlanRef` and run identity model
 2. the UI loop stays `design -> plan -> run -> result`
-3. the product does not fork into two unrelated execution paths
+3. each persisted plan still binds a single provider profile
+4. the product does not fork into two unrelated execution paths
 
 ## Test plan by area
 
@@ -313,6 +318,7 @@ Add dbt as a runtime mode without replacing the outer product loop.
 - invalid node count
 - invalid edge order
 - cycle rejection
+- missing or unknown `previewProfile`
 - missing SQL artifact provenance
 - deterministic graph-to-step mapping
 
@@ -320,6 +326,7 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 - preview returns persisted `PlanRef`
 - preview rejects malformed envelopes
+- preview rejects unsupported profile values with `400`
 - preview rejects invalid graphs with `422`
 - persisted plan contains provenance and canonical hash
 

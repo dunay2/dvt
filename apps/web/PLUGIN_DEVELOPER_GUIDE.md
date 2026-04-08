@@ -284,6 +284,7 @@ nodeKinds: [
     pluginId: 'mi-plugin',
     label: 'Entidad',
     role: 'transform',
+    previewStepKind: 'MY_PLUGIN_ENTITY',
     icon: Box,
     borderClass: 'border-violet-500',
     minimapColor: '#8b5cf6',
@@ -293,6 +294,10 @@ nodeKinds: [
   },
 ],
 ```
+
+`previewStepKind` es opcional. Si tu plugin necesita que el preview genérico
+proyecte un `stepKind` específico, decláralo aquí. Si no lo declaras, la shell
+cae al mapping base por `role`.
 
 `NodeRendererProps`:
 

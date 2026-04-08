@@ -106,8 +106,14 @@ export function useCanvasController() {
         nodes: graphModel.canonicalNodes,
         edges: graphModel.canonicalEdges,
         selectedNodeIds: store.selectedNodeIds,
+        workspaceNodeIds: graphModel.workspaceNodes.map((node) => node.id),
       }),
-    [graphModel.canonicalEdges, graphModel.canonicalNodes, store.selectedNodeIds]
+    [
+      graphModel.canonicalEdges,
+      graphModel.canonicalNodes,
+      graphModel.workspaceNodes,
+      store.selectedNodeIds,
+    ]
   );
 
   const nodesWithImpact = useMemo(

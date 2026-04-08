@@ -96,6 +96,10 @@ support for the step kinds used by that graph.
 5. Keep runtime-only worker details out of the graph source.
 6. Treat array order as cosmetic. The planner decides deterministic order.
 
+If your source of truth starts from richer domain nodes, normalize those nodes
+into explicit `stepKind` values before calling the planner. Do not make
+planner-facing `stepKind` depend on ad hoc metadata keys.
+
 ## Target shape
 
 The target authoring model is:

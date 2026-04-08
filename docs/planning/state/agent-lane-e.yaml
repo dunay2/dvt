@@ -1569,15 +1569,17 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
       - docs/architecture/frontend/ux-implementation-guide.md
     status_reason: >-
       The proposal set now freezes the real product decisions, architecture, and delivery phases:
-      SQL-first execution, design-graph planning input, preview as validate-plus-persist, PostgreSQL
-      as the first data target, Docker PostgreSQL as the first proof environment, Git-first
-      artifacts, phase-2 dbt engine, and cross-lane execution ownership. Remaining work is
-      implementation review and acceptance, not roadmap ambiguity.
-    last_verified: '2026-04-05'
+      SQL-first execution, design-graph planning input, explicit `previewProfile` routing,
+      one-provider-per-plan semantics for v1, PostgreSQL as the first data target, Docker PostgreSQL
+      as the first proof environment, Git-first artifacts, phase-2 dbt as a later provider profile,
+      and cross-lane execution ownership. Remaining work is implementation review and acceptance,
+      not roadmap ambiguity.
+    last_verified: '2026-04-08'
   - task_id: F-23
     priority: P1
     status: in_progress

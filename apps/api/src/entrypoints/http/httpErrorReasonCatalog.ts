@@ -8,6 +8,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidEnrichedFlag: 'invalid_enriched_flag',
   invalidEnvironmentId: 'invalid_environment_id',
   invalidLimit: 'invalid_limit',
+  invalidPreviewProfile: 'invalid_preview_profile',
   invalidPlanRef: 'invalid_plan_ref',
   invalidPlanSource: 'invalid_plan_source',
   invalidProjectId: 'invalid_project_id',

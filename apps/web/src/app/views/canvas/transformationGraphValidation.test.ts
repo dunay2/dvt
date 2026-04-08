@@ -95,4 +95,75 @@ describe('validateTransformationGraph', () => {
       })
     );
   });
+
+  it('changes draftSignature when projected graph source changes without changing ids', () => {
+    const nodes = [
+      buildNode({ id: 'src', name: 'Source', role: 'input' }),
+      buildNode({
+        id: 'tx',
+        name: 'Transform',
+        role: 'transform',
+        kind: 'dvt:sql_transform',
+      }),
+      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
+    ];
+    const edges = [
+      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
+      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
+    ];
+    const [sourceNode, transformNode, sinkNode] = nodes;
+
+    const baseline = validateTransformationGraph({ nodes, edges });
+    const renamed = validateTransformationGraph({
+      nodes: [
+        sourceNode!,
+        {
+          ...transformNode!,
+          name: 'Transform renamed',
+          path: 'models/transform.sql',
+        },
+        sinkNode!,
+      ],
+      edges,
+    });
+
+    expect(baseline.valid).toBe(true);
+    expect(renamed.valid).toBe(true);
+    expect(renamed.draftSignature).not.toBe(baseline.draftSignature);
+  });
+
+  it('keeps draftSignature stable when only raw metadata changes outside the preview projection', () => {
+    const nodes = [
+      buildNode({ id: 'src', name: 'Source', role: 'input' }),
+      buildNode({
+        id: 'tx',
+        name: 'Transform',
+        role: 'transform',
+        kind: 'dvt:sql_transform',
+      }),
+      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
+    ];
+    const edges = [
+      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
+      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
+    ];
+    const [sourceNode, transformNode, sinkNode] = nodes;
+
+    const baseline = validateTransformationGraph({ nodes, edges });
+    const metadataOnly = validateTransformationGraph({
+      nodes: [
+        sourceNode!,
+        {
+          ...transformNode!,
+          metadata: { uiHint: 'changed', nonPreviewField: 'ignored' },
+        },
+        sinkNode!,
+      ],
+      edges,
+    });
+
+    expect(baseline.valid).toBe(true);
+    expect(metadataOnly.valid).toBe(true);
+    expect(metadataOnly.draftSignature).toBe(baseline.draftSignature);
+  });
 });

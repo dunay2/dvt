@@ -6,7 +6,7 @@ import type {
   PlanRef,
   RunContextSchemaT,
 } from '@dvt/contracts';
-import { parseRunContext } from '@dvt/contracts';
+import { jcsCanonicalize, parseRunContext, sha256HexUtf8 } from '@dvt/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import {
@@ -22,6 +22,8 @@ import { extractBearerToken } from './extractBearerToken.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { parsePreviewProfile, type PreviewProfilePolicy } from './previewProfilePolicy.js';
+import { parsePreviewProvenance, type PreviewProvenance } from './previewProvenanceParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
 import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
@@ -75,6 +77,12 @@ export async function previewPlanRoute(
     return;
   }
 
+  const previewProfile = parsePreviewProfile(parsedBody.value.previewProfile);
+  if (!previewProfile.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(previewProfile.issue));
+    return;
+  }
+
   const selectionInput = parsedBody.value.selectedNodeIds ?? parsedBody.value.selection;
   const selection = parseStartRunSelection(selectionInput);
   if (!selection.ok) {
@@ -87,13 +95,27 @@ export async function previewPlanRoute(
     sendHttpResponse(reply, mapRouteParseIssue(plannerEnvelope.issue));
     return;
   }
+  const provenance = parsePreviewProvenance(parsedBody.value.provenance);
+  if (!provenance.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(provenance.issue));
+    return;
+  }
+  const previewContractViolation = validatePreviewProfileContract(
+    previewProfile.value,
+    parsedBody.value,
+    provenance.value
+  );
+  if (previewContractViolation !== null) {
+    sendHttpResponse(reply, previewContractViolation);
+    return;
+  }
 
   try {
     const requestedAtIso = authz.context.authorizedAt.toISOString();
     let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
     try {
       buildResult = await deps.planner.buildPlan({
-        ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext),
+        ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext, provenance.value),
         selection: { selectedNodeIds: selection.value },
         requestedBy: authz.context.principal.principalId,
         requestId: request.id,
@@ -128,7 +150,18 @@ export async function previewPlanRoute(
       return;
     }
     await deps.planStore.markValid(planRef);
-    reply.code(200).send({ plan: buildResult.plan, planRef });
+    const responsePlanRef = normalizePlanRef(planRef);
+    reply
+      .code(200)
+      .send(
+        buildPreviewResponse(
+          buildResult.plan,
+          responsePlanRef,
+          plannerEnvelope.value,
+          provenance.value,
+          previewProfile.value
+        )
+      );
   } catch (error) {
     request.log.error({ err: error }, 'plan preview failed');
     sendHttpResponse(
@@ -196,7 +229,7 @@ export async function importPlanRoute(
       );
       return;
     }
-    reply.code(200).send({ plan, planRef });
+    reply.code(200).send({ plan, planRef: normalizePlanRef(planRef) });
   } catch (error) {
     request.log.error({ err: error }, 'plan import failed');
     sendHttpResponse(
@@ -250,8 +283,19 @@ function bindScopeToPlannerEnvelope(
   envelope: ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T>
     ? T
     : never,
-  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>
+  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>,
+  provenance: PreviewProvenance | undefined
 ): ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T> ? T : never {
+  const observabilityExtra = envelope.observability?.extra ?? {};
+  const extraWithProvenance =
+    provenance === undefined
+      ? observabilityExtra
+      : {
+          ...observabilityExtra,
+          transformationFlowProvenance: provenance,
+        };
+  const hasExtra = Object.keys(extraWithProvenance).length > 0;
+
   return {
     ...envelope,
     observability: {
@@ -262,8 +306,121 @@ function bindScopeToPlannerEnvelope(
         'dvt.scope.projectId': context.projectId.value,
         'dvt.scope.environmentId': context.environmentId.value,
       },
+      ...(hasExtra ? { extra: extraWithProvenance } : {}),
     },
   };
+}
+
+function buildPreviewResponse(
+  plan: ExecutionPlan,
+  planRef: PlanRef,
+  envelope: ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T>
+    ? T
+    : never,
+  provenance: PreviewProvenance | undefined,
+  previewProfile: PreviewProfilePolicy
+): {
+  previewProfile: PreviewProfilePolicy['previewProfile'];
+  plan: ExecutionPlan;
+  planRef: PlanRef;
+  planSummary?: {
+    executor: 'postgres' | 'dbt';
+    nodeCount: number;
+    stepCount: number;
+    sourceTables: string[];
+    sinkTables: string[];
+  };
+  persisted: {
+    planRecordId: string;
+    canonicalPlanSha256: string;
+  };
+  validation: {
+    valid: true;
+    warnings: string[];
+  };
+  provenance?: PreviewProvenance;
+} {
+  const canonicalPlanJson = jcsCanonicalize(plan);
+  const planSummary =
+    previewProfile.executor === undefined
+      ? undefined
+      : {
+          executor: previewProfile.executor,
+          nodeCount: envelope.graphSource?.nodes.length ?? plan.steps.length,
+          stepCount: plan.steps.length,
+          sourceTables: [],
+          sinkTables: [],
+        };
+
+  return {
+    previewProfile: previewProfile.previewProfile,
+    plan,
+    planRef,
+    ...(planSummary === undefined ? {} : { planSummary }),
+    persisted: {
+      planRecordId: planRef.planId,
+      canonicalPlanSha256: sha256HexUtf8(canonicalPlanJson),
+    },
+    validation: {
+      valid: true,
+      warnings: [],
+    },
+    ...(provenance === undefined ? {} : { provenance }),
+  };
+}
+
+function normalizePlanRef(
+  planRef: Pick<PlanRef, 'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion'> & {
+    sizeBytes?: number | undefined;
+    expiresAt?: string | undefined;
+  }
+): PlanRef {
+  return {
+    uri: planRef.uri,
+    sha256: planRef.sha256,
+    schemaVersion: planRef.schemaVersion,
+    planId: planRef.planId,
+    planVersion: planRef.planVersion,
+    ...(planRef.sizeBytes === undefined ? {} : { sizeBytes: planRef.sizeBytes }),
+    ...(planRef.expiresAt === undefined ? {} : { expiresAt: planRef.expiresAt }),
+  };
+}
+
+function validatePreviewProfileContract(
+  previewProfile: PreviewProfilePolicy,
+  record: Record<string, unknown>,
+  provenance: PreviewProvenance | undefined
+): ReturnType<typeof createHttpErrorResponse> | null {
+  const activePlanSource =
+    record.graphSource !== undefined && record.manifestRef === undefined
+      ? 'graphSource'
+      : record.manifestRef !== undefined && record.graphSource === undefined
+        ? 'manifestRef'
+        : null;
+
+  if (activePlanSource !== null && !previewProfile.allowedPlanSources.includes(activePlanSource)) {
+    return createHttpErrorResponse({
+      type: HTTP_ERROR_TYPE.unprocessable,
+      reason: HTTP_ERROR_REASON.planRejected,
+      details: {
+        cause: 'preview_profile_source_not_allowed',
+        message: `${previewProfile.previewProfile} does not allow ${activePlanSource} plan input.`,
+      },
+    });
+  }
+
+  if (previewProfile.provenanceRequired && provenance === undefined) {
+    return createHttpErrorResponse({
+      type: HTTP_ERROR_TYPE.unprocessable,
+      reason: HTTP_ERROR_REASON.planRejected,
+      details: {
+        cause: 'missing_preview_provenance',
+        message: `${previewProfile.previewProfile} requires graphArtifact and sqlArtifact provenance.`,
+      },
+    });
+  }
+
+  return null;
 }
 
 function isPlanOwnedByScope(

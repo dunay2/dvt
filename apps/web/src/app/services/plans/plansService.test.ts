@@ -4,6 +4,13 @@ import type { ApiClient } from '../api/createApiClient';
 import type { PlanRef } from '../../types/engine';
 import { createPlansService } from './plansService';
 
+const VALID_GRAPH_SOURCE = {
+  kind: 'generic-graph-v1',
+  sourceFamily: 'canvas-canonical-graph',
+  sourceVersion: 'planner-generic-v1',
+  nodes: [{ nodeId: 'node_1', stepKind: 'CANVAS_TRANSFORM', dependsOn: [] }],
+} as const;
+
 function buildValidContractPlan(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
@@ -53,6 +60,8 @@ describe('createPlansService', () => {
     const service = createPlansService('mock');
 
     const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_GRAPH_SOURCE,
       selectedNodeIds: ['node_1'],
       persist: true,
       context: {
@@ -102,6 +111,8 @@ describe('createPlansService', () => {
     );
 
     const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_GRAPH_SOURCE,
       selectedNodeIds: ['node_1'],
       persist: true,
       context: {
@@ -136,6 +147,8 @@ describe('createPlansService', () => {
     expect(postJsonMock).toHaveBeenCalledWith(
       '/plans/preview',
       expect.objectContaining({
+        previewProfile: 'transformation-sql-first-v1',
+        graphSource: VALID_GRAPH_SOURCE,
         selectedNodeIds: ['node_1'],
         persist: true,
       })
@@ -155,6 +168,8 @@ describe('createPlansService', () => {
 
     await expect(
       service.previewPlan({
+        previewProfile: 'transformation-sql-first-v1',
+        graphSource: VALID_GRAPH_SOURCE,
         selectedNodeIds: ['node_1'],
         persist: true,
         context: {
