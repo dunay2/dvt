@@ -79,7 +79,7 @@ function HookHost({
   );
 }
 
-function buildPersistedPreviewPlan() {
+function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
   const persistedSha = 'c'.repeat(64);
 
   return {
