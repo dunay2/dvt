@@ -221,6 +221,63 @@ describe('resolvePlanRefForStartRun', () => {
     expect(container.querySelector('[data-testid="plan-modal-state"]')?.textContent).toBe('true');
   });
 
+  it('blocks startRun when preview has no persisted proof', async () => {
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+    const plansService: IPlansPort = {
+      previewPlan: vi.fn(async () => mockExecutionPlan),
+      importPlan: vi.fn(async () => mockExecutionPlan),
+    };
+    const onRunStarted = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={{
+            ...mockExecutionPlan,
+            preview: {
+              ...mockExecutionPlan.preview,
+              persisted: undefined,
+            },
+          }}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Preview is not persisted. Re-run Plan to create a persisted plan.'
+    );
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[1]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(runsService.startRun).not.toHaveBeenCalled();
+    expect(onRunStarted).not.toHaveBeenCalled();
+    expect(shellFeedback.error).toHaveBeenCalledWith(
+      'Run start requires a persisted preview plan. Re-run Plan first.'
+    );
+  });
+
   it('does not call previewPlan when the transformation graph is invalid', async () => {
     const plansService: IPlansPort = {
       previewPlan: vi.fn(async () => mockExecutionPlan),
@@ -393,5 +450,59 @@ describe('resolvePlanRefForStartRun', () => {
       'Preview is stale. Re-run Plan before starting.'
     );
     expect(onRunStarted).not.toHaveBeenCalled();
+  });
+
+  it('starts run with persisted plan and forwards run id to navigation', async () => {
+    const plansService: IPlansPort = {
+      previewPlan: vi.fn(async () => mockExecutionPlan),
+      importPlan: vi.fn(async () => mockExecutionPlan),
+    };
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run-success',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+    const onRunStarted = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={mockExecutionPlan}
+          onRunStarted={onRunStarted}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('true');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Preview is current and ready to run.'
+    );
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[1]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(runsService.startRun).toHaveBeenCalledTimes(1);
+    expect(runsService.startRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        planRef: mockExecutionPlan.planRef,
+      })
+    );
+    expect(shellFeedback.success).toHaveBeenCalledWith('Run started');
+    expect(onRunStarted).toHaveBeenCalledWith('run-success');
   });
 });

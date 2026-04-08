@@ -32,16 +32,46 @@ function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefine
   return undefined;
 }
 
+function getStepFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
+  for (const event of [...workspace.timeline.events].reverse()) {
+    if (event.eventType !== 'StepFailed' || !event.payload || typeof event.payload !== 'object') {
+      continue;
+    }
+
+    const payload = event.payload as { reason?: unknown; message?: unknown };
+    if (typeof payload.reason === 'string') {
+      return payload.reason;
+    }
+    if (typeof payload.message === 'string') {
+      return payload.message;
+    }
+  }
+
+  return undefined;
+}
+
+function getFailureEmittedAt(workspace: RunWorkspaceViewModel): string | undefined {
+  const failedEvent = [...workspace.timeline.events]
+    .reverse()
+    .find((event) => event.eventType === 'StepFailed' || event.eventType === 'RunFailed');
+  return failedEvent?.emittedAt;
+}
+
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
   const failedStepId =
     workspace.snapshot.failedStepId ??
     [...workspace.timeline.events].reverse().find((event) => event.eventType === 'StepFailed')
       ?.stepId;
-  const errorReason = workspace.snapshot.errorReason ?? getRunFailedReason(workspace);
+  const errorReason =
+    workspace.snapshot.errorReason ??
+    getRunFailedReason(workspace) ??
+    getStepFailedReason(workspace);
+  const failureEmittedAt = getFailureEmittedAt(workspace);
 
   return {
     failedStepId,
     errorReason,
+    failureEmittedAt,
   };
 }
 
@@ -141,7 +171,9 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           )}
         </Card>
 
-        {failureDiagnostics.failedStepId || failureDiagnostics.errorReason ? (
+        {failureDiagnostics.failedStepId ||
+        failureDiagnostics.errorReason ||
+        failureDiagnostics.failureEmittedAt ? (
           <Card className="border-slate-700 bg-slate-900 p-5">
             <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
             <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
@@ -155,6 +187,12 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div>
                   <span className="text-slate-400">{copy.errorReasonLabel}</span>
                   <div>{failureDiagnostics.errorReason}</div>
+                </div>
+              ) : null}
+              {failureDiagnostics.failureEmittedAt ? (
+                <div>
+                  <span className="text-slate-400">{copy.failureAtLabel}</span>
+                  <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString()}</div>
                 </div>
               ) : null}
             </div>
