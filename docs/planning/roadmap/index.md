@@ -23,6 +23,8 @@ Concept anchors for this page:
 ## Canonical Planning Surfaces
 
 - Roadmap of record: this page
+- Strategic product direction:
+  [Strategic Product Roadmap](strategic-product-roadmap.md)
 - Current implementation state:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Current planning dashboard:
@@ -38,8 +40,14 @@ Concept anchors for this page:
 - `docs/planning/roadmap/index.md`
   Classification: canonical roadmap of record
   Use it for: repository-wide planning entry point
+- `docs/planning/roadmap/strategic-product-roadmap.md`
+  Classification: strategic roadmap overlay
+  Use it for: multi-quarter product direction and why the active lanes exist
 - `docs/planning/archive/proposals/gap-5-executive-delivery-roadmap-20260319.md`
   Classification: archived subsystem roadmap
+  Use it for: historical context only
+- `docs/planning/archive/proposals/strategic-product-roadmap-20260324.md`
+  Classification: archived dated strategic snapshot
   Use it for: historical context only
 - `docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md`
   Classification: archived subsystem roadmap proposal
@@ -105,6 +113,7 @@ Repository-wide planning should currently be read in this order:
 
 Current subsystem roadmaps worth consulting:
 
+- [Strategic Product Roadmap](strategic-product-roadmap.md)
 - [MVP Backend Operability Baseline Roadmap](../proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)

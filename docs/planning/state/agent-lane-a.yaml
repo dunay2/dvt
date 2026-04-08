@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-07'
+last_reviewed: '2026-04-08'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -86,7 +86,7 @@ tasks:
     evidence_refs:
       - packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.test.ts
       - packages/@dvt/adapter-postgres/test/smoke.test.ts
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: >-
       Tenant-scoped dead-letter behavior is present in code and tests; this pass found equivalent
       closure evidence even without a dedicated accepted evidence doc.

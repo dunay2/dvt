@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-08'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -177,7 +177,7 @@ tasks:
     evidence_refs:
       - docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-code-grounded-corrective-task-list-review.md
       - apps/lineage-worker/src/server.ts
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: >-
       The lineage worker no longer needs adapter-internal reach-through and the mainline code
       matches the corrective review target.

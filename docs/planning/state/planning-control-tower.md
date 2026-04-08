@@ -2,7 +2,7 @@
 title: Planning Control Tower
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-09
 planning_type: operational
 ---
 
@@ -61,6 +61,8 @@ surface. This control tower is the update protocol.
 
 - Human entrypoint: [Planning Dashboard](./planning-dashboard.md)
 - Strategy and classification: [Roadmap Of Record](../roadmap/index.md)
+- Strategic product direction:
+  [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
 - Cross-domain roadmap view: [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - Planning entrypoint: [Planning Control Tower](./planning-control-tower.md)
 - Task registry:
@@ -84,15 +86,17 @@ When there is confusion about "what is active now" vs "where to continue":
 1. [Planning Dashboard](./planning-dashboard.md): one-screen navigation to board,
    blockers, lanes, and next reading surface.
 2. [System Delivery Status](../../architecture/system-delivery-status.md)
-   (`last_reviewed: 2026-04-02`): current implementation truth.
+   (`last_reviewed: 2026-04-08`): current implementation truth.
 3. [Agent Lane YAML registry](./agent-lane-a.yaml)
    (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): active tasks, owners,
    execution status, blockers, and next actions.
 4. [Review Status Board](../reviews/review-status-board.md)
    (`last_reviewed: 2026-04-04`): which reviews are active/reference and which
    tasks they feed.
-5. [Roadmap Of Record](../roadmap/index.md): ordering and sequencing of
-   delivery.
+5. [Roadmap Of Record](../roadmap/index.md): roadmap classification and source
+   authority.
+6. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md):
+   long-range product direction and capability ladder.
 
 Interpretation rule:
 
@@ -117,6 +121,7 @@ Interpretation rule:
 2. [Planning Dashboard](./planning-dashboard.md)
 3. Relevant [Agent Lane YAML](./agent-lane-a.yaml)
 4. [Roadmap Of Record](../roadmap/index.md)
-5. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
-6. [Domain Status Board](./domain-status-board.md)
-7. Relevant proposal or review document for the specific slice
+5. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
+6. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
+7. [Domain Status Board](./domain-status-board.md)
+8. Relevant proposal or review document for the specific slice
