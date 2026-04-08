@@ -1,0 +1,23 @@
+---
+id: R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT
+title: PlanStore integration tests can drift from current artifact and contract shapes
+status: Open
+date: 2026-04-08
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Low
+probability: Medium
+context: >
+  PR 679 exposed drift in adapter-postgres integration tests where one test treated fetch output as
+  bytes instead of StoredPlanArtifact and another test built a PlanRecord payload with an
+  inconsistent canonicalHash.
+risk: >
+  Future refactors in contracts or storage adapters can silently desynchronize integration tests
+  from governed data shapes, causing CI failures on unrelated dependency or docs PRs and delaying
+  merges.
+mitigations:
+  - 'Adapter smoke integration in CI now validates the corrected tests for PR 679.'
+  - 'PlanStore tests now assert against artifact.bytes and canonical hash consistency.'
+  - 'ARC-2 evidence tracks this adjustment and associated validation commands.'
+review_after: 2026-05-31
+---
