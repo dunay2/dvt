@@ -4,9 +4,9 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { CalendarChevron } from './calendar';
+import { Calendar } from './calendar';
 
-describe('CalendarChevron', () => {
+describe('Calendar', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -26,40 +26,20 @@ describe('CalendarChevron', () => {
     container.remove();
   });
 
-  async function renderChevron(
-    orientation?: 'left' | 'right' | 'up' | 'down'
-  ): Promise<SVGElement> {
+  it('wires the day-picker chevrons through the calendar override', async () => {
     await act(async () => {
-      root.render(<CalendarChevron orientation={orientation} />);
+      root.render(
+        <Calendar
+          captionLayout="dropdown"
+          defaultMonth={new Date(2026, 3, 1)}
+          fromYear={2020}
+          toYear={2030}
+        />
+      );
     });
 
-    const svg = container.querySelector('svg');
-    expect(svg).not.toBeNull();
-    return svg as SVGElement;
-  }
-
-  it('renders the right chevron by default', async () => {
-    const svg = await renderChevron();
-
-    expect(svg.getAttribute('class')).toContain('lucide-chevron-right');
-    expect(svg.getAttribute('class')).toContain('size-4');
-  });
-
-  it('renders the left chevron when requested', async () => {
-    const svg = await renderChevron('left');
-
-    expect(svg.getAttribute('class')).toContain('lucide-chevron-left');
-  });
-
-  it('renders the up chevron when requested', async () => {
-    const svg = await renderChevron('up');
-
-    expect(svg.getAttribute('class')).toContain('lucide-chevron-up');
-  });
-
-  it('renders the down chevron when requested', async () => {
-    const svg = await renderChevron('down');
-
-    expect(svg.getAttribute('class')).toContain('lucide-chevron-down');
+    expect(container.querySelector('svg.lucide-chevron-left.size-4')).not.toBeNull();
+    expect(container.querySelector('svg.lucide-chevron-right.size-4')).not.toBeNull();
+    expect(container.querySelector('svg.lucide-chevron-down.size-4')).not.toBeNull();
   });
 });

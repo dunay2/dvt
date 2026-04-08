@@ -77,4 +77,4 @@ function Calendar({
   );
 }
 
-export { Calendar, CalendarChevron };
+export { Calendar };
