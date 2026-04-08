@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-08
 planning_type: review
 ---
 
@@ -59,6 +59,13 @@ Additional active rationale:
 - [20260407 Execution plan and run execution policy rationale](architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md)
   - domain: `architecture-and-governance`
   - role: current plan-definition vs execution-policy rationale
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260407 Principal architecture review - progress, effort, and diagrams](architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md)
+  - domain: `architecture-and-governance`
+  - role: current status-and-diagrams companion to the 2026-04-07 principal architecture review
   - linkage: `none`
   - status: `reference`
   - progress: `n/a`
