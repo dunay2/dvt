@@ -1,11 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
 import { FileCode2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ViewHeader } from '../components/domain';
 import { MonacoCodeViewer } from '../components/monaco/MonacoCodeViewer';
-import { queryKeys } from '../queries/queryKeys';
-import { useWorkspaceService } from '../services/AppServicesContext';
+import { useWorkspaceFileContentQuery, useWorkspaceFileTreeQuery } from '../queries/workspaceQueries';
 import type { WorkspaceFileEntry } from '../ports/workspace';
 import FileTreePanel from './code/FileTreePanel';
 
@@ -20,21 +18,13 @@ function firstFilePath(entries: WorkspaceFileEntry[]): string | undefined {
 }
 
 export default function CodeView() {
-  const workspaceService = useWorkspaceService();
-  const fileTreeQuery = useQuery({
-    queryKey: queryKeys.workspace.fileTree(),
-    queryFn: () => workspaceService.listFiles(),
-  });
+  const fileTreeQuery = useWorkspaceFileTreeQuery();
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
   const resolvedPath = useMemo(
     () => selectedPath ?? firstFilePath(fileTreeQuery.data ?? []),
     [fileTreeQuery.data, selectedPath]
   );
-  const fileContentQuery = useQuery({
-    enabled: resolvedPath != null,
-    queryKey: queryKeys.workspace.fileContent(resolvedPath ?? ''),
-    queryFn: () => workspaceService.getFileContent(resolvedPath ?? ''),
-  });
+  const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-950 text-slate-50">
@@ -63,7 +53,7 @@ export default function CodeView() {
         <div className="min-w-0 flex-1">
           {fileTreeQuery.isPending ? (
             <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              Loading workspace files…
+              Loading workspace files...
             </div>
           ) : fileTreeQuery.isError ? (
             <div className="flex h-full items-center justify-center text-sm text-red-300">
@@ -71,7 +61,7 @@ export default function CodeView() {
             </div>
           ) : fileContentQuery.isPending ? (
             <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              Loading file preview…
+              Loading file preview...
             </div>
           ) : fileContentQuery.isError || !fileContentQuery.data ? (
             <div className="flex h-full items-center justify-center text-sm text-slate-400">

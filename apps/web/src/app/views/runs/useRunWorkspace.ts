@@ -3,6 +3,7 @@ import { useMemo, useSyncExternalStore } from 'react';
 
 import type { IRunsPort, RunSummaryItem } from '../../ports/runs';
 import { queryKeys } from '../../queries/queryKeys';
+import { useScopedRunSummariesQuery } from '../../queries/runsQueries';
 import { useRunsService, useSessionContext } from '../../services/AppServicesContext';
 import {
   createRunWorkspaceFacade,
@@ -36,10 +37,7 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
   );
   const workspaceLayoutKey = buildWorkspaceLayoutKey(tenantId, projectId, environmentId);
 
-  const runsQuery = useQuery({
-    queryKey: queryKeys.runs.summaries(workspaceLayoutKey),
-    queryFn: () => runsService.listRunSummaries(),
-  });
+  const runsQuery = useScopedRunSummariesQuery(workspaceLayoutKey);
 
   const runWorkspaceQuery = useQuery({
     queryKey: queryKeys.runs.workspace(workspaceLayoutKey, runId),
