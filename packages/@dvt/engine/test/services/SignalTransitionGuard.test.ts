@@ -1,6 +1,8 @@
+import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it } from 'vitest';
 
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import type { IRunSnapshotStalenessQuery } from '../../src/ports/IRunSnapshotStalenessQuery.js';
 import type { IRunStateStoreRead, WorkflowSnapshot } from '../../src/ports/IRunStateStore.js';
 import { SignalTransitionGuard } from '../../src/services/signal/SignalTransitionGuard.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -39,13 +41,20 @@ async function appendRunLifecycleEvent(
 
 function readStoreWithSnapshot(
   store: InMemoryTxStore,
-  snapshot: WorkflowSnapshot
-): IRunStateStoreRead {
+  snapshot: WorkflowSnapshot,
+  config?: {
+    snapshotStale?: boolean;
+    throwOnListEvents?: boolean;
+  }
+): IRunStateStoreRead & Partial<IRunSnapshotStalenessQuery> {
   return {
     getRunMetadataByRunId(tenantId, runId) {
       return store.getRunMetadataByRunId(tenantId, runId);
     },
     listEvents(tenantId, runId, options) {
+      if (config?.throwOnListEvents) {
+        throw new Error('LIST_EVENTS_NOT_EXPECTED');
+      }
       return store.listEvents(tenantId, runId, options);
     },
     listRuns(options) {
@@ -53,6 +62,9 @@ function readStoreWithSnapshot(
     },
     async getSnapshot() {
       return snapshot;
+    },
+    async isSnapshotStale() {
+      return config?.snapshotStale ?? false;
     },
   };
 }
@@ -69,11 +81,15 @@ describe('SignalTransitionGuard', () => {
 
     const beforeEventTypes = (await store.listEvents('t', 'guard-pause-1')).map((e) => e.eventType);
     const guard = new SignalTransitionGuard({
-      stateStoreRead: readStoreWithSnapshot(store, {
-        ...persistedSnapshot,
-        status: 'PENDING',
-        paused: false,
-      }),
+      stateStoreRead: readStoreWithSnapshot(
+        store,
+        {
+          ...persistedSnapshot,
+          status: 'PENDING',
+          paused: false,
+        },
+        { snapshotStale: true }
+      ),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-04-07T00:00:00.000Z'),
     });
@@ -180,11 +196,15 @@ describe('SignalTransitionGuard', () => {
     if (!persistedSnapshot) throw new Error('expected workflow snapshot');
 
     const guard = new SignalTransitionGuard({
-      stateStoreRead: readStoreWithSnapshot(store, {
-        ...persistedSnapshot,
-        status: 'PENDING',
-        paused: false,
-      }),
+      stateStoreRead: readStoreWithSnapshot(
+        store,
+        {
+          ...persistedSnapshot,
+          status: 'PENDING',
+          paused: false,
+        },
+        { snapshotStale: true }
+      ),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-04-07T00:00:02.000Z'),
     });
@@ -217,11 +237,15 @@ describe('SignalTransitionGuard', () => {
     if (!persistedSnapshot) throw new Error('expected workflow snapshot');
 
     const guard = new SignalTransitionGuard({
-      stateStoreRead: readStoreWithSnapshot(store, {
-        ...persistedSnapshot,
-        status: 'PAUSED',
-        paused: true,
-      }),
+      stateStoreRead: readStoreWithSnapshot(
+        store,
+        {
+          ...persistedSnapshot,
+          status: 'PAUSED',
+          paused: true,
+        },
+        { snapshotStale: true }
+      ),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-04-07T00:00:03.000Z'),
     });
@@ -233,5 +257,54 @@ describe('SignalTransitionGuard', () => {
         'RunResumed'
       )
     ).resolves.toBe('already_applied');
+  });
+
+  it('uses the snapshot fast path when the snapshot is marked fresh', async () => {
+    const store = new InMemoryTxStore();
+    await bootstrapQueuedRun(store, 'guard-fast-path-1');
+    await appendRunStarted(store, 'guard-fast-path-1');
+    const meta = await store.getRunMetadataByRunId('t', 'guard-fast-path-1');
+    if (!meta) throw new Error('expected run metadata');
+    const persistedSnapshot = await store.getSnapshot('t', 'guard-fast-path-1');
+    if (!persistedSnapshot) throw new Error('expected workflow snapshot');
+
+    const guard = new SignalTransitionGuard({
+      stateStoreRead: readStoreWithSnapshot(store, persistedSnapshot, {
+        snapshotStale: false,
+        throwOnListEvents: true,
+      }),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-04-07T00:00:00.000Z'),
+    });
+
+    await expect(
+      guard.assertAllowed(meta, { signalId: 'sig-guard-fast-path-1', type: 'PAUSE' }, 'RunPaused')
+    ).resolves.toBe('allowed');
+  });
+
+  it('rejects RESUME on a fresh RUNNING snapshot when no runtime resume event exists', async () => {
+    const store = new InMemoryTxStore();
+    await bootstrapQueuedRun(store, 'guard-resume-invalid-fresh-1');
+    await appendRunStarted(store, 'guard-resume-invalid-fresh-1');
+    const meta = await store.getRunMetadataByRunId('t', 'guard-resume-invalid-fresh-1');
+    if (!meta) throw new Error('expected run metadata');
+    const persistedSnapshot = await store.getSnapshot('t', 'guard-resume-invalid-fresh-1');
+    if (!persistedSnapshot) throw new Error('expected workflow snapshot');
+
+    const guard = new SignalTransitionGuard({
+      stateStoreRead: readStoreWithSnapshot(store, persistedSnapshot, {
+        snapshotStale: false,
+      }),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-04-07T00:00:00.000Z'),
+    });
+
+    await expect(
+      guard.assertAllowed(
+        meta,
+        { signalId: 'sig-guard-resume-invalid-fresh-1', type: 'RESUME' },
+        'RunResumed'
+      )
+    ).rejects.toBeInstanceOf(InvalidStateTransitionError);
   });
 });

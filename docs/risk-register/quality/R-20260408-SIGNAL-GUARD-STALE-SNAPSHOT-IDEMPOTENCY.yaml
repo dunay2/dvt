@@ -15,9 +15,12 @@ risk: >
   Stale snapshots can cause duplicate PAUSE/RESUME dispatches to adapters or reject valid
   transitions despite authoritative event history, reducing determinism and operational trust.
 mitigations:
-  - 'SignalTransitionGuard now rebuilds validation state from listEvents() for event-authoritative
-    decisions.'
+  - 'SignalTransitionGuard now uses getSnapshot() as a fast path and replays events only when the
+    store reports the snapshot stale or missing, except for the ambiguous fresh RUNNING RESUME case
+    that still reads event history.'
   - 'SignalTransitionGuard tests cover stale snapshot drift for both PAUSE and RESUME idempotency.'
+  - 'SignalTransitionGuard tests assert that fresh PAUSE paths do not call listEvents() on the hot
+    path and that fresh RUNNING RESUME still rejects invalid transitions.'
   - 'ADR-0047 runtime-owned lifecycle boundary remains the governing model for RunPaused/RunResumed.'
   - 'verify:prepush remains required before marking the slice ready.'
 review_after: 2026-05-31
