@@ -90,6 +90,8 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries[0]?.sql).toContain(
       `COALESCE(s.snapshot->>'schemaVersion', '') <> '${CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION}'`
     );
+    expect(client.queries[0]?.sql).toContain(`s.snapshot ? 'currentStepId'`);
+    expect(client.queries[0]?.sql).toContain(`s.snapshot ? 'materialization'`);
     expect(client.queries[0]?.params).toEqual([MAX_STALE_BATCH_SIZE]);
   });
 
@@ -114,6 +116,8 @@ describe('PostgresSnapshotStalenessQuery', () => {
     expect(client.queries[0]?.sql).toContain(
       `COALESCE(s.snapshot->>'schemaVersion', '') <> '${CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION}'`
     );
+    expect(client.queries[0]?.sql).toContain(`s.snapshot ? 'failedStepId'`);
+    expect(client.queries[0]?.sql).toContain(`s.snapshot ? 'errorReason'`);
     expect(client.queries[0]?.params).toEqual([TEST_TENANT_ID, TEST_RUN_ID]);
   });
 });

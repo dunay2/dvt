@@ -141,9 +141,11 @@ export interface ListEventsOptions {
 
 /**
  * Version marker for persisted WorkflowSnapshot shape.
- * Bump this value whenever the WorkflowSnapshot contract changes.
+ * Development baseline for persisted WorkflowSnapshot rows.
+ * The active branch keeps one snapshot schema line (`1`) and treats legacy
+ * flat-shape rows as stale via adapter-side rebuild logic.
  */
-export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 2 as const;
+export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 1 as const;
 
 export interface WorkflowSnapshot {
   schemaVersion: number;

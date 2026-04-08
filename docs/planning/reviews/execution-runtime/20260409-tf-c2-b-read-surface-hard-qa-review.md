@@ -47,8 +47,9 @@ Debt handling for this review:
   `R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT`
 - the failed-run materialization semantics finding is accepted as open debt in
   `R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS`
-- the persisted snapshot schema-version mismatch remains the active blocker for
-  closure and is not downgraded to debt
+- the previous snapshot schema-version blocker is closed in development by
+  keeping `schemaVersion = 1` and treating legacy flat-shape rows as stale for
+  rebuild
 
 ## Governing Sources
 
@@ -70,26 +71,26 @@ Debt handling for this review:
 
 ### High
 
-- Title: Persisted snapshot schema changed without a schema-version bump.
-  Why it matters: `WorkflowSnapshot` is a persisted CQRS read model. The old row
-  shape and the new row shape are not equivalent, so serving an old row under
-  the same `schemaVersion` silently violates the rebuild-on-mismatch safety
-  model.
+- Title: Persisted snapshot safety now stays on one schema line and rebuilds
+  legacy flat-shape rows.
+  Why it matters: the development branch explicitly wants one internal snapshot
+  schema line. That only stays safe if legacy flat-shape rows are detected and
+  rebuilt from canonical events instead of introducing a second schema number.
   Evidence:
-  - `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts:142-146` says the
-    snapshot schema version must be bumped whenever `WorkflowSnapshot` changes.
-  - `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts:148-171` replaces
-    the flat outcome fields with `execution?: RunExecutionEvidence`.
-  - `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts:122-125`
-    only rebuilds when `snapshot.schemaVersion !== CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION`.
-  - `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts:146` still keeps
-    `CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 2`.
-    Risk: Existing persisted snapshots with the old flat shape can be treated as
-    fresh and returned without rebuild, causing silent evidence loss or mixed
-    semantics in reads.
-    Recommendation: bump the snapshot schema version, add a regression test that
-    an old-shape snapshot triggers rebuild, and update the docs/evidence to record
-    the migration impact explicitly.
+  - `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts:142-148` now
+    states the development baseline remains on `schemaVersion = 1`.
+  - `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts:122-128`
+    now rebuilds when either the schema value mismatches or legacy flat TF-C2-B
+    keys are present on the stored snapshot.
+  - `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts:15-55`
+    now marks legacy flat-shape rows as stale for projector refresh.
+  - `packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts`
+    now includes a regression proving legacy flat-shape rows rebuild even when
+    `schemaVersion` stays on the current value.
+    Risk: the multi-line snapshot-version concern is removed for this branch,
+    but legacy-shape detection must remain aligned with the real retired fields.
+    Recommendation: keep the single-line development policy explicit and retain
+    regression coverage for flat-shape snapshot rebuild.
 
 - Title: Canonical contract docs still describe the old run-status shape.
   Why it matters: this slice changes caller-visible runtime read semantics. If
@@ -171,12 +172,13 @@ Debt handling for this review:
   Not aligned. The proposal says `execution.materialization` is success-only,
   while the implementation and tests allow it to coexist with failure.
 - Tests vs claims:
-  Partial alignment. The new tests prove the current code path, but they do not
-  protect snapshot schema-version migration or settle the failed-run
-  materialization semantics explicitly.
+  Partial alignment. The new tests now protect the single-line snapshot rebuild
+  policy, but they still do not settle the failed-run materialization semantics
+  explicitly.
 - Current truth vs planned truth:
-  The branch moved the code toward the planned target, but hard-QA blockers
-  remain before TF-C2-B can be treated as closure-ready.
+  The branch now matches the chosen development posture for snapshots, but
+  canonical-doc drift and failed-run materialization semantics still remain
+  before TF-C2-B can be treated as closure-ready.
 - Documentation update status:
   Updated in closeout/evidence/proposal surfaces, stale in canonical engine,
   frontend, and architecture entrypoints.
@@ -195,8 +197,8 @@ Debt handling for this review:
   Improved. Normalization moved out of the projector, but the architecture docs
   still depict the old seam.
 - CQRS if relevant:
-  Improved in intent, but the missing schema-version bump violates the persisted
-  read-model discipline required by ADR-0039.
+  Improved. Persisted snapshot safety now keeps one development schema line and
+  rebuilds legacy flat-shape rows from events instead of serving them directly.
 - Complexity:
   Reasonable in the implementation, but documentary complexity is high because
   current-state truth is split across code, closeout, and stale contract docs.
@@ -214,17 +216,17 @@ Debt handling for this review:
     failure/materialization fields in
     `apps/web/src/app/views/runs/RunStates.test.tsx`
 - Negative paths missing:
-  - no regression test proving that an old-shape persisted snapshot rebuilds
-    after the `execution` shape lands
   - no semantic regression test that fixes the contract meaning of
     materialization on failed runs
   - no documentary fitness test guarding canonical contract docs against stale
     `RunStatusSnapshot` examples
 - Regression status:
-  Repo gate is green, but documentary and semantic blockers remain.
+  Repo gate is green, and the snapshot-safety regression is now covered, but
+  documentary and semantic blockers remain.
 - Determinism:
-  The mapper-first projection remains deterministic. The snapshot-version gap is
-  the determinism risk because stale rows can bypass rebuild.
+  The mapper-first projection remains deterministic. Legacy flat-shape rows are
+  now forced back through event-authoritative rebuild instead of being served
+  directly.
 - Local suite vs meaningful global confidence:
   Good code confidence for touched packages; insufficient closure confidence for
   persisted snapshot migration and canonical-doc truth.
@@ -232,14 +234,14 @@ Debt handling for this review:
   Yes. This review checked contracts, persisted snapshots, API/web consumers,
   architecture docs, and planning surfaces together.
 - Harness or shared fixture need:
-  Yes. A persisted old-shape snapshot fixture is needed for schema-version drift
-  regression.
+  No additional harness blocker. The persisted old-shape snapshot regression is
+  now covered in the adapter store tests.
 - Test grouping by type (`unit` / `integration` / `contract` / `e2e` / regression) and rationale:
   - `contract`: `packages/@dvt/contracts/test/validation.test.ts`
   - `unit/regression`: `packages/@dvt/run-domain/test/applyRunEvent.test.ts`
   - `integration`: `apps/api/test/...getRunStatus...`, `apps/api/test/...getRunEvents...`
   - `ui regression`: `apps/web/src/app/views/runs/RunStates.test.tsx`
-  - missing `migration regression`: old snapshot shape vs new schema-version handling
+  - missing `semantic regression`: failed-run materialization rule
 
 ## Quality Gates
 
@@ -265,8 +267,8 @@ Debt handling for this review:
 
 ```mermaid
 flowchart LR
-  A[Persisted snapshot contract changed] --> B[Schema version stayed at 2]
-  B --> C[Old rows can bypass rebuild]
+  A[Persisted snapshot contract changed] --> B[Legacy flat-shape rows detected]
+  B --> C[Rows rebuild from canonical events while schemaVersion stays at 1]
 
   D[Proposal says materialization on success] --> E[Projector preserves materialization on failure]
   E --> F[UI test renders both failure and materialization]
@@ -276,13 +278,12 @@ flowchart LR
 
 ## Unblock Roadmap
 
-### Wave 0 - Persisted truth and contract truth
+### Wave 0 - Contract truth
 
-Tasks: `TF-C2-B-QA-01`, `TF-C2-B-QA-02`
+Tasks: `TF-C2-B-QA-02`
 
 Target:
 
-- persisted snapshots rebuild correctly after the shape change;
 - canonical engine and frontend contracts describe the shipped `execution`
   object and its compatibility posture.
 
@@ -309,7 +310,7 @@ Target:
 
 ### Task Checklist
 
-- [ ] `TF-C2-B-QA-01` Bump `WorkflowSnapshot` schema version and add old-row rebuild regression coverage
+- [x] `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` and rebuild legacy flat-shape rows by detection
 - [ ] `TF-C2-B-QA-02` Update canonical engine and frontend contract docs for `RunStatusSnapshot.execution`
 - [ ] `TF-C2-B-QA-03` Reconcile failed-run materialization semantics in code, tests, and contract docs
 - [ ] `TF-C2-B-QA-04` Update canonical architecture diagrams to show mapper-first projection
@@ -317,10 +318,11 @@ Target:
 
 ### Task Details
 
-#### `TF-C2-B-QA-01` Bump `WorkflowSnapshot` schema version and add old-row rebuild regression coverage
+#### `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` and rebuild legacy flat-shape rows by detection
 
 - Objective: Prevent stale persisted snapshot rows from being treated as current
-  truth after the `execution` shape landed.
+  truth after the `execution` shape landed while keeping one development schema
+  line.
 - Scope: `IRunStateStore` contract, snapshot stores, migration-sensitive tests,
   and related evidence docs.
 - Recommended owner: Lane C runtime/contracts owner.
@@ -332,9 +334,9 @@ Target:
 - Comment with rationale: this is the most serious hard-QA finding because it
   affects persisted state truth, not just prose.
 - Definition of Done:
-  - `CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION` is bumped;
-  - old-shape snapshots trigger rebuild;
-  - regression coverage proves that mismatch handling works end to end.
+  - `CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION` stays at `1`;
+  - legacy flat-shape snapshots trigger rebuild;
+  - regression coverage proves that legacy-shape handling works end to end.
 
 #### `TF-C2-B-QA-02` Update canonical engine and frontend contract docs for `RunStatusSnapshot.execution`
 

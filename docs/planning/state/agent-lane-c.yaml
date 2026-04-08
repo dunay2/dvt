@@ -842,12 +842,12 @@ tasks:
       - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
       - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
     status_reason: >-
-      Hard QA found one remaining runtime blocker after the mapper-first `execution` refactor: the
-      persisted WorkflowSnapshot schema version was not bumped despite a shape change. Two follow-up
-      items were explicitly accepted as debt and logged in the quality risk register: canonical
-      contract/architecture doc drift and failed-run materialization semantics. Real executor
-      payload emission from TF-C2-A or TF-B1-B remains a downstream dependency after the
-      schema-version blocker is resolved.
+      Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
+      development baseline stays on `schemaVersion = 1` and legacy flat-shape snapshot rows now
+      rebuild from canonical events by detection. Two follow-up items remain explicitly accepted as
+      debt and logged in the quality risk register: canonical contract/architecture doc drift and
+      failed-run materialization semantics. Real executor payload emission from TF-C2-A or TF-B1-B
+      remains the downstream dependency for full TF-C2-B closure.
     last_verified: '2026-04-09'
   - task_id: TF-C3
     priority: P1

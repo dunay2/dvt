@@ -12,6 +12,13 @@ import { quoteIdentifier } from './sqlUtils.js';
 
 export const IS_SNAPSHOT_STALE_ALIAS = 'is_snapshot_stale' as const;
 
+const LEGACY_FLAT_WORKFLOW_SNAPSHOT_PREDICATE = `
+        s.snapshot ? 'currentStepId'
+        OR s.snapshot ? 'failedStepId'
+        OR s.snapshot ? 'errorReason'
+        OR s.snapshot ? 'materialization'
+`;
+
 export function listStaleSnapshotRunsSql(schema: string): string {
   const snapshotSchemaVersion = String(CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION);
   return `
@@ -38,6 +45,9 @@ export function listStaleSnapshotRunsSql(schema: string): string {
       s.run_id IS NOT NULL
       AND (
         COALESCE(s.snapshot->>'schemaVersion', '') <> '${snapshotSchemaVersion}'
+        OR (
+${LEGACY_FLAT_WORKFLOW_SNAPSHOT_PREDICATE}
+        )
         OR
         s.last_run_seq < COALESCE(h.latest_run_seq, 0)
         OR (
@@ -90,6 +100,9 @@ export function isSnapshotStaleSql(schema: string): string {
         AND (
           (s.run_id IS NULL AND le.run_seq IS NOT NULL)
           OR COALESCE(s.snapshot->>'schemaVersion', '') <> '${snapshotSchemaVersion}'
+          OR (
+${LEGACY_FLAT_WORKFLOW_SNAPSHOT_PREDICATE}
+          )
           OR s.last_run_seq < COALESCE(le.run_seq, 0)
         )
     ) AS ${IS_SNAPSHOT_STALE_ALIAS}
