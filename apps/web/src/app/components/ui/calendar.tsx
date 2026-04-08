@@ -7,6 +7,19 @@ import { DayPicker, type ChevronProps } from 'react-day-picker';
 import { buttonVariants } from './button';
 import { cn } from './utils';
 
+function CalendarChevron({ className, orientation = 'right', ...props }: ChevronProps) {
+  if (orientation === 'left') {
+    return <ChevronLeft className={cn('size-4', className)} {...props} />;
+  }
+  if (orientation === 'up') {
+    return <ChevronUp className={cn('size-4', className)} {...props} />;
+  }
+  if (orientation === 'down') {
+    return <ChevronDown className={cn('size-4', className)} {...props} />;
+  }
+  return <ChevronRight className={cn('size-4', className)} {...props} />;
+}
+
 function Calendar({
   className,
   classNames,
@@ -57,22 +70,11 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Chevron: ({ className, orientation = 'right', ...props }: ChevronProps) => {
-          if (orientation === 'left') {
-            return <ChevronLeft className={cn('size-4', className)} {...props} />;
-          }
-          if (orientation === 'up') {
-            return <ChevronUp className={cn('size-4', className)} {...props} />;
-          }
-          if (orientation === 'down') {
-            return <ChevronDown className={cn('size-4', className)} {...props} />;
-          }
-          return <ChevronRight className={cn('size-4', className)} {...props} />;
-        },
+        Chevron: CalendarChevron,
       }}
       {...props}
     />
   );
 }
 
-export { Calendar };
+export { Calendar, CalendarChevron };
