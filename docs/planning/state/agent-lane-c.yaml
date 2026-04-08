@@ -1,4 +1,4 @@
-﻿lane_id: C
+lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
@@ -295,8 +295,8 @@ tasks:
     status: review
     objective: >-
       add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
-      admin endpoints) so that authentication alone is not sufficient â€” an admin-level role grant
-      is required regardless of feature flag state.
+      admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
+      required regardless of feature flag state.
     dependency: none
     target: >-
       Admin routes enforce an explicit admin-role RBAC check; any authenticated principal without
@@ -565,8 +565,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Current backpressure only covers outbox lag and tenant pending events â€” adapter saturation
-      is invisible to admission control.
+      Current backpressure only covers outbox lag and tenant pending events — adapter saturation is
+      invisible to admission control.
     last_verified: '2026-04-02'
   - task_id: AR-C4
     priority: P1
@@ -585,8 +585,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Temporal activities write directly to IRunStateStore with no protection â€” state store
-      latency or unavailability cascades into workflow timeouts.
+      Temporal activities write directly to IRunStateStore with no protection — state store latency
+      or unavailability cascades into workflow timeouts.
     last_verified: '2026-04-02'
   - task_id: AR-C5
     priority: P1
@@ -625,8 +625,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Current Temporal activities assume every step is a dbt operation â€” this is the
-      execution-layer blocker for multi-workflow support.
+      Current Temporal activities assume every step is a dbt operation — this is the execution-layer
+      blocker for multi-workflow support.
     last_verified: '2026-04-02'
   - task_id: RC-C2
     priority: P2
@@ -833,6 +833,7 @@ tasks:
     effort_points: 3
     progress_pct: 0
     evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
     status_reason: >-
