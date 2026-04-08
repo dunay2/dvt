@@ -73,68 +73,10 @@ function readArtifactFields(
   };
 }
 
-function readMaterializationFields(value: unknown): MaterializationEvidence | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const executor = value.executor;
-  const environmentId = value.environmentId;
-  const sinkTable = value.sinkTable;
-  const rowsWritten = value.rowsWritten;
-  const startedAt = value.startedAt;
-  const completedAt = value.completedAt;
-  const durationMs = value.durationMs;
-
-  if (
-    (executor !== 'postgres' && executor !== 'dbt') ||
-    typeof environmentId !== 'string' ||
-    typeof sinkTable !== 'string' ||
-    typeof rowsWritten !== 'number' ||
-    !Number.isFinite(rowsWritten) ||
-    typeof startedAt !== 'string' ||
-    typeof completedAt !== 'string' ||
-    typeof durationMs !== 'number' ||
-    !Number.isFinite(durationMs)
-  ) {
-    return null;
-  }
-
-  return {
-    executor,
-    environmentId,
-    sinkTable,
-    rowsWritten,
-    startedAt,
-    completedAt,
-    durationMs,
-  };
-}
-
 function deriveMaterializationEvidence(
   workspace: RunWorkspaceViewModel
 ): MaterializationEvidence | undefined {
-  if (workspace.snapshot.materialization) {
-    return workspace.snapshot.materialization;
-  }
-
-  for (const event of [...workspace.timeline.events].reverse()) {
-    if (!isRecord(event.payload)) {
-      continue;
-    }
-
-    const fromPayloadMaterialization = readMaterializationFields(event.payload.materialization);
-    if (fromPayloadMaterialization) {
-      return fromPayloadMaterialization;
-    }
-
-    const fromPayloadResultEvidence = readMaterializationFields(event.payload.resultEvidence);
-    if (fromPayloadResultEvidence) {
-      return fromPayloadResultEvidence;
-    }
-  }
-
-  return undefined;
+  return workspace.snapshot.materialization;
 }
 
 function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
@@ -187,61 +129,10 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
   return provenance;
 }
 
-function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
-  for (const event of [...workspace.timeline.events].reverse()) {
-    if (event.eventType !== 'RunFailed' || !event.payload || typeof event.payload !== 'object') {
-      continue;
-    }
-
-    const reason = (event.payload as { reason?: unknown }).reason;
-    if (typeof reason === 'string') {
-      return reason;
-    }
-  }
-
-  return undefined;
-}
-
-function getStepFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
-  for (const event of [...workspace.timeline.events].reverse()) {
-    if (event.eventType !== 'StepFailed' || !event.payload || typeof event.payload !== 'object') {
-      continue;
-    }
-
-    const payload = event.payload as { reason?: unknown; message?: unknown };
-    if (typeof payload.reason === 'string') {
-      return payload.reason;
-    }
-    if (typeof payload.message === 'string') {
-      return payload.message;
-    }
-  }
-
-  return undefined;
-}
-
-function getFailureEmittedAt(workspace: RunWorkspaceViewModel): string | undefined {
-  const failedEvent = [...workspace.timeline.events]
-    .reverse()
-    .find((event) => event.eventType === 'StepFailed' || event.eventType === 'RunFailed');
-  return failedEvent?.emittedAt;
-}
-
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
-  const failedStepId =
-    workspace.snapshot.failedStepId ??
-    [...workspace.timeline.events].reverse().find((event) => event.eventType === 'StepFailed')
-      ?.stepId;
-  const errorReason =
-    workspace.snapshot.errorReason ??
-    getRunFailedReason(workspace) ??
-    getStepFailedReason(workspace);
-  const failureEmittedAt = getFailureEmittedAt(workspace);
-
   return {
-    failedStepId,
-    errorReason,
-    failureEmittedAt,
+    failedStepId: workspace.snapshot.failedStepId,
+    errorReason: workspace.snapshot.errorReason,
   };
 }
 
@@ -398,9 +289,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           )}
         </Card>
 
-        {failureDiagnostics.failedStepId ||
-        failureDiagnostics.errorReason ||
-        failureDiagnostics.failureEmittedAt ? (
+        {failureDiagnostics.failedStepId || failureDiagnostics.errorReason ? (
           <Card className="border-slate-700 bg-slate-900 p-5">
             <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
             <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
@@ -414,12 +303,6 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div>
                   <span className="text-slate-400">{copy.errorReasonLabel}</span>
                   <div>{failureDiagnostics.errorReason}</div>
-                </div>
-              ) : null}
-              {failureDiagnostics.failureEmittedAt ? (
-                <div>
-                  <span className="text-slate-400">{copy.failureAtLabel}</span>
-                  <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString()}</div>
                 </div>
               ) : null}
             </div>

@@ -216,7 +216,7 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('STEP_FAILURE');
   });
 
-  it('renders materialization evidence from timeline payload when snapshot omits it', async () => {
+  it('does not render materialization evidence from timeline payload when snapshot omits it', async () => {
     const workspace = buildWorkspace(
       {
         snapshot: {
@@ -276,9 +276,11 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Materialization evidence');
-    expect(container.textContent).toContain('postgres');
-    expect(container.textContent).toContain('analytics.daily_sales');
-    expect(container.textContent).toMatch(/1,?284/);
+    expect(container.textContent).toContain(
+      'Result evidence is not available yet for this run snapshot.'
+    );
+    expect(container.textContent).not.toContain('analytics.daily_sales');
+    expect(container.textContent).not.toMatch(/1,?284/);
   });
 
   it('renders execution provenance from step-started artifact refs', async () => {
@@ -333,7 +335,7 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/evidence.sql');
   });
 
-  it('falls back to StepFailed payload reason when snapshot error reason is missing', async () => {
+  it('does not render failure diagnostics from timeline events when snapshot omits them', async () => {
     const workspace = buildWorkspace(
       {
         snapshot: {
@@ -385,10 +387,10 @@ describe('RunStates', () => {
       );
     });
 
-    expect(container.textContent).toContain('Failure diagnostics');
-    expect(container.textContent).toContain('step-load');
-    expect(container.textContent).toContain('SINK_WRITE_FAILED');
-    expect(container.textContent).toContain('Failure detected at');
+    expect(container.textContent).not.toContain('Failure diagnostics');
+    expect(container.textContent).not.toContain('SINK_WRITE_FAILED');
+    expect(container.textContent).toContain('Event timeline');
+    expect(container.textContent).toContain('Step: step-load');
   });
 
   it('renders error and not-found states', async () => {
