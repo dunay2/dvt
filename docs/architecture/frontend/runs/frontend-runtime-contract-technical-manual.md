@@ -108,6 +108,23 @@ flowchart LR
 | fetch run snapshot      | `GET /runs/:runId`        | API / Entry | status truth and detail truth        |
 | list run events         | `GET /runs/:runId/events` | API / Entry | ordered timeline feed for monitoring |
 
+## PlanRef handoff prerequisite
+
+The start-run contract is now preceded by backend-owned plan handoff routes:
+
+- `POST /plans/preview` returns `{ plan, planRef }` when a valid preview is
+  persisted.
+- `POST /plans/import` returns `{ plan, planRef }` for a readable persisted
+  plan inside the authorized scope.
+- `apps/web/src/app/services/plans/plansService.api.ts` parses `planRef`
+  directly from the payload and rejects envelopes that omit it.
+
+This keeps the runtime boundary consistent:
+
+1. preview or import returns a backend-authored `PlanRef`;
+2. `useCanvasExecutionActions` fails closed if `currentPlan.planRef` is absent;
+3. `runsService.startRun()` remains `PlanRef`-driven through `POST /runs/start`.
+
 ## Current Consumer Gap
 
 The route baseline is now correct. Current limitation is explicit and truthful:

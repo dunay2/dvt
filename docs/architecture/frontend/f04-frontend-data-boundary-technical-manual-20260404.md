@@ -42,7 +42,18 @@ flowchart TB
 
 ## StartRun PlanRef Boundary
 
-`ExecutionPlan` in the web app now carries optional `planRef` metadata for run-start.
+`ExecutionPlan` in the web app now carries optional `planRef` metadata for
+run-start.
+
+On the API path, `planRef` is backend-owned:
+
+- `POST /plans/preview` returns `{ plan, planRef }` after successful preview and
+  persistence.
+- `POST /plans/import` returns `{ plan, planRef }` for a readable persisted
+  plan.
+- `plansService.api` maps `planRef` directly from that envelope and rejects
+  payloads that omit it.
+
 The runtime boundary is fail-closed:
 
 1. `useCanvasExecutionActions` resolves `planRef` from `currentPlan`.
@@ -52,7 +63,11 @@ The runtime boundary is fail-closed:
    - reopen the plan modal.
 3. If `planRef` exists, start-run continues through `IRunsPort`.
 
-This keeps runtime behavior aligned with the engine contract boundary where run execution is `PlanRef`-driven.
+Mock mode may still use deterministic fixture data, but the API path must never
+reconstruct `uri`, `sha256`, or version fields client-side.
+
+This keeps runtime behavior aligned with the engine contract boundary where run
+execution is `PlanRef`-driven.
 
 ## Required Test Layers
 

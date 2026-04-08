@@ -37,14 +37,16 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 ### Protected runtime routes (OIDC-gated)
 
-| Method | Path                  | Frontend intent         | Auth posture                                                         | Request shape (frontend-consumed)                                                    | Success shape (frontend-consumed)                                   | Error envelope                                                             |
-| ------ | --------------------- | ----------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `POST` | `/runs/start`         | start run               | authenticated + action `run:start`                                   | `StartRunInput` (`planRef`, `context`) via `runsService.startRun`                    | `EngineRunRef` (`runId`)                                            | `HttpErrorEnvelope` (`error.type`, `reason`, optional `target`, `details`) |
-| `GET`  | `/runs`               | list run summaries      | authenticated + action `run:list`                                    | query: `tenantId` required; `projectId`, `environmentId`, `limit`, `cursor` optional | list payload mapped to `RunSummaryItem[]`                           | `HttpErrorEnvelope`                                                        |
-| `GET`  | `/runs/:runId`        | fetch run snapshot      | authenticated + action `run:view`                                    | query: `tenantId` required; `enriched` optional                                      | snapshot payload mapped to `RunSnapshot` \| `null`                  | `HttpErrorEnvelope`                                                        |
-| `GET`  | `/runs/:runId/events` | fetch run timeline page | authenticated + action `run:logs:view`                               | query: `tenantId` required; `afterSeq`, `limit` optional                             | payload mapped to `RunEventTimelinePage` (`events`, `nextAfterSeq`) | `HttpErrorEnvelope`                                                        |
-| `POST` | `/runs/:runId/signal` | send run signal         | authenticated + action by signal type (`run:signal` or `run:cancel`) | body: `tenantId`, `signalType`, optional `reason`                                    | command acceptance or runtime command outcome                       | `HttpErrorEnvelope`                                                        |
-| `POST` | `/runs/:runId/cancel` | cancel run              | authenticated + action `run:cancel`                                  | body: `tenantId`, optional `reason`                                                  | command acceptance or runtime command outcome                       | `HttpErrorEnvelope`                                                        |
+| Method | Path                  | Frontend intent          | Auth posture                                                         | Request shape (frontend-consumed)                                                       | Success shape (frontend-consumed)                                                    | Error envelope                                                             |
+| ------ | --------------------- | ------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| `POST` | `/plans/preview`      | preview and persist plan | authenticated + action `run:start`                                   | `PlanPreviewInput` (`selectedNodeIds`, `context`, `persist: true`, optional `planName`) | `{ plan, planRef, planSummary?, persisted?, provenance? }` mapped to `ExecutionPlan` | `HttpErrorEnvelope` (`error.type`, `reason`, optional `target`, `details`) |
+| `POST` | `/plans/import`       | import persisted plan    | authenticated + action `run:start`                                   | `{ planRef, context }` via `plansService.importPlan`                                    | `{ plan, planRef }` mapped to `ExecutionPlan`                                        | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/start`         | start run                | authenticated + action `run:start`                                   | `StartRunInput` (`planRef`, `context`) via `runsService.startRun`                       | `EngineRunRef` (`runId`)                                                             | `HttpErrorEnvelope`                                                        |
+| `GET`  | `/runs`               | list run summaries       | authenticated + action `run:list`                                    | query: `tenantId` required; `projectId`, `environmentId`, `limit`, `cursor` optional    | list payload mapped to `RunSummaryItem[]`                                            | `HttpErrorEnvelope`                                                        |
+| `GET`  | `/runs/:runId`        | fetch run snapshot       | authenticated + action `run:view`                                    | query: `tenantId` required; `enriched` optional                                         | snapshot payload mapped to `RunSnapshot` \| `null`                                   | `HttpErrorEnvelope`                                                        |
+| `GET`  | `/runs/:runId/events` | fetch run timeline page  | authenticated + action `run:logs:view`                               | query: `tenantId` required; `afterSeq`, `limit` optional                                | payload mapped to `RunEventTimelinePage` (`events`, `nextAfterSeq`)                  | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/:runId/signal` | send run signal          | authenticated + action by signal type (`run:signal` or `run:cancel`) | body: `tenantId`, `signalType`, optional `reason`                                       | command acceptance or runtime command outcome                                        | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/:runId/cancel` | cancel run               | authenticated + action `run:cancel`                                  | body: `tenantId`, optional `reason`                                                     | command acceptance or runtime command outcome                                        | `HttpErrorEnvelope`                                                        |
 
 ### Public operational routes (shell health contract)
 
@@ -59,6 +61,8 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 | Route                      | Access class                      | Required token | Required authorization action                              |
 | -------------------------- | --------------------------------- | -------------- | ---------------------------------------------------------- |
+| `POST /plans/preview`      | role-scoped protected runtime     | yes            | `run:start`                                                |
+| `POST /plans/import`       | role-scoped protected runtime     | yes            | `run:start`                                                |
 | `POST /runs/start`         | role-scoped protected runtime     | yes            | `run:start`                                                |
 | `GET /runs`                | role-scoped protected runtime     | yes            | `run:list`                                                 |
 | `GET /runs/:runId`         | role-scoped protected runtime     | yes            | `run:view`                                                 |
@@ -77,6 +81,19 @@ Forbidden or failure expectations for protected routes:
 - invalid route/body/query parsing -> `400` or `422`
 - command conflict or invalid transition -> `409`
 - backend/runtime unavailability -> `503` or `5xx`
+
+## PlanRef handoff contract
+
+In `api` mode, `ExecutionPlan.planRef` is backend-owned.
+
+- `POST /plans/preview` must return `{ plan, planRef }` when preview and
+  persistence succeed.
+- `POST /plans/import` must return `{ plan, planRef }` when the referenced plan
+  is readable inside the authorized scope.
+- `apps/web` maps `planRef` directly from those payloads and must fail closed
+  if the envelope omits it.
+- `POST /runs/start` remains the only start authority and consumes that same
+  immutable `PlanRef`.
 
 ## Canonical Envelope Examples
 
