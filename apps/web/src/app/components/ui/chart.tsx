@@ -99,7 +99,9 @@ const ChartTooltip = RechartsPrimitive.Tooltip;
 
 type ChartValueType = number | string | Array<number | string>;
 type ChartNameType = number | string;
-type ChartTooltipPayload = NonNullable<TooltipProps<ChartValueType, ChartNameType>['payload']>[number];
+type ChartTooltipPayload = NonNullable<
+  TooltipProps<ChartValueType, ChartNameType>['payload']
+>[number];
 type ChartLegendPayload = NonNullable<LegendProps['payload']>[number];
 
 function ChartTooltipContent({
