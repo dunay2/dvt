@@ -92,7 +92,15 @@ function mkActivityDeps(): {
   };
 }
 
-function mkResolvedRunContext() {
+function mkResolvedRunContext(): {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  targetAdapter: 'temporal';
+  logicalAttemptId: number;
+  originRunId: string;
+} {
   return {
     tenantId: 'tenant-1',
     projectId: 'proj-1',
