@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-08
 planning_type: review
 ---
 
@@ -63,6 +63,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260407 Principal architecture review - progress, effort, and diagrams](architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md)
+  - domain: `architecture-and-governance`
+  - role: current status-and-diagrams companion to the 2026-04-07 principal architecture review
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260407 PlanCore operational consumption design spike](architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md)
   - domain: `architecture-and-governance`
   - role: design spike on whether existing `PlanCore` should become an operationally consumed split
@@ -72,8 +79,15 @@ Additional active rationale:
 
 - [20260407 Retry-step boundary and use-case review](architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md)
   - domain: `architecture-and-governance`
-  - role: boundary rationale and implementation review for narrowing `RETRY_STEP` out of canonical `SignalType`
+  - role: historical boundary rationale for narrowing `RETRY_STEP`; `RETRY_RUN` is superseded separately by ADR-0049
   - linkage: `WE-HX-4-C`
+  - status: `done`
+  - progress: `100%`
+
+- [20260408 Retry-run boundary and provider signal mapper review](architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
+  - domain: `architecture-and-governance`
+  - role: boundary rationale and implementation review for narrowing `RETRY_RUN` out of canonical `SignalType` and making provider signal mapping explicit
+  - linkage: `WE-HX-4-A`, `WE-HX-4-B`, `WE-HX-4-C`
   - status: `done`
   - progress: `100%`
 
@@ -114,6 +128,13 @@ Additional active QA:
   - domain: `architecture-and-governance`
   - role: hard QA gate for narrowing `RETRY_STEP` out of canonical `SignalType`
   - linkage: `QA-RS-1..QA-RS-4`
+  - status: `done`
+  - progress: `100%`
+
+- [20260408 Retry-run boundary hard QA review](architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: hard QA gate for narrowing `RETRY_RUN` out of canonical `SignalType` and closing the provider signal mapper seam
+  - linkage: `QA-RR-1..QA-RR-5`
   - status: `done`
   - progress: `100%`
 

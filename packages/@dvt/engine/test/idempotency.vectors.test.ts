@@ -67,7 +67,7 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
     }
   });
 
-  it('matches canonical signal vectors after RETRY_STEP removal', () => {
+  it('matches canonical signal vectors after retry boundary narrowing', () => {
     const vectors = [
       {
         params: {
@@ -91,9 +91,9 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
         },
         request: {
           signalId: 'sig-999',
-          type: 'RETRY_RUN' as const,
+          type: 'RESUME' as const,
         },
-        expected: '6782a443429b2e4b4049f0fa92218db60df29134e3a7426c4067ea58cb9c8a02',
+        expected: '8b41b7babbe79b1f1587514f8a7bd32a26674ceadb0896f206ce78c966856c3f',
       },
       {
         params: {

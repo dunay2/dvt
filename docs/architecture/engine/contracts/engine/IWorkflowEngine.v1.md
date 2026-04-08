@@ -3,6 +3,8 @@
 > Historical note: references in this v1 surface to `retryStep` as a signal are
 > superseded by [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
 > The current canonical signal boundary no longer includes `RETRY_STEP`.
+> Business run recovery is also outside the generic signal boundary; see
+> [ADR-0049](../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
 > References in this v1 surface to engine-owned realized lifecycle events for
 > `RunPaused`, `RunResumed`, or `RunCancelled` are superseded by
 > [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
@@ -35,7 +37,7 @@ workstream (#133).
 - Start a run from a validated plan reference.
 - Cancel a run.
 - Return run status.
-- Accept runtime signals (`PAUSE`, `RESUME`, `CANCEL`, `RETRY_RUN`).
+- Accept runtime signals (`PAUSE`, `RESUME`, `CANCEL`).
 - Persist run and step lifecycle events through the event pipeline.
 - Include correlation identifiers on operations/events: `tenantId`,
   `projectId`, `environmentId`, `runId`.
@@ -190,7 +192,7 @@ Idempotency rule (normative):
 ## 6) Signals baseline
 
 ```ts
-type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL' | 'RETRY_RUN';
+type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 
 interface SignalRequest {
   signalId: string;
@@ -201,6 +203,9 @@ interface SignalRequest {
 
 Rules:
 
+- `RETRY_RUN` is not part of canonical `SignalType`; business recovery
+  requires a dedicated engine or application use case per ADR-0040 and
+  ADR-0049.
 - `RETRY_STEP` is not part of canonical `SignalType`; future step retry
   requires a dedicated use case per ADR-0048.
 - Signal operations MUST be tenant-authorized before execution.
@@ -225,5 +230,5 @@ and linked sub-contracts.
 - **v1 (2026-02-16)**: Initial draft baseline contract for domain-contract
   bootstrap (#133).
 - **v1 (2026-04-08)**: Clarified runtime-owned realized lifecycle ownership for
-  signal-driven events and aligned the baseline signal contract with ADR-0047
-  and ADR-0048.
+  signal-driven events and aligned the baseline signal contract with ADR-0047,
+  ADR-0048, and ADR-0049.

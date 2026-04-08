@@ -73,7 +73,7 @@ export const RunSubstatusSchema = z.enum([
 
 export const StepStatusSchema = z.enum(['PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'SKIPPED']);
 
-export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL', 'RETRY_RUN']);
+export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL']);
 
 export const StepOutputStatusSchema = z.enum(['SUCCESS', 'FAILED', 'SKIPPED']);
 const NonBlankStringSchema = z

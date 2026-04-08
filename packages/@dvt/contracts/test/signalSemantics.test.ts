@@ -23,8 +23,7 @@ describe('SignalSemantics contract', () => {
     );
   });
 
-  it('returns null for adapter-owned signals with no engine-derived event', () => {
+  it('returns null for canonical signals with no engine-derived event', () => {
     expect(getSignalDerivedEventType('CANCEL')).toBeNull();
-    expect(getSignalDerivedEventType('RETRY_RUN')).toBeNull();
   });
 });

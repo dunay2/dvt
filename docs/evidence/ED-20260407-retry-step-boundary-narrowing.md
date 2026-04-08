@@ -40,6 +40,10 @@ The architectural decision is governed by `ADR-0048`, which formalizes that
 future step-scoped retry must be introduced as a dedicated engine or
 application use case rather than as `signal(..., { type: 'RETRY_STEP' })`.
 
+Historical note: this evidence artifact records the 2026-04-07 slice only.
+`RETRY_RUN` was resolved later by `ADR-0049` and is no longer part of the
+canonical generic signal boundary.
+
 ## What changed
 
 - Removed `RETRY_STEP` from the canonical `SignalType` contract and schema.
@@ -58,6 +62,8 @@ application use case rather than as `signal(..., { type: 'RETRY_STEP' })`.
 ## Expected effect
 
 - Canonical signal vocabulary no longer advertises speculative `RETRY_STEP` support.
-- Consumers can no longer bind to a speculative `RETRY_STEP` signal path; `RETRY_RUN` posture remains a separate API/product decision.
+- Consumers can no longer bind to a speculative `RETRY_STEP` signal path; the
+  residual `RETRY_RUN` posture from that slice has since been closed by
+  `ADR-0049`.
 - Any future step retry feature must declare its own engine semantics,
   authorization, admission rules, and adapter capability behavior explicitly.

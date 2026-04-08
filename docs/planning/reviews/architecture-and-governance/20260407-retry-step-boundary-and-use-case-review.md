@@ -2,11 +2,15 @@
 title: Retry-step boundary and use-case review
 status: Complete
 owner: Architecture / Engine / Contracts / API
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-08
 planning_type: review
 ---
 
 # Retry-step boundary and use-case review
+
+Historical note: this review governs the 2026-04-07 `RETRY_STEP` slice only.
+`RETRY_RUN` was intentionally left unchanged here and was later resolved by
+`ADR-0049` as a dedicated recover-run use case outside canonical `SignalType`.
 
 ## Scope
 
@@ -35,7 +39,7 @@ The first implementation slice should therefore be narrow and clean:
 
 1. remove `RETRY_STEP` from canonical signal contracts;
 2. remove signal-path code and docs that imply support;
-3. keep `RETRY_RUN` unchanged in this slice;
+3. keep `RETRY_RUN` unchanged in this slice at that time;
 4. defer actual `retryStep(...)` runtime implementation to a later dedicated
    slice.
 
@@ -197,9 +201,14 @@ Adopt **Option C**.
 
 ## Target state
 
+Historical note: the target state below describes the clean boundary for the
+2026-04-07 `RETRY_STEP` slice. `ADR-0049` later narrowed `RETRY_RUN` out of
+the generic signal surface as well, so the active canonical signal set is now
+`PAUSE`, `RESUME`, and `CANCEL`.
+
 ```mermaid
 flowchart LR
-  caller[Caller / API / internal consumer] --> runSignals[signal: PAUSE RESUME CANCEL RETRY_RUN]
+  caller[Caller / API / internal consumer] --> runSignals[signal: PAUSE RESUME CANCEL]
   caller --> retryStep[retryStep use case]
 
   runSignals --> engineSignal[Engine signal boundary]
@@ -240,7 +249,8 @@ This slice should implement only the clean narrowing work.
 - step-retry runtime realization;
 - step-retry lineage persistence;
 - provider capability negotiation for step retry;
-- any change to `RETRY_RUN`.
+- any change to `RETRY_RUN` in this slice at the time of acceptance; that
+  residual boundary was later closed by `ADR-0049`.
 
 ## Implemented outcome
 
@@ -259,7 +269,7 @@ This slice implements the contract-narrowing path described above:
 Change now:
 
 - remove `RETRY_STEP` from `SignalType` and `SignalTypeSchema`
-- keep `RETRY_RUN`
+- keep `RETRY_RUN` unchanged in this slice at the time
 
 Expected impact:
 
@@ -272,7 +282,7 @@ Expected impact:
 Change now:
 
 - remove signal-path code that explicitly handles `RETRY_STEP`
-- keep `RETRY_RUN` behavior unchanged
+- keep `RETRY_RUN` behavior unchanged in this slice at the time
 
 Expected impact:
 

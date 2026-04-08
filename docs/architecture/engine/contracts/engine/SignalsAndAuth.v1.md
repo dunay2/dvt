@@ -3,6 +3,8 @@
 > Historical note: this draft no longer treats `RETRY_STEP` as part of the
 > canonical signal boundary. See
 > [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
+> Business run recovery is also outside the generic `signal(...)` contract; see
+> [ADR-0049](../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
 > Realized lifecycle events triggered by signals are runtime-owned per
 > [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
 
@@ -13,7 +15,7 @@
 **Stability**: Contracts - breaking changes require version bump  
 **Consumers**: Engine, Authorization Service, Audit Systems, UI  
 **Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)  
-**References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [ADR-0040](../../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md), [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
+**References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [ADR-0040](../../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md), [ADR-0048](../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md), [ADR-0049](../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 
 **Version alignment**: Contract v1 aligns with parent IWorkflowEngine.v1 and ExecutionSemantics.v1.
 
@@ -27,6 +29,10 @@ authorization/idempotency rules for those signals.
 It does not govern speculative admin/operator commands that are not present in
 `@dvt/contracts`.
 
+It also does not define business run recovery. Any future recover-run command
+must use a dedicated engine or application use case rather than
+`signal(..., { type: 'RETRY_RUN' })`.
+
 It also does not define a step-retry command surface. Any future step-scoped
 retry must be introduced as a dedicated engine or application use case rather
 than as `signal(..., { type: 'RETRY_STEP' })`.
@@ -38,24 +44,25 @@ Canonical `SignalType` is:
 - `PAUSE`
 - `RESUME`
 - `CANCEL`
-- `RETRY_RUN`
 
 Transport note:
 
-- the canonical engine contract includes `RETRY_RUN`;
-- the shipped HTTP/API runtime surface currently exposes only `PAUSE`,
-  `RESUME`, and `CANCEL`;
-- that remaining API posture is governed separately by
-  [ADR-0040](../../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md).
+- the canonical engine contract is limited to `PAUSE`, `RESUME`, and `CANCEL`;
+- business run recovery is governed separately by
+  [ADR-0040](../../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
+  and [ADR-0049](../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md);
+- the shipped HTTP/API runtime surface is aligned with this canonical signal set.
 
 ### 2.1 Signal intent summary
 
-| SignalType  | Canonical? | Intent                             | Notes                                                    |
-| ----------- | ---------- | ---------------------------------- | -------------------------------------------------------- |
-| `PAUSE`     | yes        | stop scheduling new work           | realized lifecycle fact is `RunPaused`, runtime-owned    |
-| `RESUME`    | yes        | resume scheduling work             | realized lifecycle fact is `RunResumed`, runtime-owned   |
-| `CANCEL`    | yes        | request cooperative cancellation   | realized lifecycle fact is `RunCancelled`, runtime-owned |
-| `RETRY_RUN` | yes        | request a new business run attempt | governed by ADR-0040                                     |
+| SignalType | Canonical? | Intent                           | Notes                                                    |
+| ---------- | ---------- | -------------------------------- | -------------------------------------------------------- |
+| `PAUSE`    | yes        | stop scheduling new work         | realized lifecycle fact is `RunPaused`, runtime-owned    |
+| `RESUME`   | yes        | resume scheduling work           | realized lifecycle fact is `RunResumed`, runtime-owned   |
+| `CANCEL`   | yes        | request cooperative cancellation | realized lifecycle fact is `RunCancelled`, runtime-owned |
+
+Business run recovery is intentionally outside this table. It is not a generic
+signal and must be governed by a dedicated recovery contract.
 
 ### 2.2 RETRY_STEP boundary
 
@@ -94,13 +101,13 @@ interface SignalRequest {
 
 ### 3.3 Role baseline (DRAFT)
 
-| Role       | Allowed canonical signals             |
-| ---------- | ------------------------------------- |
-| `Operator` | `PAUSE`, `RESUME`, `CANCEL`           |
-| `Engineer` | `RETRY_RUN` plus all Operator signals |
+| Role       | Allowed canonical signals   |
+| ---------- | --------------------------- |
+| `Operator` | `PAUSE`, `RESUME`, `CANCEL` |
+| `Engineer` | `PAUSE`, `RESUME`, `CANCEL` |
 
 This role table is intentionally narrow. It does not define permissions for
-non-canonical commands.
+non-canonical commands or for dedicated recovery use cases.
 
 ---
 
