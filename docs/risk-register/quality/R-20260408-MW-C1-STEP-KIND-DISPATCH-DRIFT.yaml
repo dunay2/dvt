@@ -1,0 +1,22 @@
+---
+id: R-20260408-MW-C1-STEP-KIND-DISPATCH-DRIFT
+title: Runtime step-kind routing can regress to catch-all execution in adapter-temporal
+status: Open
+date: 2026-04-08
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Low
+context: >
+  MW-C1 introduces explicit step-kind dispatch through StepActivityDispatcher and DbtStepActivity to
+  remove catch-all runtime step handling from Temporal activities.
+risk: >
+  Future edits may bypass or weaken dispatcher registration checks, reintroducing implicit execution
+  of unsupported kinds and hiding integration gaps.
+mitigations:
+  - 'StepActivityDispatcher now routes task steps by step.kind and fails closed for unknown kinds.'
+  - 'UnsupportedStepKindError is emitted as non-retryable PermanentStepError semantics.'
+  - 'Unit tests assert step kind required and unsupported-kind failure paths.'
+  - 'Time-skipping golden-path integration test remains in validation baseline.'
+review_after: 2026-06-01
+---

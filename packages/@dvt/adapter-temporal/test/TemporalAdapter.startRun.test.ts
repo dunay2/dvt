@@ -27,7 +27,7 @@ const BASE_PLAN: ExecutionPlan = {
     inputHashSha256: 'a'.repeat(64),
     createdAtIso: '2026-04-07T00:00:00.000Z',
   },
-  steps: [{ stepId: 's-1', kind: 'noop', dependsOn: [] }],
+  steps: [{ stepId: 's-1', kind: 'DBT_MODEL', dependsOn: [] }],
 };
 
 const BASE_PLAN_REF: PlanRef = {
@@ -80,7 +80,7 @@ function makeLargePlan(stepCount: number, stepIdWidth: number): ExecutionPlan {
     ...BASE_PLAN,
     steps: Array.from({ length: stepCount }, (_, index) => ({
       stepId: `step-${index}-${'x'.repeat(stepIdWidth)}`,
-      kind: 'noop',
+      kind: 'DBT_MODEL',
       dependsOn: [],
     })),
   };
