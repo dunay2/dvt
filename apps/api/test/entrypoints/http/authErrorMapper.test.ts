@@ -210,9 +210,7 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('maps unsupported provider-private commands to 422', () => {
-    const result = mapRuntimeDomainError(
-      new SignalNotImplementedError('PROVIDER_PRIVATE_COMMAND')
-    );
+    const result = mapRuntimeDomainError(new SignalNotImplementedError('PROVIDER_PRIVATE_COMMAND'));
     expect(result).toEqual({
       status: 422,
       body: {
