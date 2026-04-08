@@ -586,7 +586,7 @@ tasks:
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2
-    status: in_progress
+    status: review
     objective: >-
       close residual quality drifts after the boundary refactor, focused on test seam policy and
       shell UX contract consistency.
@@ -596,7 +596,7 @@ tasks:
       override seams instead of global module mocking, and API-mode console copy is product-safe.
     complexity: M
     effort_points: 3
-    progress_pct: 67
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
@@ -606,11 +606,11 @@ tasks:
       - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
       - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Residual cleanup is now active: `F-04-RESIDUAL-A` moved Root-level provider ownership to the
-      real shell entrypoint and added a direct integration guard. `F-04-RESIDUAL-B` now rewires
-      `useCanvasController` consumer tests to the real `AppServicesProvider` override seam instead
-      of globally mocking `AppServicesContext` exports. Documentary hard QA found no blocking issues
-      for residual-A. Remaining work is API-mode console copy normalization in `F-04-RESIDUAL-C`.
+      Residual cleanup is now functionally complete and pending final acceptance review:
+      `F-04-RESIDUAL-A` moved Root-level provider ownership to the real shell entrypoint and added a
+      direct integration guard, `F-04-RESIDUAL-B` rewired `useCanvasController` consumer tests to
+      provider overrides, and `F-04-RESIDUAL-C` normalized API-mode console empty-state copy to
+      product language without internal planning terminology.
     last_verified: '2026-04-08'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
@@ -663,7 +663,7 @@ tasks:
   - task_id: F-04-RESIDUAL-C
     parent_task: F-04-RESIDUAL
     priority: P3
-    status: queued
+    status: review
     objective: >-
       normalize API-mode console copy to product language and remove process-internal roadmap
       wording.
@@ -673,13 +673,15 @@ tasks:
       slices or internal planning terminology.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/components/Console.tsx
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
     status_reason: >-
-      Current fallback copy is operationally correct but includes internal delivery language.
-    last_verified: '2026-04-04'
+      API-mode console empty-state copy now uses product-facing wording about run events and
+      explicitly states that live log streaming is not yet available in API mode, without exposing
+      internal roadmap or implementation-slice language.
+    last_verified: '2026-04-08'
   - task_id: F-05
     priority: P0
     status: in_progress
@@ -708,7 +710,7 @@ tasks:
   - task_id: F-05-CANVAS-CTRL-DOC
     parent_task: F-05
     priority: P0
-    status: review
+    status: done
     objective: >-
       freeze the current truth, target controller decomposition, and user-facing Canvas guarantees
       for the `useCanvasController` hardening slice.
@@ -719,19 +721,20 @@ tasks:
       to the implementer.
     complexity: S
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/frontend/screen-manuals-and-user-stories.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
     status_reason: >-
-      The controller remediation now has a dedicated architecture page, user-manual update, and
-      proposal-level execution handoff; final closure depends on docs validation and acceptance.
+      Documentation hard-gate acceptance is complete: the frontend architecture entrypoint links the
+      controller current-to-target architecture page, the Canvas user manual states current journey,
+      guarantees, and non-promises, and the proposal freezes the hard-gate sequence and seam names.
     definition_of_done:
       - technical current-to-target doc is linked from the frontend architecture entrypoint
       - Canvas user manual states current journey, guarantees, and non-promises
       - the proposal freezes the hard-gate sequence and extracted seam names
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-08'
   - task_id: F-05-CANVAS-CTRL-TDD
     parent_task: F-05
     priority: P0
