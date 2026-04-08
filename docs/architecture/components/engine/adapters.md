@@ -5,6 +5,19 @@
 Summarizes adapter integration points for the engine component map and links to
 canonical adapter specifications.
 
+## Current adapter topology
+
+```mermaid
+flowchart LR
+  Engine["@dvt/engine"] --> ProviderPort["Provider adapter port"]
+  ProviderPort --> Mock["Mock adapter (testing)"]
+  ProviderPort --> Temporal["Temporal adapter"]
+  Engine --> StatePorts["State-store and intent ports"]
+  StatePorts --> Postgres["Postgres state-store adapter"]
+  Engine --> PlanPorts["Plan fetch / persistence seam"]
+  PlanPorts --> Postgres
+```
+
 ## Canonical adapter specs
 
 - [Temporal adapter specification](../../engine/adapters/temporal/TemporalAdapter.spec.md)

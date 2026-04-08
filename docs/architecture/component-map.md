@@ -2,7 +2,7 @@
 title: Component Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 ---
 
 # DVT Component Map
@@ -31,7 +31,7 @@ three practical questions:
 flowchart TB
   subgraph UIAndEntry["UI and entry"]
     web["apps/web (`@dvt/web`)"]
-    api["apps/api"]
+    api["apps/api (`dvt-api`)"]
   end
 
   subgraph Planning["Planning and artifacts"]
@@ -40,10 +40,12 @@ flowchart TB
     interpreter["@dvt/plan-interpreter"]
     dsl["@dvt/dsl"]
     artifacts["@dvt/artifacts"]
+    plannerContracts["@dvt/planner-contracts"]
   end
 
-  subgraph Execution["Execution and state"]
+  subgraph Execution["Execution and persistence"]
     engine["@dvt/engine"]
+    runDomain["@dvt/run-domain"]
     state["@dvt/state-store"]
     temporal["@dvt/adapter-temporal"]
     postgres["@dvt/adapter-postgres"]
@@ -52,8 +54,8 @@ flowchart TB
   subgraph Delivery["Delivery and read models"]
     delivery["@dvt/delivery"]
     outbox["apps/outbox-worker (`dvt-outbox-worker`)"]
-    projector["apps/projector-worker"]
-    lineage["apps/lineage-worker"]
+    projector["apps/projector-worker (`dvt-projector-worker`)"]
+    lineage["apps/lineage-worker (`dvt-lineage-worker`)"]
   end
 
   subgraph Shared["Contracts and cross-cutting"]
@@ -65,14 +67,19 @@ flowchart TB
   end
 
   web --> api
+  web --> contracts
   api --> planner
   api --> engine
   api --> delivery
+  api --> observability
+  planner --> plannerContracts
   planner --> artifacts
   planner --> verifier
   planner --> interpreter
   planner --> dsl
+  planner --> contracts
   planner --> crypto
+  engine --> runDomain
   engine --> contracts
   engine --> state
   engine --> temporal
@@ -82,45 +89,133 @@ flowchart TB
   delivery --> projector
   delivery --> lineage
   outbox --> postgres
+  outbox --> state
   projector --> postgres
+  lineage --> postgres
   lineage --> traceability
-  api --> observability
-  delivery --> observability
   observability --> otel
   traceability --> contracts
 ```
 
 ## Entry And UI Surfaces
 
-| Surface                 | Current role                                                                                                      | Code anchors                                                                                                                                                                                                  | Planned delta                                                                                                                                      |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/api`              | HTTP composition root for auth, admission, runtime commands, queries, health, readiness, and reconciler bootstrap | [app.ts](../../apps/api/src/app.ts), [server.ts](../../apps/api/src/server.ts), [buildProtectedRuntimeModule.ts](../../apps/api/src/modules/buildProtectedRuntimeModule.ts)                                   | keep frontend-facing contract and admission/runtime health alignment explicit; related active work includes `MVP-E1` and residual Lane C hardening |
-| `apps/web` (`@dvt/web`) | browser application shell, client routing, platform-health probes, run views, and operator-facing UX              | [main.tsx](../../apps/web/src/main.tsx), [App.tsx](../../apps/web/src/app/App.tsx), [httpPlatformHealthClient.ts](../../apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.ts) | retire direct mock-driven view wiring and finish backend-backed shell behavior; related active work includes `F-01`, `F-03`, `F-04`, and `MVP-E1`  |
+- `apps/api`: HTTP composition root for auth, admission, runtime commands,
+  queries, health, readiness, and reconciler bootstrap.
+  Code anchors: [app.ts](../../apps/api/src/app.ts),
+  [server.ts](../../apps/api/src/server.ts),
+  [buildProtectedRuntimeModule.ts](../../apps/api/src/modules/buildProtectedRuntimeModule.ts).
+  Planned delta: keep frontend-facing contract and admission/runtime health
+  alignment explicit; related active work includes `MVP-E1` and residual Lane
+  C hardening.
+- `apps/web` (`@dvt/web`): browser application shell, plugin-routed views,
+  platform-health probes, and operator-facing UX.
+  Code anchors: [main.tsx](../../apps/web/src/main.tsx),
+  [routes.ts](../../apps/web/src/app/routes.ts),
+  [httpPlatformHealthClient.ts](../../apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.ts).
+  Planned delta: retire direct mock-driven view wiring and finish backend-backed
+  shell behavior; related active work includes `F-01`, `F-03`, `F-04`, and
+  `MVP-E1`.
 
 ## Planning And Artifact Surfaces
 
-| Surface                                                   | Current role                                                                                | Code anchors                                                                                                                                                                                                     | Planned delta                                                                                                                                           |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@dvt/planner`                                            | planner facade, graph-source derivation, manifest handling, and execution-plan assembly     | [PlannerFacade.ts](../../packages/@dvt/planner/src/application/PlannerFacade.ts), [derivePlannerGraphSourceFromManifest.ts](../../packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts) | formalize the plan-record and plan-store model without widening shared-kernel drift; active work centers on `S08` and ownership cleanup under `RC-G1-D` |
-| `@dvt/plan-verifier`, `@dvt/plan-interpreter`, `@dvt/dsl` | verification, DAG interpretation, and deterministic DSL evaluation around planner output    | [verify.ts](../../packages/@dvt/plan-verifier/src/verify.ts), [dagAnalyzer.ts](../../packages/@dvt/plan-interpreter/src/dagAnalyzer.ts), [index.ts](../../packages/@dvt/dsl/src/index.ts)                        | stay narrow and verifiable; changes should track planner compatibility work rather than grow into parallel policy engines                               |
-| `@dvt/artifacts`                                          | compiled-code attachment and storage adapters used by planner output and traceability flows | [index.ts](../../packages/@dvt/artifacts/src/index.ts), [attachCompiledCodeRefs.ts](../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts)                                                    | absorb storage behavior that should not remain planner-private as `S08` lands                                                                           |
+- `@dvt/planner`: planner facade, graph-source derivation, manifest handling,
+  and execution-plan assembly.
+  Code anchors: [PlannerFacade.ts](../../packages/@dvt/planner/src/application/PlannerFacade.ts),
+  [derivePlannerGraphSourceFromManifest.ts](../../packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts).
+  Planned delta: formalize the plan-record and plan-store model without widening
+  shared-kernel drift; active work centers on `S08` and ownership cleanup under
+  `RC-G1-D`.
+- `@dvt/planner-contracts`: thin contract-export package used to publish
+  planner contract entrypoints for consumers.
+  Code anchors: [index.ts](../../packages/@dvt/planner-contracts/index.ts),
+  [ExecutionPlan.v1.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts).
+  Planned delta: keep it narrow and derivative of canonical planner contracts
+  rather than growing parallel planner semantics.
+- `@dvt/plan-verifier`, `@dvt/plan-interpreter`, `@dvt/dsl`: verification, DAG
+  interpretation, and deterministic DSL evaluation around planner output.
+  Code anchors: [verify.ts](../../packages/@dvt/plan-verifier/src/verify.ts),
+  [dagAnalyzer.ts](../../packages/@dvt/plan-interpreter/src/dagAnalyzer.ts),
+  [index.ts](../../packages/@dvt/dsl/src/index.ts).
+  Planned delta: stay narrow and verifiable; changes should track planner
+  compatibility work rather than grow into parallel policy engines.
+- `@dvt/artifacts`: compiled-code attachment and storage adapters used by
+  planner output and traceability flows.
+  Code anchors: [index.ts](../../packages/@dvt/artifacts/src/index.ts),
+  [attachCompiledCodeRefs.ts](../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts).
+  Planned delta: absorb storage behavior that should not remain planner-private
+  as `S08` lands.
 
 ## Execution And State Surfaces
 
-| Surface                                         | Current role                                                                                                        | Code anchors                                                                                                                                                                                                                                                            | Planned delta                                                                                                                                  |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@dvt/engine`                                   | owns run lifecycle semantics, access policy, start-run coordination, snapshot projection, and maintenance services  | [WorkflowEngine.ts](../../packages/@dvt/engine/src/core/WorkflowEngine.ts), [StartRunApplicationService.ts](../../packages/@dvt/engine/src/application/StartRunApplicationService.ts), [RunAccessPolicy.ts](../../packages/@dvt/engine/src/security/RunAccessPolicy.ts) | continue hardening and modularization without moving authority out of the engine; active work includes `S02`, `S03`, `S04`, `DHM`, and `RC-G1` |
-| `@dvt/state-store` plus `@dvt/adapter-postgres` | state-store boundary, snapshot/query persistence, intent logging, outbox persistence, and plan-store implementation | [index.ts](../../packages/@dvt/state-store/src/index.ts), [PostgresStateStoreRuntime.ts](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts), [PostgresPlanStore.ts](../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts)                  | keep ownership explicit while plan-store and state-store responsibilities are separated cleanly under `S02` and `S08`                          |
-| `@dvt/adapter-temporal`                         | Temporal provider implementation and worker-host integration behind engine/provider contracts                       | [index.ts](../../packages/@dvt/adapter-temporal/src/index.ts), [TemporalAdapter.ts](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)                                                                                                                        | preserve equivalence and provider isolation while engine hardening continues; new behavior must stay behind the provider contract              |
+- `@dvt/engine`: owns run lifecycle semantics, access policy, start-run
+  coordination, snapshot projection, and maintenance services.
+  Code anchors: [WorkflowEngine.ts](../../packages/@dvt/engine/src/core/WorkflowEngine.ts),
+  [StartRunApplicationService.ts](../../packages/@dvt/engine/src/application/StartRunApplicationService.ts),
+  [RunAccessPolicy.ts](../../packages/@dvt/engine/src/security/RunAccessPolicy.ts).
+  Planned delta: continue hardening and modularization without moving authority
+  out of the engine; active work includes `S02`, `S03`, `S04`, `DHM`, and
+  `RC-G1`.
+- `@dvt/run-domain`: pure run-event transition and illegal-state policy library
+  consumed below the engine boundary.
+  Code anchors: [applyRunEvent.ts](../../packages/@dvt/run-domain/src/applyRunEvent.ts),
+  [transitionPolicy.ts](../../packages/@dvt/run-domain/src/transitionPolicy.ts).
+  Planned delta: keep transition rules explicit and domain-pure instead of
+  duplicating lifecycle policy across engine or adapters.
+- `@dvt/state-store` plus `@dvt/adapter-postgres`: state-store boundary,
+  snapshot/query persistence, intent logging, outbox persistence, and plan-store
+  implementation.
+  Code anchors: [index.ts](../../packages/@dvt/state-store/src/index.ts),
+  [PostgresStateStoreRuntime.ts](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts),
+  [PostgresPlanStore.ts](../../packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts).
+  Planned delta: keep ownership explicit while plan-store and state-store
+  responsibilities are separated cleanly under `S02` and `S08`.
+- `@dvt/adapter-temporal`: Temporal provider implementation and worker-host
+  integration behind engine/provider contracts.
+  Code anchors: [index.ts](../../packages/@dvt/adapter-temporal/src/index.ts),
+  [TemporalAdapter.ts](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts).
+  Planned delta: preserve equivalence and provider isolation while engine
+  hardening continues; new behavior must stay behind the provider contract.
 
 ## Delivery, Projection, And Traceability Surfaces
 
-| Surface                                                                                                       | Current role                                                                                                     | Code anchors                                                                                                                                                                                                                                                                                        | Planned delta                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `@dvt/delivery`                                                                                               | delivery-runtime library for outbox draining, projection, lineage bridging, and admission guarding helpers       | [OutboxWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts), [ProjectorWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts), [LineageWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts) | tighten remaining contract seams and event-envelope policy; active work includes `S05`, `S07`, and `S11`                     |
-| `apps/outbox-worker` (`dvt-outbox-worker`)                                                                    | delivery composition root with shard ownership, ops endpoints, retention, and purge runtime wiring               | [server.ts](../../apps/outbox-worker/src/server.ts), [runOutboxWorkerHost.ts](../../apps/outbox-worker/src/host/runOutboxWorkerHost.ts), [DeliveryBufferPurgeRuntime.ts](../../apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts)                                                        | keep operational ownership explicit while retention and purge policy continue to harden                                      |
-| `apps/projector-worker` and `apps/lineage-worker`                                                             | dedicated worker processes for snapshot rebuilding and OpenLineage emission                                      | [projector server](../../apps/projector-worker/src/server.ts), [lineage server](../../apps/lineage-worker/src/server.ts), [compiledCodeResolver.ts](../../apps/lineage-worker/src/compiledCodeResolver.ts)                                                                                          | keep projection and lineage as downstream consumers of runtime facts, not lifecycle authorities                              |
-| `@dvt/contracts`, `@dvt/observability`, `@dvt/observability-otel`, `@dvt/traceability-service`, `@dvt/crypto` | shared transport contracts, telemetry ports, OTel binding, lineage mapping, and hashing/canonicalization helpers | [contracts index](../../packages/@dvt/contracts/src/index.ts), [observability index](../../packages/@dvt/observability/src/index.ts), [traceability service](../../packages/@dvt/traceability-service/src/service.ts), [crypto index](../../packages/@dvt/canonical/src/index.ts)                   | keep shared-kernel scope tight and explicit; related deltas include `RC-G1` ownership cleanup and production OTel validation |
+- `@dvt/delivery`: delivery-runtime library for outbox draining,
+  projection, lineage bridging, and admission guarding helpers.
+  Code anchors: [OutboxWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts),
+  [ProjectorWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts),
+  [LineageWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts).
+  Planned delta: tighten remaining contract seams and event-envelope policy;
+  active work includes `S05`, `S07`, and `S11`.
+- `apps/outbox-worker` (`dvt-outbox-worker`): delivery composition root with
+  shard ownership, ops endpoints, retention, and purge runtime wiring.
+  Code anchors: [server.ts](../../apps/outbox-worker/src/server.ts),
+  [runOutboxWorkerHost.ts](../../apps/outbox-worker/src/host/runOutboxWorkerHost.ts),
+  [DeliveryBufferPurgeRuntime.ts](../../apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts).
+  Planned delta: keep operational ownership explicit while retention and purge
+  policy continue to harden.
+- `apps/projector-worker` (`dvt-projector-worker`): dedicated read-model worker
+  that rebuilds stale snapshots through the shared delivery runtime.
+  Code anchors: [server.ts](../../apps/projector-worker/src/server.ts),
+  [ProjectorWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts),
+  [PostgresStateStoreAdapter.ts](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts).
+  Planned delta: keep read-model rebuild downstream-only and avoid pushing
+  snapshot ownership back into API or engine composition roots.
+- `apps/lineage-worker` (`dvt-lineage-worker`): dedicated lineage worker that
+  drains lineage outbox records and ships OpenLineage-compatible payloads.
+  Code anchors: [server.ts](../../apps/lineage-worker/src/server.ts),
+  [bootstrap.ts](../../apps/lineage-worker/src/bootstrap.ts),
+  [compiledCodeResolver.ts](../../apps/lineage-worker/src/compiledCodeResolver.ts).
+  Planned delta: keep lineage as a downstream consumer with explicit
+  mapper/sink seams rather than a second owner of runtime lifecycle facts.
+- `@dvt/contracts`, `@dvt/observability`, `@dvt/observability-otel`,
+  `@dvt/traceability-service`, `@dvt/crypto`: shared transport contracts,
+  telemetry ports, OTel binding, lineage mapping, and hashing/canonicalization
+  helpers.
+  Code anchors: [contracts index](../../packages/@dvt/contracts/src/index.ts),
+  [observability index](../../packages/@dvt/observability/src/index.ts),
+  [traceability service](../../packages/@dvt/traceability-service/src/service.ts),
+  [crypto index](../../packages/@dvt/canonical/src/index.ts).
+  Planned delta: keep shared-kernel scope tight and explicit; related deltas
+  include `RC-G1` ownership cleanup and production OTel validation.
 
 ## Relationship Rules
 

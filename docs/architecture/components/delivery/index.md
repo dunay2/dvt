@@ -2,7 +2,7 @@
 title: '@dvt/delivery'
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-08
 ---
 
 # @dvt/delivery
@@ -25,11 +25,15 @@ that behavior back into the engine or API layers.
 
 ```mermaid
 flowchart LR
-  Execution["Execution events"] --> Delivery["@dvt/delivery"]
-  Delivery --> Outbox["apps/outbox-worker"]
-  Delivery --> Projector["apps/projector-worker"]
-  Delivery --> Lineage["apps/lineage-worker"]
-  Delivery --> Traceability["@dvt/traceability-service"]
+  RuntimeFacts["Run events / outbox / stale snapshots"] --> Delivery["@dvt/delivery"]
+  Delivery --> Admission["StartRunAdmissionGuard"]
+  Delivery --> Outbox["OutboxWorkerRuntime"]
+  Delivery --> Projector["ProjectorWorkerRuntime"]
+  Delivery --> Lineage["LineageWorkerRuntime"]
+  Outbox --> OutboxHost["apps/outbox-worker"]
+  Projector --> ProjectorHost["apps/projector-worker"]
+  Lineage --> LineageHost["apps/lineage-worker"]
+  Lineage --> Traceability["@dvt/traceability-service"]
 ```
 
 ## Code Anchors
@@ -49,6 +53,8 @@ handling. It is no longer just a placeholder around worker apps.
 
 - tighten envelope and lineage seams under `S05`, `S07`, and `S11`;
 - keep retention and purge coordination explicit as delivery policy evolves.
+- keep worker runtimes reusable without hiding operational ownership in the
+  library surface.
 
 ## Historical Deep Dives
 
