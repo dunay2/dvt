@@ -1675,7 +1675,7 @@ tasks:
       runtime detail flow using the persisted plan path.
     complexity: S
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
@@ -1683,10 +1683,10 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx
     status_reason: >-
-      Frontend handoff now enforces persisted preview proof before run start and routes successful
-      starts through the existing run navigation callback. Remaining TF-E1-B work depends on TF-C1-B
-      runtime persistence readiness to validate the full real PlanRef path against backend
-      contracts.
+      Frontend handoff now enforces persisted preview proof bound to the active `planRef` hash
+      before run start and routes successful starts through the existing run navigation callback.
+      Remaining TF-E1-B work depends on TF-C1-B runtime persistence readiness to validate the full
+      real PlanRef path against backend contracts.
     last_verified: '2026-04-08'
   - task_id: TF-E1-C
     priority: P0
