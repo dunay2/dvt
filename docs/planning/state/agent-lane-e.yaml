@@ -1656,11 +1656,12 @@ tasks:
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.test.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
     status_reason: >-
-      Canvas now enforces constrained transformation authoring in two places: connection-time edge
-      guard and drop-time node composition guard. The authoring guard prevents unsupported roles,
-      duplicate roles, and fourth-node expansion in the one-source/one-transform/one-sink draft,
-      with dedicated unit coverage. Remaining TF-E1-A work is final UX alignment of authoring copy
-      and operator guidance.
+      Canvas now keeps the constrained transformation rules in explicit-context seams instead of
+      inferring draft mode from generic dbt canvas composition. Connection-time edge guard remains
+      active, preview-time graph validation still enforces the one-source/one-transform/one-sink
+      contract, and the node-composition guard is now gated behind a future dedicated transformation
+      strategy id rather than blocking generic dbt authoring. Remaining TF-E1-A work is to introduce
+      that explicit transformation authoring mode and align the operator copy.
     last_verified: '2026-04-08'
   - task_id: TF-E1-B
     priority: P0

@@ -8,15 +8,12 @@ type TransformationAuthoringGuardResult =
     };
 
 type GuardArgs = {
+  authoringModeEnabled: boolean;
   existingRoles: CoreNodeRole[];
   nextRole: CoreNodeRole;
 };
 
 const ALLOWED_ROLES: ReadonlySet<CoreNodeRole> = new Set(['input', 'transform', 'output']);
-
-function isTransformationAuthoringContext(existingRoles: CoreNodeRole[]): boolean {
-  return existingRoles.every((role) => ALLOWED_ROLES.has(role));
-}
 
 function countRoles(
   existingRoles: CoreNodeRole[]
@@ -33,10 +30,11 @@ function countRoles(
 }
 
 export function guardTransformationAuthoringNode({
+  authoringModeEnabled,
   existingRoles,
   nextRole,
 }: GuardArgs): TransformationAuthoringGuardResult {
-  if (!isTransformationAuthoringContext(existingRoles)) {
+  if (!authoringModeEnabled) {
     return { allowed: true };
   }
 

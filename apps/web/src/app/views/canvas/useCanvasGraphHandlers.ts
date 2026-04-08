@@ -257,6 +257,7 @@ export function useCanvasGraphHandlers({
           return existingNodes;
         }
 
+        const transformationAuthoringModeEnabled = graphStrategy.id === 'transformation';
         const existingRoles = existingNodes
           .map((node) => node.data)
           .map((data) =>
@@ -271,6 +272,7 @@ export function useCanvasGraphHandlers({
               role === 'control'
           );
         const authoringGuard = guardTransformationAuthoringNode({
+          authoringModeEnabled: transformationAuthoringModeEnabled,
           existingRoles,
           nextRole: canonicalNode.role,
         });
