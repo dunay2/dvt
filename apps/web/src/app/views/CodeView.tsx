@@ -3,7 +3,10 @@ import { useMemo, useState } from 'react';
 
 import { ViewHeader } from '../components/domain';
 import { MonacoCodeViewer } from '../components/monaco/MonacoCodeViewer';
-import { useWorkspaceFileContentQuery, useWorkspaceFileTreeQuery } from '../queries/workspaceQueries';
+import {
+  useWorkspaceFileContentQuery,
+  useWorkspaceFileTreeQuery,
+} from '../queries/workspaceQueries';
 import type { WorkspaceFileEntry } from '../ports/workspace';
 import FileTreePanel from './code/FileTreePanel';
 
