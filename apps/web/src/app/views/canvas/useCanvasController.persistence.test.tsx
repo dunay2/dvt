@@ -51,4 +51,19 @@ describe('useCanvasController persistence guards', () => {
 
     expect(harness.state.store.setCanvasViewport).not.toHaveBeenCalled();
   });
+
+  it('prefers persisted node positions deterministically when syncing nodes', async () => {
+    harness.state.store.canvasLayouts = {
+      'tenant-a::project-a::dev': {
+        viewport: { x: 0, y: 0, zoom: 1 },
+        nodePositions: {
+          node_1: { x: 320, y: 240 },
+        },
+      },
+    };
+    await harness.renderProbe();
+
+    const node = harness.getLatestResult()?.nodesWithImpact.find((candidate) => candidate.id === 'node_1');
+    expect(node?.position).toEqual({ x: 320, y: 240 });
+  });
 });

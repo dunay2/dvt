@@ -738,7 +738,7 @@ tasks:
   - task_id: F-05-CANVAS-CTRL-TDD
     parent_task: F-05
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       add failing tests that freeze controller invariants before any code extraction starts.
     dependency: F-05-CANVAS-CTRL-DOC
@@ -747,18 +747,20 @@ tasks:
       overlay fallback, guarded persistence, and isolated post-run navigation side effects.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 40
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
     status_reason: >-
-      The controller slice currently lacks invariant-driven tests and must enter a red phase before
-      implementation work starts.
+      Invariant coverage is now being expanded for persisted-position determinism and isolated
+      route-side run navigation handoff. Existing controller decomposition is already present in
+      code, so this slice is focused on freezing behavior with explicit tests before further
+      extraction or cleanup.
     definition_of_done:
       - red tests fail for the intended controller invariants
       - tests do not depend on fragile private implementation details
       - provider or route seams remain testable after extraction
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-08'
   - task_id: F-05-CANVAS-CTRL-IMPL
     parent_task: F-05
     priority: P0

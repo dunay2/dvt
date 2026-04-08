@@ -58,6 +58,7 @@ describe('useCanvasController core', () => {
         runsService: harness.state.services.runsService,
         sessionContext: harness.state.services.sessionContext,
         shellFeedback: harness.state.services.shellFeedback,
+        onRunStarted: harness.state.navigationActionsResult.handleRunStarted,
       })
     );
   });

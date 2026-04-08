@@ -38,6 +38,9 @@ export type CanvasHarnessState = {
     handlePlan: MockFn;
     handleStartRun: MockFn;
   } & Record<string, unknown>;
+  navigationActionsResult: {
+    handleRunStarted: MockFn;
+  } & Record<string, unknown>;
 };
 
 export type CanvasHarnessMocks = {
@@ -57,6 +60,7 @@ export type CanvasHarnessMocks = {
   buildNodesWithImpact: MockFn;
   useCanvasExecutionActions: MockFn;
   useCanvasGraphHandlers: MockFn;
+  useCanvasNavigationActions: MockFn;
 };
 
 export function createDefaultCanvasHarnessState(): CanvasHarnessState {
@@ -255,6 +259,9 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       handlePlan: vi.fn(),
       handleStartRun: vi.fn(),
     },
+    navigationActionsResult: {
+      handleRunStarted: vi.fn(),
+    },
   };
 }
 
@@ -282,10 +289,16 @@ export function configureDefaultCanvasHarnessMocks(
   mocks.buildOverlayContext.mockReturnValue({ overlay: 'ctx' });
   mocks.buildNodeDecorations.mockImplementation(() => state.overlayDecorations);
   mocks.mapCanonicalNodeToCanvasNode.mockImplementation(
-    (node: CanonicalNode, index: number, showColumns: boolean) => ({
+    (
+      node: CanonicalNode,
+      index: number,
+      showColumns: boolean,
+      _status: unknown,
+      persistedPosition?: { x: number; y: number }
+    ) => ({
       id: node.id,
       type: 'dbtNode',
-      position: { x: index * 100, y: 0 },
+      position: persistedPosition ?? { x: index * 100, y: 0 },
       data: { name: node.name, pluginKind: node.kind, showColumns, overlayDecoration: null },
     })
   );
@@ -299,4 +312,5 @@ export function configureDefaultCanvasHarnessMocks(
   mocks.buildNodesWithImpact.mockImplementation(({ nodes }: { nodes: unknown[] }) => nodes);
   mocks.useCanvasGraphHandlers.mockImplementation(() => state.graphHandlersResult);
   mocks.useCanvasExecutionActions.mockImplementation(() => state.executionActionsResult);
+  mocks.useCanvasNavigationActions.mockImplementation(() => state.navigationActionsResult);
 }
