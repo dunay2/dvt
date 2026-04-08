@@ -35,7 +35,7 @@ export class DispatchedIntentReconciliationPolicy {
         context: traceContext,
         attributes: { intentId: intent.intentId, runId: intent.runId },
       });
-      return { cancelled: intent.intentId };
+      return { resolved: intent.intentId };
     }
 
     const adapter = this.deps.adapters.get(intent.provider);

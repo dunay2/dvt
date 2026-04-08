@@ -181,7 +181,8 @@ interface ReconcileOrphanedIntentsOptions {
 interface ReconcileOrphanedIntentsResult {
   inspected: number;
   expired: string[]; // PENDING intents expired
-  cancelled: string[]; // DISPATCHED intents cancelled/resolved
+  resolved: string[]; // DISPATCHED intents resolved after bootstrap was already persisted
+  cancelled: string[]; // DISPATCHED intents cancelled after orphaned workflow cleanup
   cancelFailed: string[]; // cancellation failed, retry next sweep
 }
 ```

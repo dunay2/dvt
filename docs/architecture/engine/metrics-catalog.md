@@ -5,11 +5,15 @@
 - **Owner**: Engine Domain
 - **Related**: ADR-0030 §3.9
 
-All metrics are emitted via `IObservability.metrics` from `@dvt/observability` using the pattern:
+Service-level metrics are emitted via `IObservability.metrics` from
+`@dvt/observability` using the pattern:
 
 ```typescript
 this.observability.metrics.counter(name, baseLabels).add(value);
 ```
+
+Worker rollup metrics are emitted through the worker-specific metrics sink
+injected into background workers such as `IntentReconcilerWorker`.
 
 ---
 
@@ -44,6 +48,16 @@ this.observability.metrics.counter(name, baseLabels).add(value);
 | Emitted by  | `RunMaintenanceService.reconcileOrphanedIntents()`                                                                           |
 | Description | A DISPATCHED intent was resolved after the reconciler cancelled the orphaned provider workflow (run was never bootstrapped). |
 | Invariant   | INV-INTENT-008                                                                                                               |
+
+### `dvt.intent.reconcile.resolved_total`
+
+| Field       | Value                                                                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type        | Counter                                                                                                                                                                             |
+| Labels      | None                                                                                                                                                                                |
+| Emitted by  | `IntentReconcilerWorker`                                                                                                                                                            |
+| Description | Count of `ReconcileOrphanedIntentsResult.resolved` entries, where a DISPATCHED intent was resolved after detecting existing run metadata and no provider cancellation was required. |
+| Invariant   | INV-INTENT-008                                                                                                                                                                      |
 
 ---
 

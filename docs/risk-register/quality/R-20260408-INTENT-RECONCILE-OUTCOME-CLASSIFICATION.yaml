@@ -1,0 +1,25 @@
+---
+id: R-20260408-INTENT-RECONCILE-OUTCOME-CLASSIFICATION
+title: Intent reconciliation outcomes can overreport cancelled workflows
+status: Open
+date: 2026-04-08
+owners:
+  - packages/@dvt/engine
+severity: Medium
+probability: Low
+context: >
+  The orphaned intent reconciler previously reported bootstrapped DISPATCHED intents as cancelled
+  even when the sweep only resolved the intent after detecting existing run metadata.
+risk: >
+  If reconciliation outcomes classify local resolution as cancellation, operational metrics and
+  reports overstate provider cleanup activity and can hide whether the reconciler actually issued
+  cancel requests.
+mitigations:
+  - 'DispatchedIntentReconciliationPolicy now returns resolved when the run is already bootstrapped.'
+  - 'RunMaintenanceService and IntentReconcilerWorker regression coverage assert the bootstrapped
+    DISPATCHED path is counted as resolved, not cancelled.'
+  - 'IRunMaintenanceService, ADR-0030, and the metrics catalog now reserve cancelled for real
+    provider cleanup.'
+  - 'verify:prepush remains required before presenting the slice as ready.'
+review_after: 2026-05-31
+---

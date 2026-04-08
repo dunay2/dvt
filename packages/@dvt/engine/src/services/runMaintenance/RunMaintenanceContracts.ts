@@ -25,6 +25,7 @@ export type OrphanedIntent = {
 
 export type ReconcileOrphanedIntentOutcome = {
   readonly expired?: string;
+  readonly resolved?: string;
   readonly cancelled?: string;
   readonly cancelFailed?: string;
   readonly deferred?: string;
