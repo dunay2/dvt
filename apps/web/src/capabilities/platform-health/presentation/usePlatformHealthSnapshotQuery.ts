@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { queryKeys } from '../../../app/queries/queryKeys';
 import {
   createPlatformHealthCapability,
   type PlatformHealthCapabilityApi,
@@ -12,7 +13,7 @@ import {
 
 const platformHealthCapability = createPlatformHealthCapability();
 
-export const platformHealthQueryKey = ['platform-health', 'snapshot'] as const;
+export const platformHealthQueryKey = queryKeys.shell.platformHealthSnapshot();
 export const PLATFORM_HEALTH_REFETCH_INTERVAL_MS = PLATFORM_HEALTH_BASE_POLL_INTERVAL_MS;
 
 export function createPlatformHealthSnapshotQueryOptions(
