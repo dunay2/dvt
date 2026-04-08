@@ -119,7 +119,6 @@ describeIfPg('PostgresPlanStore records core integration', () => {
         store.createPlanRecord({
           ...record,
           planId: missingLineagePlanId,
-          canonicalHash: sha256HexUtf8(missingLineageCanonicalPlanJson),
           canonicalPlanJson: missingLineageCanonicalPlanJson,
           canonicalHash: sha256HexUtf8(missingLineageCanonicalPlanJson),
           sourceRef: missingLineageSourceRef,
