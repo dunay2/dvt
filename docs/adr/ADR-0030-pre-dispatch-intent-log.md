@@ -181,10 +181,20 @@ interface ReconcileOrphanedIntentsOptions {
 interface ReconcileOrphanedIntentsResult {
   inspected: number;
   expired: string[]; // PENDING intents expired
-  cancelled: string[]; // DISPATCHED intents cancelled/resolved
+  resolved: string[]; // DISPATCHED intents resolved after bootstrap was already persisted
+  cancelled: string[]; // DISPATCHED intents cancelled after orphaned workflow cleanup
   cancelFailed: string[]; // cancellation failed, retry next sweep
 }
 ```
+
+Compatibility note:
+
+- `ReconcileOrphanedIntentsResult` is exported from `@dvt/engine`; adding the
+  required `resolved` bucket is a breaking interface change.
+- Implementations MUST return `resolved` on every call, including `[]` when no
+  bootstrapped `DISPATCHED` intents were resolved.
+- Consumers and implementations MUST be upgraded in lockstep across this
+  boundary; mixed-version worker/service pairings are not supported.
 
 Reconciliation logic:
 
@@ -217,12 +227,15 @@ Two new error classes extending `DvtError`:
 - **Closes the crash-consistency gap**: orphaned provider workflows are detected and cancelled automatically.
 - **Reconciliation is automated and idempotent**: the sweep can run repeatedly without side effects on already-resolved intents.
 - **Required dependency**: ensures the consistency guarantee cannot be accidentally omitted.
-- **Observable**: metrics (`dvt.intent.expired_total`, `dvt.intent.cancelled_total`) and structured logs provide operational visibility into orphan detection and cleanup.
+- **Observable**: metrics (`dvt.intent.expired_total`, `dvt.intent.expired_after_cancel_total`, `dvt.intent.cancelled_total`, `dvt.intent.reconcile.resolved_total`) and structured logs provide operational visibility into orphan detection and cleanup.
 - **Extends the existing `RunMaintenanceService`** (ADR-0029) pattern: no new service class needed.
 
 ### Negative / Trade-offs
 
 - **Additional dependency and port**: one more interface to implement for production (e.g., a Postgres-backed intent store).
+- **Breaking interface change**: `ReconcileOrphanedIntentsResult` now requires a
+  `resolved[]` bucket, so external or mixed-version implementations of
+  `IRunMaintenanceService` must be updated together with the worker.
 - **PENDING crash gap**: a crash between `adapter.startRun()` return and `markDispatched()` leaves the intent in PENDING (not DISPATCHED), so the reconciler cannot use `engineRunRef` to cancel. Mitigated by workflowId derivation from runId (StartRunIdempotency spec §3.3), which enables natural dedup on retry.
 - **Threshold tuning**: the reconciliation threshold must be set above the maximum expected `adapter.startRun()` latency to avoid false positives on slow responses.
 
@@ -240,13 +253,16 @@ Two new error classes extending `DvtError`:
 - **INV-INTENT-002**: `markDispatched()` MUST be called immediately after `adapter.startRun()` returns, attaching the `engineRunRef`.
 - **INV-INTENT-003**: `markResolved()` MUST be called after `bootstrapRunTx()` succeeds.
 - **INV-INTENT-004**: `markResolved()` on the compensation path is best-effort (`.catch(() => {})`).
-- **INV-INTENT-005**: `intentStore` is a required dependency — `WorkflowEngine` MUST reject construction without it.
-- **INV-INTENT-006**: The happy path transitions are `PENDING → DISPATCHED → RESOLVED`.
+- **INV-INTENT-005**: `intentStore` is a required dependency - `WorkflowEngine` MUST reject construction without it.
+- **INV-INTENT-006**: The happy path transitions are `PENDING -> DISPATCHED -> RESOLVED`.
 - **INV-INTENT-007**: Reconciliation expires PENDING intents beyond the threshold via `markExpired()`.
-- **INV-INTENT-008**: Reconciliation checks `stateStore.getRunMetadataByRunId()` before cancelling a DISPATCHED intent — if the run exists, it marks the intent resolved without cancelling.
+- **INV-INTENT-008**: Reconciliation checks `stateStore.getRunMetadataByRunId()` before cancelling a DISPATCHED intent - if the run exists, it marks the intent resolved without cancelling.
 - **INV-INTENT-009**: `listOrphaned()` returns only PENDING and DISPATCHED intents older than the threshold, ordered by `createdAt` ASC.
 - **INV-INTENT-010**: Failed cancellations are reported in `cancelFailed[]` for retry on the next sweep.
-- **INV-INTENT-011**: Callers of `createIntent()` MUST derive `intentId` deterministically from `(tenantId, runId)` — e.g., `canonicalHash(tenantId | runId | "startRun")` following the ADR-0008 pattern — so that a scheduler crash-restart produces the same `intentId` and the idempotency-on-`intentId` guarantee absorbs the retry. Generating a fresh UUID on every invocation violates this invariant. Implementations MUST throw `IntentActiveConflictError` if a different `intentId` is submitted for a `(tenantId, runId)` pair that already has an active (PENDING or DISPATCHED) intent.
+- **INV-INTENT-011**: Callers of `createIntent()` MUST derive `intentId` deterministically from `(tenantId, runId)` - e.g., `canonicalHash(tenantId | runId | "startRun")` following the ADR-0008 pattern - so that a scheduler crash-restart produces the same `intentId` and the idempotency-on-`intentId` guarantee absorbs the retry. Generating a fresh UUID on every invocation violates this invariant. Implementations MUST throw `IntentActiveConflictError` if a different `intentId` is submitted for a `(tenantId, runId)` pair that already has an active (PENDING or DISPATCHED) intent.
+- **INV-INTENT-012**: If PENDING intent reconciliation finds a provider workflow via `lookupRunRef()`, the reconciler MUST cancel that workflow and then mark the intent `EXPIRED`.
+- **INV-INTENT-013**: If DISPATCHED intent reconciliation does not find bootstrapped run metadata, the reconciler MUST cancel the provider workflow and then report the intent in `cancelled[]`.
+- **INV-INTENT-014**: `ReconcileOrphanedIntentsResult` MUST expose `resolved[]` separately from `cancelled[]`; implementations MUST return both arrays on every call, including empty arrays.
 
 ---
 

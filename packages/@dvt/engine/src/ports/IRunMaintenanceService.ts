@@ -38,9 +38,11 @@ export interface ReconcileOrphanedIntentsOptions {
 
 export interface ReconcileOrphanedIntentsResult {
   inspected: number;
-  /** Intent IDs expired (PENDING beyond threshold, no provider workflow). */
+  /** Intent IDs expired (for example: PENDING beyond threshold with no provider workflow). */
   expired: string[];
-  /** Intent IDs cancelled/resolved (DISPATCHED, provider workflow cleaned up). */
+  /** Intent IDs resolved after the run was already bootstrapped and no provider cancellation was needed. */
+  resolved: string[];
+  /** Intent IDs cancelled after the reconciler cleaned up an orphaned provider workflow. */
   cancelled: string[];
   /** Intent IDs where cancellation failed (will be retried next sweep). */
   cancelFailed: string[];

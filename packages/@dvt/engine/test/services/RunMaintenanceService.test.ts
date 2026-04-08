@@ -648,6 +648,7 @@ describe('RunMaintenanceService', () => {
       expect(result).toEqual({
         inspected: 0,
         expired: [],
+        resolved: [],
         cancelled: [],
         cancelFailed: [],
         deferred: [],
@@ -666,6 +667,7 @@ describe('RunMaintenanceService', () => {
       expect(result).toEqual({
         inspected: 1,
         expired: [],
+        resolved: [],
         cancelled: [],
         cancelFailed: [],
         deferred: [],
@@ -681,6 +683,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual([]);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p1']);
@@ -694,6 +697,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual(['i-p2']);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect((await intentStore.getIntent('i-p2'))?.status).toBe('EXPIRED');
@@ -709,6 +713,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual(['i-p3']);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('run-with-wf-1');
@@ -725,6 +730,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toEqual(['i-p4']);
       expect(result.expired).toEqual([]);
+      expect(result.resolved).toEqual([]);
       expect(result.deferred).toEqual([]);
       // Intent stays PENDING for retry on next sweep (INV-INTENT-011)
       expect((await intentStore.getIntent('i-p4'))?.status).toBe('PENDING');
@@ -755,13 +761,14 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual([]);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p5']);
       expect((await intentStore.getIntent('i-p5'))?.status).toBe('PENDING');
     });
 
-    it('resolves DISPATCHED intent without cancelling when run was already bootstrapped', async () => {
+    it('classifies DISPATCHED bootstrapped intent as resolved without cancelling', async () => {
       const cancelLog: string[] = [];
       const { service, store, intentStore } = createFixtureWith(
         makeAdapterWithLookup(new Set(), cancelLog)
@@ -796,7 +803,9 @@ describe('RunMaintenanceService', () => {
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
-      expect(result.cancelled).toContain('i-d1');
+      expect(result.expired).toEqual([]);
+      expect(result.resolved).toContain('i-d1');
+      expect(result.cancelled).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toHaveLength(0); // no actual workflow cancel
       expect((await intentStore.getIntent('i-d1'))?.status).toBe('RESOLVED');
@@ -819,6 +828,7 @@ describe('RunMaintenanceService', () => {
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toContain('i-d2');
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('dispatched-orphan-1');
@@ -840,6 +850,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelFailed).toContain('i-d3');
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toHaveLength(0);
       expect(result.deferred).toEqual([]);
     });
@@ -866,6 +877,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.inspected).toBe(1);
       expect(result.expired).toHaveLength(0);
+      expect(result.resolved).toHaveLength(0);
       expect(result.deferred).toEqual(['i-dry1']);
       expect((await intentStore.getIntent('i-dry1'))?.status).toBe('PENDING');
     });
@@ -901,6 +913,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toHaveLength(2);
+      expect(result.resolved).toHaveLength(0);
       expect(result.cancelFailed).toHaveLength(0);
       expect(result.deferred).toHaveLength(0);
       expect(cancelLogTemporal).toContain('run-temporal-mp');
@@ -928,6 +941,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelFailed).toContain('i-no-adapter');
+      expect(result.resolved).toHaveLength(0);
       expect(result.cancelled).toHaveLength(0);
       expect(result.deferred).toHaveLength(0);
     });

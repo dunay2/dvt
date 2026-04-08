@@ -55,6 +55,7 @@ export class RunMaintenanceOrphanedIntentService {
     );
 
     const expired: string[] = [];
+    const resolved: string[] = [];
     const cancelled: string[] = [];
     const cancelFailed: string[] = [];
     const deferred: string[] = [];
@@ -68,12 +69,13 @@ export class RunMaintenanceOrphanedIntentService {
       }
       const outcome = await this.reconcileIntent(intent, traceContext);
       if (outcome.expired !== undefined) expired.push(outcome.expired);
+      if (outcome.resolved !== undefined) resolved.push(outcome.resolved);
       if (outcome.cancelled !== undefined) cancelled.push(outcome.cancelled);
       if (outcome.cancelFailed !== undefined) cancelFailed.push(outcome.cancelFailed);
       if (outcome.deferred !== undefined) deferred.push(outcome.deferred);
     }
 
-    return { inspected: orphaned.length, expired, cancelled, cancelFailed, deferred };
+    return { inspected: orphaned.length, expired, resolved, cancelled, cancelFailed, deferred };
   }
 
   private reconcileIntent(
