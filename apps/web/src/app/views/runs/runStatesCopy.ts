@@ -13,12 +13,11 @@ export const runStatesCopy = {
   snapshotTimelineBadge: 'snapshot+timeline',
   snapshotOnlyBadge: 'snapshot-only',
   snapshotReadModelNote:
-    'This route consumes explicit runtime read models. It does not fabricate step or artifact detail from snapshot payloads.',
+    'This route consumes explicit runtime read models for run outcome. Timeline stays visible for chronology and artifact refs, but result evidence and failure diagnostics render only from persisted snapshot fields.',
   snapshotFieldsTitle: 'Snapshot fields',
   currentStepLabel: 'Current step',
   failedStepLabel: 'Failed step',
   errorReasonLabel: 'Error reason',
-  failureAtLabel: 'Failure detected at',
   startedLabel: 'Started',
   completedLabel: 'Completed',
   gitShaLabel: 'Git SHA',
