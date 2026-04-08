@@ -26,7 +26,6 @@ const commandContext: AuthorizedCommandExecutionContext = {
 describe('RecoverRunUseCase', () => {
   it('maps recover command to engine.recoverRun using source run context', async () => {
     const engine = {
-      getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-source-1', status: 'FAILED' }),
       recoverRun: vi.fn().mockResolvedValue({
         provider: 'mock',
         runId: 'run-recovery-1',
@@ -87,12 +86,11 @@ describe('RecoverRunUseCase', () => {
         targetAdapter: 'temporal',
       }
     );
-    expect(engine.getRunStatus).toHaveBeenCalledTimes(1);
   });
 
   it('throws run-not-found when source metadata does not exist', async () => {
     const useCase = new RecoverRunUseCase(
-      { recoverRun: vi.fn(), getRunStatus: vi.fn() } as never,
+      { recoverRun: vi.fn() } as never,
       { getRunMetadataByRunId: vi.fn().mockResolvedValue(null) } as never
     );
 
@@ -116,8 +114,9 @@ describe('RecoverRunUseCase', () => {
 
   it('rejects recover when the source run is not terminal', async () => {
     const engine = {
-      getRunStatus: vi.fn().mockResolvedValue({ runId: 'provider-run-1', status: 'RUNNING' }),
-      recoverRun: vi.fn(),
+      recoverRun: vi
+        .fn()
+        .mockRejectedValue(new RecoverySourceNotTerminalError('run-source-1', 'RUNNING')),
     };
     const stateStore = {
       getRunMetadataByRunId: vi.fn().mockResolvedValue({
@@ -152,7 +151,6 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toBeInstanceOf(RecoverySourceNotTerminalError);
-
-    expect(engine.recoverRun).not.toHaveBeenCalled();
+    expect(engine.recoverRun).toHaveBeenCalledTimes(1);
   });
 });
