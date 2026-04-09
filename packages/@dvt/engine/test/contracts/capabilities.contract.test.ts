@@ -44,6 +44,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MATRIX_PATH_CANDIDATES = [
   path.resolve(
     __dirname,
+    '../../../../../docs/architecture/components/engine/contracts/capabilities/adapters.capabilities.json'
+  ),
+  path.resolve(
+    __dirname,
     '../../../../../docs/architecture/engine/contracts/capabilities/adapters.capabilities.json'
   ),
   path.resolve(__dirname, '../../../../../specs/contracts/capabilities/adapters.capabilities.json'),

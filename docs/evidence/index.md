@@ -17,6 +17,7 @@ Evidence documents that justify or validate relevant changes.
 - [Supporting](supporting/index.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
+- [ED 20260401 Temporal Live Status Query](ED-20260401-temporal-live-status-query.md)
 - [ED 20260404 Guards Alignment Adapter Postgres](ED-20260404-guards-alignment-adapter-postgres.md)
 - [ED 20260404 Inmemory State Store Invariants Hardening](ED-20260404-inmemory-state-store-invariants-hardening.md)
 - [ED 20260405 Admin Rebuild And Plan Store Alignment](ED-20260405-admin-rebuild-and-plan-store-alignment.md)
