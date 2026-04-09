@@ -10,12 +10,13 @@
 // Contracts: types.ts
 // Version: v1.1.1 (subset needed for this implementation)
 
-export type IsoUtcString = string;
+export type NonBlankString = string;
+export type IsoUtcString = NonBlankString;
 
 // Branded primitive aliases
 export type TenantId = string & { readonly __brand: 'TenantId' };
 export type RunId = string & { readonly __brand: 'RunId' };
-export type StepId = string & { readonly __brand: 'StepId' };
+export type StepId = NonBlankString;
 export type EventId = string & { readonly __brand: 'EventId' };
 export type IdempotencyKey = string & { readonly __brand: 'IdempotencyKey' };
 
@@ -42,14 +43,14 @@ export type RunSubstatus =
 export type AdapterScopedSubstatus = `${Provider}/${string}`;
 
 export interface RunFailureEvidence {
-  stepId: string;
-  reason?: string;
-  message?: string;
+  stepId: StepId;
+  reason?: NonBlankString;
+  message?: NonBlankString;
   failedAt: IsoUtcString;
 }
 
 export interface RunExecutionEvidence {
-  activeStepId?: string;
+  activeStepId?: StepId;
   failure?: RunFailureEvidence;
   materialization?: MaterializationEvidence;
 }
