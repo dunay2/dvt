@@ -8,7 +8,6 @@
  */
 import {
   MaterializationEvidenceSchema,
-  RunFailureEvidenceSchema,
   type EventEnvelope,
   type MaterializationEvidence,
   type RunFailureEvidence,
@@ -159,26 +158,11 @@ function readFailureEvidence(
   const failedAt = asNonBlankString(payload?.['failedAt']) ?? emittedAt;
   const reason = asNonBlankString(payload?.['reason']);
   const message = asNonBlankString(payload?.['message']);
-  const candidate = {
+  return {
     stepId,
     failedAt,
     ...(reason ? { reason } : {}),
     ...(message ? { message } : {}),
-  };
-
-  const parsed = RunFailureEvidenceSchema.safeParse(candidate);
-  if (parsed.success) {
-    return {
-      stepId: parsed.data.stepId,
-      failedAt: parsed.data.failedAt,
-      ...(parsed.data.reason !== undefined ? { reason: parsed.data.reason } : {}),
-      ...(parsed.data.message !== undefined ? { message: parsed.data.message } : {}),
-    };
-  }
-
-  return {
-    stepId,
-    failedAt: emittedAt,
   };
 }
 
