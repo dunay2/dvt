@@ -1624,7 +1624,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
@@ -1633,13 +1633,23 @@ tasks:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - apps/web/src/app/components/domain/ViewHeader.tsx
+      - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
+      - apps/web/src/app/views/AdminView.tsx
+      - apps/web/src/app/views/ArtifactsView.tsx
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/DiffView.tsx
+      - apps/web/src/app/views/LineageView.tsx
       - apps/web/src/styles/theme.css
     status_reason: >-
       The professionalization bundle is now normalized in English and aligned to the active
-      workbench grammar across visual-system, rollout, drift, and wireframe docs, so Lane E has a
-      usable governed baseline for token convergence, density policy, route-header primitives, and
-      Monaco or React Flow visual alignment. Remaining work is implementation and shared primitive
-      migration across the live route surfaces.
+      workbench grammar across visual-system, rollout, drift, and wireframe docs, and the first
+      implementation slice now exists in code: `RouteWorkbenchFrame` plus semantic route-frame and
+      route-header styling are active in `Code`, `Diff`, `Lineage`, `Artifacts`, and `Admin`, while
+      `ViewHeader` now consumes semantic token colors instead of route-local slate chrome. Remaining
+      work is broader panel, table, shell, and Canvas or Monaco convergence across the rest of the
+      operator path.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components
@@ -1847,7 +1857,7 @@ verification_summary:
   verified_on: '2026-04-09'
   total_tasks: 60
   total_effort_points: 213
-  completed_weighted_points: 73.97
+  completed_weighted_points: 74.97
   lane_progress_pct: 35
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
