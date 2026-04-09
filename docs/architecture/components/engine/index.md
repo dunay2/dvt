@@ -13,6 +13,30 @@ This page is the single active home for the component's public surface, the
 main methods a caller cares about, and the supporting folders that explain how
 this component is wired today.
 
+## Southbound Port Surface
+
+`@dvt/engine` exposes seven southbound ports as its declared architecture
+surface. Five are wired on the current runtime path; two remain intentionally
+exposed as target-line seams that the architecture keeps visible while their
+dedicated runtime adoption is still in progress.
+
+This table is the canonical doc-level inventory for engine port membership and
+posture. Deeper architecture pages refine usage and ownership, but they should
+not redefine which ports belong to the seven-port surface.
+
+| Port                           | Current posture       | Notes                                                                                         |
+| ------------------------------ | --------------------- | --------------------------------------------------------------------------------------------- |
+| `IRunStateStore`               | `runtime-wired`       | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
+| `IStartRunIntentStore`         | `runtime-wired`       | Crash-consistency seam for pre-dispatch start-run intents                                     |
+| `IProviderAdapter`             | `runtime-wired`       | Provider runtime seam                                                                         |
+| `IPlanFetcher`                 | `runtime-wired`       | Plan/artifact fetch seam on the start-run path                                                |
+| `IRunExecutionContextResolver` | `runtime-wired`       | Conditional seam when `runExecutionContextRef` is supplied                                    |
+| `IProjector`                   | `target-line exposed` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
+| `IMetricsCollector`            | `target-line exposed` | Kept visible as a telemetry seam even though mainline injects `IObservability` today          |
+
+`IObservability` remains the current telemetry facade in the shipped runtime.
+It is not counted inside the seven-port southbound surface.
+
 ## Current Responsibilities
 
 - own run lifecycle semantics and provider dispatch;
@@ -53,10 +77,16 @@ flowchart LR
   Engine --> StartRun["StartRunApplicationService"]
   Engine --> Core["WorkflowEngineCoreService"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
-  StartRun --> Plan["plan fetch and integrity validation"]
-  Core --> State["IRunStateStoreRead / Write"]
-  Core --> Providers["IProviderAdapter"]
-  Core --> Projector["SnapshotProjector"]
+  StartRun --> Ports["Declared southbound ports"]
+  Core --> Ports
+  Ports --> State["IRunStateStore<br/>(runtime-wired)"]
+  Ports --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
+  Ports --> Providers["IProviderAdapter<br/>(runtime-wired)"]
+  Ports --> Plan["IPlanFetcher<br/>(runtime-wired)"]
+  Ports --> RunCtx["IRunExecutionContextResolver<br/>(runtime-wired)"]
+  Ports -.-> Projector["IProjector<br/>(target-line exposed)"]
+  Ports -.-> Metrics["IMetricsCollector<br/>(target-line exposed)"]
+  Engine --> Obs["IObservability<br/>(current telemetry facade)"]
 ```
 
 ## Component Folders

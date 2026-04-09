@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-04'
+last_reviewed: '2026-04-08'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -166,7 +166,7 @@ tasks:
     effort_points: 8
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Partitioning remains planned scale work with no implementation evidence.
     last_verified: '2026-03-31'
   - task_id: read replica query path
@@ -179,7 +179,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Read-replica routing remains backlog work after partitioning.
     last_verified: '2026-03-31'
   - task_id: projector event-driven invalidation
@@ -193,7 +193,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason:
       The queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
     last_verified: '2026-03-31'
@@ -207,7 +207,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Backpressure propagation remains planned admission hardening work.
     last_verified: '2026-03-31'
   - task_id: AR-D1
@@ -437,7 +437,7 @@ tasks:
     effort_points: 8
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Explicit GTM backlog item; no execution evidence exists yet.
     last_verified: '2026-03-31'
   - task_id: billing integration
@@ -450,7 +450,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
       - docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
     status_reason: Deferred GTM/finance integration with no implementation evidence yet.
     last_verified: '2026-03-31'
@@ -464,7 +464,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Deferred GTM/compliance packaging with no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: acquisition positioning deck
@@ -477,7 +477,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Deferred GTM collateral with no implementation evidence yet.
     last_verified: '2026-03-31'
 dependency_notes:

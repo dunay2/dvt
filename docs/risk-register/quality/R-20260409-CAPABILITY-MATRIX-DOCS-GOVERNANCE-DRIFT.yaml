@@ -1,0 +1,34 @@
+---
+id: R-20260409-CAPABILITY-MATRIX-DOCS-GOVERNANCE-DRIFT
+title: Capability matrix tests and docs governance can drift after doc relocations
+status: Open
+date: 2026-04-09
+owners:
+  - packages/@dvt/engine
+  - docs
+severity: Medium
+probability: Medium
+summary: >
+  The branch exposed two governance-coupled failure modes: the engine capability matrix contract
+  test still referenced a retired documentation path, and docs-doctor frontmatter parsing failed on
+  UTF-8 BOM-prefixed planning documents.
+context: >
+  Documentation moved to the canonical `docs/architecture/components/...` surface while a contract
+  test in `packages/@dvt/engine` still depended on the former path. In parallel, a planning archive
+  document with a BOM remained valid to humans but invisible to the docs-doctor frontmatter parser.
+  Both issues surfaced only in CI and blocked merge readiness even though the governed documents
+  were present in the repository.
+risk: >
+  Future docs reorganizations or editor-generated BOM changes can silently reintroduce CI-only drift
+  between governance artifacts and the tests or validation tools that depend on them. That would
+  keep merge gates red and erode trust in the repo's canonical documentation map.
+mitigations:
+  - 'Engine capability matrix tests now probe the canonical components path before falling back to
+    legacy locations.'
+  - 'docs-doctor strips an initial UTF-8 BOM before parsing frontmatter.'
+  - 'The duplicate top-level CI process review copy was removed so review title uniqueness is
+    enforced against the active review surface only.'
+  - 'docs:doctor, docs:sync:check, test:engine, test:coverage:engine, and verify:prepush were run
+    locally before re-pushing the branch.'
+review_after: 2026-06-01
+---

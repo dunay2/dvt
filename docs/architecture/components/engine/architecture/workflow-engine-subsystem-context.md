@@ -2,7 +2,7 @@
 title: WorkflowEngine subsystem context
 status: Review
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-09
 ---
 
 # WorkflowEngine subsystem context
@@ -17,8 +17,8 @@ fragmented or stale engine notes.
 
 `WorkflowEngine` sits in the DVT **Execution** bounded context (`@dvt/engine`).
 It is consumed northbound by application entrypoints such as `apps/api`, and it
-uses southbound ports for state, intent durability, provider runtime, and
-observability.
+uses southbound ports for state, intent durability, provider runtime, plan and
+execution-context resolution, and a declared projector/metrics seam.
 
 Key governing boundaries:
 
@@ -48,49 +48,57 @@ Inbound flow (primary):
 
 Outbound flow (primary):
 
-`WorkflowEngine -> StartRunAdmissionGuard/StartRunCoordinator/WorkflowEngineCoreService -> ports/adapters`
+`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/WorkflowEngineCoreService -> ports/adapters`
 
-Current southbound dependencies:
+Declared southbound port surface:
 
-- run state read/write stores
-- start-run intent store
-- executable plan fetcher
-- provider adapter map
-- run execution context resolver seam
-- observability facade
+- `IRunStateStore` (`runtime-wired`)
+- `IStartRunIntentStore` (`runtime-wired`)
+- `IProviderAdapter` (`runtime-wired`)
+- `IPlanFetcher` (`runtime-wired`)
+- `IRunExecutionContextResolver` (`runtime-wired`)
+- `IProjector` (`target-line exposed`)
+- `IMetricsCollector` (`target-line exposed`)
+
+Current runtime telemetry still flows through `IObservability`; that facade is
+not counted inside the seven-port southbound surface.
 
 ```mermaid
 flowchart LR
   Caller["apps/api or other caller"] --> UseCase["API use case layer"]
   UseCase --> Engine["WorkflowEngine facade"]
-  Engine --> StartRun["StartRunCoordinator path"]
+  Engine --> StartRun["StartRunApplicationService path"]
   Engine --> Core["WorkflowEngineCoreService path"]
   StartRun --> Ports["Engine ports"]
   Core --> Ports
-  Ports --> State["Run state store adapter"]
-  Ports --> PlanStore["Plan fetcher / plan store adapter"]
-  Ports --> Intent["StartRun intent store adapter"]
-  Ports --> Provider["Provider adapter (Temporal/Conductor/Mock)"]
-  Ports --> RunCtx["RunExecutionContext resolver seam"]
+  Ports --> State["IRunStateStore (runtime-wired)"]
+  Ports --> PlanStore["IPlanFetcher (runtime-wired)"]
+  Ports --> Intent["IStartRunIntentStore (runtime-wired)"]
+  Ports --> Provider["IProviderAdapter (runtime-wired)"]
+  Ports --> RunCtx["IRunExecutionContextResolver (runtime-wired)"]
+  Ports -.-> Projector["IProjector (target-line exposed)"]
+  Ports -.-> Metrics["IMetricsCollector (target-line exposed)"]
   StartRun --> Obs["Observability facade"]
   Core --> Obs
 ```
 
 ## Current ports and adapters inventory
 
-Engine-owned ports (`packages/@dvt/engine/src/ports`):
+Declared southbound ports:
 
-- `IRunStateStore` read/write roles
-- `IStartRunIntentStore`
-- `IRunSnapshotStalenessQuery`
-- `IRunMaintenanceService`
-- `IPlanResolver`
-- `IRunExecutionContextResolver`
+| Port                           | Code anchor                                                                                                                                 | Current posture       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`                                                                                          | `runtime-wired`       |
+| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`                                                                                    | `runtime-wired`       |
+| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`                                                                                     | `runtime-wired`       |
+| `IPlanFetcher`                 | `packages/@dvt/engine/src/adapters/IPlanFetcher.ts` (`packages/@dvt/engine/src/ports/IRunStateStore.ts` still carries a legacy alias today) | `runtime-wired`       |
+| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts`                                                                            | `runtime-wired`       |
+| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                                                                                              | `target-line exposed` |
+| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`                                                                                     | `target-line exposed` |
 
-Engine provider adapter contract:
-
-- `IProviderAdapter` (`startRun`, `cancelRun`, `getRunStatus`, `signal`,
-  optional capabilities and lookup helpers)
+Other engine-owned interfaces such as `IRunSnapshotStalenessQuery` and
+`IRunMaintenanceService` remain important local seams, but they are not part of
+the exposed seven-port southbound inventory.
 
 Known concrete adapter families:
 
@@ -105,7 +113,7 @@ Main components in the subsystem:
 
 - `WorkflowEngine` (public compatibility facade + dependency assembly)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
-- `StartRunCoordinator` (start-run application orchestration)
+- `StartRunApplicationService` (start-run application orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
 - `WorkflowEngineCoreService` (cancel/status/enrich/signal runtime path)
 - `SnapshotProjector` (event-to-status read model projection)
@@ -113,7 +121,7 @@ Main components in the subsystem:
 ```mermaid
 flowchart TB
   WF["WorkflowEngine"] --> Guard["StartRunAdmissionGuard"]
-  WF --> Coord["StartRunCoordinator"]
+  WF --> Coord["StartRunApplicationService"]
   WF --> Core["WorkflowEngineCoreService"]
   Coord --> Exec["StartRunExecutionService"]
   Coord --> Fail["StartRunFailurePolicy"]
@@ -129,7 +137,7 @@ sequenceDiagram
   participant Client as API Use Case
   participant Engine as WorkflowEngine
   participant Guard as StartRunAdmissionGuard
-  participant Coord as StartRunCoordinator
+  participant StartRun as StartRunApplicationService
   participant PlanStore as IPlanFetcher
   participant Intent as IStartRunIntentStore
   participant Adapter as IProviderAdapter
@@ -138,14 +146,14 @@ sequenceDiagram
   Client->>Engine: startRun(planRef, runContext)
   Engine->>Guard: assertStartRunAllowed(planRef, resolvedContext)
   Guard->>Guard: validate preconditions + capabilities + rate limit
-  Guard->>Coord: admission passed
-  Coord->>PlanStore: fetch executable plan bytes
-  Coord->>Coord: parse + validate metadata + recompute planId
-  Coord->>Intent: createIntent(...)
-  Coord->>Adapter: startRun(verifiedPlan, planRef, resolvedContext)
-  Coord->>State: persist run bootstrap/events
-  Coord->>Intent: markDispatched/markResolved
-  Coord-->>Engine: EngineRunRef
+  Guard->>StartRun: admission passed
+  StartRun->>PlanStore: fetch executable plan bytes
+  StartRun->>StartRun: parse + validate metadata + recompute planId
+  StartRun->>Intent: createIntent(...)
+  StartRun->>Adapter: startRun(verifiedPlan, planRef, resolvedContext)
+  StartRun->>State: persist run bootstrap/events
+  StartRun->>Intent: markDispatched/markResolved
+  StartRun-->>Engine: EngineRunRef
   Engine-->>Client: EngineRunRef
 ```
 
@@ -191,7 +199,7 @@ sequenceDiagram
 ## Active drifts and architecture debt
 
 - facade width still too broad in `WorkflowEngine`
-- coordinator/guard still construct and mix collaborator concerns
+- start-run application path and guard still construct and mix collaborator concerns
 - query/runtime behavior still concentrated in one core service
 - provider-resolution and telemetry policy logic remains repeated
 - ownership seams between engine resolver and artifacts reader need one explicit
@@ -202,7 +210,7 @@ flowchart LR
   WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + wiring + health checks"]
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
   Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Query + enrichment + command + telemetry"]
-  Coord["StartRunCoordinator"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
+  StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
 ```
 
 ## Fowler/SOLID/hexagonal assessment (as-is)
@@ -219,9 +227,13 @@ flowchart LR
 
 - `packages/@dvt/engine/src/core/WorkflowEngine.ts`
 - `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`
-- `packages/@dvt/engine/src/application/StartRunCoordinator.ts`
+- `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
+- `packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
 - `packages/@dvt/engine/src/core/SnapshotProjector.ts`
 - `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
+- `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`
 - `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts`
+- `packages/@dvt/engine/src/ports/IProjector.ts`
+- `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`
 - `packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts`

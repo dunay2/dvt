@@ -10,7 +10,7 @@
     "start": "node dist/server.js",
     "pretypecheck": "pnpm --filter \"dvt-projector-worker^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
-    "pretest": "pnpm --filter \"dvt-projector-worker^...\" build",
+    "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-projector-worker^...\" build",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
