@@ -10,7 +10,7 @@
     "start": "node dist/server.js",
     "pretypecheck": "pnpm --filter \"dvt-outbox-worker^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
-    "pretest": "pnpm --filter \"dvt-outbox-worker^...\" build",
+    "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-outbox-worker^...\" build",
     "test": "vitest run --config vitest.config.ts",
     "test:arch": "depcruise src --config .dependency-cruiser.cjs"
   },

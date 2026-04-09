@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "prebuild": "pnpm --filter \"@dvt/engine^...\" build",
-    "pretest": "pnpm --filter \"@dvt/engine^...\" build",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/engine^...\" build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"

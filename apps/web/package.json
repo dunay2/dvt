@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "pretest": "pnpm --filter \"@dvt/web^...\" build",
+    "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/web^...\" build",
     "build": "vite build",
     "build:e2e": "vite build --mode e2e",
     "dev": "vite",

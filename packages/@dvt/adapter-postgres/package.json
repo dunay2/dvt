@@ -24,7 +24,7 @@
   "scripts": {
     "prebuild": "pnpm --filter \"@dvt/adapter-postgres^...\" build",
     "pretypecheck": "pnpm --filter \"@dvt/adapter-postgres^...\" build",
-    "pretest": "pnpm --filter \"@dvt/adapter-postgres^...\" build",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/adapter-postgres^...\" build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests --config vitest.config.ts",

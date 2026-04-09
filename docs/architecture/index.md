@@ -40,6 +40,7 @@ operations surface.
 - [Reference Architecture](reference-architecture.md)
 - [Current Status](system-delivery-status.md)
 - [Components](components/index.md)
+- [Diagrams](diagrams/index.md)
 - [System](system/index.md)
 - [API / Entry Domain](domain-api.md)
 - [Architecture Surface Inventory 2026-04-02](architecture-surface-inventory-20260402.md)
