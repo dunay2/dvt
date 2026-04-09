@@ -17,6 +17,7 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { PostgresRelationalExecutionCapability } from '@dvt/adapter-postgres';
 import type {
   EngineRunRef,
   MaterializationEvidence,
@@ -70,6 +71,8 @@ const WORKFLOW_PATH = resolve(TEST_DIR, '../src/workflows/RunPlanWorkflow.ts');
 const WORKFLOW_JS_PATH = WORKFLOW_PATH.replace(/\.ts$/, '.js');
 const WORKFLOW_DIST_JS_PATH = resolve(TEST_DIR, '../dist/workflows/RunPlanWorkflow.js');
 const INTEGRATION_TEST_TIMEOUT = 120_000;
+const RUN_PG_INTEGRATION = process.env.DVT_PG_INTEGRATION === '1';
+const itIfPg = RUN_PG_INTEGRATION ? it : it.skip;
 
 // Artifact validation (ADR-0001 Section 1)
 if (!existsSync(WORKFLOW_JS_PATH) && !existsSync(WORKFLOW_DIST_JS_PATH) && process.env.CI) {
@@ -844,6 +847,48 @@ function mkLinearThreeStepPlan(): unknown {
   } as const;
 }
 
+function mkPostgresTransformationPlan(schema: string, sinkTable: string): unknown {
+  return withTransformationRuntimeBinding({
+    metadata: {
+      planId: 'it-plan-postgres-transform',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+    },
+    steps: [
+      {
+        stepId: 's-1',
+        kind: 'PREPARE_POSTGRES_TRANSFORM',
+        stepTypeConfig: {
+          targetSchema: schema,
+        },
+      },
+      {
+        stepId: 's-2',
+        kind: 'POSTGRES_SQL_TRANSFORM',
+        dependsOn: ['s-1'],
+        stepTypeConfig: {
+          sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
+          sinkSchema: schema,
+          sinkTable,
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+      {
+        stepId: 's-3',
+        kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+        dependsOn: ['s-2'],
+        stepTypeConfig: {
+          environmentId: 't-it',
+          sinkSchema: schema,
+          sinkTable,
+        },
+      },
+    ],
+  } as const);
+}
+
 function mkPermanentFailurePlan(): unknown {
   return {
     metadata: {
@@ -1304,6 +1349,114 @@ describe('temporal integration (time-skipping)', () => {
         const projected = projector.rebuild(ctx.runId, events);
         expect(projected.status).toBe('COMPLETED');
       } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
+  itIfPg(
+    'golden path: postgres relational capability executes through the Temporal runtime',
+    async () => {
+      const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('DVT_PG_URL or DATABASE_URL is required for Postgres runtime integration');
+      }
+
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+      const store = new TestStateStore();
+      const outbox = new TestOutbox();
+      const projector = new TestProjector();
+      const ctx: ResolvedRunContext = {
+        ...createRunContext(RunId.of('run-it-postgres-relational-runtime')),
+        tenantId: 't-it',
+        environmentId: 'env-it',
+      };
+      const schema = `it_runtime_${ctx.runId.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      const sinkTable = 'orders_daily';
+      const plan = mkPostgresTransformationPlan(schema, sinkTable);
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const planRef = createPlanRef('it-plan-postgres-transform', planBytes);
+      const capability = new PostgresRelationalExecutionCapability({
+        connectionString,
+        nowIsoUtc: () => '2026-04-09T00:00:00.000Z',
+      });
+
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-postgres-transform',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
+
+      const worker = new TemporalWorkerHost({
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, outbox, planBytes),
+        stepActivitiesByKind: capability.stepActivitiesByKind,
+      });
+
+      await worker.start(env.nativeConnection);
+
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+      });
+
+      try {
+        await adapter.startRun(plan, planRef, ctx);
+
+        await waitForCondition(
+          () => store.listRunEvents(RunId.of(ctx.runId)),
+          (events) => events.some((e) => e.eventType === 'RunCompleted'),
+          { timeoutMs: 30_000 }
+        );
+
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
+        const stepThreeEvidence = events.find(
+          (event) => event.eventType === 'StepCompleted' && event.stepId === 's-3'
+        )?.payload;
+
+        expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
+          'RunStarted:-',
+          'StepStarted:s-1',
+          'StepCompleted:s-1',
+          'StepStarted:s-2',
+          'StepCompleted:s-2',
+          'StepStarted:s-3',
+          'StepCompleted:s-3',
+          'RunCompleted:-',
+        ]);
+        expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
+        expect(events.find((event) => event.eventType === 'RunStarted')?.payload).toMatchObject({
+          executor: 'postgres',
+        });
+        expect(stepThreeEvidence).toMatchObject({
+          resultEvidence: {
+            executor: 'postgres',
+            environmentId: 't-it',
+            sinkTable: `${schema}.${sinkTable}`,
+            rowsWritten: 2,
+          },
+        });
+        expect(events.find((event) => event.eventType === 'RunCompleted')?.payload).toMatchObject({
+          executor: 'postgres',
+          resultEvidence: {
+            executor: 'postgres',
+            environmentId: 't-it',
+            sinkTable: `${schema}.${sinkTable}`,
+            rowsWritten: 2,
+          },
+        });
+
+        const projected = projector.rebuild(ctx.runId, events);
+        expect(projected.status).toBe('COMPLETED');
+      } finally {
+        await capability.close();
         await worker.shutdown();
         await env.teardown();
       }
