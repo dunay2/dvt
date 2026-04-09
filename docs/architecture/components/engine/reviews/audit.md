@@ -197,13 +197,16 @@ Status:
 
 ## 9. Principles Validation
 
-| Principle      | Status  | Evidence                                                                                              |
-| -------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| DDD            | Parcial | docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (fuga en migraciÃ³n) |
-| SOLID          | Parcial | Falta de asignaciÃ³n clara de responsabilidad (NO EVIDENCE FOUND)                                     |
-| CQRS           | Parcial | Split presente, enforcement no evidenciado (NO EVIDENCE FOUND)                                        |
-| Hexagonal      | Parcial | Riesgo en lÃ­mites durante migraciÃ³n (NO EVIDENCE FOUND)                                             |
-| Event Sourcing | Parcial | Source of truth mantenido, riesgo de bypass (NO EVIDENCE FOUND)                                       |
+- DDD: `Parcial`
+  Evidence: `docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md` (fuga en migracion)
+- SOLID: `Parcial`
+  Evidence: Falta de asignacion clara de responsabilidad (`NO EVIDENCE FOUND`)
+- CQRS: `Parcial`
+  Evidence: Split presente, enforcement no evidenciado (`NO EVIDENCE FOUND`)
+- Hexagonal: `Parcial`
+  Evidence: Riesgo en limites durante migracion (`NO EVIDENCE FOUND`)
+- Event Sourcing: `Parcial`
+  Evidence: Source of truth mantenido, riesgo de bypass (`NO EVIDENCE FOUND`)
 
 ---
 
