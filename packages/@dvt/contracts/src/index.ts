@@ -133,6 +133,7 @@ export type {
   IPlanIntegrityValidator,
   ListEventsOptions,
   ListRunsOptions,
+  ProviderRefUpdate,
   RunBootstrapInput,
   RunEventInput,
   RunEventInputBase,

@@ -38,12 +38,12 @@ import type {
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
-import type { StartRunTraceContext } from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
-import { TRACEABLE_ADAPTERS } from './lifecycle/coreDomainConstants.js';
+import { buildTraceContext } from './lifecycle/coreRuntime.js';
+import type { StartRunTraceContext } from './lifecycle/StartRunTraceContext.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 import { WorkflowEngineCoreService } from './WorkflowEngineCoreService.js';
 
@@ -433,25 +433,6 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
   }
-}
-
-function buildTraceContext(
-  input: Pick<RunContext, 'tenantId' | 'projectId' | 'environmentId' | 'runId'> & {
-    targetAdapter?: EngineRunRef['provider'];
-    provider?: EngineRunRef['provider'];
-  },
-  planId?: string
-): StartRunTraceContext {
-  const raw = input.targetAdapter ?? input.provider;
-  const adapter = TRACEABLE_ADAPTERS.find((value) => value === raw);
-  return {
-    tenantId: input.tenantId,
-    projectId: input.projectId,
-    environmentId: input.environmentId,
-    runId: input.runId,
-    ...(planId ? { planId } : {}),
-    ...(adapter ? { adapter } : {}),
-  };
 }
 
 const TERMINAL_RUN_STATUSES = new Set<RunStatus>(['COMPLETED', 'FAILED', 'CANCELLED']);

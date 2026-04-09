@@ -14,9 +14,12 @@ function makeMetadata(
     planId: 'plan-1',
     planVersion: '1.0.0',
     logicalAttemptId: 1,
-    provider: 'mock' as const,
-    providerWorkflowId: `wf-${runId}`,
-    providerRunId: `pr-${runId}`,
+    providerRef: {
+      provider: 'mock' as const,
+      tenantId: 'tenant-1',
+      workflowId: `wf-${runId}`,
+      runId: `pr-${runId}`,
+    },
     ...overrides,
   };
 }

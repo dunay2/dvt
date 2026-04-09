@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 ---
 
 # Current Status
@@ -52,7 +52,7 @@ Minimum tuple for this document:
 
 ## Snapshot
 
-- Review date: 2026-04-08
+- Review date: 2026-04-09
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
 - Active workspaces: 23
@@ -91,12 +91,12 @@ Minimum tuple for this document:
 
 ### Execution And Adapters
 
-| Area              | Packages                   | Status             | Notes                                                                                                                                                                                                                                                                                           |
-| ----------------- | -------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow engine   | `@dvt/engine`              | Closed for Phase 1 | Core engine, in-process projector, pre-bootstrap `estimateRunRef` path, and provider run-id reconciliation for the pre-bootstrap path are delivered under G7; current hardening work is focused on the `WE-HX` boundary split plus recent signal-transition and stale-snapshot guard tightening |
-| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately                                                                                                                                                            |
-| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and operating as shipped foundations                                                                                                                                                                                              |
-| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                                                                                                                                                                                   |
+| Area              | Packages                   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------- | -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow engine   | `@dvt/engine`              | Closed for Phase 1 | Core engine, in-process projector, and the pre-bootstrap `estimateRunRef` path are delivered; `RunMetadata` now persists a single discriminated `providerRef`, provider-ref reconciliation is constrained to a typed validated `saveProviderRef(...)` seam, and current hardening work is focused on the `WE-HX` boundary split plus recent signal-transition and stale-snapshot guard tightening |
+| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately                                                                                                                                                                                                                                                              |
+| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and operating as shipped foundations                                                                                                                                                                                                                                                                                                |
+| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                                                                                                                                                                                                                                                                                     |
 
 ### Persistence, Read Models, And Delivery
 
@@ -105,7 +105,7 @@ Minimum tuple for this document:
 | State store       | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                                           |
 | Outbox runtime    | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain follow-up work; purge runtime (`DeliveryBufferPurgeRuntime`) was added to `dvt-outbox-worker` on 2026-03-21, gated by `DVT_PURGE_ENABLED` (default `false`) |
 | Archive lifecycle | `@dvt/state-store`, `@dvt/adapter-postgres`, `dvt-outbox-worker`  | Partial            | Archive export plus verifier, migration `007`, `RunArchiveCoordinator`, `PostgresRunArchiveStore`, retention migration `009`, `DeliveryBufferPurger`, `PostgresDeliveryBufferPurgeStore`, and purge runtime wiring are landed; deferred deletion/restore and redaction policy remain open                                                                                               |
-| Read models       | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and provider execution-ID reconciliation are delivered                                                                                                                                                                                                  |
+| Read models       | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and the discriminated `providerRef` metadata baseline are delivered                                                                                                                                                                                     |
 
 ### Observability And Traceability
 
@@ -141,7 +141,7 @@ Minimum tuple for this document:
 | S05   | EventEnvelope.payloadVersion     | Open (unblocked by S01)      |
 | S07   | OpenLineage Job Naming Fix       | Open                         |
 | S09   | Retry Ownership ADR              | Closed 2026-03-24            |
-| S04   | ProviderRefUpdated Event         | Open (blocked by S02+S05)    |
+| S04   | ProviderRefUpdated Event         | Retired 2026-04-09           |
 | S08   | Plan record and plan store model | Open (unblocked by ADR-0040) |
 | S11   | ILineageSink.jobFacets Tighten   | Open (blocked by S07)        |
 
@@ -227,17 +227,22 @@ Reflects the current metadata relationship in code:
 ```mermaid
 classDiagram
     class RunMetadata {
-        +requestedRunId
-        +providerExecutionRunId
-        +providerRunId
+        +runId
+        +planId
+        +logicalAttemptId
+        +providerRef: EngineRunRef
     }
-    RunMetadata <.. WorkflowEngine
-    WorkflowEngine <.. IProviderAdapter
+    class EngineRunRef {
+        <<union>>
+    }
+    RunMetadata --> EngineRunRef : providerRef
+    WorkflowEngine --> RunMetadata
+    WorkflowEngine --> IProviderAdapter
 ```
 
-### Reconciliation Flow
+### Estimated ProviderRef Protocol
 
-Reflects the current reconciliation flow in code:
+Reflects the current estimated-provider-ref protocol in code:
 
 ```mermaid
 sequenceDiagram
@@ -245,11 +250,19 @@ sequenceDiagram
     participant Adapter as IProviderAdapter
     participant Store as StateStore
     Engine->>Adapter: estimateRunRef()
-    Adapter-->>Engine: requestedRunId
-    Engine->>Store: bootstrapRunTx(requestedRunId)
+    Adapter-->>Engine: estimated EngineRunRef
+    Engine->>Store: bootstrapRunTx(metadata.providerRef = estimated)
     Engine->>Adapter: startRun()
-    Adapter-->>Engine: providerExecutionRunId
-    Engine->>Store: update RunMetadata (providerExecutionRunId)
+    Adapter-->>Engine: actual EngineRunRef
+    alt exact match
+        Engine-->>Engine: continue success path
+    else same provider, different late-bound fields
+        Engine->>Store: saveProviderRef(tenantId, runId, actual)
+        Engine-->>Engine: continue success path
+    else invalid cross-provider update
+        Engine->>Adapter: cancelRun(actual) best-effort
+        Engine-->>Caller: reconciliation error
+    end
 ```
 
 ---

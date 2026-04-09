@@ -1,8 +1,10 @@
 export const START_RUN_MESSAGE = {
   startingRun: 'Starting run',
-  saveProviderRefFailed:
-    'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
   compensationCancelFailed: 'Compensation cancelRun failed after bootstrap error',
+  providerRefReconciliationFailed:
+    'ProviderRef reconciliation failed after adapter.startRun returned a different EngineRunRef',
+  providerRefReconciliationCancelFailed:
+    'Compensation cancelRun failed after providerRef reconciliation failure',
   markResolvedFailed: 'markResolved failed; leaving intent cleanup to reconciliation worker',
   startRunFailed: 'startRun failed',
   postStartIntentPersistenceFailed:

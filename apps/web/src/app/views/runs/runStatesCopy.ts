@@ -18,6 +18,8 @@ export const runStatesCopy = {
   currentStepLabel: 'Current step',
   failedStepLabel: 'Failed step',
   errorReasonLabel: 'Error reason',
+  errorMessageLabel: 'Error message',
+  failedAtLabel: 'Failed at',
   startedLabel: 'Started',
   completedLabel: 'Completed',
   gitShaLabel: 'Git SHA',

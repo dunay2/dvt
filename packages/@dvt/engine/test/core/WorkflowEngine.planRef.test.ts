@@ -3,9 +3,9 @@ import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import type { StartRunTraceContext } from '../../src/services/startRun/StartRunTypes.js';
 
 function makePlanRef(): PlanRef {
   return {

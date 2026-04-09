@@ -245,3 +245,59 @@ describe('applyRunEvent - explicit transition guards', () => {
     });
   });
 });
+
+describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
+  it('projects current and failed step diagnostics from step lifecycle events', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-transform'));
+    expect(snap.execution?.activeStepId).toBe('step-transform');
+    expect(snap.execution?.failure).toBeUndefined();
+
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepFailed', 'step-transform'),
+      payload: {
+        reason: 'SINK_WRITE_FAILED',
+        message: 'duplicate key value violates unique constraint',
+      },
+    } as unknown as EventEnvelope);
+
+    expect(snap.execution?.activeStepId).toBeUndefined();
+    expect(snap.execution?.failure).toMatchObject({
+      stepId: 'step-transform',
+      reason: 'SINK_WRITE_FAILED',
+      message: 'duplicate key value violates unique constraint',
+    });
+  });
+
+  it('captures materialization evidence from step completion payloads', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-evidence'));
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepCompleted', 'step-evidence'),
+      payload: {
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-01-01T00:00:05Z',
+          completedAt: '2026-01-01T00:00:08Z',
+          durationMs: 3000,
+        },
+      },
+    } as unknown as EventEnvelope);
+
+    expect(snap.execution?.activeStepId).toBeUndefined();
+    expect(snap.execution?.materialization).toEqual({
+      executor: 'postgres',
+      environmentId: 'env-1',
+      sinkTable: 'analytics.orders_daily',
+      rowsWritten: 42,
+      startedAt: '2026-01-01T00:00:05Z',
+      completedAt: '2026-01-01T00:00:08Z',
+      durationMs: 3000,
+    });
+  });
+});

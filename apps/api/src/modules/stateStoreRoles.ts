@@ -20,6 +20,7 @@ export interface StateStoreRoleBindings {
 const REQUIRED_METHODS = [
   'bootstrapRunTx',
   'appendAndEnqueueTx',
+  'saveProviderRef',
   'reserveRetryAttempt',
   'getRunMetadataByRunId',
   'listEvents',
