@@ -11,6 +11,9 @@ planning_type: proposal
 Domain-oriented roadmap overlay for the canonical roadmap of record.
 
 This file complements, but does not replace, [Roadmap Of Record](./index.md).
+Read it with [Strategic Product Roadmap](strategic-product-roadmap.md) when the
+question is not just sequence, but why the current domains matter to product
+direction.
 
 ## Domain Lanes
 
@@ -91,6 +94,7 @@ flowchart LR
 
 ## Related Diagrams
 
+- [Strategic Product Roadmap](strategic-product-roadmap.md)
 - [Planning Control Tower](../state/planning-control-tower.md)
 - [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
