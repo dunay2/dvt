@@ -1,6 +1,9 @@
-import type { PlanRecord } from '@dvt/contracts';
-import type { IRunStateStoreRead } from '@dvt/engine';
-import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
+import type { EventEnvelope, PlanRecord, WorkflowSnapshot } from '@dvt/contracts';
+import {
+  RunMetadataNotFoundError,
+  type IRunStateStoreRead,
+  type IWorkflowEngine,
+} from '@dvt/engine';
 
 import type {
   AuthorizedQueryExecutionContext,
@@ -55,19 +58,20 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       metadata.tenantId,
       metadata.runId
     );
-    const workflowSnapshotPromise = this.stateStore.getSnapshot(metadata.tenantId, metadata.runId);
-    const eventsPromise = this.stateStore.listEvents(metadata.tenantId, metadata.runId);
-    const planRecordPromise =
-      this.planStore?.getPlanRecord(metadata.planId) ?? Promise.resolve(undefined);
-
-    const [snapshot, snapshotStaleness, workflowSnapshot, events, planRecord] = await Promise.all([
+    const [snapshot, snapshotStaleness] = await Promise.all([
       snapshotPromise,
       snapshotStalenessPromise,
-      workflowSnapshotPromise,
-      eventsPromise,
-      planRecordPromise,
     ]);
     this.recordSnapshotStalenessTelemetry(snapshotStaleness, metadata.tenantId, metadata.runId);
+    const workflowSnapshot = await this.readWorkflowSnapshot(metadata.tenantId, metadata.runId);
+    const planRecord = await this.readPlanRecord(metadata.planId);
+    const events = this.shouldReadEvidenceEvents(
+      snapshot.status,
+      snapshot.execution,
+      workflowSnapshot
+    )
+      ? await this.readRunEvents(metadata.tenantId, metadata.runId)
+      : ([] as const);
     const evidenceModel = deriveRunReadEvidenceModel({
       snapshot,
       workflowSnapshot,
@@ -85,6 +89,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
       ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
       ...(snapshot.completedAt !== undefined ? { completedAt: snapshot.completedAt } : {}),
+      ...(snapshot.execution !== undefined ? { execution: snapshot.execution } : {}),
       ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
       ...(evidenceModel.currentStepId === undefined
         ? {}
@@ -99,6 +104,61 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         ? {}
         : { materialization: evidenceModel.materialization }),
     };
+  }
+
+  private async readWorkflowSnapshot(
+    tenantId: string,
+    runId: string
+  ): Promise<WorkflowSnapshot | null> {
+    try {
+      return await this.stateStore.getSnapshot(tenantId, runId);
+    } catch {
+      return null;
+    }
+  }
+
+  private async readRunEvents(
+    tenantId: string,
+    runId: string
+  ): Promise<ReadonlyArray<EventEnvelope>> {
+    try {
+      return await this.stateStore.listEvents(tenantId, runId);
+    } catch {
+      return [];
+    }
+  }
+
+  private async readPlanRecord(planId: PlanRecord['planId']): Promise<PlanRecord | undefined> {
+    if (!this.planStore) {
+      return undefined;
+    }
+
+    try {
+      return await this.planStore.getPlanRecord(planId);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private shouldReadEvidenceEvents(
+    status: GetRunStatusResult['status'],
+    execution: GetRunStatusResult['execution'],
+    workflowSnapshot: WorkflowSnapshot | null
+  ): boolean {
+    if (workflowSnapshot === null) {
+      return true;
+    }
+
+    if (status === 'RUNNING' || status === 'PAUSED') {
+      return false;
+    }
+
+    if (status === 'FAILED') {
+      const failure = execution?.failure;
+      return !failure?.stepId || (!failure.reason && !failure.message);
+    }
+
+    return false;
   }
 
   private async resolveSnapshotStaleness(

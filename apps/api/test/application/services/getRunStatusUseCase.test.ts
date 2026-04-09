@@ -23,12 +23,12 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
 };
 
 function createStateStore(): {
-  getRunMetadataByRunId: () => Promise<unknown>;
-  getSnapshot: () => Promise<unknown>;
-  listEvents: () => Promise<unknown>;
+  getRunMetadataByRunId: ReturnType<typeof vi.fn>;
+  getSnapshot: ReturnType<typeof vi.fn>;
+  listEvents: ReturnType<typeof vi.fn>;
 } {
   return {
-    async getRunMetadataByRunId() {
+    getRunMetadataByRunId: vi.fn(async () => {
       return {
         tenantId: 'tenant-a',
         projectId: 'proj-1',
@@ -44,13 +44,13 @@ function createStateStore(): {
           runId: 'provider-run-1',
         },
       };
-    },
-    async getSnapshot() {
+    }),
+    getSnapshot: vi.fn(async () => {
       return null;
-    },
-    async listEvents() {
+    }),
+    listEvents: vi.fn(async () => {
       return [];
-    },
+    }),
   };
 }
 
@@ -621,13 +621,7 @@ describe('GetRunStatusUseCase', () => {
     ).resolves.toMatchObject({
       runId: 'provider-run-1',
       status: 'RUNNING',
-      executor: 'postgres',
       currentStepId: 'step-transform',
-      materialization: {
-        executor: 'postgres',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
-      },
     });
   });
 
@@ -876,7 +870,6 @@ describe('GetRunStatusUseCase', () => {
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
       status: 'RUNNING',
-      executor: 'postgres',
       currentStepId: 'step-transform',
     });
 
@@ -1005,7 +998,6 @@ describe('GetRunStatusUseCase', () => {
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
       status: 'COMPLETED',
-      executor: 'postgres',
     });
 
     await expect(
@@ -1014,6 +1006,90 @@ describe('GetRunStatusUseCase', () => {
       materialization: expect.anything(),
       errorReason: expect.anything(),
       failedStepId: expect.anything(),
+    });
+  });
+
+  it('skips full event history read when a workflow snapshot is available', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = createStateStore();
+    stateStore.getSnapshot.mockResolvedValue({
+      schemaVersion: 1,
+      runId: 'run-1',
+      status: 'RUNNING',
+      paused: false,
+      cancelling: false,
+      steps: {
+        'step-current': {
+          status: 'RUNNING',
+          attempts: 1,
+          startedAt: '2026-04-08T10:05:01.000Z',
+        },
+      },
+    });
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'RUNNING',
+      currentStepId: 'step-current',
+    });
+    expect(stateStore.listEvents).not.toHaveBeenCalled();
+  });
+
+  it('keeps status response available when optional evidence sources fail', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = createStateStore();
+    stateStore.getSnapshot.mockRejectedValue(new Error('snapshot backend unavailable'));
+    stateStore.listEvents.mockRejectedValue(new Error('events backend unavailable'));
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      undefined,
+      {
+        getPlanRecord: vi.fn().mockRejectedValue(new Error('plan store unavailable')),
+      }
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      runId: 'provider-run-1',
+      status: 'RUNNING',
+      snapshotStaleness: 'FRESH',
     });
   });
 });

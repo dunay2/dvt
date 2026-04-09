@@ -27,13 +27,13 @@ export interface RunReadEvidenceModel {
 }
 
 export function deriveRunReadEvidenceModel(args: {
-  snapshot: Pick<RunStatusSnapshot, 'status'>;
+  snapshot: Pick<RunStatusSnapshot, 'status' | 'execution'>;
   workflowSnapshot: WorkflowSnapshot | null;
-  events: ReadonlyArray<EventEnvelope>;
+  events?: ReadonlyArray<EventEnvelope>;
   planRecord?: PlanRecord;
 }): RunReadEvidenceModel {
-  const currentAttemptEvents = selectLatestLogicalAttemptEvents(args.events);
-  const executor = deriveExecutor(currentAttemptEvents, args.planRecord);
+  const currentAttemptEvents = selectLatestLogicalAttemptEvents(args.events ?? []);
+  const executor = deriveExecutor(currentAttemptEvents, args.snapshot.execution, args.planRecord);
   const currentStepId = deriveCurrentStepId(
     args.snapshot.status,
     args.workflowSnapshot,
@@ -42,11 +42,14 @@ export function deriveRunReadEvidenceModel(args: {
   const failedStepId = deriveFailedStepId(
     args.snapshot.status,
     args.workflowSnapshot,
-    currentAttemptEvents
+    currentAttemptEvents,
+    args.snapshot.execution
   );
   const errorReason =
-    args.snapshot.status === 'FAILED' ? deriveErrorReason(currentAttemptEvents) : undefined;
-  const materialization = deriveMaterialization(currentAttemptEvents);
+    args.snapshot.status === 'FAILED'
+      ? deriveErrorReason(currentAttemptEvents, args.snapshot.execution)
+      : undefined;
+  const materialization = deriveMaterialization(currentAttemptEvents, args.snapshot.execution);
 
   return {
     ...(executor === undefined ? {} : { executor }),
@@ -59,8 +62,13 @@ export function deriveRunReadEvidenceModel(args: {
 
 function deriveExecutor(
   events: ReadonlyArray<EventEnvelope>,
+  snapshotExecution: RunStatusSnapshot['execution'],
   planRecord?: PlanRecord
 ): TransformationExecutor | undefined {
+  if (snapshotExecution?.materialization) {
+    return snapshotExecution.materialization.executor;
+  }
+
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index]!;
     if (!isRecord(event.payload)) {
@@ -139,10 +147,16 @@ function deriveCurrentStepId(
 function deriveFailedStepId(
   status: RunStatusSnapshot['status'],
   workflowSnapshot: WorkflowSnapshot | null,
-  events: ReadonlyArray<EventEnvelope>
+  events: ReadonlyArray<EventEnvelope>,
+  snapshotExecution: RunStatusSnapshot['execution']
 ): string | undefined {
   if (status !== 'FAILED') {
     return undefined;
+  }
+
+  const fromExecution = readNonBlankString(snapshotExecution?.failure?.stepId);
+  if (fromExecution !== undefined) {
+    return fromExecution;
   }
 
   const fromSnapshot = deriveFailedStepFromSnapshot(workflowSnapshot);
@@ -160,7 +174,23 @@ function deriveFailedStepId(
   return undefined;
 }
 
-function deriveErrorReason(events: ReadonlyArray<EventEnvelope>): string | undefined {
+function deriveErrorReason(
+  events: ReadonlyArray<EventEnvelope>,
+  snapshotExecution: RunStatusSnapshot['execution']
+): string | undefined {
+  const failure = snapshotExecution?.failure;
+  if (failure) {
+    const reason = readNonBlankString(failure.reason);
+    if (reason !== undefined) {
+      return reason;
+    }
+
+    const message = readNonBlankString(failure.message);
+    if (message !== undefined) {
+      return message;
+    }
+  }
+
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index]!;
     if (event.eventType !== 'StepFailed' || !isRecord(event.payload)) {
@@ -198,7 +228,14 @@ function deriveErrorReason(events: ReadonlyArray<EventEnvelope>): string | undef
   return undefined;
 }
 
-function deriveMaterialization(events: ReadonlyArray<EventEnvelope>) {
+function deriveMaterialization(
+  events: ReadonlyArray<EventEnvelope>,
+  snapshotExecution: RunStatusSnapshot['execution']
+) {
+  if (snapshotExecution?.materialization) {
+    return snapshotExecution.materialization;
+  }
+
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index]!;
     if (!isRecord(event.payload)) {
