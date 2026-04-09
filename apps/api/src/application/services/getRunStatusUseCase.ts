@@ -89,8 +89,12 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(evidenceModel.currentStepId === undefined
         ? {}
         : { currentStepId: evidenceModel.currentStepId }),
-      ...(evidenceModel.failedStepId === undefined ? {} : { failedStepId: evidenceModel.failedStepId }),
-      ...(evidenceModel.errorReason === undefined ? {} : { errorReason: evidenceModel.errorReason }),
+      ...(evidenceModel.failedStepId === undefined
+        ? {}
+        : { failedStepId: evidenceModel.failedStepId }),
+      ...(evidenceModel.errorReason === undefined
+        ? {}
+        : { errorReason: evidenceModel.errorReason }),
       ...(evidenceModel.materialization === undefined
         ? {}
         : { materialization: evidenceModel.materialization }),

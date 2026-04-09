@@ -277,8 +277,7 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
   const currentAttemptEvents = selectCurrentAttemptEvents(workspace);
   const failedStepId =
     workspace.snapshot.failedStepId ??
-    [...currentAttemptEvents].reverse().find((event) => event.eventType === 'StepFailed')
-      ?.stepId;
+    [...currentAttemptEvents].reverse().find((event) => event.eventType === 'StepFailed')?.stepId;
   const errorReason =
     workspace.snapshot.errorReason ??
     getRunFailedReason(currentAttemptEvents) ??

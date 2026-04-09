@@ -230,9 +230,7 @@ function selectLatestLogicalAttemptEvents(
   return events.filter((event) => event.logicalAttemptId === latestLogicalAttemptId);
 }
 
-function deriveLatestLogicalAttemptId(
-  events: ReadonlyArray<EventEnvelope>
-): number | undefined {
+function deriveLatestLogicalAttemptId(events: ReadonlyArray<EventEnvelope>): number | undefined {
   let latestLogicalAttemptId: number | undefined;
 
   for (const event of events) {
@@ -249,7 +247,9 @@ function deriveLatestLogicalAttemptId(
   return latestLogicalAttemptId;
 }
 
-function deriveRunningStepFromSnapshot(workflowSnapshot: WorkflowSnapshot | null): string | undefined {
+function deriveRunningStepFromSnapshot(
+  workflowSnapshot: WorkflowSnapshot | null
+): string | undefined {
   if (!workflowSnapshot) {
     return undefined;
   }
@@ -272,7 +272,9 @@ function deriveRunningStepFromSnapshot(workflowSnapshot: WorkflowSnapshot | null
   return candidateStepId;
 }
 
-function deriveFailedStepFromSnapshot(workflowSnapshot: WorkflowSnapshot | null): string | undefined {
+function deriveFailedStepFromSnapshot(
+  workflowSnapshot: WorkflowSnapshot | null
+): string | undefined {
   if (!workflowSnapshot) {
     return undefined;
   }
