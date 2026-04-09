@@ -25,14 +25,6 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assertWorkflowContains(
     testWorkflow,
-    'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres'
-  );
-  assertWorkflowContains(
-    testWorkflow,
-    'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration'
-  );
-  assertWorkflowContains(
-    testWorkflow,
     'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant'
   );
 

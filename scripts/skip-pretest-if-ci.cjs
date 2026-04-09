@@ -1,12 +1,11 @@
+#!/usr/bin/env node
 /**
- * Guard for pretest scripts: exits 0 when DVT_CI is set (skipping the
- * subsequent || build chain), exits 1 otherwise so the local build runs.
- *
- * Usage in package.json:
- *   "pretest": "node scripts/skip-pretest-if-ci.cjs || pnpm --filter ..."
- *
- * In CI workflows, set DVT_CI=1 after running `pnpm -r build` once to
- * avoid redundant per-package dependency rebuilds.
+ * Reused by prebuild/pretypecheck/pretest hooks to skip redundant dependency
+ * graph builds when CI already executed an explicit workspace build step.
  */
-'use strict';
-process.exit(process.env.DVT_CI === '1' ? 0 : 1);
+
+const value = String(process.env.DVT_CI ?? '')
+  .trim()
+  .toLowerCase();
+
+process.exit(value === '1' || value === 'true' ? 0 : 1);

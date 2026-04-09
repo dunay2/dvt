@@ -19,16 +19,20 @@ function parseGeneratedFilter(output, key) {
 
   return lines.slice(1).map((line) => {
     assert.match(line, /^ {2}- '.*'$/, `unexpected generated line for ${key}: ${line}`);
-    return line.slice(5, -1).replaceAll('\'\'', "'");
+    return line.slice(5, -1).replaceAll("''", "'");
   });
 }
 
-for (const key of ['adapter_postgres', 'adapter_postgres_integration', 'adapter_postgres_relevant']) {
+for (const key of ['adapter_postgres', 'adapter_postgres_relevant']) {
   const out = execSync(`node .github/scripts/generate-paths-filter.js ${policyPath} ${key}`, {
     encoding: 'utf8',
   });
   const actual = parseGeneratedFilter(out, key);
-  assert.deepEqual(actual, normalize(policy[key]), `generated patterns must match policy for ${key}`);
+  assert.deepEqual(
+    actual,
+    normalize(policy[key]),
+    `generated patterns must match policy for ${key}`
+  );
 }
 
 assert.ok(

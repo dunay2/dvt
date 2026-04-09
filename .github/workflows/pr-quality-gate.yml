@@ -30,7 +30,7 @@ jobs:
   pr-checks:
     name: PR Quality Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
       temporal_changed:
