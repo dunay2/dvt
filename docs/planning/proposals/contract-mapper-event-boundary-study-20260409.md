@@ -28,7 +28,10 @@ That seam is not a one-off bug. It is a boundary-ownership problem.
 - [ADR-0005](../../adr/ADR-0005-contract-formalization-tooling.md)
 - [ADR-0006](../../adr/ADR-0006-contract-tooling-governance.md)
 - [Run Events Contract v1](../../architecture/components/engine/contracts/engine/RunEvents.v1.md)
+- [TF-C2-B read-surface evidence closeout](../closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md)
+- [TF-C2-B runtime read-surface evidence](../../evidence/ED-20260408-tf-c2-b-read-surface-evidence.md)
 - [IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+- [applyRunEvent.ts](../../../packages/@dvt/run-domain/src/applyRunEvent.ts)
 - [mapEventEnvelopeToProjectableEvent.ts](../../../packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts)
 
 ## Problem Statement
@@ -65,6 +68,27 @@ flowchart LR
   D -. typed as stronger evidence shape .-> E
 ```
 
+## Repository-Grounded Rationale
+
+The rationale for the next slice is not "be stricter because it feels cleaner".
+
+It is this:
+
+the persisted event boundary must own the invariants that the projector is
+allowed to trust, because the mapper was introduced to normalize shape for
+projection, not to repair invalid write-side facts.
+
+That is already the architectural intent of the current slice:
+
+- `mapEventEnvelopeToProjectableEvent.ts` says raw envelopes are normalized into
+  projector-specific events and that contracts remain the source of validation
+  truth
+- the TF-C2-B closeout records the mapper-first split as a way to keep payload
+  parsing and evidence extraction out of the projector, not as a second hidden
+  contract authority
+- `applyRunEvent.ts` explicitly frames the split as mapper for normalization and
+  projector for deterministic mutation
+
 ## Root Cause
 
 The codebase is mixing three responsibilities that should be assigned once:
@@ -80,6 +104,98 @@ When those roles are not explicit, two bad outcomes appear:
 - duplicated validation that does not repair anything
 - strong TypeScript types that overstate real runtime guarantees
 
+## Core Rule For This Study
+
+Use one rule to answer the boundary questions:
+
+if the projector mutates canonical read state from a field without revalidation,
+that field's semantic validity belongs to the append boundary, not to the
+mapper.
+
+This rule fits the current repository because:
+
+- contracts are declared as validation truth, not mappers
+- the mapper exists to remove payload inspection from projector logic, not to
+  become a second validator authority
+- the projector consumes mapped evidence as trusted input and writes it directly
+  into snapshot state
+- the shared evidence schemas are already stricter than some write-side event
+  schemas, which proves the drift exists today
+
+## Why The Mapper Is Not The Admission Seam
+
+Today the mapper does more than structural translation:
+
+- `requireStepId()` accepts any string with `length > 0`, so whitespace-only
+  `stepId` passes there
+- `readFailureEvidence()` trims `reason` and `message`
+- `readFailureEvidence()` derives `failedAt` from `emittedAt` when it is absent
+
+That means the mapper is already partially repairing weak write-side data.
+
+But the repository's own stated intent is that contracts remain the source of
+validation truth while the mapper keeps projection code clean. If mapper policy
+starts deciding semantic validity, ownership drifts away from the append
+boundary.
+
+## Why `StepFailed.failure` Must Be Treated As Strong
+
+`ProjectableStepFailedEvent` carries:
+
+- `failure: RunFailureEvidence`
+
+not a weaker intermediate shape.
+
+Then `applyRunEvent()` stores that failure directly into snapshot execution
+evidence without revalidation.
+
+So the current code already behaves as if:
+
+- mapper output is trustworthy enough for projector mutation
+- projector consumers can rely on `RunFailureEvidence`
+
+That leaves only two coherent choices:
+
+1. the append boundary guarantees those invariants
+2. the mapper output type becomes weaker
+
+Given the current development posture, the cleaner answer is to strengthen the
+boundary and keep the mapper simple.
+
+## Why The Contracts Already Point In That Direction
+
+The contracts package already contains the stronger semantics the runtime read
+surface expects:
+
+- `NonBlankStringSchema` rejects whitespace-only strings
+- `RunFailureEvidenceSchema` already uses the stronger rule for `stepId`,
+  optional `reason`, and optional `message`
+
+But the write-side event schemas still allow weaker equivalents in key places:
+
+- `StepFailedEventWriteSchema.stepId` is `z.string().min(1)` rather than
+  `NonBlankStringSchema`
+- `RunEventCommonSchema.emittedAt` is only `z.string().min(1)`
+- `StepFailedPayloadSchema` does not emit `failedAt` today
+
+So the repository already shows the mismatch clearly: the downstream evidence
+contract is stronger than the upstream event admission contract.
+
+## No-History Implication
+
+This repository is not carrying historical invalid-event compatibility as a
+requirement for this slice.
+
+That changes the option calculus:
+
+- we do not need tolerant reprojection of old invalid events
+- we do not need lenient transition handling for legacy snapshots
+- we do not need a dual-shape compatibility model just to keep old bad data
+  alive
+
+With no historical compatibility pressure, fail-closed at the append boundary
+is the more coherent choice.
+
 ## Boundary Questions To Decide
 
 1. Which invariants must be enforced before an event can exist in the log?
@@ -91,6 +207,16 @@ When those roles are not explicit, two bad outcomes appear:
    append boundary only, or also rechecked in mapper translation?
 5. Is blank-string normalization a contract concern or a mapper concern?
 
+## Field Ownership Recommendation
+
+| Concern                                           | Recommended owner                        | Rationale                                                                                                                                                     |
+| ------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stepId`                                          | append boundary                          | step events are identity-bearing facts; projector mutation and step indexing should never depend on later repair                                              |
+| `emittedAt` minimum validity                      | append boundary                          | projector transitions use `emittedAt` as deterministic time for state mutation                                                                                |
+| `reason` / `message` non-blank semantics          | prefer append boundary                   | the shared evidence contract already treats these as non-blank when present                                                                                   |
+| `failedAt`                                        | mapper derivation is acceptable          | current `StepFailed` payload does not emit `failedAt`, so deriving it from accepted `emittedAt` is deterministic projection logic rather than semantic repair |
+| `RunFailureEvidence` strength promised downstream | contract package after boundary decision | projectors and read surfaces should consume a shape whose guarantees match reality                                                                            |
+
 ## Options
 
 ### Option A: Boundary-authoritative invariants, simple mapper
@@ -98,6 +224,8 @@ When those roles are not explicit, two bad outcomes appear:
 - strengthen the append boundary so persisted step events already satisfy the
   invariants needed by projection
 - keep the mapper structural and unsurprising
+- allow mapper derivation only for deterministic convenience fields such as
+  `failedAt`
 - make projectable events depend on already-valid event data
 
 Pros:
@@ -105,6 +233,8 @@ Pros:
 - aligns with ADR-0004 append authority
 - minimizes hidden normalization
 - makes mapper logic easier to reason about and test
+- matches the repository's existing claim that contracts are the source of
+  validation truth
 
 Cons:
 
@@ -125,6 +255,7 @@ Cons:
 - hides semantic repair in the read path
 - duplicates contract logic outside the contract package
 - makes projector behavior depend on mapper-specific policy
+- conflicts with the mapper-first rationale already documented for TF-C2-B
 
 ### Option C: Dual validation
 
@@ -139,21 +270,38 @@ Cons:
 
 - easy to turn into redundant ceremony
 - unclear which layer owns fallback behavior
+- under the current no-history posture, it adds more overlap than value
 
 ## Recommended Direction For The Next Slice
 
 Default working hypothesis: **Option A**.
 
-The study slice should try to prove or reject this with a narrow field-level
-ownership matrix before any code change:
+The rationale is repository-specific:
 
-| Concern                                           | Preferred owner to verify                    | Why                                                                              |
-| ------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
-| `stepId` non-blank semantics                      | event schema / append boundary               | step event identity should not be repaired later                                 |
-| `emittedAt` minimum validity                      | event schema / append boundary               | persisted envelope timestamps are boundary facts                                 |
-| `reason` / `message` blank trimming               | needs explicit decision                      | could be boundary normalization or rejected input                                |
-| `failedAt` derivation from payload vs envelope    | mapper, but only as deterministic derivation | derived read evidence may legitimately reuse envelope time when payload omits it |
-| `RunFailureEvidence` shape promised to projectors | contract package after owner decisions       | downstream contract must reflect real guarantees                                 |
+- if the projector consumes a field as trusted input, the append boundary should
+  own its semantic validity
+- the mapper should remain a translation seam, not an admission seam
+- `failedAt` may still be mapper-derived from `emittedAt` because that is
+  deterministic derivation from an already accepted boundary fact, not hidden
+  repair
+
+The study slice should prove or reject this with a narrow field-level ownership
+matrix before any code change:
+
+- `stepId` non-blank semantics:
+  verify as an event schema / append-boundary concern because step identity
+  should not be repaired later.
+- `emittedAt` minimum validity:
+  verify as an event schema / append-boundary concern because projector
+  transitions treat time as a boundary fact.
+- `reason` / `message` non-blank semantics:
+  verify as an append-boundary concern unless we explicitly choose to weaken the
+  downstream evidence contract.
+- `failedAt` derivation from payload vs envelope:
+  keep as mapper-owned only if it remains a deterministic derivation from
+  accepted envelope time.
+- `RunFailureEvidence` strength promised to projectors:
+  settle in the contract package after the field-ownership decision is made.
 
 ## Proposed Follow-up Slice
 
