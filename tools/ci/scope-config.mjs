@@ -142,9 +142,21 @@ export const CONTRACT_SCOPE_PATTERNS = {
 export const PR_QUALITY_SCOPE_PATTERNS = {
   temporal_changed: [
     'packages/@dvt/adapter-temporal/**',
-    'packages/@dvt/adapter-postgres/**',
     'packages/@dvt/engine/**',
     'packages/@dvt/contracts/**',
+    ...ROOT_CONFIG_PATTERNS,
+    '.github/workflows/pr-quality-gate.yml',
+    '.github/workflows/test.yml',
+  ],
+  temporal_postgres_changed: [
+    'packages/@dvt/adapter-postgres/**',
+    'packages/@dvt/adapter-temporal/src/activities/**',
+    'packages/@dvt/adapter-temporal/src/workflows/**',
+    'packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts',
+    'packages/@dvt/adapter-temporal/package.json',
+    'packages/@dvt/engine/**',
+    'packages/@dvt/contracts/**',
+    'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
     '.github/workflows/pr-quality-gate.yml',
     '.github/workflows/test.yml',

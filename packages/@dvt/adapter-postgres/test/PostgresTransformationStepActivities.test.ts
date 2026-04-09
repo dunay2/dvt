@@ -13,14 +13,10 @@ let schemaCounter = 0;
 
 function runtimeContext(environmentId = 'env-it') {
   return {
-    ctx: {
+    executionIdentity: {
       tenantId: 't-it',
-      projectId: 'p-it',
       environmentId,
       runId: 'run-it-postgres-capability',
-      targetAdapter: 'temporal' as const,
-      logicalAttemptId: 1,
-      originRunId: 'run-it-postgres-capability',
     },
   };
 }

@@ -25,15 +25,19 @@
     "@dvt/plan-interpreter": "workspace:*"
   },
   "scripts": {
+    "build:runtime-deps": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/dsl build && pnpm --filter @dvt/plan-interpreter build && pnpm --filter @dvt/engine build",
     "build": "tsc -p tsconfig.json",
-    "prebuild": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/adapter-temporal^...\" build",
+    "prebuild": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "postbuild": "echo '✅ Build complete'",
-    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/adapter-temporal^...\" build",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts",
-    "pretest:integration": "pnpm --filter @dvt/adapter-postgres build && pnpm --filter \"@dvt/adapter-temporal^...\" build && pnpm build",
+    "pretest:integration": "pnpm run build:runtime-deps && pnpm build",
+    "pretest:integration:postgres": "pnpm --filter @dvt/adapter-postgres build && pnpm run build:runtime-deps && pnpm build",
     "test:integration": "vitest run ./test/",
+    "test:integration:postgres": "vitest run ./test/ --testNamePattern=\"golden path: postgres relational capability executes through the Temporal runtime\"",
     "test:integration:watch": "vitest watch ./test/",
-    "ci:test:integration": "pnpm pretest:integration && pnpm test:integration"
+    "ci:test:integration": "pnpm pretest:integration && pnpm test:integration",
+    "ci:test:integration:postgres": "pnpm pretest:integration:postgres && pnpm test:integration:postgres"
   },
   "devDependencies": {
     "@dvt/adapter-postgres": "workspace:*",

@@ -17,7 +17,6 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PostgresRelationalExecutionCapability } from '@dvt/adapter-postgres';
 import type {
   EngineRunRef,
   MaterializationEvidence,
@@ -1378,6 +1377,7 @@ describe('temporal integration (time-skipping)', () => {
       const plan = mkPostgresTransformationPlan(schema, sinkTable);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
       const planRef = createPlanRef('it-plan-postgres-transform', planBytes);
+      const { PostgresRelationalExecutionCapability } = await import('@dvt/adapter-postgres');
       const capability = new PostgresRelationalExecutionCapability({
         connectionString,
         nowIsoUtc: () => '2026-04-09T00:00:00.000Z',

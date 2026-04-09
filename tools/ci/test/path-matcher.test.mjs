@@ -35,16 +35,23 @@ test('computeBooleanScope marks adapter_postgres_changed for relevant workflow/c
   assert.equal(fromUnrelated.adapter_postgres_changed, false);
 });
 
-test('computeBooleanScope marks temporal_changed for adapter-postgres changes', () => {
+test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres changes', () => {
   const fromAdapterPostgres = computeBooleanScope(
     ['packages/@dvt/adapter-postgres/src/index.ts'],
     PR_QUALITY_SCOPE_PATTERNS
   );
-  assert.equal(fromAdapterPostgres.temporal_changed, true);
+  assert.equal(fromAdapterPostgres.temporal_postgres_changed, true);
 
-  const fromTemporalWorkflow = computeBooleanScope(
+  const fromTemporalSources = computeBooleanScope(
+    ['packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts'],
+    PR_QUALITY_SCOPE_PATTERNS
+  );
+  assert.equal(fromTemporalSources.temporal_postgres_changed, true);
+
+  const fromWorkflowConfig = computeBooleanScope(
     ['.github/workflows/pr-quality-gate.yml'],
     PR_QUALITY_SCOPE_PATTERNS
   );
-  assert.equal(fromTemporalWorkflow.temporal_changed, true);
+  assert.equal(fromWorkflowConfig.temporal_changed, true);
+  assert.equal(fromWorkflowConfig.temporal_postgres_changed, true);
 });

@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @date 2026-04-09
  */
-import type { ExecutionPlan, MaterializationEvidence, ResolvedRunContext } from '@dvt/contracts';
+import type { ExecutionPlan, MaterializationEvidence } from '@dvt/contracts';
 import type { Pool } from 'pg';
 import { Pool as PostgresPool } from 'pg';
 
@@ -17,8 +17,14 @@ import { POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C } from './PostgresAdapterConsta
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
 export interface RuntimeStepExecutionContext {
-  ctx: ResolvedRunContext;
+  executionIdentity: RuntimeExecutionIdentity;
   gatewayContext?: Record<string, unknown>;
+}
+
+export interface RuntimeExecutionIdentity {
+  tenantId: string;
+  runId: string;
+  environmentId: string;
 }
 
 export interface RuntimeStepResult {
@@ -53,15 +59,18 @@ interface PrepareTransformConfig {
 
 interface SqlTransformConfig {
   sql: string;
-  sinkSchema: string;
-  sinkTable: string;
+  sink: RelationalSinkRef;
   materialization: 'table';
   writeMode: 'replace';
 }
 
 interface CaptureEvidenceConfig {
-  sinkSchema: string;
-  sinkTable: string;
+  sink: RelationalSinkRef;
+}
+
+interface RelationalSinkRef {
+  schema: string;
+  table: string;
 }
 
 const FAILURE_REASON = Object.freeze({
@@ -171,7 +180,7 @@ export class PostgresRelationalExecutionCapability {
       );
     }
 
-    const targetTable = `${quoteIdentifier(parsed.value.sinkSchema)}.${quoteIdentifier(parsed.value.sinkTable)}`;
+    const targetTable = qualifySinkRef(parsed.value.sink);
 
     try {
       await this.clientSession.withTransaction(async (client) => {
@@ -204,7 +213,7 @@ export class PostgresRelationalExecutionCapability {
     }
 
     const startedAt = this.nowIsoUtc();
-    const targetTable = `${quoteIdentifier(parsed.value.sinkSchema)}.${quoteIdentifier(parsed.value.sinkTable)}`;
+    const targetTable = qualifySinkRef(parsed.value.sink);
 
     try {
       const rowsWritten = await this.clientSession.withClient(async (client) => {
@@ -219,8 +228,8 @@ export class PostgresRelationalExecutionCapability {
         status: 'COMPLETED',
         resultEvidence: {
           executor: 'postgres',
-          environmentId: context.ctx.environmentId,
-          sinkTable: `${parsed.value.sinkSchema}.${parsed.value.sinkTable}`,
+          environmentId: context.executionIdentity.environmentId,
+          sinkTable: formatSinkRef(parsed.value.sink),
           rowsWritten,
           startedAt,
           completedAt,
@@ -270,11 +279,8 @@ function parseSqlTransformConfig(
   const sql = normalizeNonBlankString(stepTypeConfig['sql'], 'sql');
   if (!sql.ok) return { ok: false, error: sql.error };
 
-  const sinkSchema = normalizeIdentifier(stepTypeConfig['sinkSchema'], 'sinkSchema');
-  if (!sinkSchema.ok) return { ok: false, error: sinkSchema.error };
-
-  const sinkTable = normalizeIdentifier(stepTypeConfig['sinkTable'], 'sinkTable');
-  if (!sinkTable.ok) return { ok: false, error: sinkTable.error };
+  const sink = parseRelationalSinkRef(stepTypeConfig);
+  if (!sink.ok) return { ok: false, error: sink.error };
 
   if (stepTypeConfig['materialization'] !== 'table') {
     return { ok: false, error: 'materialization must be table' };
@@ -287,8 +293,7 @@ function parseSqlTransformConfig(
     ok: true,
     value: {
       sql: sql.value,
-      sinkSchema: sinkSchema.value,
-      sinkTable: sinkTable.value,
+      sink: sink.value,
       materialization: 'table',
       writeMode: 'replace',
     },
@@ -303,19 +308,41 @@ function parseCaptureEvidenceConfig(
     return { ok: false, error: 'stepTypeConfig must be an object' };
   }
 
-  const sinkSchema = normalizeIdentifier(stepTypeConfig['sinkSchema'], 'sinkSchema');
-  if (!sinkSchema.ok) return { ok: false, error: sinkSchema.error };
-
-  const sinkTable = normalizeIdentifier(stepTypeConfig['sinkTable'], 'sinkTable');
-  if (!sinkTable.ok) return { ok: false, error: sinkTable.error };
+  const sink = parseRelationalSinkRef(stepTypeConfig);
+  if (!sink.ok) return { ok: false, error: sink.error };
 
   return {
     ok: true,
     value: {
-      sinkSchema: sinkSchema.value,
-      sinkTable: sinkTable.value,
+      sink: sink.value,
     },
   };
+}
+
+function parseRelationalSinkRef(
+  stepTypeConfig: Record<string, unknown>
+): { ok: true; value: RelationalSinkRef } | { ok: false; error: string } {
+  const schema = normalizeIdentifier(stepTypeConfig['sinkSchema'], 'sinkSchema');
+  if (!schema.ok) return { ok: false, error: schema.error };
+
+  const table = normalizeIdentifier(stepTypeConfig['sinkTable'], 'sinkTable');
+  if (!table.ok) return { ok: false, error: table.error };
+
+  return {
+    ok: true,
+    value: {
+      schema: schema.value,
+      table: table.value,
+    },
+  };
+}
+
+function qualifySinkRef(sink: RelationalSinkRef): string {
+  return `${quoteIdentifier(sink.schema)}.${quoteIdentifier(sink.table)}`;
+}
+
+function formatSinkRef(sink: RelationalSinkRef): string {
+  return `${sink.schema}.${sink.table}`;
 }
 
 function asPlainObject(value: unknown): Record<string, unknown> | undefined {

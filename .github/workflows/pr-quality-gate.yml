@@ -36,6 +36,9 @@ jobs:
       temporal_changed:
         ${{ steps.detect_changes.outputs.temporal_changed || steps.wd_scope.outputs.temporal_changed
         }}
+      temporal_postgres_changed:
+        ${{ steps.detect_changes.outputs.temporal_postgres_changed ||
+        steps.wd_scope.outputs.temporal_postgres_changed }}
       adapter_postgres_changed: ${{ steps.detect_changes.outputs.adapter_postgres_changed }}
     steps:
       - name: Checkout
@@ -181,7 +184,9 @@ jobs:
         if:
           github.event_name == 'workflow_dispatch' && github.event.inputs.run_temporal_integration
           == 'true'
-        run: echo "temporal_changed=true" >> $GITHUB_OUTPUT
+        run: |
+          echo "temporal_changed=true" >> $GITHUB_OUTPUT
+          echo "temporal_postgres_changed=true" >> $GITHUB_OUTPUT
 
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
@@ -190,6 +195,32 @@ jobs:
     needs: [pr-checks]
     if: >-
       needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name !=
+      'workflow_dispatch' ||
+       github.event.inputs.run_temporal_integration == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Build contracts for integration
+        run: pnpm --filter @dvt/contracts build
+
+      - name: Run Temporal adapter integration (time-skipping)
+        run: pnpm --filter @dvt/adapter-temporal test:integration
+
+  temporal-postgres-integration:
+    name: Temporal adapter integration (postgres capability)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [pr-checks]
+    if: >-
+      needs.pr-checks.outputs.temporal_postgres_changed == 'true' && (github.event_name !=
       'workflow_dispatch' ||
        github.event.inputs.run_temporal_integration == 'true')
     services:
@@ -221,14 +252,14 @@ jobs:
       - name: Build contracts for integration
         run: pnpm --filter @dvt/contracts build
 
-      - name: Run Temporal adapter integration (time-skipping)
-        run: pnpm --filter @dvt/adapter-temporal test:integration
+      - name: Run Temporal adapter integration (postgres capability)
+        run: pnpm --filter @dvt/adapter-temporal test:integration:postgres
 
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pr-checks, temporal-integration]
+    needs: [pr-checks, temporal-integration, temporal-postgres-integration]
     if: always()
     steps:
       - name: Check all jobs
