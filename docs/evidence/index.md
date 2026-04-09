@@ -30,6 +30,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260408 Pr679 Adapter Postgres Integration Smoke](ED-20260408-pr679-adapter-postgres-integration-smoke.md)
 - [ED 20260408 Pr807 React Day Picker And Adapter Postgres Tests](ED-20260408-pr807-react-day-picker-and-adapter-postgres-tests.md)
 - [ED 20260408 Retry Run Boundary And Provider Signal Mapper](ED-20260408-retry-run-boundary-and-provider-signal-mapper.md)
+- [ED 20260409 Tf C2 B Run Read Evidence Attempt Safety](ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)
