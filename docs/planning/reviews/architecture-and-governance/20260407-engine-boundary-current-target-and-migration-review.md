@@ -28,7 +28,7 @@ This document is code-grounded and ADR-calibrated. It distinguishes between:
 
 This document complements:
 
-- [20260407 DVT principles, boundaries, and target-state review](20260407-dvt-principles-boundaries-and-target-state-review.md)
+- [20260407 DVT principles, boundaries, and target-state review](./20260407-dvt-principles-boundaries-and-target-state-review.md)
 
 ## Governing sources
 

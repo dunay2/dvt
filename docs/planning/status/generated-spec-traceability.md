@@ -95,13 +95,13 @@ Generated automatically from repository documentation and source-code signals on
 | architecture | [DVT Architecture Atlas](../../architecture/atlas/index.md)                                                                                                  | -        |
 | architecture | [DVT Architecture Atlas](../../architecture/atlas/README.md)                                                                                                 | -        |
 | architecture | [DVT+ Code Completion Assessment (2026-03-06)](../../architecture/atlas/status/code_completion_assessment_2026-03-06.md)                                     | -        |
-| architecture | [ConductorAdapter Specification (DRAFT v0.8 — Phase 2)](../../architecture/engine/adapters/conductor/ConductorAdapter.spec.md)                               | -        |
-| architecture | [Snowflake State Store Adapter](../../architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md)                                               | -        |
-| architecture | [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)                                                                    | -        |
-| architecture | [TemporalAdapter Specification (Normative v1.0)](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md)                                        | -        |
-| architecture | [Capabilities: Executable Contracts](../../architecture/engine/contracts/capabilities/README.md)                                                             | -        |
-| architecture | [Contract Template (v1)](../../architecture/engine/contracts/CONTRACT_TEMPLATE.v1.md)                                                                        | -        |
-| architecture | [Decision & Risk Log — Contracts v2.0.0](../../architecture/engine/contracts/DECISION_AND_RISK_LOG_v2.0.0.md)                                                | -        |
+| architecture | [ConductorAdapter Specification (DRAFT v0.8 — Phase 2)](../../architecture/components/engine/adapters/conductor/ConductorAdapter.spec.md)                    | -        |
+| architecture | [Snowflake State Store Adapter](../../architecture/components/engine/adapters/state-store/snowflake/StateStoreAdapter.md)                                    | -        |
+| architecture | [Temporal Engine Policies](../../architecture/components/engine/adapters/temporal/EnginePolicies.md)                                                         | -        |
+| architecture | [TemporalAdapter Specification (Normative v1.0)](../../architecture/components/engine/adapters/temporal/TemporalAdapter.spec.md)                             | -        |
+| architecture | [Capabilities: Executable Contracts](../../architecture/components/engine/contracts/capabilities/README.md)                                                  | -        |
+| architecture | [Contract Template (v1)](../../architecture/components/engine/contracts/CONTRACT_TEMPLATE.v1.md)                                                             | -        |
+| architecture | [Decision & Risk Log — Contracts v2.0.0](../../architecture/components/engine/contracts/DECISION_AND_RISK_LOG_v2.0.0.md)                                     | -        |
 
 ## Duplicate Language Pairs Detected
 

@@ -14,7 +14,7 @@ canonical repo docs surface.
 
 Use this page with:
 
-- [Planner Current State Assessment](planner-current-state-assessment.md)
+- [Planner Current State Assessment](./planner-current-state-assessment.md)
 - [Planner Target State And Hardening Roadmap](../archive/proposals/planner-target-state-roadmap-20260320.md)
 - [Current Status](../../architecture/system-delivery-status.md)
 - [Planner Contracts](../../contracts/planner/index.md)

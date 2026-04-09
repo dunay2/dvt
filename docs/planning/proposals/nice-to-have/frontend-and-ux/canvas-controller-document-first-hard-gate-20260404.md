@@ -61,9 +61,9 @@ flowchart LR
 Required before any code movement:
 
 - technical source of truth in
-  `docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md`
+  `docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md`
 - user-facing Canvas hardening expectations in
-  `docs/architecture/frontend/screen-manuals-and-user-stories.md`
+  `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - Lane E tracking linked to `F-05`
 
 Acceptance for this phase:
@@ -188,10 +188,10 @@ This slice does not do any of the following:
 
 The active canonical docs for this slice are:
 
-- `docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md`
-- `docs/architecture/frontend/screen-manuals-and-user-stories.md`
+- `docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 
 The draft note under
-`docs/architecture/frontend/views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md`
+`docs/architecture/components/web/views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md`
 remains non-canonical for this remediation and must not be used as the source
 of implementation requirements.

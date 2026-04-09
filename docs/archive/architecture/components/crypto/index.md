@@ -37,8 +37,8 @@ flowchart LR
 
 @dvt/crypto is responsible for cryptographic operations and utilities:
 
-- **Root:** [CryptoAggregate](crypto.md#cryptoaggregate) — represents the central crypto model, owning key and hash management.
-- **Aggregates:** [KeyAggregate](crypto.md#keyaggregate), [HashAggregate](crypto.md#hashaggregate).
+- **Root:** [CryptoAggregate](./crypto.md#cryptoaggregate) — represents the central crypto model, owning key and hash management.
+- **Aggregates:** [KeyAggregate](./crypto.md#keyaggregate), [HashAggregate](./crypto.md#hashaggregate).
 - **Responsibilities:**
   - Manage cryptographic keys and hashes.
   - Provide secure operations for contracts and engine.
@@ -46,8 +46,8 @@ flowchart LR
 
 **Interactions:**
 
-- **[Contracts](contracts.md):** Uses crypto operations for validation.
-- **[Engine](engine.md):** Uses crypto for secure workflow execution.
+- **[Contracts](./contracts.md):** Uses crypto operations for validation.
+- **[Engine](./engine.md):** Uses crypto for secure workflow execution.
 
 Crypto coordinates these interactions to ensure secure operations and key/hash management.
 
@@ -87,7 +87,7 @@ Represents hash management for crypto. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](crypto-ddd.md)
-- [Functionalities](crypto-functional.md)
-- [Constraints & Invariants](crypto-constraints.md)
-- [Sequence Diagrams](crypto-sequence.md)
+- [DDD Structure](./crypto-ddd.md)
+- [Functionalities](./crypto-functional.md)
+- [Constraints & Invariants](./crypto-constraints.md)
+- [Sequence Diagrams](./crypto-sequence.md)

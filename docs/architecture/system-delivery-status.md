@@ -35,7 +35,7 @@ Use this page together with:
 Minimum tuple for this document:
 
 - `canonical_spec`: topic-specific. Follow the matrix and the linked specs.
-- `status_doc`: [`docs/architecture/system-delivery-status.md`](system-delivery-status.md)
+- `status_doc`: [`docs/architecture/system-delivery-status.md`](./system-delivery-status.md)
 - `code_paths`: summarized by area here; exact curated paths live in
   [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 - `test_paths`: summarized by area here; exact paths live in
@@ -150,16 +150,16 @@ See [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-ar
 1. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 2. [Planning Control Tower](../planning/state/planning-control-tower.md)
 3. [Generated Code State](../planning/status/generated-code-state.md)
-4. Topic-specific specs under [Reference](index.md)
+4. Topic-specific specs under [Reference](./index.md)
 
 ## Topic Entry Points
 
 - Engine and execution invariants:
-  [Engine Architecture](engine/index.md)
+  [Engine Architecture](./components/engine/index.md)
 - State-store boundary:
-  [State Store Overview](engine/contracts/state-store/overview.md)
+  [State Store Overview](./components/engine/contracts/state-store/overview.md)
 - Shared package surfaces:
-  [Shared Package Architecture](shared/index.md)
+  [Shared Package Architecture](./shared/index.md)
 - Contracts:
   [Contracts Index](../contracts/index.md)
 - Planning and execution debt:

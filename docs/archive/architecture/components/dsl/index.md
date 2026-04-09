@@ -37,8 +37,8 @@ flowchart LR
 
 @dvt/dsl is responsible for providing a domain-specific language for plan definition:
 
-- **Root:** [DSLAggregate](dsl.md#dslaggregate) — represents the central DSL model, owning syntax and parser logic.
-- **Aggregates:** [SyntaxAggregate](dsl.md#syntaxaggregate), [ParserAggregate](dsl.md#parseraggregate).
+- **Root:** [DSLAggregate](./dsl.md#dslaggregate) — represents the central DSL model, owning syntax and parser logic.
+- **Aggregates:** [SyntaxAggregate](./dsl.md#syntaxaggregate), [ParserAggregate](./dsl.md#parseraggregate).
 - **Responsibilities:**
   - Enable flexible and expressive plan creation.
   - Validate syntax and parse plans.
@@ -46,8 +46,8 @@ flowchart LR
 
 **Interactions:**
 
-- **[Planner](planner.md):** Receives parsed plans for editing and validation.
-- **[Interpreter](interpreter.md):** Uses parsed plans for compilation.
+- **[Planner](./planner.md):** Receives parsed plans for editing and validation.
+- **[Interpreter](./interpreter.md):** Uses parsed plans for compilation.
 
 DSL coordinates these interactions to ensure plans are defined, parsed, and ready for compilation.
 
@@ -88,7 +88,7 @@ Represents parser logic for DSL. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](dsl-ddd.md)
-- [Functionalities](dsl-functional.md)
-- [Constraints & Invariants](dsl-constraints.md)
-- [Sequence Diagrams](dsl-sequence.md)
+- [DDD Structure](./dsl-ddd.md)
+- [Functionalities](./dsl-functional.md)
+- [Constraints & Invariants](./dsl-constraints.md)
+- [Sequence Diagrams](./dsl-sequence.md)

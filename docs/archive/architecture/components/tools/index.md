@@ -37,8 +37,8 @@ flowchart LR
 
 tools/ is responsible for development, operations, and CI/CD support:
 
-- **Root:** [ToolAggregate](tools.md#toolaggregate) — represents the central tool model, owning development and operations logic.
-- **Aggregates:** [OperationAggregate](tools.md#operationaggregate).
+- **Root:** [ToolAggregate](./tools.md#toolaggregate) — represents the central tool model, owning development and operations logic.
+- **Aggregates:** [OperationAggregate](./tools.md#operationaggregate).
 - **Responsibilities:**
   - Provide tools for development and operations.
   - Support CI/CD and infra operations.
@@ -46,8 +46,8 @@ tools/ is responsible for development, operations, and CI/CD support:
 
 **Interactions:**
 
-- **[Infra](infra.md):** Receives tools for environment provisioning.
-- **[Scripts](scripts.md):** Uses tools for CI/CD and validation.
+- **[Infra](./infra.md):** Receives tools for environment provisioning.
+- **[Scripts](./scripts.md):** Uses tools for CI/CD and validation.
 
 Tools coordinates these interactions to ensure development, operations, and CI/CD support.
 
@@ -79,7 +79,7 @@ Represents operation management for tools. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](tools-ddd.md)
-- [Functionalities](tools-functional.md)
-- [Constraints & Invariants](tools-constraints.md)
-- [Sequence Diagrams](tools-sequence.md)
+- [DDD Structure](./tools-ddd.md)
+- [Functionalities](./tools-functional.md)
+- [Constraints & Invariants](./tools-constraints.md)
+- [Sequence Diagrams](./tools-sequence.md)

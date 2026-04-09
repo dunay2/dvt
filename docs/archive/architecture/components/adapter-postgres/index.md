@@ -35,8 +35,8 @@ flowchart LR
 
 @dvt/adapter-postgres is responsible for integrating Postgres persistence:
 
-- **Root:** [PostgresAdapterAggregate](adapter-postgres.md#postgresadapteraggregate) — represents the central postgres adapter model, owning state management.
-- **Aggregates:** [StateAggregate](adapter-postgres.md#stateaggregate).
+- **Root:** [PostgresAdapterAggregate](./adapter-postgres.md#postgresadapteraggregate) — represents the central postgres adapter model, owning state management.
+- **Aggregates:** [StateAggregate](./adapter-postgres.md#stateaggregate).
 - **Responsibilities:**
   - Manage workflow state.
   - Integrate adapter connections.
@@ -44,7 +44,7 @@ flowchart LR
 
 **Interactions:**
 
-- **[Engine](engine.md):** Receives state management results.
+- **[Engine](./engine.md):** Receives state management results.
 
 Postgres adapter coordinates these interactions to ensure reliable state management and adapter integration.
 
@@ -76,7 +76,7 @@ Represents state management for postgres adapter. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](adapter-postgres-ddd.md)
-- [Functionalities](adapter-postgres-functional.md)
-- [Constraints & Invariants](adapter-postgres-constraints.md)
-- [Sequence Diagrams](adapter-postgres-sequence.md)
+- [DDD Structure](./adapter-postgres-ddd.md)
+- [Functionalities](./adapter-postgres-functional.md)
+- [Constraints & Invariants](./adapter-postgres-constraints.md)
+- [Sequence Diagrams](./adapter-postgres-sequence.md)

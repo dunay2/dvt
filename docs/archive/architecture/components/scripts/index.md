@@ -37,8 +37,8 @@ flowchart LR
 
 scripts/ is responsible for CI/CD, validation, and tooling:
 
-- **Root:** [ScriptAggregate](scripts.md#scriptaggregate) — represents the central script model, owning CI/CD and validation logic.
-- **Aggregates:** [ValidationAggregate](scripts.md#validationaggregate).
+- **Root:** [ScriptAggregate](./scripts.md#scriptaggregate) — represents the central script model, owning CI/CD and validation logic.
+- **Aggregates:** [ValidationAggregate](./scripts.md#validationaggregate).
 - **Responsibilities:**
   - Provide scripts for CI/CD and validation.
   - Support infra and tooling operations.
@@ -46,8 +46,8 @@ scripts/ is responsible for CI/CD, validation, and tooling:
 
 **Interactions:**
 
-- **[Infra](infra.md):** Receives scripts for environment provisioning.
-- **[Tools](tools.md):** Uses scripts for development and operations.
+- **[Infra](./infra.md):** Receives scripts for environment provisioning.
+- **[Tools](./tools.md):** Uses scripts for development and operations.
 
 Scripts coordinates these interactions to ensure CI/CD, validation, and tooling support.
 
@@ -79,7 +79,7 @@ Represents validation management for scripts. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](scripts-ddd.md)
-- [Functionalities](scripts-functional.md)
-- [Constraints & Invariants](scripts-constraints.md)
-- [Sequence Diagrams](scripts-sequence.md)
+- [DDD Structure](./scripts-ddd.md)
+- [Functionalities](./scripts-functional.md)
+- [Constraints & Invariants](./scripts-constraints.md)
+- [Sequence Diagrams](./scripts-sequence.md)

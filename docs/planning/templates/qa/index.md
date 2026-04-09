@@ -12,9 +12,9 @@ Reusable prompt templates for hard, evidence-first QA reviews.
 
 ## Index
 
-- [Global System QA Check Prompt](TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md)
-- [Current Task QA Check Prompt](TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
-- [QA Artifact Example Template](TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [Global System QA Check Prompt](./TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md)
+- [Current Task QA Check Prompt](./TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
+- [QA Artifact Example Template](./TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
 
 ## Usage Rule
 

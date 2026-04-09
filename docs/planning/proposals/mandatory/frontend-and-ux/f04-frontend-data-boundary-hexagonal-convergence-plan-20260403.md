@@ -362,7 +362,7 @@ Validation:
 
 Deliverables:
 
-- Write `docs/architecture/frontend/frontend-hexagonal-boundary.md` describing
+- Write `docs/architecture/components/web/frontend-hexagonal-boundary.md` describing
   the achieved architecture with diagrams.
 - Update `DVT_FRONTEND_PLUGIN_ARCHITECTURE.md` to reflect the hexagonal data
   flow.

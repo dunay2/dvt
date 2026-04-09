@@ -83,6 +83,6 @@ kernel.
 ## Related Pages
 
 - [Planner and Contracts planning view](../planning/domains/planner-and-contracts.md)
-- [DVT Component Map](component-map.md)
-- [System Delivery Status](system-delivery-status.md)
-- [Shared Package Architecture](shared/index.md)
+- [DVT Component Map](./component-map.md)
+- [System Delivery Status](./system-delivery-status.md)
+- [Shared Package Architecture](./shared/index.md)

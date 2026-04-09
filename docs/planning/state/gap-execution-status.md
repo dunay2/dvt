@@ -15,9 +15,9 @@ an active planning board and it does not carry the current delivery posture.
 
 ## Use Instead
 
-- [Planning Control Tower](planning-control-tower.md) for active work items,
+- [Planning Control Tower](./planning-control-tower.md) for active work items,
   lane routing, and task triage
-- [Domain Status Board](domain-status-board.md) for domain-level priorities
+- [Domain Status Board](./domain-status-board.md) for domain-level priorities
 - [Roadmap Of Record](../roadmap/index.md) for sequencing and roadmap posture
 - [System Delivery Status](../../architecture/system-delivery-status.md) for
   current implementation truth

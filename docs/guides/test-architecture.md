@@ -10,7 +10,7 @@ last_reviewed: 2026-03-31
 This guide defines how tests should be structured in this repository.
 
 It does not replace the command inventory in
-[`testing-and-ci-capabilities.md`](testing-and-ci-capabilities.md). That guide
+[`testing-and-ci-capabilities.md`](./testing-and-ci-capabilities.md). That guide
 answers "what can I run?". This guide answers "how should tests be organized
 and written so they stay maintainable?".
 

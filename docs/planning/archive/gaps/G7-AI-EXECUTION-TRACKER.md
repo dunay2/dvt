@@ -24,7 +24,7 @@ sources in this precedence order:
   - [DVT+ Execution Model Specification](../execution-model/dvt-execution-model.md)
   - [Engine C4 / Maturity Notes](../../architecture/engine/c4-engine.md)
 - Active status docs:
-  - [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
+  - [DVT+ - Gap Execution Plans](./GAP_EXECUTION_PLANS.md)
   - [Current Status](../../architecture/system-delivery-status.md)
 
 This file is not a second source of truth.
@@ -91,7 +91,7 @@ Update this section before any substantial implementation turn.
 1. Before code changes, update [Current Pointer](#current-pointer).
 2. If scope or acceptance changes, update the governing spec first if one
    exists; otherwise update this tracker and then sync
-   [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md).
+   [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md).
 3. Keep each implementation turn tied to one slice at a time.
 4. Do not treat the outbox as the trigger source for projector read models
    unless the governing docs are changed first.
@@ -99,7 +99,7 @@ Update this section before any substantial implementation turn.
 6. After each validation batch, append an execution-log entry with exact
    commands and pass/fail state.
 7. When a slice closes, create `docs/planning/closeouts/<slice>-closeout.md`
-   first, then sync this tracker, [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md),
+   first, then sync this tracker, [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md),
    and any affected architecture/runbook docs in the same change. The closeout
    file is the gate — a slice is not done until the file exists and its
    "Docs synced" checklist is fully checked.

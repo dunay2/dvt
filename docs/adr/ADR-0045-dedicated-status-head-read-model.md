@@ -212,10 +212,10 @@ be tenant-scoped and queryable without replay.
 
 Internal:
 
-- [ADR-0004 - Event sourcing strategy](ADR-0004-event-sourcing-strategy.md)
-- [ADR-0013 - bootstrapRunTx ownership](ADR-0013-run-state-store-bootstrapRunTx.md)
-- [ADR-0015 - getRunStatus read model separation](ADR-0015-getRunStatus-read-model-separation.md)
-- [ADR-0031 - Storage adapter tenant isolation](ADR-0031-adapter-tenant-isolation.md)
+- [ADR-0004 - Event sourcing strategy](./ADR-0004-event-sourcing-strategy.md)
+- [ADR-0013 - bootstrapRunTx ownership](./ADR-0013-run-state-store-bootstrapRunTx.md)
+- [ADR-0015 - getRunStatus read model separation](./ADR-0015-getRunStatus-read-model-separation.md)
+- [ADR-0031 - Storage adapter tenant isolation](./ADR-0031-adapter-tenant-isolation.md)
 
 External patterns:
 

@@ -104,7 +104,7 @@ No delivery-buffer purge may bypass an explicit hold state.
 
 ## Related
 
-- [ADR-0004-event-sourcing-strategy.md](ADR-0004-event-sourcing-strategy.md)
-- [ADR-0009_Outbox_Ordering.md](ADR-0009_Outbox_Ordering.md)
-- [ADR-0033-outbox-worker-sharding-and-fencing-model.md](ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- [ADR-0004-event-sourcing-strategy.md](./ADR-0004-event-sourcing-strategy.md)
+- [ADR-0009_Outbox_Ordering.md](./ADR-0009_Outbox_Ordering.md)
+- [ADR-0033-outbox-worker-sharding-and-fencing-model.md](./ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 - [gap-5-pr3-delivery-buffer-retention-20260319.md](../planning/archive/proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)

@@ -131,6 +131,6 @@ consumers to stop treating message text as semantic.
 
 ## References
 
-- [ADR-0005-contract-formalization-tooling.md](ADR-0005-contract-formalization-tooling.md)
-- [ADR-0006-contract-tooling-governance.md](ADR-0006-contract-tooling-governance.md)
-- [ADR-0018_Shared_Kernel_Ownership_Governance.md](ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0005-contract-formalization-tooling.md](./ADR-0005-contract-formalization-tooling.md)
+- [ADR-0006-contract-tooling-governance.md](./ADR-0006-contract-tooling-governance.md)
+- [ADR-0018_Shared_Kernel_Ownership_Governance.md](./ADR-0018_Shared_Kernel_Ownership_Governance.md)

@@ -21,11 +21,11 @@ This page does not replace canonical roadmap or status docs.
 
 ## Domain Index
 
-- [Execution Runtime](execution-runtime.md)
-- [API and Admission](api-and-admission.md)
-- [Planner and Contracts](planner-and-contracts.md)
-- [Event Lifecycle and Retention](event-lifecycle-and-retention.md)
-- [Documentation Governance](documentation-governance.md)
+- [Execution Runtime](./execution-runtime.md)
+- [API and Admission](./api-and-admission.md)
+- [Planner and Contracts](./planner-and-contracts.md)
+- [Event Lifecycle and Retention](./event-lifecycle-and-retention.md)
+- [Documentation Governance](./documentation-governance.md)
 
 ## Canonical Anchors
 

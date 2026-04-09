@@ -309,4 +309,4 @@ ADR-0039 captures the concrete decisions for F1, F3, and F4.
 - [ADR-0034 — Bounded Context Boundaries](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0039 — Hexagonal Port Hardening](../../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
 - [Phase 2 Roadmap](../../archive/proposals/phase2-arch-debt-roadmap-20260315.md)
-- [2026-03-14 Domain Cohesion Review](20260314-domain-cohesion-review.md)
+- [2026-03-14 Domain Cohesion Review](./20260314-domain-cohesion-review.md)

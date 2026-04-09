@@ -14,7 +14,7 @@
 | --------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | ADR-0000 Code-generation traceability               | 🟡 Partial     | [`traceability:adr0`](../../package.json:39), [`TraceabilityService.validateAndBuildManifest()`](../../packages/@dvt/traceability-service/src/service.ts:27)                                                                                                                                                    | Tooling and governance pipeline exist; repo-wide enforcement still evolving.                |
 | ADR-0001 Temporal integration test policy           | 🟡 Partial     | [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:1)                                                                                                                                                                                            | Policy rules are present in tests; hardening remains iterative.                             |
-| ADR-0002 Neo4j knowledge graph context repository   | Superseded     | [`ADR-0002-neo4j-knowledge-graph-context-repository.md`](ADR-0002-neo4j-knowledge-graph-context-repository.md)                                                                                                                                                                                                  | Retired on 2026-03-07. Repository-local manifest traceability replaces the graph workflow.  |
+| ADR-0002 Neo4j knowledge graph context repository   | Superseded     | [`ADR-0002-neo4j-knowledge-graph-context-repository.md`](./ADR-0002-neo4j-knowledge-graph-context-repository.md)                                                                                                                                                                                                | Retired on 2026-03-07. Repository-local manifest traceability replaces the graph workflow.  |
 | ADR-0003 Execution model sovereignty                | ✅ Implemented | [`WorkflowEngine`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts:1)                                                                                                                                                                                                                                     | Engine remains lifecycle authority boundary.                                                |
 | ADR-0004 Event sourcing strategy                    | ✅ Implemented | [`InMemoryTxStore.appendAndEnqueueTx()`](../../packages/@dvt/engine/src/state/InMemoryTxStore.ts:1), [`PostgresStateStoreAdapter.appendAndEnqueueTx()`](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:1)                                                                                | Append-only + outbox behavior implemented in core stores.                                   |
 | ADR-0005 Contract formalization tooling             | 🟡 Partial     | [`@dvt/contracts`](../../packages/@dvt/contracts/package.json), [`contracts` workflow](../../.github/workflows/contracts.yml:1)                                                                                                                                                                                 | Baseline is solid; full conformance matrix remains progressive.                             |
@@ -42,19 +42,19 @@ Legend: ✅ Implemented · 🟡 Partial · ❌ Not started
 
 ## 1.1) Full ADR index (0000–0030)
 
-Source of truth for ADR documents and statuses: [`ADR-Index.md`](ADR-Index.md).
+Source of truth for ADR documents and statuses: [`ADR-Index.md`](./ADR-Index.md).
 
 ---
 
 ## 2) Notable updates in this revision
 
 1. Added newly accepted ADRs to governance view:
-   - [`ADR-0029 — Run Maintenance Service Extraction`](ADR-0029-run-maintenance-service.md)
-   - [`ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency`](ADR-0030-pre-dispatch-intent-log.md)
+   - [`ADR-0029 — Run Maintenance Service Extraction`](./ADR-0029-run-maintenance-service.md)
+   - [`ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency`](./ADR-0030-pre-dispatch-intent-log.md)
 2. Synchronized ADR status references with current ADR catalog (`0000–0030`).
 3. Normalized ADR navigation to use:
-   - [`index.md`](index.md) as landing page
-   - [`ADR-Index.md`](ADR-Index.md) as complete catalog
+   - [`index.md`](./index.md) as landing page
+   - [`ADR-Index.md`](./ADR-Index.md) as complete catalog
 
 ---
 

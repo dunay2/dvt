@@ -199,8 +199,8 @@ sidecar admission metadata, not a second canonical plan.
 
 ## References
 
-- [ADR-0012-plan-integrity-ownership.md](ADR-0012-plan-integrity-ownership.md)
-- [ADR-0014-run-driven-adapter-model.md](ADR-0014-run-driven-adapter-model.md)
-- [ADR-0017_ExecutionPlan_Schema_Versioning.md](ADR-0017_ExecutionPlan_Schema_Versioning.md)
-- [ADR-0042-execution-plan-canonical-identity-unification.md](ADR-0042-execution-plan-canonical-identity-unification.md)
-- [ADR-0043-plan-record-plan-store-and-artifacts-ownership.md](ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
+- [ADR-0012-plan-integrity-ownership.md](./ADR-0012-plan-integrity-ownership.md)
+- [ADR-0014-run-driven-adapter-model.md](./ADR-0014-run-driven-adapter-model.md)
+- [ADR-0017_ExecutionPlan_Schema_Versioning.md](./ADR-0017_ExecutionPlan_Schema_Versioning.md)
+- [ADR-0042-execution-plan-canonical-identity-unification.md](./ADR-0042-execution-plan-canonical-identity-unification.md)
+- [ADR-0043-plan-record-plan-store-and-artifacts-ownership.md](./ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)

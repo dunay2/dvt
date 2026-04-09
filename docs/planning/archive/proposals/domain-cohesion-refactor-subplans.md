@@ -16,7 +16,7 @@ architecture work.
 
 - Review of record:
   [20260314 Domain Cohesion Review](../reviews/architecture-and-governance/20260314-domain-cohesion-review.md)
-- Parent plan: [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
+- Parent plan: [Domain Cohesion Refactor Plan](./domain-cohesion-refactor-plan.md)
 
 ## P1. Run Aggregate Root
 

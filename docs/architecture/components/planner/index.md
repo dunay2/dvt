@@ -67,10 +67,10 @@ flowchart LR
 
 ## Supporting component pages
 
-- [Functional surface](planner-functional.md)
-- [Constraints and invariants](planner-constraints.md)
-- [Structure and module map](planner-ddd.md)
-- [Build sequence](planner-sequence.md)
+- [Functional surface](./planner-functional.md)
+- [Constraints and invariants](./planner-constraints.md)
+- [Structure and module map](./planner-ddd.md)
+- [Build sequence](./planner-sequence.md)
 
 ## Notes
 

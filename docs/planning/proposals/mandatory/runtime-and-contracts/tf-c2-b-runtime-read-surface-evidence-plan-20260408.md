@@ -18,9 +18,9 @@ from API responses without backend log access.
 
 ## Governing sources
 
-- [Transformation Flow Architecture And Contracts 2026-04-05](transformation-flow-architecture-and-contracts-20260405.md)
-- [Transformation Flow Delivery Plan 2026-04-05](transformation-flow-delivery-plan-20260405.md)
-- [Plan Creation Interface Route Proposal 2026-04-05](plan-creation-interface-route-proposal-20260405.md)
+- [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
+- [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
+- [Plan Creation Interface Route Proposal 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)
 - [Lane C state](../../../state/agent-lane-c.yaml)
 
 ## Scope

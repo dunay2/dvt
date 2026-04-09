@@ -37,8 +37,8 @@ flowchart LR
 
 infra/ is responsible for infrastructure setup and provisioning:
 
-- **Root:** [InfraAggregate](infra.md#infraaggregate) — represents the central infra model, owning environment provisioning.
-- **Aggregates:** [ScriptAggregate](infra.md#scriptaggregate), [ToolAggregate](infra.md#toolaggregate).
+- **Root:** [InfraAggregate](./infra.md#infraaggregate) — represents the central infra model, owning environment provisioning.
+- **Aggregates:** [ScriptAggregate](./infra.md#scriptaggregate), [ToolAggregate](./infra.md#toolaggregate).
 - **Responsibilities:**
   - Provision environment for DVT system.
   - Support CI/CD and tooling.
@@ -46,8 +46,8 @@ infra/ is responsible for infrastructure setup and provisioning:
 
 **Interactions:**
 
-- **[Scripts](scripts.md):** Provides scripts for CI/CD and validation.
-- **[Tools](tools.md):** Provides tooling for development and operations.
+- **[Scripts](./scripts.md):** Provides scripts for CI/CD and validation.
+- **[Tools](./tools.md):** Provides tooling for development and operations.
 
 Infra coordinates these interactions to ensure environment provisioning and CI/CD support.
 
@@ -87,7 +87,7 @@ Represents tool management for infra. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](infra-ddd.md)
-- [Functionalities](infra-functional.md)
-- [Constraints & Invariants](infra-constraints.md)
-- [Sequence Diagrams](infra-sequence.md)
+- [DDD Structure](./infra-ddd.md)
+- [Functionalities](./infra-functional.md)
+- [Constraints & Invariants](./infra-constraints.md)
+- [Sequence Diagrams](./infra-sequence.md)

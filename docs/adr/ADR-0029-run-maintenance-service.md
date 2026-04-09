@@ -56,5 +56,5 @@ Create a dedicated maintenance boundary and move operational scans out of core l
 
 ## Related
 
-- [ADR-0019 — Adapter Equivalence and Maintenance Boundary](ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md)
-- [ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency](ADR-0030-pre-dispatch-intent-log.md)
+- [ADR-0019 — Adapter Equivalence and Maintenance Boundary](./ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md)
+- [ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency](./ADR-0030-pre-dispatch-intent-log.md)

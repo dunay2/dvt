@@ -17,9 +17,9 @@ surface governed under `G6`.
 
 The repo-governed lineage facet artifacts live here:
 
-- [OpenLineage vendored facets provenance](facets/openlineage/index.md)
-- [OpenLineage SQL Job Facet 1-0-0 vendored copy](facets/openlineage/SqlJobFacet.1-0-0.schema.json)
-- [DvtDbtDetailsJobFacet v1](facets/DvtDbtDetailsJobFacet.v1.schema.json)
+- [OpenLineage vendored facets provenance](./facets/openlineage/index.md)
+- [OpenLineage SQL Job Facet 1-0-0 vendored copy](./facets/openlineage/SqlJobFacet.1-0-0.schema.json)
+- [DvtDbtDetailsJobFacet v1](./facets/DvtDbtDetailsJobFacet.v1.schema.json)
 - [CompiledCodeRef v1 shared contract](../shared/CompiledCodeRef.v1.schema.json)
 
 Contract ownership split:

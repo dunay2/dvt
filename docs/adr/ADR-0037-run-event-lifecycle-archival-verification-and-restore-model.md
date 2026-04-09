@@ -14,7 +14,7 @@ Accepted.
 ## Context
 
 DVT already treats `run_events` as the authoritative append-only write log under
-[ADR-0004](ADR-0004-event-sourcing-strategy.md).
+[ADR-0004](./ADR-0004-event-sourcing-strategy.md).
 
 That creates a long-term operational requirement:
 
@@ -66,8 +66,8 @@ Therefore:
 - lifecycle orchestration belongs in the state boundary behind explicit ports
 
 This keeps the architecture aligned with
-[ADR-0031](ADR-0031-adapter-tenant-isolation.md) and
-[ADR-0034](ADR-0034-bounded-context-boundaries-and-communication-rules.md).
+[ADR-0031](./ADR-0031-adapter-tenant-isolation.md) and
+[ADR-0034](./ADR-0034-bounded-context-boundaries-and-communication-rules.md).
 
 ### 4. Archive units are scoped by `tenant_bucket + persisted_at_day`
 
@@ -171,8 +171,8 @@ This ADR governs the first two directly and constrains the fourth.
 
 ## Related
 
-- [ADR-0004-event-sourcing-strategy.md](ADR-0004-event-sourcing-strategy.md)
-- [ADR-0008_Signal_Idempotency.md](ADR-0008_Signal_Idempotency.md)
-- [ADR-0031-adapter-tenant-isolation.md](ADR-0031-adapter-tenant-isolation.md)
-- [ADR-0034-bounded-context-boundaries-and-communication-rules.md](ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0004-event-sourcing-strategy.md](./ADR-0004-event-sourcing-strategy.md)
+- [ADR-0008_Signal_Idempotency.md](./ADR-0008_Signal_Idempotency.md)
+- [ADR-0031-adapter-tenant-isolation.md](./ADR-0031-adapter-tenant-isolation.md)
+- [ADR-0034-bounded-context-boundaries-and-communication-rules.md](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [gap-5-event-lifecycle-and-archival-design-20260319.md](../planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)

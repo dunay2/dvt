@@ -48,7 +48,7 @@ flowchart LR
 
 ## Detailed Documentation
 
-- [DDD Structure](contracts-ddd.md)
-- [Functionalities](contracts-functional.md)
-- [Constraints & Invariants](contracts-constraints.md)
-- [Sequence Diagrams](contracts-sequence.md)
+- [DDD Structure](./contracts-ddd.md)
+- [Functionalities](./contracts-functional.md)
+- [Constraints & Invariants](./contracts-constraints.md)
+- [Sequence Diagrams](./contracts-sequence.md)

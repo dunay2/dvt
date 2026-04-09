@@ -2,7 +2,7 @@
 title: DVT System Architecture - Supporting Overview
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-09
 ---
 
 # DVT System Architecture
@@ -13,19 +13,19 @@ architecture.
 It is grounded in the current system shape, but it is still not the canonical
 source for runtime truth or architectural invariants. Read these pages first:
 
-1. [Reference Architecture](reference-architecture.md)
-2. [System Delivery Status](system-delivery-status.md)
-3. [Architecture Surface Inventory 2026-04-02](architecture-surface-inventory-20260402.md)
-4. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
+1. [Reference Architecture](./reference-architecture.md)
+2. [System Delivery Status](./system-delivery-status.md)
+3. [System Architecture](./system/index.md)
+4. [Subsystem Architecture](./system/subsystems/index.md)
+5. [Architecture Surface Inventory 2026-04-02](./architecture-surface-inventory-20260402.md)
 
 ## How To Use This Page
 
 - use it for the broad system walkthrough;
-- use [System Delivery Status](system-delivery-status.md) to confirm what is
-  shipped now;
-- use [Reference Architecture](reference-architecture.md) to confirm
-  principles, boundaries, and invariants;
-- use [DVT Component Map](component-map.md) and [DVT Domain Map](domain-map.md)
+- use [System Architecture](./system/index.md) to see system -> subsystem
+  navigation;
+- use [Subsystem Architecture](./system/subsystems/index.md) to follow end-to-end flows;
+- use [DVT Component Map](./component-map.md) and [DVT Domain Map](./domain-map.md)
   for finer-grained ownership and dependency views.
 
 ## Repository-Wide Shape
@@ -82,8 +82,8 @@ flowchart TB
 
 ## Reading Route
 
-- [Reference Architecture](reference-architecture.md)
-- [System Delivery Status](system-delivery-status.md)
-- [DVT Component Map](component-map.md)
-- [DVT Domain Map](domain-map.md)
-- [Architecture Component Surfaces](components/index.md)
+- [System Architecture](./system/index.md)
+- [Subsystem Architecture](./system/subsystems/index.md)
+- [DVT Component Map](./component-map.md)
+- [DVT Domain Map](./domain-map.md)
+- [Architecture Component Surfaces](./components/index.md)

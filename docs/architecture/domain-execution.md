@@ -75,7 +75,7 @@ model rewrite. Start-run metadata now persists a single discriminated
 
 ## Related Pages
 
-- [Engine](engine/index.md)
-- [DVT Component Map](component-map.md)
-- [System Delivery Status](system-delivery-status.md)
+- [Engine](./components/engine/index.md)
+- [DVT Component Map](./component-map.md)
+- [System Delivery Status](./system-delivery-status.md)
 - [Execution Runtime planning view](../planning/domains/execution-runtime.md)
