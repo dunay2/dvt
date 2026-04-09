@@ -1,5 +1,32 @@
 # Changelog
 
+## [5.14.0](https://github.com/dunay2/dvt/compare/v5.13.0...v5.14.0) (2026-04-09)
+
+
+### Features
+
+* **api:** Align preview profile contract and graph validation ([#863](https://github.com/dunay2/dvt/issues/863)) ([abd1411](https://github.com/dunay2/dvt/commit/abd1411613be6cc963c3ff148597dd9d10c6b114))
+* **api:** Expose run read evidence with attempt-safe diagnostics ([#883](https://github.com/dunay2/dvt/issues/883)) ([1ecdba4](https://github.com/dunay2/dvt/commit/1ecdba4603a120175157926662a3316ddf7e3aa5))
+* **web:** Add explicit transformation canvas strategy mode ([#862](https://github.com/dunay2/dvt/issues/862)) ([3d91f28](https://github.com/dunay2/dvt/commit/3d91f28fedbe6f972d0ba2c646ae46b055f04876))
+* **web:** Expose run execution provenance in run workspace ([#859](https://github.com/dunay2/dvt/issues/859)) ([2ac521e](https://github.com/dunay2/dvt/commit/2ac521ef5d9ef0653c62ee59deaf0548848f8c19))
+* **web:** Expose transformation authoring mode in canvas toolbar ([#866](https://github.com/dunay2/dvt/issues/866)) ([6055190](https://github.com/dunay2/dvt/commit/60551903ee32f05b3fdb6e47dea5ba54470e1ef5))
+* **web:** Normalize query key ownership for shell health and runs ([#853](https://github.com/dunay2/dvt/issues/853)) ([7d88c7c](https://github.com/dunay2/dvt/commit/7d88c7c4d1701765a35bce97c3cac9700e9ecf91))
+* **web:** Standardize query boundaries for operator views ([#869](https://github.com/dunay2/dvt/issues/869)) ([6cbfed1](https://github.com/dunay2/dvt/commit/6cbfed1f09ca765ac38c97a5303dc1d92434c7f5))
+
+
+### Bug Fixes
+
+* **api:** Build workspace dependencies before dev startup ([#854](https://github.com/dunay2/dvt/issues/854)) ([fc4a62c](https://github.com/dunay2/dvt/commit/fc4a62c6c6ba3273ebee9684b591a5f0a188f71b))
+* **engine:** Align trace context and provider ref semantics ([#881](https://github.com/dunay2/dvt/issues/881)) ([bda7938](https://github.com/dunay2/dvt/commit/bda7938cc72dd77cb15500c5466324c8bdcda74b))
+* **engine:** Harden signal guard against stale snapshots ([#864](https://github.com/dunay2/dvt/issues/864)) ([00299a2](https://github.com/dunay2/dvt/commit/00299a2af2c802dd09ead42e391c0c1d5fe5b321))
+* **engine:** Restore resolved intent observability ([#860](https://github.com/dunay2/dvt/issues/860)) ([166131e](https://github.com/dunay2/dvt/commit/166131ed7d810fb42d6540ace6464c107ecbb106))
+* **engine:** Split resolved and cancelled intent reconciliation outcomes ([#858](https://github.com/dunay2/dvt/issues/858)) ([6a6b6af](https://github.com/dunay2/dvt/commit/6a6b6af8417225acfbde9be022e6fabe9c2943b3))
+* **engine:** Use staleness query to avoid signal guard event scans ([#867](https://github.com/dunay2/dvt/issues/867)) ([304222e](https://github.com/dunay2/dvt/commit/304222ea15649c5e4e7009adbd014177e2364143))
+* **web:** Consume run result evidence only from snapshots ([#868](https://github.com/dunay2/dvt/issues/868)) ([087c12a](https://github.com/dunay2/dvt/commit/087c12a58c430ff0616610651ade08a7312f82a5))
+* **web:** Cover calendar chevron through Calendar seam ([#877](https://github.com/dunay2/dvt/issues/877)) ([db69fbd](https://github.com/dunay2/dvt/commit/db69fbd1692eaddf8196fbb3411e739ca005341d))
+* **web:** Handle all react-day-picker v9 chevron orientations ([#875](https://github.com/dunay2/dvt/issues/875)) ([fd7154a](https://github.com/dunay2/dvt/commit/fd7154a2d558d02c385f91f45d5b87ab4fb74d47))
+* **web:** Preserve persisted preview run-start flow ([#865](https://github.com/dunay2/dvt/issues/865)) ([c674b08](https://github.com/dunay2/dvt/commit/c674b089776cc46d06fd2a10a5202f5440ac63c0))
+
 ## [5.13.0](https://github.com/dunay2/dvt/compare/v5.12.0...v5.13.0) (2026-04-08)
 
 
