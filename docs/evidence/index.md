@@ -33,6 +33,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260408 Retry Run Boundary And Provider Signal Mapper](ED-20260408-retry-run-boundary-and-provider-signal-mapper.md)
 - [ED 20260408 Signal Transition Guard Stale Snapshot Idempotency](ED-20260408-signal-transition-guard-stale-snapshot-idempotency.md)
 - [ED 20260408 Tf C2 B Read Surface Evidence](ED-20260408-tf-c2-b-read-surface-evidence.md)
+- [ED 20260409 Ci Rebuild Dedupe And Adapter Postgres Consolidation](ED-20260409-ci-rebuild-dedupe-and-adapter-postgres-consolidation.md)
 - [ED 20260409 Provider Ref Contract Hardening](ED-20260409-provider-ref-contract-hardening.md)
 - [ED 20260409 Provider Ref Empty String Preservation](ED-20260409-provider-ref-empty-string-preservation.md)
 - [ED 20260409 Tf C2 B Run Read Evidence Attempt Safety](ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md)

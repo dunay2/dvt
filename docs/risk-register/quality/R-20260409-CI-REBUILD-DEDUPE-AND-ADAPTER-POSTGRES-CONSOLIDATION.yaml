@@ -1,0 +1,29 @@
+---
+id: R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION
+title: CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites
+status: Open
+date: 2026-04-09
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  CI workflows and package lifecycle hooks were changed so explicit workflow build steps become the
+  authoritative dependency-graph build, while package hooks skip redundant work under DVT_CI. The
+  adapter-postgres workflow also moved from two jobs to one Postgres-backed full-suite job.
+risk: >
+  If any workflow path calls typecheck or test without the required explicit graph build,
+  DVT_CI-driven hook skipping could surface missing dist artifacts only in CI. If the
+  adapter-postgres scope policy or parity tooling drifts from the consolidated workflow, CI could
+  silently lose the intended coverage/cost balance.
+mitigations:
+  - 'workspace-ci now performs explicit graph builds before typecheck with DVT_CI enabled.'
+  - 'contracts.yml compiles contracts inline instead of depending on cross-job artifacts.'
+  - 'adapter-postgres CI now runs the full suite against a real Postgres container in one job.'
+  - 'CI policy validation and workflow parity tests were updated to match the consolidated
+    adapter-postgres job.'
+  - 'Validation included local Postgres-backed adapter-postgres execution plus pnpm test:ci-tools
+    and pnpm verify:prepush.'
+review_after: 2026-06-01
+---
