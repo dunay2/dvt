@@ -47,8 +47,8 @@ Those runtime concerns stay under `G10`.
 
 ## Navigation
 
-- [G6 OpenLineage CI and Schema Pin Plan](G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-- [G6 Architecture and QA Review](G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+- [G6 OpenLineage CI and Schema Pin Plan](./G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+- [G6 Architecture and QA Review](./G6-ARCHITECTURE-QA-REVIEW-20260308.md)
 - [Traceability Contracts](../../../contracts/traceability/index.md)
 - [Gap Execution Plans](../GAP_EXECUTION_PLANS.md)
 - [Gap Parallel Execution Tracks](../GAP_PARALLEL_EXECUTION_TRACKS.md)

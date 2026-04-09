@@ -48,12 +48,12 @@ cross-references ambiguous.
 
 ## Changes made
 
-| File                                                                                                                                      | Change                                      | Why                                                                             |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------- |
-| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md](../../architecture/engine/contracts/engine/IProviderAdapter.v1.md)     | Replaced monolithic content with redirect   | Preserve existing references while pointing readers to the right active version |
-| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.0.md](../../architecture/engine/contracts/engine/IProviderAdapter.v1.0.md) | Added archived baseline                     | Preserve the historical lifecycle-only contract                                 |
-| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.1.md](../../architecture/engine/contracts/engine/IProviderAdapter.v1.1.md) | Added current normative contract            | Make optional adapter capabilities and consumers explicit                       |
-| [docs/architecture/engine/contracts/README.md](../../architecture/engine/contracts/README.md)                                             | Updated registry entry and historical table | Keep contract discoverability aligned with the new version split                |
+| File                                                                                                                                                 | Change                                      | Why                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------- |
+| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.md)     | Replaced monolithic content with redirect   | Preserve existing references while pointing readers to the right active version |
+| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.0.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.0.md) | Added archived baseline                     | Preserve the historical lifecycle-only contract                                 |
+| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.1.md) | Added current normative contract            | Make optional adapter capabilities and consumers explicit                       |
+| [docs/architecture/engine/contracts/README.md](../../architecture/components/engine/contracts/README.md)                                             | Updated registry entry and historical table | Keep contract discoverability aligned with the new version split                |
 
 ## Libraries evaluated
 
@@ -61,7 +61,7 @@ None.
 
 ## Docs synced
 
-- [x] [docs/architecture/engine/contracts/README.md](../../architecture/engine/contracts/README.md) - registry updated for active and archived lines
+- [x] [docs/architecture/engine/contracts/README.md](../../architecture/components/engine/contracts/README.md) - registry updated for active and archived lines
 - [x] [docs/contracts/engine/index.md](../../contracts/engine/index.md) - validated as current generated index without further changes
 - [x] [docs/planning/closeouts/20260315-provider-adapter-contract-versioning-closeout.md](./20260315-provider-adapter-contract-versioning-closeout.md) - closeout and evidence recorded
 

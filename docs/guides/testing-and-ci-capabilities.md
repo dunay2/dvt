@@ -18,7 +18,7 @@ canonical command and source file for each one.
 
 See also:
 
-- [`test-architecture.md`](test-architecture.md) for repository rules on test taxonomy, harnesses, fixtures, and promotion to shared utilities.
+- [`test-architecture.md`](./test-architecture.md) for repository rules on test taxonomy, harnesses, fixtures, and promotion to shared utilities.
 
 ## Root Commands
 
@@ -191,7 +191,7 @@ These files are intended to become the canonical source of truth for:
 - The GitHub workflows remain the authoritative merge gates even when the same command is runnable
   locally.
 - For local PR-green work, the canonical operator recipe is
-  [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md).
+  [PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md).
 - `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
   `DVT_PG_URL` is absent; when configured it exercises the real API protected
   runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.

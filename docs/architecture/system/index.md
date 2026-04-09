@@ -19,7 +19,7 @@ Use it when the question is:
 
 1. [Reference Architecture](../reference-architecture.md)
 2. [System Delivery Status](../system-delivery-status.md)
-3. [Subsystem Architecture](../subsystems/index.md)
+3. [Subsystem Architecture](./subsystems/index.md)
 4. [DVT Component Map](../component-map.md)
 5. [DVT Domain Map](../domain-map.md)
 
@@ -27,10 +27,16 @@ Use it when the question is:
 
 ```mermaid
 flowchart TB
-  System["DVT system"] -.-> Read["Read subsystem"]
+  System["DVT system"] -.-> Lifecycle["Canonical run lifecycle"]
+  System -.-> Read["Read subsystem"]
   System -.-> Authoring["Authoring and planning subsystem"]
-  System -.-> Execution["Execution subsystem"]
   System -.-> Delivery["Delivery subsystem"]
+
+  Lifecycle --> ApiExecution["apps/api"]
+  Lifecycle --> Engine["@dvt/engine"]
+  Lifecycle --> State["state-store"]
+  Lifecycle --> Provider["provider adapters"]
+  Lifecycle --> DeliveryFlow["@dvt/delivery"]
 
   Read --> Web["apps/web"]
   Read --> Api["apps/api"]
@@ -40,10 +46,6 @@ flowchart TB
   Authoring --> WebAuthoring["apps/web"]
   Authoring --> ApiAuthoring["apps/api"]
   Authoring --> Planner["@dvt/planner"]
-
-  Execution --> ApiExecution["apps/api"]
-  Execution --> Engine["@dvt/engine"]
-  Execution --> Adapters["provider and state adapters"]
 
   Delivery --> DeliveryLib["@dvt/delivery"]
   Delivery --> Outbox["apps/outbox-worker"]
@@ -62,7 +64,8 @@ flowchart TB
 
 ## Current Active Routes
 
-- [Subsystem Architecture](../subsystems/index.md)
+- [Canonical run lifecycle subsystem](./subsystems/canonical-run-lifecycle/index.md)
+- [Subsystem Architecture](./subsystems/index.md)
 - [DVT Component Map](../component-map.md)
 - [DVT Domain Map](../domain-map.md)
 - [DVT System Architecture](../system-overview.md)

@@ -28,8 +28,8 @@ This is a docs-first TDD slice:
 - `docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md`
 - `docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md`
 - `docs/planning/execution-model/dvt-execution-model.md`
-- `docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md`
-- `docs/architecture/engine/contracts/state-store/overview.md`
+- `docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md`
+- `docs/architecture/components/engine/contracts/state-store/overview.md`
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md`
 
 ## Problem statement

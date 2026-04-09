@@ -37,6 +37,6 @@ last_reviewed: 2026-04-07
 
 ## Canonical references
 
-- [Planner component entry](index.md)
+- [Planner component entry](./index.md)
 - [Planner contracts](../../../contracts/planner/index.md)
 - [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)

@@ -16,10 +16,10 @@ silently.
 
 ## Packages Covered Here
 
-- [CLI Package](cli.md)
-- [Gateway DSL Package](dsl.md)
-- [Plan Interpreter Package](plan-interpreter.md)
-- [Crypto Package](crypto.md)
+- [CLI Package](./cli.md)
+- [Gateway DSL Package](./dsl.md)
+- [Plan Interpreter Package](./plan-interpreter.md)
+- [Crypto Package](./crypto.md)
 
 ## Why This Section Exists
 
@@ -34,10 +34,10 @@ silently.
 
 ## Reading Order
 
-1. [Plan Interpreter Package](plan-interpreter.md)
-2. [Gateway DSL Package](dsl.md)
-3. [Crypto Package](crypto.md)
-4. [CLI Package](cli.md)
+1. [Plan Interpreter Package](./plan-interpreter.md)
+2. [Gateway DSL Package](./dsl.md)
+3. [Crypto Package](./crypto.md)
+4. [CLI Package](./cli.md)
 
 ## Current Posture
 

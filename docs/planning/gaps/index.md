@@ -16,7 +16,7 @@ current authority reference.
 
 ## Active Tactical Gap Registers
 
-- [Runtime Architecture Gap Register 2026-03-31](runtime-architecture-gap-register-20260331.md)
+- [Runtime Architecture Gap Register 2026-03-31](./runtime-architecture-gap-register-20260331.md)
 
 ## Active Planning Anchors
 

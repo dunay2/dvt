@@ -17,7 +17,7 @@ Lane E tasks (`MVP-E1`, `F-01` through `F-23`) are the canonical work units.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
 The dedicated F-04 boundary pack is tracked here:
-[F-04 Frontend Data-Boundary Hexagonal Convergence Plan](f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md).
+[F-04 Frontend Data-Boundary Hexagonal Convergence Plan](./f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md).
 
 Original analysis: 2026-02-19. Updated to reflect active state: 2026-04-03.
 
@@ -89,14 +89,14 @@ The sequence must be reality-first:
 
 Canonical `F-07` baseline pack:
 
-- [Frontend Fowler Implementation Pattern](../../../../architecture/frontend/frontend-fowler-implementation-pattern.md)
-- [Frontend Runtime Contract Technical Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-technical-manual.md)
-- [Frontend Runtime Contract User Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-user-manual.md)
+- [Frontend Fowler Implementation Pattern](../../../../architecture/components/web/frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Contract Technical Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-user-manual.md)
 - [F-07 Frontend Runtime Contract Baseline Plan](../../mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
 
 Canonical `MVP-E1` contract artifact:
 
-- [Frontend-Facing Backend MVP Contract (MVP-E1)](../../../../architecture/frontend/runs/frontend-backend-mvp-contract.md)
+- [Frontend-Facing Backend MVP Contract (MVP-E1)](../../../../architecture/components/web/runs/frontend-backend-mvp-contract.md)
 
 ### Phase 1 - Data and state convergence
 
@@ -240,10 +240,10 @@ the design direction, not the OpenLineage backend product.
 
 That direction is now documented in:
 
-- [Main Workspace Views And UX](../../../../architecture/frontend/main-workspace-views-and-ux.md)
-- [Screen Manuals And User Stories](../../../../architecture/frontend/screen-manuals-and-user-stories.md)
-- [UX Implementation Guide](../../../../architecture/frontend/ux-implementation-guide.md)
-- [Library And Open-Source Reference Stack](../../../../architecture/frontend/library-and-open-source-reference-stack.md)
+- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](../../../../architecture/components/web/screen-manuals-and-user-stories.md)
+- [UX Implementation Guide](../../../../architecture/components/web/ux-implementation-guide.md)
+- [Library And Open-Source Reference Stack](../../../../architecture/components/web/library-and-open-source-reference-stack.md)
 
 ### Source generation direction
 
@@ -297,7 +297,7 @@ but the UI still needs its own frontend-facing contract artifact that records:
 ## Related Files
 
 - [Agent Lane E](../../../state/agent-lane-e.yaml) - execution tracking
-- [Frontend Architecture](../../../../architecture/frontend/index.md)
+- [Frontend Architecture](../../../../architecture/components/web/index.md)
 - [UI / Visualization Domain](../../../../architecture/domain-ui.md)
-- [`apps/web/src/`](../../../../../apps/web/src/) - frontend source
-- [`apps/api/`](../../../../../apps/api/) - backend source
+- [`apps/web/src/`](../../../../../apps/web/src) - frontend source
+- [`apps/api/`](../../../../../apps/api) - backend source

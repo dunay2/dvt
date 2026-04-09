@@ -21,8 +21,8 @@ what remains before closure.
 
 ## Canonical Anchors
 
-- [G6 hub](index.md) for the active planning surface
-- [G6 OpenLineage CI and Schema Pin Plan](G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+- [G6 hub](./index.md) for the active planning surface
+- [G6 OpenLineage CI and Schema Pin Plan](./G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
   for the execution plan under review
 - [Traceability Contracts](../../../contracts/traceability/index.md) for the
   normative emitted facet artifacts

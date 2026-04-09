@@ -20,8 +20,8 @@ That model no longer governs the repository.
 
 Use instead:
 
-- [Engine Roadmap](../../architecture/engine/roadmap/engine-phases.md)
-- [WorkflowEngine target architecture v1](../../architecture/engine/workflow-engine-target-architecture.v1.md)
+- [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
+- [WorkflowEngine target architecture v1](../../architecture/components/engine/workflow-engine-target-architecture.v1.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Roadmap Of Record](../../planning/roadmap/index.md)
 

@@ -57,7 +57,7 @@ clarity and incremental hardening, not about inventing the API layer.
 Use the main walkthrough below for the real current system, the target API
 shape, and the governed transition route:
 
-- [API Current To Target Architecture](api-current-to-target-architecture.md)
+- [API Current To Target Architecture](./api-current-to-target-architecture.md)
 - [API Control-Plane User Manual](../../../guides/api-control-plane-user-manual-20260404.md)
 - [API Control-Plane Technical Manual](../../../guides/api-control-plane-technical-manual-20260404.md)
 - [API Runtime SLA Canonical](../../../runbooks/api-runtime-sla-canonical-20260404.md)
@@ -75,7 +75,7 @@ shape, and the governed transition route:
 These notes are older decomposition artifacts. Use them only as supporting
 detail after the current page:
 
-- [DDD Structure](api-ddd.md)
-- [Functionalities](api-functional.md)
-- [Constraints and invariants](api-constraints.md)
-- [Sequence diagrams](api-sequence.md)
+- [DDD Structure](./api-ddd.md)
+- [Functionalities](./api-functional.md)
+- [Constraints and invariants](./api-constraints.md)
+- [Sequence diagrams](./api-sequence.md)

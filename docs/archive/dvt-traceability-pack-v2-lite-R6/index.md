@@ -14,24 +14,24 @@ This pack is kept as a bundled reference, not as the canonical source of the act
 
 ## Core Bundle Docs
 
-- [Bundle README](README.md)
-- [ADR-0000c - Modular Traceability Policy](ADR-0000c-modular-traceability-policy.en.md)
-- [ADR-012 - Design Quality Criteria](ADR-012-design-quality-criteria.en.md)
-- [Quick Start for Developers](QUICKSTART-dev.md)
-- [AI Guide for Documentation Generation](AI-GUIDE-doc-generation.md)
-- [CI Implementation Guide](GUIDE-ci-implementation.md)
-- [ADR-012 Self-Evaluation Guide](GUIDE-adr012-self-eval.md)
-- [Risk Register Guide](GUIDE-risk-register.md)
-- [VS Code Productivity Guide](TOOLS-vscode-productivity.md)
+- [Bundle README](./README.md)
+- [ADR-0000c - Modular Traceability Policy](./ADR-0000c-modular-traceability-policy.en.md)
+- [ADR-012 - Design Quality Criteria](./ADR-012-design-quality-criteria.en.md)
+- [Quick Start for Developers](./QUICKSTART-dev.md)
+- [AI Guide for Documentation Generation](./AI-GUIDE-doc-generation.md)
+- [CI Implementation Guide](./GUIDE-ci-implementation.md)
+- [ADR-012 Self-Evaluation Guide](./GUIDE-adr012-self-eval.md)
+- [Risk Register Guide](./GUIDE-risk-register.md)
+- [VS Code Productivity Guide](./TOOLS-vscode-productivity.md)
 
 ## Templates and Examples
 
-- [ARC Policy YAML Reference](POLICY-arc-policy.yaml.md)
-- [PR Checklist Template](TEMPLATE-pr-checklist.md)
-- [Evidence Doc Template](TEMPLATE-evidence-doc.md)
-- [Risk Register Template](TEMPLATE-risk-register.md)
-- [ARC-3 Example Change](EXAMPLE-arc3-breaking-change.md)
-- [Real Change Example](EXAMPLE-real-change.md)
+- [ARC Policy YAML Reference](./POLICY-arc-policy.yaml.md)
+- [PR Checklist Template](./TEMPLATE-pr-checklist.md)
+- [Evidence Doc Template](./TEMPLATE-evidence-doc.md)
+- [Risk Register Template](./TEMPLATE-risk-register.md)
+- [ARC-3 Example Change](./EXAMPLE-arc3-breaking-change.md)
+- [Real Change Example](./EXAMPLE-real-change.md)
 
 ## Domain Guides
 
@@ -50,8 +50,8 @@ This pack is kept as a bundled reference, not as the canonical source of the act
 
 ## Tooling Notes
 
-- [Bundle CI Tooling README](tools/ci/README.md)
-- [Bundle Risk Tooling README](tools/risk/README.md)
+- [Bundle CI Tooling README](./tools/ci/README.md)
+- [Bundle Risk Tooling README](./tools/risk/README.md)
 
 ## Active Repo Equivalents
 

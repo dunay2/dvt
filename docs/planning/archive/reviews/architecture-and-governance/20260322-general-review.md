@@ -12,10 +12,10 @@ Review wrapper page for 2026-03-22 findings.
 
 Primary review artifact:
 
-- [20260322 DDD and Hexagonal Port Audit](20260322-ddd-hexagonal-port-audit-review.md)
-- [20260322 DVT Deep Architectural Review](20260322-dvt-deep-architectural-review.md)
-- [20260322 DVT Corrected Code Grounded Review](20260322-dvt-corrected-code-grounded-review.md)
-- [20260322 DVT Code Grounded Corrective Task List Review](20260322-dvt-code-grounded-corrective-task-list-review.md)
+- [20260322 DDD and Hexagonal Port Audit](./20260322-ddd-hexagonal-port-audit-review.md)
+- [20260322 DVT Deep Architectural Review](./20260322-dvt-deep-architectural-review.md)
+- [20260322 DVT Corrected Code Grounded Review](./20260322-dvt-corrected-code-grounded-review.md)
+- [20260322 DVT Code Grounded Corrective Task List Review](./20260322-dvt-code-grounded-corrective-task-list-review.md)
 
 ## Scope Summary
 

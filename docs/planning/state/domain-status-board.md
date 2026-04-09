@@ -11,7 +11,7 @@ planning_type: status
 Operational board by domain with explicit links to task IDs and roadmap impact.
 
 For full task-level tracking use the lane YAML registry linked from
-[Planning Control Tower](planning-control-tower.md).
+[Planning Control Tower](./planning-control-tower.md).
 
 ## Domain Board
 
@@ -28,14 +28,14 @@ For full task-level tracking use the lane YAML registry linked from
 
 ## Canonical Anchors
 
-- [Planning Control Tower](planning-control-tower.md)
+- [Planning Control Tower](./planning-control-tower.md)
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 
 ## Reading Order
 
-1. [Planning Control Tower](planning-control-tower.md)
+1. [Planning Control Tower](./planning-control-tower.md)
 2. [Roadmap Of Record](../roadmap/index.md)
 3. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 4. [Domain Views](../domains/index.md)

@@ -19,19 +19,19 @@ boards, review status board, and active governance/docs tracks).
 
 ## Must
 
-- [Architecture Documentation Reconciliation Plan](architecture-doc-reconciliation-plan-20260402.md)
+- [Architecture Documentation Reconciliation Plan](./architecture-doc-reconciliation-plan-20260402.md)
   Rationale: active truth-correction and simplification path for repository-wide architecture docs.
-- [CI Delivery Governance Consolidated Action Plan](ci-delivery-governance-consolidated-action-plan-20260331.md)
+- [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md)
   Rationale: declared as the single active CI governance execution surface.
 - [Contracts Domain Ownership Migration Plan](../runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)
   Rationale: active domain-boundary and ownership alignment work.
-- [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
+- [Documentation Usability Change Plan](./documentation-usability-change-plan-20260308.md)
   Rationale: active documentation governance and navigation hardening.
-- [Generated Planning Surfaces Extraction Plan](generated-planning-surfaces-extraction-plan-20260403.md)
+- [Generated Planning Surfaces Extraction Plan](./generated-planning-surfaces-extraction-plan-20260403.md)
   Rationale: targeted plan to stop tracking the highest-conflict generated planning views while keeping CI fail-closed.
-- [Governance Startup Card Router Plan](governance-startup-card-router-plan-20260402.md)
+- [Governance Startup Card Router Plan](./governance-startup-card-router-plan-20260402.md)
   Rationale: active startup-governance enforcement and routing consistency.
-- [Doc-Driven Framework And Tooling Plan](doc-driven-framework-and-tooling-plan-20260404.md)
+- [Doc-Driven Framework And Tooling Plan](./doc-driven-framework-and-tooling-plan-20260404.md)
   Rationale: the repo already has strong governance controls, but still lacks a unified
   framework for document taxonomy, planning data, authoring scaffolds, and traceability
   automation.

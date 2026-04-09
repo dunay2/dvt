@@ -76,7 +76,7 @@ Concept anchors for this page:
   Classification: tactical gap registers
   Use it for: currently open, explicitly scoped deltas only; retire closed
   programs instead of carrying them as active controls
-- `docs/architecture/engine/roadmap/engine-phases.md`
+- `docs/architecture/components/engine/roadmap/engine-phases.md`
   Classification: subsystem roadmap
   Use it for: engine-specific current sequencing aligned to `WE-HX`, `AR-A8`,
   `MW-C1`, and `TF-C2`
@@ -109,9 +109,9 @@ Current subsystem roadmaps worth consulting:
 - [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-- [Engine Roadmap](../../architecture/engine/roadmap/engine-phases.md)
-- [Roadmap By Domain](roadmap-by-domain.md)
-- [Review Remediation Roadmap 2026-04](review-remediation-roadmap-20260402.md)
+- [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
+- [Roadmap By Domain](./roadmap-by-domain.md)
+- [Review Remediation Roadmap 2026-04](./review-remediation-roadmap-20260402.md)
 
 ## Domain And Diagram Navigation
 
@@ -125,8 +125,8 @@ Use these surfaces for domain-first planning navigation and updated diagrams:
 - [Agent Lane C YAML](../state/agent-lane-c.yaml)
 - [Agent Lane D YAML](../state/agent-lane-d.yaml)
 - [Agent Lane E YAML](../state/agent-lane-e.yaml)
-- [Planning Roadmap Diagrams](diagrams/index.md)
-- [Planning Domain Map](diagrams/planning-domain-map.md)
+- [Planning Roadmap Diagrams](./diagrams/index.md)
+- [Planning Domain Map](./diagrams/planning-domain-map.md)
 
 ## Maintenance Rule
 

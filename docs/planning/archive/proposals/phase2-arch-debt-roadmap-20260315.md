@@ -12,10 +12,10 @@ planning_type: proposal
 
 This document is part of the repository governance proposal set.
 
-- Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
+- Set entry point: [Repository Governance Proposal Set 2026-03-17](./repository-governance-proposal-set-20260317.md)
 - Role in set: execution roadmap
 - Complementary proposals:
-  - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines target repository package policy
+  - [Package Module Build Policy v2](./package-module-build-policy-v2-20260317.md) defines target repository package policy
   - [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md) defines how enforcement and CI orchestration should converge
   - [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md) defines how documentation and traceability around these slices should stay discoverable
 

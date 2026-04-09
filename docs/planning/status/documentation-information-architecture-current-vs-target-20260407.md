@@ -16,7 +16,7 @@ surface auditable against real code and planning sources.
 
 ## Governing sources
 
-- [Governance document rule inventory](governance-document-rule-inventory.md)
+- [Governance document rule inventory](./governance-document-rule-inventory.md)
 - [Architecture surface inventory 2026-04-02](../../architecture/architecture-surface-inventory-20260402.md)
 - [AI work protocol](../../guides/ai-work-protocol.md)
 - [Planning control tower](../state/planning-control-tower.md)
@@ -30,7 +30,7 @@ flowchart TB
 
   subgraph Active["Active architecture surface"]
     System["System entrypoint\ndocs/architecture/system"]
-    Subsystems["Subsystem flow docs\ndocs/architecture/subsystems"]
+    Subsystems["Subsystem flow docs\ndocs/architecture/system/subsystems"]
     Components["Canonical component homes\ndocs/architecture/components"]
     Domains["Domain and transverse views\ndocs/architecture/domain-*.md\ncomponent-map.md\ndomain-map.md"]
   end
@@ -56,14 +56,14 @@ flowchart TB
 
 ## Current code-alignment facts
 
-| Area                          | Current active entrypoint                    | Code-alignment action in this slice                                                                  |
-| ----------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| System routing                | `docs/architecture/system/index.md`          | added explicit system -> subsystem -> component navigation                                           |
-| Subsystem routing             | `docs/architecture/subsystems/index.md`      | introduced flow-oriented subsystem entrypoint distinct from component homes                          |
-| Read flow                     | `docs/architecture/subsystems/read/index.md` | documented real browser -> API -> engine/state-store read path with code anchors                     |
-| Engine component home         | `docs/architecture/components/engine/*`      | promoted as the canonical engine component home; top-level engine pack now treated as subsystem view |
-| Frontend component home       | `docs/architecture/components/web/*`         | consolidated `apps/web` and `@dvt/web` into one canonical component home                             |
-| Archived architecture aliases | `docs/archive/architecture/components/*`     | moved stale or duplicate aliases out of the active tree                                              |
+| Area                          | Current active entrypoint                           | Code-alignment action in this slice                                                                              |
+| ----------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| System routing                | `docs/architecture/system/index.md`                 | added explicit system -> subsystem -> component navigation                                                       |
+| Subsystem routing             | `docs/architecture/system/subsystems/index.md`      | introduced named subsystem folders under the system tree, distinct from component homes                          |
+| Read flow                     | `docs/architecture/system/subsystems/read/index.md` | documented real browser -> API -> engine/state-store read path with code anchors                                 |
+| Engine component home         | `docs/architecture/components/engine/*`             | retired the top-level engine pack; engine truth now lives under the component tree with subsystem links          |
+| Frontend component home       | `docs/architecture/components/web/*`                | consolidated `apps/web` and `@dvt/web` into one canonical component home and removed the top-level frontend pack |
+| Archived architecture aliases | `docs/archive/architecture/components/*`            | moved stale or duplicate aliases out of the active tree                                                          |
 
 ## Target-state model
 
@@ -95,18 +95,17 @@ flowchart LR
 - System docs explain top-level composition and routing into subsystems.
 - Domain docs explain ownership and responsibility boundaries; they are not a
   second subsystem tree.
-- Historical aliases and compatibility packs belong in archive once active
-  links are migrated.
+- Historical aliases and superseded packs belong in archive once active links
+  are migrated.
 - Docs validation must prove the active tree, not overwhelm contributors with
   archive-only drift.
 
 ## Remaining follow-up space
 
-- top-level subsystem compatibility packs under `docs/architecture/engine/` and
-  `docs/architecture/frontend/` still need deeper migration into the
-  `subsystems/` tree.
+- add more named subsystem folders under
+  `docs/architecture/system/subsystems/` beyond `canonical-run-lifecycle` and
+  `read` as more end-to-end flows are clarified.
 - Frontmatter normalization and `last_reviewed` coverage across the historical
   corpus remain broader `GOV-S2` work.
-- Several active docs still route to `frontend/index.md` or `engine/index.md`
-  as subsystem compatibility packs and should eventually route through the new
-  system/subsystem entrypoints first.
+- Several secondary active docs still deep-link straight into component pages
+  without first routing through the system/subsystem entrypoints.

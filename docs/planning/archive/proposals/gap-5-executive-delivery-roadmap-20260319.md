@@ -25,7 +25,7 @@ delivery view that answers:
 
 - planning surface: subsystem roadmap
 - parent design:
-  [Gap 5 Event Lifecycle And Archival Design](../proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+  [Gap 5 Event Lifecycle And Archival Design](./gap-5-event-lifecycle-and-archival-design-20260319.md)
 - governing ADRs:
   - [ADR-0037 - Run Event Lifecycle Archival, Verification, and Restore Model](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md)
   - [ADR-0038 - Delivery Buffer Retention and Purge Policy](../../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)
@@ -86,17 +86,17 @@ Remove ambiguity before changing persistence mechanics.
 
 ### Related planning documents
 
-- [Gap 5 Event Lifecycle And Archival Design](../proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+- [Gap 5 Event Lifecycle And Archival Design](./gap-5-event-lifecycle-and-archival-design-20260319.md)
 - [Gap 5 User Reference](../../guides/gap-5-user-reference-20260319.md)
-- [Gap 5 Domain Design Companion](../proposals/gap-5-domain-design-companion-20260319.md)
+- [Gap 5 Domain Design Companion](./gap-5-domain-design-companion-20260319.md)
 
 ### Expected files and modules
 
-- [PostgresStateStoreAdapter.ts](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-- [PostgresSchemaManager.ts](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts)
-- [001_init.sql](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/001_init.sql)
-- [004_run_snapshots_and_status_index.sql](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql)
-- [005_lineage_outbox.sql](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql)
+- [PostgresStateStoreAdapter.ts](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+- [PostgresSchemaManager.ts](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts)
+- [001_init.sql](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/001_init.sql)
+- [004_run_snapshots_and_status_index.sql](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql)
+- [005_lineage_outbox.sql](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql)
 - future migration files under `packages/@dvt/adapter-postgres/migrations/`
 
 ### Deliverables
@@ -124,13 +124,13 @@ Ship the first real archival slice without deleting hot data yet.
 
 ### Related planning documents
 
-- [Gap 5 PR1 Minimal Usable Archival](../proposals/gap-5-pr1-minimal-usable-archival-20260319.md)
-- [Gap 5 Sequence And Module Design](../proposals/gap-5-sequence-and-module-design-20260319.md)
+- [Gap 5 PR1 Minimal Usable Archival](./gap-5-pr1-minimal-usable-archival-20260319.md)
+- [Gap 5 Sequence And Module Design](./gap-5-sequence-and-module-design-20260319.md)
 
 ### Expected files and modules
 
-- [PostgresStateStoreAdapter.ts](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-- [PostgresSchemaManager.ts](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts)
+- [PostgresStateStoreAdapter.ts](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+- [PostgresSchemaManager.ts](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts)
 - `packages/@dvt/adapter-postgres/migrations/*gap5*.sql`
 - `packages/@dvt/state-store/src/lifecycle/*`
 - future archive exporter adapter under state/storage integration
@@ -164,7 +164,7 @@ Make archival safe and operationally credible.
 
 ### Related planning documents
 
-- [Gap 5 PR2 Deferred Deletion And Restore](../proposals/gap-5-pr2-deferred-deletion-and-restore-20260319.md)
+- [Gap 5 PR2 Deferred Deletion And Restore](./gap-5-pr2-deferred-deletion-and-restore-20260319.md)
 - [Gap 5 Archive Operations Runbook](../../runbooks/gap-5-archive-operations-runbook-20260319.md)
 
 ### Expected files and modules
@@ -202,11 +202,11 @@ Clean up non-authoritative delivery buffers with explicit lifecycle rules.
 
 ### Related planning documents
 
-- [Gap 5 PR3 Delivery Buffer Retention](../proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)
+- [Gap 5 PR3 Delivery Buffer Retention](./gap-5-pr3-delivery-buffer-retention-20260319.md)
 
 ### Expected files and modules
 
-- [005_lineage_outbox.sql](f:/segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql)
+- [005_lineage_outbox.sql](../../../../../../segundodvt/dvt/packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql)
 - outbox and lineage cleanup migrations under `packages/@dvt/adapter-postgres/migrations/`
 - outbox worker or delivery-maintenance services under `apps/outbox-worker/` and delivery-owned packages
 - retention policy configuration surfaces
@@ -233,11 +233,11 @@ Handle regulated erasure without corrupting the archival model.
 ### Related decisions
 
 - [ADR-0037 - Run Event Lifecycle Archival, Verification, and Restore Model](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md)
-- future redaction ADR created from [Gap 5 PR4 Redaction ADR And Follow-Up](../proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
+- future redaction ADR created from [Gap 5 PR4 Redaction ADR And Follow-Up](./gap-5-pr4-redaction-adr-follow-up-20260319.md)
 
 ### Related planning documents
 
-- [Gap 5 PR4 Redaction ADR And Follow-Up](../proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
+- [Gap 5 PR4 Redaction ADR And Follow-Up](./gap-5-pr4-redaction-adr-follow-up-20260319.md)
 
 ### Expected files and modules
 
@@ -277,6 +277,6 @@ Gap 5 should be considered substantively complete only when:
 
 ## Related
 
-- [Roadmap Of Record](index.md)
-- [Gap 5 Event Lifecycle And Archival Design](../proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+- [Roadmap Of Record](./index.md)
+- [Gap 5 Event Lifecycle And Archival Design](./gap-5-event-lifecycle-and-archival-design-20260319.md)
 - [Gap 5 User Reference](../../guides/gap-5-user-reference-20260319.md)

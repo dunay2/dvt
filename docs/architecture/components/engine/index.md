@@ -1,4 +1,4 @@
----
+﻿---
 title: '@dvt/engine'
 status: Active
 owner: Architecture / Engine
@@ -9,9 +9,9 @@ last_reviewed: 2026-04-09
 
 `@dvt/engine` is the canonical component home for the execution core package.
 
-Subsystem context and longer execution narratives still live under
-`docs/architecture/engine/`, but this page is the single active home for the
-component's public surface.
+This page is the single active home for the component's public surface, the
+main methods a caller cares about, and the supporting folders that explain how
+this component is wired today.
 
 ## Current Responsibilities
 
@@ -59,19 +59,64 @@ flowchart LR
   Core --> Projector["SnapshotProjector"]
 ```
 
-## Supporting Component Pages
+## Component Folders
 
-- [Core](core.md)
-- [Adapters](adapters.md)
-- [Contracts](contracts.md)
-- [Capabilities](capabilities.md)
-- [Security](security.md)
-- [Operations](operations.md)
-- [Workflows](workflows.md)
+- [Architecture](./architecture/index.md): structure, C4, workflows, current
+  core shape, and target shape.
+- [Adapters](./adapters/index.md): provider/state-store adapter surfaces.
+- [Contracts](./contracts/index.md): engine contracts, schemas, and versioning
+  policy.
+- [Operations](./ops/index.md): observability, runbooks, metrics, and runtime
+  posture.
+- [Security](./security/index.md): threat model, invariants, provenance, and
+  tenant isolation.
+- [Roadmap](./roadmap/index.md): engine-specific projection.
+- [Reviews](./reviews/index.md): audits and analysis notes.
+- [Developer tooling](./dev/index.md): determinism and contract-tooling docs.
+- [Schemas](./schemas/index.md): signal schema pack and related machine-readable
+  artifacts.
+
+## Access Map
+
+- `architecture/`
+  - [index](./architecture/index.md)
+  - [core](./architecture/core.md)
+  - [workflows](./architecture/workflows.md)
+  - [c4-engine](./architecture/c4-engine.md)
+  - [workflow-engine-subsystem-context](./architecture/workflow-engine-subsystem-context.md)
+  - [workflow-engine-target-architecture.v1](./architecture/workflow-engine-target-architecture.v1.md)
+- `adapters/`
+  - [index](./adapters/index.md)
+  - [temporal](./adapters/temporal/index.md)
+  - [conductor](./adapters/conductor/index.md)
+  - [state-store](./adapters/state-store/index.md)
+- `contracts/`
+  - [index](./contracts/index.md)
+  - [engine](./contracts/engine/index.md)
+  - [capabilities](./contracts/capabilities/index.md)
+  - [security](./contracts/security/index.md)
+  - [state-store](./contracts/state-store/index.md)
+  - [extensions](./contracts/extensions/index.md)
+  - [schemas](./contracts/schemas/index.md)
+  - [versioning](./contracts/VERSIONING.md)
+- `ops/`
+  - [index](./ops/index.md)
+  - [runbooks](./ops/runbooks/index.md)
+- `security/`
+  - [index](./security/index.md)
+- `roadmap/`
+  - [index](./roadmap/index.md)
+- `reviews/`
+  - [index](./reviews/index.md)
+- `dev/`
+  - [index](./dev/index.md)
+- `schemas/`
+  - [index](./schemas/index.md)
+  - [signal](./schemas/signal/index.md)
 
 ## Related Pages
 
-- [Execution subsystem compatibility pack](../../engine/index.md)
-- [Read subsystem](../../subsystems/read/index.md)
+- [Canonical run lifecycle subsystem](../../system/subsystems/canonical-run-lifecycle/index.md)
+- [Read subsystem](../../system/subsystems/read/index.md)
 - [DVT Component Map](../../component-map.md)
 - [System Delivery Status](../../system-delivery-status.md)

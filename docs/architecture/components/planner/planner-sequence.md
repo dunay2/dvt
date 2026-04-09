@@ -60,6 +60,6 @@ engine surfaces, not to the planner package itself.
 
 ## Canonical references
 
-- [Planner component entry](index.md)
+- [Planner component entry](./index.md)
 - [Planner contracts](../../../contracts/planner/index.md)
 - [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)

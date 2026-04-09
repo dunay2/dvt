@@ -204,4 +204,4 @@ That keeps the canonical plan artifact singular while fixing ownership.
 - [ADR-0046](../../../adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md)
 - [ADR-0042](../../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
 - [ADR-0043](../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
-- [20260407 engine boundary review](20260407-engine-boundary-current-target-and-migration-review.md)
+- [20260407 engine boundary review](./20260407-engine-boundary-current-target-and-migration-review.md)

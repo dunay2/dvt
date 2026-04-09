@@ -50,12 +50,12 @@ Open-source product references:
 
 ## Related Pages
 
-- [Frontend Architecture](frontend/index.md)
-- [Frontend Data-Boundary Architecture](frontend/frontend-data-boundary-architecture.md)
-- [Frontend Fowler Implementation Pattern](frontend/frontend-fowler-implementation-pattern.md)
-- [Frontend Runtime Modes User Manual](frontend/frontend-runtime-modes-user-manual.md)
-- [Frontend Runtime Contract Technical Manual](frontend/runs/frontend-runtime-contract-technical-manual.md)
-- [Frontend Runtime Contract User Manual](frontend/runs/frontend-runtime-contract-user-manual.md)
-- [Main Workspace Views And UX](frontend/main-workspace-views-and-ux.md)
-- [UX Implementation Guide](frontend/ux-implementation-guide.md)
-- [Library And Open-Source Reference Stack](frontend/library-and-open-source-reference-stack.md)
+- [Frontend Architecture](./components/web/index.md)
+- [Frontend Data-Boundary Architecture](./components/web/frontend-data-boundary-architecture.md)
+- [Frontend Fowler Implementation Pattern](./components/web/frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Modes User Manual](./components/web/frontend-runtime-modes-user-manual.md)
+- [Frontend Runtime Contract Technical Manual](./components/web/runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](./components/web/runs/frontend-runtime-contract-user-manual.md)
+- [Main Workspace Views And UX](./components/web/main-workspace-views-and-ux.md)
+- [UX Implementation Guide](./components/web/ux-implementation-guide.md)
+- [Library And Open-Source Reference Stack](./components/web/library-and-open-source-reference-stack.md)

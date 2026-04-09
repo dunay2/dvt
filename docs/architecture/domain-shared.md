@@ -75,6 +75,6 @@ behavior back to its owning context when drift is discovered.
 ## Related Pages
 
 - [Contracts Index](../contracts/index.md)
-- [DVT Component Map](component-map.md)
-- [Shared Package Architecture](shared/index.md)
-- [System Delivery Status](system-delivery-status.md)
+- [DVT Component Map](./component-map.md)
+- [Shared Package Architecture](./shared/index.md)
+- [System Delivery Status](./system-delivery-status.md)

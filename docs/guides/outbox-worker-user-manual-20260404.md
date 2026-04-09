@@ -67,5 +67,5 @@ This manual explains how operators and service owners should operate and interpr
 ## References
 
 - [Outbox Worker Runbook](../runbooks/outbox-worker-g5.md)
-- [Outbox worker technical manual](outbox-worker-technical-manual-20260404.md)
+- [Outbox worker technical manual](./outbox-worker-technical-manual-20260404.md)
 - [R-20260311-G5-4-QA-01](../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md)

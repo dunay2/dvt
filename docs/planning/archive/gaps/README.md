@@ -18,7 +18,7 @@ The material previously kept under this directory has been archived.
 
 ## Archived source material
 
-- [Archived G5 review packs](../../../archive/planning/gaps/gap5/)
+- [Archived G5 review packs](../../../archive/planning/gaps/gap5)
 
 ## Why this directory is no longer active
 

@@ -40,9 +40,9 @@ names depending on whether the reader is in planning, code, or architecture.
 
 ## Related Surfaces
 
-- [Glossary](glossary.md)
-- [System Map](system-map.md)
-- [Repository Map](repository-map.md)
+- [Glossary](./glossary.md)
+- [System Map](./system-map.md)
+- [Repository Map](./repository-map.md)
 
 ## Do Not Collapse Distinct Concepts
 

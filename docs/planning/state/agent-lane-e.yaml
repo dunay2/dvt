@@ -157,7 +157,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md
-      - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
     status_reason: >-
       The frontend-facing backend contract artifact is now published with route inventory, auth
@@ -201,7 +201,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/architecture/frontend/planning/frontend-planning-capability-architecture.md
+      - docs/architecture/components/web/planning/frontend-planning-capability-architecture.md
       - docs/planning/closeouts/F-02-closeout.md
     status_reason: >-
       Platform health now ships as a dedicated frontend capability with explicit DTO, domain,
@@ -220,7 +220,7 @@ tasks:
     progress_pct: 96
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
-      - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
       - apps/web/src/app/Root.tsx
       - apps/web/src/app/components/TopAppBar.tsx
       - apps/web/src/app/components/ShellHealthBanner.tsx
@@ -252,8 +252,8 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-      - docs/architecture/frontend/frontend-data-boundary-architecture.md
-      - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/frontend-runtime-modes-user-manual.md
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
       - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
       - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
@@ -289,7 +289,7 @@ tasks:
     effort_points: 2
     progress_pct: 90
     evidence_refs:
-      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/queries/useCapabilitiesQuery.ts
@@ -317,8 +317,8 @@ tasks:
     effort_points: 3
     progress_pct: 80
     evidence_refs:
-      - docs/architecture/frontend/frontend-data-boundary-architecture.md
-      - docs/architecture/frontend/index.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/index.md
       - docs/architecture/domain-ui.md
     status_reason: >-
       Core content and diagrams are written and linked from active entrypoints; review pass remains
@@ -343,8 +343,8 @@ tasks:
     effort_points: 2
     progress_pct: 80
     evidence_refs:
-      - docs/architecture/frontend/frontend-runtime-modes-user-manual.md
-      - docs/architecture/frontend/index.md
+      - docs/architecture/components/web/frontend-runtime-modes-user-manual.md
+      - docs/architecture/components/web/index.md
     status_reason: >-
       The manual is drafted with target route journey and shell guarantees; final acceptance depends
       on consistency checks with active route behavior.
@@ -368,7 +368,7 @@ tasks:
     effort_points: 5
     progress_pct: 85
     evidence_refs:
-      - docs/architecture/frontend/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
       - apps/web/src/app/ports/capabilities.ts
       - apps/web/src/app/ports/sessionContext.ts
@@ -481,7 +481,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/architecture/components/web/appshell/data-source-service-boundary.md
       - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
       - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
       - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
@@ -539,8 +539,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
       - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
-      - docs/architecture/frontend/runs/frontend-backend-mvp-contract.md
-      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
       - apps/api/src/entrypoints/http/planRoutes.ts
       - apps/api/test/entrypoints/http/planRoutes.test.ts
       - apps/web/src/app/services/plans/plansService.api.ts
@@ -570,7 +570,7 @@ tasks:
     effort_points: 2
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/architecture/components/web/appshell/data-source-service-boundary.md
       - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
       - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
       - apps/web/src/app/services/workspace/workspaceService.mock.ts
@@ -598,7 +598,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/architecture/components/web/appshell/data-source-service-boundary.md
       - apps/web/src/app/Root.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/components/Console.tsx
@@ -652,7 +652,7 @@ tasks:
     evidence_refs:
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
       - apps/web/src/app/services/AppServicesContext.test.tsx
-      - docs/architecture/frontend/appshell/data-source-service-boundary.md
+      - docs/architecture/components/web/appshell/data-source-service-boundary.md
       - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
     status_reason: >-
       The shared canvas-controller harness now mounts `AppServicesProvider` with explicit service
@@ -676,7 +676,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - apps/web/src/app/components/Console.tsx
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
     status_reason: >-
       API-mode console empty-state copy now uses product-facing wording about run events and
       explicitly states that live log streaming is not yet available in API mode, without exposing
@@ -699,7 +699,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
-      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/stores/sessionStore.ts
       - apps/web/src/app/stores/appStore.ts
@@ -723,8 +723,8 @@ tasks:
     effort_points: 2
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
     status_reason: >-
       Documentation hard-gate acceptance is complete: the frontend architecture entrypoint links the
@@ -777,7 +777,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - apps/web/src/app/views/canvas/useCanvasController.ts
     status_reason: >-
@@ -807,7 +807,7 @@ tasks:
     effort_points: 1
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
       - docs/planning/state/agent-lane-e.yaml
     status_reason: >-
@@ -863,7 +863,7 @@ tasks:
       - apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/ux-implementation-guide.md
       - docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     status_reason: >-
       Completed on main via feat(web): Normalize query key ownership for shell health and runs
@@ -894,9 +894,9 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
-      - docs/architecture/frontend/frontend-fowler-implementation-pattern.md
-      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
-      - docs/architecture/frontend/runs/frontend-runtime-contract-user-manual.md
+      - docs/architecture/components/web/frontend-fowler-implementation-pattern.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/web/src/app/services/runs/runsService.ts
       - apps/web/src/app/services/runs/runWorkspaceFacade.ts
@@ -927,12 +927,12 @@ tasks:
     effort_points: 2
     progress_pct: 90
     evidence_refs:
-      - docs/architecture/frontend/frontend-fowler-implementation-pattern.md
-      - docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md
-      - docs/architecture/frontend/runs/frontend-runtime-contract-user-manual.md
+      - docs/architecture/components/web/frontend-fowler-implementation-pattern.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
-      - docs/architecture/frontend/runs/dvt-runs-frontend-architecture.md
-      - docs/architecture/frontend/index.md
+      - docs/architecture/components/web/runs/dvt-runs-frontend-architecture.md
+      - docs/architecture/components/web/index.md
       - docs/architecture/domain-ui.md
       - docs/architecture/domain-api.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
@@ -1039,7 +1039,7 @@ tasks:
     effort_points: 1
     progress_pct: 100
     evidence_refs:
-      - docs/architecture/frontend/index.md
+      - docs/architecture/components/web/index.md
       - docs/planning/state/agent-lane-e.yaml
     status_reason: >-
       Docs sync and planning-generation checks now pass with the F-07 entrypoints and lane
@@ -1188,10 +1188,10 @@ tasks:
     effort_points: 3
     progress_pct: 60
     evidence_refs:
-      - docs/architecture/frontend/index.md
+      - docs/architecture/components/web/index.md
       - docs/architecture/domain-ui.md
-      - docs/architecture/frontend/ux-implementation-guide.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/planning/proposals/frontend-roadmap-20260219.md
     status_reason: >-
       The frontend architecture entrypoint, route-level docs, observability slice, UX guide, and
@@ -1213,7 +1213,7 @@ tasks:
     evidence_refs:
       - apps/web/package.json
       - apps/web/src/testing/reactQueryHarness.test.tsx
-      - docs/architecture/frontend/index.md
+      - docs/architecture/components/web/index.md
     status_reason: >-
       Local frontend test files exist, but no declared workspace test command or dedicated CI lane
       currently proves them.
@@ -1233,8 +1233,8 @@ tasks:
     effort_points: 5
     progress_pct: 30
     evidence_refs:
-      - docs/architecture/frontend/main-workspace-views-and-ux.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/main-workspace-views-and-ux.md
+      - docs/architecture/components/web/ux-implementation-guide.md
     status_reason: >-
       The workbench UX contract is now documented across the frontend entrypoint, workspace-view
       map, and implementation guide, but the shell still does not enforce all panel and recovery
@@ -1254,8 +1254,8 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/architecture/frontend/ux-implementation-guide.md
-      - docs/architecture/frontend/runs/dvt-runs-frontend-architecture.md
+      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/runs/dvt-runs-frontend-architecture.md
     status_reason: >-
       The current card-based runs UX is acceptable for early slices but will not scale to denser
       operator workflows, and no delivery slice exists yet for the table upgrade.
@@ -1278,8 +1278,8 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
-      - docs/architecture/frontend/main-workspace-views-and-ux.md
-      - docs/architecture/frontend/library-and-open-source-reference-stack.md
+      - docs/architecture/components/web/main-workspace-views-and-ux.md
+      - docs/architecture/components/web/library-and-open-source-reference-stack.md
     status_reason: >-
       The Monaco strategy has been realigned around route-level workbenches and embedded review
       surfaces. Documentation and task decomposition are now in progress; implementation stays gated
@@ -1307,10 +1307,10 @@ tasks:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
-      - docs/architecture/frontend/frontend-data-boundary-architecture.md
-      - docs/architecture/frontend/ux-implementation-guide.md
-      - docs/architecture/frontend/main-workspace-views-and-ux.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/main-workspace-views-and-ux.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
     status_reason: >-
       The canonical docs and roadmap are being rewritten around the embedded-surface model, and the
       legacy `vscode style` integration note has now been realigned so it no longer claims a
@@ -1391,8 +1391,8 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - docs/architecture/frontend/main-workspace-views-and-ux.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/main-workspace-views-and-ux.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
     status_reason: >-
       Blocked until F-21 establishes the Templates route and its governed source-generation
       contract. Monaco cannot own a route that does not exist yet.
@@ -1469,8 +1469,8 @@ tasks:
     effort_points: 3
     progress_pct: 0
     evidence_refs:
-      - docs/architecture/frontend/ux-implementation-guide.md
-      - docs/architecture/frontend/observability/front-observability-architecture-dvt.md
+      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
     status_reason: >-
       The shell already has a console drawer and the current frontend includes an xterm-backed
       implementation, but there is still no accepted governed slice for typed live-log behavior,
@@ -1492,8 +1492,8 @@ tasks:
     effort_points: 3
     progress_pct: 20
     evidence_refs:
-      - docs/architecture/frontend/ux-implementation-guide.md
-      - docs/architecture/frontend/library-and-open-source-reference-stack.md
+      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/library-and-open-source-reference-stack.md
       - docs/planning/proposals/frontend-roadmap-20260219.md
     status_reason: >-
       Marquez is now named in the UX guide, library and reference stack, and roadmap as the
@@ -1515,8 +1515,8 @@ tasks:
     effort_points: 3
     progress_pct: 80
     evidence_refs:
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/ux-implementation-guide.md
     status_reason: >-
       A maintained screen-manual and user-story document now covers the main workbenches and ties UX
       acceptance to Lane E, but future route changes still need to keep those stories in sync.
@@ -1537,9 +1537,9 @@ tasks:
     effort_points: 5
     progress_pct: 20
     evidence_refs:
-      - docs/architecture/frontend/main-workspace-views-and-ux.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/main-workspace-views-and-ux.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/ux-implementation-guide.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
     status_reason: >-
       The frontend architecture and roadmap now name execution-template and source-generation UX as
@@ -1570,8 +1570,8 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/ux-implementation-guide.md
     status_reason: >-
       The proposal set now freezes the real product decisions, architecture, and delivery phases:
       SQL-first execution, design-graph planning input, explicit `previewProfile` routing,
@@ -1595,8 +1595,8 @@ tasks:
     effort_points: 3
     progress_pct: 15
     evidence_refs:
-      - docs/architecture/frontend/git/git-mode-architecture.md
-      - docs/architecture/frontend/main-workspace-views-and-ux.md
+      - docs/architecture/components/web/git/git-mode-architecture.md
+      - docs/architecture/components/web/main-workspace-views-and-ux.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
     status_reason: >-
       The docs-first baseline now freezes `Code` as the file-history entry surface and `Diff` as the
@@ -1629,8 +1629,8 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
-      - docs/architecture/frontend/screen-manuals-and-user-stories.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/ux-implementation-guide.md
       - apps/web/src/app/views/canvas/CanvasToolbar.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
@@ -1656,7 +1656,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/ux-implementation-guide.md
       - apps/web/src/app/plugins/graphStrategyRegistry.ts
       - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.ts
@@ -1689,7 +1689,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/ux-implementation-guide.md
       - apps/web/src/app/components/Modals.tsx
       - apps/web/src/app/components/Modals.test.tsx
       - apps/web/src/app/data/mockDbtData.ts
@@ -1717,7 +1717,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
-      - docs/architecture/frontend/ux-implementation-guide.md
+      - docs/architecture/components/web/ux-implementation-guide.md
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
       - apps/web/src/app/views/runs/RunStates.test.tsx
       - apps/web/src/app/views/runs/runStatesCopy.ts

@@ -18,21 +18,21 @@ the canonical frontend architecture set.
 
 Canonical truth for shipped behavior remains in:
 
-- [Frontend Architecture](../../../../architecture/frontend/index.md)
-- [Main Workspace Views And UX](../../../../architecture/frontend/main-workspace-views-and-ux.md)
-- [Workbench UI Contract And Component Inventory](../../../../architecture/frontend/workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/frontend/screen-layout-and-cross-surface-behavior-rules.md)
-- [UX Implementation Guide](../../../../architecture/frontend/ux-implementation-guide.md)
+- [Frontend Architecture](../../../../architecture/components/web/index.md)
+- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
+- [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [UX Implementation Guide](../../../../architecture/components/web/ux-implementation-guide.md)
 
 ## Governing Sources
 
 - [Reference Architecture](../../../../architecture/reference-architecture.md)
 - [System Delivery Status](../../../../architecture/system-delivery-status.md)
-- [Frontend Architecture](../../../../architecture/frontend/index.md)
-- [Main Workspace Views And UX](../../../../architecture/frontend/main-workspace-views-and-ux.md)
-- [Workbench UI Contract And Component Inventory](../../../../architecture/frontend/workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/frontend/screen-layout-and-cross-surface-behavior-rules.md)
-- [Frontend Roadmap - Prototype To Operational UI](frontend-roadmap-20260219.md)
+- [Frontend Architecture](../../../../architecture/components/web/index.md)
+- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
+- [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Frontend Roadmap - Prototype To Operational UI](./frontend-roadmap-20260219.md)
 
 ## Proposal Position
 
@@ -308,9 +308,9 @@ This proposal is satisfied when:
 
 ## Related Canonical Docs
 
-- [Frontend Architecture](../../../../architecture/frontend/index.md)
-- [App Shell](../../../../architecture/frontend/appshell/app-shell.md)
-- [Main Workspace Views And UX](../../../../architecture/frontend/main-workspace-views-and-ux.md)
-- [Workbench UI Contract And Component Inventory](../../../../architecture/frontend/workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/frontend/screen-layout-and-cross-surface-behavior-rules.md)
-- [Iconography And Design Tokens Contract](../../../../architecture/frontend/iconography-and-design-tokens-contract.md)
+- [Frontend Architecture](../../../../architecture/components/web/index.md)
+- [App Shell](../../../../architecture/components/web/appshell/app-shell.md)
+- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
+- [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Iconography And Design Tokens Contract](../../../../architecture/components/web/iconography-and-design-tokens-contract.md)

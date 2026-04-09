@@ -372,6 +372,6 @@ The following are baked into stored data and cannot change without a migration p
 - Reference Architecture: [`../../architecture/reference-architecture.md`](../../architecture/reference-architecture.md)
 - God Diagram: [`../execution-model/dvt-system-map-god-diagram.md`](../execution-model/dvt-system-map-god-diagram.md)
 - Dependency Risk Map: [`../execution-model/dvt-dependency-risk-map.md`](../execution-model/dvt-dependency-risk-map.md)
-- ADR corpus: [`../../adr/`](../../adr/)
+- ADR corpus: [`../../adr/`](../../adr)
 - OpenLineage spec: https://openlineage.io/
 - Temporal: https://docs.temporal.io/

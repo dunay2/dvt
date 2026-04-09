@@ -36,7 +36,7 @@ These are the only SLA signals safe to treat as active today.
 
 Canonical signal-to-threshold mapping source for AR-C2 wiring:
 
-- [AR-C2 SLA signal threshold mapping](ar-c2-sla-signal-threshold-mapping-20260404.md)
+- [AR-C2 SLA signal threshold mapping](./ar-c2-sla-signal-threshold-mapping-20260404.md)
 
 | Status                         | Logical signal                           | Exported metric(s)                                             | Threshold (SLO)                         | Alert policy                                            |
 | ------------------------------ | ---------------------------------------- | -------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------- |
@@ -128,8 +128,8 @@ sum(rate(dvt_api_run_status_snapshot_staleness_fallback_unknown_total[15m])) by 
 
 When any threshold breaches, operators must follow:
 
-- [Backend MVP Control-Plane Runbook](backend-mvp-control-plane-runbook-20260329.md)
-- [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)
+- [Backend MVP Control-Plane Runbook](./backend-mvp-control-plane-runbook-20260329.md)
+- [Read-Your-Writes Freshness SLO](./read-your-writes-freshness-slo-20260330.md)
 
 ## Review Cadence
 

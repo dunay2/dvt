@@ -14,7 +14,7 @@ Use this page when a task affects planning, roadmap, proposals, reviews, or
 closeouts and you need to update the planning system correctly.
 
 If you only need to understand what is active, blocked, or next, start at
-[Planning Dashboard](planning-dashboard.md). The dashboard is the reading
+[Planning Dashboard](./planning-dashboard.md). The dashboard is the reading
 surface. This control tower is the update protocol.
 
 ## Mandatory Update Map By Task Type
@@ -28,7 +28,7 @@ surface. This control tower is the update protocol.
   [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md),
   and the affected lane YAML registry.
 - Changes domain priorities or active objective focus:
-  update [Domain Status Board](domain-status-board.md) and
+  update [Domain Status Board](./domain-status-board.md) and
   [Roadmap By Domain](../roadmap/roadmap-by-domain.md).
 - Introduces or updates a plan/proposal:
   update the corresponding file under `docs/planning/proposals/` and its linked
@@ -59,14 +59,14 @@ surface. This control tower is the update protocol.
 
 ## Canonical Planning Navigation
 
-- Human entrypoint: [Planning Dashboard](planning-dashboard.md)
+- Human entrypoint: [Planning Dashboard](./planning-dashboard.md)
 - Strategy and classification: [Roadmap Of Record](../roadmap/index.md)
 - Cross-domain roadmap view: [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
-- Planning entrypoint: [Planning Control Tower](planning-control-tower.md)
+- Planning entrypoint: [Planning Control Tower](./planning-control-tower.md)
 - Task registry:
-  [Agent Lane A](agent-lane-a.yaml), [Agent Lane B](agent-lane-b.yaml),
-  [Agent Lane C](agent-lane-c.yaml), [Agent Lane D](agent-lane-d.yaml),
-  [Agent Lane E](agent-lane-e.yaml)
+  [Agent Lane A](./agent-lane-a.yaml), [Agent Lane B](./agent-lane-b.yaml),
+  [Agent Lane C](./agent-lane-c.yaml), [Agent Lane D](./agent-lane-d.yaml),
+  [Agent Lane E](./agent-lane-e.yaml)
 - Domain views: [Planning Domains](../domains/index.md)
 - Proposals: [Proposal Portfolio Map](../proposals/portfolio-map-20260403.md)
 - Reviews: [Review Status Board](../reviews/review-status-board.md)
@@ -81,11 +81,11 @@ surface. This control tower is the update protocol.
 
 When there is confusion about "what is active now" vs "where to continue":
 
-1. [Planning Dashboard](planning-dashboard.md): one-screen navigation to board,
+1. [Planning Dashboard](./planning-dashboard.md): one-screen navigation to board,
    blockers, lanes, and next reading surface.
 2. [System Delivery Status](../../architecture/system-delivery-status.md)
    (`last_reviewed: 2026-04-02`): current implementation truth.
-3. [Agent Lane YAML registry](agent-lane-a.yaml)
+3. [Agent Lane YAML registry](./agent-lane-a.yaml)
    (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): active tasks, owners,
    execution status, blockers, and next actions.
 4. [Review Status Board](../reviews/review-status-board.md)
@@ -113,10 +113,10 @@ Interpretation rule:
 
 ## Recommended Reading Order For Any Planning Task
 
-1. [Planning Control Tower](planning-control-tower.md)
-2. [Planning Dashboard](planning-dashboard.md)
-3. Relevant [Agent Lane YAML](agent-lane-a.yaml)
+1. [Planning Control Tower](./planning-control-tower.md)
+2. [Planning Dashboard](./planning-dashboard.md)
+3. Relevant [Agent Lane YAML](./agent-lane-a.yaml)
 4. [Roadmap Of Record](../roadmap/index.md)
 5. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
-6. [Domain Status Board](domain-status-board.md)
+6. [Domain Status Board](./domain-status-board.md)
 7. Relevant proposal or review document for the specific slice

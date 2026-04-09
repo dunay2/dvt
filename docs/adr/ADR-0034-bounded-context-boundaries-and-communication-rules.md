@@ -646,8 +646,8 @@ reuse that pattern or establish an equivalent repo-approved gate.
 
 ## Related
 
-- [ADR-0003 - Execution Model Sovereignty](ADR-0003-execution-model.md)
-- [ADR-0004 - Event Sourcing Strategy](ADR-0004-event-sourcing-strategy.md)
-- [ADR-0018 - Shared Kernel Ownership Governance](ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [ADR-0032 - compiledCodeRef Ownership](ADR-0032-compiledcoderef-ownership.md)
-- [ADR-0033 - Outbox Worker Sharding And Fencing Model](ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- [ADR-0003 - Execution Model Sovereignty](./ADR-0003-execution-model.md)
+- [ADR-0004 - Event Sourcing Strategy](./ADR-0004-event-sourcing-strategy.md)
+- [ADR-0018 - Shared Kernel Ownership Governance](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0032 - compiledCodeRef Ownership](./ADR-0032-compiledcoderef-ownership.md)
+- [ADR-0033 - Outbox Worker Sharding And Fencing Model](./ADR-0033-outbox-worker-sharding-and-fencing-model.md)

@@ -18,10 +18,10 @@ architecture or status sources it classifies.
 
 Use this order for repository-wide architecture questions:
 
-1. [Reference Architecture](reference-architecture.md)
-2. [System Delivery Status](system-delivery-status.md)
-3. [System Architecture](system/index.md)
-4. [Subsystem Architecture](subsystems/index.md)
+1. [Reference Architecture](./reference-architecture.md)
+2. [System Delivery Status](./system-delivery-status.md)
+3. [System Architecture](./system/index.md)
+4. [Subsystem Architecture](./system/subsystems/index.md)
 5. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 6. [DVT System Map](../concepts/system-map.md)
 
@@ -37,24 +37,24 @@ history, domain-specific navigation, or a component-level map.
 
 ## Repository-Wide Architecture Surface Inventory
 
-| Surface                                                                      | Classification | Role                                                                    | Current handling                                                                      |
-| ---------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [Reference Architecture](reference-architecture.md)                          | `canonical`    | top-level architectural principles and bounded-context posture          | keep as the architecture principle source                                             |
-| [System Delivery Status](system-delivery-status.md)                          | `status`       | current implementation truth and delivery posture                       | keep as the implementation truth source                                               |
-| [System Architecture](system/index.md)                                       | `supporting`   | system-to-subsystem navigation entrypoint                               | keep as the top-level composition view                                                |
-| [Subsystem Architecture](subsystems/index.md)                                | `supporting`   | flow-oriented subsystem catalog and routing surface                     | keep as the active subsystem entrypoint                                               |
-| [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) | `status`       | doc -> code -> test -> command traceability for architecture claims     | keep as the verification companion                                                    |
-| [DVT System Map](../concepts/system-map.md)                                  | `supporting`   | conceptual orientation map                                              | keep as the first mental-model companion                                              |
-| [Architecture Index](index.md)                                               | `supporting`   | architecture navigation entrypoint                                      | keep, but route readers to canonical, status, system, and subsystem sources first     |
-| [DVT System Architecture](system-overview.md)                                | `supporting`   | broad integrated narrative and diagrams                                 | keep as a supporting overview with explicit non-canonical handling                    |
-| [DVT Component Map](component-map.md)                                        | `supporting`   | current component and dependency map with queued deltas                 | keep as a real current-state supporting map grounded in code and the workboard        |
-| [DVT Domain Map](domain-map.md)                                              | `supporting`   | current bounded-context map with interaction rules                      | keep as a real supporting domain map grounded in current ownership                    |
-| [Architecture Component Surfaces](components/index.md)                       | `supporting`   | canonical catalog for component homes                                   | keep as the component catalog entrypoint; one component, one active home              |
-| [Execution subsystem compatibility pack](engine/index.md)                    | `supporting`   | execution-specific subsystem context and longer-form runtime narratives | keep during migration, but do not treat it as the engine component home               |
-| [Frontend subsystem compatibility pack](frontend/index.md)                   | `supporting`   | frontend workbench flow and UX subsystem narratives                     | keep during migration, but do not treat it as the frontend component home             |
-| [Engine Roadmap](engine/roadmap/engine-phases.md)                            | `supporting`   | execution-subsystem delivery projection and sequencing                  | keep as the active engine roadmap; do not let it compete with repo-wide roadmap truth |
-| [TypeScript Package Classification](typescript-package-classification.md)    | `supporting`   | package taxonomy and workspace structure aid                            | keep as supporting classification                                                     |
-| [Architecture Atlas](atlas/architecture/architecture_atlas.md)               | `historical`   | dated code snapshot from 2026-03-06                                     | keep as historical snapshot only                                                      |
+| Surface                                                                      | Classification | Role                                                                      | Current handling                                                                      |
+| ---------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [Reference Architecture](./reference-architecture.md)                        | `canonical`    | top-level architectural principles and bounded-context posture            | keep as the architecture principle source                                             |
+| [System Delivery Status](./system-delivery-status.md)                        | `status`       | current implementation truth and delivery posture                         | keep as the implementation truth source                                               |
+| [System Architecture](./system/index.md)                                     | `supporting`   | system-to-subsystem navigation entrypoint                                 | keep as the top-level composition view                                                |
+| [Subsystem Architecture](./system/subsystems/index.md)                       | `supporting`   | flow-oriented subsystem catalog and routing surface                       | keep as the active subsystem entrypoint                                               |
+| [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) | `status`       | doc -> code -> test -> command traceability for architecture claims       | keep as the verification companion                                                    |
+| [DVT System Map](../concepts/system-map.md)                                  | `supporting`   | conceptual orientation map                                                | keep as the first mental-model companion                                              |
+| [Architecture Index](./index.md)                                             | `supporting`   | architecture navigation entrypoint                                        | keep, but route readers to canonical, status, system, and subsystem sources first     |
+| [DVT System Architecture](./system-overview.md)                              | `supporting`   | broad integrated narrative and diagrams                                   | keep as a supporting overview with explicit non-canonical handling                    |
+| [DVT Component Map](./component-map.md)                                      | `supporting`   | current component and dependency map with queued deltas                   | keep as a real current-state supporting map grounded in code and the workboard        |
+| [DVT Domain Map](./domain-map.md)                                            | `supporting`   | current bounded-context map with interaction rules                        | keep as a real supporting domain map grounded in current ownership                    |
+| [Architecture Component Surfaces](./components/index.md)                     | `supporting`   | canonical catalog for component homes                                     | keep as the component catalog entrypoint; one component, one active home              |
+| [@dvt/engine](./components/engine/index.md)                                  | `supporting`   | canonical engine component home with public surface and code anchors      | keep as the single engine component home; use subsystem docs for flow context         |
+| [web component](./components/web/index.md)                                   | `supporting`   | canonical frontend component home with routes, services, and code anchors | keep as the single frontend component home; use subsystem docs for flow context       |
+| [Engine Roadmap](./components/engine/roadmap/engine-phases.md)               | `supporting`   | execution-subsystem delivery projection and sequencing                    | keep as the active engine roadmap; do not let it compete with repo-wide roadmap truth |
+| [TypeScript Package Classification](./typescript-package-classification.md)  | `supporting`   | package taxonomy and workspace structure aid                              | keep as supporting classification                                                     |
+| [Architecture Atlas](./atlas/architecture/architecture_atlas.md)             | `historical`   | dated code snapshot from 2026-03-06                                       | keep as historical snapshot only                                                      |
 
 ## Planning-Adjacent Architecture Surfaces
 
@@ -70,15 +70,16 @@ compete with the canonical architecture sources above.
 
 ## Confirmed Drift Closed In This Pass
 
-- [Architecture Component Surfaces](components/index.md) now enforces the
+- [Architecture Component Surfaces](./components/index.md) now enforces the
   component-home rule explicitly.
-- [System Architecture](system/index.md) and
-  [Subsystem Architecture](subsystems/index.md) now separate system,
+- [System Architecture](./system/index.md) and
+  [Subsystem Architecture](./system/subsystems/index.md) now separate system,
   subsystem, and component navigation instead of mixing those levels.
-- [web component](components/web/index.md) is now the single active frontend
+- [web component](./components/web/index.md) is now the single active frontend
   component home; the old `web-app` alias was removed from the active tree.
-- The top-level `engine/` and `frontend/` packs are now described as subsystem
-  compatibility packs instead of second component homes.
+- The top-level `engine/` and `frontend/` packs were removed from the active
+  tree; flow narratives now route through `system/subsystems/**` while
+  component truth stays under `components/**`.
 
 ## Wave 1 Outcome
 

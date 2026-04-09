@@ -4,10 +4,10 @@
 - Date: 2026-03-03
 - Owners: Engine + Storage
 - Related:
-  - [SECURITY_INVARIANTS.v1.md](../architecture/engine/security/SECURITY_INVARIANTS.v1.md)
-  - [TENANT_ISOLATION_TESTS.v1.md](../architecture/engine/security/TENANT_ISOLATION_TESTS.v1.md)
-  - [ADR-0003 - Execution Model](ADR-0003-execution-model.md)
-  - [ADR-0004 - Event Sourcing Strategy](ADR-0004-event-sourcing-strategy.md)
+  - [SECURITY_INVARIANTS.v1.md](../architecture/components/engine/security/SECURITY_INVARIANTS.v1.md)
+  - [TENANT_ISOLATION_TESTS.v1.md](../architecture/components/engine/security/TENANT_ISOLATION_TESTS.v1.md)
+  - [ADR-0003 - Execution Model](./ADR-0003-execution-model.md)
+  - [ADR-0004 - Event Sourcing Strategy](./ADR-0004-event-sourcing-strategy.md)
 
 ## 1. Context
 

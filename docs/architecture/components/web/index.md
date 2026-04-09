@@ -20,6 +20,24 @@ out of the active tree.
 - expose client services for plans, runs, and workspace state;
 - map backend runtime and planning responses into operator-facing views.
 
+## Component Decomposition
+
+- shell and bootstrap:
+  [Main workspace views and UX](./main-workspace-views-and-ux.md),
+  [App shell](./appshell/app-shell.md),
+  [Data source service boundary](./appshell/data-source-service-boundary.md)
+- graph and authoring surfaces:
+  [Graph frontend architecture](./graph/graph-frontend-architecture.md),
+  [Canvas controller current-to-target](./graph/canvas-controller-current-to-target-architecture.md)
+- runtime and run-inspection surfaces:
+  [Runs architecture](./runs/dvt-runs-frontend-architecture.md),
+  [Frontend runtime contract technical manual](./runs/frontend-runtime-contract-technical-manual.md),
+  [Frontend runtime contract user manual](./runs/frontend-runtime-contract-user-manual.md)
+- cross-cutting UX:
+  [UX implementation guide](./ux-implementation-guide.md),
+  [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
+  [Library and open-source reference stack](./library-and-open-source-reference-stack.md)
+
 ## Public Operational Surface
 
 - app bootstrap and shell wiring:
@@ -72,7 +90,7 @@ with the protected backend contracts.
 
 ## Related Pages
 
-- [Frontend subsystem compatibility pack](../../frontend/index.md)
-- [Read subsystem](../../subsystems/read/index.md)
+- [Read subsystem](../../system/subsystems/read/index.md)
+- [Canonical run lifecycle subsystem](../../system/subsystems/canonical-run-lifecycle/index.md)
 - [DVT Component Map](../../component-map.md)
 - [System Delivery Status](../../system-delivery-status.md)

@@ -41,8 +41,8 @@ This review was refreshed on `2026-04-08` against the current code and tests in:
 
 ## Canonical References
 
-- [Governance Document And Rule Inventory](governance-document-rule-inventory.md)
-- [Canonical Doc Code Matrix](canonical-doc-code-matrix.md)
+- [Governance Document And Rule Inventory](./governance-document-rule-inventory.md)
+- [Canonical Doc Code Matrix](./canonical-doc-code-matrix.md)
 - [Planner contracts](../../contracts/planner/index.md)
 - [ADR-0035 - Planner public contract evolution](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [ADR-0036 - ExecutionPlan planVersion registry](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)

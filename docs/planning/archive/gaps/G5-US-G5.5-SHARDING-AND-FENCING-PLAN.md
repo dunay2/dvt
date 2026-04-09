@@ -12,9 +12,9 @@ Execution plan for the multi-worker strategy that remains after the standalone
 runtime and single-owner rollout work.
 
 - Gap: `G5 - Outbox worker independiente`
-- Current status source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- Predecessor slice: [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+- Current status source: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
+- Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- Predecessor slice: [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](./G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
 - ADR: [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 - Ordering baseline: [`ADR-0009_Outbox_Ordering.md`](../../adr/ADR-0009_Outbox_Ordering.md)
 

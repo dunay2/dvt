@@ -20,10 +20,10 @@ three practical questions:
 
 ## Read This With
 
-1. [Reference Architecture](reference-architecture.md)
-2. [System Delivery Status](system-delivery-status.md)
-3. [System Architecture](system/index.md)
-4. [Subsystem Architecture](subsystems/index.md)
+1. [Reference Architecture](./reference-architecture.md)
+2. [System Delivery Status](./system-delivery-status.md)
+3. [System Architecture](./system/index.md)
+4. [Subsystem Architecture](./system/subsystems/index.md)
 5. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 6. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
@@ -235,9 +235,9 @@ flowchart TB
 
 ## Related Pages
 
-- [DVT Domain Map](domain-map.md)
-- [System Architecture](system/index.md)
-- [Subsystem Architecture](subsystems/index.md)
-- [Architecture Component Surfaces](components/index.md)
-- [System Delivery Status](system-delivery-status.md)
+- [DVT Domain Map](./domain-map.md)
+- [System Architecture](./system/index.md)
+- [Subsystem Architecture](./system/subsystems/index.md)
+- [Architecture Component Surfaces](./components/index.md)
+- [System Delivery Status](./system-delivery-status.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)

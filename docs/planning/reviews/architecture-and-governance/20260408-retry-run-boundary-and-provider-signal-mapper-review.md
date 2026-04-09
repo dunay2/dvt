@@ -24,8 +24,8 @@ It answers two questions:
 - [ADR-0040](../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
 - [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
-- [Engine boundary current/target review](20260407-engine-boundary-current-target-and-migration-review.md)
-- [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
+- [Engine boundary current/target review](./20260407-engine-boundary-current-target-and-migration-review.md)
+- [StartRunProtocol.v1.md](../../../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md)
 
 Primary code paths:
 

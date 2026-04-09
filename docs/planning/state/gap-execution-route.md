@@ -15,11 +15,11 @@ current operational planning path.
 
 ## Current Routing Surfaces
 
-- [Planning Control Tower](planning-control-tower.md)
+- [Planning Control Tower](./planning-control-tower.md)
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
-- [Domain Status Board](domain-status-board.md)
+- [Domain Status Board](./domain-status-board.md)
 
 ## Retirement Rule
 
