@@ -137,6 +137,23 @@ export const RecoverRunCommandSchema = z
   })
   .strict();
 
+export const RunFailureEvidenceSchema = z
+  .object({
+    stepId: NonBlankStringSchema,
+    reason: NonBlankStringSchema.optional(),
+    message: NonBlankStringSchema.optional(),
+    failedAt: z.string().min(1),
+  })
+  .strict();
+
+export const RunExecutionEvidenceSchema = z
+  .object({
+    activeStepId: NonBlankStringSchema.optional(),
+    failure: RunFailureEvidenceSchema.optional(),
+    materialization: z.lazy(() => MaterializationEvidenceSchema).optional(),
+  })
+  .strict();
+
 export const RunStatusSnapshotSchema = z.object({
   runId: NonBlankStringSchema,
   status: RunStatusSchema,
@@ -146,6 +163,7 @@ export const RunStatusSnapshotSchema = z.object({
   message: z.string().optional(),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
+  execution: RunExecutionEvidenceSchema.optional(),
 });
 
 export const MaterializationEvidenceSchema = z

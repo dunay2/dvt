@@ -464,7 +464,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
               ) : null}
               {failureDiagnostics.failureEmittedAt ? (
                 <div>
-                  <span className="text-slate-400">{copy.failureAtLabel}</span>
+                  <span className="text-slate-400">{copy.failedAtLabel}</span>
                   <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString()}</div>
                 </div>
               ) : null}
