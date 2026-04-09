@@ -153,9 +153,7 @@ jobs:
     timeout-minutes: 5
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
-      integration_changed:
-        ${{ steps.changes.outputs.adapter_postgres_integration || steps.push_all.outputs.changed }}
-      smoke_changed:
+      adapter_postgres_changed:
         ${{ steps.changes.outputs.adapter_postgres_relevant || steps.push_all.outputs.changed }}
     steps:
       - name: Checkout
@@ -171,7 +169,6 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "filters<<EOF" >> $GITHUB_OUTPUT
-          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration >> $GITHUB_OUTPUT
           node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
@@ -182,14 +179,14 @@ jobs:
         with:
           filters: ${{ steps.filters.outputs.filters }}
 
-  adapter-postgres-integration:
-    name: Adapter Postgres Integration Smoke
+  adapter-postgres:
+    name: Adapter Postgres Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [detect-pg-scope]
     if:
-      needs.detect-pg-scope.result == 'success' && needs.detect-pg-scope.outputs.integration_changed
-      == 'true'
+      needs.detect-pg-scope.result == 'success' &&
+      needs.detect-pg-scope.outputs.adapter_postgres_changed == 'true'
     services:
       postgres:
         image: postgres:15
@@ -202,6 +199,7 @@ jobs:
         ports:
           - 5432:5432
     env:
+      DVT_CI: '1'
       DVT_PG_INTEGRATION: '1'
       DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
     steps:
@@ -216,11 +214,11 @@ jobs:
       - name: Enforce adapter-postgres import alias guard
         run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
 
-      - name: Build adapter-postgres dependency graph (integration)
-        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+      - name: Build adapter-postgres dependency graph
+        run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build
 
-      - name: Run adapter-postgres smoke integration
-        run: pnpm test:adapter-postgres:integration
+      - name: Run adapter-postgres full suite
+        run: pnpm test:adapter-postgres
 
   test-determinism:
     name: Determinism Tests
@@ -326,29 +324,3 @@ jobs:
         with:
           name: engine-coverage-report
           path: packages/@dvt/engine/coverage/
-
-  adapter-postgres-smoke:
-    name: Adapter Postgres Smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [detect-pg-scope]
-    if:
-      needs.detect-pg-scope.result == 'success' && needs.detect-pg-scope.outputs.smoke_changed ==
-      'true'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Setup pnpm, cache and dependencies
-        uses: ./.github/actions/setup-node-pnpm
-        with:
-          node-version: 22.x
-
-      - name: Enforce adapter-postgres import alias guard
-        run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
-
-      - name: Build adapter-postgres dependency graph
-        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
-
-      - name: Run adapter-postgres full test suite
-        run: pnpm test:adapter-postgres

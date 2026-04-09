@@ -26,7 +26,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prebuild": "pnpm --filter \"@dvt/adapter-temporal^...\" build",
+    "prebuild": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/adapter-temporal^...\" build",
     "postbuild": "echo '✅ Build complete'",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/adapter-temporal^...\" build",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts",

@@ -52,6 +52,19 @@ Implementation notes:
 
 ## Changed-file Gates and Autofix
 
+### `skip-pretest-if-ci.cjs`
+
+Lifecycle-hook helper reused by `prebuild`, `pretypecheck`, and `pretest`
+scripts that normally build dependency graphs before the main command.
+
+Behavior:
+
+- exits `0` when `DVT_CI=1|true`, so the `|| pnpm ... build` fallback is skipped
+- exits `1` otherwise, so local builds keep the normal dependency prebuild path
+
+Use this only when CI already ran an explicit workspace-graph build step before
+the guarded command.
+
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by
