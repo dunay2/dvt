@@ -45,7 +45,8 @@ function shouldSkipForDuplicateCheck(p) {
 }
 
 function parseFrontmatter(raw) {
-  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  const normalized = raw.replace(/^\uFEFF/, '');
+  const m = normalized.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!m) return {};
   const out = {};
   const lines = m[1].split(/\r?\n/);
@@ -186,9 +187,13 @@ function main() {
         } else {
           const ageDays = Math.floor((now.getTime() - parsed.getTime()) / 86400000);
           if (ageDays > STALE_FAIL_DAYS) {
-            errors.push(`${relative} -> stale documentation (${ageDays} days since last_reviewed).`);
+            errors.push(
+              `${relative} -> stale documentation (${ageDays} days since last_reviewed).`
+            );
           } else if (ageDays > STALE_WARN_DAYS) {
-            warnings.push(`${relative} -> aging documentation (${ageDays} days since last_reviewed).`);
+            warnings.push(
+              `${relative} -> aging documentation (${ageDays} days since last_reviewed).`
+            );
           }
         }
       }
