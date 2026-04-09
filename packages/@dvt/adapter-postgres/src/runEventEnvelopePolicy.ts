@@ -1,5 +1,5 @@
 import { parseRunEventRecord, parseRunEventWrite } from '@dvt/contracts';
-import type { RunEventRecordSchemaT, RunEventWriteSchemaT } from '@dvt/contracts';
+import type { RunEventWriteSchemaT } from '@dvt/contracts';
 
 import {
   InvalidRunEventEnvelopeError,
@@ -67,45 +67,13 @@ function enrichEnvelopeWithSeq(
   envelope: RunEventWriteSchemaT,
   context: EnrichContext
 ): EventEnvelope {
-  const normalizedInput = toNormalizedEventInput(envelope);
-  const candidate: RunEventRecordSchemaT = {
-    ...normalizedInput,
-    runSeq: context.runSeq,
-    persistedAt: context.persistedAt,
-  };
-
   try {
-    return parseRunEventRecord(candidate) as EventEnvelope;
+    return parseRunEventRecord({
+      ...envelope,
+      runSeq: context.runSeq,
+      persistedAt: context.persistedAt,
+    }) as EventEnvelope;
   } catch (cause) {
     throw new InvalidRunEventSchemaError(context.runId, context.index, cause);
   }
-}
-
-function toNormalizedEventInput(envelope: RunEventWriteSchemaT): EventInput {
-  const base = {
-    eventId: envelope.eventId,
-    eventType: envelope.eventType,
-    runId: envelope.runId,
-    emittedAt: envelope.emittedAt,
-    tenantId: envelope.tenantId,
-    projectId: envelope.projectId,
-    environmentId: envelope.environmentId,
-    planId: envelope.planId,
-    planVersion: envelope.planVersion,
-    engineAttemptId: envelope.engineAttemptId,
-    logicalAttemptId: envelope.logicalAttemptId,
-    idempotencyKey: envelope.idempotencyKey,
-    payloadVersion: envelope.payloadVersion,
-  };
-  const withPayload =
-    envelope.payload === undefined ? base : { ...base, payload: envelope.payload };
-
-  if ('stepId' in envelope) {
-    return {
-      ...withPayload,
-      stepId: envelope.stepId,
-    };
-  }
-
-  return withPayload;
 }
