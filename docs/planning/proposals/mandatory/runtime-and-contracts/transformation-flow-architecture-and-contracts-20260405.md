@@ -421,6 +421,7 @@ type MaterializationEvidence = {
 type RunOutcome = {
   runId: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
+  executor?: 'postgres' | 'dbt';
   currentStepId?: string;
   failedStepId?: string;
   errorReason?: string;
@@ -444,6 +445,44 @@ type RunOutcome = {
 - start and completion timestamps
 - failure event with step attribution
 - materialization evidence event when sink write succeeds
+
+### Result-event payload contract
+
+For this vertical, the read surfaces rely on governed event payloads rather
+than UI-local heuristics.
+
+```ts
+type RunStartedPayload = {
+  executor?: 'postgres' | 'dbt';
+};
+
+type StepCompletedPayload = {
+  gatewayDecision?: boolean;
+  resultEvidence?: MaterializationEvidence;
+};
+
+type StepFailedPayload = {
+  reason?: string;
+  message?: string;
+};
+
+type RunCompletedPayload = {
+  executor?: 'postgres' | 'dbt';
+  resultEvidence?: MaterializationEvidence;
+};
+
+type RunFailedPayload = {
+  reason: string;
+  executor?: 'postgres' | 'dbt';
+  message?: string;
+};
+```
+
+The persisted plan MUST bind the transformation executor identity in
+`plan.observability.extra.transformationFlowRuntime.executor` when the preview
+profile is executor-bound. Runtime emitters then copy that identity into
+terminal run events so `GET /runs/:runId` and `GET /runs/:runId/events` can
+surface executor identity without inferring it from internal step kinds.
 
 ## Execution sequence
 

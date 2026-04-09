@@ -715,6 +715,10 @@ describe('planRoutes', () => {
       expect.objectContaining({
         observability: expect.objectContaining({
           extra: expect.objectContaining({
+            transformationFlowRuntime: {
+              previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+              executor: 'postgres',
+            },
             transformationFlowProvenance: VALID_PREVIEW_PROVENANCE,
           }),
         }),

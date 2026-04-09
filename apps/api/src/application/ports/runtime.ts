@@ -1,4 +1,10 @@
-import type { EventEnvelope, RunExecutionContextRef, RunStatusSnapshot } from '@dvt/contracts';
+import type {
+  EventEnvelope,
+  MaterializationEvidence,
+  RunExecutionContextRef,
+  RunStatusSnapshot,
+  TransformationExecutor,
+} from '@dvt/contracts';
 
 import type { AuthorizationAction } from '../../domain/auth/types.js';
 
@@ -43,6 +49,11 @@ export type GetRunStatusResult = Pick<
   readonly tenantId: string;
   readonly enriched: boolean;
   readonly snapshotStaleness: RunSnapshotStaleness;
+  readonly executor?: TransformationExecutor;
+  readonly currentStepId?: string;
+  readonly failedStepId?: string;
+  readonly errorReason?: string;
+  readonly materialization?: MaterializationEvidence;
 };
 
 export interface IGetRunStatusUseCase {

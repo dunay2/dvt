@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 import type {
   EngineRunRef,
+  MaterializationEvidence,
   PlanRef,
   ResolvedRunContext,
   RunStateCommandPort,
@@ -44,7 +45,11 @@ import {
   toTemporalTaskQueue,
 } from '../src/index.js';
 
-import { permanentErrorExecutor, withErrorExecutors } from './helpers/testExecutors.js';
+import {
+  materializationEvidenceExecutor,
+  permanentErrorExecutor,
+  withErrorExecutors,
+} from './helpers/testExecutors.js';
 
 // Local outbox record type for test doubles — mirrors engine's OutboxRecord shape.
 interface OutboxRecord {
@@ -875,6 +880,34 @@ function mkGatewaySkipPlan(): unknown {
   } as const;
 }
 
+function withTransformationRuntimeBinding<T extends Record<string, unknown>>(
+  plan: T,
+  executor: 'postgres' | 'dbt' = 'postgres'
+): T {
+  const currentObservability =
+    typeof plan['observability'] === 'object' && plan['observability'] !== null
+      ? (plan['observability'] as Record<string, unknown>)
+      : {};
+  const currentExtra =
+    typeof currentObservability['extra'] === 'object' && currentObservability['extra'] !== null
+      ? (currentObservability['extra'] as Record<string, unknown>)
+      : {};
+
+  return {
+    ...plan,
+    observability: {
+      ...currentObservability,
+      extra: {
+        ...currentExtra,
+        transformationFlowRuntime: {
+          previewProfile: 'transformation-sql-first-v1',
+          executor,
+        },
+      },
+    },
+  };
+}
+
 function sha256Hex(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
@@ -1179,14 +1212,23 @@ describe('temporal integration (time-skipping)', () => {
    * @verifies ADR-0011 — RunStarted ownership
    */
   it(
-    'golden path: linear 3-step plan reaches COMPLETED with deterministic event order',
+    'golden path: linear 3-step plan emits result evidence and completes deterministically',
     async () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
       const store = new TestStateStore();
       const outbox = new TestOutbox();
       const projector = new TestProjector();
-      const plan = mkLinearThreeStepPlan();
+      const resultEvidence: MaterializationEvidence = {
+        executor: 'postgres',
+        environmentId: 't-it',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-01-01T00:00:00.000Z',
+        completedAt: '2026-01-01T00:00:05.000Z',
+        durationMs: 5000,
+      };
+      const plan = withTransformationRuntimeBinding(mkLinearThreeStepPlan());
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-linear-3', planBytes);
@@ -1208,6 +1250,10 @@ describe('temporal integration (time-skipping)', () => {
         },
         workflowsPath: WORKFLOW_PATH,
         activityDeps: createActivityDeps(store, outbox, planBytes),
+        stepExecutors: [
+          materializationEvidenceExecutor('s-3', resultEvidence),
+          ...DEFAULT_STEP_EXECUTORS,
+        ],
       });
 
       await worker.start(env.nativeConnection);
@@ -1240,6 +1286,20 @@ describe('temporal integration (time-skipping)', () => {
 
         // Verify monotonic runSeq (ADR-0010 Section 3.2)
         expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
+
+        expect(events.find((event) => event.eventType === 'RunStarted')?.payload).toMatchObject({
+          executor: 'postgres',
+        });
+        expect(
+          events.find((event) => event.eventType === 'StepCompleted' && event.stepId === 's-3')
+            ?.payload
+        ).toMatchObject({
+          resultEvidence,
+        });
+        expect(events.find((event) => event.eventType === 'RunCompleted')?.payload).toMatchObject({
+          executor: 'postgres',
+          resultEvidence,
+        });
 
         const projected = projector.rebuild(ctx.runId, events);
         expect(projected.status).toBe('COMPLETED');
@@ -1342,7 +1402,7 @@ describe('temporal integration (time-skipping)', () => {
       const store = new TestStateStore();
       const outbox = new TestOutbox();
       const projector = new TestProjector();
-      const plan = mkPermanentFailurePlan();
+      const plan = withTransformationRuntimeBinding(mkPermanentFailurePlan());
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
@@ -1390,8 +1450,17 @@ describe('temporal integration (time-skipping)', () => {
           'StepFailed:s-fail',
           'RunFailed:-',
         ]);
+        expect(events.find((e) => e.eventType === 'RunStarted')?.payload).toMatchObject({
+          executor: 'postgres',
+        });
+        expect(events.find((e) => e.eventType === 'StepFailed')?.payload).toMatchObject({
+          reason: 'PermanentStepError',
+          message: 'PERMANENT_STEP_ERROR:s-fail',
+        });
         expect(events.find((e) => e.eventType === 'RunFailed')?.payload).toMatchObject({
           reason: 'STEP_FAILURE',
+          executor: 'postgres',
+          message: 'PERMANENT_STEP_ERROR:s-fail',
         });
 
         const projected = projector.rebuild(ctx.runId, events);

@@ -5,6 +5,7 @@
  * Use these with `createActivities(deps, [...testExecutors, ...DEFAULT_STEP_EXECUTORS])`
  * to simulate step failures without polluting production code or plan fixtures.
  */
+import type { MaterializationEvidence } from '@dvt/contracts';
 import { ApplicationFailure } from '@temporalio/activity';
 
 import { DEFAULT_STEP_EXECUTORS, type StepExecutor } from '../../src/activities/stepActivities.js';
@@ -35,6 +36,25 @@ export function permanentErrorExecutor(targetStepId: string): StepExecutor {
         message: `PERMANENT_STEP_ERROR:${step.stepId}`,
         nonRetryable: true,
       });
+    },
+  };
+}
+
+/**
+ * Executor that completes the target step and returns governed result evidence.
+ */
+export function materializationEvidenceExecutor(
+  targetStepId: string,
+  resultEvidence: MaterializationEvidence
+): StepExecutor {
+  return {
+    canExecute: (step) => step.stepId === targetStepId,
+    async execute(step) {
+      return {
+        stepId: step.stepId,
+        status: 'COMPLETED',
+        resultEvidence,
+      };
     },
   };
 }

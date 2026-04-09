@@ -1712,8 +1712,8 @@ tasks:
     status_reason: >-
       Result diagnostics implementation started in run detail: failure attribution now derives from
       snapshot and event payloads (including StepFailed reason/message fallback) and surfaces a
-      failure timestamp for operator triage without backend log inspection. Full closure still
-      depends on TF-C2-B runtime result payload readiness.
+      failure timestamp for operator triage without backend log inspection. TF-C2-B runtime payload
+      readiness is now closed, so the remaining work is UI completion and evidence presentation.
     last_verified: '2026-04-08'
 dependency_notes:
   - >-

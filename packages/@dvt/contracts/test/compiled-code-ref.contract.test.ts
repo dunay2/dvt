@@ -86,6 +86,43 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     expect(parsed.payload?.gatewayDecision).toBe(false);
   });
 
+  it('accepts StepCompleted write events with resultEvidence payload', () => {
+    const parsed = parseRunEventWrite({
+      eventId: 'evt-step-completed-evidence-1',
+      eventType: 'StepCompleted',
+      payloadVersion: 1,
+      emittedAt: '2026-03-07T10:00:00.000Z',
+      runId: 'run-compiled-code-ref-1',
+      tenantId: 'tenant-a',
+      projectId: 'project-analytics',
+      environmentId: 'prod',
+      planId: 'plan-compiled-code-ref-1',
+      planVersion: '1.0',
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      stepId: 'model.analytics.orders',
+      idempotencyKey: 'StepCompleted|tenant-a|run-compiled-code-ref-1|1|result-evidence',
+      payload: {
+        resultEvidence: {
+          executor: 'postgres',
+          environmentId: 'prod',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-03-07T10:00:02.000Z',
+          completedAt: '2026-03-07T10:00:05.000Z',
+          durationMs: 3000,
+        },
+      },
+    });
+
+    expect(parsed.eventType).toBe('StepCompleted');
+    expect(parsed.payload?.resultEvidence).toMatchObject({
+      executor: 'postgres',
+      sinkTable: 'analytics.orders_daily',
+      rowsWritten: 42,
+    });
+  });
+
   it('rejects StepCompleted payloads that omit gatewayDecision', () => {
     expect(() =>
       parseRunEventWrite({
@@ -176,6 +213,73 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
 
     expect(parsed.eventType).toBe('RunFailed');
     expect(parsed.payload?.reason).toBe('STEP_FAILURE');
+  });
+
+  it('accepts RunCompleted write events with executor and resultEvidence payload', () => {
+    const parsed = parseRunEventWrite({
+      eventId: 'evt-run-completed-1',
+      eventType: 'RunCompleted',
+      payloadVersion: 1,
+      emittedAt: '2026-03-07T10:00:10.000Z',
+      runId: 'run-compiled-code-ref-1',
+      tenantId: 'tenant-a',
+      projectId: 'project-analytics',
+      environmentId: 'prod',
+      planId: 'plan-compiled-code-ref-1',
+      planVersion: '1.0',
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      idempotencyKey: 'RunCompleted|tenant-a|run-compiled-code-ref-1|1|result-evidence',
+      payload: {
+        executor: 'postgres',
+        resultEvidence: {
+          executor: 'postgres',
+          environmentId: 'prod',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-03-07T10:00:02.000Z',
+          completedAt: '2026-03-07T10:00:05.000Z',
+          durationMs: 3000,
+        },
+      },
+    });
+
+    expect(parsed.eventType).toBe('RunCompleted');
+    expect(parsed.payload).toMatchObject({
+      executor: 'postgres',
+      resultEvidence: {
+        sinkTable: 'analytics.orders_daily',
+      },
+    });
+  });
+
+  it('accepts StepFailed write events with structured diagnostics payload', () => {
+    const parsed = parseRunEventWrite({
+      eventId: 'evt-step-failed-1',
+      eventType: 'StepFailed',
+      payloadVersion: 1,
+      emittedAt: '2026-03-07T10:00:05.000Z',
+      runId: 'run-compiled-code-ref-1',
+      tenantId: 'tenant-a',
+      projectId: 'project-analytics',
+      environmentId: 'prod',
+      planId: 'plan-compiled-code-ref-1',
+      planVersion: '1.0',
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      stepId: 'model.analytics.orders',
+      idempotencyKey: 'StepFailed|tenant-a|run-compiled-code-ref-1|1|reason-present',
+      payload: {
+        reason: 'SINK_WRITE_FAILED',
+        message: 'duplicate key value violates unique constraint',
+      },
+    });
+
+    expect(parsed.eventType).toBe('StepFailed');
+    expect(parsed.payload).toMatchObject({
+      reason: 'SINK_WRITE_FAILED',
+      message: 'duplicate key value violates unique constraint',
+    });
   });
 
   it('rejects RunFailed write events with unknown reasons', () => {

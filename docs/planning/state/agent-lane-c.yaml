@@ -812,7 +812,7 @@ tasks:
     last_verified: '2026-04-05'
   - task_id: TF-C2-B
     priority: P0
-    status: queued
+    status: completed
     objective: >-
       expose caller-visible materialization evidence and step-attributed failure diagnostics on the
       runtime read surfaces.
@@ -822,14 +822,16 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260408-tf-c2-b-run-read-evidence-closeout.md
     status_reason: >-
-      Outcome visibility is now part of the product definition, but the read-surface evidence slice
-      is not yet separate from the executor work.
-    last_verified: '2026-04-05'
+      Runtime read surfaces now expose executor identity, sink materialization evidence, and
+      step-attributed failure diagnostics by combining structured Temporal event payloads with the
+      persisted plan runtime binding on `GET /runs/:runId` and `GET /runs/:runId/events`.
+    last_verified: '2026-04-08'
   - task_id: TF-C3
     priority: P1
     status: queued

@@ -9,8 +9,19 @@
 // normalizeDependsOn
 // ---------------------------------------------------------------------------
 
-import type { CompiledCodeRef, ExecutionStep, StepArtifactRef } from '@dvt/contracts';
-import { DbtStepTypeConfigSchema } from '@dvt/contracts';
+import type {
+  CompiledCodeRef,
+  ExecutionPlan,
+  ExecutionStep,
+  MaterializationEvidence,
+  StepArtifactRef,
+  TransformationExecutor,
+} from '@dvt/contracts';
+import {
+  DbtStepTypeConfigSchema,
+  MaterializationEvidenceSchema,
+  TransformationFlowRuntimeBindingSchema,
+} from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {
   if (!Array.isArray(dependsOn)) return [];
@@ -70,13 +81,20 @@ export function resolveGatewayDependencyContext(
 
 export function buildCompletedStepFact(
   stepId: string,
-  gatewayDecision?: boolean
+  gatewayDecision?: boolean,
+  resultEvidence?: MaterializationEvidence
 ): Record<string, unknown> {
+  const fact: Record<string, unknown> = { stepId, status: 'COMPLETED' };
+
   if (typeof gatewayDecision === 'boolean') {
-    return { stepId, status: 'COMPLETED', gatewayDecision };
+    fact['gatewayDecision'] = gatewayDecision;
   }
 
-  return { stepId, status: 'COMPLETED' };
+  if (resultEvidence !== undefined) {
+    fact['resultEvidence'] = resultEvidence;
+  }
+
+  return fact;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +180,21 @@ export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload
       ...compiledCodeRef,
     },
   };
+}
+
+export function resolveMaterializationEvidence(
+  value: unknown
+): MaterializationEvidence | undefined {
+  const parsed = MaterializationEvidenceSchema.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
+}
+
+export function resolveTransformationExecutor(
+  plan: Pick<ExecutionPlan, 'observability'>
+): TransformationExecutor | undefined {
+  const runtimeBinding = plan.observability?.extra?.['transformationFlowRuntime'];
+  const parsed = TransformationFlowRuntimeBindingSchema.safeParse(runtimeBinding);
+  return parsed.success ? parsed.data.executor : undefined;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

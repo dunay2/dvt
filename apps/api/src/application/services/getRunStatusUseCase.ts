@@ -1,3 +1,4 @@
+import type { PlanRecord } from '@dvt/contracts';
 import type { IRunStateStoreRead } from '@dvt/engine';
 import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
 
@@ -12,6 +13,7 @@ import type {
 } from '../ports/runtime.js';
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
+import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
@@ -20,12 +22,17 @@ interface SnapshotStalenessResolution {
   fallbackReason?: SnapshotStalenessFallbackReason;
 }
 
+interface PlanRecordReader {
+  getPlanRecord(planId: PlanRecord['planId']): Promise<PlanRecord | undefined>;
+}
+
 export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
     private readonly stateStore: IRunStateStoreRead,
     private readonly stalenessReader?: IRunSnapshotStalenessReader,
-    private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry
+    private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
+    private readonly planStore?: PlanRecordReader
   ) {}
 
   public async execute(
@@ -48,10 +55,25 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       metadata.tenantId,
       metadata.runId
     );
+    const workflowSnapshotPromise = this.stateStore.getSnapshot(metadata.tenantId, metadata.runId);
+    const eventsPromise = this.stateStore.listEvents(metadata.tenantId, metadata.runId);
+    const planRecordPromise =
+      this.planStore?.getPlanRecord(metadata.planId) ?? Promise.resolve(undefined);
 
-    const snapshot = await snapshotPromise;
-    const snapshotStaleness = await snapshotStalenessPromise;
+    const [snapshot, snapshotStaleness, workflowSnapshot, events, planRecord] = await Promise.all([
+      snapshotPromise,
+      snapshotStalenessPromise,
+      workflowSnapshotPromise,
+      eventsPromise,
+      planRecordPromise,
+    ]);
     this.recordSnapshotStalenessTelemetry(snapshotStaleness, metadata.tenantId, metadata.runId);
+    const evidenceModel = deriveRunReadEvidenceModel({
+      snapshot,
+      workflowSnapshot,
+      events,
+      ...(planRecord === undefined ? {} : { planRecord }),
+    });
 
     return {
       runId: snapshot.runId,
@@ -63,6 +85,15 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
       ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
       ...(snapshot.completedAt !== undefined ? { completedAt: snapshot.completedAt } : {}),
+      ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
+      ...(evidenceModel.currentStepId === undefined
+        ? {}
+        : { currentStepId: evidenceModel.currentStepId }),
+      ...(evidenceModel.failedStepId === undefined ? {} : { failedStepId: evidenceModel.failedStepId }),
+      ...(evidenceModel.errorReason === undefined ? {} : { errorReason: evidenceModel.errorReason }),
+      ...(evidenceModel.materialization === undefined
+        ? {}
+        : { materialization: evidenceModel.materialization }),
     };
   }
 

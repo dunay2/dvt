@@ -1,7 +1,7 @@
-# Run Events Contract (Normative v2.0.1)
+# Run Events Contract (Normative v2.0.2)
 
 **Status**: Normative (MUST / MUST NOT)  
-**Version**: 2.0.1  
+**Version**: 2.0.2  
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: StateStore (Append Authority), Projectors, UI, Audit Systems  
 **Parent Contract**: [`IWorkflowEngine.v2.0.md`](./IWorkflowEngine.v2.0.md)  
@@ -122,6 +122,44 @@ References:
 
 - If an event carries event-specific data (errors, outputs, skip reasons, pause/resume/cancel reasons), producer MUST include `payload`.
 - If no additional data exists, `payload` MAY be omitted.
+
+### 2.6.1 Known Payload Shapes (NORMATIVE)
+
+For the known lifecycle events below, producers and consumers MUST treat these
+payload keys as part of the governed contract.
+
+```ts
+type TransformationExecutor = 'postgres' | 'dbt';
+
+interface MaterializationEvidence {
+  executor: TransformationExecutor;
+  environmentId: string;
+  sinkTable: string;
+  rowsWritten: number;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+}
+```
+
+| Event type      | Payload rule                                                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `RunStarted`    | MAY include `{ executor }` when the persisted plan is bound to a governed transformation executor.                            |
+| `StepCompleted` | MAY include `{ gatewayDecision }`, `{ resultEvidence }`, or both. `resultEvidence` MUST conform to `MaterializationEvidence`. |
+| `StepFailed`    | MAY include `{ reason, message }`. When present, `reason` and `message` MUST be non-empty strings.                            |
+| `RunCompleted`  | MAY include `{ executor, resultEvidence }`. When `resultEvidence` is present it MUST conform to `MaterializationEvidence`.    |
+| `RunFailed`     | MUST include `{ reason }`. It MAY additionally include `{ executor, message }`.                                               |
+
+Additional constraints:
+
+- `gatewayDecision` is reserved for gateway semantics and MUST be a boolean when
+  present.
+- `resultEvidence` is the canonical payload key for caller-visible runtime
+  outcome evidence.
+- Producers MUST NOT place materialization evidence under ad hoc payload keys
+  for these known events.
+- Consumers MUST tolerate absent optional fields and treat the event envelope as
+  authoritative when those fields are present.
 
 ---
 
@@ -293,6 +331,10 @@ interface RunEventRecord extends RunEventWrite {
 
 ## 6) Change Log
 
+- **2.0.2 (2026-04-08)**: PATCH — formalized known payload shapes for
+  `RunStarted`, `StepCompleted`, `StepFailed`, `RunCompleted`, and `RunFailed`,
+  including the canonical `resultEvidence` materialization payload used by
+  caller-visible runtime read surfaces.
 - **2.0.1 (2026-02-16)**: PATCH — clarified producer-side `eventId` tracking requirements and specified a three-layer transition enforcement architecture with deterministic invalid-transition handling; added conformance test requirements and golden vectors for idempotency derivation.
 - **2.0.0 (2026-02-16)**: **MAJOR** — `eventId` REQUIRED; idempotency formula now includes `planId` + `planVersion` with strict SHA-256, ordered derivation, `|` delimiter, and `RUN` normalization; duplicate handling changed to return-existing metadata and no insert; lifecycle catalog explicitly includes `RunQueued`; `eventType` made forward-compatible; `stepId` MUST/MUST NOT applicability made strict; `eventId` retry-stability rule added; payload presence rule added; transition enforcement responsibilities added; scope clarified to engine runtime plus adapter-owned workers/activities; attempt fallback (`engineAttemptId = 1`) formalized; timestamp authority split (`emittedAt` vs `persistedAt`) formalized.
 

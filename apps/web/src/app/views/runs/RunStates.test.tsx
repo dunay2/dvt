@@ -281,6 +281,134 @@ describe('RunStates', () => {
     expect(container.textContent).toMatch(/1,?284/);
   });
 
+  it('ignores stale prior-attempt diagnostics and materialization when a newer attempt completed', async () => {
+    const workspace = buildWorkspace(
+      {
+        snapshot: {
+          runId: 'run_123',
+          status: 'completed',
+          startedAt: '2026-03-28T10:00:00Z',
+          completedAt: '2026-03-28T10:00:30Z',
+          environment: 'dev',
+          gitSha: 'abc123def',
+          failedStepId: undefined,
+          errorReason: undefined,
+          currentStepId: undefined,
+          materialization: undefined,
+        },
+      },
+      {
+        state: 'available',
+        events: [
+          {
+            eventId: 'evt-old-step-failed',
+            eventType: 'StepFailed',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:10Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'id-old-step-failed',
+            payloadVersion: 1,
+            stepId: 'step-old',
+            runSeq: 3,
+            persistedAt: '2026-03-28T10:00:10Z',
+            payload: {
+              reason: 'OLD_ATTEMPT_FAILURE',
+            },
+          } as RunEvent,
+          {
+            eventId: 'evt-old-run-completed',
+            eventType: 'RunCompleted',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:12Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'id-old-run-completed',
+            payloadVersion: 1,
+            runSeq: 4,
+            persistedAt: '2026-03-28T10:00:12Z',
+            payload: {
+              resultEvidence: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.old_attempt',
+                rowsWritten: 42,
+                startedAt: '2026-03-28T10:00:05Z',
+                completedAt: '2026-03-28T10:00:12Z',
+                durationMs: 7000,
+              },
+            },
+          } as RunEvent,
+          {
+            eventId: 'evt-current-run-started',
+            eventType: 'RunStarted',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:20Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'id-current-run-started',
+            payloadVersion: 1,
+            runSeq: 5,
+            persistedAt: '2026-03-28T10:00:20Z',
+            payload: {
+              executor: 'postgres',
+            },
+          } as RunEvent,
+          {
+            eventId: 'evt-current-run-completed',
+            eventType: 'RunCompleted',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:30Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'id-current-run-completed',
+            payloadVersion: 1,
+            runSeq: 6,
+            persistedAt: '2026-03-28T10:00:30Z',
+            payload: {
+              executor: 'postgres',
+            },
+          } as RunEvent,
+        ],
+      }
+    );
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).not.toContain('Failure diagnostics');
+    expect(container.textContent).not.toContain('OLD_ATTEMPT_FAILURE');
+    expect(container.textContent).not.toContain('analytics.old_attempt');
+    expect(container.textContent).toContain(
+      'Result evidence is not available yet for this run snapshot.'
+    );
+  });
+
   it('renders execution provenance from step-started artifact refs', async () => {
     const workspace = buildWorkspace(undefined, {
       state: 'available',
@@ -389,6 +517,85 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('step-load');
     expect(container.textContent).toContain('SINK_WRITE_FAILED');
     expect(container.textContent).toContain('Failure detected at');
+  });
+
+  it('uses the latest logical attempt when falling back to failure diagnostics', async () => {
+    const workspace = buildWorkspace(
+      {
+        snapshot: {
+          runId: 'run_123',
+          status: 'failed',
+          startedAt: '2026-03-28T10:00:00Z',
+          completedAt: '2026-03-28T10:00:30Z',
+          environment: 'dev',
+          gitSha: 'abc123def',
+          failedStepId: undefined,
+          errorReason: undefined,
+          currentStepId: undefined,
+          materialization: undefined,
+        },
+      },
+      {
+        state: 'available',
+        events: [
+          {
+            eventId: 'evt-old-step-failed',
+            eventType: 'StepFailed',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:10Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'id-old-step-failed',
+            payloadVersion: 1,
+            stepId: 'step-old',
+            runSeq: 3,
+            persistedAt: '2026-03-28T10:00:10Z',
+            payload: {
+              reason: 'OLD_ATTEMPT_FAILURE',
+            },
+          } as RunEvent,
+          {
+            eventId: 'evt-current-step-failed',
+            eventType: 'StepFailed',
+            runId: 'run_123',
+            emittedAt: '2026-03-28T10:00:25Z',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            planId: 'plan_123',
+            planVersion: '1.0.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'id-current-step-failed',
+            payloadVersion: 1,
+            stepId: 'step-current',
+            runSeq: 6,
+            persistedAt: '2026-03-28T10:00:25Z',
+            payload: {
+              reason: 'CURRENT_ATTEMPT_FAILURE',
+            },
+          } as RunEvent,
+        ],
+      }
+    );
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Failure diagnostics');
+    expect(container.textContent).toContain('step-current');
+    expect(container.textContent).toContain('CURRENT_ATTEMPT_FAILURE');
+    expect(container.textContent).not.toContain('OLD_ATTEMPT_FAILURE');
   });
 
   it('renders error and not-found states', async () => {

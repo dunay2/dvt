@@ -22,7 +22,11 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
-function createStateStore(): { getRunMetadataByRunId: () => Promise<unknown> } {
+function createStateStore(): {
+  getRunMetadataByRunId: () => Promise<unknown>;
+  getSnapshot: () => Promise<unknown>;
+  listEvents: () => Promise<unknown>;
+} {
   return {
     async getRunMetadataByRunId() {
       return {
@@ -37,6 +41,12 @@ function createStateStore(): { getRunMetadataByRunId: () => Promise<unknown> } {
         providerWorkflowId: 'wf-1',
         providerRunId: 'provider-run-1',
       };
+    },
+    async getSnapshot() {
+      return null;
+    },
+    async listEvents() {
+      return [];
     },
   };
 }
@@ -406,5 +416,537 @@ describe('GetRunStatusUseCase', () => {
 
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
     expect(telemetry.recordSnapshotStalenessResult).not.toHaveBeenCalled();
+  });
+
+  it('derives executor, currentStepId, and materialization evidence from plan and events', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = {
+      ...createStateStore(),
+      async getSnapshot() {
+        return {
+          schemaVersion: 1,
+          runId: 'run-1',
+          status: 'RUNNING' as const,
+          paused: false,
+          cancelling: false,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          steps: {
+            'step-transform': {
+              status: 'RUNNING' as const,
+              startedAt: '2026-04-08T10:00:01.000Z',
+              attempts: 1,
+            },
+          },
+        };
+      },
+      async listEvents() {
+        return [
+          {
+            eventId: 'evt-run-started',
+            eventType: 'RunStarted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-run-started',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:00:00.000Z',
+            persistedAt: '2026-04-08T10:00:00.100Z',
+            runSeq: 1,
+            payload: {
+              executor: 'postgres',
+            },
+          },
+          {
+            eventId: 'evt-step-completed',
+            eventType: 'StepCompleted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-step-completed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:00:05.000Z',
+            persistedAt: '2026-04-08T10:00:05.100Z',
+            runSeq: 2,
+            stepId: 'step-evidence',
+            payload: {
+              resultEvidence: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.orders_daily',
+                rowsWritten: 42,
+                startedAt: '2026-04-08T10:00:02.000Z',
+                completedAt: '2026-04-08T10:00:05.000Z',
+                durationMs: 3000,
+              },
+            },
+          },
+        ];
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      undefined,
+      {
+        async getPlanRecord() {
+          return {
+            planId: 'plan-1',
+            planVersion: '1.0',
+            schemaVersion: 'v1.2',
+            contractVersion: '1.0.0',
+            canonicalHash: 'a'.repeat(64),
+            canonicalPlanJson: JSON.stringify({
+              metadata: {
+                planId: 'plan-1',
+                planVersion: '1.0',
+                schemaVersion: 'v1.2',
+                contractVersion: '1.0.0',
+                inputHashSha256: 'b'.repeat(64),
+                createdAtIso: '2026-04-08T10:00:00.000Z',
+              },
+              steps: [],
+              observability: {
+                extra: {
+                  transformationFlowRuntime: {
+                    previewProfile: 'transformation-sql-first-v1',
+                    executor: 'postgres',
+                  },
+                },
+              },
+            }),
+            sourceRef: 'plan://persisted/plan-1',
+            state: 'ACTIVE' as const,
+            createdAtIso: '2026-04-08T10:00:00.000Z',
+            updatedAtIso: '2026-04-08T10:00:00.000Z',
+          };
+        },
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      runId: 'provider-run-1',
+      status: 'RUNNING',
+      executor: 'postgres',
+      currentStepId: 'step-transform',
+      materialization: {
+        executor: 'postgres',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+      },
+    });
+  });
+
+  it('derives failedStepId and errorReason from failure events', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'FAILED' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:10.000Z',
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = {
+      ...createStateStore(),
+      async getSnapshot() {
+        return {
+          schemaVersion: 1,
+          runId: 'run-1',
+          status: 'FAILED' as const,
+          paused: false,
+          cancelling: false,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:10.000Z',
+          steps: {
+            'step-load': {
+              status: 'FAILED' as const,
+              startedAt: '2026-04-08T10:00:04.000Z',
+              completedAt: '2026-04-08T10:00:09.000Z',
+              attempts: 1,
+            },
+          },
+        };
+      },
+      async listEvents() {
+        return [
+          {
+            eventId: 'evt-step-failed',
+            eventType: 'StepFailed',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-step-failed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:00:09.000Z',
+            persistedAt: '2026-04-08T10:00:09.100Z',
+            runSeq: 3,
+            stepId: 'step-load',
+            payload: {
+              reason: 'SINK_WRITE_FAILED',
+              message: 'duplicate key value violates unique constraint',
+            },
+          },
+          {
+            eventId: 'evt-run-failed',
+            eventType: 'RunFailed',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-run-failed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:00:10.000Z',
+            persistedAt: '2026-04-08T10:00:10.100Z',
+            runSeq: 4,
+            payload: {
+              reason: 'STEP_FAILURE',
+              executor: 'postgres',
+              message: 'PERMANENT_STEP_ERROR:step-load',
+            },
+          },
+        ];
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      executor: 'postgres',
+      failedStepId: 'step-load',
+      errorReason: 'SINK_WRITE_FAILED',
+    });
+  });
+
+  it('ignores stale failure and materialization evidence from prior logical attempts', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'RUNNING' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = {
+      ...createStateStore(),
+      async getSnapshot() {
+        return {
+          schemaVersion: 1,
+          runId: 'run-1',
+          status: 'RUNNING' as const,
+          paused: false,
+          cancelling: false,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          steps: {
+            'step-transform': {
+              status: 'RUNNING' as const,
+              startedAt: '2026-04-08T10:05:01.000Z',
+              attempts: 1,
+            },
+          },
+        };
+      },
+      async listEvents() {
+        return [
+          {
+            eventId: 'evt-old-step-completed',
+            eventType: 'StepCompleted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-old-step-completed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:01:05.000Z',
+            persistedAt: '2026-04-08T10:01:05.100Z',
+            runSeq: 1,
+            stepId: 'step-old-sink',
+            payload: {
+              resultEvidence: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.old_attempt',
+                rowsWritten: 42,
+                startedAt: '2026-04-08T10:01:00.000Z',
+                completedAt: '2026-04-08T10:01:05.000Z',
+                durationMs: 5000,
+              },
+            },
+          },
+          {
+            eventId: 'evt-old-run-failed',
+            eventType: 'RunFailed',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-old-run-failed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:01:06.000Z',
+            persistedAt: '2026-04-08T10:01:06.100Z',
+            runSeq: 2,
+            payload: {
+              reason: 'STEP_FAILURE',
+              executor: 'postgres',
+              message: 'PERMANENT_STEP_ERROR:step-old-sink',
+            },
+          },
+          {
+            eventId: 'evt-current-run-started',
+            eventType: 'RunStarted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'idem-current-run-started',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:05:00.000Z',
+            persistedAt: '2026-04-08T10:05:00.100Z',
+            runSeq: 3,
+            payload: {
+              executor: 'postgres',
+            },
+          },
+          {
+            eventId: 'evt-current-step-started',
+            eventType: 'StepStarted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'idem-current-step-started',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:05:01.000Z',
+            persistedAt: '2026-04-08T10:05:01.100Z',
+            runSeq: 4,
+            stepId: 'step-transform',
+            payload: {},
+          },
+        ];
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'RUNNING',
+      executor: 'postgres',
+      currentStepId: 'step-transform',
+    });
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.not.toMatchObject({
+      errorReason: 'STEP_FAILURE',
+      failedStepId: 'step-old-sink',
+      materialization: expect.anything(),
+    });
+  });
+
+  it('does not leak old-attempt materialization into a later completed attempt without evidence', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'COMPLETED' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:10:00.000Z',
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = {
+      ...createStateStore(),
+      async getSnapshot() {
+        return {
+          schemaVersion: 1,
+          runId: 'run-1',
+          status: 'COMPLETED' as const,
+          paused: false,
+          cancelling: false,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:10:00.000Z',
+          steps: {},
+        };
+      },
+      async listEvents() {
+        return [
+          {
+            eventId: 'evt-old-step-completed',
+            eventType: 'StepCompleted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-old-step-completed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:01:05.000Z',
+            persistedAt: '2026-04-08T10:01:05.100Z',
+            runSeq: 1,
+            stepId: 'step-old-sink',
+            payload: {
+              resultEvidence: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.old_attempt',
+                rowsWritten: 42,
+                startedAt: '2026-04-08T10:01:00.000Z',
+                completedAt: '2026-04-08T10:01:05.000Z',
+                durationMs: 5000,
+              },
+            },
+          },
+          {
+            eventId: 'evt-current-run-started',
+            eventType: 'RunStarted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'idem-current-run-started',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:09:00.000Z',
+            persistedAt: '2026-04-08T10:09:00.100Z',
+            runSeq: 2,
+            payload: {
+              executor: 'postgres',
+            },
+          },
+          {
+            eventId: 'evt-current-run-completed',
+            eventType: 'RunCompleted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 2,
+            logicalAttemptId: 2,
+            idempotencyKey: 'idem-current-run-completed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:10:00.000Z',
+            persistedAt: '2026-04-08T10:10:00.100Z',
+            runSeq: 3,
+            payload: {
+              executor: 'postgres',
+            },
+          },
+        ];
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'COMPLETED',
+      executor: 'postgres',
+    });
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.not.toMatchObject({
+      materialization: expect.anything(),
+      errorReason: expect.anything(),
+      failedStepId: expect.anything(),
+    });
   });
 });

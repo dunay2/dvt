@@ -111,6 +111,38 @@ function readMaterializationFields(value: unknown): MaterializationEvidence | nu
   };
 }
 
+function deriveLatestLogicalAttemptId(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): number | undefined {
+  let latestLogicalAttemptId: number | undefined;
+
+  for (const event of events) {
+    const logicalAttemptId = event.logicalAttemptId;
+    if (!Number.isInteger(logicalAttemptId) || logicalAttemptId <= 0) {
+      continue;
+    }
+
+    if (latestLogicalAttemptId === undefined || logicalAttemptId > latestLogicalAttemptId) {
+      latestLogicalAttemptId = logicalAttemptId;
+    }
+  }
+
+  return latestLogicalAttemptId;
+}
+
+function selectCurrentAttemptEvents(
+  workspace: RunWorkspaceViewModel
+): ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]> {
+  const latestLogicalAttemptId = deriveLatestLogicalAttemptId(workspace.timeline.events);
+  if (latestLogicalAttemptId === undefined) {
+    return workspace.timeline.events;
+  }
+
+  return workspace.timeline.events.filter(
+    (event) => event.logicalAttemptId === latestLogicalAttemptId
+  );
+}
+
 function deriveMaterializationEvidence(
   workspace: RunWorkspaceViewModel
 ): MaterializationEvidence | undefined {
@@ -118,7 +150,7 @@ function deriveMaterializationEvidence(
     return workspace.snapshot.materialization;
   }
 
-  for (const event of [...workspace.timeline.events].reverse()) {
+  for (const event of [...selectCurrentAttemptEvents(workspace)].reverse()) {
     if (!isRecord(event.payload)) {
       continue;
     }
@@ -187,8 +219,10 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
   return provenance;
 }
 
-function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
-  for (const event of [...workspace.timeline.events].reverse()) {
+function getRunFailedReason(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): string | undefined {
+  for (const event of [...events].reverse()) {
     if (event.eventType !== 'RunFailed' || !event.payload || typeof event.payload !== 'object') {
       continue;
     }
@@ -202,8 +236,10 @@ function getRunFailedReason(workspace: RunWorkspaceViewModel): string | undefine
   return undefined;
 }
 
-function getStepFailedReason(workspace: RunWorkspaceViewModel): string | undefined {
-  for (const event of [...workspace.timeline.events].reverse()) {
+function getStepFailedReason(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): string | undefined {
+  for (const event of [...events].reverse()) {
     if (event.eventType !== 'StepFailed' || !event.payload || typeof event.payload !== 'object') {
       continue;
     }
@@ -220,23 +256,34 @@ function getStepFailedReason(workspace: RunWorkspaceViewModel): string | undefin
   return undefined;
 }
 
-function getFailureEmittedAt(workspace: RunWorkspaceViewModel): string | undefined {
-  const failedEvent = [...workspace.timeline.events]
+function getFailureEmittedAt(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): string | undefined {
+  const failedEvent = [...events]
     .reverse()
     .find((event) => event.eventType === 'StepFailed' || event.eventType === 'RunFailed');
   return failedEvent?.emittedAt;
 }
 
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
+  if (workspace.snapshot.status !== 'failed') {
+    return {
+      failedStepId: undefined,
+      errorReason: undefined,
+      failureEmittedAt: undefined,
+    };
+  }
+
+  const currentAttemptEvents = selectCurrentAttemptEvents(workspace);
   const failedStepId =
     workspace.snapshot.failedStepId ??
-    [...workspace.timeline.events].reverse().find((event) => event.eventType === 'StepFailed')
+    [...currentAttemptEvents].reverse().find((event) => event.eventType === 'StepFailed')
       ?.stepId;
   const errorReason =
     workspace.snapshot.errorReason ??
-    getRunFailedReason(workspace) ??
-    getStepFailedReason(workspace);
-  const failureEmittedAt = getFailureEmittedAt(workspace);
+    getRunFailedReason(currentAttemptEvents) ??
+    getStepFailedReason(currentAttemptEvents);
+  const failureEmittedAt = getFailureEmittedAt(currentAttemptEvents);
 
   return {
     failedStepId,
