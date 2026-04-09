@@ -20,17 +20,18 @@ export default function DiffView() {
   return (
     <RouteWorkbenchFrame
       header={
-        <DiffHeader
-          compareMode={compareMode}
-          severityFilter={severityFilter}
-          comparePreset={comparePreset}
-          onCompareModeChange={setCompareMode}
-          onSeverityFilterChange={setSeverityFilter}
-        />
+        <>
+          <DiffHeader
+            compareMode={compareMode}
+            severityFilter={severityFilter}
+            comparePreset={comparePreset}
+            onCompareModeChange={setCompareMode}
+            onSeverityFilterChange={setSeverityFilter}
+          />
+          <DiffSummaryCards summary={summary} />
+        </>
       }
-      bodyClassName="space-y-6"
     >
-      <DiffSummaryCards summary={summary} />
       <DiffTabs
         catalogDocument={catalogDocument}
         changes={filteredChanges}

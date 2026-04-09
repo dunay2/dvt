@@ -38,7 +38,38 @@ describe('RouteWorkbenchFrame', () => {
       );
     });
 
-    expect(container.textContent).toContain('Shared header');
-    expect(container.textContent).toContain('Route body');
+    const header = container.querySelector('[data-slot="route-workbench-header"]');
+    const body = container.querySelector('[data-slot="route-workbench-body"]');
+    const bodyContent = container.querySelector('[data-slot="route-workbench-body-content"]');
+
+    expect(header?.textContent).toContain('Shared header');
+    expect(body).not.toBeNull();
+    expect(bodyContent?.textContent).toContain('Route body');
+    expect(bodyContent?.className).toContain('p-6');
+    expect(bodyContent?.className).toContain('pb-10');
+    expect(body?.contains(header ?? null)).toBe(false);
+  });
+
+  it('supports non-scroll bodies without adding the shared body padding wrapper', async () => {
+    await act(async () => {
+      root.render(
+        <RouteWorkbenchFrame
+          header={<div data-testid="workbench-header">Static header</div>}
+          bodyClassName="flex min-h-0 flex-1"
+          scroll={false}
+        >
+          <div data-testid="workbench-body">Static route body</div>
+        </RouteWorkbenchFrame>
+      );
+    });
+
+    const body = container.querySelector('[data-slot="route-workbench-body"]');
+    const bodyContent = container.querySelector('[data-slot="route-workbench-body-content"]');
+    const scrollArea = container.querySelector('[data-slot="scroll-area"]');
+
+    expect(body?.textContent).toContain('Static route body');
+    expect(body?.className).toContain('flex');
+    expect(scrollArea).toBeNull();
+    expect(bodyContent).toBeNull();
   });
 });

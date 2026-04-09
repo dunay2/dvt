@@ -17,9 +17,23 @@ export const routeWorkbenchPanelClassName =
   'border-[color:var(--border-default)] bg-[var(--surface-panel)] text-[var(--text-default)]';
 
 export const routeWorkbenchFieldClassName =
-  'border-[color:var(--border-default)] bg-[var(--surface-app)] text-[var(--text-default)]';
+  'border border-[color:var(--border-default)] bg-[var(--surface-app)] text-[var(--text-default)]';
 
 export const routeWorkbenchMutedTextClassName = 'text-[var(--text-muted)]';
+
+export const routeWorkbenchSubtleTextClassName = 'text-[var(--text-subtle)]';
+
+export const routeWorkbenchSectionTitleClassName =
+  'mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]';
+
+export const routeWorkbenchTabListClassName =
+  'border border-[color:var(--border-default)] bg-[var(--surface-app)]';
+
+export const routeWorkbenchTabTriggerClassName =
+  'text-[var(--text-muted)] data-[state=active]:bg-[var(--surface-elevated)] data-[state=active]:text-[var(--text-strong)]';
+
+export const routeWorkbenchMonacoSurfaceClassName =
+  'h-[420px] overflow-hidden rounded border border-[color:var(--border-default)] bg-[var(--surface-app)]';
 
 type RouteWorkbenchFrameProps = {
   readonly header?: ReactNode;
@@ -45,14 +59,28 @@ export function RouteWorkbenchFrame({
   );
 
   return (
-    <div className={cn(routeWorkbenchClassName, className)}>
-      {header}
+    <div data-slot="route-workbench-frame" className={cn(routeWorkbenchClassName, className)}>
+      {header ? (
+        <div data-slot="route-workbench-header" className="shrink-0">
+          {header}
+        </div>
+      ) : null}
       {scroll ? (
-        <ScrollArea className={routeWorkbenchScrollAreaClassName}>
-          <div className={cn(routeWorkbenchBodyPaddingClassName, bodyClassName)}>{bodyContent}</div>
+        <ScrollArea data-slot="route-workbench-body" className={routeWorkbenchScrollAreaClassName}>
+          <div
+            data-slot="route-workbench-body-content"
+            className={cn(routeWorkbenchBodyPaddingClassName, bodyClassName)}
+          >
+            {bodyContent}
+          </div>
         </ScrollArea>
       ) : (
-        <div className={cn(routeWorkbenchScrollAreaClassName, bodyClassName)}>{bodyContent}</div>
+        <div
+          data-slot="route-workbench-body"
+          className={cn(routeWorkbenchScrollAreaClassName, bodyClassName)}
+        >
+          {bodyContent}
+        </div>
       )}
     </div>
   );

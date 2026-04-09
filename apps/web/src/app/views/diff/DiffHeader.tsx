@@ -7,6 +7,7 @@ import {
   routeWorkbenchHeaderBandClassName,
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
+  routeWorkbenchSubtleTextClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   Select,
@@ -36,7 +37,7 @@ export function DiffHeader({
   onSeverityFilterChange,
 }: DiffHeaderProps) {
   return (
-    <div className={cn('space-y-4', routeWorkbenchHeaderBandClassName)}>
+    <div data-slot="diff-header" className={cn('space-y-4', routeWorkbenchHeaderBandClassName)}>
       <ViewHeader
         className="border-0 bg-transparent p-0"
         title={copy.title}
@@ -63,11 +64,11 @@ export function DiffHeader({
           <span className={cn('text-sm', routeWorkbenchMutedTextClassName)}>
             {copy.compareLabel}
           </span>
-          <code className={cn('rounded px-2 py-1 text-sm', routeWorkbenchFieldClassName)}>
+          <code className={cn('rounded px-2 py-1 text-sm font-mono', routeWorkbenchFieldClassName)}>
             {comparePreset.left}
           </code>
-          <span className="text-[var(--text-subtle)]">...</span>
-          <code className={cn('rounded px-2 py-1 text-sm', routeWorkbenchFieldClassName)}>
+          <span className={routeWorkbenchSubtleTextClassName}>...</span>
+          <code className={cn('rounded px-2 py-1 text-sm font-mono', routeWorkbenchFieldClassName)}>
             {comparePreset.right}
           </code>
         </div>

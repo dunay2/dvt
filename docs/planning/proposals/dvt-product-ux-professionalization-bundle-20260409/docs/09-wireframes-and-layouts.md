@@ -78,6 +78,7 @@ They are workbench grammar references, not pixel-perfect implementation specs.
 - app-wide concern -> top bar
 - task switch -> left rail
 - route-wide concern -> route header or local toolbar
+- route summary or secondary header band -> header stack, not the scroll-owned body
 - selection-driven concern -> inspector
 - output or diagnostics -> bottom panel
 

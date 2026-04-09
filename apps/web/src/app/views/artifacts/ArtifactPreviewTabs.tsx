@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { routeWorkbenchTabListClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { artifactsViewCopy } from './copy';
 import type { ArtifactPreviewDocumentMap } from './constants';
 import { formatStructuredArtifactContent } from './structuredArtifactContent';
@@ -48,7 +49,7 @@ export function ArtifactPreviewTabs({
   return (
     <Card className={panelClassName}>
       <Tabs defaultValue="manifest">
-        <TabsList className="border border-slate-700 bg-slate-950">
+        <TabsList className={routeWorkbenchTabListClassName}>
           <TabsTrigger value="manifest" className={tabTriggerClassName}>
             manifest.json
           </TabsTrigger>

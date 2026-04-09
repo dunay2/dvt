@@ -58,6 +58,7 @@
   --focus-ring: #60a5fa;
   --status-success: #22c55e;
   --status-running: #4f8cff;
+  --status-degraded: #fbbf24;
   --status-warning: #f59e0b;
   --status-danger: #ef4444;
   --status-info: #38bdf8;

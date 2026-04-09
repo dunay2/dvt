@@ -1,17 +1,25 @@
 import { AlertTriangle, Edit, Minus, Plus } from 'lucide-react';
 
 import { StatCard } from '../../components/domain';
+import { cn } from '../../components/ui/utils';
 import type { DiffSummary } from './diffViewModel';
 import { diffViewCopy as copy } from './copy';
 
 interface DiffSummaryCardsProps {
   summary: DiffSummary;
+  className?: string;
 }
 
-export function DiffSummaryCards({ summary }: DiffSummaryCardsProps) {
+export function DiffSummaryCards({ summary, className }: DiffSummaryCardsProps) {
   return (
-    <div className="border-b border-slate-700 p-6">
-      <div className="grid max-w-4xl grid-cols-4 gap-4">
+    <div
+      data-slot="diff-summary-cards"
+      className={cn(
+        'border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-6 py-4',
+        className
+      )}
+    >
+      <div className="mx-auto grid max-w-5xl grid-cols-4 gap-4">
         <StatCard
           icon={<Plus className="size-5" />}
           value={summary.added}

@@ -1624,7 +1624,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 55
+    progress_pct: 70
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
@@ -1643,13 +1643,15 @@ tasks:
       - apps/web/src/app/views/LineageView.tsx
       - apps/web/src/styles/theme.css
     status_reason: >-
-      The professionalization bundle is now normalized in English and aligned to the active
-      workbench grammar across visual-system, rollout, drift, and wireframe docs, and the first
-      implementation slice now exists in code: `RouteWorkbenchFrame` plus semantic route-frame and
-      route-header styling are active in `Code`, `Diff`, `Lineage`, `Artifacts`, and `Admin`, while
-      `ViewHeader` now consumes semantic token colors instead of route-local slate chrome. Remaining
-      work is broader panel, table, shell, and Canvas or Monaco convergence across the rest of the
-      operator path.
+      The bundle is normalized in English and now governs an explicit `RouteWorkbenchFrame` v1
+      contract instead of an over-broad future shape: header and summary bands stay outside the
+      scroll-owned body, `scroll={false}` remains available for split-pane routes, and contextual
+      side panels remain future primitives. The implementation now restores `Diff` summary ownership
+      to the header stack, fixes the shared field token so it works on neutral elements like compare
+      pills, and applies shared tab and Monaco tokens across the first `Diff` and `Artifacts`
+      cleanup slice. Tests now cover frame header or body ownership and the `Diff`
+      header-versus-body contract. Remaining work is broader panel, table, shell, Canvas, and deeper
+      Monaco convergence across the rest of the operator path.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components
@@ -1657,6 +1659,13 @@ tasks:
         ownership
       - downstream implementation slices can remove route-level `slate-*` and hex usage without
         inventing a parallel style system
+      - the shared frame documents its v1 scope precisely and does not imply left or right panels
+        that do not exist yet
+      - header bands, summary bands, and scroll-owned bodies preserve prior route behavior unless a
+        governed UX change says otherwise
+      - shared field or tab tokens work on both primitives and neutral elements used in route chrome
+      - tests cover the frame scroll contract and at least one route-level header or body ownership
+        assertion
     last_verified: '2026-04-09'
   - task_id: F-25
     priority: P1

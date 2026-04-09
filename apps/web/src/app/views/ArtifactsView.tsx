@@ -5,6 +5,7 @@ import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
   routeWorkbenchPanelClassName,
+  routeWorkbenchTabTriggerClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
 import { Badge } from '../components/ui/badge';
 import { cn } from '../components/ui/utils';
@@ -18,8 +19,6 @@ import { useLocalManifestImport } from './artifacts/useLocalManifestImport';
 
 export default function ArtifactsView() {
   const panelClassName = cn(routeWorkbenchPanelClassName, 'p-4');
-  const tabTriggerClassName =
-    'text-[var(--text-muted)] data-[state=active]:bg-[var(--surface-elevated)] data-[state=active]:text-[var(--text-strong)]';
 
   const manifestImport = useLocalManifestImport();
   const { artifacts, importedStats, previewDocuments } = useArtifactsViewModel(
@@ -60,7 +59,7 @@ export default function ArtifactsView() {
       <ArtifactPreviewTabs
         previewDocuments={previewDocuments}
         panelClassName={panelClassName}
-        tabTriggerClassName={tabTriggerClassName}
+        tabTriggerClassName={routeWorkbenchTabTriggerClassName}
       />
       <ArtifactsInfoCard />
     </RouteWorkbenchFrame>
