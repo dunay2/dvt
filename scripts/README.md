@@ -64,8 +64,25 @@ Checks:
 
 Diff policy:
 
-- prefers `origin/main..HEAD` when `origin/main` exists
+- prefers `origin/main...HEAD` when `origin/main` exists
 - falls back to the configured upstream or `HEAD~1..HEAD`
+
+### `type-check-prepush.cjs`
+
+Runs `pnpm type-check` only when the changed diff includes files that can alter
+the TypeScript graph or workspace dependency surface.
+
+Type-check triggers:
+
+- changed `ts/tsx/mts/cts` files
+- `package.json`
+- `pnpm-lock.yaml`
+- `pnpm-workspace.yaml`
+- `tsconfig*.json`
+- `vitest.config.ts`
+
+When the diff contains only docs, scripts, Markdown, or workflow YAML changes,
+the script skips `pnpm type-check` cleanly.
 
 ### `lint-markdown-changed.cjs`
 

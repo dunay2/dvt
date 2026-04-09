@@ -43,13 +43,9 @@ jobs:
               - 'apps/api/**'
             planner:
               - 'packages/@dvt/planner/**'
-            root_config:
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'vitest.config.ts'
-              - 'tsconfig*.json'
-              - '.github/workflows/test.yml'
+
+              - '.github/actions/setup-node-pnpm/**'
+              - 'scripts/skip-pretest-if-ci.cjs'
 
       - name: Setup pnpm, cache and dependencies
         if:
@@ -63,19 +59,57 @@ jobs:
 
       - name: Build all packages (once, before tests)
         if: github.event_name != 'pull_request'
-        run: pnpm -r build
+        run: pnpm -r --workspace-concurrency=4 build
 
       - name: Run tests (push/workflow_dispatch full suite)
         if: github.event_name != 'pull_request'
-        run: pnpm test
+        run: pnpm -r --workspace-concurrency=4 test
         env:
           DVT_CI: '1'
+
+      - name: Build affected dependency graphs (PR only)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          declare -A seen
+
+          run_once() {
+            local cmd="$1"
+            if [[ -n "${seen[$cmd]+x}" ]]; then
+              return
+            fi
+
+            seen[$cmd]=1
+            echo ">> $cmd"
+            eval "$cmd"
+          }
+
+          if [[ "${{ steps.changes.outputs.engine }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.changes.outputs.adapter_temporal }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/adapter-temporal^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.changes.outputs.api }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+            run_once 'pnpm --filter "dvt-api^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.changes.outputs.planner }}" == "true" || "${{ steps.changes.outputs.contracts }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+            run_once 'pnpm --filter @dvt/contracts --workspace-concurrency=4 build'
+            run_once 'pnpm --filter @dvt/artifacts --workspace-concurrency=4 build'
+          fi
 
       - name: Run engine tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.changes.outputs.engine == 'true' ||
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:engine
+        env:
+          DVT_CI: '1'
 
       - name: Run contracts tests (affected package)
         if:
@@ -88,6 +122,8 @@ jobs:
           github.event_name == 'pull_request' && (steps.changes.outputs.adapter_temporal == 'true'
           || steps.changes.outputs.root_config == 'true')
         run: pnpm test:adapter-temporal
+        env:
+          DVT_CI: '1'
 
       - name: Run cli tests (affected package)
         if:
@@ -100,12 +136,16 @@ jobs:
           github.event_name == 'pull_request' && (steps.changes.outputs.api == 'true' ||
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:api
+        env:
+          DVT_CI: '1'
 
       - name: Run planner tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.changes.outputs.planner == 'true' ||
           steps.changes.outputs.contracts == 'true' || steps.changes.outputs.root_config == 'true')
         run: pnpm test:planner
+        env:
+          DVT_CI: '1'
 
   detect-pg-scope:
     name: Detect adapter-postgres scope
@@ -213,17 +253,27 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Build engine dependency graph (once, before tests)
+        if:
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true'
+        run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
+
       - name: Run determinism tests
         if:
           github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
           'true'
         run: pnpm test:determinism
+        env:
+          DVT_CI: '1'
 
       - name: Verify replay consistency
         if:
           github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
           'true'
         run: pnpm test:replay
+        env:
+          DVT_CI: '1'
 
   coverage:
     name: Engine Coverage Gate
@@ -256,11 +306,19 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Build engine dependency graph (once, before tests)
+        if:
+          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
+          'true'
+        run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
+
       - name: Run engine coverage (with threshold enforcement)
         if:
           github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
           'true'
         run: pnpm test:coverage:engine
+        env:
+          DVT_CI: '1'
 
       - name: Upload coverage report
         if: always()
