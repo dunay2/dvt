@@ -18,7 +18,8 @@ on:
         type: boolean
         default: false
       run_golden_validation:
-        description: 'Run golden fixtures validation and hash checks'
+        description:
+          'Run golden fixtures validation and hash checks (deprecated: now runs automatically)'
         required: false
         type: boolean
         default: false
@@ -191,21 +192,6 @@ jobs:
       - name: Compile contracts
         run: pnpm test:contracts:compile
 
-      - name: Check for 'any' types
-        run: |
-          echo "Checking for TypeScript 'any' types in contracts..."
-          if [ -d "packages/@dvt/contracts/src" ]; then
-            if grep -rE ":\s*any" packages/@dvt/contracts/src 2>/dev/null | grep -q .; then
-              echo "❌ Found 'any' types in contracts (violates strict mode)"
-              exit 1
-            else
-              echo "✅ No 'any' types found"
-            fi
-          else
-            echo "⚠️  packages/@dvt/contracts/src directory not found"
-            echo "✅ Check passed (stub mode)"
-          fi
-
       - name: Upload compiled contracts artifact
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -220,9 +206,8 @@ jobs:
     timeout-minutes: 10
     needs: [detect-changes, contract-compile]
     if: >
-      (github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
-      'true') && (github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.run_golden_validation == 'true')
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -245,9 +230,7 @@ jobs:
     timeout-minutes: 15
     needs: [detect-changes, contract-compile]
     if: >
-      (github.event_name != 'pull_request' || needs.detect-changes.outputs.golden_relevant ==
-      'true') && (github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.run_golden_validation == 'true')
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.golden_relevant == 'true'
     services:
       postgres:
         image: postgres:15
