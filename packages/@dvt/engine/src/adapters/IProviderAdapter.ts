@@ -38,6 +38,10 @@ export interface IProviderAdapter {
    * Optional. Computes a deterministic EngineRunRef from RunContext WITHOUT a network call.
    * When implemented, WorkflowEngine bootstraps run_metadata before adapter.startRun(),
    * eliminating the dual-producer event ordering race.
+   *
+   * If this hook is implemented, `startRun()` MUST return the same provider.
+   * Late-bound provider fields may be reconciled through `saveProviderRef()`,
+   * but cross-provider drift is treated as a protocol violation.
    */
   estimateRunRef?(ctx: ResolvedRunContext): EngineRunRef;
 

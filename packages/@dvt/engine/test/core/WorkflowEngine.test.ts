@@ -18,6 +18,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  ProviderRefProviderMismatchError,
   RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
 } from '../../src/contracts/errors.js';
@@ -480,16 +481,12 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(recovery?.originRunId).toBe(sourceRunId);
   });
 
-  it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {
-    const savedRefs: Array<{ runId: string; update: unknown }> = [];
+  it('reconciles providerRef when estimateRunRef and startRun disagree on same-provider late-bound fields', async () => {
+    const cancelRun = vi.fn(async () => {});
     const store = new InMemoryTxStore();
-    const originalSaveProviderRef = store.saveProviderRef.bind(store);
-    store.saveProviderRef = async (_tenantId, runId, update) => {
-      savedRefs.push({ runId, update });
-      return originalSaveProviderRef(_tenantId, runId, update);
-    };
 
     const adapters = makeAdapters({
+      cancelRun,
       estimateRunRef(ctx) {
         return {
           provider: 'temporal',
@@ -511,31 +508,31 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
 
     const { engine } = createEngine({ adapters, stateStore: store });
-    await engine.startRun(makePlanRef(), makeContext('g7-reconcile-1'));
-
-    expect(savedRefs).toHaveLength(1);
-    expect(savedRefs[0]).toMatchObject({
-      runId: 'g7-reconcile-1',
-      update: {
-        providerWorkflowId: 'wf-g7-reconcile-1',
-        providerRunId: 'actual-execution-id-for-g7-reconcile-1',
-      },
+    await expect(engine.startRun(makePlanRef(), makeContext('g7-reconcile-1'))).resolves.toEqual({
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'default',
+      workflowId: 'wf-g7-reconcile-1',
+      runId: 'actual-execution-id-for-g7-reconcile-1',
     });
+    expect(cancelRun).not.toHaveBeenCalled();
 
     const meta = await store.getRunMetadataByRunId('t', 'g7-reconcile-1');
-    expect(meta?.providerRunId).toBe('actual-execution-id-for-g7-reconcile-1');
+    expect(meta?.providerRef).toEqual({
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'default',
+      workflowId: 'wf-g7-reconcile-1',
+      runId: 'actual-execution-id-for-g7-reconcile-1',
+    });
   });
 
-  it('does not call saveProviderRef when startRun returns the same runId as estimateRunRef', async () => {
-    const savedRefs: unknown[] = [];
+  it('starts successfully when estimateRunRef and startRun return the same EngineRunRef', async () => {
+    const cancelRun = vi.fn(async () => {});
     const store = new InMemoryTxStore();
-    const originalSaveProviderRef = store.saveProviderRef.bind(store);
-    store.saveProviderRef = async (_tenantId, runId, update) => {
-      savedRefs.push({ runId, update });
-      return originalSaveProviderRef(_tenantId, runId, update);
-    };
 
     const adapters = makeAdapters({
+      cancelRun,
       estimateRunRef(ctx) {
         return {
           provider: 'temporal',
@@ -557,18 +554,70 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
 
     const { engine } = createEngine({ adapters, stateStore: store });
-    await engine.startRun(makePlanRef(), makeContext('g7-same-id-1'));
+    await expect(engine.startRun(makePlanRef(), makeContext('g7-same-id-1'))).resolves.toEqual({
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'default',
+      workflowId: 'wf-g7-same-id-1',
+      runId: 'g7-same-id-1',
+    });
 
-    expect(savedRefs).toHaveLength(0);
+    expect(cancelRun).not.toHaveBeenCalled();
+    const meta = await store.getRunMetadataByRunId('t', 'g7-same-id-1');
+    expect(meta?.providerRef.runId).toBe('g7-same-id-1');
   });
 
-  it('continues startRun when saveProviderRef fails (fail-soft)', async () => {
-    const store = new InMemoryTxStore();
-    store.saveProviderRef = async () => {
-      throw new Error('metadata update failed');
-    };
+  it('rejects startRun when providerRef reconciliation crosses provider discriminators', async () => {
+    const cancelRun = vi.fn(async () => {});
 
     const adapters = makeAdapters({
+      cancelRun,
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+      async startRun(_plan, _planRef, ctx) {
+        return {
+          provider: 'conductor',
+          tenantId: ctx.tenantId,
+          workflowId: `wf-${ctx.runId}`,
+          runId: `actual-execution-id-for-${ctx.runId}`,
+          conductorUrl: 'http://localhost:8080/api',
+        } as EngineRunRef;
+      },
+    });
+
+    const store = new InMemoryTxStore();
+    const { engine } = createEngine({ adapters, stateStore: store });
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('g7-provider-drift-1'))
+    ).rejects.toBeInstanceOf(ProviderRefProviderMismatchError);
+    expect(cancelRun).toHaveBeenCalledTimes(1);
+
+    const meta = await store.getRunMetadataByRunId('t', 'g7-provider-drift-1');
+    expect(meta?.providerRef).toEqual({
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'default',
+      workflowId: 'wf-g7-provider-drift-1',
+      runId: 'g7-provider-drift-1',
+    });
+  });
+
+  it('still rejects when compensating cancelRun fails after providerRef reconciliation error', async () => {
+    const cancelRun = vi.fn(async () => {
+      throw new Error('cancel unavailable');
+    });
+    const store = new InMemoryTxStore();
+    vi.spyOn(store, 'saveProviderRef').mockRejectedValueOnce(new Error('save boom'));
+
+    const adapters = makeAdapters({
+      cancelRun,
       estimateRunRef(ctx) {
         return {
           provider: 'temporal',
@@ -590,9 +639,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
 
     const { engine } = createEngine({ adapters, stateStore: store });
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('g7-fail-soft-1'))
-    ).resolves.toBeDefined();
+    await expect(engine.startRun(makePlanRef(), makeContext('g7-fail-soft-1'))).rejects.toThrow(
+      /save boom/
+    );
+    expect(cancelRun).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a pre-bootstrapped run pending when adapter.startRun fails before dispatch', async () => {

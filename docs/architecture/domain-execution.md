@@ -2,7 +2,7 @@
 title: Execution Domain
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-09
 ---
 
 # Execution Domain
@@ -51,15 +51,17 @@ flowchart LR
 
 The runtime exists and is actively used. The current work is execution
 hardening, modularization, and ownership cleanup, not a greenfield execution
-model rewrite.
+model rewrite. Start-run metadata now persists a single discriminated
+`providerRef` identity and the shared trace-context seam lives under
+`@dvt/engine/core/lifecycle`.
 
 ## Queued Delta
 
 - `S02`: split state-store responsibilities more cleanly.
 - `S03`: extract start-run coordination without moving runtime authority out of
   the engine.
-- `S04`: land `ProviderRefUpdated` in the right place after the ownership seams
-  are stable.
+- `TF-C2-A/B`: finish executor payload emission and caller-visible runtime
+  evidence on top of the hardened `providerRef` contract.
 - `DHM` and `RC-G1`: continue DDD or hexagonal modularization and shared-kernel
   cleanup without widening composition-root leakage.
 

@@ -10,7 +10,6 @@ export async function bootstrapQueuedRun(
   const provider = options?.provider ?? 'temporal';
   const tenantId = options?.tenantId ?? 't';
   const emittedAt = options?.emittedAt ?? '2026-03-26T00:00:00.000Z';
-  const providerWorkflowId = provider === 'mock' ? `mock_${runId}` : `wf-${runId}`;
 
   await store.bootstrapRunTx({
     metadata: {
@@ -21,9 +20,7 @@ export async function bootstrapQueuedRun(
       planId: 'plan-1',
       planVersion: '1.0',
       logicalAttemptId: 1,
-      provider,
-      providerWorkflowId,
-      providerRunId: runId,
+      providerRef: makeRunRef(runId, { provider, tenantId }),
     },
     firstEvents: [
       {

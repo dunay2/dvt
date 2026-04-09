@@ -61,9 +61,9 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.provider);
+    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(meta.provider, meta.tenantId, {
+    const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
       operation: CORE_OPERATION.cancelRun,
     });
     const traceContext = buildTraceContext(meta, meta.planId);
@@ -73,14 +73,14 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         CORE_SPAN.cancelRun,
         {
           context: traceContext,
-          attributes: { provider: meta.provider },
+          attributes: { provider: meta.providerRef.provider },
         },
         async (span) => {
           try {
             this.deps.observability.logs.info({
               msg: CORE_LOG_MESSAGE.cancellingRun,
               context: traceContext,
-              attributes: { provider: meta.provider },
+              attributes: { provider: meta.providerRef.provider },
             });
 
             await withTimeout(
@@ -110,7 +110,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(meta.provider, meta.tenantId, {
+    const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
       operation: CORE_OPERATION.getRunStatus,
     });
     const traceContext = buildTraceContext(meta, meta.planId);
@@ -120,7 +120,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         CORE_SPAN.getRunStatus,
         {
           context: traceContext,
-          attributes: { provider: meta.provider },
+          attributes: { provider: meta.providerRef.provider },
         },
         async (span) => {
           try {
@@ -154,7 +154,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.provider);
+    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
     const traceContext = buildTraceContext(meta, meta.planId);
 
     return this.deps.observability.withContext(traceContext, () =>
@@ -162,7 +162,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         CORE_SPAN.enrichRunStatus,
         {
           context: traceContext,
-          attributes: { provider: meta.provider },
+          attributes: { provider: meta.providerRef.provider },
         },
         async (span) => {
           try {
@@ -205,7 +205,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
 
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.provider);
+    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
     const traceContext = buildTraceContext(meta, meta.planId);
 
     await this.deps.observability.withContext(traceContext, () =>
@@ -213,7 +213,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         CORE_SPAN.signal,
         {
           context: traceContext,
-          attributes: { provider: meta.provider, signalType: validatedRequest.type },
+          attributes: { provider: meta.providerRef.provider, signalType: validatedRequest.type },
         },
         async (span) => {
           try {

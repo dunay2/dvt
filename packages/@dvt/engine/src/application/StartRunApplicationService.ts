@@ -2,6 +2,7 @@ import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
+import type { StartRunTraceContext } from '../core/lifecycle/StartRunTraceContext.js';
 import type {
   IPlanFetcher,
   IPlanIntegrityValidator,
@@ -15,10 +16,7 @@ import { START_RUN_MESSAGE } from '../services/startRun/StartRunDomainConstants.
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
 import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
 import { StartRunFailurePolicy } from '../services/startRun/StartRunFailurePolicy.js';
-import type {
-  StartRunErrorContext,
-  StartRunTraceContext,
-} from '../services/startRun/StartRunTypes.js';
+import type { StartRunErrorContext } from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 
 import { StartRunAdmissionGuard } from './StartRunAdmissionGuard.js';

@@ -49,7 +49,7 @@ The current implementation units are:
 | Context admission       | [`RunExecutionContextAdmissionPolicy`](../../../../../packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts) | Validates `runExecutionContextRef` alignment and compatibility fingerprints                                                   |
 | Dispatch + bootstrap    | [`StartRunExecutionService`](../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)                     | Calls provider adapter, marks intent dispatched, bootstraps run state, compensates on bootstrap failure                       |
 | Failure handling        | [`StartRunFailurePolicy`](../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)                           | Logs/metrics, best-effort intent resolution, guarded `RunFailed` emission after persisted metadata exists                     |
-| Metadata/event factory  | [`StartRunEventFactory`](../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)                             | Constructs `RunMetadata`, `RunQueued`, provider-ref updates, and failure events                                               |
+| Metadata/event factory  | [`StartRunEventFactory`](../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)                             | Constructs `RunMetadata`, `RunQueued`, and failure events                                                                     |
 
 ---
 
@@ -77,15 +77,24 @@ sequenceDiagram
     App->>Exec: executeStartRun(...)
 
     alt adapter exposes estimateRunRef()
-        Exec->>State: bootstrapRunTx(run_metadata + RunQueued)
+        Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
         Exec->>Adapter: startRun(plan, planRef, resolvedContext)
         Exec->>Intent: markDispatched(intentId, runRef)
-        Exec->>State: saveProviderRef(...) when actual ref differs
-        Exec->>Failure: markIntentResolvedBestEffort(...)
+        Exec->>Exec: reconcile estimatedRef vs runRef
+        alt same provider, different late-bound fields
+            Exec->>State: saveProviderRef(tenantId, runId, runRef)
+            Exec->>Failure: markIntentResolvedBestEffort(...)
+        else cross-provider or invalid update
+            Exec->>Adapter: cancelRun(runRef) best-effort
+            Exec->>Failure: markIntentResolvedBestEffort(...)
+            Failure-->>Caller: rethrow reconciliation error
+        else exact match
+            Exec->>Failure: markIntentResolvedBestEffort(...)
+        end
     else no estimateRunRef()
         Exec->>Adapter: startRun(plan, planRef, resolvedContext)
         Exec->>Intent: markDispatched(intentId, runRef)
-        Exec->>State: bootstrapRunTx(run_metadata + RunQueued)
+        Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
         Exec->>Failure: markIntentResolvedBestEffort(...)
     end
 
@@ -207,6 +216,11 @@ Bootstrap behavior is already implemented by:
 
 There are two current bootstrap branches.
 
+In both branches, `RunMetadata.providerRef` persists one canonical
+discriminated `EngineRunRef`. There is no flat provider bag in the current
+protocol. The only provider-ref update seam is `saveProviderRef(...)`, which
+accepts a discriminated update and MUST reject provider discriminator changes.
+
 #### Branch A: adapter provides `estimateRunRef()`
 
 Implemented by `startRunWithEstimatedRef()`.
@@ -220,9 +234,14 @@ Current order:
    - first event: `RunQueued`
 4. call `adapter.startRun(...)`
 5. mark the intent `DISPATCHED`
-6. if the actual provider ref differs from the estimated one, call
-   `saveProviderRef(...)` fail-soft
-7. best-effort resolve the intent
+6. if the refs are equal, mark the intent resolved best-effort
+7. if the refs differ but keep the same provider:
+   - reconcile persisted metadata through `saveProviderRef(...)`
+   - mark the intent resolved best-effort
+8. if reconciliation rejects the update:
+   - cancel the provider run best-effort
+   - mark the intent resolved best-effort
+   - rethrow the reconciliation error
 
 #### Branch B: adapter does not provide `estimateRunRef()`
 
@@ -258,11 +277,20 @@ Current failure behavior:
    - call `adapter.cancelRun(runRef)` as compensation
    - best-effort resolve the intent
    - rethrow the bootstrap error
-2. if `markDispatched(...)` fails after `adapter.startRun(...)` succeeded:
+2. if `estimateRunRef()` is implemented and `startRun()` returns a different
+   `EngineRunRef`:
+   - attempt `saveProviderRef(...)` reconciliation using the actual
+     discriminated provider ref
+   - if the update changes provider discriminator or fails validation,
+     log the reconciliation error
+   - call `adapter.cancelRun(runRef)` best-effort
+   - best-effort resolve the intent
+   - rethrow the reconciliation error
+3. if `markDispatched(...)` fails after `adapter.startRun(...)` succeeded:
    - raise `PostStartIntentPersistenceError`
    - log/report the failure
    - do not fabricate a synthetic success path
-3. if a start-run error reaches `StartRunFailurePolicy.handleStartRunError(...)`:
+4. if a start-run error reaches `StartRunFailurePolicy.handleStartRunError(...)`:
    - report metrics/logging
    - if metadata does not exist yet, rethrow without emitting `RunFailed`
    - if the tracked intent is still `PENDING`, rethrow without emitting `RunFailed`
@@ -339,10 +367,13 @@ Reviewers can verify the protocol by checking:
 3. integrity verification happens before adapter dispatch
 4. an intent is created before provider dispatch
 5. provider dispatch marks the intent `DISPATCHED`
-6. one of the two documented bootstrap branches executes
-7. `RunQueued` is the first persisted lifecycle event
-8. bootstrap failure in the non-estimated branch compensates with `cancelRun`
-9. `RunFailed` is only emitted when persisted run metadata exists
+6. in the estimated branch, `estimateRunRef()` and `startRun()` either return
+   the same `EngineRunRef` or reconcile through a same-provider
+   `saveProviderRef(...)` update; cross-provider drift fails closed
+7. one of the two documented bootstrap branches executes
+8. `RunQueued` is the first persisted lifecycle event
+9. bootstrap failure in the non-estimated branch compensates with `cancelRun`
+10. `RunFailed` is only emitted when persisted run metadata exists
 
 No new protocol is defined by this artifact.
 

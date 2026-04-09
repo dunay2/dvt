@@ -21,6 +21,7 @@ export const ENGINE_ERROR_MESSAGE_KEY = {
   INVALID_RUN_EVENT_INPUT: 'engine.error.invalid_run_event_input',
   RUN_SEQUENCE_OVERFLOW: 'engine.error.run_sequence_overflow',
   RUN_EXECUTION_CONTEXT_REJECTED: 'engine.error.run_execution_context_rejected',
+  PROVIDER_REF_PROVIDER_MISMATCH: 'engine.error.provider_ref_provider_mismatch',
 } as const satisfies Record<EngineErrorCode, string>;
 
 export type EngineErrorMessageKey =
@@ -50,6 +51,11 @@ interface EngineErrorMessageParamMap {
   INVALID_RUN_EVENT_INPUT: { reason: string; index?: number; runId?: string };
   RUN_SEQUENCE_OVERFLOW: { runId: string; attemptedRunSeq: number };
   RUN_EXECUTION_CONTEXT_REJECTED: { reason: string };
+  PROVIDER_REF_PROVIDER_MISMATCH: {
+    runId: string;
+    persistedProvider: string;
+    updateProvider: string;
+  };
 }
 
 export type EngineErrorMessageParams<C extends EngineErrorCode = EngineErrorCode> = Readonly<
@@ -137,6 +143,10 @@ export function defaultEngineErrorMessage<C extends EngineErrorCode>(
     case 'RUN_EXECUTION_CONTEXT_REJECTED': {
       const p = params as EngineErrorMessageParams<'RUN_EXECUTION_CONTEXT_REJECTED'>;
       return `Run execution context rejected: ${p.reason}`;
+    }
+    case 'PROVIDER_REF_PROVIDER_MISMATCH': {
+      const p = params as EngineErrorMessageParams<'PROVIDER_REF_PROVIDER_MISMATCH'>;
+      return `ProviderRef update rejected for runId=${p.runId}: persisted provider=${p.persistedProvider}, update provider=${p.updateProvider}`;
     }
   }
   return assertNever(code);

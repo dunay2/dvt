@@ -6,7 +6,11 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
-import { RunNotFoundError, TenantAccessDeniedError } from '@dvt/engine';
+import {
+  ProviderRefProviderMismatchError,
+  RunNotFoundError,
+  TenantAccessDeniedError,
+} from '@dvt/engine';
 import type { PoolClient } from 'pg';
 
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
@@ -27,7 +31,7 @@ interface RunMetadataRow {
   logical_attempt_id: number;
   parent_run_id: string | null;
   origin_run_id: string | null;
-  provider: RunMetadata['provider'];
+  provider: RunMetadata['providerRef']['provider'];
   provider_workflow_id: string;
   provider_run_id: string;
   provider_namespace: string | null;
@@ -62,6 +66,31 @@ const RUN_METADATA_COLUMNS = `
 // ---------------------------------------------------------------------------
 
 function toRunMetadata(row: RunMetadataRow): RunMetadata {
+  const providerRef =
+    row.provider === 'temporal'
+      ? ({
+          provider: 'temporal',
+          tenantId: row.tenant_id,
+          namespace: row.provider_namespace ?? 'default',
+          workflowId: row.provider_workflow_id,
+          runId: row.provider_run_id,
+          ...(row.provider_task_queue !== null ? { taskQueue: row.provider_task_queue } : {}),
+        } as const)
+      : row.provider === 'conductor'
+        ? ({
+            provider: 'conductor',
+            tenantId: row.tenant_id,
+            workflowId: row.provider_workflow_id,
+            runId: row.provider_run_id,
+            conductorUrl: row.provider_conductor_url ?? '',
+          } as const)
+        : ({
+            provider: 'mock',
+            tenantId: row.tenant_id,
+            workflowId: row.provider_workflow_id,
+            runId: row.provider_run_id,
+          } as const);
+
   return {
     tenantId: row.tenant_id,
     projectId: row.project_id,
@@ -72,12 +101,7 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
     logicalAttemptId: row.logical_attempt_id,
     parentRunId: row.parent_run_id ?? undefined,
     originRunId: row.origin_run_id ?? undefined,
-    provider: row.provider,
-    providerWorkflowId: row.provider_workflow_id,
-    providerRunId: row.provider_run_id,
-    providerNamespace: row.provider_namespace ?? undefined,
-    providerTaskQueue: row.provider_task_queue ?? undefined,
-    providerConductorUrl: row.provider_conductor_url ?? undefined,
+    providerRef,
   } as RunMetadata;
 }
 
@@ -125,12 +149,12 @@ export class PostgresRunMetadataRepository {
         meta.parentRunId ?? null,
         meta.originRunId ?? meta.runId,
         meta.logicalAttemptId + 1,
-        meta.provider,
-        meta.providerWorkflowId,
-        meta.providerRunId,
-        meta.providerNamespace ?? null,
-        meta.providerTaskQueue ?? null,
-        meta.providerConductorUrl ?? null,
+        meta.providerRef.provider,
+        meta.providerRef.workflowId,
+        meta.providerRef.runId,
+        meta.providerRef.provider === 'temporal' ? meta.providerRef.namespace : null,
+        meta.providerRef.provider === 'temporal' ? (meta.providerRef.taskQueue ?? null) : null,
+        meta.providerRef.provider === 'conductor' ? meta.providerRef.conductorUrl : null,
       ]
     );
 
@@ -204,14 +228,71 @@ export class PostgresRunMetadataRepository {
         meta.environmentId,
         meta.planId,
         meta.planVersion,
-        meta.provider,
-        meta.providerWorkflowId,
-        meta.providerRunId,
-        meta.providerNamespace ?? null,
-        meta.providerTaskQueue ?? null,
-        meta.providerConductorUrl ?? null,
+        meta.providerRef.provider,
+        meta.providerRef.workflowId,
+        meta.providerRef.runId,
+        meta.providerRef.provider === 'temporal' ? meta.providerRef.namespace : null,
+        meta.providerRef.provider === 'temporal' ? (meta.providerRef.taskQueue ?? null) : null,
+        meta.providerRef.provider === 'conductor' ? meta.providerRef.conductorUrl : null,
       ]
     );
+  }
+
+  async saveProviderRef(
+    tenantId: string,
+    runId: RunId,
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
+    if (providerRef.tenantId !== tenantId) {
+      throw new TenantAccessDeniedError(tenantId);
+    }
+
+    return this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+
+      const existing = await client.query<RunMetadataRow>(
+        `
+          SELECT ${RUN_METADATA_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $1 AND run_id = $2
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [tenantId, runId]
+      );
+
+      const current = existing.rows[0];
+      if (!current) {
+        throw new RunNotFoundError(runId);
+      }
+      if (current.provider !== providerRef.provider) {
+        throw new ProviderRefProviderMismatchError(runId, current.provider, providerRef.provider);
+      }
+
+      const updated = await client.query<RunMetadataRow>(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+          SET provider_workflow_id = $1,
+              provider_run_id = $2,
+              provider_namespace = $3,
+              provider_task_queue = $4,
+              provider_conductor_url = $5
+          WHERE tenant_id = $6 AND run_id = $7
+          RETURNING ${RUN_METADATA_COLUMNS}
+        `,
+        [
+          providerRef.workflowId,
+          providerRef.runId,
+          providerRef.provider === 'temporal' ? providerRef.namespace : null,
+          providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
+          providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
+          tenantId,
+          runId,
+        ]
+      );
+
+      return toRunMetadata(updated.rows[0] as RunMetadataRow);
+    });
   }
 
   async resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
@@ -299,44 +380,6 @@ export class PostgresRunMetadataRepository {
       );
       return result.rows.map(toRunMetadata);
     });
-  }
-
-  async saveProviderRef(
-    tenantId: string,
-    runId: RunId,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void> {
-    const result = await this.withClient((client) =>
-      client.query(
-        `
-          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
-          SET provider_workflow_id = $2,
-              provider_run_id = $3,
-              provider_namespace = $4,
-              provider_task_queue = $5,
-              provider_conductor_url = $6
-          WHERE run_id = $1 AND tenant_id = $7
-        `,
-        [
-          runId,
-          runRef.providerWorkflowId,
-          runRef.providerRunId,
-          runRef.providerNamespace ?? null,
-          runRef.providerTaskQueue ?? null,
-          runRef.providerConductorUrl ?? null,
-          tenantId,
-        ]
-      )
-    );
-    if (!result.rowCount) {
-      throw new RunNotFoundError(runId);
-    }
   }
 
   async reserveRetryAttempt(

@@ -41,9 +41,12 @@ describe('SignalRunUseCase', () => {
           planId: 'plan-1',
           planVersion: '1.0',
           logicalAttemptId: 1,
-          provider: 'mock' as const,
-          providerWorkflowId: 'wf-1',
-          providerRunId: 'provider-run-1',
+          providerRef: {
+            provider: 'mock' as const,
+            tenantId: 'tenant-a',
+            workflowId: 'wf-1',
+            runId: 'provider-run-1',
+          },
         };
       },
     };

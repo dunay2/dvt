@@ -45,9 +45,12 @@ describe('InMemoryRunStateStore append invariants', () => {
         planId: 'plan-minimal',
         planVersion: '1.0',
         logicalAttemptId: 1,
-        provider: 'mock',
-        providerWorkflowId: `wf-${runId}`,
-        providerRunId: `pr-${runId}`,
+        providerRef: {
+          provider: 'mock',
+          tenantId: 't1',
+          workflowId: `wf-${runId}`,
+          runId: `pr-${runId}`,
+        },
       },
       firstEvents: [
         {
@@ -109,9 +112,12 @@ describe('InMemoryRunStateStore append invariants', () => {
         planId: 'plan-minimal',
         planVersion: '1.0',
         logicalAttemptId: 1,
-        provider: 'mock',
-        providerWorkflowId: `wf-${runId}`,
-        providerRunId: `pr-${runId}`,
+        providerRef: {
+          provider: 'mock',
+          tenantId: 't1',
+          workflowId: `wf-${runId}`,
+          runId: `pr-${runId}`,
+        },
       },
       firstEvents: [
         {

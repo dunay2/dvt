@@ -109,6 +109,9 @@ describe('modules', () => {
               lastSeq: 0,
             };
           },
+          async saveProviderRef() {
+            return null as never;
+          },
         },
         clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
         projector: {

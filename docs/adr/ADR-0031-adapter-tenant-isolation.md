@@ -26,7 +26,10 @@ Administrative dead-letter operations are tenant-scoped by contract:
 
 - `listDeadLetter` requires tenant scope.
 - `replayDeadLetters` requires tenant scope.
-- `saveProviderRef` requires tenant scope and updates only matching `(tenant_id, run_id)`.
+- tenant-owned run metadata writes must stay scoped to matching
+  `(tenant_id, run_id)` rows; provider runtime identity is now persisted as the
+  discriminated `providerRef` inside `RunMetadata` rather than via a separate
+  provider-ref patch method.
 - Deprecated `saveRunMetadata` must reject tenant takeover attempts on existing `run_id`.
 
 ## 3. Consequences
@@ -46,7 +49,7 @@ Trade-offs:
 
 - Add integration tests for cross-tenant negative paths in `@dvt/adapter-postgres`.
 - Validate no tenant can list/replay another tenant dead letters.
-- Validate cross-tenant `saveProviderRef` is denied.
+- Validate cross-tenant run-metadata reads/upserts are denied.
 - Validate deprecated `saveRunMetadata` cannot overwrite ownership of existing `run_id`.
 
 ## 5. Migration Notes

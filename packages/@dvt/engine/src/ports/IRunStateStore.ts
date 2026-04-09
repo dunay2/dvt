@@ -1,5 +1,6 @@
 import type { ExecutionPlan as CanonicalExecutionPlan } from '@dvt/contracts';
 import type {
+  EngineRunRef,
   IsoUtcString,
   PlanRef,
   Provider,
@@ -93,14 +94,15 @@ export interface RunMetadata {
    * initial runId here for root runs to keep retry reservation stable.
    */
   originRunId?: string;
-  provider: 'temporal' | 'conductor' | 'mock';
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
+  providerRef: EngineRunRef;
   createdAt?: IsoUtcString;
 }
+
+/**
+ * Provider-ref reconciliation payload for pre-bootstrapped runs.
+ * The update itself stays fully discriminated by provider.
+ */
+export type ProviderRefUpdate = EngineRunRef;
 
 export interface AppendResult {
   appended: EventEnvelope[];
@@ -142,8 +144,8 @@ export interface ListEventsOptions {
 /**
  * Version marker for persisted WorkflowSnapshot shape.
  * Development baseline for persisted WorkflowSnapshot rows.
- * The active branch keeps one snapshot schema line (`1`) and treats legacy
- * flat-shape rows as stale via adapter-side rebuild logic.
+ * The active branch keeps one snapshot schema line (`1`) while the
+ * execution-evidence shape evolves in development.
  */
 export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 1 as const;
 
@@ -172,14 +174,6 @@ export interface WorkflowSnapshot {
   >;
 }
 
-export interface ProviderRefUpdate {
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
-}
-
 export interface RetryAttemptReservation {
   parentRunId: string;
   originRunId: string;
@@ -190,19 +184,19 @@ export interface IRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   /**
+   * Reconciles persisted provider identity after a pre-bootstrap estimate.
+   * Implementations MUST reject tenant drift and provider discriminator changes.
+   */
+  saveProviderRef(
+    tenantId: string,
+    runId: string,
+    providerRef: ProviderRefUpdate
+  ): Promise<RunMetadata>;
+  /**
    * Atomically reserves the next business retry lineage slot for a new run
    * derived from `sourceRunId`.
    */
   reserveRetryAttempt(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
-
-  /**
-   * Updates the provider-assigned references on an already-bootstrapped run.
-   *
-   * Called after `adapter.startRun()` returns a `firstExecutionRunId` that differs
-   * from the `estimateRunRef()` value written at bootstrap time.
-   * Optional - the engine call-site is fail-soft.
-   */
-  saveProviderRef?(tenantId: string, runId: string, update: ProviderRefUpdate): Promise<void>;
 }
 
 export interface IRunStateStoreRead {
