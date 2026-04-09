@@ -29,7 +29,7 @@ This roadmap is constrained by:
 - [ADR-0035 - Planner Public Contract Evolution Protocol](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [ADR-0012 - Plan Integrity Ownership](../../adr/ADR-0012-plan-integrity-ownership.md)
 - [ADR-0017 - ExecutionPlan Schema Versioning](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
-- [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md)
+- [Phase 2 Architectural Debt Roadmap](./phase2-arch-debt-roadmap-20260315.md)
 - [Stage 1.1 - Planner Contract, Canonical Ownership, and Documentation Placement](../../../packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md)
 
 ## Planning Rules

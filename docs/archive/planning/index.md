@@ -12,5 +12,5 @@ reclassification out of the active planning tree.
 
 ## Index
 
-- [Archived Gap Artifacts](gaps/index.md)
-- [Archived Proposal Artifacts](proposals/index.md)
+- [Archived Gap Artifacts](./gaps/index.md)
+- [Archived Proposal Artifacts](./proposals/index.md)

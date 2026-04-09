@@ -12,9 +12,9 @@ Execution plan for the QA follow-up that remains after `G5.3` correctness
 hardening.
 
 - Gap: `G5 - Outbox worker independiente`
-- Current status source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- Predecessor hardening slice: [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
+- Current status source: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
+- Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- Predecessor hardening slice: [`G5 / US-G5.3 Correctness Hardening Plan`](./G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
 - Risk record: [`R-20260311-G5-4-QA-01`](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md)
 - Ordering baseline: [`ADR-0009_Outbox_Ordering.md`](../../adr/ADR-0009_Outbox_Ordering.md)
 

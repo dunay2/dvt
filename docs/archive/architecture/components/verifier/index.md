@@ -37,8 +37,8 @@ flowchart LR
 
 @dvt/plan-verifier is responsible for validating plan integrity:
 
-- **Root:** [VerifierAggregate](verifier.md#verifieraggregate) — represents the central validation model, owning all validation results.
-- **Aggregates:** [ErrorAggregate](verifier.md#erroraggregate), [WarningAggregate](verifier.md#warningaggregate).
+- **Root:** [VerifierAggregate](./verifier.md#verifieraggregate) — represents the central validation model, owning all validation results.
+- **Aggregates:** [ErrorAggregate](./verifier.md#erroraggregate), [WarningAggregate](./verifier.md#warningaggregate).
 - **Responsibilities:**
   - Validate plan structure and constraints.
   - Track errors and warnings.
@@ -46,8 +46,8 @@ flowchart LR
 
 **Interactions:**
 
-- **[Planner](planner.md):** Receives plans for validation.
-- **[Engine](engine.md):** Ensures only valid plans are executed.
+- **[Planner](./planner.md):** Receives plans for validation.
+- **[Engine](./engine.md):** Ensures only valid plans are executed.
 
 Verifier coordinates these interactions to ensure plan integrity and traceability.
 
@@ -95,7 +95,7 @@ Represents warning tracking for plan validation. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](verifier-ddd.md)
-- [Functionalities](verifier-functional.md)
-- [Constraints & Invariants](verifier-constraints.md)
-- [Sequence Diagrams](verifier-sequence.md)
+- [DDD Structure](./verifier-ddd.md)
+- [Functionalities](./verifier-functional.md)
+- [Constraints & Invariants](./verifier-constraints.md)
+- [Sequence Diagrams](./verifier-sequence.md)

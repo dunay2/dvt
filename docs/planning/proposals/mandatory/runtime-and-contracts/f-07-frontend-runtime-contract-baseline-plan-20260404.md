@@ -120,8 +120,8 @@ drifting endpoints.
 
 ## Related Sources
 
-- [Frontend Fowler Implementation Pattern](../../../../architecture/frontend/frontend-fowler-implementation-pattern.md)
-- [Frontend Runtime Contract Technical Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-technical-manual.md)
-- [Frontend Runtime Contract User Manual](../../../../architecture/frontend/runs/frontend-runtime-contract-user-manual.md)
+- [Frontend Fowler Implementation Pattern](../../../../architecture/components/web/frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Contract Technical Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)
+- [Frontend Runtime Contract User Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-user-manual.md)
 - [Frontend Roadmap - Prototype To Operational UI](../../nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Lane E](../../../state/agent-lane-e.yaml)

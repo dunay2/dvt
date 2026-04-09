@@ -57,7 +57,7 @@ as much as library behavior in `@dvt/delivery`.
 
 ## Historical Deep Dives
 
-- [DDD Structure](outbox-worker-ddd.md)
-- [Functionalities](outbox-worker-functional.md)
-- [Constraints and invariants](outbox-worker-constraints.md)
-- [Sequence diagrams](outbox-worker-sequence.md)
+- [DDD Structure](./outbox-worker-ddd.md)
+- [Functionalities](./outbox-worker-functional.md)
+- [Constraints and invariants](./outbox-worker-constraints.md)
+- [Sequence diagrams](./outbox-worker-sequence.md)

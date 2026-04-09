@@ -14,13 +14,13 @@ procedure. Both must be respected â€” they are not alternatives.
 ## Canonical References
 
 - [AGENTS.md](../../AGENTS.md)
-- [PR Preflight And CI Triage](pr-preflight-and-ci-triage.md)
+- [PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md)
 - [Engineering Playbook](../architecture/atlas/engineering/engineering_playbook.md)
 - [ADR-0000: Code Generation With Enforced Normative Traceability](../adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md)
 - [ADR-0004: Event Sourcing Strategy](../adr/ADR-0004-event-sourcing-strategy.md)
 - [ADR-0005: Contract Formalization Tooling](../adr/ADR-0005-contract-formalization-tooling.md)
-- [RunEvents Contract](../architecture/engine/contracts/engine/RunEvents.v1.md)
-- [Testing and CI Capabilities](testing-and-ci-capabilities.md)
+- [RunEvents Contract](../architecture/components/engine/contracts/engine/RunEvents.v1.md)
+- [Testing and CI Capabilities](./testing-and-ci-capabilities.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Startup Router Rule
@@ -199,7 +199,7 @@ Before closing the work, verify all acceptance criteria:
       makes the slice officially closed
 
 When the task is about preparing a PR or recovering from a red PR, use
-[PR Preflight And CI Triage](pr-preflight-and-ci-triage.md) as the canonical
+[PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md) as the canonical
 recipe for diagnostics, slice checks, `pnpm verify:prepush`, and first-red
 failed-job inspection.
 
@@ -240,7 +240,7 @@ worked example.
 Example relationship for a contract-backed artifact set:
 
 - ADR baseline: [ADR-0004](../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0005](../adr/ADR-0005-contract-formalization-tooling.md)
-- Canonical contract: [RunEvents Contract](../architecture/engine/contracts/engine/RunEvents.v1.md)
+- Canonical contract: [RunEvents Contract](../architecture/components/engine/contracts/engine/RunEvents.v1.md)
 - Generated artifacts: `schemas/run-events.schema.json`, `src/run-events.types.ts`, `test/run-events.conformance.test.ts`
 
 The artifact paths above are examples of code or build outputs. They should be

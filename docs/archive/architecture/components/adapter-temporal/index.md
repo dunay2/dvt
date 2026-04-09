@@ -35,8 +35,8 @@ flowchart LR
 
 @dvt/adapter-temporal is responsible for integrating Temporal workflows:
 
-- **Root:** [TemporalAdapterAggregate](adapter-temporal.md#temporaladapteraggregate) — represents the central temporal adapter model, owning workflow execution.
-- **Aggregates:** [WorkflowAggregate](adapter-temporal.md#workflowaggregate).
+- **Root:** [TemporalAdapterAggregate](./adapter-temporal.md#temporaladapteraggregate) — represents the central temporal adapter model, owning workflow execution.
+- **Aggregates:** [WorkflowAggregate](./adapter-temporal.md#workflowaggregate).
 - **Responsibilities:**
   - Execute Temporal workflows.
   - Manage adapter connections.
@@ -44,7 +44,7 @@ flowchart LR
 
 **Interactions:**
 
-- **[Engine](engine.md):** Receives workflow execution results.
+- **[Engine](./engine.md):** Receives workflow execution results.
 
 Temporal adapter coordinates these interactions to ensure reliable workflow execution and adapter management.
 
@@ -76,7 +76,7 @@ Represents workflow management for temporal adapter. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](adapter-temporal-ddd.md)
-- [Functionalities](adapter-temporal-functional.md)
-- [Constraints & Invariants](adapter-temporal-constraints.md)
-- [Sequence Diagrams](adapter-temporal-sequence.md)
+- [DDD Structure](./adapter-temporal-ddd.md)
+- [Functionalities](./adapter-temporal-functional.md)
+- [Constraints & Invariants](./adapter-temporal-constraints.md)
+- [Sequence Diagrams](./adapter-temporal-sequence.md)

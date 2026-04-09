@@ -100,7 +100,7 @@ drift between the implementation core and the published entry surface.
   boundary
 - [docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md](../../evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md):
   added slice evidence
-- [docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md](20260320-planner-r2-typed-graph-source-boundary-closeout.md):
+- [docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md](./20260320-planner-r2-typed-graph-source-boundary-closeout.md):
   added think-first analysis and validation record
 
 ## Test evidence

@@ -7,7 +7,7 @@ last_reviewed: 2026-03-15
 
 # Planner Aggregates
 
-## [PlanAggregate](planner-aggregates.md#planaggregate)
+## [PlanAggregate](./planner-aggregates.md#planaggregate)
 
 Represents the central plan model, owning all steps and dependencies. Responsible for:
 
@@ -63,7 +63,7 @@ sequenceDiagram
     PlanAssembler-->>Planner: Final plan with validation
 ```
 
-## [StepAggregate](planner-aggregates.md#stepaggregate)
+## [StepAggregate](./planner-aggregates.md#stepaggregate)
 
 Represents an individual step within a plan. Responsible for:
 
@@ -113,7 +113,7 @@ sequenceDiagram
     PlanAssembler-->>Planner: Final plan with validation
 ```
 
-## [ValidationAggregate](planner-aggregates.md#validationaggregate)
+## [ValidationAggregate](./planner-aggregates.md#validationaggregate)
 
 Represents validation results for a plan. Responsible for:
 
@@ -170,8 +170,8 @@ sequenceDiagram
 
 ## Responsibilities
 
-- Root: [PlanAggregate](planner-aggregates.md#planaggregate) (central plan model)
-- Aggregates: [StepAggregate](planner-aggregates.md#stepaggregate), [ValidationAggregate](planner-aggregates.md#validationaggregate)
+- Root: [PlanAggregate](./planner-aggregates.md#planaggregate) (central plan model)
+- Aggregates: [StepAggregate](./planner-aggregates.md#stepaggregate), [ValidationAggregate](./planner-aggregates.md#validationaggregate)
 - Ensures plan structure, dependencies, and constraints
 - Coordinates plan lifecycle (draft, compiled, validated)
 - Create new plans and edit existing ones.
@@ -181,9 +181,9 @@ sequenceDiagram
 
 ## Interactions
 
-- [Verifier](verifier.md): Receives plans from planner, checks integrity, returns validation results.
-- [Interpreter](interpreter.md): Receives compiled plans, interprets for execution, returns execution-ready artifacts.
-- [DSL](dsl.md): Provides domain-specific language for plan definition, used by planner to enable flexible plan creation.
+- [Verifier](./verifier.md): Receives plans from planner, checks integrity, returns validation results.
+- [Interpreter](./interpreter.md): Receives compiled plans, interprets for execution, returns execution-ready artifacts.
+- [DSL](./dsl.md): Provides domain-specific language for plan definition, used by planner to enable flexible plan creation.
 
 Planner orchestrates these interactions to ensure every plan is valid, executable, and compliant with system constraints.
 
@@ -220,7 +220,7 @@ sequenceDiagram
 
 ## Detailed Documentation
 
-- [DDD Structure](planner-aggregates-ddd.md)
-- [Functionalities](planner-aggregates-functional.md)
-- [Constraints & Invariants](planner-aggregates-constraints.md)
-- [Sequence Diagrams](planner-aggregates-sequence.md)
+- [DDD Structure](./planner-aggregates-ddd.md)
+- [Functionalities](./planner-aggregates-functional.md)
+- [Constraints & Invariants](./planner-aggregates-constraints.md)
+- [Sequence Diagrams](./planner-aggregates-sequence.md)

@@ -37,8 +37,8 @@ flowchart LR
 
 @dvt/observability is responsible for observability and monitoring:
 
-- **Root:** [ObservabilityAggregate](observability.md#observabilityaggregate) — represents the central observability model, owning metrics and log management.
-- **Aggregates:** [MetricsAggregate](observability.md#metricsaggregate), [LogAggregate](observability.md#logaggregate).
+- **Root:** [ObservabilityAggregate](./observability.md#observabilityaggregate) — represents the central observability model, owning metrics and log management.
+- **Aggregates:** [MetricsAggregate](./observability.md#metricsaggregate), [LogAggregate](./observability.md#logaggregate).
 - **Responsibilities:**
   - Collect and manage metrics.
   - Collect and manage logs.
@@ -46,8 +46,8 @@ flowchart LR
 
 **Interactions:**
 
-- **[Contracts](contracts.md):** Uses observability for validation.
-- **[Engine](engine.md):** Uses observability for workflow monitoring.
+- **[Contracts](./contracts.md):** Uses observability for validation.
+- **[Engine](./engine.md):** Uses observability for workflow monitoring.
 
 Observability coordinates these interactions to ensure monitoring, metrics, and log management.
 
@@ -87,7 +87,7 @@ Represents log management for observability. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](observability-ddd.md)
-- [Functionalities](observability-functional.md)
-- [Constraints & Invariants](observability-constraints.md)
-- [Sequence Diagrams](observability-sequence.md)
+- [DDD Structure](./observability-ddd.md)
+- [Functionalities](./observability-functional.md)
+- [Constraints & Invariants](./observability-constraints.md)
+- [Sequence Diagrams](./observability-sequence.md)

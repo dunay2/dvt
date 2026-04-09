@@ -17,7 +17,7 @@ positioning.
 This document is strategic and multi-consumer.
 It is not the execution queue.
 Operational status lives in
-[Planning Control Tower](state/planning-control-tower.md) and the
+[Planning Control Tower](./state/planning-control-tower.md) and the
 `agent-lane-*.yaml` registry.
 
 ## Workboard Coverage
@@ -69,10 +69,10 @@ owned by one agent at a time and to minimize cross-lane coupling.
 
 Detailed per-agent workfiles:
 
-- [Lane A](state/agent-lane-a.yaml)
-- [Lane B](state/agent-lane-b.yaml)
-- [Lane C](state/agent-lane-c.yaml)
-- [Lane D](state/agent-lane-d.yaml)
+- [Lane A](./state/agent-lane-a.yaml)
+- [Lane B](./state/agent-lane-b.yaml)
+- [Lane C](./state/agent-lane-c.yaml)
+- [Lane D](./state/agent-lane-d.yaml)
 
 ### Lane A · Contracts And State-Store Boundary
 

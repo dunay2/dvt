@@ -10,7 +10,7 @@ planning_type: proposal
 
 Operational playbook for executing gaps in parallel by independent teams.
 
-- Base plan: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
+- Base plan: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
 - Last sync date: 2026-03-14
 - Scope: G1 to G10
 
@@ -92,6 +92,6 @@ Operational playbook for executing gaps in parallel by independent teams.
 
 ## Related Documents
 
-- Master status: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- G4 detail: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
-- G3 detail: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
+- Master status: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
+- G4 detail: [`G4-TASK-SPECIFICATION.md`](./G4-TASK-SPECIFICATION.md)
+- G3 detail: [`G3-TASK-SPECIFICATION.md`](./G3-TASK-SPECIFICATION.md)

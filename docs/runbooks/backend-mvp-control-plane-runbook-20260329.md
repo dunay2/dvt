@@ -205,5 +205,5 @@ pnpm verify:prepush
 
 For runtime latency, freshness, outbox drain, and alert thresholds, use:
 
-- [API Runtime SLA Canonical](api-runtime-sla-canonical-20260404.md)
-- [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)
+- [API Runtime SLA Canonical](./api-runtime-sla-canonical-20260404.md)
+- [Read-Your-Writes Freshness SLO](./read-your-writes-freshness-slo-20260330.md)

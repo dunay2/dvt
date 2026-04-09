@@ -814,7 +814,7 @@ tasks:
       intentionally non-deterministic worker assignment.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
-      - docs/architecture/engine/contracts/engine/SchedulerReleaseAndClaimSemantics.v1.md
+      - docs/architecture/components/engine/contracts/engine/SchedulerReleaseAndClaimSemantics.v1.md
       - packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts
       - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
       - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
@@ -1432,8 +1432,8 @@ tasks:
     effort_points: 5
     progress_pct: 20
     evidence_refs:
-      - docs/architecture/engine/workflow-engine-subsystem-context.md
-      - docs/architecture/engine/workflow-engine-target-architecture.v1.md
+      - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+      - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
       - docs/guides/workflow-engine-user-manual.v1.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
@@ -1453,10 +1453,10 @@ tasks:
       New subsystem context, target architecture spec, and user manual are canonical; engine and
       component navigation route to them.
     evidence_refs:
-      - docs/architecture/engine/workflow-engine-subsystem-context.md
-      - docs/architecture/engine/workflow-engine-target-architecture.v1.md
+      - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+      - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
       - docs/guides/workflow-engine-user-manual.v1.md
-      - docs/architecture/engine/index.md
+      - docs/architecture/components/engine/index.md
       - docs/architecture/components/engine/index.md
       - docs/planning/status/canonical-doc-code-matrix.md
     status_reason: Primary docs are drafted and replacement routing is in progress.

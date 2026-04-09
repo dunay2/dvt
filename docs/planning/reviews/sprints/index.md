@@ -16,11 +16,11 @@ Roadmap companion:
 
 ## Active Sprints
 
-| Sprint                                      | Window                   | Focus                                                                      | Status |
-| ------------------------------------------- | ------------------------ | -------------------------------------------------------------------------- | ------ |
-| [Sprint 2026-04A](sprint-2026-04a/index.md) | 2026-04-02 to 2026-04-16 | Runtime architecture debt, CI process hardening, review-governance cleanup | Active |
-| [Sprint 2026-04B](sprint-2026-04b/index.md) | 2026-04-17 to 2026-04-30 | Contract hardening and execution boundary enforcement                      | Active |
-| [Sprint 2026-04C](sprint-2026-04c/index.md) | 2026-05-01 to 2026-05-15 | Planner scalability and operability hardening                              | Queued |
+| Sprint                                        | Window                   | Focus                                                                      | Status |
+| --------------------------------------------- | ------------------------ | -------------------------------------------------------------------------- | ------ |
+| [Sprint 2026-04A](./sprint-2026-04a/index.md) | 2026-04-02 to 2026-04-16 | Runtime architecture debt, CI process hardening, review-governance cleanup | Active |
+| [Sprint 2026-04B](./sprint-2026-04b/index.md) | 2026-04-17 to 2026-04-30 | Contract hardening and execution boundary enforcement                      | Active |
+| [Sprint 2026-04C](./sprint-2026-04c/index.md) | 2026-05-01 to 2026-05-15 | Planner scalability and operability hardening                              | Queued |
 
 ## Board File Rules
 

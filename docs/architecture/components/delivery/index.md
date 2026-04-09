@@ -58,7 +58,7 @@ handling. It is no longer just a placeholder around worker apps.
 
 ## Historical Deep Dives
 
-- [DDD Structure](delivery-ddd.md)
-- [Sequence diagram and flow](delivery-sequence.md)
-- [Constraints and invariants](delivery-constraints.md)
-- [Functionalities](delivery-functional.md)
+- [DDD Structure](./delivery-ddd.md)
+- [Sequence diagram and flow](./delivery-sequence.md)
+- [Constraints and invariants](./delivery-constraints.md)
+- [Functionalities](./delivery-functional.md)

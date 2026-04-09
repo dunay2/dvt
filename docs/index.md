@@ -12,79 +12,82 @@ specifically about execution invariants or adapters.
 
 ## Start By Intent
 
-- Understand the system and its language: [Concepts](concepts/index.md)
-- Read technical structure and invariants: [Architecture](architecture/index.md),
-  [Shared Package Architecture](architecture/shared/index.md), and
-  [Contracts](contracts/index.md)
+- Understand the system and its language: [Concepts](./concepts/index.md)
+- Read technical structure and invariants: [Architecture](./architecture/index.md),
+  [Shared Package Architecture](./architecture/shared/index.md), and
+  [Contracts](./contracts/index.md)
 - See current implementation and delivery status:
-  [System Delivery Status](architecture/system-delivery-status.md)
+  [System Delivery Status](./architecture/system-delivery-status.md)
 - Follow active work, proposals, and gaps:
-  [Planning Dashboard](planning/state/planning-dashboard.md)
-- Operate or troubleshoot the system: [Runbooks](runbooks/index.md)
-- Review unresolved debt and acceptance posture: [Risk Register](risk-register/index.md)
-- Review decisions and decision history: [ADRs](adr/index.md)
+  [Planning Dashboard](./planning/state/planning-dashboard.md)
+- Operate or troubleshoot the system: [Runbooks](./runbooks/index.md)
+- Review unresolved debt and acceptance posture: [Risk Register](./risk-register/index.md)
+- Review decisions and decision history: [ADRs](./adr/index.md)
 
 ## Core Entry Points
 
-- [Concept Glossary](concepts/glossary.md)
-- [Domain Language](concepts/domain-language.md)
-- [System Map](concepts/system-map.md)
-- [Repository Map](concepts/repository-map.md)
-- [Shared Package Architecture](architecture/shared/index.md)
-- [Frontend Architecture](architecture/frontend/index.md)
-- [Infra Architecture](architecture/infra/index.md)
-- [Engine Architecture](architecture/engine/index.md)
-- [Roadmap Of Record](planning/roadmap/index.md)
-- [Planning Dashboard](planning/state/planning-dashboard.md)
-- [Planning Control Tower](planning/state/planning-control-tower.md)
-- [Planning Gaps](planning/gaps/index.md)
-- [Current Delivery Status](architecture/system-delivery-status.md)
-- [Planning Governance Inventory](planning/status/governance-document-rule-inventory.md)
-- [Evidence](evidence/index.md)
+- [Concept Glossary](./concepts/glossary.md)
+- [Domain Language](./concepts/domain-language.md)
+- [System Map](./concepts/system-map.md)
+- [Repository Map](./concepts/repository-map.md)
+- [System Architecture](./architecture/system/index.md)
+- [Subsystem Architecture](./architecture/system/subsystems/index.md)
+- [Architecture Component Surfaces](./architecture/components/index.md)
+- [Shared Package Architecture](./architecture/shared/index.md)
+- [Frontend Architecture](./architecture/components/web/index.md)
+- [Infra Architecture](./architecture/infra/index.md)
+- [Engine Architecture](./architecture/components/engine/index.md)
+- [Roadmap Of Record](./planning/roadmap/index.md)
+- [Planning Dashboard](./planning/state/planning-dashboard.md)
+- [Planning Control Tower](./planning/state/planning-control-tower.md)
+- [Planning Gaps](./planning/gaps/index.md)
+- [Current Delivery Status](./architecture/system-delivery-status.md)
+- [Planning Governance Inventory](./planning/status/governance-document-rule-inventory.md)
+- [Evidence](./evidence/index.md)
 
 ## Reading Paths
 
 ### New contributor
 
-1. [Concepts](concepts/index.md)
-2. [System Map](concepts/system-map.md)
-3. [Current Delivery Status](architecture/system-delivery-status.md)
-4. [Shared Package Architecture](architecture/shared/index.md)
-5. [Architecture Index](architecture/index.md)
+1. [Concepts](./concepts/index.md)
+2. [System Map](./concepts/system-map.md)
+3. [Current Delivery Status](./architecture/system-delivery-status.md)
+4. [Shared Package Architecture](./architecture/shared/index.md)
+5. [Architecture Index](./architecture/index.md)
 
 ### Contributor changing behavior
 
-1. [Contracts Index](contracts/index.md)
-2. [Current Delivery Status](architecture/system-delivery-status.md)
-3. [Shared Package Architecture](architecture/shared/index.md)
-4. [Architecture Index](architecture/index.md)
-5. [Planning Dashboard](planning/state/planning-dashboard.md)
-6. [Planning Control Tower](planning/state/planning-control-tower.md)
-7. [Risk Register](risk-register/index.md)
-8. [Evidence](evidence/index.md)
+1. [Contracts Index](./contracts/index.md)
+2. [Current Delivery Status](./architecture/system-delivery-status.md)
+3. [Shared Package Architecture](./architecture/shared/index.md)
+4. [Architecture Index](./architecture/index.md)
+5. [Planning Dashboard](./planning/state/planning-dashboard.md)
+6. [Planning Control Tower](./planning/state/planning-control-tower.md)
+7. [Risk Register](./risk-register/index.md)
+8. [Evidence](./evidence/index.md)
 
 ### Operator or reviewer
 
-1. [Runbooks](runbooks/index.md)
-2. [Current Delivery Status](architecture/system-delivery-status.md)
-3. [Risk Register](risk-register/index.md)
-4. [Planning Gaps](planning/gaps/index.md)
-5. [Planning Governance Inventory](planning/status/governance-document-rule-inventory.md)
+1. [Runbooks](./runbooks/index.md)
+2. [Current Delivery Status](./architecture/system-delivery-status.md)
+3. [Risk Register](./risk-register/index.md)
+4. [Planning Gaps](./planning/gaps/index.md)
+5. [Planning Governance Inventory](./planning/status/governance-document-rule-inventory.md)
 
 ## Transitional Notes
 
 - The canonical roadmap entry point now lives at
-  [Roadmap Of Record](planning/roadmap/index.md).
-- [System Delivery Status](architecture/system-delivery-status.md) remains the
+  [Roadmap Of Record](./planning/roadmap/index.md).
+- [System Delivery Status](./architecture/system-delivery-status.md) remains the
   active status surface for current implementation truth.
 - Legacy aliases were removed from the active tree. Start from
-  [Concepts](concepts/index.md),
-  [Planning Dashboard](planning/state/planning-dashboard.md),
-  [Planning Control Tower](planning/state/planning-control-tower.md), and
-  [ADRs](adr/index.md) for the active surface.
+  [Concepts](./concepts/index.md),
+  [Planning Dashboard](./planning/state/planning-dashboard.md),
+  [Planning Control Tower](./planning/state/planning-control-tower.md), and
+  [ADRs](./adr/index.md) for the active surface.
 
 ## Governance and Contribution
 
-- [Contribution Guide](CONTRIBUTING.md)
-- [Docs Structure Baseline](DOCS_README.md)
-- [Archive](archive/index.md)
+- [Contribution Guide](./CONTRIBUTING.md)
+- [Docs Structure Baseline](./DOCS_README.md)
+- [Archive](./archive/index.md)

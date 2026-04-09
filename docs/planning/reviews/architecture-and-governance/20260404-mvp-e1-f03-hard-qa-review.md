@@ -19,7 +19,7 @@ qa_artifact: true
   - [agent-lane-e.yaml](../../state/agent-lane-e.yaml) (`MVP-E1` queued, `progress_pct: 0`)
   - [agent-lane-e.yaml](../../state/agent-lane-e.yaml) (`F-03` in progress, `progress_pct: 35`)
   - implemented contract and shell changes exist in:
-    [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md),
+    [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md),
     [Root.tsx](../../../../apps/web/src/app/Root.tsx),
     [usePlatformHealthSnapshotQuery.ts](../../../../apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts)
     Risk: execution board and readiness decisions can be made from stale task posture.
@@ -28,8 +28,8 @@ qa_artifact: true
 - Title: MVP-E1 contract artifact is not discoverable from frontend architecture entrypoint.
   Why it matters: contract exists but discoverability fails for engineers entering from canonical frontend index.
   Evidence:
-  - [frontend index reading order](../../../architecture/frontend/index.md) does not include the new MVP-E1 artifact.
-  - artifact exists at [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md).
+  - [frontend index reading order](../../../architecture/components/web/index.md) does not include the new MVP-E1 artifact.
+  - artifact exists at [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md).
     Risk: route/auth assumptions continue from older docs.
     Recommendation: add explicit link from frontend index and route/runtime manuals.
 
@@ -39,7 +39,7 @@ qa_artifact: true
   Why it matters: plan asks for canonical success/error envelope examples; current doc is descriptive only.
   Evidence:
   - plan asks for examples in [MVP-E1-D](../../proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md)
-  - current contract section [Canonical success and error envelope baseline](../../../architecture/frontend/frontend-backend-contract-mvp-e1-20260404.md) has no concrete payload samples.
+  - current contract section [Canonical success and error envelope baseline](../../../architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md) has no concrete payload samples.
     Risk: frontend error handling can diverge by interpretation.
     Recommendation: add minimal JSON examples for `2xx`, `401/403`, and health degraded/offline mappings.
 

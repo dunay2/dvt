@@ -18,8 +18,8 @@ explicit for the remaining canonical run-control surface.
 Canonical execution tracking remains in:
 
 - [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
-- [20260408 Retry-run boundary and provider signal mapper review](20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
-- [ADR-0049](C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
+- [20260408 Retry-run boundary and provider signal mapper review](./20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
+- [ADR-0049](./C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 
 The slice closes the remaining `WE-HX-4-A/B/C` signal-boundary work. This QA
 artifact verifies that contract, adapter, docs, planning, evidence, and risk
@@ -32,15 +32,15 @@ surfaces all agree on the same boundary truth.
 ## Governing Sources
 
 - [governance-document-rule-inventory.md](../../status/governance-document-rule-inventory.md)
-- [AGENTS.md](C:/dvt/AGENTS.md)
-- [ai-work-protocol.md](C:/dvt/docs/guides/ai-work-protocol.md)
+- [AGENTS.md](./C:/dvt/AGENTS.md)
+- [ai-work-protocol.md](./C:/dvt/docs/guides/ai-work-protocol.md)
 - [TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md](../../templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
 - [TEMPLATE_QA_ARTIFACT_EXAMPLE.md](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
-- [ADR-0040](C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
-- [ADR-0047](C:/dvt/docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
-- [ADR-0048](C:/dvt/docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
-- [ADR-0049](C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
-- [20260408 Retry-run boundary and provider signal mapper review](20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
+- [ADR-0040](./C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
+- [ADR-0047](./C:/dvt/docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+- [ADR-0048](./C:/dvt/docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
+- [ADR-0049](./C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
+- [20260408 Retry-run boundary and provider signal mapper review](./20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
 
 ## Findings
 
@@ -52,7 +52,7 @@ No critical findings remain in the reviewed slice.
   and test matrix.
   Why it matters: `ADR-0049` intentionally narrows the generic signal boundary
   without implementing business recovery itself.
-  Evidence: [ADR-0049](C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md), [ADR-0040](C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
+  Evidence: [ADR-0049](./C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md), [ADR-0040](./C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
   Risk: a later feature could regress by reusing `signal(...)` instead of a
   dedicated recovery boundary.
   Recommendation: keep the open risk entry and require a new ADR before any

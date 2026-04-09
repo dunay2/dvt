@@ -37,8 +37,8 @@ flowchart LR
 
 @dvt/traceability-service is responsible for traceability and event tracking:
 
-- **Root:** [TraceabilityAggregate](traceability-service.md#traceabilityaggregate) — represents the central traceability model, owning event tracking.
-- **Aggregates:** [EventAggregate](traceability-service.md#eventaggregate).
+- **Root:** [TraceabilityAggregate](./traceability-service.md#traceabilityaggregate) — represents the central traceability model, owning event tracking.
+- **Aggregates:** [EventAggregate](./traceability-service.md#eventaggregate).
 - **Responsibilities:**
   - Track events for traceability.
   - Manage traceability operations.
@@ -46,8 +46,8 @@ flowchart LR
 
 **Interactions:**
 
-- **[Contracts](contracts.md):** Uses traceability for validation.
-- **[Engine](engine.md):** Uses traceability for workflow event tracking.
+- **[Contracts](./contracts.md):** Uses traceability for validation.
+- **[Engine](./engine.md):** Uses traceability for workflow event tracking.
 
 Traceability coordinates these interactions to ensure event tracking and traceability management.
 
@@ -79,7 +79,7 @@ Represents event management for traceability. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](traceability-service-ddd.md)
-- [Functionalities](traceability-service-functional.md)
-- [Constraints & Invariants](traceability-service-constraints.md)
-- [Sequence Diagrams](traceability-service-sequence.md)
+- [DDD Structure](./traceability-service-ddd.md)
+- [Functionalities](./traceability-service-functional.md)
+- [Constraints & Invariants](./traceability-service-constraints.md)
+- [Sequence Diagrams](./traceability-service-sequence.md)

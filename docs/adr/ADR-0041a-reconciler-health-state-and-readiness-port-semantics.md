@@ -11,7 +11,7 @@ last_reviewed: 2026-03-26
 
 Accepted.
 
-Subordinate decision under [ADR-0041 - Global Domain State Model and Boundary Contracts](ADR-0041-global-domain-state-model-and-boundary-contracts.md).
+Subordinate decision under [ADR-0041 - Global Domain State Model and Boundary Contracts](./ADR-0041-global-domain-state-model-and-boundary-contracts.md).
 
 ## Context
 
@@ -99,9 +99,9 @@ Mapping between both lives in presenter/policy modules and must be explicit.
 
 ## References
 
-- [ADR-0005 - Contract Formalization Tooling](ADR-0005-contract-formalization-tooling.md)
-- [ADR-0006 - Contract Tooling Governance](ADR-0006-contract-tooling-governance.md)
-- [ADR-0018 - Shared Kernel Ownership Governance](ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0005 - Contract Formalization Tooling](./ADR-0005-contract-formalization-tooling.md)
+- [ADR-0006 - Contract Tooling Governance](./ADR-0006-contract-tooling-governance.md)
+- [ADR-0018 - Shared Kernel Ownership Governance](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [Reconciler Runtime SOLID QA Review](../planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md)
-- [ADR-0034 - Bounded Context Boundaries And Communication Rules](ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [ADR-0039 - Hexagonal Port Hardening and SOLID Remediation](ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
+- [ADR-0034 - Bounded Context Boundaries And Communication Rules](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0039 - Hexagonal Port Hardening and SOLID Remediation](./ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)

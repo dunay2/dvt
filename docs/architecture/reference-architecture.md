@@ -77,6 +77,6 @@ Engine --> ObservabilityPort["IObservability"]
 ## Canonical Companions
 
 - ADRs: [`docs/adr/`](../adr/index.md)
-- Engine architecture: [`docs/architecture/engine/`](engine/index.md)
-- Delivery status: [`docs/architecture/system-delivery-status.md`](system-delivery-status.md)
-- Code-aligned snapshot atlas: [`docs/architecture/atlas/`](atlas/index.md)
+- Engine architecture: [`docs/architecture/components/engine/`](./components/engine/index.md)
+- Delivery status: [`docs/architecture/system-delivery-status.md`](./system-delivery-status.md)
+- Code-aligned snapshot atlas: [`docs/architecture/atlas/`](./atlas/index.md)

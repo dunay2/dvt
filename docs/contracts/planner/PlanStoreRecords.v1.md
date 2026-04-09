@@ -99,7 +99,7 @@ Invariants:
 
 ## Related
 
-- [Planner Contracts Index](index.md)
+- [Planner Contracts Index](./index.md)
 - [ADR-0041](../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
 - [ADR-0042](../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
 - [ADR-0043](../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)

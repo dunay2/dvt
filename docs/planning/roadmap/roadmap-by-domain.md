@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 planning_type: proposal
 ---
 
@@ -10,7 +10,7 @@ planning_type: proposal
 
 Domain-oriented roadmap overlay for the canonical roadmap of record.
 
-This file complements, but does not replace, [Roadmap Of Record](index.md).
+This file complements, but does not replace, [Roadmap Of Record](./index.md).
 
 ## Domain Lanes
 
@@ -41,10 +41,13 @@ flowchart LR
 - `Execution Runtime`
   Current sources: [Execution Runtime domain view](../domains/execution-runtime.md),
   [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md),
+  [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md),
   [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
   Near-term target: close the remaining `WE-HX` hardening waves while opening
-  `TF-C2` for the PostgreSQL executor path and caller-visible runtime evidence.
+  `TF-C2` for the PostgreSQL executor path and caller-visible runtime evidence,
+  while keeping Conductor cleanup scoped as truthfulness debt (`AR-A8`) rather
+  than a second-provider phase.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
@@ -68,9 +71,11 @@ flowchart LR
   repeatable Docker PostgreSQL reset/cleanup lifecycle for transformation proof
   runs.
 - `UI and Frontend`
-  Current sources: [Frontend Architecture](../../architecture/frontend/index.md),
+  Current sources: [web component](../../architecture/components/web/index.md),
+  [Read subsystem](../../architecture/system/subsystems/read/index.md),
+  [Frontend subsystem architecture](../../architecture/components/web/index.md),
   [UI / Visualization Domain](../../architecture/domain-ui.md),
-  [Documentation and UX implementation guide](../../architecture/frontend/ux-implementation-guide.md),
+  [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
   Near-term target: keep Lane E aligned around explicit transformation
   authoring, persisted preview-to-run handoff, and snapshot-owned result
@@ -87,11 +92,12 @@ flowchart LR
 ## Related Diagrams
 
 - [Planning Control Tower](../state/planning-control-tower.md)
-- [Review Sprint Critical Path 2026-04](diagrams/review-sprint-critical-path-2026-04.md)
-- [Planning Domain Map](diagrams/planning-domain-map.md)
-- [Execution Runtime Architecture Delta](diagrams/execution-runtime-architecture-delta.md)
-- [API and Admission Architecture Delta](diagrams/api-admission-architecture-delta.md)
-- [Planner and Contracts Architecture Delta](diagrams/planner-contracts-architecture-delta.md)
-- [Event Lifecycle and Retention Architecture Delta](diagrams/event-lifecycle-retention-architecture-delta.md)
-- [Documentation Governance Architecture Delta](diagrams/documentation-governance-architecture-delta.md)
+- [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
+- [Planning Domain Map](./diagrams/planning-domain-map.md)
+- [Execution Runtime Architecture Delta](./diagrams/execution-runtime-architecture-delta.md)
+- [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
+- [API and Admission Architecture Delta](./diagrams/api-admission-architecture-delta.md)
+- [Planner and Contracts Architecture Delta](./diagrams/planner-contracts-architecture-delta.md)
+- [Event Lifecycle and Retention Architecture Delta](./diagrams/event-lifecycle-retention-architecture-delta.md)
+- [Documentation Governance Architecture Delta](./diagrams/documentation-governance-architecture-delta.md)
 - [Execution Model Index](../execution-model/index.md)

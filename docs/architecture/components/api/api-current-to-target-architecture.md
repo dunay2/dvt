@@ -20,9 +20,9 @@ through the existing planning registry.
 
 ## Read This With
 
-- [Reference Architecture](../../../architecture/reference-architecture.md)
-- [API / Entry Domain](../../../architecture/domain-api.md)
-- [System Delivery Status](../../../architecture/system-delivery-status.md)
+- [Reference Architecture](../../reference-architecture.md)
+- [API / Entry Domain](../../domain-api.md)
+- [System Delivery Status](../../system-delivery-status.md)
 - [Canonical Doc Code Matrix](../../../planning/status/canonical-doc-code-matrix.md)
 - [DVT+ Design Guide - Boundaries, Ports, Composition, and CQRS](../../../guides/dvt-code-style-solid-hexagonal-cqrs.md)
 - [MVP-A1 Backend Contractual Inventory](../../../planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)

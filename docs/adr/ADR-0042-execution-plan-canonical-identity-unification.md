@@ -206,7 +206,7 @@ consumers read the same public plan shape while those semantics are applied.
 
 ## References
 
-- [ADR-0017_ExecutionPlan_Schema_Versioning.md](ADR-0017_ExecutionPlan_Schema_Versioning.md)
-- [ADR-0018_Shared_Kernel_Ownership_Governance.md](ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [ADR-0035-planner-public-contract-evolution-protocol.md](ADR-0035-planner-public-contract-evolution-protocol.md)
-- [ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md](ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)
+- [ADR-0017_ExecutionPlan_Schema_Versioning.md](./ADR-0017_ExecutionPlan_Schema_Versioning.md)
+- [ADR-0018_Shared_Kernel_Ownership_Governance.md](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0035-planner-public-contract-evolution-protocol.md](./ADR-0035-planner-public-contract-evolution-protocol.md)
+- [ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md](./ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)

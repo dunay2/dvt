@@ -14,4 +14,4 @@ canonical, status, and supporting architecture surfaces.
 
 ## Archived Families
 
-- [Archived component packs](components/index.md)
+- [Archived component packs](./components/index.md)

@@ -1,56 +1,96 @@
 ---
-title: '@dvt/web package surface'
+title: web component
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 ---
 
-# @dvt/web Package Surface
+# web component
 
-`@dvt/web` is the package-level view of the `apps/web` workspace.
+`web` is the canonical component home for the `apps/web` workspace.
 
-Use this page when the question is about module boundaries inside the frontend
-package rather than the deployable shell as a whole.
+It covers both the deployable browser shell and the public package-level
+surface consumed inside that workspace. The old `web-app` alias has been moved
+out of the active tree.
 
 ## Current Responsibilities
 
-- client-side API, runs, and workspace services;
-- planner preview/import and plan-selection service composition;
-- platform-health capability and related hooks;
-- plugin registry, contributions, and route/view discovery;
-- route-level views and the supporting state used by those views.
+- bootstrap the browser application and persistent workbench shell;
+- compose route views, plugin-contributed surfaces, and shell-owned routes;
+- expose client services for plans, runs, and workspace state;
+- map backend runtime and planning responses into operator-facing views.
 
-## Current Package Topology
+## Component Decomposition
+
+- shell and bootstrap:
+  [Main workspace views and UX](./main-workspace-views-and-ux.md),
+  [App shell](./appshell/app-shell.md),
+  [Data source service boundary](./appshell/data-source-service-boundary.md)
+- graph and authoring surfaces:
+  [Graph frontend architecture](./graph/graph-frontend-architecture.md),
+  [Canvas controller current-to-target](./graph/canvas-controller-current-to-target-architecture.md)
+- runtime and run-inspection surfaces:
+  [Runs architecture](./runs/dvt-runs-frontend-architecture.md),
+  [Frontend runtime contract technical manual](./runs/frontend-runtime-contract-technical-manual.md),
+  [Frontend runtime contract user manual](./runs/frontend-runtime-contract-user-manual.md)
+- cross-cutting UX:
+  [UX implementation guide](./ux-implementation-guide.md),
+  [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
+  [Library and open-source reference stack](./library-and-open-source-reference-stack.md)
+
+## Public Operational Surface
+
+- app bootstrap and shell wiring:
+  [main.tsx](../../../../apps/web/src/main.tsx),
+  [App.tsx](../../../../apps/web/src/app/App.tsx),
+  [Root.tsx](../../../../apps/web/src/app/Root.tsx),
+  [routes.ts](../../../../apps/web/src/app/routes.ts)
+- route-level read and run inspection:
+  [RunsView.tsx](../../../../apps/web/src/app/views/RunsView.tsx),
+  [RunWorkspaceStateView.tsx](../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
+- service factories and facades:
+  [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts),
+  [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts),
+  [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts),
+  [runWorkspaceFacade.ts](../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
+- plugin and contribution boundary:
+  [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
+
+## Component Topology
 
 ```mermaid
 flowchart LR
-  Views["Route views / shell hooks"] --> Services["app/services/*"]
-  Views --> Plugins["plugins/registry"]
-  Services --> ApiClient["createApiClient"]
-  Services --> Modes["API and mock service adapters"]
-  ApiClient --> Backend["apps/api"]
-  Plugins --> Contribs["plugin views / overlays / node renderers"]
+  Browser["Browser"] --> Router["React Router shell"]
+  Router --> Views["Canvas, Runs, Lineage, Code, Diff, Artifacts"]
+  Router --> Shell["Plugins and Admin shell routes"]
+  Views --> Services["plansService / runsService / workspaceService"]
+  Views --> Plugins["plugin registry and node renderers"]
+  Services --> Api["apps/api"]
+  Plugins --> Api
 ```
 
-## Current Code Anchors
+## Current Route Inventory
 
-- [createApiClient.ts](../../../../apps/web/src/app/services/api/createApiClient.ts)
-- [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts)
-- [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts)
-- [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts)
-- [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
+| Route                   | Main responsibility                   |
+| ----------------------- | ------------------------------------- |
+| `/canvas`               | graph workbench and run-start flow    |
+| `/runs`, `/runs/:runId` | run list and run detail inspection    |
+| `/lineage`              | graph-derived lineage and impact      |
+| `/code`                 | file and compiled-source inspection   |
+| `/diff`                 | diff and review handoff surface       |
+| `/artifacts`            | manifest import and artifact browsing |
+| `/plugins`              | plugin management shell view          |
+| `/admin`                | shell-owned administrative view       |
 
-## Library Direction
+## Current Posture
 
-- React Flow for graph rendering adapters;
-- TanStack Query for remote query orchestration;
-- Zustand for focused local UI state;
-- Radix/shadcn primitives for reusable accessible UI;
-- TanStack Table, Monaco Editor, and xterm.js when the corresponding capability
-  surfaces mature enough to justify them.
+This component is real product code. The remaining work is around tightening
+service boundaries, removing mock-heavy paths, and aligning route-level flows
+with the protected backend contracts.
 
 ## Related Pages
 
-- [apps/web](../web-app/index.md)
-- [Frontend Architecture](../../frontend/index.md)
-- [Library And Open-Source Reference Stack](../../frontend/library-and-open-source-reference-stack.md)
+- [Read subsystem](../../system/subsystems/read/index.md)
+- [Canonical run lifecycle subsystem](../../system/subsystems/canonical-run-lifecycle/index.md)
+- [DVT Component Map](../../component-map.md)
+- [System Delivery Status](../../system-delivery-status.md)

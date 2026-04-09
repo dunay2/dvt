@@ -11,4 +11,4 @@ planning_type: archive
 Historical reviews that were superseded by later review-of-record documents,
 accepted ADRs, closeouts, or completed workboard tasks.
 
-- [Architecture and governance archive](architecture-and-governance/index.md)
+- [Architecture and governance archive](./architecture-and-governance/index.md)

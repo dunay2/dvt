@@ -15,7 +15,7 @@ and `docs/planning/`.
 
 ## Retained Snapshots
 
-- [DVT+ Blueprint v0.6 Historical Snapshot](DVT_Blueprint_v0.6_MASTER.md)
+- [DVT+ Blueprint v0.6 Historical Snapshot](./DVT_Blueprint_v0.6_MASTER.md)
 
 ## Use Policy
 

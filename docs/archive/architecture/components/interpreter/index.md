@@ -37,8 +37,8 @@ flowchart LR
 
 @dvt/plan-interpreter is responsible for compiling and interpreting plans:
 
-- **Root:** [InterpreterAggregate](interpreter.md#interpreteraggregate) — represents the central interpretation model, owning all execution artifacts.
-- **Aggregates:** [ArtifactAggregate](interpreter.md#artifactaggregate).
+- **Root:** [InterpreterAggregate](./interpreter.md#interpreteraggregate) — represents the central interpretation model, owning all execution artifacts.
+- **Aggregates:** [ArtifactAggregate](./interpreter.md#artifactaggregate).
 - **Responsibilities:**
   - Compile plans into executable artifacts.
   - Interpret plan logic for engine.
@@ -46,8 +46,8 @@ flowchart LR
 
 **Interactions:**
 
-- **[Planner](planner.md):** Receives plans for compilation.
-- **[Engine](engine.md):** Executes interpreted artifacts.
+- **[Planner](./planner.md):** Receives plans for compilation.
+- **[Engine](./engine.md):** Executes interpreted artifacts.
 
 Interpreter coordinates these interactions to ensure plans are executable and ready for workflow orchestration.
 
@@ -85,7 +85,7 @@ Represents execution artifacts produced by interpretation. Responsible for:
 
 ## Detailed Documentation
 
-- [DDD Structure](interpreter-ddd.md)
-- [Functionalities](interpreter-functional.md)
-- [Constraints & Invariants](interpreter-constraints.md)
-- [Sequence Diagrams](interpreter-sequence.md)
+- [DDD Structure](./interpreter-ddd.md)
+- [Functionalities](./interpreter-functional.md)
+- [Constraints & Invariants](./interpreter-constraints.md)
+- [Sequence Diagrams](./interpreter-sequence.md)

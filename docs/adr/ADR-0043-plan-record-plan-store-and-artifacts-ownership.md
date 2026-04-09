@@ -304,10 +304,10 @@ executable plan payloads as default peers.
 
 ## References
 
-- [ADR-0018_Shared_Kernel_Ownership_Governance.md](ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [ADR-0034-bounded-context-boundaries-and-communication-rules.md](ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [ADR-0035-planner-public-contract-evolution-protocol.md](ADR-0035-planner-public-contract-evolution-protocol.md)
-- [ADR-0039-hexagonal-port-hardening-and-solid-remediation.md](ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
-- [ADR-0040-retry-ownership-and-attempt-authority.md](ADR-0040-retry-ownership-and-attempt-authority.md)
-- [ADR-0041-global-domain-state-model-and-boundary-contracts.md](ADR-0041-global-domain-state-model-and-boundary-contracts.md)
-- [ADR-0042-execution-plan-canonical-identity-unification.md](ADR-0042-execution-plan-canonical-identity-unification.md)
+- [ADR-0018_Shared_Kernel_Ownership_Governance.md](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0034-bounded-context-boundaries-and-communication-rules.md](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0035-planner-public-contract-evolution-protocol.md](./ADR-0035-planner-public-contract-evolution-protocol.md)
+- [ADR-0039-hexagonal-port-hardening-and-solid-remediation.md](./ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
+- [ADR-0040-retry-ownership-and-attempt-authority.md](./ADR-0040-retry-ownership-and-attempt-authority.md)
+- [ADR-0041-global-domain-state-model-and-boundary-contracts.md](./ADR-0041-global-domain-state-model-and-boundary-contracts.md)
+- [ADR-0042-execution-plan-canonical-identity-unification.md](./ADR-0042-execution-plan-canonical-identity-unification.md)

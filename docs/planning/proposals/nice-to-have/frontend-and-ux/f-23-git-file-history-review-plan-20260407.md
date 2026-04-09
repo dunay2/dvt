@@ -33,13 +33,13 @@ implementation work starts.
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md`
-- `docs/architecture/frontend/index.md`
-- `docs/architecture/frontend/main-workspace-views-and-ux.md`
-- `docs/architecture/frontend/screen-manuals-and-user-stories.md`
-- `docs/architecture/frontend/ux-implementation-guide.md`
-- `docs/architecture/frontend/screen-layout-and-cross-surface-behavior-rules.md`
-- `docs/architecture/frontend/workbench-ui-contract-and-component-inventory.md`
-- `docs/architecture/frontend/git/git-mode-architecture.md`
+- `docs/architecture/components/web/index.md`
+- `docs/architecture/components/web/main-workspace-views-and-ux.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
+- `docs/architecture/components/web/ux-implementation-guide.md`
+- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`
+- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- `docs/architecture/components/web/git/git-mode-architecture.md`
 - `docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md`
 - `apps/web/src/app/views/CodeView.tsx`
 - `apps/web/src/app/views/DiffView.tsx`
@@ -116,7 +116,7 @@ introducing a second navigation grammar.
     sequencing.
 - Touched files or paths:
   - `docs/planning/proposals/nice-to-have/frontend-and-ux/*`
-  - `docs/architecture/frontend/*`
+  - `docs/architecture/components/web/*`
   - `docs/planning/state/agent-lane-e.yaml`
   - `docs/planning/closeouts/*`
 - Expected outcome:

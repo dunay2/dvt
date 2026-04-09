@@ -17,8 +17,8 @@ The execution target is the `F-05` canvas hardening chain in Lane E.
 ## Governing Sources
 
 - [Agent Lane E](../../../state/agent-lane-e.yaml)
-- [Canvas controller hard gate](canvas-controller-document-first-hard-gate-20260404.md)
-- [Canvas controller current-to-target architecture](../../../../architecture/frontend/graph/canvas-controller-current-to-target-architecture.md)
+- [Canvas controller hard gate](./canvas-controller-document-first-hard-gate-20260404.md)
+- [Canvas controller current-to-target architecture](../../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 
 ## Compliance Items
 

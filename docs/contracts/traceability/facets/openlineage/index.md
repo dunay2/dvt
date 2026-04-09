@@ -15,7 +15,7 @@ remain pinned in emitted lineage payloads.
 - Emitted `_schemaURL`:
   `https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json`
 - Repo-local artifact:
-  [SqlJobFacet.1-0-0.schema.json](SqlJobFacet.1-0-0.schema.json)
+  [SqlJobFacet.1-0-0.schema.json](./SqlJobFacet.1-0-0.schema.json)
 - Vendored on: `2026-03-08`
 - Artifact SHA-256:
   `e3b9996ed97a45198c83330021726b24ba0b04e5d7856e9a6d121eb636af7032`
