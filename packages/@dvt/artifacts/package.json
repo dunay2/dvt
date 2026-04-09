@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "pretest": "pnpm --filter @dvt/contracts build",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest"

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "prebuild": "pnpm --filter \"@dvt/run-domain^...\" build",
-    "pretest": "pnpm --filter \"@dvt/run-domain^...\" build",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/run-domain^...\" build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --config vitest.config.ts"
   },
