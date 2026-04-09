@@ -60,7 +60,9 @@ export function DiffHeader({
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.compareLabel}</span>
+          <span className={cn('text-sm', routeWorkbenchMutedTextClassName)}>
+            {copy.compareLabel}
+          </span>
           <code className={cn('rounded px-2 py-1 text-sm', routeWorkbenchFieldClassName)}>
             {comparePreset.left}
           </code>
