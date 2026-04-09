@@ -15,8 +15,8 @@ import {
   CORE_ERROR_MESSAGE,
   RUN_EVENT_CONSTANTS,
   TRACEABLE_ADAPTERS,
-  type TraceableAdapter,
 } from './coreDomainConstants.js';
+import type { StartRunTraceContext } from './StartRunTraceContext.js';
 
 type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
 type IRunStateStoreRead = import('../../ports/IRunStateStore.js').IRunStateStoreRead;
@@ -70,17 +70,11 @@ export function buildTraceContext(
   input: Pick<RunMetadata, 'tenantId' | 'projectId' | 'environmentId' | 'runId'> & {
     targetAdapter?: EngineRunRef['provider'];
     provider?: EngineRunRef['provider'];
+    providerRef?: EngineRunRef;
   },
   planId?: string
-): {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
-  planId?: string;
-  adapter?: TraceableAdapter;
-} {
-  const raw = input.targetAdapter ?? input.provider;
+): StartRunTraceContext {
+  const raw = input.targetAdapter ?? input.provider ?? input.providerRef?.provider;
   const adapter = TRACEABLE_ADAPTERS.find((value) => value === raw);
   return {
     tenantId: input.tenantId,

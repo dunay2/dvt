@@ -76,7 +76,7 @@ function readArtifactFields(
 function deriveMaterializationEvidence(
   workspace: RunWorkspaceViewModel
 ): MaterializationEvidence | undefined {
-  return workspace.snapshot.materialization;
+  return workspace.snapshot.execution?.materialization;
 }
 
 function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
@@ -130,10 +130,7 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
 }
 
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
-  return {
-    failedStepId: workspace.snapshot.failedStepId,
-    errorReason: workspace.snapshot.errorReason,
-  };
+  return workspace.snapshot.execution?.failure;
 }
 
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
@@ -187,10 +184,10 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div className="font-mono">{snapshot.gitSha}</div>
               </div>
             ) : null}
-            {isKnownRunField(snapshot.currentStepId) ? (
+            {isKnownRunField(snapshot.execution?.activeStepId) ? (
               <div>
                 <span className="text-slate-400">{copy.currentStepLabel}</span>
-                <div className="font-mono">{snapshot.currentStepId}</div>
+                <div className="font-mono">{snapshot.execution?.activeStepId}</div>
               </div>
             ) : null}
             {isKnownRunField(snapshot.hash) ? (
@@ -289,22 +286,32 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           )}
         </Card>
 
-        {failureDiagnostics.failedStepId || failureDiagnostics.errorReason ? (
+        {failureDiagnostics ? (
           <Card className="border-slate-700 bg-slate-900 p-5">
             <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
             <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-              {failureDiagnostics.failedStepId ? (
+              {failureDiagnostics.stepId ? (
                 <div>
                   <span className="text-slate-400">{copy.failedStepLabel}</span>
-                  <div className="font-mono">{failureDiagnostics.failedStepId}</div>
+                  <div className="font-mono">{failureDiagnostics.stepId}</div>
                 </div>
               ) : null}
-              {failureDiagnostics.errorReason ? (
+              {failureDiagnostics.reason ? (
                 <div>
                   <span className="text-slate-400">{copy.errorReasonLabel}</span>
-                  <div>{failureDiagnostics.errorReason}</div>
+                  <div>{failureDiagnostics.reason}</div>
                 </div>
               ) : null}
+              {failureDiagnostics.message ? (
+                <div className="md:col-span-2">
+                  <span className="text-slate-400">{copy.errorMessageLabel}</span>
+                  <div>{failureDiagnostics.message}</div>
+                </div>
+              ) : null}
+              <div>
+                <span className="text-slate-400">{copy.failedAtLabel}</span>
+                <div>{new Date(failureDiagnostics.failedAt).toLocaleString()}</div>
+              </div>
             </div>
           </Card>
         ) : null}

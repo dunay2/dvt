@@ -51,6 +51,9 @@ Out of scope:
 - Implement `getRunStatus(runRef)` returning `RunStatusSnapshot`.
 - Implement `signal(runRef, request)` with contract-level signal validation
   delegated to engine/auth layers as appropriate.
+- If `estimateRunRef()` is implemented, `startRun()` MUST return the same
+  `provider` discriminator for the same dispatch input. Same-provider
+  late-bound fields MAY be reconciled through `saveProviderRef()`.
 - Preserve correlation inputs coming from `RunContext` and `EngineRunRef`
   through downstream runtime calls.
 - Surface runtime failures with actionable adapter-level errors.
@@ -84,8 +87,10 @@ export interface IProviderAdapter {
   capabilities?(): readonly string[];
 
   // Optional - deterministic ref estimation without a network call (v1.1)
-  // Enables pre-bootstrap path (ADR-0030): engine commits run_metadata + RunQueued
-  // before adapter.startRun(), eliminating the dual-producer ordering race.
+  // Enables the pre-bootstrap path (ADR-0030): engine commits run_metadata +
+  // RunQueued before adapter.startRun(). If implemented, startRun() MUST keep
+  // the same provider discriminator; same-provider late-bound fields may be
+  // reconciled through saveProviderRef().
   estimateRunRef?(ctx: RunContext): EngineRunRef;
 
   // Optional - reverse lookup by runId (v1.1)
@@ -108,11 +113,11 @@ export interface IProviderAdapter {
 
 ### 3.2 Optional extensions (v1.1)
 
-| Method              | Who consumes it                           | Behaviour when absent                             |
-| ------------------- | ----------------------------------------- | ------------------------------------------------- |
-| `capabilities?()`   | Engine `startRun` capability gate         | Gate skipped (graceful degradation)               |
-| `estimateRunRef?()` | Engine `startRun` pre-bootstrap path      | Legacy path used (startRun first, then bootstrap) |
-| `lookupRunRef?()`   | `RunMaintenanceService` intent reconciler | Reconciler skips provider verification            |
+| Method              | Who consumes it                                                              | Behaviour when absent                  |
+| ------------------- | ---------------------------------------------------------------------------- | -------------------------------------- |
+| `capabilities?()`   | Engine `startRun` capability gate                                            | Gate skipped (graceful degradation)    |
+| `estimateRunRef?()` | Engine `startRun` pre-bootstrap path with typed same-provider reconciliation | Adapter-start-first path used          |
+| `lookupRunRef?()`   | `RunMaintenanceService` intent reconciler                                    | Reconciler skips provider verification |
 
 ```mermaid
 classDiagram
@@ -145,6 +150,9 @@ classDiagram
   effects.
 - **INV-PA-6** _(v1.1)_: `capabilities()` is stable for the lifetime of the
   adapter instance.
+- **INV-PA-7** _(v1.1)_: if `estimateRunRef()` is implemented, `startRun()`
+  returns the same provider discriminator for the same dispatch input; any
+  same-provider drift is reconciled through a typed `saveProviderRef()` update.
 
 ---
 

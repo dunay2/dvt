@@ -57,10 +57,13 @@ function mapDbtRunToSnapshot(run: Run): RunSnapshot {
     gitSha: run.gitSha,
     startedAt: run.startTime,
     completedAt: run.endTime,
-    currentStepId: run.status === 'running' ? 'step_run' : undefined,
-    failedStepId: undefined,
-    errorReason: undefined,
-    materialization,
+    execution:
+      run.status === 'running' || materialization
+        ? {
+            ...(run.status === 'running' ? { activeStepId: 'step_run' } : {}),
+            ...(materialization ? { materialization } : {}),
+          }
+        : undefined,
   };
 }
 

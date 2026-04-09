@@ -1,4 +1,5 @@
 import { RunNotFoundError, TenantAccessDeniedError } from '@dvt/engine';
+import { ProviderRefProviderMismatchError } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import { PostgresRunMetadataRepository } from '../src/PostgresRunMetadataRepository.js';
@@ -44,11 +45,53 @@ function makeMeta(overrides: Partial<RunMetadata> = {}): RunMetadata {
     planId: 'plan-a',
     planVersion: '1.0.0',
     logicalAttemptId: 1,
-    provider: 'mock',
-    providerWorkflowId: 'wf-run-a',
-    providerRunId: 'pr-run-a',
+    providerRef: {
+      provider: 'mock',
+      tenantId: 'tenant-a',
+      workflowId: 'wf-run-a',
+      runId: 'pr-run-a',
+    },
     ...overrides,
   };
+}
+
+class ProviderRefUpdateClient extends RecordingClient {
+  override async query(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ rows: Array<Record<string, unknown>> }> {
+    this.queries.push({ sql, params });
+
+    if (
+      sql.includes('SELECT') &&
+      sql.includes('FOR UPDATE') &&
+      sql.includes('provider_workflow_id')
+    ) {
+      return {
+        rows: [
+          {
+            tenant_id: 'tenant-a',
+            project_id: 'project-a',
+            environment_id: 'env-a',
+            run_id: 'run-a',
+            plan_id: 'plan-a',
+            plan_version: '1.0.0',
+            logical_attempt_id: 1,
+            parent_run_id: null,
+            origin_run_id: null,
+            provider: 'temporal',
+            provider_workflow_id: 'wf-run-a',
+            provider_run_id: 'pr-run-a',
+            provider_namespace: 'default',
+            provider_task_queue: null,
+            provider_conductor_url: null,
+          },
+        ],
+      };
+    }
+
+    return super.query(sql, params) as Promise<{ rows: Array<Record<string, unknown>> }>;
+  }
 }
 
 describe('PostgresRunMetadataRepository upsertWithClient', () => {
@@ -87,5 +130,24 @@ describe('PostgresRunMetadataRepository upsertWithClient', () => {
     await expect(
       repo.resolveTenantWithClient(client as never, 'run-missing')
     ).rejects.toBeInstanceOf(RunNotFoundError);
+  });
+
+  it('saveProviderRef rejects cross-provider updates before issuing the UPDATE statement', async () => {
+    const client = new ProviderRefUpdateClient();
+    const repo = new PostgresRunMetadataRepository('dvt', async (fn) => fn(client as never));
+
+    await expect(
+      repo.saveProviderRef('tenant-a', 'run-a', {
+        provider: 'conductor',
+        tenantId: 'tenant-a',
+        workflowId: 'wf-run-a',
+        runId: 'actual-run-a',
+        conductorUrl: 'http://localhost:8080/api',
+      })
+    ).rejects.toBeInstanceOf(ProviderRefProviderMismatchError);
+
+    expect(client.queries.some((query) => query.sql.includes('UPDATE "dvt".run_metadata'))).toBe(
+      false
+    );
   });
 });

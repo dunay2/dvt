@@ -164,7 +164,8 @@ The resolution mechanism is adapter-specific. Each adapter MUST implement correl
 - `runId` is the universal lookup key and MUST be resolvable for all providers.
 - StateStore MUST support queries by:
   - `runId` (universal), and
-  - `(provider, workflowId, providerRunId)` (adapter-specific), where applicable.
+  - adapter-qualified `providerRef` identifiers such as `(provider, workflowId)`
+    plus provider-specific fields where applicable.
 
 **Resolution for operations without explicit RunContext**:
 

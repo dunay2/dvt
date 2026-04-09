@@ -17,9 +17,12 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
       planId: 'plan-minimal',
       planVersion: '1.0',
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: `wf-${runId}`,
-      providerRunId: `pr-${runId}`,
+      providerRef: {
+        provider: 'mock',
+        tenantId,
+        workflowId: `wf-${runId}`,
+        runId: `pr-${runId}`,
+      },
     },
     firstEvents: [
       {

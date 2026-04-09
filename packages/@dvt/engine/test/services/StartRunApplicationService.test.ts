@@ -6,7 +6,7 @@ import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
 import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import type { StartRunTraceContext } from '../../src/services/startRun/StartRunTypes.js';
+import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -155,7 +155,10 @@ describe('StartRunApplicationService', () => {
       expect.objectContaining({
         tenantId: 't',
         runId,
-        provider: 'temporal',
+        providerRef: expect.objectContaining({
+          provider: 'temporal',
+          runId,
+        }),
       })
     );
   });

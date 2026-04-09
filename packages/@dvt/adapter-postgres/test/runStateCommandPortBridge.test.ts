@@ -12,9 +12,13 @@ function buildMetadata(runId: string): RunMetadata {
     planId: 'plan-1',
     planVersion: '1.0.0',
     logicalAttemptId: 1,
-    provider: 'temporal',
-    providerWorkflowId: runId,
-    providerRunId: runId,
+    providerRef: {
+      provider: 'temporal',
+      tenantId: 't-1',
+      namespace: 'default',
+      workflowId: runId,
+      runId,
+    },
   };
 }
 

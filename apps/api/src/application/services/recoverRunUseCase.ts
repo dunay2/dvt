@@ -35,7 +35,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
         source.projectId,
         source.environmentId,
         context.scope.tenantId.value,
-        source.provider
+        source.providerRef.provider
       )
     );
 

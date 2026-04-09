@@ -421,10 +421,16 @@ type MaterializationEvidence = {
 type RunOutcome = {
   runId: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  execution?: {
+    activeStepId?: string;
+    failure?: {
+      stepId: string;
+      reason?: string;
+      message?: string;
+      failedAt: string;
+    };
+    materialization?: MaterializationEvidence;
+  };
 };
 ```
 
@@ -434,9 +440,9 @@ type RunOutcome = {
 
 - current and final run status
 - executor identity
-- current or failed step id when applicable
-- materialization evidence on success
-- error reason on failure
+- `execution.activeStepId` or `execution.failure.stepId` when applicable
+- `execution.materialization` on success
+- `execution.failure.reason` or `execution.failure.message` on failure
 
 `GET /runs/:runId/events` must expose at least:
 

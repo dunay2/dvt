@@ -120,7 +120,7 @@ sequenceDiagram
     SRAS->>Intent: save(intentId, runContext)
     SRAS->>Engine: startRun(planRef, runContext, intentId)
     Engine->>Provider: startRun(plan, runContext)
-    Provider-->>Engine: providerExecutionRunId
+    Provider-->>Engine: EngineRunRef
     Engine-->>SRAS: RunRef
     SRAS-->>API: RunRef
 ```
@@ -144,7 +144,7 @@ This decision formalizes the split contract so that S02 has a canonical shape.
 
 | Interface              | Role                                       | Methods                                                                            |
 | ---------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `IRunWriteStore`       | Command path — write domain facts          | `bootstrapRunTx`, `appendEvent`, `updateRunMetadata`, `saveProviderRef`            |
+| `IRunWriteStore`       | Command path — write domain facts          | `bootstrapRunTx`, `appendAndEnqueueTx`, `reserveRetryAttempt`                      |
 | `IRunReadStore`        | Query path — read current state            | `getRunEvents`, `getRunSnapshot`, `getRunsByTenant`, `getRunStatus`                |
 | `IRunMaintenanceStore` | Operational path — projector, purge, admin | `rebuildSnapshot`, `listStaleSnapshotRuns`, `markDelivered`, `countPendingByRunId` |
 

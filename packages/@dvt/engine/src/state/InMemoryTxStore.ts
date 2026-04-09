@@ -8,7 +8,13 @@ import type {
   OutboxRecord,
 } from '@dvt/contracts';
 
-import { InvalidRunIdError, RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
+import {
+  InvalidRunIdError,
+  ProviderRefProviderMismatchError,
+  RunAlreadyExistsError,
+  RunNotFoundError,
+  TenantAccessDeniedError,
+} from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -83,31 +89,29 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
   async saveProviderRef(
     tenantId: string,
     runId: string,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void> {
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
     const current = this.metadataByRunId.get(runId);
-    if (!current || current.tenantId !== tenantId) throw new RunNotFoundError(runId);
-    const updated = {
+    if (!current) {
+      throw new RunNotFoundError(runId);
+    }
+    if (current.tenantId !== tenantId || providerRef.tenantId !== tenantId) {
+      throw new TenantAccessDeniedError(tenantId);
+    }
+    if (current.providerRef.provider !== providerRef.provider) {
+      throw new ProviderRefProviderMismatchError(
+        runId,
+        current.providerRef.provider,
+        providerRef.provider
+      );
+    }
+
+    const updated: RunMetadata = {
       ...current,
-      providerWorkflowId: runRef.providerWorkflowId,
-      providerRunId: runRef.providerRunId,
+      providerRef,
     };
-    if (runRef.providerNamespace !== undefined) {
-      updated.providerNamespace = runRef.providerNamespace;
-    }
-    if (runRef.providerTaskQueue !== undefined) {
-      updated.providerTaskQueue = runRef.providerTaskQueue;
-    }
-    if (runRef.providerConductorUrl !== undefined) {
-      updated.providerConductorUrl = runRef.providerConductorUrl;
-    }
     this.metadataByRunId.set(runId, updated);
+    return updated;
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {

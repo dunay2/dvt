@@ -14,6 +14,24 @@ const DEFAULT_RESULT: {
   status: string;
   enriched: boolean;
   snapshotStaleness: string;
+  execution?: {
+    activeStepId?: string;
+    failure?: {
+      stepId: string;
+      reason?: string;
+      message?: string;
+      failedAt: string;
+    };
+    materialization?: {
+      executor: 'postgres' | 'dbt';
+      environmentId: string;
+      sinkTable: string;
+      rowsWritten: number;
+      startedAt: string;
+      completedAt: string;
+      durationMs: number;
+    };
+  };
 } = {
   runId: 'run-1',
   tenantId: 'tenant-a',
@@ -134,6 +152,46 @@ describe('getRunRoute', () => {
       expect.anything()
     );
     expect(reply.code).toHaveBeenCalledWith(200);
+  });
+
+  it('returns TF-C2-B outcome fields unchanged from the use case result', async () => {
+    const result = {
+      ...DEFAULT_RESULT,
+      status: 'FAILED',
+      execution: {
+        activeStepId: 'step-evidence',
+        failure: {
+          stepId: 'step-transform',
+          reason: 'SINK_WRITE_FAILED',
+          message: 'duplicate key value violates unique constraint',
+          failedAt: '2026-04-08T10:00:03.000Z',
+        },
+        materialization: {
+          executor: 'postgres' as const,
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:04.000Z',
+          durationMs: 4000,
+        },
+      },
+    };
+    const deps = createDeps(result);
+    const reply = createReply();
+
+    await getRunRoute(
+      {
+        id: 'req-2b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: 'tenant-a' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.send).toHaveBeenCalledWith(result);
   });
 
   it('returns 400 when runId is missing', async () => {

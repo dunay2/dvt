@@ -3,6 +3,7 @@ export type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
+  ProviderRefUpdate,
   RunBootstrapInput,
   IRunStateStoreMaintenance,
   IRunStateStoreRead,

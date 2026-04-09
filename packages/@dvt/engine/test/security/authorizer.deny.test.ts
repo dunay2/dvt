@@ -132,9 +132,12 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planId: TEST_PLAN_REF.planId,
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: 'wf',
-      providerRunId: 'run-1',
+      providerRef: {
+        provider: 'mock',
+        tenantId: 't1',
+        workflowId: 'wf',
+        runId: 'run-1',
+      },
     });
 
     const runRef: import('@dvt/contracts').EngineRunRef = {
@@ -162,9 +165,12 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planId: TEST_PLAN_REF.planId,
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: 'wf',
-      providerRunId: 'run-tenant-locked-1',
+      providerRef: {
+        provider: 'mock',
+        tenantId: 'tenant-allowed',
+        workflowId: 'wf',
+        runId: 'run-tenant-locked-1',
+      },
     });
 
     const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
@@ -191,9 +197,12 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planId: TEST_PLAN_REF.planId,
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: 'wf',
-      providerRunId: 'run-tenant-locked-2',
+      providerRef: {
+        provider: 'mock',
+        tenantId: 'tenant-allowed',
+        workflowId: 'wf',
+        runId: 'run-tenant-locked-2',
+      },
     });
 
     const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
@@ -219,9 +228,12 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planId: TEST_PLAN_REF.planId,
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: 'wf',
-      providerRunId: 'run-tenant-locked-3',
+      providerRef: {
+        provider: 'mock',
+        tenantId: 'tenant-allowed',
+        workflowId: 'wf',
+        runId: 'run-tenant-locked-3',
+      },
     });
 
     const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
