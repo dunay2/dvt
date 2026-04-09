@@ -2,7 +2,7 @@
 title: Contract mapper event boundary study
 status: Active
 owner: Architecture / Contracts / Engine / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 planning_type: proposal
 ---
 
@@ -14,11 +14,11 @@ This proposal opens a dedicated study slice for the relationship between the
 write-side event contract, the domain mapper, and the projected read-model
 evidence shape.
 
-The immediate trigger is small but structurally important:
+The immediate trigger for the slice was small but structurally important:
 
 - `StepFailed` evidence is typed as `RunFailureEvidence`
-- the mapper currently performs partial normalization
-- the contract and mapper do not enforce exactly the same invariants
+- the mapper historically performed partial normalization
+- the contract and mapper did not enforce exactly the same invariants
 
 That seam is not a one-off bug. It is a boundary-ownership problem.
 
@@ -44,16 +44,16 @@ Today the same semantic claim can be expressed at three different layers:
 
 The ownership line is blurred.
 
-### Concrete mismatch now
+### Initial mismatch that triggered the slice
 
-| Field / rule              | Event write/read side now            | Mapper now                                       | Evidence contract now                                        | Effect                                                                |
-| ------------------------- | ------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `stepId` on step events   | `z.string().min(1)` in event schemas | `requireStepId()` accepts `length > 0`           | `RunFailureEvidenceSchema.stepId` is non-blank               | whitespace-only values are possible upstream of the evidence contract |
-| `emittedAt`               | `z.string().min(1)`                  | forwarded unchanged                              | `failedAt` falls back to `emittedAt`                         | mapper fallback can preserve a weak timestamp invariant               |
-| `reason` / `message`      | payload is loosely shaped            | `asNonBlankString()` trims away blank strings    | `RunFailureEvidenceSchema` allows optional non-blank strings | mapper owns normalization here, not the write boundary                |
-| failure evidence validity | no canonical per-field owner         | mapper may normalize but does not fully validate | projector receives `RunFailureEvidence` type                 | type strength and runtime guarantees can drift apart                  |
+| Field / rule              | Event write/read side before slice   | Mapper before slice                          | Evidence contract before slice                       | Effect                                                                 |
+| ------------------------- | ------------------------------------ | -------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| `stepId` on step events   | `z.string().min(1)` in event schemas | `requireStepId()` accepted `length > 0`      | `RunFailureEvidenceSchema.stepId` is non-blank       | whitespace-only values were possible upstream of the evidence contract |
+| `emittedAt`               | `z.string().min(1)`                  | forwarded unchanged                          | `failedAt` fell back to `emittedAt`                  | mapper fallback could preserve a weak timestamp invariant              |
+| `reason` / `message`      | payload was loosely shaped           | mapper trimmed away blank strings            | `RunFailureEvidenceSchema` allows optional non-blank | mapper owned normalization here, not the write boundary                |
+| failure evidence validity | no canonical per-field owner         | mapper normalized but did not fully validate | projector received `RunFailureEvidence` type         | type strength and runtime guarantees could drift apart                 |
 
-## Current Flow
+## Flow Before This Slice
 
 ```mermaid
 flowchart LR
@@ -68,7 +68,7 @@ flowchart LR
   D -. typed as stronger evidence shape .-> E
 ```
 
-## Target Flow For Option A
+## Implemented Flow For Option A
 
 ```mermaid
 flowchart LR
@@ -82,6 +82,17 @@ flowchart LR
   C -. may derive failedAt from emittedAt .-> D
   E -. does not revalidate trusted evidence .-> F
 ```
+
+## Current Implemented State
+
+The narrow Option A slice in this branch now does the following:
+
+- step-event `stepId` is admitted through `NonBlankStringSchema`
+- `emittedAt` is admitted through `NonBlankStringSchema`
+- persisted records validate `persistedAt` after enrichment, not only on paper
+- `StepFailed` payload `reason` and `message` are non-blank when present
+- the mapper no longer performs silent trimming for failure diagnostics
+- `failedAt` is derived deterministically from `event.emittedAt`
 
 ## Repository-Grounded Rationale
 
@@ -139,14 +150,21 @@ This rule fits the current repository because:
 
 ## Why The Mapper Is Not The Admission Seam
 
-Today the mapper does more than structural translation:
+Before this slice the mapper did more than structural translation:
 
-- `requireStepId()` accepts any string with `length > 0`, so whitespace-only
-  `stepId` passes there
-- `readFailureEvidence()` trims `reason` and `message`
-- `readFailureEvidence()` derives `failedAt` from `emittedAt` when it is absent
+- `requireStepId()` accepted any string with `length > 0`, so whitespace-only
+  `stepId` passed there
+- `readFailureEvidence()` trimmed `reason` and `message`
+- `readFailureEvidence()` derived `failedAt` from `emittedAt`
 
-That means the mapper is already partially repairing weak write-side data.
+That meant the mapper was partially repairing weak write-side data.
+
+This slice removes that hidden policy from the active implementation:
+
+- `requireStepId()` now rejects whitespace-only values
+- failure diagnostics are no longer silently trimmed in the mapper
+- `failedAt` remains mapper-owned only as deterministic derivation from the
+  accepted envelope timestamp
 
 But the repository's own stated intent is that contracts remain the source of
 validation truth while the mapper keeps projection code clean. If mapper policy
@@ -186,7 +204,8 @@ surface expects:
 - `RunFailureEvidenceSchema` already uses the stronger rule for `stepId`,
   optional `reason`, and optional `message`
 
-But the write-side event schemas still allow weaker equivalents in key places:
+Before this slice, the write-side event schemas still allowed weaker
+equivalents in key places:
 
 - `StepFailedEventWriteSchema.stepId` is `z.string().min(1)` rather than
   `NonBlankStringSchema`
@@ -195,6 +214,14 @@ But the write-side event schemas still allow weaker equivalents in key places:
 
 So the repository already shows the mismatch clearly: the downstream evidence
 contract is stronger than the upstream event admission contract.
+
+This slice closes the first two gaps for the active boundary:
+
+- step-event `stepId` now uses `NonBlankStringSchema`
+- `RunEventCommonSchema.emittedAt` now uses `NonBlankStringSchema`
+- persisted records now validate `persistedAt` after enrichment
+- `StepFailedPayloadSchema` still does not emit `failedAt` by design; mapper
+  derivation remains the intended ownership line for that field
 
 ## No-History Implication
 
@@ -289,7 +316,8 @@ Cons:
 
 ## Recommended Direction For The Next Slice
 
-Default working hypothesis: **Option A**.
+This slice confirms the narrow Option A hypothesis for the boundary concerns in
+scope.
 
 The rationale is repository-specific:
 
@@ -300,8 +328,8 @@ The rationale is repository-specific:
   deterministic derivation from an already accepted boundary fact, not hidden
   repair
 
-The study slice should prove or reject this with a narrow field-level ownership
-matrix before any code change:
+The next slice should extend or challenge this result with a narrow
+field-level ownership matrix for the remaining questions:
 
 - `stepId` non-blank semantics:
   verify as an event schema / append-boundary concern because step identity
@@ -318,7 +346,7 @@ matrix before any code change:
 - `RunFailureEvidence` strength promised to projectors:
   settle in the contract package after the field-ownership decision is made.
 
-## Pre-Implementation Brief
+## Implementation Brief Used To Start The Slice
 
 - mode: `Full`
 - scope:
