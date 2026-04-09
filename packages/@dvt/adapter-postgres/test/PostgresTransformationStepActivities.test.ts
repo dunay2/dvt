@@ -11,6 +11,20 @@ const schemaPrefix = `dvt_transform_it_${Date.now()}`;
 const createdSchemas = new Set<string>();
 let schemaCounter = 0;
 
+function runtimeContext(environmentId = 'env-it') {
+  return {
+    ctx: {
+      tenantId: 't-it',
+      projectId: 'p-it',
+      environmentId,
+      runId: 'run-it-postgres-capability',
+      targetAdapter: 'temporal' as const,
+      logicalAttemptId: 1,
+      originRunId: 'run-it-postgres-capability',
+    },
+  };
+}
+
 function allocateSchema(): string {
   schemaCounter += 1;
   const schema = `${schemaPrefix}_${schemaCounter}`;
@@ -95,7 +109,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
             targetSchema: schema,
           },
         },
-        {}
+        runtimeContext()
       );
       expect(prepareResult).toEqual({ stepId: 'prepare-1', status: 'COMPLETED' });
 
@@ -112,7 +126,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
             writeMode: 'replace',
           },
         },
-        {}
+        runtimeContext()
       );
       expect(transformResult).toEqual({ stepId: 'transform-1', status: 'COMPLETED' });
 
@@ -122,12 +136,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
           kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
           dependsOn: ['transform-1'],
           stepTypeConfig: {
-            environmentId: 'env-it',
             sinkSchema: schema,
             sinkTable,
           },
         },
-        {}
+        runtimeContext('env-it')
       );
 
       expect(captureResult).toMatchObject({
@@ -171,7 +184,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
             targetSchema: schema,
           },
         },
-        {}
+        runtimeContext()
       );
 
       const result = await transform!.execute(
@@ -187,7 +200,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
             writeMode: 'replace',
           },
         },
-        {}
+        runtimeContext()
       );
 
       expect(result).toMatchObject({

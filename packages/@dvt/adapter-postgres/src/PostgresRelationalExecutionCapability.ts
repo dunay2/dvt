@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @date 2026-04-09
  */
-import type { ExecutionPlan, MaterializationEvidence } from '@dvt/contracts';
+import type { ExecutionPlan, MaterializationEvidence, ResolvedRunContext } from '@dvt/contracts';
 import type { Pool } from 'pg';
 import { Pool as PostgresPool } from 'pg';
 
@@ -17,6 +17,7 @@ import { POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C } from './PostgresAdapterConsta
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
 export interface RuntimeStepExecutionContext {
+  ctx: ResolvedRunContext;
   gatewayContext?: Record<string, unknown>;
 }
 
@@ -59,7 +60,6 @@ interface SqlTransformConfig {
 }
 
 interface CaptureEvidenceConfig {
-  environmentId: string;
   sinkSchema: string;
   sinkTable: string;
 }
@@ -106,19 +106,19 @@ export class PostgresRelationalExecutionCapability {
       [
         'PREPARE_POSTGRES_TRANSFORM',
         {
-          execute: async (step) => this.prepareTransform(step),
+          execute: async (step, context) => this.prepareTransform(step, context),
         } satisfies RuntimeStepActivity,
       ],
       [
         'POSTGRES_SQL_TRANSFORM',
         {
-          execute: async (step) => this.executeSqlTransform(step),
+          execute: async (step, context) => this.executeSqlTransform(step, context),
         } satisfies RuntimeStepActivity,
       ],
       [
         'CAPTURE_MATERIALIZATION_EVIDENCE',
         {
-          execute: async (step) => this.captureMaterializationEvidence(step),
+          execute: async (step, context) => this.captureMaterializationEvidence(step, context),
         } satisfies RuntimeStepActivity,
       ],
     ]);
@@ -128,7 +128,10 @@ export class PostgresRelationalExecutionCapability {
     await this.clientSession.close(this.ownsPool);
   }
 
-  private async prepareTransform(step: ExecutionPlan['steps'][number]): Promise<RuntimeStepResult> {
+  private async prepareTransform(
+    step: ExecutionPlan['steps'][number],
+    _context: RuntimeStepExecutionContext
+  ): Promise<RuntimeStepResult> {
     const parsed = parsePrepareTransformConfig(step);
     if (!parsed.ok) {
       return failedStepResult(
@@ -155,7 +158,8 @@ export class PostgresRelationalExecutionCapability {
   }
 
   private async executeSqlTransform(
-    step: ExecutionPlan['steps'][number]
+    step: ExecutionPlan['steps'][number],
+    _context: RuntimeStepExecutionContext
   ): Promise<RuntimeStepResult> {
     const parsed = parseSqlTransformConfig(step);
     if (!parsed.ok) {
@@ -186,7 +190,8 @@ export class PostgresRelationalExecutionCapability {
   }
 
   private async captureMaterializationEvidence(
-    step: ExecutionPlan['steps'][number]
+    step: ExecutionPlan['steps'][number],
+    context: RuntimeStepExecutionContext
   ): Promise<RuntimeStepResult> {
     const parsed = parseCaptureEvidenceConfig(step);
     if (!parsed.ok) {
@@ -214,7 +219,7 @@ export class PostgresRelationalExecutionCapability {
         status: 'COMPLETED',
         resultEvidence: {
           executor: 'postgres',
-          environmentId: parsed.value.environmentId,
+          environmentId: context.ctx.environmentId,
           sinkTable: `${parsed.value.sinkSchema}.${parsed.value.sinkTable}`,
           rowsWritten,
           startedAt,
@@ -298,9 +303,6 @@ function parseCaptureEvidenceConfig(
     return { ok: false, error: 'stepTypeConfig must be an object' };
   }
 
-  const environmentId = normalizeNonBlankString(stepTypeConfig['environmentId'], 'environmentId');
-  if (!environmentId.ok) return { ok: false, error: environmentId.error };
-
   const sinkSchema = normalizeIdentifier(stepTypeConfig['sinkSchema'], 'sinkSchema');
   if (!sinkSchema.ok) return { ok: false, error: sinkSchema.error };
 
@@ -310,7 +312,6 @@ function parseCaptureEvidenceConfig(
   return {
     ok: true,
     value: {
-      environmentId: environmentId.value,
       sinkSchema: sinkSchema.value,
       sinkTable: sinkTable.value,
     },

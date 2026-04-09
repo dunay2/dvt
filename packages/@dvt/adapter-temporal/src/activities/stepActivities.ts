@@ -94,6 +94,7 @@ export interface EmitEventInput {
 // ---------------------------------------------------------------------------
 
 export interface StepExecutionContext {
+  ctx: ResolvedRunContext;
   gatewayContext?: Record<string, unknown>;
 }
 
@@ -241,7 +242,7 @@ export function createActivities(
       validateStepShape(input.step);
       return dispatcher.execute(
         input.step,
-        { gatewayContext: input.gatewayContext },
+        { ctx: input.ctx, gatewayContext: input.gatewayContext },
         stepExecutors
       );
     },

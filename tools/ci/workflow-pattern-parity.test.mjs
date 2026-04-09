@@ -40,6 +40,12 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
       ADAPTER_POSTGRES_RELEVANT_PATTERNS
     )
   );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-postgres/src/index.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_changed
+    )
+  );
   assert.ok(matchesAnyPattern('tsconfig.base.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(matchesAnyPattern('tsconfig.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(

@@ -880,7 +880,6 @@ function mkPostgresTransformationPlan(schema: string, sinkTable: string): unknow
         kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
         dependsOn: ['s-2'],
         stepTypeConfig: {
-          environmentId: 't-it',
           sinkSchema: schema,
           sinkTable,
         },
@@ -1438,7 +1437,7 @@ describe('temporal integration (time-skipping)', () => {
         expect(stepThreeEvidence).toMatchObject({
           resultEvidence: {
             executor: 'postgres',
-            environmentId: 't-it',
+            environmentId: 'env-it',
             sinkTable: `${schema}.${sinkTable}`,
             rowsWritten: 2,
           },
@@ -1447,7 +1446,7 @@ describe('temporal integration (time-skipping)', () => {
           executor: 'postgres',
           resultEvidence: {
             executor: 'postgres',
-            environmentId: 't-it',
+            environmentId: 'env-it',
             sinkTable: `${schema}.${sinkTable}`,
             rowsWritten: 2,
           },

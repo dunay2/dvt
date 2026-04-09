@@ -142,6 +142,7 @@ export const CONTRACT_SCOPE_PATTERNS = {
 export const PR_QUALITY_SCOPE_PATTERNS = {
   temporal_changed: [
     'packages/@dvt/adapter-temporal/**',
+    'packages/@dvt/adapter-postgres/**',
     'packages/@dvt/engine/**',
     'packages/@dvt/contracts/**',
     ...ROOT_CONFIG_PATTERNS,

@@ -192,6 +192,21 @@ jobs:
       needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name !=
       'workflow_dispatch' ||
        github.event.inputs.run_temporal_integration == 'true')
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: dvt_test
+          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_DB: dvt_test
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DVT_PG_INTEGRATION: '1'
+      DVT_PG_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
