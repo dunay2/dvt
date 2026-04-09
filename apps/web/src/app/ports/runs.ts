@@ -21,6 +21,19 @@ export type MaterializationEvidence = {
   durationMs: number;
 };
 
+export type RunFailureEvidence = {
+  stepId: string;
+  reason?: string;
+  message?: string;
+  failedAt: string;
+};
+
+export type RunExecutionEvidence = {
+  activeStepId?: string;
+  failure?: RunFailureEvidence;
+  materialization?: MaterializationEvidence;
+};
+
 export type RunSummaryItem = {
   runId: string;
   planId?: string;
@@ -33,10 +46,7 @@ export type RunSummaryItem = {
   message?: string;
   hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  execution?: RunExecutionEvidence;
 };
 
 export type RunSnapshot = {
@@ -51,10 +61,7 @@ export type RunSnapshot = {
   message?: string;
   hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
-  materialization?: MaterializationEvidence;
+  execution?: RunExecutionEvidence;
 };
 
 export type RunEventTimelinePage = {

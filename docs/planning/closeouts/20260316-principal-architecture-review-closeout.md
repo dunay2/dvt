@@ -1,6 +1,7 @@
 ---
 slice: principal-architecture-review-20260316
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: architectural-review
 author: AI (GPT-5)
 ---

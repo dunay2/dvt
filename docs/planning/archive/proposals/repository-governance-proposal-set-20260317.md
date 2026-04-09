@@ -48,23 +48,23 @@ alignment layer above them.
 
 ## Proposal Roles
 
-| Proposal                                                                                                    | Role in set                        | Primary question it answers                                                                    |
-| ----------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md) | Diagnostic precursor               | What structural documentation disorder exists and how was it classified?                       |
-| [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md)      | Documentation governance plan      | How should the documentation system become usable and governable?                              |
-| [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md)                                | Repository technical policy        | What is the target model for packages, modules, build metadata, and tsconfig families?         |
-| [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md)                                      | Enforcement and orchestration plan | How should CI and repository automation enforce and reuse repository rules?                    |
-| [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md)                                  | Execution roadmap                  | In what order should post-Phase-1 technical slices execute against the target operating model? |
+| Proposal                                                                                                      | Role in set                        | Primary question it answers                                                                    |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Documentation Restructuring Diagnostic And Roadmap](./documentation-restructuring-diagnostic-and-roadmap.md) | Diagnostic precursor               | What structural documentation disorder exists and how was it classified?                       |
+| [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md)        | Documentation governance plan      | How should the documentation system become usable and governable?                              |
+| [Package Module Build Policy v2](./package-module-build-policy-v2-20260317.md)                                | Repository technical policy        | What is the target model for packages, modules, build metadata, and tsconfig families?         |
+| [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md)                                        | Enforcement and orchestration plan | How should CI and repository automation enforce and reuse repository rules?                    |
+| [Phase 2 Architectural Debt Roadmap](./phase2-arch-debt-roadmap-20260315.md)                                  | Execution roadmap                  | In what order should post-Phase-1 technical slices execute against the target operating model? |
 
 ## Reading Order
 
 Recommended reading order:
 
-1. [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md)
+1. [Documentation Restructuring Diagnostic And Roadmap](./documentation-restructuring-diagnostic-and-roadmap.md)
 2. [Documentation Usability Change Plan](../../proposals/documentation-usability-change-plan-20260308.md)
-3. [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md)
+3. [Package Module Build Policy v2](./package-module-build-policy-v2-20260317.md)
 4. [CI Improvement Plan](../../proposals/ci-improvement-plan-20260327.md)
-5. [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md)
+5. [Phase 2 Architectural Debt Roadmap](./phase2-arch-debt-roadmap-20260315.md)
 
 ## Set Rules
 

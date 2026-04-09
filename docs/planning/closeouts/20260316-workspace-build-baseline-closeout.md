@@ -1,6 +1,7 @@
 ---
 slice: workspace-build-baseline
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: maintenance
 author: AI (Codex)
 ---

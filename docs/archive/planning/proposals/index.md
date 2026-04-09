@@ -11,4 +11,4 @@ Implemented or superseded proposal material retained for historical reference.
 
 ## Index
 
-- [TS + ESM Monorepo - Audit and Migration Execution Plan](ts-esm-monorepo-audit-and-migration-20260318.md)
+- [TS + ESM Monorepo - Audit and Migration Execution Plan](./ts-esm-monorepo-audit-and-migration-20260318.md)

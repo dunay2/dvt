@@ -68,10 +68,9 @@ function buildWorkspace(
       environment: 'dev',
       gitSha: 'abc123def',
       substatus: 'WAITING_APPROVAL',
-      currentStepId: 'step-transform',
-      failedStepId: undefined,
-      errorReason: undefined,
-      materialization: undefined,
+      execution: {
+        activeStepId: 'step-transform',
+      },
     },
     timeline,
     detailState: 'snapshot-plus-events',
@@ -184,17 +183,22 @@ describe('RunStates', () => {
         completedAt: '2026-03-28T10:00:30Z',
         environment: 'dev',
         gitSha: 'abc123def',
-        failedStepId: 'step-transform',
-        errorReason: 'STEP_FAILURE',
-        currentStepId: undefined,
-        materialization: {
-          executor: 'postgres',
-          environmentId: 'env-1',
-          sinkTable: 'analytics.orders_daily',
-          rowsWritten: 42,
-          startedAt: '2026-03-28T10:00:05Z',
-          completedAt: '2026-03-28T10:00:25Z',
-          durationMs: 20000,
+        execution: {
+          failure: {
+            stepId: 'step-transform',
+            reason: 'STEP_FAILURE',
+            message: 'duplicate key value violates unique constraint',
+            failedAt: '2026-03-28T10:00:20Z',
+          },
+          materialization: {
+            executor: 'postgres',
+            environmentId: 'env-1',
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 42,
+            startedAt: '2026-03-28T10:00:05Z',
+            completedAt: '2026-03-28T10:00:25Z',
+            durationMs: 20000,
+          },
         },
       },
     });
@@ -216,7 +220,7 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('STEP_FAILURE');
   });
 
-  it('renders materialization evidence from timeline payload when snapshot omits it', async () => {
+  it('does not render materialization evidence from timeline payload when snapshot omits it', async () => {
     const workspace = buildWorkspace(
       {
         snapshot: {
@@ -226,10 +230,7 @@ describe('RunStates', () => {
           completedAt: '2026-03-28T10:00:30Z',
           environment: 'dev',
           gitSha: 'abc123def',
-          failedStepId: undefined,
-          errorReason: undefined,
-          currentStepId: undefined,
-          materialization: undefined,
+          execution: undefined,
         },
       },
       {
@@ -276,9 +277,11 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Materialization evidence');
-    expect(container.textContent).toContain('postgres');
-    expect(container.textContent).toContain('analytics.daily_sales');
-    expect(container.textContent).toMatch(/1,?284/);
+    expect(container.textContent).toContain(
+      'Result evidence is not available yet for this run snapshot.'
+    );
+    expect(container.textContent).not.toContain('analytics.daily_sales');
+    expect(container.textContent).not.toMatch(/1,?284/);
   });
 
   it('ignores stale prior-attempt diagnostics and materialization when a newer attempt completed', async () => {
@@ -461,7 +464,7 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/evidence.sql');
   });
 
-  it('falls back to StepFailed payload reason when snapshot error reason is missing', async () => {
+  it('does not render failure diagnostics from timeline events when snapshot omits them', async () => {
     const workspace = buildWorkspace(
       {
         snapshot: {
@@ -471,10 +474,7 @@ describe('RunStates', () => {
           completedAt: '2026-03-28T10:00:30Z',
           environment: 'dev',
           gitSha: 'abc123def',
-          failedStepId: undefined,
-          errorReason: undefined,
-          currentStepId: undefined,
-          materialization: undefined,
+          execution: undefined,
         },
       },
       {
@@ -513,10 +513,10 @@ describe('RunStates', () => {
       );
     });
 
-    expect(container.textContent).toContain('Failure diagnostics');
-    expect(container.textContent).toContain('step-load');
-    expect(container.textContent).toContain('SINK_WRITE_FAILED');
-    expect(container.textContent).toContain('Failure detected at');
+    expect(container.textContent).not.toContain('Failure diagnostics');
+    expect(container.textContent).not.toContain('SINK_WRITE_FAILED');
+    expect(container.textContent).toContain('Event timeline');
+    expect(container.textContent).toContain('Step: step-load');
   });
 
   it('uses the latest logical attempt when falling back to failure diagnostics', async () => {

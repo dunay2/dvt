@@ -1,9 +1,11 @@
-﻿---
+---
 slice: mvp-a1-contractual-inventory
 date: 2026-03-31
 author: AI (GPT-5)
 last_reviewed: 2026-03-31
 status: Accepted
+title: Closeout: MVP-A1 Contractual Inventory
+owner: docs
 ---
 
 # Closeout: MVP-A1 Contractual Inventory

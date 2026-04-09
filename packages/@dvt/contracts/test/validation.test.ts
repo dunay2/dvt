@@ -13,6 +13,7 @@ import {
   parsePlanRef,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
+  parseRunStatusSnapshot,
   parseRecoverRunCommand,
   parseResolvedRunContext,
   parseRunContext,
@@ -132,6 +133,36 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(ctx.targetAdapter).toBe('temporal');
+  });
+
+  it('parses RunStatusSnapshot with TF-C2-B result evidence fields', () => {
+    const snapshot = parseRunStatusSnapshot({
+      runId: 'run-1',
+      status: 'COMPLETED',
+      execution: {
+        activeStepId: 'step-evidence',
+        failure: {
+          stepId: 'step-transform',
+          reason: 'SINK_WRITE_FAILED',
+          message: 'duplicate key value violates unique constraint',
+          failedAt: '2026-04-08T10:00:03.000Z',
+        },
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'prod',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:04.000Z',
+          durationMs: 4000,
+        },
+      },
+    });
+
+    expect(snapshot.execution?.activeStepId).toBe('step-evidence');
+    expect(snapshot.execution?.failure?.stepId).toBe('step-transform');
+    expect(snapshot.execution?.materialization?.sinkTable).toBe('analytics.orders_daily');
+    expect(snapshot.execution?.materialization?.rowsWritten).toBe(42);
   });
 
   it('parses RunContext with optional runExecutionContextRef', () => {

@@ -1,4 +1,4 @@
----
+﻿---
 title: GenericGraphSource Technical Manual
 status: Draft
 owner: Planning Domain / Architecture / API
@@ -29,7 +29,7 @@ hard gate before TDD-based implementation waves.
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
-- `docs/planning/status/planner-current-state-assessment-20260320.md`
+- `docs/planning/status/planner-current-state-assessment.md`
 
 ## Current baseline
 

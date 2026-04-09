@@ -75,7 +75,7 @@ domain from scratch.
 
 ## Related Pages
 
-- [@dvt/delivery](components/delivery/index.md)
-- [dvt-outbox-worker](components/outbox-worker/index.md)
-- [DVT Component Map](component-map.md)
+- [@dvt/delivery](./components/delivery/index.md)
+- [dvt-outbox-worker](./components/outbox-worker/index.md)
+- [DVT Component Map](./component-map.md)
 - [Event Lifecycle and Retention planning view](../planning/domains/event-lifecycle-and-retention.md)

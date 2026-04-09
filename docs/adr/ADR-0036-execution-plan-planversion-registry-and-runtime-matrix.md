@@ -111,5 +111,5 @@ plan version is added to the union.
 
 ## Related
 
-- [ADR-0017_ExecutionPlan_Schema_Versioning.md](ADR-0017_ExecutionPlan_Schema_Versioning.md)
-- [ADR-0035-planner-public-contract-evolution-protocol.md](ADR-0035-planner-public-contract-evolution-protocol.md)
+- [ADR-0017_ExecutionPlan_Schema_Versioning.md](./ADR-0017_ExecutionPlan_Schema_Versioning.md)
+- [ADR-0035-planner-public-contract-evolution-protocol.md](./ADR-0035-planner-public-contract-evolution-protocol.md)

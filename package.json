@@ -77,6 +77,7 @@
     "docs:workboard:check": "pnpm docs:planning:generated:check",
     "docs:quality:check": "node scripts/docs-quality-check.cjs",
     "docs:doctor": "node scripts/docs-doctor.cjs",
+    "docs:planning:last-reviewed:backfill": "node scripts/backfill-planning-last-reviewed.cjs",
     "docs:canonical:check": "node scripts/docs-canonical-check.cjs",
     "docs:pr:fast": "node scripts/docs-pr-local.cjs --mode fast",
     "docs:pr:full": "node scripts/docs-pr-local.cjs --mode full",

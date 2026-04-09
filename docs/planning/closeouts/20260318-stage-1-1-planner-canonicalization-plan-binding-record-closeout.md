@@ -1,6 +1,7 @@
 ---
 slice: 20260318-stage-1-1-planner-canonicalization-plan-binding-record
 date: 2026-03-18
+last_reviewed: 2026-03-18
 gap: planner-stage-1-1
 author: AI (GPT-5)
 ---

@@ -9,6 +9,7 @@ import type { GuardedRunEventType } from '@dvt/run-domain';
 import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { buildSignalDerivedRunEventInput } from '../../core/lifecycle/coreRuntime.js';
 import { applyRunEvent } from '../../core/SnapshotProjector.js';
+import type { IRunSnapshotStalenessQuery } from '../../ports/IRunSnapshotStalenessQuery.js';
 import type { EventEnvelope, IRunStateStoreRead } from '../../ports/IRunStateStore.js';
 
 export interface SignalTransitionGuardDeps {
@@ -26,28 +27,36 @@ export class SignalTransitionGuard {
     eventType: GuardedRunEventType
   ): Promise<'allowed' | 'already_applied'> {
     const storedSnap = await this.deps.stateStoreRead.getSnapshot(meta.tenantId, meta.runId);
+    if (storedSnap === null) {
+      const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
+      const rebuiltSnap = this.rebuildWorkflowSnapshot(meta.runId, events);
+      if (this.isAlreadyApplied(rebuiltSnap, events, req)) {
+        return 'already_applied';
+      }
+      this.assertTransitionAllowed(rebuiltSnap, meta, req, eventType);
+      return 'allowed';
+    }
+
+    const replayFromEvents = await this.shouldReplayFromEvents(meta);
+    if (!replayFromEvents) {
+      if (this.requiresEventHistoryForFreshSnapshot(storedSnap, req)) {
+        const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
+        if (this.isAlreadyApplied(storedSnap, events, req)) {
+          return 'already_applied';
+        }
+      } else if (this.isAlreadyAppliedFromSnapshot(storedSnap, req)) {
+        return 'already_applied';
+      }
+      this.assertTransitionAllowed(storedSnap, meta, req, eventType);
+      return 'allowed';
+    }
+
     const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
-    const baseSnap = storedSnap ?? this.rebuildWorkflowSnapshot(meta.runId, events);
-    if (this.isAlreadyApplied(baseSnap, events, req)) {
+    const rebuiltSnap = this.rebuildWorkflowSnapshot(meta.runId, events);
+    if (this.isAlreadyApplied(rebuiltSnap, events, req)) {
       return 'already_applied';
     }
-    const transientSnap = cloneWorkflowSnapshot(baseSnap);
-    // Validation-only simulation: the engine no longer persists pause/resume
-    // realized lifecycle events, but it still validates whether the transition
-    // would be legal if the runtime later realized it.
-    const event = buildSignalDerivedRunEventInput({
-      idempotency: this.deps.idempotency,
-      clock: this.deps.clock,
-      meta,
-      req,
-      eventType,
-    });
-
-    applyRunEvent(transientSnap, {
-      ...event,
-      runSeq: 0,
-      persistedAt: event.emittedAt,
-    });
+    this.assertTransitionAllowed(rebuiltSnap, meta, req, eventType);
     return 'allowed';
   }
 
@@ -77,19 +86,46 @@ export class SignalTransitionGuard {
     events: readonly EventEnvelope[],
     req: SignalRequest
   ): boolean {
+    const lastPauseResumeEvent = this.lastPauseResumeEventType(events);
+
     if (req.type === 'PAUSE') {
-      return snapshot.status === 'PAUSED' || snapshot.paused;
+      if (snapshot.status === 'PAUSED' || snapshot.paused) {
+        return true;
+      }
+      return (
+        snapshot.status === 'RUNNING' && !snapshot.paused && lastPauseResumeEvent === 'RunPaused'
+      );
     }
 
     if (req.type === 'RESUME') {
+      if (
+        snapshot.status === 'PAUSED' &&
+        snapshot.paused &&
+        lastPauseResumeEvent === 'RunResumed'
+      ) {
+        return true;
+      }
       return (
-        snapshot.status === 'RUNNING' &&
-        !snapshot.paused &&
-        this.lastPauseResumeEventType(events) === 'RunResumed'
+        snapshot.status === 'RUNNING' && !snapshot.paused && lastPauseResumeEvent === 'RunResumed'
       );
     }
 
     return false;
+  }
+
+  private isAlreadyAppliedFromSnapshot(snapshot: WorkflowSnapshot, req: SignalRequest): boolean {
+    if (req.type === 'PAUSE') {
+      return snapshot.status === 'PAUSED' || snapshot.paused;
+    }
+
+    return false;
+  }
+
+  private requiresEventHistoryForFreshSnapshot(
+    snapshot: WorkflowSnapshot,
+    req: SignalRequest
+  ): boolean {
+    return req.type === 'RESUME' && snapshot.status === 'RUNNING' && !snapshot.paused;
   }
 
   private lastPauseResumeEventType(events: readonly EventEnvelope[]): GuardedRunEventType | null {
@@ -100,6 +136,37 @@ export class SignalTransitionGuard {
       }
     }
     return null;
+  }
+
+  private assertTransitionAllowed(
+    snapshot: WorkflowSnapshot,
+    meta: RunMetadata,
+    req: SignalRequest,
+    eventType: GuardedRunEventType
+  ): void {
+    const transientSnap = cloneWorkflowSnapshot(snapshot);
+    // Validation-only simulation: the engine no longer persists pause/resume
+    // realized lifecycle events, but it still validates whether the transition
+    // would be legal if the runtime later realized it.
+    const event = buildSignalDerivedRunEventInput({
+      idempotency: this.deps.idempotency,
+      clock: this.deps.clock,
+      meta,
+      req,
+      eventType,
+    });
+    applyRunEvent(transientSnap, {
+      ...event,
+      runSeq: 0,
+      persistedAt: event.emittedAt,
+    });
+  }
+
+  private async shouldReplayFromEvents(meta: RunMetadata): Promise<boolean> {
+    if (!hasSnapshotStalenessQuery(this.deps.stateStoreRead)) {
+      return true;
+    }
+    return this.deps.stateStoreRead.isSnapshotStale(meta.tenantId, meta.runId);
   }
 }
 
@@ -113,4 +180,12 @@ function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnapshot {
     steps,
     gatewayDecisions: snapshot.gatewayDecisions ? { ...snapshot.gatewayDecisions } : {},
   };
+}
+
+function hasSnapshotStalenessQuery(
+  stateStoreRead: IRunStateStoreRead
+): stateStoreRead is IRunStateStoreRead & IRunSnapshotStalenessQuery {
+  return (
+    typeof (stateStoreRead as Partial<IRunSnapshotStalenessQuery>).isSnapshotStale === 'function'
+  );
 }

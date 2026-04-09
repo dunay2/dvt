@@ -1,6 +1,7 @@
 ---
 slice: 20260319-gap-5-pr1-archive-artifact-contracts
 date: 2026-03-19
+last_reviewed: 2026-03-19
 gap: gap-5-pr1
 author: AI (GPT-5)
 ---

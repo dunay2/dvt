@@ -3,6 +3,7 @@ import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 
@@ -32,14 +33,7 @@ describe('WorkflowEngine planRef normalization', () => {
       (
         planRef: PlanRef,
         resolvedContext: ResolvedRunContext,
-        traceContext: {
-          tenantId: string;
-          projectId: string;
-          environmentId: string;
-          runId: string;
-          planId?: string;
-          adapter?: 'temporal' | 'conductor' | 'local';
-        }
+        traceContext: StartRunTraceContext
       ) => Promise<EngineRunRef>
     >(async () => ({
       provider: 'temporal',

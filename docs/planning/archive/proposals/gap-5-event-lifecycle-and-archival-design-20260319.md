@@ -71,8 +71,8 @@ This proposal is accompanied by these supporting documents:
 - [Gap 5 Operator Guide](../../guides/gap-5-operator-guide-20260319.md)
 - [Gap 5 User Reference](../../guides/gap-5-user-reference-20260319.md)
 - [Gap 5 Archive Operations Runbook](../../runbooks/gap-5-archive-operations-runbook-20260319.md)
-- [Gap 5 Domain Design Companion](gap-5-domain-design-companion-20260319.md)
-- [Gap 5 Sequence And Module Design](gap-5-sequence-and-module-design-20260319.md)
+- [Gap 5 Domain Design Companion](./gap-5-domain-design-companion-20260319.md)
+- [Gap 5 Sequence And Module Design](./gap-5-sequence-and-module-design-20260319.md)
 
 ## Executive Summary
 
@@ -1228,12 +1228,12 @@ Redaction is intentionally not bundled into Slice 1.
 
 ## Planned PR Breakdown
 
-| PR ID    | Secondary doc                                                                                              | Scope                                                                                | Why it stands alone                              |
-| -------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| `G5-PR1` | [gap-5-pr1-minimal-usable-archival-20260319.md](gap-5-pr1-minimal-usable-archival-20260319.md)             | archive unit schema, exporter, catalog, verifier, terminal snapshot pinning, metrics | first usable archival release                    |
-| `G5-PR2` | [gap-5-pr2-deferred-deletion-and-restore-20260319.md](gap-5-pr2-deferred-deletion-and-restore-20260319.md) | grace delete worker, restore tooling, leader/fencing model                           | makes archival safe and operable                 |
-| `G5-PR3` | [gap-5-pr3-delivery-buffer-retention-20260319.md](gap-5-pr3-delivery-buffer-retention-20260319.md)         | outbox and dead-letter purge, lineage buffer cleanup, metrics and alerts             | separate lifecycle for non-authoritative buffers |
-| `G5-PR4` | [gap-5-pr4-redaction-adr-follow-up-20260319.md](gap-5-pr4-redaction-adr-follow-up-20260319.md)             | ADR-backed redaction model, audit, archive compatibility                             | legally sensitive and architecturally separate   |
+| PR ID    | Secondary doc                                                                                                | Scope                                                                                | Why it stands alone                              |
+| -------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `G5-PR1` | [gap-5-pr1-minimal-usable-archival-20260319.md](./gap-5-pr1-minimal-usable-archival-20260319.md)             | archive unit schema, exporter, catalog, verifier, terminal snapshot pinning, metrics | first usable archival release                    |
+| `G5-PR2` | [gap-5-pr2-deferred-deletion-and-restore-20260319.md](./gap-5-pr2-deferred-deletion-and-restore-20260319.md) | grace delete worker, restore tooling, leader/fencing model                           | makes archival safe and operable                 |
+| `G5-PR3` | [gap-5-pr3-delivery-buffer-retention-20260319.md](./gap-5-pr3-delivery-buffer-retention-20260319.md)         | outbox and dead-letter purge, lineage buffer cleanup, metrics and alerts             | separate lifecycle for non-authoritative buffers |
+| `G5-PR4` | [gap-5-pr4-redaction-adr-follow-up-20260319.md](./gap-5-pr4-redaction-adr-follow-up-20260319.md)             | ADR-backed redaction model, audit, archive compatibility                             | legally sensitive and architecturally separate   |
 
 ## Risks And Open Questions
 

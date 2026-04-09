@@ -1,4 +1,4 @@
----
+﻿---
 title: DVT Glossary
 status: Active
 owner: Docs / Architecture
@@ -17,8 +17,8 @@ definition layer for readers across code, planning, operations, and review.
 
 | Term             | Meaning                                                                                                                           | Canonical follow-up                                                          |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| DVT              | The full system described in this repository, not only the engine package.                                                        | [System Map](system-map.md)                                                  |
-| Engine           | The execution core that interprets plans, enforces invariants, and coordinates state transitions.                                 | [Architecture](../architecture/engine/index.md)                              |
+| DVT              | The full system described in this repository, not only the engine package.                                                        | [System Map](./system-map.md)                                                |
+| Engine           | The execution core that interprets plans, enforces invariants, and coordinates state transitions.                                 | [Architecture](../architecture/components/engine/index.md)                   |
 | Planner          | The component that turns input material into an execution plan.                                                                   | [Planner Contracts](../contracts/planner/index.md)                           |
 | Adapter          | A runtime-specific implementation boundary used by the engine or adjacent services.                                               | [Architecture](../architecture/index.md)                                     |
 | Runtime          | The operational process or platform where an adapter or worker actually runs.                                                     | [Runbooks](../runbooks/index.md)                                             |
@@ -28,7 +28,7 @@ definition layer for readers across code, planning, operations, and review.
 | Step             | A unit of work inside a run.                                                                                                      | [Engine Contracts](../contracts/engine/index.md)                             |
 | Plan             | The executable description consumed by the engine runtime.                                                                        | [Planning Control Tower](../planning/state/planning-control-tower.md)        |
 | PlanRef          | The metadata reference that points to a plan artifact without embedding the plan bytes inline.                                    | [ADR-0012](../adr/ADR-0012-plan-integrity-ownership.md)                      |
-| Artifact         | A produced or referenced output such as compiled code, manifests, or lineage payloads.                                            | [System Map](system-map.md)                                                  |
+| Artifact         | A produced or referenced output such as compiled code, manifests, or lineage payloads.                                            | [System Map](./system-map.md)                                                |
 | compiledCodeRef  | The reference attached to compiled code or lineage-adjacent material so ownership and traceability stay explicit across packages. | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 | logicalAttemptId | The logical retry or execution-attempt identifier used to distinguish run behavior from provider-specific attempt counters.       | [ADRs](../adr/index.md)                                                      |
 | ADR              | A decision record that captures an accepted, proposed, or superseded architectural choice.                                        | [ADRs](../adr/index.md)                                                      |
@@ -38,12 +38,12 @@ definition layer for readers across code, planning, operations, and review.
 | Roadmap          | Planned change sequencing. It must not be confused with current implementation status.                                            | [Roadmap Of Record](../planning/roadmap/index.md)                            |
 | Canonical spec   | The governing document that defines behavior, invariants, or accepted architecture for a topic.                                   | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 | Status doc       | The document that says what is currently true in implementation or delivery, even when the target design is different.            | [System Delivery Status](../architecture/system-delivery-status.md)          |
-| Reference-only   | Documentation that is visible and useful, but not the accepted governing source of truth for behavior.                            | [Repository Map](repository-map.md)                                          |
-| Workspace        | A package or app unit in the monorepo, usually resolved through the pnpm workspace configuration.                                 | [Repository Map](repository-map.md)                                          |
+| Reference-only   | Documentation that is visible and useful, but not the accepted governing source of truth for behavior.                            | [Repository Map](./repository-map.md)                                        |
+| Workspace        | A package or app unit in the monorepo, usually resolved through the pnpm workspace configuration.                                 | [Repository Map](./repository-map.md)                                        |
 
 ## Related Normative Vocabulary
 
 For engine-level canonical field and envelope terminology, see:
 
-- [Glossary Contract v2.0](../architecture/engine/contracts/engine/GlossaryContract.v2.0.md)
-- [Glossary Contract v1](../architecture/engine/contracts/engine/GlossaryContract.v1.md)
+- [Glossary Contract v2.0](../architecture/components/engine/contracts/engine/GlossaryContract.v2.0.md)
+- [Glossary Contract v1](../architecture/components/engine/contracts/engine/GlossaryContract.v1.md)

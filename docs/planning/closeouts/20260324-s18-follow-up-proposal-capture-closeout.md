@@ -1,6 +1,7 @@
 ---
 slice: 20260324-s18-follow-up-proposal-capture
 date: 2026-03-24
+last_reviewed: 2026-03-24
 work_item: S18-F1
 status: Done
 ---

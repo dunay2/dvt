@@ -2,7 +2,7 @@
 title: Roadmap Of Record
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-09
 ---
 
 # Roadmap Of Record
@@ -25,11 +25,13 @@ Concept anchors for this page:
 - Roadmap of record: this page
 - Current implementation state:
   [System Delivery Status](../../architecture/system-delivery-status.md)
+- Current planning dashboard:
+  [Planning Dashboard](../state/planning-dashboard.md)
 - Current planning hub: [Planning Control Tower](../state/planning-control-tower.md)
 - Current planning status:
   [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 - Current execution tracking:
-  [Planning Control Tower](../state/planning-control-tower.md)
+  [Execution Workboard](../state/execution-workboard.md)
 
 ## Document Classification
 
@@ -41,6 +43,9 @@ Concept anchors for this page:
   Use it for: historical context only
 - `docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md`
   Classification: archived subsystem roadmap proposal
+  Use it for: historical context only
+- `docs/archive/architecture/engine-roadmap-phases-20260211.md`
+  Classification: archived engine phase snapshot
   Use it for: historical context only
 - `docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md`
   Classification: subsystem roadmap proposal
@@ -71,9 +76,10 @@ Concept anchors for this page:
   Classification: tactical gap registers
   Use it for: currently open, explicitly scoped deltas only; retire closed
   programs instead of carrying them as active controls
-- `docs/architecture/engine/roadmap/engine-phases.md`
+- `docs/architecture/components/engine/roadmap/engine-phases.md`
   Classification: subsystem roadmap
-  Use it for: engine-specific phase planning
+  Use it for: engine-specific current sequencing aligned to `WE-HX`, `AR-A8`,
+  `MW-C1`, and `TF-C2`
 
 ## Operating Rules
 
@@ -92,9 +98,10 @@ Concept anchors for this page:
 Repository-wide planning should currently be read in this order:
 
 1. [System Delivery Status](../../architecture/system-delivery-status.md)
-2. [Planning Control Tower](../state/planning-control-tower.md)
-3. [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
-4. Relevant proposals under [Proposal Portfolio Map](../proposals/portfolio-map-20260403.md)
+2. [Planning Dashboard](../state/planning-dashboard.md)
+3. [Planning Control Tower](../state/planning-control-tower.md)
+4. [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
+5. Relevant proposals under [Proposal Portfolio Map](../proposals/portfolio-map-20260403.md)
 
 Current subsystem roadmaps worth consulting:
 
@@ -102,8 +109,9 @@ Current subsystem roadmaps worth consulting:
 - [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-- [Roadmap By Domain](roadmap-by-domain.md)
-- [Review Remediation Roadmap 2026-04](review-remediation-roadmap-20260402.md)
+- [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
+- [Roadmap By Domain](./roadmap-by-domain.md)
+- [Review Remediation Roadmap 2026-04](./review-remediation-roadmap-20260402.md)
 
 ## Domain And Diagram Navigation
 
@@ -117,8 +125,8 @@ Use these surfaces for domain-first planning navigation and updated diagrams:
 - [Agent Lane C YAML](../state/agent-lane-c.yaml)
 - [Agent Lane D YAML](../state/agent-lane-d.yaml)
 - [Agent Lane E YAML](../state/agent-lane-e.yaml)
-- [Planning Roadmap Diagrams](diagrams/index.md)
-- [Planning Domain Map](diagrams/planning-domain-map.md)
+- [Planning Roadmap Diagrams](./diagrams/index.md)
+- [Planning Domain Map](./diagrams/planning-domain-map.md)
 
 ## Maintenance Rule
 

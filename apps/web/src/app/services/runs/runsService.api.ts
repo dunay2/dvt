@@ -10,6 +10,8 @@ import { ApiError, type ApiClient } from '../api/createApiClient';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import type {
   MaterializationEvidence,
+  RunExecutionEvidence,
+  RunFailureEvidence,
   RunEventTimelinePage,
   RunSnapshot,
   RunSummaryItem,
@@ -71,6 +73,50 @@ function parseMaterializationEvidence(value: unknown): MaterializationEvidence |
   };
 }
 
+function parseFailureEvidence(value: unknown): RunFailureEvidence | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const stepId = asString(candidate.stepId);
+  const failedAt = asString(candidate.failedAt);
+  const reason = asString(candidate.reason);
+  const message = asString(candidate.message);
+
+  if (!stepId || !failedAt) {
+    return undefined;
+  }
+
+  return {
+    stepId,
+    failedAt,
+    ...(reason ? { reason } : {}),
+    ...(message ? { message } : {}),
+  };
+}
+
+function parseExecutionEvidence(value: unknown): RunExecutionEvidence | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const activeStepId = asString(candidate.activeStepId);
+  const failure = parseFailureEvidence(candidate.failure);
+  const materialization = parseMaterializationEvidence(candidate.materialization);
+
+  if (!activeStepId && !failure && !materialization) {
+    return undefined;
+  }
+
+  return {
+    ...(activeStepId ? { activeStepId } : {}),
+    ...(failure ? { failure } : {}),
+    ...(materialization ? { materialization } : {}),
+  };
+}
+
 function mapContractStatusToUi(status: ContractRunStatus | string | undefined): UiRunStatus {
   switch ((status ?? '').toUpperCase()) {
     case 'APPROVED':
@@ -121,10 +167,7 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
       | 'STALE'
       | 'UNKNOWN'
       | undefined,
-    currentStepId: asString(candidate.currentStepId),
-    failedStepId: asString(candidate.failedStepId),
-    errorReason: asString(candidate.errorReason),
-    materialization: parseMaterializationEvidence(candidate.materialization),
+    execution: parseExecutionEvidence(candidate.execution),
   };
 }
 
@@ -141,10 +184,7 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     message: snapshot.message,
     hash: snapshot.hash,
     snapshotStaleness: snapshot.snapshotStaleness,
-    currentStepId: snapshot.currentStepId,
-    failedStepId: snapshot.failedStepId,
-    errorReason: snapshot.errorReason,
-    materialization: snapshot.materialization,
+    execution: snapshot.execution,
   };
 }
 

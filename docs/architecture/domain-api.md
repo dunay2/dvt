@@ -58,7 +58,7 @@ contract around it.
 
 ## Current To Target Walkthrough
 
-- [API Current To Target Architecture](components/api/api-current-to-target-architecture.md)
+- [API Current To Target Architecture](./components/api/api-current-to-target-architecture.md)
 
 ## Queued Delta
 
@@ -78,10 +78,10 @@ contract around it.
 
 ## Related Pages
 
-- [apps/api](components/api/index.md)
-- [API Current To Target Architecture](components/api/api-current-to-target-architecture.md)
-- [Frontend Fowler Implementation Pattern](frontend/frontend-fowler-implementation-pattern.md)
-- [Frontend Runtime Contract Technical Manual](frontend/runs/frontend-runtime-contract-technical-manual.md)
-- [DVT Component Map](component-map.md)
-- [System Delivery Status](system-delivery-status.md)
+- [apps/api](./components/api/index.md)
+- [API Current To Target Architecture](./components/api/api-current-to-target-architecture.md)
+- [Frontend Fowler Implementation Pattern](./components/web/frontend-fowler-implementation-pattern.md)
+- [Frontend Runtime Contract Technical Manual](./components/web/runs/frontend-runtime-contract-technical-manual.md)
+- [DVT Component Map](./component-map.md)
+- [System Delivery Status](./system-delivery-status.md)
 - [API and Admission planning view](../planning/domains/api-and-admission.md)

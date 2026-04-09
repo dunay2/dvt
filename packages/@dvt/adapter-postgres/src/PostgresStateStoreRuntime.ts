@@ -96,20 +96,6 @@ export class PostgresStateStoreRuntime {
     return this.runStateCoordinator.bootstrapRunTx(input);
   }
 
-  protected async saveProviderRefInternal(
-    tenantId: string,
-    runId: RunId,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void> {
-    return this.metadataRepo.saveProviderRef(tenantId, runId, runRef);
-  }
-
   protected async getRunMetadataByRunIdInternal(
     tenantId: string,
     runId: string
@@ -119,6 +105,14 @@ export class PostgresStateStoreRuntime {
 
   protected async listRunsInternal(options: ListRunsOptions): Promise<RunMetadata[]> {
     return this.metadataRepo.listRuns(options);
+  }
+
+  protected async saveProviderRefInternal(
+    tenantId: string,
+    runId: RunId,
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
+    return this.metadataRepo.saveProviderRef(tenantId, runId, providerRef);
   }
 
   protected async reserveRetryAttemptInternal(

@@ -1,4 +1,4 @@
-﻿---
+---
 title: MVP-A1 Backend Contractual Inventory
 status: Superseded
 owner: Architecture / API / Docs

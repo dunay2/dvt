@@ -68,7 +68,7 @@ runtime changes can land.
 
 ## Related Pages
 
-- [Infra Architecture](infra/index.md)
+- [Infra Architecture](./infra/index.md)
 - [Testing and CI Capabilities](../guides/testing-and-ci-capabilities.md)
 - [Governance Document and Rule Inventory](../planning/status/governance-document-rule-inventory.md)
-- [DVT Domain Map](domain-map.md)
+- [DVT Domain Map](./domain-map.md)

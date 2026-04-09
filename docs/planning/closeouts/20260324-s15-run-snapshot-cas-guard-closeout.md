@@ -109,14 +109,14 @@ that still needs implementation.
 
 ## Changes made
 
-| File or path                                                                                                               | Change                                                                        | Why                                                              |
-| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [docs/planning/state/agent-lane-d.yaml](../state/agent-lane-d.yaml)                                                        | Marked `S15` as `done`                                                        | Make the lane source of truth match the delivered implementation |
-| [docs/planning/state/agent-lane-d.md](../state/agent-lane-d.md)                                                            | Regenerated via `pnpm docs:sync`                                              | Keep the lane markdown synchronized with the YAML source         |
-| [docs/planning/state/execution-workboard.md](../state/execution-workboard.md)                                              | Updated `S15` status to `Done` and adjusted the next slice                    | Reflect the closure in the operational tracker                   |
-| [docs/planning/state/open-task-route.md](../state/open-task-route.md)                                                      | Removed `S15` from open-task navigation and corrected the open snapshot count | Prevent the closed item from still appearing as actionable       |
-| [docs/planning/state/domain-status-board.md](../state/domain-status-board.md)                                              | Removed `S15` from the active execution-runtime set                           | Keep the domain board aligned with the closed status             |
-| [docs/planning/closeouts/20260324-s15-run-snapshot-cas-guard-closeout.md](20260324-s15-run-snapshot-cas-guard-closeout.md) | Recorded the closeout and validation evidence                                 | Required closeout artifact for the slice                         |
+| File or path                                                                                                                 | Change                                                                        | Why                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [docs/planning/state/agent-lane-d.yaml](../state/agent-lane-d.yaml)                                                          | Marked `S15` as `done`                                                        | Make the lane source of truth match the delivered implementation |
+| [docs/planning/state/agent-lane-d.md](../state/agent-lane-d.md)                                                              | Regenerated via `pnpm docs:sync`                                              | Keep the lane markdown synchronized with the YAML source         |
+| [docs/planning/state/execution-workboard.md](../state/execution-workboard.md)                                                | Updated `S15` status to `Done` and adjusted the next slice                    | Reflect the closure in the operational tracker                   |
+| [docs/planning/state/open-task-route.md](../state/open-task-route.md)                                                        | Removed `S15` from open-task navigation and corrected the open snapshot count | Prevent the closed item from still appearing as actionable       |
+| [docs/planning/state/domain-status-board.md](../state/domain-status-board.md)                                                | Removed `S15` from the active execution-runtime set                           | Keep the domain board aligned with the closed status             |
+| [docs/planning/closeouts/20260324-s15-run-snapshot-cas-guard-closeout.md](./20260324-s15-run-snapshot-cas-guard-closeout.md) | Recorded the closeout and validation evidence                                 | Required closeout artifact for the slice                         |
 
 ## Docs Synced
 

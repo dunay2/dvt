@@ -19,6 +19,7 @@ function CanvasContent() {
         activeRunId={controller.activeRunId}
         registeredPlugins={controller.registeredPlugins}
         userPermissions={controller.userPermissions}
+        canvasAuthoringMode={controller.canvasAuthoringMode}
         nodesWithImpact={controller.nodesWithImpact}
         edges={controller.edges}
         nodeTypes={controller.nodeTypes}

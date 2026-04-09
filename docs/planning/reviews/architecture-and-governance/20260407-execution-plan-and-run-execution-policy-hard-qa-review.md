@@ -29,7 +29,7 @@ Canonical execution tracking remains in:
 
 - [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
 - [ADR-0046](../../../adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md)
-- [20260407 execution-plan rationale](20260407-execution-plan-and-run-execution-policy-rationale.md)
+- [20260407 execution-plan rationale](./20260407-execution-plan-and-run-execution-policy-rationale.md)
 
 ## Governing Sources
 

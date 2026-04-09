@@ -1,4 +1,4 @@
-﻿---
+---
 title: MVP Backend Operability Baseline Roadmap
 status: Proposed
 owner: Product / Architecture / API / Docs

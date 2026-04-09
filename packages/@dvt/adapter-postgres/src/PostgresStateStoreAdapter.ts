@@ -68,21 +68,6 @@ export class PostgresStateStoreAdapter
     return this.bootstrapRunTxInternal(input);
   }
 
-  async saveProviderRef(
-    tenantId: string,
-    runId: RunId,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void> {
-    this.ready();
-    return this.saveProviderRefInternal(tenantId, runId, runRef);
-  }
-
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
     return this.getRunMetadataByRunIdInternal(tenantId, runId);
@@ -91,6 +76,15 @@ export class PostgresStateStoreAdapter
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     this.ready();
     return this.listRunsInternal(options);
+  }
+
+  async saveProviderRef(
+    tenantId: string,
+    runId: RunId,
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
+    this.ready();
+    return this.saveProviderRefInternal(tenantId, runId, providerRef);
   }
 
   async reserveRetryAttempt(

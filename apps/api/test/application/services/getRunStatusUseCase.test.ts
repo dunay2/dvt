@@ -37,9 +37,12 @@ function createStateStore(): {
         planId: 'plan-1',
         planVersion: '1.0',
         logicalAttemptId: 1,
-        provider: 'mock' as const,
-        providerWorkflowId: 'wf-1',
-        providerRunId: 'provider-run-1',
+        providerRef: {
+          provider: 'mock' as const,
+          tenantId: 'tenant-a',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
       };
     },
     async getSnapshot() {
@@ -384,6 +387,70 @@ describe('GetRunStatusUseCase', () => {
       'run-1'
     );
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
+  });
+
+  it('returns TF-C2-B snapshot outcome fields when projected state carries them', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'FAILED' as const,
+          execution: {
+            activeStepId: 'step-evidence',
+            failure: {
+              stepId: 'step-transform',
+              reason: 'SINK_WRITE_FAILED',
+              message: 'duplicate key value violates unique constraint',
+              failedAt: '2026-04-08T10:00:03.000Z',
+            },
+            materialization: {
+              executor: 'postgres' as const,
+              environmentId: 'env-1',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T10:00:00.000Z',
+              completedAt: '2026-04-08T10:00:04.000Z',
+              durationMs: 4000,
+            },
+          },
+        };
+      },
+      async enrichRunStatus() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      {
+        recordSnapshotStalenessResult: vi.fn(),
+        recordSnapshotStalenessFallback: vi.fn(),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      runId: 'provider-run-1',
+      status: 'FAILED',
+      snapshotStaleness: 'FRESH',
+      execution: {
+        activeStepId: 'step-evidence',
+        failure: {
+          stepId: 'step-transform',
+          reason: 'SINK_WRITE_FAILED',
+        },
+        materialization: {
+          executor: 'postgres',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+        },
+      },
+    });
   });
 
   it('rejects enriched status when enrichment times out instead of returning partial status', async () => {

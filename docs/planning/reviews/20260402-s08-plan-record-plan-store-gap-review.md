@@ -187,7 +187,7 @@ Defer `bindingState` from S08-v1.
 Evidence:
 
 - [Current status](../../architecture/system-delivery-status.md)
-- [Planner current state assessment](../status/planner-current-state-assessment-20260320.md)
+- [Planner current state assessment](../status/planner-current-state-assessment.md)
 - [ADR-0040](../../adr/ADR-0040-retry-ownership-and-attempt-authority.md)
 
 Problem:

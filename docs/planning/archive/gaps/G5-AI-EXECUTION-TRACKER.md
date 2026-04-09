@@ -12,9 +12,9 @@ Operational tracker for AI-assisted execution of the remaining `G5` work.
 
 ## Authority Rule
 
-- Canonical spec: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- Active status doc: [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-- Last completed slice contract: [G5 / US-G5.3 Correctness Hardening Plan](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
+- Canonical spec: [G5 - Outbox Worker Consolidated Plan](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- Active status doc: [DVT+ - Gap Execution Plans](./GAP_EXECUTION_PLANS.md)
+- Last completed slice contract: [G5 / US-G5.3 Correctness Hardening Plan](./G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
 
 This file is not a second source of truth.
 
@@ -56,11 +56,11 @@ Update this section before any substantial implementation turn.
 ## Execution Protocol For AI
 
 1. Before code changes, update [Current Pointer](#current-pointer).
-2. If scope or acceptance changes, update [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md) first, then update this tracker.
+2. If scope or acceptance changes, update [G5 - Outbox Worker Consolidated Plan](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md) first, then update this tracker.
 3. Keep the current stage tied to one GitHub issue at a time.
 4. Record the touched-files plan before implementation for the active stage.
 5. After each validation batch, append an execution-log entry with exact commands and pass/fail state.
-6. When a stage closes, sync this tracker, [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md), and any affected runbook/deployment docs in the same change.
+6. When a stage closes, sync this tracker, [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md), and any affected runbook/deployment docs in the same change.
 
 ## Stage Detail
 
@@ -265,7 +265,7 @@ Working checklist:
 
 Selected planning refs:
 
-- [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 Primary validation lane:

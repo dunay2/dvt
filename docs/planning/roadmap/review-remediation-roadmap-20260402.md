@@ -58,7 +58,7 @@ Primary outcomes:
 References:
 
 - [Sprint 2026-04B Board](../reviews/sprints/sprint-2026-04b/index.md)
-- [AR-B1 quality hardening roadmap 2026-04-04](ar-b1-quality-hardening-roadmap-20260404.md)
+- [AR-B1 quality hardening roadmap 2026-04-04](./ar-b1-quality-hardening-roadmap-20260404.md)
 
 ### Phase 3: Scale and operability follow-through (Sprint 2026-04C)
 
@@ -79,7 +79,7 @@ References:
 
 ## Diagram Set
 
-- [Review Sprint Timeline 2026-04](diagrams/review-sprint-timeline-2026-04.md)
-- [Review Sprint Dependency Graph 2026-04](diagrams/review-sprint-dependency-graph-2026-04.md)
-- [Review Sprint Critical Path 2026-04](diagrams/review-sprint-critical-path-2026-04.md)
-- [Review Sprint Capacity By Sprint 2026-04](diagrams/review-sprint-capacity-2026-04.md)
+- [Review Sprint Timeline 2026-04](./diagrams/review-sprint-timeline-2026-04.md)
+- [Review Sprint Dependency Graph 2026-04](./diagrams/review-sprint-dependency-graph-2026-04.md)
+- [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
+- [Review Sprint Capacity By Sprint 2026-04](./diagrams/review-sprint-capacity-2026-04.md)

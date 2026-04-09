@@ -14,8 +14,8 @@ Execution plan for GitHub issue `#412`:
 - Gap: `G5 - Outbox worker independiente`
 - Parent epic: `#409`
 - Declared blocker in issue body: `#410`
-- Current status source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- Current status source: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
+- Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - Normative ordering baseline: [`ADR-0009_Outbox_Ordering.md`](../../adr/ADR-0009_Outbox_Ordering.md)
 
 ## Working Rule

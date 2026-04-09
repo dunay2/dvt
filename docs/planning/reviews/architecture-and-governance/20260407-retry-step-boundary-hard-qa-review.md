@@ -21,7 +21,7 @@ generic `SignalType`.
 Canonical execution tracking remains in:
 
 - [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
-- [20260407 Retry-step boundary and use-case review](20260407-retry-step-boundary-and-use-case-review.md)
+- [20260407 Retry-step boundary and use-case review](./20260407-retry-step-boundary-and-use-case-review.md)
 
 The original blockers identified in this QA pass were corrected in the same
 slice. The review now closes as `Ready`.
@@ -33,15 +33,15 @@ slice. The review now closes as `Ready`.
 ## Governing Sources
 
 - [governance-document-rule-inventory.md](../../status/governance-document-rule-inventory.md)
-- [AGENTS.md](C:/dvt/AGENTS.md)
-- [ai-work-protocol.md](C:/dvt/docs/guides/ai-work-protocol.md)
+- [AGENTS.md](./C:/dvt/AGENTS.md)
+- [ai-work-protocol.md](./C:/dvt/docs/guides/ai-work-protocol.md)
 - [TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md](../../templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
 - [TEMPLATE_QA_ARTIFACT_EXAMPLE.md](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
-- [ADR-0040](C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
-- [ADR-0047](C:/dvt/docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
-- [ADR-0048](C:/dvt/docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
-- [contracts.ts](C:/dvt/packages/@dvt/contracts/src/types/contracts.ts)
-- [runtime.ts](C:/dvt/apps/api/src/application/ports/runtime.ts)
+- [ADR-0040](./C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
+- [ADR-0047](./C:/dvt/docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+- [ADR-0048](./C:/dvt/docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
+- [contracts.ts](./C:/dvt/packages/@dvt/contracts/src/types/contracts.ts)
+- [runtime.ts](./C:/dvt/apps/api/src/application/ports/runtime.ts)
 
 ## Findings
 
@@ -52,7 +52,7 @@ No critical findings remain in the reviewed slice.
 - `RETRY_RUN` remains outside the shipped HTTP/API runtime surface.
   This artifact predates the later boundary decision that moved `RETRY_RUN`
   out of canonical `SignalType`; see
-  [ADR-0049](C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
+  [ADR-0049](./C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
 
 ## Alignment
 
@@ -235,7 +235,7 @@ issue.
 ## Unrelated Worktree Observations
 
 - Unrelated untracked file present during this QA:
-  [20260407-principal-architecture-review-progress-and-diagrams.md](C:/dvt/docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md)
+  [20260407-principal-architecture-review-progress-and-diagrams.md](./C:/dvt/docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md)
 - It remains outside the scope of this slice.
 
 ## Final Verdict

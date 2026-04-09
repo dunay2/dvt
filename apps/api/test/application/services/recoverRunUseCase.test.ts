@@ -40,9 +40,13 @@ describe('RecoverRunUseCase', () => {
         planId: 'plan-a',
         planVersion: '1.0.0',
         logicalAttemptId: 1,
-        provider: 'temporal' as const,
-        providerWorkflowId: 'wf-1',
-        providerRunId: 'provider-run-1',
+        providerRef: {
+          provider: 'temporal' as const,
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
       }),
     };
 
@@ -127,9 +131,13 @@ describe('RecoverRunUseCase', () => {
         planId: 'plan-a',
         planVersion: '1.0.0',
         logicalAttemptId: 1,
-        provider: 'temporal' as const,
-        providerWorkflowId: 'wf-1',
-        providerRunId: 'provider-run-1',
+        providerRef: {
+          provider: 'temporal' as const,
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
       }),
     };
 

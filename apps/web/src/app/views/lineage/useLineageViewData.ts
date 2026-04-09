@@ -1,9 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
-import { queryKeys } from '../../queries/queryKeys';
-import { useWorkspaceService } from '../../services/AppServicesContext';
+import { useWorkspaceGraphForViewQuery } from '../../queries/workspaceQueries';
 import type { CanonicalNode } from '../../types/canonical';
 import { assignLevels, bfsReachable, buildColumnLineage, groupNodesByLevel } from './lineageModel';
 
@@ -11,12 +9,7 @@ export function useLineageViewData() {
   const [searchQuery, setSearchQuery] = useState('');
   const [columnLevel, setColumnLevel] = useState(false);
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const workspaceService = useWorkspaceService();
-  const snapshotQuery = useQuery({
-    queryKey: queryKeys.workspace.graphForView('lineage'),
-    queryFn: () => workspaceService.getGraphSnapshot(),
-    staleTime: 60_000,
-  });
+  const snapshotQuery = useWorkspaceGraphForViewQuery('lineage', 60_000);
 
   const { canonicalNodes, canonicalEdges } = useMemo(() => {
     const rawNodes = snapshotQuery.data?.nodes ?? [];

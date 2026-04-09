@@ -16,7 +16,7 @@ bound to scheduled Lane E tasks only.
 Canonical execution tracking remains in:
 
 - [Agent Lane E](../../../state/agent-lane-e.yaml)
-- [Frontend roadmap](frontend-roadmap-20260219.md)
+- [Frontend roadmap](./frontend-roadmap-20260219.md)
 
 This document is the implementation sequence and Definition of Done map for the
 workbench program.
@@ -25,9 +25,9 @@ workbench program.
 
 - [Governance document and rule inventory](../../../status/governance-document-rule-inventory.md)
 - [Mandatory work system for AI](../../../../guides/ai-work-protocol.md)
-- [Frontend roadmap](frontend-roadmap-20260219.md)
-- [UX implementation guide](../../../../architecture/frontend/ux-implementation-guide.md)
-- [Screen manuals and user stories](../../../../architecture/frontend/screen-manuals-and-user-stories.md)
+- [Frontend roadmap](./frontend-roadmap-20260219.md)
+- [UX implementation guide](../../../../architecture/components/web/ux-implementation-guide.md)
+- [Screen manuals and user stories](../../../../architecture/components/web/screen-manuals-and-user-stories.md)
 
 ## Unblock roadmap
 

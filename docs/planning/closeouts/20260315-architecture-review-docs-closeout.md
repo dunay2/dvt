@@ -1,6 +1,7 @@
 ---
 slice: architecture-review-docs
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: architecture-reviews
 author: AI (GPT-5)
 ---
@@ -53,7 +54,7 @@ standard repo pre-push verification.
 | [WorkflowHelpers_Architecture_Review.md](../../../../packages/@dvt/adapter-temporal/src/workflows/WorkflowHelpers_Architecture_Review.md)               | Add architecture review of `workflowHelpers.ts`                    | Capture cohesion and helper-boundary concerns next to the helper module |
 | [StartRunIntentSchemaManager_Architecture_Review.md](../../../../packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager_Architecture_Review.md) | Add architecture review of `StartRunIntentSchemaManager.ts`        | Record migration/bootstrap boundary findings                            |
 | [PostgresStateStoreAdapter_Refactor_Review.md](../../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter_Refactor_Review.md)             | Add architecture/refactor review of `PostgresStateStoreAdapter.ts` | Record aggregate, boundary, and refactor findings                       |
-| [20260315-architecture-review-docs-closeout.md](20260315-architecture-review-docs-closeout.md)                                                          | Add closeout for this review-doc slice                             | Satisfy task closeout governance                                        |
+| [20260315-architecture-review-docs-closeout.md](./20260315-architecture-review-docs-closeout.md)                                                        | Add closeout for this review-doc slice                             | Satisfy task closeout governance                                        |
 
 ## Libraries evaluated
 
@@ -61,7 +62,7 @@ None.
 
 ## Docs synced
 
-- [x] [20260315-architecture-review-docs-closeout.md](20260315-architecture-review-docs-closeout.md) — closeout added for this task
+- [x] [20260315-architecture-review-docs-closeout.md](./20260315-architecture-review-docs-closeout.md) — closeout added for this task
 
 ## Test evidence
 

@@ -41,6 +41,19 @@ export type RunSubstatus =
 
 export type AdapterScopedSubstatus = `${Provider}/${string}`;
 
+export interface RunFailureEvidence {
+  stepId: string;
+  reason?: string;
+  message?: string;
+  failedAt: IsoUtcString;
+}
+
+export interface RunExecutionEvidence {
+  activeStepId?: string;
+  failure?: RunFailureEvidence;
+  materialization?: MaterializationEvidence;
+}
+
 export interface RunStatusSnapshot {
   runId: string;
   status: RunStatus;
@@ -48,6 +61,7 @@ export interface RunStatusSnapshot {
   message?: string;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
+  execution?: RunExecutionEvidence;
 }
 
 export interface MaterializationEvidence {

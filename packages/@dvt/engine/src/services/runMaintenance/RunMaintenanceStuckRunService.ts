@@ -67,7 +67,7 @@ export class RunMaintenanceStuckRunService {
       ]);
 
       this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.queuedTimeoutTotal, {
-        provider: meta.provider,
+        provider: meta.providerRef.provider,
         tenantId: meta.tenantId,
         operation: RUN_MAINTENANCE_OPERATION.detectStuckRuns,
       });
@@ -76,7 +76,7 @@ export class RunMaintenanceStuckRunService {
         context: traceContext,
         attributes: {
           runId: meta.runId,
-          provider: meta.provider,
+          provider: meta.providerRef.provider,
           reason: RUN_MAINTENANCE_RUN_FAILED_REASON.queuedTimeout,
         },
       });
@@ -132,7 +132,7 @@ export class RunMaintenanceStuckRunService {
       ]);
 
       this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.cancellationTimeoutTotal, {
-        provider: meta.provider,
+        provider: meta.providerRef.provider,
         tenantId: meta.tenantId,
         operation: RUN_MAINTENANCE_OPERATION.detectStuckCancellingRuns,
       });
@@ -141,7 +141,7 @@ export class RunMaintenanceStuckRunService {
         context: traceContext,
         attributes: {
           runId: meta.runId,
-          provider: meta.provider,
+          provider: meta.providerRef.provider,
           reason: RUN_MAINTENANCE_RUN_FAILED_REASON.cancellationTimeout,
         },
       });

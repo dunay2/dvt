@@ -92,10 +92,7 @@ describe('runsService runtime contract', () => {
       substatus: 'WAITING_APPROVAL',
       message: 'Approval required',
       snapshotStaleness: 'FRESH',
-      currentStepId: undefined,
-      failedStepId: undefined,
-      errorReason: undefined,
-      materialization: undefined,
+      execution: undefined,
     });
   });
 
@@ -160,10 +157,7 @@ describe('runsService runtime contract', () => {
         substatus: 'WAITING_APPROVAL',
         message: 'Approval required',
         snapshotStaleness: undefined,
-        currentStepId: undefined,
-        failedStepId: undefined,
-        errorReason: undefined,
-        materialization: undefined,
+        execution: undefined,
       },
     ]);
   });
@@ -175,15 +169,17 @@ describe('runsService runtime contract', () => {
       status: 'COMPLETED',
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
-      currentStepId: 'step_transform',
-      materialization: {
-        executor: 'postgres',
-        environmentId: 'env-prod',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
-        startedAt: '2026-04-04T00:00:02.000Z',
-        completedAt: '2026-04-04T00:00:10.000Z',
-        durationMs: 8000,
+      execution: {
+        activeStepId: 'step_transform',
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-prod',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-04T00:00:02.000Z',
+          completedAt: '2026-04-04T00:00:10.000Z',
+          durationMs: 8000,
+        },
       },
     });
 
@@ -192,11 +188,13 @@ describe('runsService runtime contract', () => {
 
     expect(snapshot).toMatchObject({
       runId: 'run_completed',
-      currentStepId: 'step_transform',
-      materialization: {
-        executor: 'postgres',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
+      execution: {
+        activeStepId: 'step_transform',
+        materialization: {
+          executor: 'postgres',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+        },
       },
     });
   });

@@ -91,6 +91,72 @@ describe('getRunEventsRoute', () => {
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
+  it('returns TF-C2-B evidence-bearing event payloads unchanged from the use case', async () => {
+    const deps = createDeps();
+    deps.useCase.execute.mockResolvedValue({
+      items: [
+        {
+          eventId: 'evt-1',
+          eventType: 'StepCompleted',
+          runId: 'run-1',
+          tenantId: 'tenant-a',
+          projectId: 'proj-1',
+          environmentId: 'env-1',
+          planId: 'plan-1',
+          planVersion: '1.0',
+          engineAttemptId: 1,
+          logicalAttemptId: 1,
+          idempotencyKey: 'idem-1',
+          emittedAt: '2026-04-08T10:00:00.000Z',
+          persistedAt: '2026-04-08T10:00:01.000Z',
+          payloadVersion: 1,
+          stepId: 'step-evidence',
+          payload: {
+            materialization: {
+              executor: 'postgres',
+              environmentId: 'env-1',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T10:00:00.000Z',
+              completedAt: '2026-04-08T10:00:01.000Z',
+              durationMs: 1000,
+            },
+          },
+          runSeq: 7,
+        },
+      ],
+      nextCursor: 7,
+    });
+    const reply = createReply();
+
+    await getRunEventsRoute(
+      {
+        id: 'req-1b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: 'tenant-a', afterSeq: '0', limit: '10' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.send).toHaveBeenCalledWith({
+      items: [
+        expect.objectContaining({
+          eventType: 'StepCompleted',
+          stepId: 'step-evidence',
+          payload: expect.objectContaining({
+            materialization: expect.objectContaining({
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+            }),
+          }),
+        }),
+      ],
+      nextCursor: 7,
+    });
+  });
+
   it('returns 400 when runId is missing', async () => {
     const deps = createDeps();
     const reply = createReply();

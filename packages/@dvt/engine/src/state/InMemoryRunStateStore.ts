@@ -1,7 +1,13 @@
 /**
  * @baseline ADR-0003
  */
-import { InvalidRunIdError, RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
+import {
+  InvalidRunIdError,
+  ProviderRefProviderMismatchError,
+  RunAlreadyExistsError,
+  RunNotFoundError,
+  TenantAccessDeniedError,
+} from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -54,24 +60,29 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
   async saveProviderRef(
     tenantId: string,
     runId: string,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void> {
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
     const current = this.metadataByRunId.get(runId);
-    if (current?.tenantId !== tenantId) throw new RunNotFoundError(runId);
-    this.metadataByRunId.set(runId, {
+    if (!current) {
+      throw new RunNotFoundError(runId);
+    }
+    if (current.tenantId !== tenantId || providerRef.tenantId !== tenantId) {
+      throw new TenantAccessDeniedError(tenantId);
+    }
+    if (current.providerRef.provider !== providerRef.provider) {
+      throw new ProviderRefProviderMismatchError(
+        runId,
+        current.providerRef.provider,
+        providerRef.provider
+      );
+    }
+
+    const updated: RunMetadata = {
       ...current,
-      providerWorkflowId: runRef.providerWorkflowId,
-      providerRunId: runRef.providerRunId,
-      ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
-      ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
-      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
-    });
+      providerRef,
+    };
+    this.metadataByRunId.set(runId, updated);
+    return updated;
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {

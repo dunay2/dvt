@@ -94,9 +94,9 @@ captured as subordinate decisions (`ADR-0041A`, `ADR-0041B`, etc.).
 
 ## References
 
-- [ADR-0005 - Contract Formalization Tooling](ADR-0005-contract-formalization-tooling.md)
-- [ADR-0006 - Contract Tooling Governance](ADR-0006-contract-tooling-governance.md)
-- [ADR-0018 - Shared Kernel Ownership Governance](ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [ADR-0034 - Bounded Context Boundaries And Communication Rules](ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [ADR-0039 - Hexagonal Port Hardening and SOLID Remediation](ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
-- [ADR-0041A - Reconciler Health State and Readiness Port Semantics](ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md)
+- [ADR-0005 - Contract Formalization Tooling](./ADR-0005-contract-formalization-tooling.md)
+- [ADR-0006 - Contract Tooling Governance](./ADR-0006-contract-tooling-governance.md)
+- [ADR-0018 - Shared Kernel Ownership Governance](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0034 - Bounded Context Boundaries And Communication Rules](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0039 - Hexagonal Port Hardening and SOLID Remediation](./ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
+- [ADR-0041A - Reconciler Health State and Readiness Port Semantics](./ADR-0041a-reconciler-health-state-and-readiness-port-semantics.md)

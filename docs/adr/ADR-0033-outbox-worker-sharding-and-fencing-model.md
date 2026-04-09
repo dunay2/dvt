@@ -119,4 +119,4 @@ Use this ADR together with:
 - [`G5 - Outbox Worker Consolidated Plan`](../planning/archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - [`G5 / US-G5.5 Sharding And Fencing Plan`](../planning/archive/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`G5 - AI Execution Tracker`](../planning/archive/gaps/G5-AI-EXECUTION-TRACKER.md)
-- [`ADR-G5 - Independent Outbox Worker Runtime`](../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+- [`ADR-G5 - Independent Outbox Worker Runtime`](./_drafts/ADR-G5-independent-outbox-worker-runtime.md)

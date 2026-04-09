@@ -1,9 +1,11 @@
-﻿---
+---
 slice: ar-a9-planner-cycle-fail-closed
 date: 2026-04-04
 author: AI (GPT-5)
 last_reviewed: 2026-04-04
 status: Accepted
+title: Closeout: AR-A9 Planner Cycle Fail-Closed
+owner: docs
 ---
 
 # Closeout: AR-A9 Planner Cycle Fail-Closed

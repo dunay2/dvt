@@ -87,6 +87,19 @@ export class RunMetadataNotFoundError extends DvtError {
   }
 }
 
+export class ProviderRefProviderMismatchError extends DvtError {
+  constructor(runId: string, persistedProvider: string, updateProvider: string) {
+    const messageKey = ENGINE_ERROR_MESSAGE_KEY.PROVIDER_REF_PROVIDER_MISMATCH;
+    const messageParams = { runId, persistedProvider, updateProvider };
+    super(ENGINE_ERROR_CODE.PROVIDER_REF_PROVIDER_MISMATCH, messageKey, runId, {
+      details: messageParams,
+      messageKey,
+      messageParams,
+    });
+    this.name = 'ProviderRefProviderMismatchError';
+  }
+}
+
 export class RecoverySourceNotTerminalError extends DvtError {
   constructor(runId: string, status: string) {
     const messageKey = ENGINE_ERROR_MESSAGE_KEY.RECOVERY_SOURCE_NOT_TERMINAL;

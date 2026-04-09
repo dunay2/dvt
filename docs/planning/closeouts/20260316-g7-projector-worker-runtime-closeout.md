@@ -1,6 +1,7 @@
 ---
 slice: g7-projector-worker-runtime
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: G7
 author: AI (GPT-5)
 ---

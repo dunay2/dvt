@@ -4,9 +4,9 @@
 - **Date**: 2026-02-16
 - **Owners**: Architecture / Engine Domain
 - **Related files**:
-  - [`IWorkflowEngine.v2.0.md`](../architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md)
-  - [`RunEvents.v2.0.md`](../architecture/engine/contracts/engine/RunEvents.v2.0.md)
-  - [`ExecutionSemantics.v2.0.md`](../architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md)
+  - [`IWorkflowEngine.v2.0.md`](../architecture/components/engine/contracts/engine/IWorkflowEngine.v2.0.md)
+  - [`RunEvents.v2.0.md`](../architecture/components/engine/contracts/engine/RunEvents.v2.0.md)
+  - [`ExecutionSemantics.v2.0.md`](../architecture/components/engine/contracts/engine/ExecutionSemantics.v2.0.md)
 
 ---
 

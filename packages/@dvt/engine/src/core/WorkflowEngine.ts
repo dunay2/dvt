@@ -42,6 +42,8 @@ import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
+import { buildTraceContext } from './lifecycle/coreRuntime.js';
+import type { StartRunTraceContext } from './lifecycle/StartRunTraceContext.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 import { WorkflowEngineCoreService } from './WorkflowEngineCoreService.js';
 
@@ -49,14 +51,7 @@ export interface IStartRunApplicationService {
   startRun(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
-    traceContext: {
-      tenantId: string;
-      projectId: string;
-      environmentId: string;
-      runId: string;
-      planId?: string;
-      adapter?: 'temporal' | 'conductor' | 'local';
-    }
+    traceContext: StartRunTraceContext
   ): Promise<EngineRunRef>;
 }
 
@@ -438,33 +433,6 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
   }
-}
-
-function buildTraceContext(
-  input: Pick<RunContext, 'tenantId' | 'projectId' | 'environmentId' | 'runId'> & {
-    targetAdapter?: EngineRunRef['provider'];
-    provider?: EngineRunRef['provider'];
-  },
-  planId?: string
-): {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
-  planId?: string;
-  adapter?: 'temporal' | 'conductor' | 'local';
-} {
-  const raw = input.targetAdapter ?? input.provider;
-  const adapter: 'temporal' | 'conductor' | undefined =
-    raw === 'temporal' || raw === 'conductor' ? raw : undefined;
-  return {
-    tenantId: input.tenantId,
-    projectId: input.projectId,
-    environmentId: input.environmentId,
-    runId: input.runId,
-    ...(planId ? { planId } : {}),
-    ...(adapter ? { adapter } : {}),
-  };
 }
 
 const TERMINAL_RUN_STATUSES = new Set<RunStatus>(['COMPLETED', 'FAILED', 'CANCELLED']);

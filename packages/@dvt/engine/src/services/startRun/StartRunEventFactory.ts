@@ -9,14 +9,6 @@ export interface StartRunEventFactoryDeps {
   clock: IClock;
 }
 
-export interface ProviderRefUpdate {
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
-}
-
 export class StartRunEventFactory {
   constructor(private readonly deps: StartRunEventFactoryDeps) {}
 
@@ -65,32 +57,8 @@ export class StartRunEventFactory {
       logicalAttemptId: context.logicalAttemptId,
       ...(context.parentRunId !== undefined ? { parentRunId: context.parentRunId } : {}),
       ...(context.originRunId !== undefined ? { originRunId: context.originRunId } : {}),
-      provider: context.targetAdapter,
-      providerWorkflowId: runRef.workflowId,
-      providerRunId: runRef.runId,
-      ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-      ...(runRef.provider === 'temporal' && runRef.taskQueue
-        ? { providerTaskQueue: runRef.taskQueue }
-        : {}),
-      ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
+      providerRef: runRef,
       createdAt,
     };
-  }
-
-  buildProviderRefUpdate(runRef: EngineRunRef): ProviderRefUpdate {
-    const update: ProviderRefUpdate = {
-      providerWorkflowId: runRef.workflowId,
-      providerRunId: runRef.runId,
-    };
-    if (runRef.provider === 'temporal') {
-      update.providerNamespace = runRef.namespace;
-      if (runRef.taskQueue) {
-        update.providerTaskQueue = runRef.taskQueue;
-      }
-    }
-    if (runRef.provider === 'conductor') {
-      update.providerConductorUrl = runRef.conductorUrl;
-    }
-    return update;
   }
 }

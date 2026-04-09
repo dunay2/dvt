@@ -1,13 +1,13 @@
-# DVT Architecture Atlas
+﻿# DVT Architecture Atlas
 
 Code-aligned snapshot for architecture status, completion, and delivery planning.
 
 ## Navigation
 
-- [Home (README)](README.md)
-- [Architecture Atlas](architecture/architecture_atlas.md)
-- [Engineering Playbook](engineering/engineering_playbook.md)
-- [Code Completion Assessment](status/code_completion_assessment_2026-03-06.md)
+- [Home (README)](./README.md)
+- [Architecture Atlas](./architecture/architecture_atlas.md)
+- [Engineering Playbook](./engineering/engineering_playbook.md)
+- [Code Completion Assessment](./status/code_completion_assessment_2026-03-06.md)
 - [System Delivery Status](../system-delivery-status.md)
 - [Roadmap Of Record](../../planning/roadmap/index.md)
 
@@ -21,7 +21,7 @@ Code-aligned snapshot for architecture status, completion, and delivery planning
 
 ## Recommended Flow
 
-1. [Architecture Atlas](architecture/architecture_atlas.md)
-2. [Code Completion Assessment](status/code_completion_assessment_2026-03-06.md)
+1. [Architecture Atlas](./architecture/architecture_atlas.md)
+2. [Code Completion Assessment](./status/code_completion_assessment_2026-03-06.md)
 3. [System Delivery Status](../system-delivery-status.md)
 4. [Roadmap Of Record](../../planning/roadmap/index.md)

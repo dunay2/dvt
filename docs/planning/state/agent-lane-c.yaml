@@ -1,4 +1,4 @@
-﻿lane_id: C
+lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
@@ -295,8 +295,8 @@ tasks:
     status: review
     objective: >-
       add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
-      admin endpoints) so that authentication alone is not sufficient â€” an admin-level role grant
-      is required regardless of feature flag state.
+      admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
+      required regardless of feature flag state.
     dependency: none
     target: >-
       Admin routes enforce an explicit admin-role RBAC check; any authenticated principal without
@@ -565,8 +565,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Current backpressure only covers outbox lag and tenant pending events â€” adapter saturation
-      is invisible to admission control.
+      Current backpressure only covers outbox lag and tenant pending events — adapter saturation is
+      invisible to admission control.
     last_verified: '2026-04-02'
   - task_id: AR-C4
     priority: P1
@@ -585,8 +585,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Temporal activities write directly to IRunStateStore with no protection â€” state store
-      latency or unavailability cascades into workflow timeouts.
+      Temporal activities write directly to IRunStateStore with no protection — state store latency
+      or unavailability cascades into workflow timeouts.
     last_verified: '2026-04-02'
   - task_id: AR-C5
     priority: P1
@@ -625,8 +625,8 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
     status_reason: >-
-      Current Temporal activities assume every step is a dbt operation â€” this is the
-      execution-layer blocker for multi-workflow support.
+      Current Temporal activities assume every step is a dbt operation — this is the execution-layer
+      blocker for multi-workflow support.
     last_verified: '2026-04-02'
   - task_id: RC-C2
     priority: P2
@@ -707,22 +707,26 @@ tasks:
       `PlanRef` used by `POST /runs/start`.
     complexity: M
     effort_points: 5
-    progress_pct: 55
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/src/entrypoints/http/previewProfilePolicy.ts
+      - apps/api/src/entrypoints/http/previewProvenanceParser.ts
     status_reason: >-
-      Preview persistence wiring exists on the active branch, but the route contract is being
-      corrected from compiled-step heuristics to an explicit `previewProfile` boundary with
-      one-provider-per-plan semantics. Remaining work is to land the contract, registry, web caller,
-      and validation updates together.
+      The protected preview boundary now validates explicit `previewProfile` intent, enforces
+      request-boundary graph and provenance rules, persists canonical plan bytes, and returns the
+      real runtime-safe `PlanRef`. Remaining closure is to finish Lane A or B contract adoption for
+      the transformation profile so the generic preview caller and SQL-first persisted path stop
+      diverging operationally.
     last_verified: '2026-04-08'
   - task_id: TF-C1-A
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       implement the protected preview route, typed validation failures, and authorization behavior
       for SQL-first design-graph requests.
@@ -733,20 +737,22 @@ tasks:
       behavior.
     complexity: S
     effort_points: 3
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/src/entrypoints/http/previewProfilePolicy.ts
     status_reason: >-
-      The protected route, auth flow, and typed error envelope already exist; active work is moving
-      profile and provenance validation to the request boundary so the route stops inferring
-      contract semantics from compiled step kinds.
+      The protected route, auth flow, and typed error envelope are now exercised against explicit
+      `previewProfile` parsing and request-boundary validation. Remaining follow-up belongs to the
+      parent TF-C1 convergence chain, not to the route behavior itself.
     last_verified: '2026-04-08'
   - task_id: TF-C1-B
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       persist canonical plan bytes plus provenance and issue the real `PlanRef` consumed by runtime
       start.
@@ -756,15 +762,18 @@ tasks:
       runtime-safe `PlanRef` later accepted by `POST /runs/start`.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/src/entrypoints/http/previewProvenanceParser.ts
     status_reason: >-
-      Plan-store write, validation lifecycle, and `PlanRef` issuance are already wired on the active
-      branch. Remaining closure is to align the persisted preview response and provenance rules with
-      the explicit preview profile contract before the slice can move to review.
+      Successful preview now persists the canonical plan and returns the real `PlanRef` through the
+      explicit preview-profile contract instead of step-kind heuristics. Remaining work is
+      downstream caller adoption of the transformation profile and provenance path, not persistence
+      correctness on the API boundary.
     last_verified: '2026-04-08'
   - task_id: TF-C2
     priority: P0
@@ -812,7 +821,7 @@ tasks:
     last_verified: '2026-04-05'
   - task_id: TF-C2-B
     priority: P0
-    status: completed
+    status: in_progress
     objective: >-
       expose caller-visible materialization evidence and step-attributed failure diagnostics on the
       runtime read surfaces.
@@ -822,16 +831,24 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 100
+    progress_pct: 80
     evidence_refs:
+      - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
+      - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
+      - docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
-      - docs/planning/closeouts/20260408-tf-c2-b-run-read-evidence-closeout.md
+      - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
+      - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
     status_reason: >-
-      Runtime read surfaces now expose executor identity, sink materialization evidence, and
-      step-attributed failure diagnostics by combining structured Temporal event payloads with the
-      persisted plan runtime binding on `GET /runs/:runId` and `GET /runs/:runId/events`.
-    last_verified: '2026-04-08'
+      Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
+      development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
+      not maintain a second snapshot-schema line. Two follow-up items remain explicitly accepted as
+      debt and logged in the quality risk register: canonical contract/architecture doc drift and
+      failed-run materialization semantics. Real executor payload emission from TF-C2-A or TF-B1-B
+      remains the downstream dependency for full TF-C2-B closure.
+    last_verified: '2026-04-09'
   - task_id: TF-C3
     priority: P1
     status: queued

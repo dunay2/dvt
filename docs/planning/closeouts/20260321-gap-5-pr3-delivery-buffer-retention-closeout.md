@@ -1,6 +1,7 @@
 ---
 title: Gap 5 PR3 — Delivery Buffer Retention Closeout
 date: 2026-03-21
+last_reviewed: 2026-03-21
 author: Architecture
 planning_type: closeout
 parent_plan: gap-5-pr3-delivery-buffer-retention-20260319

@@ -12,13 +12,13 @@ planning_type: review
 
 ## Board Files
 
-| Board file                                                     | Domain                       | Linked task | Status  | Progress | Blocked by  | Target date |
-| -------------------------------------------------------------- | ---------------------------- | ----------- | ------- | -------- | ----------- | ----------- |
-| [Board 007](board-007-typed-compiled-code-ref-contract.md)     | Planner and contracts        | `none`      | Queued  | 0%       | `none`      | 2026-04-22  |
-| [Board 008](board-008-observability-hash-decoupling.md)        | Planner and contracts        | `none`      | Blocked | 0%       | `board-007` | 2026-04-24  |
-| [Board 009](board-009-retry-reservation-contract-mandatory.md) | Runtime safety and admission | `none`      | Queued  | 0%       | `none`      | 2026-04-25  |
-| [Board 010](board-010-step-executor-port-definition.md)        | Execution runtime            | `none`      | Blocked | 0%       | `board-007` | 2026-04-28  |
-| [Board 011](board-011-snapshot-schema-versioning.md)           | Execution runtime            | `none`      | Queued  | 0%       | `none`      | 2026-04-30  |
+| Board file                                                       | Domain                       | Linked task | Status  | Progress | Blocked by  | Target date |
+| ---------------------------------------------------------------- | ---------------------------- | ----------- | ------- | -------- | ----------- | ----------- |
+| [Board 007](./board-007-typed-compiled-code-ref-contract.md)     | Planner and contracts        | `none`      | Queued  | 0%       | `none`      | 2026-04-22  |
+| [Board 008](./board-008-observability-hash-decoupling.md)        | Planner and contracts        | `none`      | Blocked | 0%       | `board-007` | 2026-04-24  |
+| [Board 009](./board-009-retry-reservation-contract-mandatory.md) | Runtime safety and admission | `none`      | Queued  | 0%       | `none`      | 2026-04-25  |
+| [Board 010](./board-010-step-executor-port-definition.md)        | Execution runtime            | `none`      | Blocked | 0%       | `board-007` | 2026-04-28  |
+| [Board 011](./board-011-snapshot-schema-versioning.md)           | Execution runtime            | `none`      | Queued  | 0%       | `none`      | 2026-04-30  |
 
 ## Definition Of Done
 

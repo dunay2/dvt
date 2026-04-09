@@ -140,7 +140,7 @@ the repository rule that status and roadmap are different planning surfaces.
 
 Created:
 
-- `docs/planning/status/planner-current-state-assessment-20260320.md`
+- `docs/planning/status/planner-current-state-assessment.md`
 - `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
 - `docs/planning/closeouts/20260320-planner-assessment-roadmap-closeout.md`
 
@@ -175,7 +175,7 @@ Passed:
 - `pnpm docs:doctor`
 - `pnpm docs:canonical:check`
 - `pnpm docs:gov`
-- `pnpm exec markdownlint-cli2 "docs/planning/closeouts/20260320-planner-assessment-roadmap-closeout.md" "docs/planning/status/planner-current-state-assessment-20260320.md" "docs/planning/proposals/planner-target-state-roadmap-20260320.md" "docs/planning/roadmap/index.md" "docs/planning/index.md" "docs/planning/proposals/index.md" "docs/planning/status/index.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+- `pnpm exec markdownlint-cli2 "docs/planning/closeouts/20260320-planner-assessment-roadmap-closeout.md" "docs/planning/status/planner-current-state-assessment.md" "docs/planning/proposals/planner-target-state-roadmap-20260320.md" "docs/planning/roadmap/index.md" "docs/planning/index.md" "docs/planning/proposals/index.md" "docs/planning/status/index.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
 - `pnpm verify:prepush`
 
 Not green as a global repository gate, but not due to this slice:

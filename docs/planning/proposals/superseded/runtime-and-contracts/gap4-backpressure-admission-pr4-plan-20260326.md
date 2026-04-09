@@ -1,4 +1,4 @@
-﻿---
+---
 title: G4-PR4: Admission Control Operability - Implementation Plan
 status: Superseded
 owner: Architecture / API

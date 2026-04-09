@@ -60,13 +60,13 @@ controlled split.
 
 ## Document set
 
-- [Transformation Flow Product Decisions 2026-04-05](transformation-flow-product-decisions-20260405.md)
+- [Transformation Flow Product Decisions 2026-04-05](./transformation-flow-product-decisions-20260405.md)
   Decision register, scope boundaries, realism rules, success criteria, and
   rejected alternatives.
-- [Transformation Flow Architecture And Contracts 2026-04-05](transformation-flow-architecture-and-contracts-20260405.md)
+- [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
   Terms, runtime boundaries, public interfaces, graph and plan model, compiler
   mapping, and sequence diagrams.
-- [Transformation Flow Delivery Plan 2026-04-05](transformation-flow-delivery-plan-20260405.md)
+- [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
   Phase-by-phase execution roadmap, lane task breakdown, entry and exit
   criteria, validations, and delivery dependencies.
 
@@ -88,9 +88,9 @@ This overview document remains the entry point for the set.
 
 ## Reading order
 
-1. read [Transformation Flow Product Decisions 2026-04-05](transformation-flow-product-decisions-20260405.md)
-2. read [Transformation Flow Architecture And Contracts 2026-04-05](transformation-flow-architecture-and-contracts-20260405.md)
-3. read [Transformation Flow Delivery Plan 2026-04-05](transformation-flow-delivery-plan-20260405.md)
+1. read [Transformation Flow Product Decisions 2026-04-05](./transformation-flow-product-decisions-20260405.md)
+2. read [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
+3. read [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
 4. then route execution to the relevant lane YAML entry
 
 ## Relationship map

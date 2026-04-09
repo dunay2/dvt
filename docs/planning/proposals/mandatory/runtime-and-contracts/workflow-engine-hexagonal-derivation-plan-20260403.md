@@ -26,7 +26,7 @@ This is a **reconcile-and-replace** plan, not an additive docs layer.
 - `ADR-0034`
 - `ADR-0042`
 - `docs/guides/dvt-code-style-solid-hexagonal-cqrs.md`
-- `docs/architecture/engine/engine-class-review-and-gaps-2026-03-31.md`
+- `docs/architecture/components/engine/reviews/engine-class-review-and-gaps-2026-03-31.md`
 - `docs/planning/state/agent-lane-a.yaml`
 
 ## As-is findings
@@ -114,8 +114,8 @@ Lane A execution mapping:
 
 - create umbrella `WE-HX` with child tasks `WE-HX-0..6`
 - reference this proposal and the two canonical docs:
-  - `docs/architecture/engine/workflow-engine-subsystem-context.md`
-  - `docs/architecture/engine/workflow-engine-target-architecture.v1.md`
+  - `docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md`
+  - `docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md`
 - update dependency notes so `AR-A3` is explicitly merged into `WE-HX-4`
 
 ## Risks and tradeoffs

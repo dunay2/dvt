@@ -1,3 +1,10 @@
+---
+title: RunPlanWorkflow — Refactor Analysis (DVT+)
+status: Archived
+owner: docs
+last_reviewed: 2026-03-28
+---
+
 # RunPlanWorkflow — Refactor Analysis (DVT+)
 
 ## Governing Sources

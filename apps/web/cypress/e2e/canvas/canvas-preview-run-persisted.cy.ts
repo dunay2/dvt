@@ -15,16 +15,22 @@ function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
           environmentId: 'e2e-env',
           startedAt: '2026-04-08T00:00:00.000Z',
           completedAt: '2026-04-08T00:00:30.000Z',
-          failedStepId: 'step-transform',
-          errorReason: 'STEP_FAILURE',
-          materialization: {
-            executor: 'postgres',
-            environmentId: 'e2e-env',
-            sinkTable: 'analytics.orders_daily',
-            rowsWritten: 42,
-            startedAt: '2026-04-08T00:00:05.000Z',
-            completedAt: '2026-04-08T00:00:25.000Z',
-            durationMs: 20000,
+          execution: {
+            failure: {
+              stepId: 'step-transform',
+              reason: 'STEP_FAILURE',
+              message: 'duplicate key value violates unique constraint',
+              failedAt: '2026-04-08T00:00:20.000Z',
+            },
+            materialization: {
+              executor: 'postgres',
+              environmentId: 'e2e-env',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T00:00:05.000Z',
+              completedAt: '2026-04-08T00:00:25.000Z',
+              durationMs: 20000,
+            },
           },
         },
       ],
@@ -42,16 +48,22 @@ function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
       gitSha: 'abc123def',
       startedAt: '2026-04-08T00:00:00.000Z',
       completedAt: '2026-04-08T00:00:30.000Z',
-      failedStepId: 'step-transform',
-      errorReason: 'STEP_FAILURE',
-      materialization: {
-        executor: 'postgres',
-        environmentId: 'e2e-env',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
-        startedAt: '2026-04-08T00:00:05.000Z',
-        completedAt: '2026-04-08T00:00:25.000Z',
-        durationMs: 20000,
+      execution: {
+        failure: {
+          stepId: 'step-transform',
+          reason: 'STEP_FAILURE',
+          message: 'duplicate key value violates unique constraint',
+          failedAt: '2026-04-08T00:00:20.000Z',
+        },
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'e2e-env',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-08T00:00:05.000Z',
+          completedAt: '2026-04-08T00:00:25.000Z',
+          durationMs: 20000,
+        },
       },
     },
   }).as('getRun');
@@ -303,6 +315,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.visit('/canvas');
     cy.wait('@getCapabilities');
     cy.wait('@getWorkspaceGraph');
+    cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
     cy.wait('@previewPlan');
@@ -341,6 +354,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.visit('/canvas');
     cy.wait('@getCapabilities');
     cy.wait('@getWorkspaceGraph');
+    cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
     cy.wait('@previewPlan');

@@ -38,7 +38,7 @@ The delivered scope is:
 
 ## Sub-slice evidence
 
-- [ED-20260316 - G7.3 provider run-id reconciliation](ED-20260316-g7-provider-ref-reconciliation.md)
+- [ED-20260316 - G7.3 provider run-id reconciliation](./ED-20260316-g7-provider-ref-reconciliation.md)
 
 ## Closure criteria
 

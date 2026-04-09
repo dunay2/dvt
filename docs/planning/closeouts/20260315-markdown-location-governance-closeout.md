@@ -1,6 +1,7 @@
 ---
 slice: markdown-location-governance
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: docs-governance
 author: AI (Codex)
 ---
@@ -90,7 +91,7 @@ on convention only would keep the failure mode invisible until after review.
 | [docs/guides/testing-and-ci-capabilities.md](../../guides/testing-and-ci-capabilities.md)                                       | Added `pnpm docs:gov:locations`                                             | Expose the command in the canonical validation guide                 |
 | [docs/planning/status/governance-document-rule-inventory.md](../status/governance-document-rule-inventory.md)                   | Recorded the new enforcement surface                                        | Keep the governance inventory aligned with active gates              |
 | [docs/archive/working-notes/engine-source-tree-placeholders.md](../../archive/working-notes/engine-source-tree-placeholders.md) | Preserved removed engine placeholder README content                         | Keep the information under `docs/` while clearing code directories   |
-| [docs/architecture/engine/dev/determinism-tooling.md](../../architecture/engine/dev/determinism-tooling.md)                     | Absorbed useful determinism README content                                  | Preserve active guidance in the canonical doc                        |
+| [docs/architecture/engine/dev/determinism-tooling.md](../../architecture/components/engine/dev/determinism-tooling.md)          | Absorbed useful determinism README content                                  | Preserve active guidance in the canonical doc                        |
 | `packages/@dvt/engine/cli/src/README.md`                                                                                        | Removed from code directory                                                 | Code directories must stay prose-free                                |
 | `packages/@dvt/engine/schemas/commands/README.md`                                                                               | Removed from code directory                                                 | Code directories must stay prose-free                                |
 | `packages/@dvt/engine/schemas/envelope/README.md`                                                                               | Removed from code directory                                                 | Code directories must stay prose-free                                |

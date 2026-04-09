@@ -10,7 +10,7 @@ planning_type: proposal
 
 This document is the planner subsystem roadmap proposal that follows the
 current-state baseline in
-[Planner Current State Assessment](../status/planner-current-state-assessment-20260320.md).
+[Planner Current State Assessment](../status/planner-current-state-assessment.md).
 
 It is **not** the repository roadmap of record. It is a planner-specific
 roadmap proposal that must remain subordinate to:
@@ -23,13 +23,13 @@ roadmap proposal that must remain subordinate to:
 
 This roadmap is constrained by:
 
-- [Planner Current State Assessment](../status/planner-current-state-assessment-20260320.md)
+- [Planner Current State Assessment](../status/planner-current-state-assessment.md)
 - [Planner Local Doc Triage](../status/planner-local-doc-triage-20260320.md)
 - [Planner Contracts](../../contracts/planner/index.md)
 - [ADR-0035 - Planner Public Contract Evolution Protocol](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [ADR-0012 - Plan Integrity Ownership](../../adr/ADR-0012-plan-integrity-ownership.md)
 - [ADR-0017 - ExecutionPlan Schema Versioning](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
-- [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md)
+- [Phase 2 Architectural Debt Roadmap](./phase2-arch-debt-roadmap-20260315.md)
 - [Stage 1.1 - Planner Contract, Canonical Ownership, and Documentation Placement](../../../packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md)
 
 ## Planning Rules

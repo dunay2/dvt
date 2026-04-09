@@ -11,6 +11,7 @@ export type {
   ListRunsOptions,
   OutboxClaimSelection,
   OutboxRecord,
+  ProviderRefUpdate,
   RunBootstrapInput,
   RunId,
   RunMetadata,

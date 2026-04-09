@@ -85,7 +85,7 @@ that matter for the review conclusions.
   - initial review concern: reviewers had to reconstruct protocol across
     multiple classes
   - current merged state:
-    [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
+    [StartRunProtocol.v1.md](../../../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md)
     codifies the current protocol end to end
   - status: **Done**
 - Operational use of `PlanCore` split
@@ -116,7 +116,7 @@ that matter for the review conclusions.
 
 The engine depends on `IProviderAdapter` as a port, not on concrete adapters.
 Composition roots wire concrete adapters into the provider adapter map. See
-[workflow-engine-subsystem-context.md](../../../architecture/engine/workflow-engine-subsystem-context.md)
+[workflow-engine-subsystem-context.md](../../../architecture/components/engine/architecture/workflow-engine-subsystem-context.md)
 for the governing boundary rule.
 
 ```mermaid
@@ -304,7 +304,7 @@ flowchart TD
 - Codify the existing `startRun()` protocol
   - status: **Done**
   - material:
-    [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
+    [StartRunProtocol.v1.md](../../../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md)
 - Move `PAUSE` / `RESUME` realized lifecycle ownership to runtime
   - status: **Done**
   - material:
@@ -317,7 +317,7 @@ flowchart TD
 - Spike the operational use of existing `PlanCore` split
   - status: **Done, recommendation is no implementation**
   - material:
-    [PlanCore operational consumption design spike](20260407-plan-core-operational-consumption-design-spike.md)
+    [PlanCore operational consumption design spike](./20260407-plan-core-operational-consumption-design-spike.md)
 - Remove `RETRY_STEP` from the canonical signal boundary and document the
   separate use-case direction
   - status: **Done**
@@ -327,7 +327,7 @@ flowchart TD
   - status: **Done on main**
   - material:
     [reference-architecture.md](../../../architecture/reference-architecture.md),
-    [workflow-engine-subsystem-context.md](../../../architecture/engine/workflow-engine-subsystem-context.md),
+    [workflow-engine-subsystem-context.md](../../../architecture/components/engine/architecture/workflow-engine-subsystem-context.md),
     `eslint.config.cjs`
 - Decide `RETRY_RUN` ownership and product posture
   - status: **Done**
@@ -348,7 +348,7 @@ flowchart TD
 
 | Item                                                                      | Resolution                                                                                                                                                   |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Phase 2 executed before a governed protocol write-up existed              | [StartRunProtocol.v1.md](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md) now codifies the implemented protocol                         |
+| Phase 2 executed before a governed protocol write-up existed              | [StartRunProtocol.v1.md](../../../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md) now codifies the implemented protocol              |
 | No durable forward rule for signal ownership                              | [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md) is accepted and makes runtime ownership the forward rule |
 | PlanCore split was still an open design question                          | Spike completed and explicitly recommends no additional public runtime-contract split now                                                                    |
 | `RETRY_STEP` inflated the canonical signal surface                        | [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md) narrows it out of `SignalType`                                                   |
@@ -362,10 +362,10 @@ flowchart TD
 
 ## References
 
-- [Engine boundary current/target review](20260407-engine-boundary-current-target-and-migration-review.md)
-- [DVT principles and target-state review](20260407-dvt-principles-boundaries-and-target-state-review.md)
-- [Execution plan and policy rationale](20260407-execution-plan-and-run-execution-policy-rationale.md)
-- [StartRun protocol](../../../architecture/engine/contracts/engine/StartRunProtocol.v1.md)
+- [Engine boundary current/target review](./20260407-engine-boundary-current-target-and-migration-review.md)
+- [DVT principles and target-state review](./20260407-dvt-principles-boundaries-and-target-state-review.md)
+- [Execution plan and policy rationale](./20260407-execution-plan-and-run-execution-policy-rationale.md)
+- [StartRun protocol](../../../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md)
 - [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
 - [ADR-0049](../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)

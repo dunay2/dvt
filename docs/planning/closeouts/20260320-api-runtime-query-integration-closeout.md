@@ -147,7 +147,7 @@ expanding into UI integration.
 | [docs/planning/status/canonical-doc-code-matrix.md](../status/canonical-doc-code-matrix.md)                                                                       | Added API query-route, auth, integration-test, and verification mappings                  | Keep canonical topic traceability accurate                                  |
 | [docs/guides/testing-and-ci-capabilities.md](../../guides/testing-and-ci-capabilities.md)                                                                         | Added the API package and integration commands                                            | Publish the local validation entry points for this slice                    |
 | [docs/planning/dvt-top-5-gaps-corrected-20260319.md](../dvt-top-5-gaps-corrected-20260319.md)                                                                     | Corrected the active proposal so it no longer points engineers at already-shipped routes  | Remove active planning drift                                                |
-| [docs/planning/closeouts/20260320-api-runtime-query-integration-closeout.md](20260320-api-runtime-query-integration-closeout.md)                                  | Recorded think-first analysis plus final execution evidence                               | Required by repo governance                                                 |
+| [docs/planning/closeouts/20260320-api-runtime-query-integration-closeout.md](./20260320-api-runtime-query-integration-closeout.md)                                | Recorded think-first analysis plus final execution evidence                               | Required by repo governance                                                 |
 
 ## Libraries evaluated
 

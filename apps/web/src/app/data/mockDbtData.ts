@@ -206,7 +206,7 @@ export const mockExecutionPlan: ExecutionPlan = {
   planVersion: '1.0.0',
   planRef: {
     uri: 'mock://plans/plan_abc123',
-    sha256: 'mock-plan-abc123',
+    sha256: 'c'.repeat(64),
     schemaVersion: 'mock-v1',
     planId: 'plan_abc123',
     planVersion: '1.0.0',
