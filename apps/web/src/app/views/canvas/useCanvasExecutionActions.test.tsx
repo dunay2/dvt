@@ -79,6 +79,97 @@ function HookHost({
   );
 }
 
+function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
+  const persistedSha = 'c'.repeat(64);
+
+  return {
+    ...mockExecutionPlan,
+    planRef: {
+      ...mockExecutionPlan.planRef!,
+      sha256: persistedSha,
+    },
+    preview: {
+      ...mockExecutionPlan.preview,
+      persisted: {
+        ...mockExecutionPlan.preview?.persisted,
+        planRecordId: 'plan-record-abc123',
+        canonicalPlanSha256: persistedSha,
+      },
+    },
+  };
+}
+
+function StatefulHookHost({
+  plansService,
+  runsService,
+  initialPlan,
+  onRunStarted,
+  sessionContext,
+  shellFeedback,
+  canonicalNodes,
+  canonicalEdges,
+  selectedNodeIds = [],
+  workspaceNodeIds = canonicalNodes.map((node) => node.id),
+}: Readonly<{
+  plansService: IPlansPort;
+  runsService: IRunsPort;
+  initialPlan: typeof mockExecutionPlan | null;
+  onRunStarted: (runId: string) => void;
+  sessionContext: SessionContextPort;
+  shellFeedback: ShellFeedbackPort;
+  canonicalNodes: CanonicalNode[];
+  canonicalEdges: CanonicalEdge[];
+  selectedNodeIds?: string[];
+  workspaceNodeIds?: string[];
+}>): React.JSX.Element {
+  const [currentPlan, setCurrentPlan] = React.useState<typeof mockExecutionPlan | null>(
+    initialPlan
+  );
+  const hook = useCanvasExecutionActions({
+    plansService,
+    runsService,
+    canonicalNodes,
+    canonicalEdges,
+    selectedNodeIds,
+    workspaceNodeIds,
+    canPlan: true,
+    canRun: true,
+    sessionContext,
+    shellFeedback,
+    consolePanelVisible: false,
+    currentPlan,
+    setCurrentPlan,
+    setConsolePanelHeight: () => undefined,
+    toggleConsolePanel: () => undefined,
+    onRunStarted,
+  });
+
+  return (
+    <div>
+      <div data-testid="plan-modal-state">{String(hook.planModalOpen)}</div>
+      <div data-testid="can-start-run">{String(hook.canStartRun)}</div>
+      <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
+      <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
+      <button
+        type="button"
+        onClick={() => {
+          void hook.handlePlan();
+        }}
+      >
+        plan
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void hook.handleStartRun();
+        }}
+      >
+        start-run
+      </button>
+    </div>
+  );
+}
+
 describe('resolvePlanRefForStartRun', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -485,6 +576,56 @@ describe('resolvePlanRefForStartRun', () => {
     expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
     expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
       'Preview required before running.'
+    );
+  });
+
+  it('stores a persisted preview result and enables Start Run after a valid plan', async () => {
+    const persistedPlan = buildPersistedPreviewPlan();
+    const plansService: IPlansPort = {
+      previewPlan: vi.fn(async () => persistedPlan),
+      importPlan: vi.fn(async () => persistedPlan),
+    };
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        provider: 'mock' as const,
+        runId: 'run',
+        tenantId: 't',
+        workflowId: 'w',
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+
+    await act(async () => {
+      root.render(
+        <StatefulHookHost
+          plansService={plansService}
+          runsService={runsService}
+          initialPlan={null}
+          onRunStarted={vi.fn()}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-testid="plan-modal-state"]')?.textContent).toBe('true');
+    expect(container.querySelector('[data-testid="current-plan-sha"]')?.textContent).toBe(
+      persistedPlan.planRef?.sha256
+    );
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('true');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Preview is current and ready to run.'
     );
   });
 
