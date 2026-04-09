@@ -1,0 +1,11 @@
+---
+id: R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS
+title: Contract mapper boundary type aliases can drift from schema-level non-blank semantics
+status: Open
+date: 2026-04-10
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+severity: Medium
+probability: Medium
+---
