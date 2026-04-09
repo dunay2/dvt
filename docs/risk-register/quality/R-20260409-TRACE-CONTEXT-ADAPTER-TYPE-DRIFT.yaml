@@ -1,0 +1,24 @@
+---
+id: R-20260409-TRACE-CONTEXT-ADAPTER-TYPE-DRIFT
+title: StartRun trace context advertises an unreachable local adapter
+status: Open
+date: 2026-04-09
+owners:
+  - packages/@dvt/engine
+severity: Low
+probability: Medium
+context: >
+  WorkflowEngine and StartRunTraceContext exposed adapter?: 'temporal' | 'conductor' | 'local' even
+  though the trace context builder only emitted temporal or conductor and the canonical runtime
+  adapter set was already defined in coreDomainConstants.
+risk: >
+  Leaving the dead local adapter branch in internal engine types misleads implementers, encourages
+  copy-pasted union drift, and weakens the repository's model rigor around trace context semantics.
+mitigations:
+  - 'StartRunTraceContext now reuses TraceableAdapter from coreDomainConstants.'
+  - 'WorkflowEngine.startRun uses the shared StartRunTraceContext shape instead of an inline union.'
+  - 'WorkflowEngine.buildTraceContext resolves adapter through TRACEABLE_ADAPTERS, matching runtime
+    behavior.'
+  - 'Focused engine tests and verify:prepush remain part of the validation baseline for the slice.'
+review_after: 2026-06-01
+---

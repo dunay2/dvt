@@ -38,10 +38,12 @@ import type {
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import type { StartRunTraceContext } from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
+import { TRACEABLE_ADAPTERS } from './lifecycle/coreDomainConstants.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 import { WorkflowEngineCoreService } from './WorkflowEngineCoreService.js';
 
@@ -49,14 +51,7 @@ export interface IStartRunApplicationService {
   startRun(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
-    traceContext: {
-      tenantId: string;
-      projectId: string;
-      environmentId: string;
-      runId: string;
-      planId?: string;
-      adapter?: 'temporal' | 'conductor' | 'local';
-    }
+    traceContext: StartRunTraceContext
   ): Promise<EngineRunRef>;
 }
 
@@ -446,17 +441,9 @@ function buildTraceContext(
     provider?: EngineRunRef['provider'];
   },
   planId?: string
-): {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
-  planId?: string;
-  adapter?: 'temporal' | 'conductor' | 'local';
-} {
+): StartRunTraceContext {
   const raw = input.targetAdapter ?? input.provider;
-  const adapter: 'temporal' | 'conductor' | undefined =
-    raw === 'temporal' || raw === 'conductor' ? raw : undefined;
+  const adapter = TRACEABLE_ADAPTERS.find((value) => value === raw);
   return {
     tenantId: input.tenantId,
     projectId: input.projectId,

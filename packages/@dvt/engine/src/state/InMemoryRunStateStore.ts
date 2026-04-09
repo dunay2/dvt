@@ -68,9 +68,15 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
       providerRunId: runRef.providerRunId,
-      ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
-      ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
-      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
+      ...(runRef.providerNamespace !== undefined
+        ? { providerNamespace: runRef.providerNamespace }
+        : {}),
+      ...(runRef.providerTaskQueue !== undefined
+        ? { providerTaskQueue: runRef.providerTaskQueue }
+        : {}),
+      ...(runRef.providerConductorUrl !== undefined
+        ? { providerConductorUrl: runRef.providerConductorUrl }
+        : {}),
     });
   }
 

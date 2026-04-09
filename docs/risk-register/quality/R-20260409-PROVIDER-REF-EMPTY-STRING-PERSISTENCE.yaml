@@ -1,0 +1,26 @@
+---
+id: R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE
+title: Provider ref updates discard explicit empty optional values
+status: Open
+date: 2026-04-09
+owners:
+  - packages/@dvt/engine
+severity: Low
+probability: Medium
+context: >
+  In-memory provider-ref persistence and the start-run provider-ref builder used truthy checks for
+  optional provider fields. As a result, an explicit empty string was treated as absent and silently
+  removed from the persisted update.
+risk: >
+  Truthy-based provider-ref updates blur the difference between "field not supplied" and "field
+  supplied as empty", which weakens model rigor and creates least-surprise drift in engine test
+  stores and producer helpers.
+mitigations:
+  - 'InMemoryRunStateStore and InMemoryTxStore now persist optional provider fields whenever they
+    are not undefined.'
+  - 'StartRunEventFactory now preserves an explicit empty providerTaskQueue in run metadata and
+    provider ref updates.'
+  - 'Regression tests cover producer and store seams for empty-string provider-ref values.'
+  - 'verify:prepush remains required before marking the slice ready.'
+review_after: 2026-06-01
+---
