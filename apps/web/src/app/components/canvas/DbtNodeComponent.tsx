@@ -131,9 +131,6 @@ function buildCanonicalNode(
   const metadata =
     typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
 
-  if (data.type != null) {
-    metadata.dbtType ??= data.type;
-  }
   if (data.typeLabel != null) {
     metadata.typeLabel ??= data.typeLabel;
   }

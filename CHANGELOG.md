@@ -1,7 +1,163 @@
 # Changelog
 
-## [5.4.4](https://github.com/dunay2/dvt/compare/v5.4.3...v5.4.4) (2026-03-31)
+## [5.13.0](https://github.com/dunay2/dvt/compare/v5.12.0...v5.13.0) (2026-04-08)
 
+
+### Features
+
+* **engine:** Add dedicated recover-run command boundary ([#841](https://github.com/dunay2/dvt/issues/841)) ([6ca5def](https://github.com/dunay2/dvt/commit/6ca5def47c602bb2f1dcafddbf5b96927bfec48a))
+* **web:** Enforce TF-E1-A node composition constraints ([#848](https://github.com/dunay2/dvt/issues/848)) ([d41badd](https://github.com/dunay2/dvt/commit/d41badd604ed1e7d3efa742514bbbb42f8a61a7d))
+
+
+### Bug Fixes
+
+* **adapters:** Snapshot step-activity registry for deterministic dispatch ([#846](https://github.com/dunay2/dvt/issues/846)) ([6922b49](https://github.com/dunay2/dvt/commit/6922b49fb36a1d171744a27748263eb9c33e5b0e))
+* **planner:** Use binary manifest node ordering ([#849](https://github.com/dunay2/dvt/issues/849)) ([216534e](https://github.com/dunay2/dvt/commit/216534e4992e3d741be72f09e31fb7786f6e2a1b))
+* **web:** Bind persisted preview hash to planRef and add Cypress coverage ([#852](https://github.com/dunay2/dvt/issues/852)) ([a7a7510](https://github.com/dunay2/dvt/commit/a7a7510d3d2ca843f148ddc195f4b21df4d0ccad))
+* **web:** Expose snapshot hash in run workspace view ([#851](https://github.com/dunay2/dvt/issues/851)) ([40835a1](https://github.com/dunay2/dvt/commit/40835a13487fe9afde57850619c6149227c2878f))
+
+## [5.12.0](https://github.com/dunay2/dvt/compare/v5.11.0...v5.12.0) (2026-04-08)
+
+
+### Features
+
+* **engine:** Separate retry-run recovery from step-level signals ([#840](https://github.com/dunay2/dvt/issues/840)) ([87bc79a](https://github.com/dunay2/dvt/commit/87bc79af83f339314b2aea82947e1a2eb72c8333))
+* **web:** Advance TF-E1 end-to-end run flow ([#845](https://github.com/dunay2/dvt/issues/845)) ([bb71527](https://github.com/dunay2/dvt/commit/bb715276f345c5975c837b04a1a8bf8eb72f7ea6))
+* **web:** Harden transformation flow and align F-23 docs ([#839](https://github.com/dunay2/dvt/issues/839)) ([72a2035](https://github.com/dunay2/dvt/commit/72a203594b5a3bee943fe544c0449d11aca6aa05))
+* **web:** Surface snapshot hash in run workspace ([#844](https://github.com/dunay2/dvt/issues/844)) ([71d79ea](https://github.com/dunay2/dvt/commit/71d79ea9a88d8af04c9231bdfa9e3a10c9a867a5))
+
+
+### Bug Fixes
+
+* **contracts:** Harden execution plan and signal contract boundaries ([#826](https://github.com/dunay2/dvt/issues/826)) ([a7a116e](https://github.com/dunay2/dvt/commit/a7a116eb31b70e0cc795e76958fe220a8b33da21))
+* **planner:** Sort manifest node keys for deterministic graph derivation ([#843](https://github.com/dunay2/dvt/issues/843)) ([02f6ce3](https://github.com/dunay2/dvt/commit/02f6ce3933b667d1cf0113f04feb8de77082cb42))
+* **web:** Harden frontend runtime seam boundaries ([#831](https://github.com/dunay2/dvt/issues/831)) ([fcec05c](https://github.com/dunay2/dvt/commit/fcec05ce5442416d28c3149eb031a23871179e7c))
+* **web:** Harden Root provider ownership guard ([#836](https://github.com/dunay2/dvt/issues/836)) ([0df3dda](https://github.com/dunay2/dvt/commit/0df3dda3a01961bf0bba2497aa707905bfe3d029))
+* **web:** Remove duplicate mock workspace paths ([#833](https://github.com/dunay2/dvt/issues/833)) ([a458af7](https://github.com/dunay2/dvt/commit/a458af759925c76d1dab9a25fc7399b2d80f6bb3))
+* **web:** Use provider overrides in canvas controller tests ([#838](https://github.com/dunay2/dvt/issues/838)) ([91ef77a](https://github.com/dunay2/dvt/commit/91ef77a000e3d919fb592dde3cabd0bd7c1904b9))
+
+## [5.11.0](https://github.com/dunay2/dvt/compare/v5.10.0...v5.11.0) (2026-04-07)
+
+
+### Features
+
+* **engine:** Centralize plan integrity verification at engine entry ([#819](https://github.com/dunay2/dvt/issues/819)) ([1aab09d](https://github.com/dunay2/dvt/commit/1aab09d6ecaf50cc1a48d60a78192bdee36f995e))
+* **planner:** Generalize runtime boundaries and planner hardening ([#813](https://github.com/dunay2/dvt/issues/813)) ([a9b5043](https://github.com/dunay2/dvt/commit/a9b50435fc6271405a17ecec352fcb0fa0e33a87))
+* **planner:** Generalize runtime boundaries and planner hardening ([#814](https://github.com/dunay2/dvt/issues/814)) ([f555d2a](https://github.com/dunay2/dvt/commit/f555d2ae4591cbf1cceb6bfcc4c0776571b436fc))
+* **web:** Add live run console terminal ([#811](https://github.com/dunay2/dvt/issues/811)) ([c51dbe2](https://github.com/dunay2/dvt/commit/c51dbe2fc5bc78790710dbac36462ee2597fbbb5))
+* **web:** Add workspace code explorer view ([#812](https://github.com/dunay2/dvt/issues/812)) ([37ddc68](https://github.com/dunay2/dvt/commit/37ddc68a953f4414079a913576c9dfba30982852))
+* **web:** Embed Monaco review surfaces and align runtime capabilities ([#809](https://github.com/dunay2/dvt/issues/809)) ([d976226](https://github.com/dunay2/dvt/commit/d9762261cd7e8e98a51747c19933a5ea1804a4b1))
+* **web:** Harden transformation flow and align F-23 docs ([#817](https://github.com/dunay2/dvt/issues/817)) ([dcd46af](https://github.com/dunay2/dvt/commit/dcd46af99d7983d15f3e0a9f77bc729b4ad55638))
+
+
+### Bug Fixes
+
+* **api:** Harden plan preview manifest errors and integration QA evidence ([#822](https://github.com/dunay2/dvt/issues/822)) ([1ba10f4](https://github.com/dunay2/dvt/commit/1ba10f4591f48cbc6fa54947813836a55b8b03a4))
+* **engine:** Preserve step-kind registry and plan fingerprint wiring ([#815](https://github.com/dunay2/dvt/issues/815)) ([a054d3a](https://github.com/dunay2/dvt/commit/a054d3a5a4a35c93e69220d2c49c978864b23ff3))
+* **engine:** Reinstate plan hash validation and guard Temporal start payloads ([#820](https://github.com/dunay2/dvt/issues/820)) ([6015290](https://github.com/dunay2/dvt/commit/60152907d3d44169fc0f25eb49e8fcbf7c963355))
+* **web:** Stabilize Cypress runtime contract tests in Docker ([#825](https://github.com/dunay2/dvt/issues/825)) ([31acb84](https://github.com/dunay2/dvt/commit/31acb845b9955d81883ac114cae9f46601ac4e7a))
+* **web:** Stabilize web tests and fix kafka proposal references ([#816](https://github.com/dunay2/dvt/issues/816)) ([9f5778b](https://github.com/dunay2/dvt/commit/9f5778bf3f6030a5f0ebfef495f610b4f5dbe66b))
+
+## [5.10.0](https://github.com/dunay2/dvt/compare/v5.9.0...v5.10.0) (2026-04-05)
+
+
+### Features
+
+* **ci:** Add AR-C2 evidence collector MVP command ([#789](https://github.com/dunay2/dvt/issues/789)) ([f6ae619](https://github.com/dunay2/dvt/commit/f6ae619f90afc7bc91564609ce4c86d6630cb47c))
+* **planner:** Add stepTypeConfig validation for plan verifier ([#795](https://github.com/dunay2/dvt/issues/795)) ([3d0cd66](https://github.com/dunay2/dvt/commit/3d0cd66f62c455607476bd4d710692336c3d722b))
+* **planner:** Complete MW-A2 policy-first QA closure ([#800](https://github.com/dunay2/dvt/issues/800)) ([c081750](https://github.com/dunay2/dvt/commit/c0817503a1e41ab90945c3aa5c1562f3a6cba06e))
+
+
+### Bug Fixes
+
+* **adapters:** Align pending cancel flow and plan-store canonical persistence ([#802](https://github.com/dunay2/dvt/issues/802)) ([9cea707](https://github.com/dunay2/dvt/commit/9cea707841372fd989987e8f8b937cdb98f3cf81))
+* **adapters:** Close S19-F1-C snapshot queue closure evidence ([#790](https://github.com/dunay2/dvt/issues/790)) ([358c2c6](https://github.com/dunay2/dvt/commit/358c2c65502c219e9f24f36aadd1d3fa5fcc958f))
+* **adapters:** Harden outbox worker startup abort handling and add manuals ([#794](https://github.com/dunay2/dvt/issues/794)) ([e4d1848](https://github.com/dunay2/dvt/commit/e4d184888cd6d9d72d6ba72375781acd00f792ce))
+* **api:** Enforce explicit admin RBAC for maintenance routes ([#792](https://github.com/dunay2/dvt/issues/792)) ([92ce493](https://github.com/dunay2/dvt/commit/92ce49389bb0f35c38dad1620b96f16d17f5d12a))
+* **api:** Guarantee canonical planRef payload for plan preview and import ([#801](https://github.com/dunay2/dvt/issues/801)) ([b32e25e](https://github.com/dunay2/dvt/commit/b32e25e098e3236baf9eef0ff4b291ea6e7c1751))
+* **contracts:** Version WorkflowSnapshot and rebuild stale snapshots ([#798](https://github.com/dunay2/dvt/issues/798)) ([2c41871](https://github.com/dunay2/dvt/commit/2c41871a86e490f8eecb1dbd4fff651f738b50ce))
+* **web:** Ensure app services provider wraps router globally ([#797](https://github.com/dunay2/dvt/issues/797)) ([0589750](https://github.com/dunay2/dvt/commit/0589750e03ae94e9047a435856f56e11218c86dd))
+
+## [5.9.0](https://github.com/dunay2/dvt/compare/v5.8.0...v5.9.0) (2026-04-04)
+
+
+### Features
+
+* **adapters:** Alinea guards de transición y shape-checking en run-domain y adapter-postgres ([#779](https://github.com/dunay2/dvt/issues/779)) ([7c7986e](https://github.com/dunay2/dvt/commit/7c7986ee6e1537f3a0fcf5561e5db0729b163c35))
+* **api:** Emit lane C SLA telemetry and align canonical manuals ([#772](https://github.com/dunay2/dvt/issues/772)) ([d952763](https://github.com/dunay2/dvt/commit/d9527637cc4a872bd31a214278395a7e3337c4c3))
+* **engine:** Gobernanza y boundary público para runExecutionContextRef y StepKind ([#781](https://github.com/dunay2/dvt/issues/781)) ([2ecd044](https://github.com/dunay2/dvt/commit/2ecd044b369aa1357f58a48413022254fb5d614d))
+* **web:** Refactor canvas controller: modularización, hardening y pruebas negativas ([#780](https://github.com/dunay2/dvt/issues/780)) ([58acb0d](https://github.com/dunay2/dvt/commit/58acb0d20b04b0920f40cd36535a01e20c0e8c9c))
+
+
+### Bug Fixes
+
+* **web:** Close F-04 QA findings and publish manuals ([#785](https://github.com/dunay2/dvt/issues/785)) ([c94a437](https://github.com/dunay2/dvt/commit/c94a437a7dc8fff354da9f12d112513b65e061af))
+* **web:** Scope DBT run queries and mark snapshot-only focused run ([#774](https://github.com/dunay2/dvt/issues/774)) ([c3659a7](https://github.com/dunay2/dvt/commit/c3659a74d16b5f7ad9f025d729280b05d730f4eb))
+
+## [5.8.0](https://github.com/dunay2/dvt/compare/v5.7.0...v5.8.0) (2026-04-04)
+
+
+### Features
+
+* **adapters:** Evolve Postgres plan store to three-part compatibility model ([#747](https://github.com/dunay2/dvt/issues/747)) ([efebb75](https://github.com/dunay2/dvt/commit/efebb75406b9efe6cc2baa324f3be1cd51f94f41))
+* **contracts:** Adopt structured contract errors and SRP plan ([#749](https://github.com/dunay2/dvt/issues/749)) ([51b0918](https://github.com/dunay2/dvt/commit/51b091896cbb0b4f1e95b729b37fe0d7e32d4fab))
+* **engine:** Harden run execution context boundary and publish engine derivation docs ([#763](https://github.com/dunay2/dvt/issues/763)) ([f36f134](https://github.com/dunay2/dvt/commit/f36f13480d077f67a83bd2b83a758c9155dbfe74))
+* **web:** Harden F-04 data-source service boundary and track residual risks ([#768](https://github.com/dunay2/dvt/issues/768)) ([bc7ff66](https://github.com/dunay2/dvt/commit/bc7ff665826607d228d73cb44e5d52d5cf456a4b))
+
+
+### Bug Fixes
+
+* **api:** Enforce admin RBAC on rebuild snapshot route ([#762](https://github.com/dunay2/dvt/issues/762)) ([bf7bc08](https://github.com/dunay2/dvt/commit/bf7bc08de1c89a037af387484731d97665986c53))
+* **api:** Harden admin route contract coverage and task decomposition ([#764](https://github.com/dunay2/dvt/issues/764)) ([5250fcb](https://github.com/dunay2/dvt/commit/5250fcb660cc364942aff1a1570fc3e3834b1fcb))
+* **api:** Harden admin route test typing and schema contract coverage ([#759](https://github.com/dunay2/dvt/issues/759)) ([1659f12](https://github.com/dunay2/dvt/commit/1659f12348ef1ac686694f8d1461e7773a0f5a28))
+* **deps:** Remove deprecated baseUrl from tsconfig chain ([#760](https://github.com/dunay2/dvt/issues/760)) ([98b7a25](https://github.com/dunay2/dvt/commit/98b7a25457f44bd7f3edf02b5d506392cb6ee5db))
+
+## [5.7.0](https://github.com/dunay2/dvt/compare/v5.6.0...v5.7.0) (2026-04-03)
+
+
+### Features
+
+* **adapters:** Add artifacts-owned S08 plan-store read-write ports ([#745](https://github.com/dunay2/dvt/issues/745)) ([6ae354a](https://github.com/dunay2/dvt/commit/6ae354ad5a91c7e1c2129564bec05c08d4b6c877))
+
+## [5.6.0](https://github.com/dunay2/dvt/compare/v5.5.0...v5.6.0) (2026-04-02)
+
+
+### Features
+
+* **ci:** Add shared preflight and PR log triage ([#729](https://github.com/dunay2/dvt/issues/729)) ([bdc4cd4](https://github.com/dunay2/dvt/commit/bdc4cd4a49d9e0452179e2e613ff2d348f3d7069))
+* **web:** Add backend health banner and retry flow ([#739](https://github.com/dunay2/dvt/issues/739)) ([e3488c8](https://github.com/dunay2/dvt/commit/e3488c834ba8d14c9b698328ccd84718a7180501))
+* **web:** Add shell health banner with retry countdown ([#740](https://github.com/dunay2/dvt/issues/740)) ([63688dd](https://github.com/dunay2/dvt/commit/63688ddde28823bd1f66ff68ca428dac8f802ebb))
+
+
+### Bug Fixes
+
+* **adapters:** Harden snapshot retry errors and fallback polling cadence ([#736](https://github.com/dunay2/dvt/issues/736)) ([cd84eef](https://github.com/dunay2/dvt/commit/cd84eefcddf4215ab452f6d7916fc92b4a4ec39c))
+* **contracts:** Harden S08 plan-store contract boundaries ([#741](https://github.com/dunay2/dvt/issues/741)) ([582312d](https://github.com/dunay2/dvt/commit/582312d23c373096870be944a191fb1561e17687))
+* **docs:** Fix docs sync drift at source ([#733](https://github.com/dunay2/dvt/issues/733)) ([4734154](https://github.com/dunay2/dvt/commit/47341545560a41f5af1478ac799e90e81617e8ac))
+* **engine:** Harden run-event envelope payloadVersion gating ([#734](https://github.com/dunay2/dvt/issues/734)) ([3e660d5](https://github.com/dunay2/dvt/commit/3e660d52186660a531dd316f4042aeffa807f3e3))
+
+## [5.5.0](https://github.com/dunay2/dvt/compare/v5.4.6...v5.5.0) (2026-04-01)
+
+
+### Features
+
+* **api:** Add startRun target-adapter registry wiring ([#727](https://github.com/dunay2/dvt/issues/727)) ([c39574b](https://github.com/dunay2/dvt/commit/c39574b7df1ed9b46c0eff9cf92feb0e32da6a0b))
+
+## [5.4.6](https://github.com/dunay2/dvt/compare/v5.4.5...v5.4.6) (2026-04-01)
+
+### Bug Fixes
+
+* **api:** Restore manifestRef as production planner path ([#719](https://github.com/dunay2/dvt/issues/719)) ([044a80c](https://github.com/dunay2/dvt/commit/044a80c94649c8d6b5c3538bbffe0fa80d3de34e))
+* **engine:** Downgrade ESLint to v9 ([#720](https://github.com/dunay2/dvt/issues/720)) ([2cd2ddd](https://github.com/dunay2/dvt/commit/2cd2ddd3536a1df0f149637809ea493de0c79ad9))
+
+## [5.4.5](https://github.com/dunay2/dvt/compare/v5.4.4...v5.4.5) (2026-04-01)
+
+### Bug Fixes
+
+* **adapters:** Remove stringly run metadata errors ([#712](https://github.com/dunay2/dvt/issues/712)) ([91341f1](https://github.com/dunay2/dvt/commit/91341f130d01238a48769cd052ed9608b4a2098b))
+* **temporal:** Remove projection dependencies from TemporalAdapter getRunStatus ([#718](https://github.com/dunay2/dvt/issues/718)) ([e479f2a](https://github.com/dunay2/dvt/commit/e479f2a186c2ad934d9ce3f4c88b1e6ca009ad84))
+
+## [5.4.4](https://github.com/dunay2/dvt/compare/v5.4.3...v5.4.4) (2026-03-31)
 
 ### Bug Fixes
 
@@ -9,13 +165,11 @@
 
 ## [5.4.3](https://github.com/dunay2/dvt/compare/v5.4.2...v5.4.3) (2026-03-31)
 
-
 ### Bug Fixes
 
 * **api:** Delay staleness telemetry until status lookup succeeds ([#702](https://github.com/dunay2/dvt/issues/702)) ([9ade772](https://github.com/dunay2/dvt/commit/9ade77247ce0ad17ab6260cd4108c3928ab46568))
 
 ## [5.4.2](https://github.com/dunay2/dvt/compare/v5.4.1...v5.4.2) (2026-03-31)
-
 
 ### Bug Fixes
 
@@ -23,7 +177,6 @@
 * **api:** Generalize run-command parser errors and reinforce Lane C operations ([#694](https://github.com/dunay2/dvt/issues/694)) ([c44c43f](https://github.com/dunay2/dvt/commit/c44c43fabab2af0d7d6f31e48a09809e6264e3ac))
 
 ## [5.4.1](https://github.com/dunay2/dvt/compare/v5.4.0...v5.4.1) (2026-03-30)
-
 
 ### Bug Fixes
 
@@ -33,18 +186,15 @@
 
 ## [5.4.0](https://github.com/dunay2/dvt/compare/v5.3.0...v5.4.0) (2026-03-30)
 
-
 ### Features
 
 * **api:** Expose snapshot staleness in run status route ([#671](https://github.com/dunay2/dvt/issues/671)) ([8b16ee4](https://github.com/dunay2/dvt/commit/8b16ee481771ca8b5726c21bb4e18acacf4932cc))
 
 ## [5.3.0](https://github.com/dunay2/dvt/compare/v5.2.0...v5.3.0) (2026-03-30)
 
-
 ### Features
 
 * **planner:** Add manifestRef cache in PlannerFacade ([#681](https://github.com/dunay2/dvt/issues/681)) ([8c32c89](https://github.com/dunay2/dvt/commit/8c32c89d661dab1b929900367466f34e8136e414))
-
 
 ### Bug Fixes
 
@@ -53,13 +203,11 @@
 
 ## [5.2.0](https://github.com/dunay2/dvt/compare/v5.1.2...v5.2.0) (2026-03-30)
 
-
 ### Features
 
 * **adapters:** Add lineage DLQ alerting and automatic replay controls ([#672](https://github.com/dunay2/dvt/issues/672)) ([451a60f](https://github.com/dunay2/dvt/commit/451a60f6692c07095798b45ceab6af1556644bac))
 
 ## [5.1.2](https://github.com/dunay2/dvt/compare/v5.1.1...v5.1.2) (2026-03-30)
-
 
 ### Bug Fixes
 
@@ -68,18 +216,15 @@
 
 ## [5.1.1](https://github.com/dunay2/dvt/compare/v5.1.0...v5.1.1) (2026-03-29)
 
-
 ### Bug Fixes
 
 * **state-store:** Protect rollback disposal and retry timestamp idempotency ([#662](https://github.com/dunay2/dvt/issues/662)) ([ad9a030](https://github.com/dunay2/dvt/commit/ad9a03051f2ab668d5dd2374454105178452f28f))
 
 ## [5.1.0](https://github.com/dunay2/dvt/compare/v5.0.2...v5.1.0) (2026-03-29)
 
-
 ### Features
 
 * **web:** Set raven loading screen and favicon ([#657](https://github.com/dunay2/dvt/issues/657)) ([81bf074](https://github.com/dunay2/dvt/commit/81bf074d47392bd9db15d17169f67de7202fb332))
-
 
 ### Bug Fixes
 
@@ -87,20 +232,17 @@
 
 ## [5.0.2](https://github.com/dunay2/dvt/compare/v5.0.1...v5.0.2) (2026-03-28)
 
-
 ### Bug Fixes
 
 * **api:** Align startRun facade result contract and HTTP mapping ([#650](https://github.com/dunay2/dvt/issues/650)) ([5ce6f28](https://github.com/dunay2/dvt/commit/5ce6f2814d3e9ccfc0a71535879008daa0027567))
 
 ## [5.0.1](https://github.com/dunay2/dvt/compare/v5.0.0...v5.0.1) (2026-03-28)
 
-
 ### Bug Fixes
 
 * **adapters:** Harden lineage stale-claim recovery and redaction coverage ([#647](https://github.com/dunay2/dvt/issues/647)) ([0323b54](https://github.com/dunay2/dvt/commit/0323b54af9ddc97900c236b71dffb3db486095a6))
 
 ## [5.0.0](https://github.com/dunay2/dvt/compare/v4.14.0...v5.0.0) (2026-03-28)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -178,7 +320,6 @@
 * TypeScript project structure with adapter-agnostic contracts ([566f707](https://github.com/dunay2/dvt/commit/566f70746e52f2f485fa5a82966a007843da2eab)), closes [#2](https://github.com/dunay2/dvt/issues/2)
 * TypeScript project structure with adapter-agnostic contracts ([#55](https://github.com/dunay2/dvt/issues/55)) ([566f707](https://github.com/dunay2/dvt/commit/566f70746e52f2f485fa5a82966a007843da2eab))
 * U2 temporal lookup run ref ([#352](https://github.com/dunay2/dvt/issues/352)) ([ba0df13](https://github.com/dunay2/dvt/commit/ba0df13b5ae792177ce7417c66773ff998b0df97))
-
 
 ### Bug Fixes
 
@@ -252,13 +393,11 @@
 
 ## [4.14.0](https://github.com/dunay2/dvt/compare/v4.13.0...v4.14.0) (2026-03-28)
 
-
 ### Features
 
 * **api:** Add explicit cancel route and shared command execution ([#640](https://github.com/dunay2/dvt/issues/640)) ([f782bd4](https://github.com/dunay2/dvt/commit/f782bd4af27591fe35aa3d222c87223f31d7c731))
 
 ## [4.13.0](https://github.com/dunay2/dvt/compare/v4.12.3...v4.13.0) (2026-03-27)
-
 
 ### Features
 
@@ -266,13 +405,11 @@
 
 ## [4.12.3](https://github.com/dunay2/dvt/compare/v4.12.2...v4.12.3) (2026-03-25)
 
-
 ### Bug Fixes
 
 * **state-store:** Build dependency graph before tests ([#618](https://github.com/dunay2/dvt/issues/618)) ([04e3796](https://github.com/dunay2/dvt/commit/04e3796bcf39607289dc15d8249dbc8e5d88045d))
 
 ## [4.12.2](https://github.com/dunay2/dvt/compare/v4.12.1...v4.12.2) (2026-03-25)
-
 
 ### Bug Fixes
 
@@ -281,20 +418,17 @@
 
 ## [4.12.1](https://github.com/dunay2/dvt/compare/v4.12.0...v4.12.1) (2026-03-25)
 
-
 ### Bug Fixes
 
 * **docs:** Restore RC-F1 note and PR [#605](https://github.com/dunay2/dvt/issues/605) link lost in cherry-pick ([#608](https://github.com/dunay2/dvt/issues/608)) ([0585bb6](https://github.com/dunay2/dvt/commit/0585bb6979eec822fee00d4ef398d284a0e31b4e))
 
 ## [4.12.0](https://github.com/dunay2/dvt/compare/v4.11.0...v4.12.0) (2026-03-24)
 
-
 ### Features
 
 * **state-store:** S12 — Remove deprecated write paths ([#597](https://github.com/dunay2/dvt/issues/597)) ([19181b6](https://github.com/dunay2/dvt/commit/19181b60027e51e9374a9e4f60461954592735a5))
 
 ## [4.11.0](https://github.com/dunay2/dvt/compare/v4.10.0...v4.11.0) (2026-03-24)
-
 
 ### Features
 
@@ -303,18 +437,15 @@
 
 ## [4.10.0](https://github.com/dunay2/dvt/compare/v4.9.3...v4.10.0) (2026-03-24)
 
-
 ### Features
 
 * **docs,adapters:** Consolidate remaining value slices ([#590](https://github.com/dunay2/dvt/issues/590)) ([ea7bbc0](https://github.com/dunay2/dvt/commit/ea7bbc0bf5b9a614c63f85b1ecc26ae7687f1263))
-
 
 ### Bug Fixes
 
 * **adapters:** Harden archive SQL and validation ([#587](https://github.com/dunay2/dvt/issues/587)) ([b59c29c](https://github.com/dunay2/dvt/commit/b59c29cca737088977fa2b02f790988b31b67ffe))
 
 ## [4.9.3](https://github.com/dunay2/dvt/compare/v4.9.2...v4.9.3) (2026-03-23)
-
 
 ### Bug Fixes
 
@@ -323,13 +454,11 @@
 
 ## [4.9.2](https://github.com/dunay2/dvt/compare/v4.9.1...v4.9.2) (2026-03-23)
 
-
 ### Bug Fixes
 
 * **adapters:** Tighten claim timeout and docs guards ([#576](https://github.com/dunay2/dvt/issues/576)) ([30d3907](https://github.com/dunay2/dvt/commit/30d39078030718b7bab7c8cfd61fb2e52af1c558))
 
 ## [4.9.1](https://github.com/dunay2/dvt/compare/v4.9.0...v4.9.1) (2026-03-23)
-
 
 ### Bug Fixes
 
@@ -337,13 +466,11 @@
 
 ## [4.9.0](https://github.com/dunay2/dvt/compare/v4.8.1...v4.9.0) (2026-03-23)
 
-
 ### Features
 
 * **api:** Harden start-run parser edges ([#570](https://github.com/dunay2/dvt/issues/570)) ([7b917fb](https://github.com/dunay2/dvt/commit/7b917fba4141e029fe516c37d810ed35028f7bd8))
 
 ## [4.8.1](https://github.com/dunay2/dvt/compare/v4.8.0...v4.8.1) (2026-03-23)
-
 
 ### Bug Fixes
 
@@ -351,13 +478,11 @@
 
 ## [4.8.0](https://github.com/dunay2/dvt/compare/v4.7.2...v4.8.0) (2026-03-23)
 
-
 ### Features
 
 * **api:** Add reconciler health visibility ([#564](https://github.com/dunay2/dvt/issues/564)) ([4a96f94](https://github.com/dunay2/dvt/commit/4a96f94c8e1b4bc50b180e76ce05586cd81afb56))
 
 ## [4.7.2](https://github.com/dunay2/dvt/compare/v4.7.1...v4.7.2) (2026-03-23)
-
 
 ### Bug Fixes
 
@@ -366,14 +491,12 @@
 
 ## [4.7.1](https://github.com/dunay2/dvt/compare/v4.7.0...v4.7.1) (2026-03-22)
 
-
 ### Bug Fixes
 
 * **engine:** Emit markResolved warning when metric sink fails ([#553](https://github.com/dunay2/dvt/issues/553)) ([e509b46](https://github.com/dunay2/dvt/commit/e509b462be27c2ecfc58ad4eecadadca55db2939))
 * **engine:** Harden markResolved observability and close RC-A5 QA findings ([#549](https://github.com/dunay2/dvt/issues/549)) ([28d8922](https://github.com/dunay2/dvt/commit/28d8922efe2edf114ad4f41cf428c4d82fc92309))
 
 ## [4.7.0](https://github.com/dunay2/dvt/compare/v4.6.0...v4.7.0) (2026-03-21)
-
 
 ### Features
 
@@ -382,12 +505,10 @@
 
 ## [4.6.0](https://github.com/dunay2/dvt/compare/v4.5.0...v4.6.0) (2026-03-21)
 
-
 ### Features
 
 * **state-store:** Archive export, verifier, Postgres adapter, and test coverage ([#535](https://github.com/dunay2/dvt/issues/535)) ([bac3b4c](https://github.com/dunay2/dvt/commit/bac3b4c9bbc79c035284045b75f5ab782c8510cb))
 * **state-store:** G5-PR2 — Deferred deletion and restore ([#536](https://github.com/dunay2/dvt/issues/536)) ([91fa3a0](https://github.com/dunay2/dvt/commit/91fa3a0eb21e41fe2f7d5691fde62e2490928f2c))
-
 
 ### Bug Fixes
 
@@ -395,25 +516,21 @@
 
 ## [4.5.0](https://github.com/dunay2/dvt/compare/v4.4.0...v4.5.0) (2026-03-21)
 
-
 ### Features
 
 * **api:** Add planner-backed stored plan start flow ([#533](https://github.com/dunay2/dvt/issues/533)) ([f960284](https://github.com/dunay2/dvt/commit/f9602845365aa0e33012bfecdfcf15b7fb12b825))
 
 ## [4.4.0](https://github.com/dunay2/dvt/compare/v4.3.0...v4.4.0) (2026-03-21)
 
-
 ### Features
 
 * **api:** Add backpressure resilience envelope ([#532](https://github.com/dunay2/dvt/issues/532)) ([f0b1577](https://github.com/dunay2/dvt/commit/f0b157705450f9cb7593edc86314da6774ed46be))
-
 
 ### Bug Fixes
 
 * **contracts:** Harden planner boundary validation ([#530](https://github.com/dunay2/dvt/issues/530)) ([a6f8e22](https://github.com/dunay2/dvt/commit/a6f8e2240f6a104e501e8990adddf9f819f0be8c))
 
 ## [4.3.0](https://github.com/dunay2/dvt/compare/v4.2.2...v4.3.0) (2026-03-20)
-
 
 ### Features
 
@@ -425,20 +542,17 @@
 * **contracts:** Govern execution plan versioning ([#518](https://github.com/dunay2/dvt/issues/518)) ([90f445c](https://github.com/dunay2/dvt/commit/90f445c45f52c712e2e9fe8715ff4df4a8424889))
 * **state-store:** Add archive artifact helpers ([#523](https://github.com/dunay2/dvt/issues/523)) ([065ac4d](https://github.com/dunay2/dvt/commit/065ac4d090d71ba2e07b652a3a61b1d9b1254fff))
 
-
 ### Bug Fixes
 
 * **state-store:** Harden archive lifecycle helper validation ([#521](https://github.com/dunay2/dvt/issues/521)) ([1d5fa74](https://github.com/dunay2/dvt/commit/1d5fa746bf04f2585e1a6317273661c77e69060e))
 
 ## [4.2.2](https://github.com/dunay2/dvt/compare/v4.2.1...v4.2.2) (2026-03-17)
 
-
 ### Bug Fixes
 
 * **deps:** Make tslib explicit runtime helper ([#500](https://github.com/dunay2/dvt/issues/500)) ([a7e202a](https://github.com/dunay2/dvt/commit/a7e202a2ce193d9988876d383e6a43c6a49a3f5e))
 
 ## [4.2.1](https://github.com/dunay2/dvt/compare/v4.2.0...v4.2.1) (2026-03-16)
-
 
 ### Bug Fixes
 
@@ -447,13 +561,11 @@
 
 ## [4.2.0](https://github.com/dunay2/dvt/compare/v4.1.2...v4.2.0) (2026-03-16)
 
-
 ### Features
 
 * Add G7 projector worker runtime ([#487](https://github.com/dunay2/dvt/issues/487)) ([8c6f31e](https://github.com/dunay2/dvt/commit/8c6f31e276dc08f242faa3193a158f9cd4863df0))
 
 ## [4.1.2](https://github.com/dunay2/dvt/compare/v4.1.1...v4.1.2) (2026-03-16)
-
 
 ### Bug Fixes
 
@@ -462,13 +574,11 @@
 
 ## [4.1.1](https://github.com/dunay2/dvt/compare/v4.1.0...v4.1.1) (2026-03-16)
 
-
 ### Bug Fixes
 
 * **api:** Map missing startRun adapter to 422 ([#480](https://github.com/dunay2/dvt/issues/480)) ([470d994](https://github.com/dunay2/dvt/commit/470d99468d117f7b9de335325cd6eea3f3a09c11))
 
 ## [4.1.0](https://github.com/dunay2/dvt/compare/v4.0.1...v4.1.0) (2026-03-15)
-
 
 ### Features
 
@@ -476,13 +586,11 @@
 
 ## [4.0.1](https://github.com/dunay2/dvt/compare/v4.0.0...v4.0.1) (2026-03-15)
 
-
 ### Bug Fixes
 
 * **state-store:** Harden intent store conflict semantics ([#475](https://github.com/dunay2/dvt/issues/475)) ([a2f2883](https://github.com/dunay2/dvt/commit/a2f2883b0c7528620b0871262c837b184c1be5b7))
 
 ## [4.0.0](https://github.com/dunay2/dvt/compare/v3.5.1...v4.0.0) (2026-03-15)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -544,7 +652,6 @@
 * TypeScript project structure with adapter-agnostic contracts ([#55](https://github.com/dunay2/dvt/issues/55)) ([566f707](https://github.com/dunay2/dvt/commit/566f70746e52f2f485fa5a82966a007843da2eab))
 * U2 temporal lookup run ref ([#352](https://github.com/dunay2/dvt/issues/352)) ([ba0df13](https://github.com/dunay2/dvt/commit/ba0df13b5ae792177ce7417c66773ff998b0df97))
 
-
 ### Bug Fixes
 
 * **adapter-postgres:** quote stale snapshot schema ([#468](https://github.com/dunay2/dvt/issues/468)) ([5d7c1d0](https://github.com/dunay2/dvt/commit/5d7c1d044d5f96c3c503e8414d08e46a1d4c0524))
@@ -600,9 +707,7 @@
 * update pnpm version to 9 in all workflow files ([04de73b](https://github.com/dunay2/dvt/commit/04de73bf3ac4b4571c14ae9916080b58845709eb))
 * use relative paths in JSDoc references ([e5c2996](https://github.com/dunay2/dvt/commit/e5c29960d05716ce5261782122d8e3ecc00d3118))
 * **validation:** make formatZodPath robust for PropertyKey[] paths ([54bfeda](https://github.com/dunay2/dvt/commit/54bfeda334cc1f1f2f0250d1acc47ffbc11938d2))
-
 ## [3.5.1](https://github.com/dunay2/dvt/compare/v3.5.0...v3.5.1) (2026-03-15)
-
 
 ### Bug Fixes
 
@@ -610,13 +715,11 @@
 
 ## [3.5.0](https://github.com/dunay2/dvt/compare/v3.4.1...v3.5.0) (2026-03-15)
 
-
 ### Features
 
 * **engine:** Formalize snapshot recovery and startup hardening ([#459](https://github.com/dunay2/dvt/issues/459)) ([4a88b41](https://github.com/dunay2/dvt/commit/4a88b4155e0f789e0084c872330cba55f551b381))
 
 ## [3.4.1](https://github.com/dunay2/dvt/compare/v3.4.0...v3.4.1) (2026-03-14)
-
 
 ### Bug Fixes
 
@@ -624,20 +727,17 @@
 
 ## [3.4.0](https://github.com/dunay2/dvt/compare/v3.3.2...v3.4.0) (2026-03-14)
 
-
 ### Features
 
 * **adapters:** Finalize outbox worker extraction and ownership hardening ([#449](https://github.com/dunay2/dvt/issues/449)) ([88c35aa](https://github.com/dunay2/dvt/commit/88c35aa929f5ce99f4ca294349e862696683d530))
 
 ## [3.3.2](https://github.com/dunay2/dvt/compare/v3.3.1...v3.3.2) (2026-03-10)
 
-
 ### Bug Fixes
 
 * **engine:** Harden outbox ordering and correctness ([#444](https://github.com/dunay2/dvt/issues/444)) ([8b79a98](https://github.com/dunay2/dvt/commit/8b79a980775329a3f070dda485b30496981fa7f3))
 
 ## [3.3.1](https://github.com/dunay2/dvt/compare/v3.3.0...v3.3.1) (2026-03-10)
-
 
 ### Bug Fixes
 
@@ -646,13 +746,11 @@
 
 ## [3.3.0](https://github.com/dunay2/dvt/compare/v3.2.0...v3.3.0) (2026-03-09)
 
-
 ### Features
 
 * **g5:** Harden standalone outbox worker service ([#421](https://github.com/dunay2/dvt/issues/421)) ([edd4c92](https://github.com/dunay2/dvt/commit/edd4c92e03b6087dbea57f8f55b725169338d7c0))
 
 ## [3.2.0](https://github.com/dunay2/dvt/compare/v3.1.0...v3.2.0) (2026-03-08)
-
 
 ### Features
 
@@ -660,20 +758,17 @@
 
 ## [3.1.0](https://github.com/dunay2/dvt/compare/v3.0.1...v3.1.0) (2026-03-08)
 
-
 ### Features
 
 * Close temporal operational observability gaps ([#400](https://github.com/dunay2/dvt/issues/400)) ([d358fd4](https://github.com/dunay2/dvt/commit/d358fd4ccdc39f1417e8e143f33fa8e0e1002742))
 
 ## [3.0.1](https://github.com/dunay2/dvt/compare/v3.0.0...v3.0.1) (2026-03-08)
 
-
 ### Bug Fixes
 
 * Stabilize auth runtime and planner changes ([#396](https://github.com/dunay2/dvt/issues/396)) ([2a39101](https://github.com/dunay2/dvt/commit/2a39101bc5d1abf9921c3e46f300d39cdbdba039))
 
 ## [3.0.0](https://github.com/dunay2/dvt/compare/v2.4.9...v3.0.0) (2026-03-08)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -717,7 +812,6 @@
 * **temporal:** deterministic DAG-layer scheduler slice for [#15](https://github.com/dunay2/dvt/issues/15) ([#240](https://github.com/dunay2/dvt/issues/240)) ([941670a](https://github.com/dunay2/dvt/commit/941670a944047ab9a29681b2cef433fa6c93d0d7))
 * U2 temporal lookup run ref ([#352](https://github.com/dunay2/dvt/issues/352)) ([ba0df13](https://github.com/dunay2/dvt/commit/ba0df13b5ae792177ce7417c66773ff998b0df97))
 
-
 ### Bug Fixes
 
 * **adapters:** Corrige advertencias SonarQube y tipado ([#355](https://github.com/dunay2/dvt/issues/355)) ([d353e5a](https://github.com/dunay2/dvt/commit/d353e5a70242c641122638f1daa1542bc48b63fc))
@@ -748,7 +842,6 @@
 * **validation:** make formatZodPath robust for PropertyKey[] paths ([54bfeda](https://github.com/dunay2/dvt/commit/54bfeda334cc1f1f2f0250d1acc47ffbc11938d2))
 
 ## [3.0.0](https://github.com/dunay2/dvt/compare/v2.4.9...v3.0.0) (2026-02-28)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -781,7 +874,6 @@
 * **state-store:** Implement issue [#6](https://github.com/dunay2/dvt/issues/6) postgres adapter foundation ([#202](https://github.com/dunay2/dvt/issues/202)) ([b112354](https://github.com/dunay2/dvt/commit/b1123545e9ef0e1e669d64519ea6a1c916553a6a))
 * **temporal:** deterministic continue-as-new policy for [#15](https://github.com/dunay2/dvt/issues/15) (slice 3) ([#242](https://github.com/dunay2/dvt/issues/242)) ([084fe78](https://github.com/dunay2/dvt/commit/084fe78694ddac73c0e84ffb37993e114c1d22e9))
 * **temporal:** deterministic DAG-layer scheduler slice for [#15](https://github.com/dunay2/dvt/issues/15) ([#240](https://github.com/dunay2/dvt/issues/240)) ([941670a](https://github.com/dunay2/dvt/commit/941670a944047ab9a29681b2cef433fa6c93d0d7))
-
 
 ### Bug Fixes
 

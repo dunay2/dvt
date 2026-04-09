@@ -1,6 +1,7 @@
 ---
 slice: 20260318-stage-1-1-planner-canonicalization-baseline-snapshot
 date: 2026-03-18
+last_reviewed: 2026-03-18
 gap: planner-stage-1-1
 author: AI (GPT-5)
 ---
@@ -88,9 +89,9 @@ churn.
 - `AGENTS.md`
 - `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
-- `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts`
+- `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/planner/src/domain/types.ts`
-- `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v2.ts`
+- `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/planner/src/contracts/planner/ExecutionPlan.v2.ts`
 
 ## Docs synced

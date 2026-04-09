@@ -1,7 +1,13 @@
 /**
  * @baseline ADR-0003
  */
-import { InvalidRunIdError, RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
+import {
+  InvalidRunIdError,
+  ProviderRefProviderMismatchError,
+  RunAlreadyExistsError,
+  RunNotFoundError,
+  TenantAccessDeniedError,
+} from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -26,8 +32,9 @@ import {
   restoreRetryLineageCheckpoint,
 } from './retryLineagePolicy.js';
 import {
+  assertEventTenantMatches,
   assertEventRunIdMatches,
-  assertEventsMatchRunId,
+  assertEventsMatchRunIdAndTenant,
   assertRunEventInput,
   assertRunSequenceWithinSafeRange,
   cloneWorkflowSnapshot,
@@ -53,24 +60,29 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
   async saveProviderRef(
     tenantId: string,
     runId: string,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void> {
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
     const current = this.metadataByRunId.get(runId);
-    if (current?.tenantId !== tenantId) throw new RunNotFoundError(runId);
-    this.metadataByRunId.set(runId, {
+    if (!current) {
+      throw new RunNotFoundError(runId);
+    }
+    if (current.tenantId !== tenantId || providerRef.tenantId !== tenantId) {
+      throw new TenantAccessDeniedError(tenantId);
+    }
+    if (current.providerRef.provider !== providerRef.provider) {
+      throw new ProviderRefProviderMismatchError(
+        runId,
+        current.providerRef.provider,
+        providerRef.provider
+      );
+    }
+
+    const updated: RunMetadata = {
       ...current,
-      providerWorkflowId: runRef.providerWorkflowId,
-      providerRunId: runRef.providerRunId,
-      ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
-      ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
-      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
-    });
+      providerRef,
+    };
+    this.metadataByRunId.set(runId, updated);
+    return updated;
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
@@ -78,7 +90,11 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
       throw new RunAlreadyExistsError(input.metadata.runId);
     }
 
-    assertEventsMatchRunId(input.metadata.runId, input.firstEvents);
+    assertEventsMatchRunIdAndTenant(
+      input.metadata.runId,
+      input.metadata.tenantId,
+      input.firstEvents
+    );
     const retryLineageCheckpoint = captureRetryLineageCheckpoint(
       this.nextRetryAttemptByOriginRunId,
       input.metadata
@@ -110,6 +126,10 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     const events = this.eventsByRunId.get(runId) ?? [];
     const baseRunSeq = events.length;
     const idx = new Map<string, RunEventPersisted>(this.idempIndexByRunId.get(runId));
+    const tenantId = this.metadataByRunId.get(runId)?.tenantId;
+    if (tenantId === undefined) {
+      throw new RunNotFoundError(runId);
+    }
 
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
@@ -118,6 +138,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     for (const [i, env] of eventsToAppend.entries()) {
       assertRunEventInput(env, i);
       assertEventRunIdMatches(runId, env, i);
+      assertEventTenantMatches(tenantId, env, i);
 
       const existing = idx.get(env.idempotencyKey);
       if (existing) {

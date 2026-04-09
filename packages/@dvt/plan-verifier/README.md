@@ -6,13 +6,15 @@ Shared, deterministic plan verification helpers.
 
 This package provides _enforcement_ primitives adapters MUST share:
 
-- Verify `planId` matches `sha256(canonicalPlanJson)` (canonical JSON already produced by the planner).
+- Verify `planId` matches `sha256(canonicalPlanCoreJson)` (canonical JSON already produced by the planner).
 - Verify planner `planVersion` compatibility using an explicit runtime compatibility matrix.
+- Verify `ExecutionPlan.steps[].stepTypeConfig` per `StepKind` with `IStepTypeRegistry`
+  and fail-closed rejection of unregistered kinds by default.
 - Provide consistent error codes across adapters (Temporal, Conductor, BullMQ, etc.).
 
 ## Non-goals
 
-- No canonicalization (the planner is the source of truth for `canonicalPlanJson`).
+- No canonicalization (the planner is the source of truth for `canonicalPlanCoreJson`).
 - No IO: adapters fetch plan bytes/string and call these functions.
 - No Node-only crypto: uses WebCrypto (`globalThis.crypto.subtle`).
 
@@ -25,6 +27,7 @@ hashing work when a plan is clearly incompatible. If you want combined diagnosti
 Preferred mode:
 
 - `verifyPlanVersionOrThrow({ planVersion, runtime })`
+- `parseAndVerifyStepTypeConfigsOrThrow({ input, stepTypeRegistry? })`
 
 Compatibility is looked up in `PLAN_RUNTIME_COMPATIBILITY_MATRIX`. Legacy
 major/minor gating remains available for older call sites.

@@ -19,6 +19,9 @@ and build flows.
 - Mark document status explicitly (`Accepted`, `Active`, `Draft`, `Review`, `Archived`)
 - Keep ADR IDs unique globally
 - Move historical documents to `docs/archive/` or `docs/adr/_archive/`
+- Use the governed maintenance procedure in
+  [`docs/guides/documentation-maintenance-guide-20260407.md`](./guides/documentation-maintenance-guide-20260407.md)
+  when code, planning, or archive moves change active reader routes
 
 ## Quick start
 
@@ -45,7 +48,28 @@ For strict drift enforcement against `HEAD`:
 pnpm docs:sync:check
 ```
 
-That command is the explicit clean-worktree gate for generated docs output.
+That command is the explicit clean-worktree gate for tracked generated docs
+output.
+
+For planning-generated local or CI artifacts that are intentionally not tracked
+in git:
+
+```bash
+pnpm docs:workboard:check
+```
+
+That command regenerates the planning-derived pages, verifies the required
+files and sections exist, checks determinism across repeated runs, and fails if
+those pages are accidentally tracked in git again.
+For isolated local generation (useful with concurrent agents or long-lived
+branches):
+
+```bash
+pnpm docs:planning:preview:isolated
+```
+
+This writes generated planning lane/workboard outputs to
+`.generated-docs/docs/planning/state/` without modifying tracked docs files.
 
 ## Runtime authority
 
@@ -56,3 +80,22 @@ That command is the explicit clean-worktree gate for generated docs output.
 One contract now owns the docs runtime and docs validation surfaces. CI keeps
 its explicit strict drift gates on top of that contract. There is no secondary
 compatibility config.
+
+## Planning-generated artifact rule
+
+The tracked planning sources of truth are:
+
+- `docs/planning/state/agent-lane-*.yaml`
+- tracked planning docs such as `planning-control-tower.md`, portfolio maps,
+  proposals, reviews, closeouts, and roadmap docs
+
+The following planning surfaces are derived local/CI artifacts and must not be
+committed:
+
+- `docs/planning/index.md`
+- `docs/planning/proposals/index.md`
+- `docs/planning/reviews/index.md`
+- `docs/planning/status/index.md`
+- `docs/planning/state/agent-lane-*.md`
+- `docs/planning/state/execution-workboard.md`
+- `docs/planning/state/open-task-route.md`

@@ -2,23 +2,41 @@ import type {
   IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
-  PlannerInputEnvelopeV2,
+  GenericGraphSourceV1,
+  PlannerInputEnvelopeV1,
 } from '@dvt/contracts';
 
+import {
+  formatManifestArtifactResolutionReason,
+  isManifestArtifactResolutionError,
+  mapManifestArtifactResolutionCause,
+} from '../errors/ManifestArtifactResolutionError.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { StartRunCommand } from '../ports/startRunCommandContract.js';
-import { START_RUN_RESULT_KIND } from '../ports/startRunResultContract.js';
+import {
+  START_RUN_PLAN_REJECTION_CODE,
+  START_RUN_RESULT_KIND,
+} from '../ports/startRunResultContract.js';
+import type {
+  IPlanCompileLatencyTelemetry,
+  PlanCompileLatencyOutcome,
+} from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
+  private static readonly NOOP_TELEMETRY: IPlanCompileLatencyTelemetry = {
+    recordPlanCompileLatency() {},
+  };
+
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
       readonly planStore: IPlanValidationLifecycleStore;
       readonly validator: IPlanExecutabilityValidator;
       readonly delegate: IStartRunUseCase;
+      readonly compileTelemetry?: IPlanCompileLatencyTelemetry;
     }
   ) {}
 
@@ -30,7 +48,24 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       return this.deps.delegate.execute(command, context);
     }
 
-    const buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+    let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
+    const compileStartMs = Date.now();
+    let compileOutcome: PlanCompileLatencyOutcome = 'error';
+    try {
+      buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+      compileOutcome = 'built';
+    } catch (error) {
+      const rejection = mapManifestResolutionFailure(error);
+      if (rejection !== null) {
+        compileOutcome = 'manifest_resolution_error';
+        return rejection;
+      }
+      throw error;
+    } finally {
+      (
+        this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
+      ).recordPlanCompileLatency(Date.now() - compileStartMs, compileOutcome);
+    }
     const planRef = await this.deps.planStore.storePlan(buildResult);
     const validation = await this.deps.validator.validatePlan(planRef, command.targetAdapter);
 
@@ -56,12 +91,12 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
 function toPlannerInput(
   command: StartRunCommand,
   context: AuthorizedCommandExecutionContext
-): PlannerInputEnvelopeV2 {
+): PlannerInputEnvelopeV1 {
   return {
-    ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
+    ...(command.graphSource === undefined
+      ? {}
+      : { graphSource: toPlannerGraphSource(command.graphSource) }),
     ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
-    ...(command.manifest === undefined ? {} : { manifest: command.manifest }),
-    ...(command.nodes === undefined ? {} : { nodes: command.nodes }),
     ...(command.policies === undefined ? {} : { policies: command.policies }),
     ...(command.environment === undefined ? {} : { environment: command.environment }),
     ...(command.observability === undefined ? {} : { observability: command.observability }),
@@ -72,8 +107,53 @@ function toPlannerInput(
   };
 }
 
+function toPlannerGraphSource(graphSource: StartRunCommand['graphSource']): GenericGraphSourceV1 {
+  const source = graphSource!;
+  return {
+    kind: source.kind,
+    sourceFamily: source.sourceFamily,
+    sourceVersion: source.sourceVersion,
+    nodes: source.nodes.map((node) => ({
+      nodeId: node.nodeId,
+      stepKind: node.stepKind,
+      dependsOn: [...node.dependsOn],
+      ...(node.stepTypeConfig === undefined ? {} : { stepTypeConfig: node.stepTypeConfig }),
+      ...(node.metadata === undefined
+        ? {}
+        : {
+            metadata: {
+              ...(node.metadata.displayName === undefined
+                ? {}
+                : { displayName: node.metadata.displayName }),
+              ...(node.metadata.sourceRef === undefined
+                ? {}
+                : { sourceRef: node.metadata.sourceRef }),
+              ...(node.metadata.tags === undefined ? {} : { tags: node.metadata.tags }),
+            },
+          }),
+    })),
+  };
+}
+
 function isValidationError(
   validation: PlanValidationResult
 ): validation is Extract<PlanValidationResult, { readonly status: 'ERROR' }> {
   return validation.status === 'ERROR';
+}
+
+function mapManifestResolutionFailure(error: unknown): StartRunUseCaseResult | null {
+  if (!isManifestArtifactResolutionError(error)) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    value: {
+      kind: START_RUN_RESULT_KIND.planRejected,
+      accepted: false,
+      code: START_RUN_PLAN_REJECTION_CODE.rejected,
+      reason: formatManifestArtifactResolutionReason(error.kind, error.detail),
+      cause: mapManifestArtifactResolutionCause(error.kind),
+    },
+  };
 }

@@ -1,41 +1,88 @@
 ---
 title: Planning Domain
-status: Draft
+status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-15
+last_reviewed: 2026-04-02
 ---
 
 # Planning Domain
 
-## Purpose
+This domain owns plan derivation and validation before execution starts.
 
-Defines the construction, compilation, and integrity validation of plans in the DVT system.
+It covers planner orchestration, graph-source derivation, execution-plan
+assembly, verification, deterministic interpretation, DSL evaluation, and the
+artifact helpers that attach compiled-code references.
 
-## Boundaries
+Current target reading for graph-source generalization:
 
-- [@dvt/planner](../../packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md)
-- [@dvt/plan-verifier](../contracts/index.md)
-- [@dvt/plan-interpreter](../contracts/index.md)
-- [@dvt/dsl](../contracts/index.md)
+- `docs/guides/generic-graph-source-technical-manual-20260404.md`
+- `docs/guides/generic-graph-source-user-manual-20260404.md`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
 
-## Responsibilities
+## Scope
 
-- Plan creation and editing
-- Compilation and validation
-- Integrity checks
-- Delivery of plans to the Execution domain
+- `@dvt/planner`
+- `@dvt/plan-verifier`
+- `@dvt/plan-interpreter`
+- `@dvt/dsl`
+- `@dvt/artifacts`
 
-## Example interaction
+## Current Interactions
 
-- Delivers plan to Engine for execution
+```mermaid
+flowchart LR
+  Manifest["Manifest and graph inputs"] --> Planner["@dvt/planner"]
+  Planner --> Verifier["@dvt/plan-verifier"]
+  Planner --> Interpreter["@dvt/plan-interpreter"]
+  Planner --> DSL["@dvt/dsl"]
+  Planner --> Artifacts["@dvt/artifacts"]
+  Planner --> API["apps/api"]
+  Planner --> Execution["@dvt/engine"]
+```
 
-## Related documentation
+## Current Responsibilities
 
-- [Domain Map](domain-map.md)
-- [Execution Domain](domain-execution.md)
-- [Contracts](../contracts/index.md)
+- build execution plans from manifest and graph-source inputs;
+- validate plan structure, integrity, and compatibility;
+- provide deterministic DAG interpretation helpers used by runtimes;
+- attach and store compiled-code references needed by downstream execution and
+  lineage flows.
 
-## Status
+## Code Anchors
 
-- All core planning features implemented.
-- See [Current Status Map](domain-map.md#current-status-map) for pending tasks.
+- [PlannerFacade.ts](../../packages/@dvt/planner/src/application/PlannerFacade.ts)
+- [derivePlannerGraphSourceFromManifest.ts](../../packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts)
+- [verify.ts](../../packages/@dvt/plan-verifier/src/verify.ts)
+- [dagAnalyzer.ts](../../packages/@dvt/plan-interpreter/src/dagAnalyzer.ts)
+- [attachCompiledCodeRefs.ts](../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts)
+
+## Current Posture
+
+The planning domain is already on the runtime path. The main open problem is
+not whether planning exists, but how to formalize plan records, plan storage,
+and ownership seams without dragging planner-private behavior into the shared
+kernel.
+
+## Queued Delta
+
+- `S08`: formalize the plan-record and plan-store model and sequence the
+  artifacts or storage ownership correctly.
+- `RC-G1-D`: keep planner-private ports private while preserving the shared
+  planner contracts that are intentionally public.
+- `MW-A2`: make `GenericGraphSource` the canonical planner input and demote dbt
+  manifest ingestion to a compatibility adapter path.
+
+## Domain Rules
+
+- Planning produces inputs to execution. It does not own runtime state
+  transitions after admission succeeds.
+- Verifier, interpreter, and DSL packages should stay narrow and deterministic.
+- Artifact and compiled-code handling should move toward the right owner rather
+  than remaining implicitly planner-owned forever.
+
+## Related Pages
+
+- [Planner and Contracts planning view](../planning/domains/planner-and-contracts.md)
+- [DVT Component Map](./component-map.md)
+- [System Delivery Status](./system-delivery-status.md)
+- [Shared Package Architecture](./shared/index.md)

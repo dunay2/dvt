@@ -54,8 +54,8 @@ sequenceDiagram
 
 ## Key Files & References
 
-- [File1.ts](path/to/File1.ts): Description
-- [File2.md](path/to/File2.md): Description
+- [File1.ts](./path/to/File1.ts): Description
+- [File2.md](./path/to/File2.md): Description
 
 ## Global Flow Position
 
@@ -63,8 +63,8 @@ Explain where this component fits in the overall system flow.
 
 ## Related Links
 
-- [Link1](url)
-- [Link2](url)
+- [Link1](./url)
+- [Link2](./url)
 
 ## Component File List
 

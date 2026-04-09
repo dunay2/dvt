@@ -2,6 +2,7 @@ import {
   CONTRACT_SCOPE_PATTERNS,
   PR_QUALITY_SCOPE_PATTERNS,
   TEST_SCOPE_PATTERNS,
+  WORKFLOW_SCOPE_PATTERNS,
   computeBooleanScope,
   getChangedFiles,
   isPullRequestEvent,
@@ -12,6 +13,7 @@ const MODES = {
   contracts: CONTRACT_SCOPE_PATTERNS,
   'pr-quality': PR_QUALITY_SCOPE_PATTERNS,
   test: TEST_SCOPE_PATTERNS,
+  workflow: WORKFLOW_SCOPE_PATTERNS,
 };
 
 function parseMode(argv) {

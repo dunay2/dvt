@@ -19,7 +19,13 @@ export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPla
   if (uri && sha256 && schemaVersion && planId && planVersion) {
     return {
       ok: true,
-      value: { uri, sha256, schemaVersion, planId, planVersion },
+      value: {
+        uri,
+        sha256,
+        schemaVersion,
+        planId,
+        planVersion,
+      },
     };
   }
 

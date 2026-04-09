@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-03-31'
+last_reviewed: '2026-04-08'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -46,6 +46,67 @@ header_markdown: >
 
   - No aceptar asserts sin evidencia ejecutable
 tasks:
+  - task_id: EVD-IA-03
+    priority: P2
+    status: done
+    objective: >-
+      execute the class-based evidence path migration and update references to the new folder
+      topology.
+    dependency: EVD-IA-02
+    target: >-
+      `docs/evidence/ED-*.md` artifacts are relocated to `critical/`, `supporting/`, `context/`, or
+      `archive/` and concrete references resolve to the new paths.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260402-evidence-information-architecture-phase3-migration-closeout.md
+      - docs/planning/status/evidence-classification-inventory-20260402.md
+      - docs/evidence/index.md
+    status_reason: >-
+      Phase-3 folder migration is complete with class-aware evidence paths and linked planning
+      references updated to the moved artifacts.
+    last_verified: '2026-04-04'
+  - task_id: EVD-IA-02
+    priority: P2
+    status: done
+    objective: >-
+      classify every current evidence artifact into the approved IA classes and publish the
+      migration inventory baseline.
+    dependency: EVD-IA-01
+    target: >-
+      All `docs/evidence/**/ED-*.md` files carry `evidence_class`, and one inventory matrix records
+      class assignment plus target phase-3 path for each artifact.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/status/evidence-classification-inventory-20260402.md
+      - docs/planning/closeouts/20260402-evidence-information-architecture-classification-closeout.md
+    status_reason: >-
+      Phase 2 classification is complete with one-class-per-file metadata and a deterministic
+      migration matrix; file moves remain phase-3 work.
+    last_verified: '2026-04-04'
+  - task_id: EVD-IA-01
+    priority: P2
+    status: done
+    objective: >-
+      define the governed information architecture for `docs/evidence/` without moving active
+      evidence files in the first pass.
+    dependency: none
+    target: >-
+      Proposal plus linked closeout define evidence taxonomy, admission rules, metadata, lifecycle,
+      versioning, migration waves, and future enforcement gates for `docs/evidence/`.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/evidence-information-architecture-plan-20260402.md
+      - docs/planning/closeouts/20260402-evidence-information-architecture-proposal-closeout.md
+    status_reason: >-
+      The target operating model for `docs/evidence/` is now captured as a governed proposal with
+      linked planning evidence; file moves and validator changes remain follow-up work.
+    last_verified: '2026-04-02'
   - task_id: MVP-B1
     priority: P0
     status: done
@@ -60,8 +121,8 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260330-mvp-b1-claim-evidence-traceability-matrix.md
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
     status_reason:
       The matrix remains aligned with the final `MVP-A1` inventory and now provides equivalent
@@ -69,7 +130,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: S05
     priority: P0
-    status: review
+    status: done
     objective: >-
       S05-part-1 envelope boundary hardening: enforce payloadVersion and envelope-level
       write-boundary schema gating.
@@ -77,14 +138,19 @@ tasks:
     target: Merge PR
     complexity: L
     effort_points: 8
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
-      - docs/planning/reviews/20260324-dvt-architectural-review.md
+      - docs/evidence/ED-20260404-guards-alignment-adapter-postgres.md
+      - docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md
+      - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md
+      - docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
+      - docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md
     status_reason: >-
-      Payload-content validation landed, but the full envelope-level payloadVersion closure is still
-      not accepted.
-    last_verified: '2026-03-31'
+      Payload-content validation, in-memory write-boundary tenant/schema hardening, and
+      adapter-postgres integration evidence are accepted. Parent task `S05` is now closed with
+      accepted evidence artifacts for both in-memory and adapter-postgres boundary equivalence.
+    last_verified: '2026-04-04'
   - task_id: S05-F1
     priority: P0
     status: done
@@ -95,7 +161,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260328-lineage-outbox-retry-scheduling.md
+      - docs/evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md
     status_reason:
       Accepted evidence explicitly records the per-eventType payload-content validation slice.
     last_verified: '2026-03-31'
@@ -109,9 +175,9 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/20260322-dvt-code-grounded-corrective-task-list-review.md
+      - docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-code-grounded-corrective-task-list-review.md
       - apps/lineage-worker/src/server.ts
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: >-
       The lineage worker no longer needs adapter-internal reach-through and the mainline code
       matches the corrective review target.
@@ -144,7 +210,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260328-lineage-outbox-retry-scheduling.md
+      - docs/evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md
     status_reason: Accepted evidence closes retry scheduling and DLQ pacing hardening.
     last_verified: '2026-03-31'
   - task_id: RC-B5-F2
@@ -161,7 +227,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md
+      - docs/evidence/critical/ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md
     status_reason:
       Accepted evidence closes the real-Postgres claim-timeout and stale-claimer race coverage.
     last_verified: '2026-03-31'
@@ -175,7 +241,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260330-lineage-dlq-alerting-auto-replay.md
+      - docs/evidence/critical/ED-20260330-lineage-dlq-alerting-auto-replay.md
     status_reason: >-
       Accepted evidence closes DLQ lag alerting and bounded dead-letter replay, with an explicit
       note about an unrelated pre-existing worker-suite failure.
@@ -190,9 +256,164 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260330-planner-manifest-ref-cache.md
+      - docs/evidence/critical/ED-20260330-planner-manifest-ref-cache.md
     status_reason: Accepted evidence closes the repeated manifestRef fetch cache slice.
     last_verified: '2026-03-31'
+  - task_id: AR-B1
+    priority: P0
+    status: in_progress
+    objective: >-
+      add RunStatus state machine validation at the event append boundary in appendAndEnqueueTx so
+      that invalid event sequences (e.g., StepCompleted before StepStarted) are rejected at write
+      time, not discovered during snapshot projection.
+    dependency: none
+    target: >-
+      A formal state machine definition exists in code; appendAndEnqueueTx validates that each event
+      represents a legal transition from the current run/step state; invalid transitions are
+      rejected with a typed error before persisting.
+    complexity: L
+    effort_points: 8
+    progress_pct: 80
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
+      - docs/guides/run-status-write-boundary-technical-manual-20260404.md
+      - docs/guides/run-status-write-boundary-user-manual-20260404.md
+      - docs/planning/roadmap/ar-b1-quality-hardening-roadmap-20260404.md
+    status_reason: >-
+      Docs-first TDD now includes transition policy modularization, signal precheck extraction,
+      fixture modularization, and nightly postgres integration scheduling; final closeout artifact
+      publication remains.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-A
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: freeze AR-B1 target model in canonical proposal and manuals.
+    dependency: none
+    target: >-
+      One canonical proposal plus technical and user manuals define scope, transition rules, Mermaid
+      diagrams, and DoD for AR-B1.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
+      - docs/guides/run-status-write-boundary-technical-manual-20260404.md
+      - docs/guides/run-status-write-boundary-user-manual-20260404.md
+    status_reason: Canonical docs are in place and linked to AR-B1 execution.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-B
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: add red tests that prove illegal transition rejection at append boundary.
+    dependency: AR-B1-A
+    target: >-
+      Failing tests cover invalid run-level and step-level transition sequences in run-domain and
+      store append paths before implementation hardening.
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/run-domain/test/applyRunEvent.test.ts
+      - packages/@dvt/engine/test/state/InMemoryRunStateStore.appendInvariants.test.ts
+      - packages/@dvt/adapter-postgres/test/smoke.test.ts
+    status_reason: Red tests were authored and exercised for invalid transition rejection coverage.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-C
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: codify explicit legal run and step transition rules in @dvt/run-domain.
+    dependency: AR-B1-B
+    target: >-
+      Transition policy is explicit in code, not inferred from projection side effects, and produces
+      stable typed invalid-transition errors.
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/run-domain/src/applyRunEvent.ts
+      - packages/@dvt/run-domain/src/errors.ts
+    status_reason: Explicit run/step transition guards are now codified in run-domain.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-D
+    parent_task: AR-B1
+    priority: P0
+    status: done
+    objective: wire write-boundary validation across in-memory and Postgres append paths.
+    dependency: AR-B1-C
+    target: >-
+      appendAndEnqueueTx rejects illegal transitions before write effects while preserving dedupe
+      replay semantics and transactional guarantees.
+    complexity: M
+    effort_points: 1
+    progress_pct: 100
+    evidence_refs:
+      - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
+      - packages/@dvt/engine/src/state/InMemoryTxStore.ts
+      - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
+      - packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts
+    status_reason:
+      Write-boundary guards are wired with signal precheck and adapter side-effect prevention.
+    last_verified: '2026-04-04'
+  - task_id: AR-B1-E
+    parent_task: AR-B1
+    priority: P0
+    status: in_progress
+    objective: close AR-B1 with validation evidence, docs sync, and planning and status alignment.
+    dependency: AR-B1-D
+    target: >-
+      Required package tests and prepush gates pass, docs and planning surfaces are synchronized,
+      and closeout evidence is recorded.
+    complexity: S
+    effort_points: 1
+    progress_pct: 70
+    evidence_refs:
+      - docs/planning/closeouts
+      - docs/evidence
+    status_reason: Validation baselines are green; pending formal closeout/evidence publication.
+    last_verified: '2026-04-04'
+  - task_id: AR-B2
+    priority: P1
+    status: queued
+    objective: >-
+      document the distributed consistency model: map all eventual consistency windows (event append
+      to snapshot, bootstrap to adapter start, outbox enqueue to delivery), their maximum expected
+      durations, and failure modes when windows are exceeded.
+    dependency: none
+    target: >-
+      Cross-cutting architectural document lists every consistency boundary, expected max latency,
+      failure mode, and monitoring signal; referenced from operational runbooks.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Implicit consistency assumptions become production incidents at scale; no unified document
+      exists mapping all eventual consistency windows.
+    last_verified: '2026-04-02'
+  - task_id: AR-B3
+    priority: P1
+    status: queued
+    objective: >-
+      verify that ManifestGraphDeriver sorts node keys before processing to prevent Object.keys()
+      ordering variance across dbt versions from changing plan identity (planId hash).
+    dependency: none
+    target: >-
+      ManifestGraphDeriver explicitly sorts manifest node keys; golden vector test confirms
+      identical planId across different dbt manifest key orderings.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      If Object.keys() order changes between dbt versions, the topo sort input changes, and the plan
+      identity silently drifts — a determinism violation.
+    last_verified: '2026-04-02'
   - task_id: ADP-LINT-ORDER-01
     priority: P2
     status: review
@@ -205,7 +426,7 @@ tasks:
     effort_points: 2
     progress_pct: 80
     evidence_refs:
-      - docs/evidence/ED-20260328-adapter-runtime-sonar-closeout.md
+      - docs/evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md
       - packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
     status_reason: >-
       The core Sonar slice is closed, but the review still tracks the import-order tooling hardening
@@ -232,27 +453,111 @@ tasks:
       The shared policy and tests exist in code, but this pass did not find a dedicated accepted
       closeout artifact for final closure.
     last_verified: '2026-03-31'
+  - task_id: TF-B1
+    priority: P1
+    status: queued
+    objective: >-
+      define Git-first provenance and execution evidence linkage for the transformation flow so the
+      design graph, SQL artifact, persisted plan, and runtime outcome remain traceable end to end.
+    dependency: TF-A1
+    target: >-
+      One governed provenance contract links Git-tracked graph and SQL artifacts to the persisted
+      immutable plan and the emitted run evidence, with explicit rules for what runtime may persist
+      versus what remains Git-owned authoring truth.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/index.md
+    status_reason: >-
+      Git-first is now a locked product decision in the roadmap, but no Lane B provenance contract
+      or evidence chain has yet been formalized for implementation.
+    last_verified: '2026-04-05'
+  - task_id: TF-B1-A
+    priority: P0
+    status: queued
+    objective: >-
+      formalize the Git artifact reference and preview-time provenance rules for graph and SQL
+      inputs.
+    dependency: TF-A1-A
+    target: >-
+      Lane B freezes `GitArtifactRef`, required hash and ref fields, and the rules that say which
+      authoring artifacts must travel through preview and into the persisted plan record.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/evidence/index.md
+    status_reason: >-
+      Git-first is now frozen as a product rule, but the concrete artifact-ref contract and capture
+      rules are not yet isolated as a Lane B slice.
+    last_verified: '2026-04-05'
+  - task_id: TF-B1-B
+    priority: P0
+    status: queued
+    objective: >-
+      define the evidence model that links runtime outcome, sink materialization, and failure events
+      back to the persisted plan and Git-tracked authoring inputs.
+    dependency: TF-B1-A, TF-C2-A
+    target: >-
+      Lane B publishes the caller-visible provenance and evidence chain from Git artifacts to plan
+      record to run outcome, including sink evidence and failure-event attribution.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/index.md
+    status_reason: >-
+      The roadmap now requires caller-visible provenance and evidence, but the result-side linkage
+      is not yet broken into a concrete Lane B execution slice.
+    last_verified: '2026-04-05'
 dependency_notes:
+  - >-
+    `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
+    evidence paths; phase 4 enforcement gates remain open follow-up work.
+  - >-
+    `EVD-IA-02` closes the phase-2 inventory baseline with explicit per-file classes and no folder
+    moves; relocation and enforcement activation remain follow-up slices.
+  - >-
+    `EVD-IA-01` captures the target evidence-surface taxonomy and migration plan only; active file
+    relocation and enforcement changes remain explicit follow-up work.
   - >-
     `MVP-B1` is now closed because the traceability matrix still matches the reviewed `MVP-A1`
     contractual scope and command baseline.
   - >-
-    `S05-F1` is closed as the payload-content schema slice, but parent task `S05` stays in review
-    until envelope-level payloadVersion closure is accepted.
+    `S05-F1` remains closed as the payload-content schema slice, and parent task `S05` is now closed
+    with accepted adapter-postgres integration evidence.
   - '`RC-B1` and `RC-B2` are verified against mainline code and proposal artifacts.'
   - '`RC-B5` and `RC-B5-F2` are closed with accepted evidence.'
   - >-
     `DLQ alerting + automated replay` and `manifest S3 fetch cache` are now verified as delivered
     via accepted evidence dated 2026-03-30.
   - '`ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.'
+  - >-
+    `AR-B1` is the most critical gap from the 2026-04-02 deep architectural review: RunStatus state
+    machine validation at event append boundary to prevent invalid sequences from corrupting the
+    log.
+  - >-
+    `AR-B2` addresses the missing distributed consistency model documentation, and `AR-B3` verifies
+    ManifestGraphDeriver key ordering for determinism safety.
+  - >-
+    `TF-B1` is now decomposed into `TF-B1-A` and `TF-B1-B` so preview-time provenance and
+    result-time evidence linkage can move independently while remaining under one Git-first policy.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
-  total_tasks: 11
-  total_effort_points: 47
-  completed_weighted_points: 43.6
-  lane_progress_pct: 93
+  verified_on: '2026-04-05'
+  total_tasks: 20
+  total_effort_points: 79
+  completed_weighted_points: 52.6
+  lane_progress_pct: 67
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

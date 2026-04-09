@@ -1,39 +1,42 @@
 ---
-title: planner Constraints & Invariants
-status: Draft
-owner: Planning Domain
-last_reviewed: 2026-03-28
+title: planner Constraints and Invariants
+status: Active
+owner: Planning Domain / Architecture
+last_reviewed: 2026-04-07
 ---
 
-# planner Constraints & Invariants
+# planner Constraints and Invariants
 
-## Constraints and Invariants
+## Active invariants
 
-| Constraint / Invariant                                       | Where Enforced                    | Description                                                                                                          |
-| ------------------------------------------------------------ | --------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Must comply with PlannerContracts.v2.3.1                     | PlanAggregate / PlanAssembler     | All plan structures, step types, and assembly outputs must conform to the formal contract definitions.               |
-| Only interacts with Planning domain components               | PlanAggregate boundary            | Planner must not reach into delivery, infra, or observability domains; it only calls verifier, interpreter, and DSL. |
-| Steps must not form circular dependencies                    | GraphBuilder                      | The dependency graph must be a directed acyclic graph (DAG). Cycles are rejected at graph-build time.                |
-| All required step parameters must be defined                 | StepFactory / ValidationAggregate | Steps missing required parameters fail validation before the plan reaches the compiled state.                        |
-| Plan must pass validation before transitioning to compiled   | PlanAggregate                     | The lifecycle gate from draft → compiled requires a passing ValidationAggregate result.                              |
-| Steps must be executable in the topologically sorted order   | TopoSort                          | The assembled plan's step sequence must respect all declared dependency orderings.                                   |
-| Input envelope must pass schema validation before processing | InputEnvelopeValidator            | A plan build request with an invalid envelope is rejected before any aggregate is mutated.                           |
-| Plan hash must be deterministic                              | PlanAssembler                     | Given identical inputs, PlanAssembler must always produce the same plan hash (content-addressable).                  |
+| Invariant                              | Where enforced                             | Description                                                                                               |
+| -------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Contract-first boundary                | `PlannerFacade` + `@dvt/contracts` parsers | Public planner input and output are governed by `PlannerInputEnvelopeV1` and `ExecutionPlanV1`.           |
+| Cycle detection is fail-closed         | `GraphBuilder` and planner cycle docs      | Planner graph construction must reject cycles rather than degrade into partial execution semantics.       |
+| `stepKind` is authoritative            | planner domain + `IStepTypeRegistry`       | Planner logic must not silently remap back to legacy `resourceType` semantics.                            |
+| Policy precedence is explicit          | planner step factories                     | Governance policy values override conflicting node-local settings where the planner contract requires it. |
+| Compatibility ingress is normalized    | envelope mapper + manifest derivation seam | `manifest` and `nodes` compatibility paths must normalize before core planner logic executes.             |
+| Deterministic plan assembly            | `PlanAssembler`                            | Equivalent planner input must yield the same canonical plan core payload.                                 |
+| Planner does not own runtime execution | package boundary                           | Planner emits a plan artifact; runtime acceptance and execution stay outside `@dvt/planner`.              |
 
-## Validation Examples
+## Validation examples
 
-- Submitting a plan where step B declares step A as a dependency, and step A declares step B as a dependency, causes GraphBuilder to raise a `CyclicDependencyError`.
-- A step of type `task` with a missing `stepTypeConfig` required field fails StepFactory policy resolution with a `MissingRequiredParameterError`.
-- Calling `compilePlan` on a plan still in draft state that has not been validated raises a `LifecycleTransitionError`.
-- A `PlannerInputEnvelope` whose schema does not match `planner-input.ts` is rejected by InputEnvelopeValidator before any domain object is created.
-- Two builds from the same input envelope must produce identical plan hashes from PlanAssembler.
+- Invalid envelope shape is rejected before graph derivation starts.
+- Cyclic graph input fails closed instead of emitting a partial plan.
+- Unknown or invalid `stepKind` configuration is rejected at planner build time.
+- Canonical output shape is governed by `ExecutionPlan.v1.ts`, not by planner-local schema copies.
 
-## Key Files
+## Current code anchors
 
-- `packages/@dvt/planner/src/domain/Planner.ts` — Lifecycle gate enforcement
-- `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts` — Cycle detection
-- `packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts` — Input validation
-- `packages/@dvt/planner/src/domain/PlanAssembler.ts` — Hash determinism
-- `packages/@dvt/planner/src/domain/policies.ts` — Parameter requirement checks
-- `packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md` — Formal constraint definitions
-- `packages/@dvt/contracts/test/planner.contract.test.ts` — Contract-level constraint tests
+- `packages/@dvt/planner/src/application/PlannerFacade.ts`
+- `packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts`
+- `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts`
+- `packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json`
+
+## Canonical references
+
+- [Planner component entry](./index.md)
+- [Planner contracts](../../../contracts/planner/index.md)
+- [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)

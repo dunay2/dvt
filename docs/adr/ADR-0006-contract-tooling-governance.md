@@ -5,8 +5,8 @@
 - **Date**: 2026-02-16
 - **Owners**: Architecture / Engine Contracts maintainers
 - **Related files**:
-  - [`docs/architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md)
-  - [`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`](../architecture/engine/contracts/engine/GlossaryContract.v1.md)
+  - [`docs/architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/components/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md)
+  - [`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`](../architecture/components/engine/contracts/engine/GlossaryContract.v1.md)
   - [`scripts/validate-contracts.cjs`](../../scripts/validate-contracts.cjs)
   - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
 
@@ -74,7 +74,7 @@ Contract semantic changes MUST include an ADR in `docs/adr/` once the ADR gate i
 
 ## Acceptance Criteria
 
-1. Proposal baseline is documented in [`CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md).
+1. Proposal baseline is documented in [`CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/components/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md).
 2. Contributor workflow is documented in [`docs/CONTRIBUTING.md`](../CONTRIBUTING.md).
 3. One GitHub issue exists per approved validator implementation stream.
 4. CI integration path is explicitly tracked in workflow backlog.
@@ -83,9 +83,9 @@ Contract semantic changes MUST include an ADR in `docs/adr/` once the ADR gate i
 
 ## References
 
-- [`docs/architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md)
-- [`docs/architecture/engine/contracts/engine/RunEvents.v1.md`](../architecture/engine/contracts/engine/RunEvents.v1.md)
-- [`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`](../architecture/engine/contracts/engine/GlossaryContract.v1.md)
+- [`docs/architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md`](../architecture/components/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md)
+- [`docs/architecture/engine/contracts/engine/RunEvents.v1.md`](../architecture/components/engine/contracts/engine/RunEvents.v1.md)
+- [`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`](../architecture/components/engine/contracts/engine/GlossaryContract.v1.md)
 - [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119)
 - [RFC 8174](https://datatracker.ietf.org/doc/html/rfc8174)
 ```

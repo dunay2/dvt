@@ -8,12 +8,15 @@ import { CancelRunUseCase } from './application/services/cancelRunUseCase.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
+import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
+import { importPlanRoute, previewPlanRoute } from './entrypoints/http/planRoutes.js';
+import { recoverRunRoute } from './entrypoints/http/recoverRunRoute.js';
 import {
   PROTECTED_RUNTIME_ROUTE_SUMMARY,
   RUNTIME_ROUTE_PATH,
@@ -27,6 +30,7 @@ import { registerOperationalHooks } from './modules/registerOperationalHooks.js'
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
+import { capabilitiesRoutes } from './routes/capabilities.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
 import {
@@ -156,6 +160,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
     readinessPorts,
   });
+  app.register(capabilitiesRoutes, { prefix: '/' });
   app.register(versionRoutes, { prefix: '/', env });
   app.register(dbReadyRoutes, { prefix: '/', env });
 
@@ -195,10 +200,40 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.stateStore.read
     );
     const cancelRunUseCase = new CancelRunUseCase(signalRunUseCase);
+    const recoverRunUseCase = new RecoverRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore.read
+    );
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
-      async (request, reply) => startRunRoute(request as never, reply, protectedModule.facade)
+      async (request, reply) =>
+        startRunRoute(
+          request as never,
+          reply,
+          protectedModule.facade,
+          protectedModule.startRunTargetAdapterRegistry
+        )
+    );
+    app.post(RUNTIME_ROUTE_PATH.plansPreview, async (request, reply) =>
+      previewPlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        planner: protectedModule.planner,
+        planStore: protectedModule.planStore,
+        planValidator: protectedModule.planValidator,
+        planResolver: protectedModule.executablePlanResolver,
+      })
+    );
+    app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
+      importPlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        planner: protectedModule.planner,
+        planStore: protectedModule.planStore,
+        planValidator: protectedModule.planValidator,
+        planResolver: protectedModule.executablePlanResolver,
+      })
     );
 
     app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
@@ -220,9 +255,12 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
       cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })
     );
+    app.post(RUNTIME_ROUTE_PATH.recover, async (request, reply) =>
+      recoverRunRoute(request as never, reply, { ...runtimeAuth, useCase: recoverRunUseCase })
+    );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
-      registerAdminRoutes(app, protectedModule.stateStore.maintenance);
+      registerAdminRoutes(app, protectedModule.stateStore.maintenance, runtimeAuth);
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
 

@@ -3,13 +3,12 @@
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0007: Run Cancellation Semantics (RunCancelRequested + cancelling substatus)
- * @decision Decision — The snapshot projection is derived exclusively from events for deterministic state reads
+ * @decision The snapshot projection is derived exclusively from events for deterministic state reads
  * @consequence getRunStatus and incremental stores reuse the same replay semantics without duplicating rules
  * @version 1.1.0
  * @date 2026-02-21
  */
-import type { RunStatusSnapshot } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, type RunStatusSnapshot } from '@dvt/contracts';
 import { applyRunEvent as applyCanonicalRunEvent } from '@dvt/run-domain';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
@@ -31,26 +30,13 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): Workflo
 }
 
 /**
- * Pure function: converts a materialized WorkflowSnapshot into a RunStatusSnapshot
- * (adds the deterministic JCS+SHA-256 hash).
+ * Pure function: converts a materialized WorkflowSnapshot into a RunStatusSnapshot.
  *
  * Exported so WorkflowEngine.getRunStatus can produce its response from a
  * stored snapshot without a full event replay.
  */
 export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
-  const logical = {
-    runId: snap.runId,
-    status: snap.status,
-    paused: snap.paused,
-    cancelling: snap.cancelling,
-    startedAt: snap.startedAt,
-    completedAt: snap.completedAt,
-    gatewayDecisions: snap.gatewayDecisions,
-    steps: snap.steps,
-  };
-
-  const canonical = jcsCanonicalize(logical);
-  const hash = sha256Hex(canonical);
+  const execution = toRunExecutionEvidence(snap);
 
   return {
     runId: snap.runId,
@@ -58,13 +44,14 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
     ...(snap.cancelling ? { substatus: 'CANCELLING' as const } : {}),
     ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
     ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
-    hash,
+    ...(execution ? { execution } : {}),
   };
 }
 
 export class SnapshotProjector {
   rebuild(runId: string, events: EventEnvelope[]): RunStatusSnapshot {
     const snap: WorkflowSnapshot = {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId,
       status: 'PENDING',
       paused: false,
@@ -79,4 +66,21 @@ export class SnapshotProjector {
 
     return snapshotToStatus(snap);
   }
+}
+
+function toRunExecutionEvidence(snap: WorkflowSnapshot): RunStatusSnapshot['execution'] {
+  const execution = snap.execution;
+  if (!execution) {
+    return undefined;
+  }
+
+  const normalized = {
+    ...(execution.activeStepId !== undefined ? { activeStepId: execution.activeStepId } : {}),
+    ...(execution.failure !== undefined ? { failure: execution.failure } : {}),
+    ...(execution.materialization !== undefined
+      ? { materialization: execution.materialization }
+      : {}),
+  };
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 }

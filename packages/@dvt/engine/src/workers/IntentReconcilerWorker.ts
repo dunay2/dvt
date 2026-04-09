@@ -108,6 +108,7 @@ export class IntentReconcilerWorker {
       this.consecutiveInfraErrors = 0;
       this.metrics.increment('dvt.intent.reconcile.inspected_total', result.inspected);
       this.metrics.increment('dvt.intent.reconcile.expired_total', result.expired.length);
+      this.metrics.increment('dvt.intent.reconcile.resolved_total', result.resolved.length);
       this.metrics.increment('dvt.intent.reconcile.cancelled_total', result.cancelled.length);
       this.metrics.increment('dvt.intent.reconcile.cancelFailed_total', result.cancelFailed.length);
       this.metrics.timing('dvt.intent.reconcile.duration_ms', this.nowMs() - startedAt);
@@ -118,6 +119,7 @@ export class IntentReconcilerWorker {
         limit: this.options.limit,
         inspected: result.inspected,
         expired: result.expired.length,
+        resolved: result.resolved.length,
         cancelled: result.cancelled.length,
         cancelFailed: result.cancelFailed.length,
       });

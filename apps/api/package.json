@@ -4,6 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
+    "predev": "pnpm --filter \"dvt-api^...\" build",
     "dev": "tsx watch src/server.ts",
     "prebuild": "pnpm --filter \"dvt-api^...\" build",
     "build": "tsc -p tsconfig.json",
@@ -17,6 +18,7 @@
     "test:arch": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
     "@dvt/adapter-postgres": "workspace:*",
     "@dvt/adapter-temporal": "workspace:*",
     "@dvt/contracts": "workspace:*",
@@ -24,6 +26,8 @@
     "@dvt/engine": "workspace:*",
     "@dvt/observability": "workspace:*",
     "@dvt/observability-otel": "workspace:*",
+    "@dvt/plan-verifier": "workspace:*",
+    "@dvt/planner": "workspace:*",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.0",
     "@fastify/sensible": "^6.0.0",
@@ -34,8 +38,7 @@
     "zod": "^3.0.0"
   },
   "devDependencies": {
-    "@dvt/planner": "workspace:*",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "@types/pg": "^8.11.10",
     "dependency-cruiser": "^17.3.9",
     "tsx": "^4.0.0",

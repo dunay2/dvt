@@ -1,0 +1,33 @@
+---
+id: R-20260409-PROVIDER-REF-EXACT-MATCH-ADAPTER-CONFORMANCE
+title: Future adapters may violate the validated providerRef reconciliation contract
+status: Open
+date: 2026-04-09
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Low
+summary: >
+  The engine now reconciles `estimateRunRef()` drift through a typed `saveProviderRef(...)` seam.
+  Any future adapter that changes provider discriminator or returns malformed late-bound identifiers
+  can still fail the start-run flow at runtime.
+context: >
+  This branch hardens the start-run protocol by keeping provider reconciliation typed and validated
+  against the persisted provider discriminator while persisting a canonical discriminated
+  `providerRef` inside `RunMetadata`. The remaining residual risk is conformance by future adapters,
+  not ambiguity in the engine contract.
+risk: >
+  A newly added or modified adapter could implement `estimateRunRef()` incorrectly, causing startRun
+  requests to dispatch a provider run and then fail provider-ref reconciliation. The engine now
+  compensates with a best-effort cancel on invalid cross-provider drift or rejected updates, but
+  operational confusion and adapter churn would still occur until the adapter is corrected.
+mitigations:
+  - 'The provider adapter contract now states that `startRun()` must keep the same provider
+    discriminator when `estimateRunRef()` is implemented.'
+  - 'StartRunExecutionService reconciles same-provider late-bound fields through
+    `saveProviderRef(...)` and fails closed on rejected updates.'
+  - 'Engine, API, state-store, and Postgres adapter tests now exercise the nested `providerRef`
+    contract end to end.'
+review_after: 2026-06-01
+---

@@ -19,8 +19,7 @@ It defines:
 
 Primary lane references:
 
-- [Agent Lane E YAML](agent-lane-e.yaml)
-- [Agent Lane E View](agent-lane-e.md)
+- [Agent Lane E YAML](./agent-lane-e.yaml)
 
 ## Scope
 

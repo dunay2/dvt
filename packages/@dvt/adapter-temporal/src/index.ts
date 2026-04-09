@@ -43,10 +43,20 @@ export type {
   ActivityDeps,
   Activities,
   EmitEventInput,
+  StepActivity,
+  StepActivityRegistry,
+  StepExecutor,
   StepInput,
   StepResult,
 } from './activities/stepActivities.js';
-export { createActivities } from './activities/stepActivities.js';
+export {
+  createActivities,
+  createDefaultStepActivityRegistry,
+  DbtStepActivity,
+  DEFAULT_STEP_ACTIVITY_REGISTRY,
+  StepActivityDispatcher,
+  UnsupportedStepKindError,
+} from './activities/stepActivities.js';
 
 // PR-2: Workflow types (workflow function itself is loaded by Worker bundler)
 export type {

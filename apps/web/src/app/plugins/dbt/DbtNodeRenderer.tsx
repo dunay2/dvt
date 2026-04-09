@@ -1,25 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CSSProperties, ReactElement } from 'react';
-import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Code,
-  Info,
-  Loader2,
-  Settings,
-  Table,
-  XCircle,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
-import { resolveDataSource } from '../../services/config/dataSource';
-import { createRunsService } from '../../services/runs/runsService';
+import { queryKeys } from '../../queries/queryKeys';
+import { useRunsService } from '../../services/AppServicesContext';
+import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
   CanonicalRun,
@@ -53,26 +43,6 @@ const STATUS_BADGE: Record<string, string> = {
   success: 'border-green-500/80 bg-green-950/60 text-green-200',
   failed: 'border-red-500/80 bg-red-950/60 text-red-200',
   skipped: 'border-yellow-500/80 bg-yellow-950/60 text-yellow-200',
-};
-
-const TASK_STATUS_ICON: Record<string, ReactElement> = {
-  success: <CheckCircle2 className="size-3.5 shrink-0 text-green-400" />,
-  failed: <XCircle className="size-3.5 shrink-0 text-red-400" />,
-  running: <Loader2 className="size-3.5 shrink-0 animate-spin text-blue-400" />,
-  skipped: <Clock className="size-3.5 shrink-0 text-yellow-400" />,
-  pending: <Clock className="size-3.5 shrink-0 text-slate-500" />,
-  warn: <CheckCircle2 className="size-3.5 shrink-0 text-orange-400" />,
-  cancelled: <XCircle className="size-3.5 shrink-0 text-slate-400" />,
-};
-
-const TASK_STATUS_TEXT: Record<string, string> = {
-  success: 'text-green-300',
-  failed: 'text-red-300',
-  running: 'text-blue-300',
-  skipped: 'text-yellow-300',
-  pending: 'text-slate-400',
-  warn: 'text-orange-300',
-  cancelled: 'text-slate-400',
 };
 
 const cardClass = 'border-slate-700 bg-slate-950 p-3 text-slate-50';
@@ -115,12 +85,6 @@ function resolveColumns(
 
 function meta<T>(node: InspectorPanelProps['node'], key: string): T | undefined {
   return node.metadata?.[key] as T | undefined;
-}
-
-function formatDuration(ms: number | undefined): string {
-  if (ms == null) return '-';
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
 }
 
 export function DbtNodeRenderer({
@@ -381,92 +345,31 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
   );
 }
 
-function TaskCard({ task }: Readonly<{ task: CanonicalTask }>) {
-  const stepType = task.metadata?.stepType as string | undefined;
-  const stepName = task.metadata?.stepName as string | undefined;
-  const warehouse = task.metadata?.warehouse as string | undefined;
-  const message = task.metadata?.message as string | undefined;
-  const icon = TASK_STATUS_ICON[task.status] ?? TASK_STATUS_ICON.pending;
-  const textClass = TASK_STATUS_TEXT[task.status] ?? 'text-slate-400';
-
-  return (
-    <Card className={cardClass}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex items-center gap-2">
-          {icon}
-          <span className={`text-xs font-medium ${textClass}`}>{task.status}</span>
-          {stepType && (
-            <Badge variant="outline" className="px-1 py-0 text-[10px]">
-              {stepType}
-            </Badge>
-          )}
-        </div>
-        <span className="shrink-0 font-mono text-xs text-slate-400">
-          {formatDuration(task.durationMs)}
-        </span>
-      </div>
-
-      {stepName && <div className="mt-1.5 text-[11px] text-slate-400">{stepName}</div>}
-
-      {task.startedAt && (
-        <div className="mt-1 text-[10px] text-slate-500">
-          {new Date(task.startedAt).toLocaleString()}
-        </div>
-      )}
-
-      {warehouse && (
-        <div className="mt-1 text-[10px] text-slate-400">
-          Warehouse: <span className="font-mono">{warehouse}</span>
-        </div>
-      )}
-
-      {task.errorMessage && (
-        <div className="mt-2 rounded border border-red-900 bg-red-950/40 px-2 py-1 text-[10px] text-red-300">
-          {task.errorMessage}
-        </div>
-      )}
-
-      {message && !task.errorMessage && (
-        <div className="mt-1 truncate text-[10px] text-slate-400">{message}</div>
-      )}
-    </Card>
-  );
-}
-
 function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
-  const runsService = useMemo(() => createRunsService(resolveDataSource()), []);
+  const runsService = useRunsService();
+  const tenantId = useSessionStore((state) => state.tenantId);
+  const projectId = useSessionStore((state) => state.projectId);
+  const environmentId = useSessionStore((state) => state.environmentId);
+  const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
+  const activeRunIdOrUndefined = activeRunId ?? undefined;
 
-  const { data: run, isLoading } = useQuery({
-    queryKey: ['runs', 'detail', activeRunId],
-    queryFn: () => runsService.getRun(activeRunId!),
+  const { data: runSnapshot, isLoading } = useQuery({
+    queryKey: queryKeys.runs.snapshot(workspaceLayoutKey, activeRunIdOrUndefined),
+    queryFn: () => runsService.getRunSnapshot(activeRunIdOrUndefined!),
     enabled: Boolean(activeRunId),
     staleTime: 5_000,
   });
 
-  const { data: allRuns, isLoading: isLoadingList } = useQuery({
-    queryKey: ['runs', 'list'],
-    queryFn: () => runsService.listRuns(),
+  const { data: runSummaries, isLoading: isLoadingList } = useQuery({
+    queryKey: queryKeys.runs.summaries(workspaceLayoutKey),
+    queryFn: () => runsService.listRunSummaries(),
     enabled: !activeRunId,
     staleTime: 30_000,
   });
 
-  const tasks = useMemo<CanonicalTask[]>(() => {
-    if (activeRunId && run) {
-      const canonicalRun = mapRunToCanonical(run);
-      return canonicalRun ? getTasksForNode(canonicalRun, node.id) : [];
-    }
-
-    if (!activeRunId && allRuns) {
-      for (const item of allRuns) {
-        const canonicalRun = mapRunToCanonical(item);
-        if (!canonicalRun) continue;
-        const nodeTasks = getTasksForNode(canonicalRun, node.id);
-        if (nodeTasks.length > 0) return nodeTasks;
-      }
-    }
-
-    return [];
-  }, [activeRunId, allRuns, node.id, run]);
+  const hasRuntimeSnapshotData =
+    (activeRunId && runSnapshot != null) ||
+    (!activeRunId && Array.isArray(runSummaries) && runSummaries.length > 0);
 
   if (isLoading || isLoadingList) {
     return (
@@ -477,24 +380,34 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
     );
   }
 
-  if (tasks.length === 0) {
+  if (hasRuntimeSnapshotData) {
     return (
       <div className="space-y-2 text-sm text-slate-400">
-        <p>No run history for this node.</p>
-        {node.lastDuration != null && (
-          <p className="text-slate-300">
-            Last recorded duration: <span className="font-mono">{node.lastDuration}s</span>
-          </p>
-        )}
+        <p>Detailed node history is unavailable from the current runtime contract baseline.</p>
+        <p className="text-slate-500">
+          This panel needs event-backed and step-backed run detail. `F-07` provides snapshot and
+          timeline truth, but node-level execution detail remains follow-on work.
+        </p>
+      </div>
+    );
+  }
+
+  if (activeRunId && runSnapshot == null) {
+    return (
+      <div className="space-y-2 text-sm text-slate-400">
+        <p>No runtime snapshot exists for this run.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {tasks.map((task) => (
-        <TaskCard key={task.taskId} task={task} />
-      ))}
+    <div className="space-y-2 text-sm text-slate-400">
+      <p>No run history for this node.</p>
+      {node.lastDuration != null && (
+        <p className="text-slate-300">
+          Last recorded duration: <span className="font-mono">{node.lastDuration}s</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -592,7 +505,13 @@ function buildTasks(run: Run): CanonicalTask[] {
 export function mapRunToCanonical(value: unknown): CanonicalRun | null {
   if (!value || typeof value !== 'object') return null;
 
+  const runtimeDetailLevel = (value as { runtimeDetail?: { level?: string } }).runtimeDetail?.level;
+  if (runtimeDetailLevel === 'snapshot') {
+    return null;
+  }
+
   const run = value as Partial<Run>;
+
   if (
     !run.runId ||
     !run.planId ||
@@ -620,17 +539,6 @@ export function mapRunToCanonical(value: unknown): CanonicalRun | null {
       artifacts: run.artifacts,
     },
   };
-}
-
-function getTasksForNode(run: CanonicalRun, nodeId: string): CanonicalTask[] {
-  return run.tasks
-    .filter((task) => task.nodeId === nodeId)
-    .sort((a, b) => {
-      if (!a.startedAt && !b.startedAt) return 0;
-      if (!a.startedAt) return 1;
-      if (!b.startedAt) return -1;
-      return a.startedAt.localeCompare(b.startedAt);
-    });
 }
 
 export const dbtInspectorPanels: InspectorPanelContribution[] = [

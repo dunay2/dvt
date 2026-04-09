@@ -2,26 +2,30 @@
 title: Planning Gaps
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-27
-planning_type: proposal
+last_reviewed: 2026-04-02
+planning_type: reference
 ---
 
 # Planning Gaps
 
-All gaps G1–G10 are closed. Archived gap specifications are in
-[docs/planning/archive/](../archive/index.md).
+This section is only for currently open tactical gap registers.
 
-Active execution work is tracked in the
-[agent lane YAMLs](../state/agent-lane-a.yaml) and the
-[execution workboard](../state/execution-workboard.md).
+The legacy `G1` through `G10` execution-gap program is retired and is not part
+of the active planning route. Closed legacy material should not be used as a
+current authority reference.
 
-All G6 documents are in [archive/gaps/g6/](../archive/gaps/g6/).
+## Active Tactical Gap Registers
 
-## Active tactical gap registers
+- [Runtime Architecture Gap Register 2026-03-31](./runtime-architecture-gap-register-20260331.md)
 
-- [Runtime Architecture Gap Register 2026-03-31](runtime-architecture-gap-register-20260331.md)
+## Active Planning Anchors
 
-## Concept anchors
+- [Planning Control Tower](../state/planning-control-tower.md)
+- [Roadmap Of Record](../roadmap/index.md)
+- [Domain Status Board](../state/domain-status-board.md)
+- [System Delivery Status](../../architecture/system-delivery-status.md)
+
+## Concept Anchors
 
 - [Glossary](../../concepts/glossary.md) for `gap`, `status`, `roadmap`,
   `canonical spec`, and `verification tuple`

@@ -143,9 +143,9 @@ surface ownership risk:
   - `docs/planning/gaps/GAP_EXECUTION_PLANS.md`
   - `docs/planning/gaps/G4-TASK-SPECIFICATION.md`
   - `docs/planning/proposals/principal-architecture-review-execution-plan-20260317.md`
-  - `docs/evidence/ED-20260312-g6-golden-schema-closeout.md`
-  - `docs/evidence/ED-20260315-g10-closeout.md`
-  - `docs/evidence/ED-20260319-ts-esm-monorepo-migration.md`
+  - `docs/evidence/critical/ED-20260312-g6-golden-schema-closeout.md`
+  - `docs/evidence/critical/ED-20260315-g10-closeout.md`
+  - `docs/evidence/supporting/ED-20260319-ts-esm-monorepo-migration.md`
 - corrected two stale code-path links for `attachCompiledCodeRefs` so changed-file
   governance checks still pass after the archive sweep
 - regenerated generated navigation surfaces affected by the move:

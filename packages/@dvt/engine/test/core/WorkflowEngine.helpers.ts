@@ -3,24 +3,21 @@ import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import type { IClock } from '../../src/utils/clock.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import {
   createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanRefForPlan,
   makeProviderMap,
   makeTemporalAdapter as makeSharedTemporalAdapter,
 } from '../helpers/workflowEngine.fixture.js';
 
 export function makePlanRef(): PlanRef {
-  return {
-    uri: 'https://example.com/plan',
-    sha256: 'deadbeef',
-    schemaVersion: 'v1.1',
-    planId: 'p',
-    planVersion: '1.0',
-  };
+  return makePlanRefForPlan(makeDefaultExecutionPlan(), 'https://example.com/plan');
 }
 
 export function makeContext(runId = 'r1'): RunContext {
@@ -112,6 +109,7 @@ export function createEngine(input?: {
   intentStore?: InMemoryStartRunIntentStore;
   observabilityFallbackThrottleMs?: number;
   clock?: IClock;
+  runExecutionContextResolver?: IRunExecutionContextResolver;
 }): {
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   store: InMemoryTxStore;
@@ -127,6 +125,7 @@ export function createEngine(input?: {
     intentStore: input?.intentStore,
     observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
     clock: input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z'),
+    runExecutionContextResolver: input?.runExecutionContextResolver,
   });
 
   return { engine: fixture.engine, store: fixture.store, intentStore: fixture.intentStore };
@@ -159,8 +158,8 @@ export function makeRunEventInput(input: {
     tenantId: 't',
     projectId: 'p',
     environmentId: 'dev',
-    planId: 'p',
-    planVersion: '1.0',
+    planId: makePlanRef().planId,
+    planVersion: makePlanRef().planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
     idempotencyKey: input.idempotencyKey ?? `idemp-${input.eventId}`,

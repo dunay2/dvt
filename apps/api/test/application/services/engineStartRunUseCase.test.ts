@@ -1,6 +1,7 @@
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
+  RunExecutionContextRejectedError,
   RunAlreadyExistsError,
   UnsupportedPlanVersionError,
 } from '@dvt/engine';
@@ -11,6 +12,7 @@ import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
   type StartRunCommand,
+  type StartRunPlanRef,
 } from '../../../src/application/ports/startRunContract.js';
 import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
@@ -110,6 +112,87 @@ describe('EngineStartRunUseCase', () => {
     });
   });
 
+  it('forwards only canonical planRef fields to engine boundary', async () => {
+    let capturedPlanRef: unknown;
+    const fakeEngine = {
+      async startRun(planRef: unknown) {
+        capturedPlanRef = planRef;
+        return {
+          provider: 'mock' as const,
+          tenantId: 'tenant-1',
+          workflowId: 'wf-1',
+          runId: 'run-test-1',
+        };
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const noisyPlanRef: StartRunPlanRef & {
+      pluginCompatibilityFingerprint: string;
+      requiresCapabilities: string[];
+    } = {
+      ...PLAN_REF,
+      pluginCompatibilityFingerprint:
+        '1111111111111111111111111111111111111111111111111111111111111111',
+      requiresCapabilities: ['basic-execution'],
+    };
+    await useCase.execute(
+      {
+        ...mkCommand(),
+        planRef: noisyPlanRef,
+      },
+      mkContext()
+    );
+
+    expect(capturedPlanRef).toEqual(PLAN_REF);
+  });
+
+  it('passes runExecutionContextRef through to engine RunContext', async () => {
+    let capturedRunContext: unknown;
+
+    const fakeEngine = {
+      async startRun(_planRef: unknown, runContext: unknown) {
+        capturedRunContext = runContext;
+        return {
+          provider: 'mock' as const,
+          tenantId: 'tenant-1',
+          workflowId: 'wf-1',
+          runId: 'run-test-1',
+        };
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    await useCase.execute(
+      {
+        ...mkCommand(),
+        runExecutionContextRef: {
+          uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
+          sha256: 'ctxsha',
+          schemaVersion: 'v1.0',
+          planId: PLAN_REF.planId,
+          planVersion: PLAN_REF.planVersion,
+        },
+      },
+      mkContext()
+    );
+
+    expect(capturedRunContext).toEqual({
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-test-1',
+      targetAdapter: 'mock',
+      runExecutionContextRef: {
+        uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
+        sha256: 'ctxsha',
+        schemaVersion: 'v1.0',
+        planId: PLAN_REF.planId,
+        planVersion: PLAN_REF.planVersion,
+      },
+    });
+  });
+
   it('maps AdapterNotRegisteredError to typed engine error result', async () => {
     const fakeEngine = {
       async startRun() {
@@ -205,6 +288,27 @@ describe('EngineStartRunUseCase', () => {
         kind: 'rate_limited',
         accepted: false,
         code: 'OUTBOX_RATE_LIMIT_EXCEEDED',
+      },
+    });
+  });
+
+  it('maps RunExecutionContextRejectedError to plan_rejected result', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw new RunExecutionContextRejectedError('tenant mismatch');
+      },
+    };
+
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        reason: 'engine.error.run_execution_context_rejected',
+        cause: 'run_execution_context',
       },
     });
   });

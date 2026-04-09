@@ -1,4 +1,13 @@
-import type { IsoUtcString, PlanRef, Provider, RunStatus } from '../types/contracts.js';
+import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
+import type {
+  EngineRunRef,
+  IsoUtcString,
+  PlanRef,
+  Provider,
+  RunExecutionEvidence,
+  RunExecutionPolicy,
+  RunStatus,
+} from '../types/contracts.js';
 
 export type EventType =
   | 'RunQueued'
@@ -41,18 +50,15 @@ export type EventEnvelope = EventInput & {
 };
 
 /**
- * Content-addressable reference to a compiled SQL artifact stored in object storage.
- * Attached to StepStarted.payload for DBT_MODEL and DBT_TEST step kinds.
- *
- * Design: ADR-0032 - Option A (reference in StepStarted.payload)
- * Pattern: Content-Addressable Storage (CAS) with SHA-256 as key.
- *
- * INV-CCREF-001: sha256 MUST be the SHA-256 hex digest of the blob at storageUri.
- * INV-CCREF-003: Field is OPTIONAL. Absent = not an error. Consumers must fail-open.
- * INV-CCREF-006: Event log stores ONLY this reference, never the SQL text.
- * INV-CCREF-007: file:// is ONLY valid in local dev; prohibited in NODE_ENV=production.
+ * Generic content-addressable artifact reference emitted in step lifecycle events.
+ * This is the step-kind-agnostic runtime contract (`MW-A3`).
  */
-export interface CompiledCodeRef {
+export interface StepArtifactRef {
+  /**
+   * Canonical artifact discriminator, e.g. `dbt.compiled-sql`, `python.script`,
+   * `spark.job-spec`.
+   */
+  artifactKind: string;
   /** SHA-256 hex digest of the compiled SQL bytes (content-addressable key). */
   sha256: string;
   /** Object storage URI: s3://<bucket>/<key> | gs://<bucket>/<key> | file://<path> (dev only). */
@@ -62,6 +68,11 @@ export interface CompiledCodeRef {
   /** Character encoding. MUST be 'utf-8'. Default: 'utf-8'. */
   encoding?: 'utf-8';
 }
+
+/**
+ * DBT-specialized alias retained for compatibility with existing callers.
+ */
+export interface CompiledCodeRef extends Omit<StepArtifactRef, 'artifactKind'> {}
 
 export interface RunMetadata {
   tenantId: string;
@@ -83,14 +94,15 @@ export interface RunMetadata {
    * initial runId here for root runs to keep retry reservation stable.
    */
   originRunId?: string;
-  provider: 'temporal' | 'conductor' | 'mock';
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
+  providerRef: EngineRunRef;
   createdAt?: IsoUtcString;
 }
+
+/**
+ * Provider-ref reconciliation payload for pre-bootstrapped runs.
+ * The update itself stays fully discriminated by provider.
+ */
+export type ProviderRefUpdate = EngineRunRef;
 
 export interface AppendResult {
   appended: EventEnvelope[];
@@ -129,11 +141,21 @@ export interface ListEventsOptions {
   limit?: number;
 }
 
+/**
+ * Version marker for persisted WorkflowSnapshot shape.
+ * Development baseline for persisted WorkflowSnapshot rows.
+ * The active branch keeps one snapshot schema line (`1`) while the
+ * execution-evidence shape evolves in development.
+ */
+export const CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION = 1 as const;
+
 export interface WorkflowSnapshot {
+  schemaVersion: number;
   runId: string;
   status: RunStatus;
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
+  execution?: RunExecutionEvidence;
   paused: boolean;
   cancelling: boolean;
   /**
@@ -152,14 +174,6 @@ export interface WorkflowSnapshot {
   >;
 }
 
-export interface ProviderRefUpdate {
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
-}
-
 export interface RetryAttemptReservation {
   parentRunId: string;
   originRunId: string;
@@ -170,19 +184,19 @@ export interface IRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   /**
+   * Reconciles persisted provider identity after a pre-bootstrap estimate.
+   * Implementations MUST reject tenant drift and provider discriminator changes.
+   */
+  saveProviderRef(
+    tenantId: string,
+    runId: string,
+    providerRef: ProviderRefUpdate
+  ): Promise<RunMetadata>;
+  /**
    * Atomically reserves the next business retry lineage slot for a new run
    * derived from `sourceRunId`.
    */
-  reserveRetryAttempt?(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
-
-  /**
-   * Updates the provider-assigned references on an already-bootstrapped run.
-   *
-   * Called after `adapter.startRun()` returns a `firstExecutionRunId` that differs
-   * from the `estimateRunRef()` value written at bootstrap time.
-   * Optional - the engine call-site is fail-soft.
-   */
-  saveProviderRef?(tenantId: string, runId: string, update: ProviderRefUpdate): Promise<void>;
+  reserveRetryAttempt(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
 }
 
 export interface IRunStateStoreRead {
@@ -239,30 +253,7 @@ export interface RunStateCommandPort {
   appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult>;
 }
 
-export interface ExecutionPlan {
-  metadata: {
-    planId: string;
-    planVersion: string;
-    schemaVersion: string;
-    contractVersion?: string;
-    inputHashSha256?: string;
-    requiresCapabilities?: string[];
-    fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
-    targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
-  };
-  steps: Array<
-    {
-      stepId: string;
-      kind?: string;
-      type?: 'task' | 'gateway';
-      gateway?: {
-        dslVersion: '1.0';
-        expression: string;
-      };
-      dependsOn?: string[];
-    } & Record<string, unknown>
-  >;
-}
+export type ExecutionPlan = CanonicalExecutionPlan;
 
 export interface IClock {
   nowIsoUtc(): IsoUtcString;
@@ -294,9 +285,17 @@ export interface IIdempotencyKeyBuilder {
 }
 
 export interface IPlanFetcher {
-  fetch(planRef: PlanRef): Promise<Uint8Array>;
+  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
 }
 
 export interface IPlanIntegrityValidator {
-  fetchAndValidate(planRef: PlanRef, fetcher: IPlanFetcher): Promise<Uint8Array>;
+  fetchAndValidate(
+    planRef: PlanRef,
+    fetcher: IPlanFetcher
+  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }>;
+}
+
+export interface StoredPlanArtifact {
+  bytes: Uint8Array;
+  executionPolicy: RunExecutionPolicy;
 }

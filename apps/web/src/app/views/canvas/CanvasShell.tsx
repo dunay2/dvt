@@ -20,6 +20,7 @@ export default function CanvasShell({
   activeRunId,
   registeredPlugins,
   userPermissions,
+  canvasAuthoringMode,
   nodesWithImpact,
   edges,
   nodeTypes,
@@ -44,10 +45,13 @@ export default function CanvasShell({
   onToggleColumns,
   onPlan,
   onRun,
+  canStartRun,
+  planStatusSummary,
   exclusiveOverlayMode,
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  transformationValidation,
 }: CanvasShellProps) {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
 
@@ -86,10 +90,14 @@ export default function CanvasShell({
             onToggleColumns={onToggleColumns}
             onPlan={onPlan}
             onRun={onRun}
+            canStartRun={canStartRun}
+            planStatusSummary={planStatusSummary}
+            canvasAuthoringMode={canvasAuthoringMode}
             exclusiveOverlayMode={exclusiveOverlayMode}
             canUseCostOverlay={canUseCostOverlay}
             impactOverlayEnabled={impactOverlayEnabled}
             columnLevelLineageEnabled={columnLevelLineageEnabled}
+            transformationValidation={transformationValidation}
             nodeCount={nodesWithImpact.length}
             edgeCount={edges.length}
           />

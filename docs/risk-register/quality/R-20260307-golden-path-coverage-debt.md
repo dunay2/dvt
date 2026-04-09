@@ -46,5 +46,5 @@ paths without a strong CI signal.
 - `.github/workflows/golden-paths.yml`
 - `package.json` (`pnpm golden:validate`)
 - `docs/guides/testing-and-ci-capabilities.md`
-- `docs/planning/gaps/GAP_EXECUTION_PLANS.md`
+- `docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md`
 - `docs/archive/GOLDEN_PATH_COVERAGE_DEBT_ASSESSMENT_20260307.md`

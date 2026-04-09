@@ -33,7 +33,7 @@ This file is the active status doc for execution gaps. Use it together with:
 Minimum tuple for this document:
 
 - `canonical_spec`: gap-specific. See each gap section below.
-- `status_doc`: [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
+- `status_doc`: [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
 - `code_paths`: listed in each active gap section
 - `test_paths`: listed in each active gap section or linked evidence doc
 - `verification_cmd`: gap-specific. See each active gap section below.
@@ -66,7 +66,7 @@ Minimum tuple for this document:
    - Store: [`packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts)
    - Worker: [`packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts`](../../../packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts)
    - Runtime wiring: [`apps/api/src/runtime/intentReconcilerRuntime.ts`](../../../apps/api/src/runtime/intentReconcilerRuntime.ts)
-   - Evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+   - Evidence: [`docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)
 3. `G4` compiledCodeRef ownership is implemented end-to-end at package scope and documented as closed.
    - Contracts fixtures and validation tests: [`packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`](../../../packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts)
    - Planner enrichment: [`packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts)
@@ -84,7 +84,7 @@ Minimum tuple for this document:
    - Registry and schema: [`packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts`](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
    - Planner validation path: [`packages/@dvt/planner/src/domain/Planner.ts`](../../../packages/@dvt/planner/src/domain/Planner.ts)
    - Adapter validation path: [`packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
-   - Closeout evidence: [`docs/evidence/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
+   - Closeout evidence: [`docs/evidence/critical/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/critical/ED-20260314-g9-step-type-registry-closeout.md)
 
 ## Gap-by-Gap Status
 
@@ -93,11 +93,11 @@ Minimum tuple for this document:
 - Status: Closed
 - Traceability tuple:
   - `canonical_spec`: [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)
-  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalClient.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
   - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/smoke.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
   - `verification_cmd`: `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`
-  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md), [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md), [R-20260308 - Temporal runtime hardening residuals](../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
+  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/critical/ED-20260304-temporal-lookup-run-ref.md), [ED-20260308 - Temporal adapter operational close-out](../../evidence/critical/ED-20260308-temporal-operational-close-out.md), [R-20260308 - Temporal runtime hardening residuals](../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
 - Delivered:
   - `lookupRunRef` implemented
   - unit tests for exists/not-found/error paths
@@ -126,33 +126,33 @@ Minimum tuple for this document:
 
 - Status: Closed
 - Traceability tuple:
-  - `canonical_spec`: [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](G3-TASK-SPECIFICATION.md)
-  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `canonical_spec`: [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](./G3-TASK-SPECIFICATION.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts`, `packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts`, `apps/api/src/runtime/intentReconcilerRuntime.ts`
   - `test_paths`: `packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts`, `packages/@dvt/engine/test/workers/IntentReconcilerWorker.test.ts`
   - `verification_cmd`: `pnpm test:adapter-postgres`, `pnpm test:engine`
-  - `evidence_or_risk`: [ED-20260304 - G3 intent store Postgres reconciler](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+  - `evidence_or_risk`: [ED-20260304 - G3 intent store Postgres reconciler](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)
 - Delivered:
   - durable Postgres intent store
   - transition guards and typed errors
   - non-overlap reconciler worker with infra backoff/jitter/timeout guard
   - runtime wiring in `apps/api`
 - Closure evidence:
-  - [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+  - [`docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)
 - Non-blocking follow-up:
   - keep integration/load evidence current as production telemetry grows
-- Task spec: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
+- Task spec: [`G3-TASK-SPECIFICATION.md`](./G3-TASK-SPECIFICATION.md)
 
 ### G4 - compiledCodeRef ownership
 
 - Status: Closed
 - Traceability tuple:
-  - `canonical_spec`: [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](G4-TASK-SPECIFICATION.md)
-  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `canonical_spec`: [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](./G4-TASK-SPECIFICATION.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts`, `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`
   - `test_paths`: `packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`, `packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts`, `packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`, `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/contracts test`, `pnpm --filter @dvt/planner test`, `pnpm --filter @dvt/adapter-temporal test`, `pnpm --filter @dvt/traceability-service test`
-  - `evidence_or_risk`: [ED-20260304 - compiledCodeRef ownership](../../evidence/ED-20260304-compiledcoderef-ownership.md)
+  - `evidence_or_risk`: [ED-20260304 - compiledCodeRef ownership](../../evidence/critical/ED-20260304-compiledcoderef-ownership.md)
 - Subtasks:
 
 | Task | Scope                                             | Status                                      |
@@ -162,29 +162,29 @@ Minimum tuple for this document:
 | T4-3 | adapter-temporal propagation to StepStarted       | Done in code + tests + QA hardening cleanup |
 | T4-4 | traceability reader/cache/SqlJobFacet             | Done in code + tests                        |
 
-- Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
-- Historical QA architecture review: [`docs/archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../../archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md)
+- Task spec: [`G4-TASK-SPECIFICATION.md`](./G4-TASK-SPECIFICATION.md)
+- Historical QA architecture review: [`docs/archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md)
 
 ### G5 - Outbox worker independiente
 
 - Status: Closed
 - Closed: 2026-03-12
-- Evidence: [ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md)
+- Evidence: [ED-20260312-g5-canary-local-docker](../../evidence/supporting/ED-20260312-g5-canary-local-docker.md)
 - Traceability tuple:
-  - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md)
   - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/delivery/src/application/OutboxWorker.ts`, `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
   - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`, `packages/@dvt/delivery/test/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/delivery test`, `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm --filter dvt-outbox-worker test:arch`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: closed — local-docker canary evidence in [ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md); advisory lock exclusivity proven by `PgShardOwnershipGate.integration.test.ts` (2/2 pass against the repo `postgres:16` compose service, 2026-03-12); keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible for downstream contract hardening and `outbox_lineage` flow (Phase 2 / G10)
+  - `evidence_or_risk`: closed — local-docker canary evidence in [ED-20260312-g5-canary-local-docker](../../evidence/supporting/ED-20260312-g5-canary-local-docker.md); advisory lock exclusivity proven by `PgShardOwnershipGate.integration.test.ts` (2/2 pass against the repo `postgres:16` compose service, 2026-03-12); keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible for downstream contract hardening and `outbox_lineage` flow (Phase 2 / G10)
 - Working refs:
-  - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
-  - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
-  - [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
-  - [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+  - [`G5 - AI Execution Tracker`](./G5-AI-EXECUTION-TRACKER.md)
+  - [`G5 / US-G5.3 Correctness Hardening Plan`](./G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
+  - [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](./G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+  - [`G5 / US-G5.5 Sharding And Fencing Plan`](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
   - [`docs/adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
-  - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
+  - [`docs/planning/gaps/g5-outbox-worker-guide.md`](./g5-outbox-worker-guide.md)
   - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
@@ -211,18 +211,18 @@ Minimum tuple for this document:
 
 - Status: Closed
 - Closed: 2026-03-12
-- Evidence: [ED-20260312 - G6 golden schema closeout](../../evidence/ED-20260312-g6-golden-schema-closeout.md)
+- Evidence: [ED-20260312 - G6 golden schema closeout](../../evidence/critical/ED-20260312-g6-golden-schema-closeout.md)
 - Traceability tuple:
-  - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)
-  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](./g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`, `packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts`
   - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`, `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts`, `packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm --filter @dvt/traceability-service test:lineage:golden`, `pnpm --filter @dvt/traceability-service test:lineage:schema`
-  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md), [ED-20260312 - G6 golden schema closeout](../../evidence/ED-20260312-g6-golden-schema-closeout.md)
+  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/critical/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md), [ED-20260312 - G6 golden schema closeout](../../evidence/critical/ED-20260312-g6-golden-schema-closeout.md)
 - Working refs:
-  - [G6 hub](g6/index.md)
-  - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-  - [G6 Architecture and QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+  - [G6 hub](./g6/index.md)
+  - [G6 OpenLineage CI and Schema Pin Plan](./g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  - [G6 Architecture and QA Review](./g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
   - [Traceability Contracts](../../contracts/traceability/index.md)
 - Delivered:
   - compiled-code lineage resolver/cache/facet mapping package code
@@ -239,7 +239,7 @@ Minimum tuple for this document:
 ### G7 - Read models + standalone projector
 
 - Status: Closed
-- Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
+- Active tracker: [G7 - AI Execution Tracker](./G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
   - terminal-state transition guards with typed `InvalidStateTransitionError`
@@ -262,14 +262,14 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
     now calls `saveProviderRef` fail-soft when `adapter.startRun()` returns a
     different provider run-id than `estimateRunRef()`
 - Evidence:
-  - [ED-20260316 - G7 provider run-id reconciliation](../../evidence/ED-20260316-g7-provider-ref-reconciliation.md)
-  - [ED-20260316 - G7 closeout](../../evidence/ED-20260316-g7-closeout.md)
+  - [ED-20260316 - G7 provider run-id reconciliation](../../evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md)
+  - [ED-20260316 - G7 closeout](../../evidence/critical/ED-20260316-g7-closeout.md)
 
 ### G8 - Auth real en apps/api
 
 - Status: Closed
 - Closed: 2026-03-12
-- Evidence: [`docs/evidence/ED-20260312-g8-arch-tests-engine-wiring.md`](../../evidence/ED-20260312-g8-arch-tests-engine-wiring.md)
+- Evidence: [`docs/evidence/critical/ED-20260312-g8-arch-tests-engine-wiring.md`](../../evidence/critical/ED-20260312-g8-arch-tests-engine-wiring.md)
 - Delivered:
   - `TenantHierarchyAuthorizationPolicy` with full tenant → project → environment grant hierarchy
   - `OidcAuthenticator` + `JwksJwtVerifier` (jose-based JWKS) behind `IJwtVerifierGateway`
@@ -289,13 +289,13 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
 - verification_cmd:
   - `pnpm --filter dvt-api test` → 21/21 pass
   - `pnpm --filter dvt-api test:arch` → 0 violations
-- Spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
+- Spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](./G8-REAL-AUTH-FINAL-SPEC.md)
 
 ### G9 - StepTypeRegistry + typed stepTypeConfig
 
 - Status: Closed
 - Closed: 2026-03-14
-- Evidence: [`docs/evidence/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
+- Evidence: [`docs/evidence/critical/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/critical/ED-20260314-g9-step-type-registry-closeout.md)
 - Delivered:
   - `IStepTypeRegistry`, `StepTypeRegistry`, `createDefaultStepTypeRegistry`, and
     `DbtStepTypeConfigSchema` in `@dvt/contracts/src/step-registry/StepTypeRegistry.ts`
@@ -340,8 +340,8 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
 
 - Status: Closed
 - Closed: 2026-03-15
-- Evidence: [`docs/evidence/ED-20260315-g10-closeout.md`](../../evidence/ED-20260315-g10-closeout.md)
-- Historical tracker: [G10 - AI Execution Tracker](../../archive/planning/gaps/G10-AI-EXECUTION-TRACKER.md)
+- Evidence: [`docs/evidence/critical/ED-20260315-g10-closeout.md`](../../evidence/critical/ED-20260315-g10-closeout.md)
+- Historical tracker: [G10 - AI Execution Tracker](../planning/gaps/G10-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - `ILineageSink` and `ILineageOutboxStore` contract interfaces in `@dvt/contracts`
   - `lineage_outbox` + `lineage_dead_letter` tables as migration `005`
@@ -368,14 +368,14 @@ Recommended order for next cycles:
 
 Parallel execution track detail:
 
-- [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)
+- [`GAP_PARALLEL_EXECUTION_TRACKS.md`](./GAP_PARALLEL_EXECUTION_TRACKS.md)
 
 ## Related Documents
 
-- Planning gaps hub: [`docs/planning/gaps/index.md`](index.md)
-- G3 detail: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
-- G4 detail: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
-- Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)
-- G3 evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
-- G4 evidence: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
-- G8 spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
+- Planning gaps hub: [`docs/planning/gaps/index.md`](./index.md)
+- G3 detail: [`G3-TASK-SPECIFICATION.md`](./G3-TASK-SPECIFICATION.md)
+- G4 detail: [`G4-TASK-SPECIFICATION.md`](./G4-TASK-SPECIFICATION.md)
+- Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](./GAP_PARALLEL_EXECUTION_TRACKS.md)
+- G3 evidence: [`docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)
+- G4 evidence: [`docs/evidence/critical/ED-20260304-compiledcoderef-ownership.md`](../../evidence/critical/ED-20260304-compiledcoderef-ownership.md)
+- G8 spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](./G8-REAL-AUTH-FINAL-SPEC.md)

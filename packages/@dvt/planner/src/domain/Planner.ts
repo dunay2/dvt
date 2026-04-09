@@ -3,7 +3,7 @@
  *
  *  CQRS segregation:
  *   - COMMAND side → BuildPlanCommand (input VO) + Planner.execute()
- *   - QUERY side   → { plan: ExecutionPlanV2; canonicalPlanJson: string } (read model)
+ *   - QUERY side   → { plan: ExecutionPlan; executionPolicy: RunExecutionPolicy; canonicalPlanCoreJson: string }
  *
  *  Delegated sub-responsibilities (SRP):
  *   - InputEnvelopeValidator → validates shape of the input envelope
@@ -15,7 +15,11 @@
  *  This class is the entry-point Domain Service: it orchestrates the pipeline
  *  and owns cross-cutting concerns (abort, metrics, limits).
  */
-import { createDefaultStepTypeRegistry, type IStepTypeRegistry } from '@dvt/contracts';
+import {
+  collectRequiredCapabilitiesForSteps,
+  createDefaultStepTypeRegistry,
+  type IStepTypeRegistry,
+} from '@dvt/contracts';
 
 import { nowMs } from '../runtime/time.js';
 
@@ -33,18 +37,18 @@ import { binaryCompare } from './sorting.js';
 import { dbtStepFactory } from './stepFactory/dbtStepFactory.js';
 import type { StepFactory } from './stepFactory/StepFactory.js';
 import type {
-  ExecutionPlanV2,
+  ExecutionPlan,
   GraphNode,
   NormalizedPlannerInput,
   PlanCore,
-  PlannerInputEnvelopeV2,
+  PlannerInputEnvelopeV1,
 } from './types.js';
 
 // ── COMMAND ────────────────────────────────────────────────────────────────────
 // Immutable value object expressing the intent to build an execution plan.
 
 export class BuildPlanCommand {
-  constructor(readonly input: PlannerInputEnvelopeV2) {}
+  constructor(readonly input: PlannerInputEnvelopeV1) {}
 }
 
 // ── Options ────────────────────────────────────────────────────────────────────
@@ -73,7 +77,8 @@ export interface PlannerOptions {
  *
  * Guarantees:
  * - planId = sha256(JCS(planCore)), where planCore = { metadata: { planVersion, inputHashSha256 }, steps }
- * - canonicalPlanJson = JCS(planCore), i.e. caller can verify sha256(canonicalPlanJson) === planId
+ * - canonicalPlanCoreJson = JCS(planCore), i.e. caller can verify
+ *   sha256(canonicalPlanCoreJson) === planId
  * - inputHashSha256 = sha256(JCS({ nodes, selection, policies })) excluding observability and volatile fields
  * - Same semantic input -> same planId across Node/Bun/Deno
  */
@@ -97,9 +102,11 @@ export class Planner {
   }
 
   /** CQRS command handler entry point. */
-  execute(
-    command: BuildPlanCommand
-  ): Promise<{ plan: ExecutionPlanV2; canonicalPlanJson: string }> {
+  execute(command: BuildPlanCommand): Promise<{
+    plan: ExecutionPlan;
+    executionPolicy: import('@dvt/contracts').RunExecutionPolicy;
+    canonicalPlanCoreJson: string;
+  }> {
     return this.buildPlan(command.input);
   }
 
@@ -107,9 +114,11 @@ export class Planner {
    * Primary public API (retained for call-site compatibility).
    * Internally delegates to the CQRS collaborators.
    */
-  public async buildPlan(
-    input: PlannerInputEnvelopeV2
-  ): Promise<{ plan: ExecutionPlanV2; canonicalPlanJson: string }> {
+  public async buildPlan(input: PlannerInputEnvelopeV1): Promise<{
+    plan: ExecutionPlan;
+    executionPolicy: import('@dvt/contracts').RunExecutionPolicy;
+    canonicalPlanCoreJson: string;
+  }> {
     const started = nowMs();
     try {
       this.checkAbort(started);
@@ -155,8 +164,17 @@ export class Planner {
       this.validateStepConfigs(normalizedSteps);
 
       // 7) Assemble plan
+      const requiredCapabilities = collectRequiredCapabilitiesForSteps(
+        this.stepTypeRegistry,
+        normalizedSteps
+      );
       const result = await this.assembler.execute(
-        new AssemblePlanCommand(normalizedInput, normalizedSteps, this.limits.maxPlanSizeBytes)
+        new AssemblePlanCommand(
+          normalizedInput,
+          normalizedSteps,
+          this.limits.maxPlanSizeBytes,
+          requiredCapabilities
+        )
       );
 
       this.metrics.recordDuration(nowMs() - started);
@@ -169,19 +187,12 @@ export class Planner {
     }
   }
 
-  private normalizeInput(input: PlannerInputEnvelopeV2): NormalizedPlannerInput {
-    let nodes: readonly GraphNode[];
-    if (Array.isArray(input.nodes) && input.nodes.length > 0) {
-      nodes = input.nodes;
-    } else if (input.graphSource !== undefined) {
-      nodes = input.graphSource.nodes;
-    } else {
-      nodes = [];
-    }
+  private normalizeInput(input: PlannerInputEnvelopeV1): NormalizedPlannerInput {
+    const nodes: readonly GraphNode[] = input.graphSource.nodes;
     if (nodes.length === 0) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        'Planner requires non-empty nodes (directly or derived from graphSource).'
+        'Planner requires non-empty nodes from graphSource.'
       );
     }
     return { ...input, nodes };

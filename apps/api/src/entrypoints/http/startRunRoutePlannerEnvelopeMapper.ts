@@ -1,4 +1,5 @@
-import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
+import { parsePlannerInputEnvelopeV1 } from '@dvt/contracts';
+import type { GenericGraphNodeV1, GenericGraphSourceV1 } from '@dvt/contracts';
 
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 
@@ -9,8 +10,6 @@ type PlannerCommandFields = {
   -readonly [K in
     | 'graphSource'
     | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
     | 'policies'
     | 'environment'
     | 'observability']?: StartRunCommand[K];
@@ -22,21 +21,13 @@ export function parseStartRunPlannerEnvelope(
 ): RouteParseResult<
   Pick<
     StartRunCommand,
-    | 'graphSource'
-    | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
-    | 'policies'
-    | 'environment'
-    | 'observability'
+    'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
   >
 > {
   try {
-    const parsed = parsePlannerInputEnvelopeV2({
+    const parsed = parsePlannerInputEnvelopeV1({
       ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
       ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
-      ...(record.manifest === undefined ? {} : { manifest: record.manifest }),
-      ...(record.nodes === undefined ? {} : { nodes: record.nodes }),
       ...(record.policies === undefined ? {} : { policies: record.policies }),
       ...(record.environment === undefined ? {} : { environment: record.environment }),
       ...(record.observability === undefined ? {} : { observability: record.observability }),
@@ -53,16 +44,10 @@ export function parseStartRunPlannerEnvelope(
 }
 
 function toPlannerCommandFields(
-  parsed: ReturnType<typeof parsePlannerInputEnvelopeV2>
+  parsed: ReturnType<typeof parsePlannerInputEnvelopeV1>
 ): Pick<
   StartRunCommand,
-  | 'graphSource'
-  | 'manifestRef'
-  | 'manifest'
-  | 'nodes'
-  | 'policies'
-  | 'environment'
-  | 'observability'
+  'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
 > {
   const result: PlannerCommandFields = {};
 
@@ -71,11 +56,6 @@ function toPlannerCommandFields(
 
   const manifestRef = mapManifestRef(parsed.manifestRef);
   if (manifestRef !== undefined) result.manifestRef = manifestRef;
-
-  if (parsed.manifest !== undefined) result.manifest = parsed.manifest;
-
-  const nodes = mapNodes(parsed.nodes);
-  if (nodes !== undefined) result.nodes = nodes;
 
   if (parsed.policies !== undefined) result.policies = parsed.policies;
 
@@ -89,22 +69,50 @@ function toPlannerCommandFields(
 }
 
 function mapGraphSource(
-  graphSource: ReturnType<typeof parsePlannerInputEnvelopeV2>['graphSource']
+  graphSource: ReturnType<typeof parsePlannerInputEnvelopeV1>['graphSource']
 ): StartRunCommand['graphSource'] | undefined {
   if (graphSource === undefined) return undefined;
 
+  const nodes: GenericGraphNodeV1[] = graphSource.nodes.map((node) => {
+    const mappedNode: GenericGraphNodeV1 = {
+      nodeId: node.nodeId,
+      stepKind: node.stepKind,
+      dependsOn: node.dependsOn,
+    };
+
+    if (node.stepTypeConfig !== undefined) {
+      mappedNode.stepTypeConfig = node.stepTypeConfig;
+    }
+
+    if (node.metadata !== undefined) {
+      const metadata: NonNullable<GenericGraphNodeV1['metadata']> = {};
+      if (node.metadata.displayName !== undefined) {
+        metadata.displayName = node.metadata.displayName;
+      }
+      if (node.metadata.sourceRef !== undefined) {
+        metadata.sourceRef = node.metadata.sourceRef;
+      }
+      if (node.metadata.tags !== undefined) {
+        metadata.tags = node.metadata.tags;
+      }
+      if (Object.keys(metadata).length > 0) {
+        mappedNode.metadata = metadata;
+      }
+    }
+
+    return mappedNode;
+  });
+
   return {
     kind: graphSource.kind,
-    nodes: graphSource.nodes.map((node) => ({
-      nodeId: node.nodeId,
-      resourceType: node.resourceType,
-      dependsOn: [...node.dependsOn],
-    })),
-  };
+    sourceFamily: graphSource.sourceFamily,
+    sourceVersion: graphSource.sourceVersion,
+    nodes,
+  } satisfies GenericGraphSourceV1;
 }
 
 function mapManifestRef(
-  manifestRef: ReturnType<typeof parsePlannerInputEnvelopeV2>['manifestRef']
+  manifestRef: ReturnType<typeof parsePlannerInputEnvelopeV1>['manifestRef']
 ): StartRunCommand['manifestRef'] | undefined {
   if (manifestRef === undefined) return undefined;
 
@@ -115,20 +123,8 @@ function mapManifestRef(
   };
 }
 
-function mapNodes(
-  nodes: ReturnType<typeof parsePlannerInputEnvelopeV2>['nodes']
-): StartRunCommand['nodes'] | undefined {
-  if (nodes === undefined) return undefined;
-
-  return nodes.map((node) => ({
-    nodeId: node.nodeId,
-    resourceType: node.resourceType,
-    dependsOn: [...node.dependsOn],
-  }));
-}
-
 function mapEnvironment(
-  environment: ReturnType<typeof parsePlannerInputEnvelopeV2>['environment']
+  environment: ReturnType<typeof parsePlannerInputEnvelopeV1>['environment']
 ): StartRunCommand['environment'] | undefined {
   if (environment === undefined) return undefined;
 
@@ -144,7 +140,7 @@ function mapEnvironment(
 }
 
 function mapObservability(
-  observability: ReturnType<typeof parsePlannerInputEnvelopeV2>['observability']
+  observability: ReturnType<typeof parsePlannerInputEnvelopeV1>['observability']
 ): StartRunCommand['observability'] | undefined {
   if (observability === undefined) return undefined;
 

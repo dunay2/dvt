@@ -1,4 +1,5 @@
-import { parseRunEventWrite } from '@dvt/contracts';
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, parseRunEventWrite } from '@dvt/contracts';
+import type { RunEventWriteSchemaT } from '@dvt/contracts';
 
 import { InvalidRunEventInputError, RunSequenceOverflowError } from '../contracts/errors.js';
 import type { RunEventInput, WorkflowSnapshot } from '../contracts/runEvents.js';
@@ -7,6 +8,7 @@ export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 
 export function createDefaultWorkflowSnapshot(runId: string): WorkflowSnapshot {
   return {
+    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
     runId,
     status: 'PENDING',
     paused: false,
@@ -21,19 +23,7 @@ export function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnaps
 }
 
 export function assertRunEventInput(event: RunEventInput, index: number): void {
-  if (!event?.idempotencyKey) {
-    throw new InvalidRunEventInputError({
-      reason: 'missing_idempotency_key',
-      index,
-      runId: event?.runId,
-    });
-  }
-  if (!event?.runId) {
-    throw new InvalidRunEventInputError({ reason: 'missing_run_id', index });
-  }
-  if (event.runId.trim() === '') {
-    throw new InvalidRunEventInputError({ reason: 'empty_run_id', index, runId: event.runId });
-  }
+  const validated = parseRunEventEnvelope(event, index);
 
   const record = event as unknown as Record<string, unknown>;
   if (Object.hasOwn(record, 'runSeq')) {
@@ -47,17 +37,19 @@ export function assertRunEventInput(event: RunEventInput, index: number): void {
     throw new InvalidRunEventInputError({
       reason: 'persistedat_forbidden_in_write_input',
       index,
-      runId: event.runId,
+      runId: validated.runId,
     });
   }
+}
 
+function parseRunEventEnvelope(event: RunEventInput, index: number): RunEventWriteSchemaT {
   try {
-    parseRunEventWrite(event);
+    return parseRunEventWrite(event);
   } catch {
     throw new InvalidRunEventInputError({
       reason: 'schema_validation_failed',
       index,
-      runId: event.runId,
+      runId: event?.runId,
     });
   }
 }
@@ -72,10 +64,36 @@ export function assertEventRunIdMatches(runId: string, event: RunEventInput, ind
   }
 }
 
+export function assertEventTenantMatches(
+  tenantId: string,
+  event: RunEventInput,
+  index: number
+): void {
+  if (event.tenantId !== tenantId) {
+    throw new InvalidRunEventInputError({
+      reason: 'tenant_id_mismatch',
+      index,
+      runId: event.runId,
+    });
+  }
+}
+
 export function assertEventsMatchRunId(runId: string, events: RunEventInput[]): void {
   for (const [index, event] of events.entries()) {
     assertRunEventInput(event, index);
     assertEventRunIdMatches(runId, event, index);
+  }
+}
+
+export function assertEventsMatchRunIdAndTenant(
+  runId: string,
+  tenantId: string,
+  events: RunEventInput[]
+): void {
+  for (const [index, event] of events.entries()) {
+    assertRunEventInput(event, index);
+    assertEventRunIdMatches(runId, event, index);
+    assertEventTenantMatches(tenantId, event, index);
   }
 }
 

@@ -99,8 +99,8 @@ A feature is done when:
 
 - Architecture atlas: `../architecture/architecture_atlas.md`
 - Completion and effort assessment: `../status/code_completion_assessment_2026-03-06.md`
-- Gap execution plans: `../../planning/gaps/GAP_EXECUTION_PLANS.md`
-- Parallel execution tracks: `../../planning/gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`
+- System delivery status: `../../system-delivery-status.md`
+- Roadmap of record: `../../planning/roadmap/index.md`
 
 ## Next
 

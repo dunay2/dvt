@@ -10,7 +10,7 @@ superseded_by: ADR-0040
 
 ## Status
 
-Superseded by [ADR-0040](ADR-0040-retry-ownership-and-attempt-authority.md).
+Superseded by [ADR-0040](./ADR-0040-retry-ownership-and-attempt-authority.md).
 
 ## Historical Context
 

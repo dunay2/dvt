@@ -1,4 +1,7 @@
+import { createHash } from 'node:crypto';
+
 import { CURRENT_EXECUTION_PLAN_VERSION } from '../../src/index.js';
+import { jcsCanonicalize } from '../../src/utils/jcsCanonicalize.js';
 
 /**
  * Fixtures mínimos para validar el contrato normativo del planner (GAP-P0-02).
@@ -9,16 +12,18 @@ export const HEX_64_B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 
 export const VALID_PLANNER_INPUT_FIXTURE = {
   graphSource: {
-    kind: 'normalized-graph-v1',
+    kind: 'generic-graph-v1',
+    sourceFamily: 'dbt',
+    sourceVersion: '1.0',
     nodes: [
       {
         nodeId: 'model.analytics.customers',
-        resourceType: 'model',
+        stepKind: 'DBT_MODEL',
         dependsOn: [],
       },
       {
         nodeId: 'model.analytics.orders',
-        resourceType: 'model',
+        stepKind: 'DBT_MODEL',
         dependsOn: ['model.analytics.customers'],
       },
     ],
@@ -81,8 +86,10 @@ export const MULTI_SOURCE_PLANNER_INPUT_FIXTURE = {
 export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
   metadata: {
     planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+    schemaVersion: 'v1.2',
+    contractVersion: '1.0.0',
     inputHashSha256: HEX_64_A,
-    planId: HEX_64_B,
+    planId: '',
     createdAtIso: '2026-02-26T22:01:00.000Z',
   },
   steps: [
@@ -110,15 +117,27 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
   },
 };
 
+const VALID_PLAN_CORE_FIXTURE = {
+  metadata: {
+    planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+    inputHashSha256: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.inputHashSha256,
+  },
+  steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+} as const;
+
+const VALID_CANONICAL_PLAN_CORE_JSON = jcsCanonicalize(VALID_PLAN_CORE_FIXTURE);
+
+VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId = createHash('sha256')
+  .update(VALID_CANONICAL_PLAN_CORE_JSON, 'utf8')
+  .digest('hex');
+
 export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
   plan: VALID_EXECUTION_PLAN_V2_FIXTURE,
-  canonicalPlanJson: JSON.stringify({
-    metadata: {
-      planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-      inputHashSha256: HEX_64_A,
-    },
-    steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
-  }),
+  executionPolicy: {
+    pluginCompatibilityFingerprint: HEX_64_A,
+    requiresCapabilities: ['basic-execution'],
+  },
+  canonicalPlanCoreJson: VALID_CANONICAL_PLAN_CORE_JSON,
 };
 
 export const INVALID_PLANNER_INPUT_FIXTURE = {

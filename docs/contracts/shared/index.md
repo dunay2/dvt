@@ -11,12 +11,13 @@ Cross-cutting types and shared validation contracts.
 
 ## Repository-local documents
 
+- [AdminRebuildSnapshotAccess v1](AdminRebuildSnapshotAccess.v1.md)
+- [ContractsErrorModel v1](ContractsErrorModel.v1.md)
 - [HttpErrorEnvelope v1](HttpErrorEnvelope.v1.md)
 
 ## Normative Sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`
-- `packages/@dvt/contracts/src/planner-input.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/types/artifacts.ts`
 - `packages/@dvt/contracts/src/types/contracts.ts`

@@ -1,0 +1,25 @@
+---
+id: R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK
+title: Legacy ExecutionPlanV2 imports can break after canonical naming retirement
+status: Open
+date: 2026-04-01
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  The repository removes the public ExecutionPlanV2 alias and keeps ExecutionPlan as the only
+  canonical name. Internal packages are migrated in the same slice.
+risk: >
+  External or downstream code that still imports ExecutionPlanV2 from public package barrels may
+  fail at compile time after upgrade.
+mitigations:
+  - Internal packages (contracts, planner, engine, adapter-temporal, api) are migrated to
+    ExecutionPlan.
+  - Contracts tests include a guard that root barrel no longer exports ExecutionPlanV2 alias.
+  - ADR-0042 wording is updated to document the canonical symbol and parser names.
+  - Evidence file records explicit build and test validation across affected packages.
+---

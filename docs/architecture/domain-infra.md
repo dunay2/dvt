@@ -1,38 +1,74 @@
 ---
 title: Infra Domain
-status: Draft
+status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-15
+last_reviewed: 2026-04-02
 ---
 
 # Infra Domain
 
-## Purpose
+This domain owns the automation and operating surfaces around the repository.
 
-Provides infrastructure, scripts, tools, and CI/CD for the DVT system.
+It covers CI, local validation helpers, docs generators, policy checks, and the
+tooling that keeps runtime and documentation changes governed.
 
-## Boundaries
+## Scope
 
-- [infra/](../contracts/index.md)
-- [scripts/](../contracts/index.md)
-- [tools/](../contracts/index.md)
+- `infra/`
+- `scripts/`
+- `tools/`
+- `.github/workflows/`
 
-## Responsibilities
+## Current Interactions
 
-- Provision environment
-- Run validations and CI/CD
-- Support development and operations
+```mermaid
+flowchart LR
+  Contributors["Contributors and agents"] --> Scripts["scripts/*"]
+  Scripts --> Docs["docs generators and checks"]
+  Scripts --> CI["GitHub workflows"]
+  CI --> Packages["apps/* and packages/*"]
+  Tools["tools/ci/*"] --> CI
+```
 
-## Example interaction
+## Current Responsibilities
 
-- Provides environment, runs validations, supports all domains
+- define and run local validation, hygiene, and docs-sync paths;
+- encode CI policy in GitHub workflows and helper tools;
+- generate governed views such as docs indexes and planning workboards;
+- keep operational rules explicit instead of hiding them in tribal knowledge.
 
-## Related documentation
+## Code Anchors
 
-- [Domain Map](domain-map.md)
-- [Shared Boundary Domain](domain-shared.md)
+- [hygiene.ps1](../../scripts/hygiene.ps1)
+- [sync-docs.cjs](../../scripts/sync-docs.cjs)
+- [ci.yml](../../.github/workflows/ci.yml)
+- [pr-quality-gate.yml](../../.github/workflows/pr-quality-gate.yml)
+- [arc-check.mjs](../../tools/ci/arc-check.mjs)
 
-## Status
+## Current Posture
 
-- Core infra features implemented
-- See [Current Status Map](domain-map.md#current-status-map) for pending tasks
+Infra is active and rule-bearing. It is not just repository scaffolding. The
+docs, hooks, CI policies, and validation commands materially shape how safely
+runtime changes can land.
+
+## Queued Delta
+
+- keep docs-governance surfaces aligned with the architecture cleanup so they do
+  not regress into duplicate maps or stale links;
+- continue removing CI policy drift where path matching and validation ownership
+  are still duplicated.
+
+## Domain Rules
+
+- Generated docs and workboards are outputs. Their source of truth lives in the
+  generators and controlled inputs, not in hand edits to generated files.
+- Infra documents process and validation authority, not product runtime truth.
+- No hidden bypasses: if the workflow changes, the docs and checks should say
+  so explicitly.
+
+## Related Pages
+
+- [Infra Architecture](./infra/index.md)
+- [Testing and CI Capabilities](../guides/testing-and-ci-capabilities.md)
+- [Governance Document and Rule Inventory](../planning/status/governance-document-rule-inventory.md)
+- [DVT Domain Map](./domain-map.md)

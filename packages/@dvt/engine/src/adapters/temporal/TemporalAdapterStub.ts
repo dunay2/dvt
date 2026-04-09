@@ -6,12 +6,15 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type {
-  EngineRunRef,
-  PlanRef,
-  ResolvedRunContext,
-  RunStatusSnapshot,
-  SignalRequest,
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type EngineRunRef,
+  type ExecutionPlan,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunStatusSnapshot,
+  type SignalRequest,
+  type SignalSemanticsVersion,
 } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../IProviderAdapter.js';
@@ -25,7 +28,11 @@ import type { IProviderAdapter } from '../IProviderAdapter.js';
 export class TemporalAdapterStub implements IProviderAdapter {
   readonly provider = 'temporal' as const;
 
-  async startRun(_planRef: PlanRef, _ctx: ResolvedRunContext): Promise<EngineRunRef> {
+  async startRun(
+    _plan: ExecutionPlan,
+    _planRef: PlanRef,
+    _ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
     throw new Error('NotImplemented: TemporalAdapter (Phase 2+)');
   }
   async cancelRun(_runRef: EngineRunRef): Promise<void> {
@@ -36,5 +43,9 @@ export class TemporalAdapterStub implements IProviderAdapter {
   }
   async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {
     throw new Error('NotImplemented: TemporalAdapter (Phase 2+)');
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 }

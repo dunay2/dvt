@@ -52,7 +52,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
       planId: item.planId,
       planVersion: item.planVersion,
       logicalAttemptId: item.logicalAttemptId,
-      provider: item.provider,
+      provider: item.providerRef.provider,
       ...(item.createdAt !== undefined ? { createdAt: item.createdAt } : {}),
       ...(status !== undefined ? { status } : {}),
     };

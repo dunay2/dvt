@@ -8,8 +8,6 @@
  * @version 1.1.0
  * @date 2026-03-07
  */
-import { TextDecoder } from 'node:util';
-
 import { parsePlanRef, parseResolvedRunContext, RUN_EVENT_PAYLOAD_VERSION } from '@dvt/contracts';
 import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
@@ -21,8 +19,6 @@ import type {
   ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   RunStateCommandPort,
 } from '../engine-types.js';
 
@@ -31,12 +27,9 @@ import type {
 // ---------------------------------------------------------------------------
 
 const ActivityErrorCode = {
-  INVALID_PLAN_SCHEMA: 'INVALID_PLAN_SCHEMA',
-  PLAN_CONTRACT_VERSION_MISSING: 'PLAN_CONTRACT_VERSION_MISSING',
-  PLAN_CONTRACT_VERSION_UNKNOWN: 'PLAN_CONTRACT_VERSION_UNKNOWN',
-  PLAN_REF_MISMATCH: 'PLAN_REF_MISMATCH',
   INVALID_STEP_SCHEMA: 'INVALID_STEP_SCHEMA',
   INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
+  UNSUPPORTED_STEP_KIND: 'UNSUPPORTED_STEP_KIND',
   TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
   PERMANENT_STEP_ERROR: 'PERMANENT_STEP_ERROR',
 } as const;
@@ -46,11 +39,6 @@ const PERMANENT_STEP_ERROR_TYPE = 'PermanentStepError';
 // ---------------------------------------------------------------------------
 // Role-based dependency interfaces (3.3 — ISP: each activity declares its needs)
 // ---------------------------------------------------------------------------
-
-export interface PlanFetcherDeps {
-  fetcher: IPlanFetcher;
-  integrity: IPlanIntegrityValidator;
-}
 
 export interface EventEmitterDeps {
   runStateCommandPort: RunStateCommandPort;
@@ -65,7 +53,7 @@ export interface RunBootstrapperDeps {
 }
 
 /** Full dependency container (union of role interfaces). Injected at Worker creation time. */
-export interface ActivityDeps extends PlanFetcherDeps, EventEmitterDeps, RunBootstrapperDeps {}
+export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {}
 
 // ---------------------------------------------------------------------------
 // Activity input / output types
@@ -112,11 +100,27 @@ export interface StepExecutor {
   execute(step: ExecutionPlan['steps'][number], context: StepExecutionContext): Promise<StepResult>;
 }
 
-const gatewayStepExecutor: StepExecutor = {
-  canExecute(step) {
-    return step.type === 'gateway';
-  },
-  async execute(step, context) {
+export interface StepActivity {
+  execute(step: ExecutionPlan['steps'][number], context: StepExecutionContext): Promise<StepResult>;
+}
+
+export type StepActivityRegistry = ReadonlyMap<string, StepActivity>;
+
+export class UnsupportedStepKindError extends Error {
+  constructor(
+    readonly stepKind: string,
+    readonly stepId: string
+  ) {
+    super(`${ActivityErrorCode.UNSUPPORTED_STEP_KIND}:${stepKind}:${stepId}`);
+    this.name = 'UnsupportedStepKindError';
+  }
+}
+
+class GatewayStepActivity implements StepActivity {
+  async execute(
+    step: ExecutionPlan['steps'][number],
+    context: StepExecutionContext
+  ): Promise<StepResult> {
     const gateway = parseGatewayConfigOrThrow(step);
     try {
       const parsed = parseDslV1(gateway.expression);
@@ -130,23 +134,88 @@ const gatewayStepExecutor: StepExecutor = {
         nonRetryable: true,
       });
     }
-  },
-};
+  }
+}
 
-const defaultStepExecutor: StepExecutor = {
-  canExecute() {
-    return true;
-  },
-  async execute(step) {
+export class DbtStepActivity implements StepActivity {
+  static readonly SUPPORTED_STEP_KINDS = new Set(['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT']);
+
+  async execute(
+    step: ExecutionPlan['steps'][number],
+    _context: StepExecutionContext
+  ): Promise<StepResult> {
     return { stepId: step.stepId, status: 'COMPLETED' };
-  },
-};
+  }
+}
 
-/** Default executor chain: gateway first, catch-all last. */
-export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [
-  gatewayStepExecutor,
-  defaultStepExecutor,
-];
+const DEFAULT_DBT_STEP_ACTIVITY = new DbtStepActivity();
+
+const DEFAULT_STEP_ACTIVITY_ENTRIES = Object.freeze(
+  Array.from(
+    DbtStepActivity.SUPPORTED_STEP_KINDS,
+    (stepKind) => [stepKind, DEFAULT_DBT_STEP_ACTIVITY] as const
+  )
+);
+
+export function createDefaultStepActivityRegistry(): StepActivityRegistry {
+  return new Map(DEFAULT_STEP_ACTIVITY_ENTRIES);
+}
+
+export const DEFAULT_STEP_ACTIVITY_REGISTRY: StepActivityRegistry =
+  createDefaultStepActivityRegistry();
+
+export class StepActivityDispatcher {
+  private readonly stepActivitiesByKind: StepActivityRegistry;
+
+  constructor(
+    private readonly gatewayActivity: StepActivity = new GatewayStepActivity(),
+    stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
+  ) {
+    // Snapshot the registry on construction so later mutations cannot change
+    // dispatch behavior for already-created workers/activities.
+    this.stepActivitiesByKind = new Map(stepActivitiesByKind);
+  }
+
+  async execute(
+    step: ExecutionPlan['steps'][number],
+    context: StepExecutionContext,
+    overrideExecutors: readonly StepExecutor[]
+  ): Promise<StepResult> {
+    const overrideExecutor = overrideExecutors.find((executor) => executor.canExecute(step));
+    if (overrideExecutor) {
+      return overrideExecutor.execute(step, context);
+    }
+
+    if (step.type === 'gateway') {
+      return this.gatewayActivity.execute(step, context);
+    }
+
+    if (typeof step.kind !== 'string' || step.kind.length === 0) {
+      throw ApplicationFailure.create({
+        type: PERMANENT_STEP_ERROR_TYPE,
+        message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: step_kind_required:${step.stepId}`,
+        nonRetryable: true,
+      });
+    }
+
+    const activity = this.stepActivitiesByKind.get(step.kind);
+    if (activity) {
+      return activity.execute(step, context);
+    }
+
+    throw ApplicationFailure.create({
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: new UnsupportedStepKindError(step.kind, step.stepId).message,
+      nonRetryable: true,
+    });
+  }
+}
+
+/**
+ * Optional override executors intended for tests.
+ * Runtime dispatch is owned by StepActivityDispatcher.
+ */
+export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [];
 
 // ---------------------------------------------------------------------------
 // Activity factory — creates closures over shared deps
@@ -154,32 +223,25 @@ export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [
 
 export function createActivities(
   deps: ActivityDeps,
-  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS
+  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS,
+  stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
 ): {
-  fetchPlan(planRef: PlanRef): Promise<ExecutionPlan>;
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
 } {
+  const dispatcher = new StepActivityDispatcher(new GatewayStepActivity(), stepActivitiesByKind);
   return {
-    /**
-     * Fetch plan from storage, validate SHA-256 integrity, parse JSON,
-     * and verify metadata matches PlanRef.
-     */
-    async fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
-      const validatedPlanRef = parsePlanRef(planRef);
-      const bytes = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
-      const plan = parsePlan(bytes);
-      validatePlanAgainstRef(plan, validatedPlanRef);
-      return plan;
-    },
-
     /**
      * Execute a single step.
      * Thin dispatcher: validates shape, applies test hook, then delegates to executor registry.
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-      return dispatchStep(input.step, { gatewayContext: input.gatewayContext }, stepExecutors);
+      return dispatcher.execute(
+        input.step,
+        { gatewayContext: input.gatewayContext },
+        stepExecutors
+      );
     },
 
     /**
@@ -247,8 +309,6 @@ const ALLOWED_STEP_FIELDS = new Set([
   'dependsOn',
 ]);
 
-const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
-
 function resolveTemporalAttemptFromContext(): number {
   try {
     const attempt = Context.current().info.attempt;
@@ -257,52 +317,6 @@ function resolveTemporalAttemptFromContext(): number {
     // Activity context not available (unit tests) — fall back to 1.
     return 1;
   }
-}
-
-function parsePlan(bytes: Uint8Array): ExecutionPlan {
-  const text = new TextDecoder().decode(bytes);
-  const obj: unknown = JSON.parse(text);
-  if (!isExecutionPlan(obj)) {
-    throw new TypeError(ActivityErrorCode.INVALID_PLAN_SCHEMA);
-  }
-  const contractVersion = obj.metadata.contractVersion;
-  if (typeof contractVersion !== 'string') {
-    throw new TypeError(ActivityErrorCode.PLAN_CONTRACT_VERSION_MISSING);
-  }
-  validatePlanContractVersion(contractVersion);
-  return obj;
-}
-
-function isExecutionPlan(v: unknown): v is ExecutionPlan {
-  if (typeof v !== 'object' || v === null) return false;
-  const o = v as Record<string, unknown>;
-  const meta = o['metadata'];
-  const steps = o['steps'];
-  if (typeof meta !== 'object' || meta === null) return false;
-  if (!Array.isArray(steps)) return false;
-  const m = meta as Record<string, unknown>;
-  return (
-    typeof m['planId'] === 'string' &&
-    typeof m['planVersion'] === 'string' &&
-    typeof m['schemaVersion'] === 'string' &&
-    typeof m['contractVersion'] === 'string'
-  );
-}
-
-function validatePlanContractVersion(contractVersion: string): void {
-  if (SUPPORTED_PLAN_CONTRACT_VERSIONS.has(contractVersion)) return;
-  throw new TypeError(
-    `${ActivityErrorCode.PLAN_CONTRACT_VERSION_UNKNOWN}: ${contractVersion}. Supported: ${Array.from(SUPPORTED_PLAN_CONTRACT_VERSIONS).join(', ')}`
-  );
-}
-
-function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
-  if (plan.metadata.planId !== ref.planId)
-    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: planId`);
-  if (plan.metadata.planVersion !== ref.planVersion)
-    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: planVersion`);
-  if (plan.metadata.schemaVersion !== ref.schemaVersion)
-    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: schemaVersion`);
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
@@ -324,22 +338,6 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
       `${ActivityErrorCode.INVALID_STEP_SCHEMA}: dependsOn_values_must_be_string`
     );
   }
-}
-
-async function dispatchStep(
-  step: ExecutionPlan['steps'][number],
-  context: StepExecutionContext,
-  executors: readonly StepExecutor[]
-): Promise<StepResult> {
-  const executor = executors.find((e) => e.canExecute(step));
-  if (!executor) {
-    throw ApplicationFailure.create({
-      type: PERMANENT_STEP_ERROR_TYPE,
-      message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: no_executor_for_step_type:${step.type ?? 'unknown'}`,
-      nonRetryable: true,
-    });
-  }
-  return executor.execute(step, context);
 }
 
 function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {

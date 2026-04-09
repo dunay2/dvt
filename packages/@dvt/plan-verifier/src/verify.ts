@@ -4,15 +4,15 @@ import { type PlanRuntime, verifyPlanVersionOrThrow } from './planVersion.js';
 
 /**
  * Primary invariant:
- *   sha256( canonicalPlanJson ) === planId
+ *   sha256( canonicalPlanCoreJson ) === planId
  *
- * canonicalPlanJson MUST already be RFC-8785 canonical JSON produced by the planner.
+ * canonicalPlanCoreJson MUST already be RFC-8785 canonical JSON produced by the planner.
  */
 export async function verifyPlanIdOrThrow(params: {
-  canonicalPlanJson: string;
+  canonicalPlanCoreJson: string;
   planId: string;
 }): Promise<void> {
-  const bytes = utf8Encode(params.canonicalPlanJson);
+  const bytes = utf8Encode(params.canonicalPlanCoreJson);
   const actual = await sha256Hex(bytes);
   const expected = params.planId.toLowerCase();
   if (actual !== expected) {
@@ -27,7 +27,7 @@ export async function verifyPlanIdOrThrow(params: {
  * Convenience wrapper: checks version gate first, then planId integrity.
  */
 type VerifyPlanBaseParams = {
-  canonicalPlanJson: string;
+  canonicalPlanCoreJson: string;
   planId: string;
   planVersion: string;
 };
@@ -69,5 +69,8 @@ export async function verifyPlanOrThrow(
     verifyPlanVersionOrThrow(versionParams);
   }
 
-  await verifyPlanIdOrThrow({ canonicalPlanJson: params.canonicalPlanJson, planId: params.planId });
+  await verifyPlanIdOrThrow({
+    canonicalPlanCoreJson: params.canonicalPlanCoreJson,
+    planId: params.planId,
+  });
 }

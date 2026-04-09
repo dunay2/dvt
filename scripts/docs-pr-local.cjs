@@ -64,7 +64,7 @@ function runCommand(command, args) {
       ? spawnSync(
           process.env.ComSpec || 'cmd.exe',
           ['/d', '/s', '/c', [resolved, ...args].map(quoteWindowsArg).join(' ')],
-          { stdio: 'inherit' },
+          { stdio: 'inherit' }
         )
       : spawnSync(resolved, args, { stdio: 'inherit', shell: false });
 
@@ -82,6 +82,7 @@ function main() {
 
   const commands = [
     ['pnpm', ['verify:prepush']],
+    ['pnpm', ['docs:workboard:check']],
     ['pnpm', ['docs:sync:check']],
   ];
 

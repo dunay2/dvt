@@ -28,8 +28,9 @@ Inventory snapshot to make planning sprawl visible and navigable.
   plus domain pages to avoid browsing by filename alone.
 - Proposals and gaps hold active sequencing; status artifacts hold current truth.
 - Reviews are concentrated and should be consumed through domain mapping.
-- Active execution tracking should be centralized in
-  [Execution Workboard](execution-workboard.md) to avoid dispersed follow-up.
+- Active execution tracking should be centralized in the lane YAML registry and
+  [Planning Control Tower](./planning-control-tower.md) to avoid dispersed
+  follow-up.
 
 ## Current Domain Hubs
 
@@ -45,4 +46,4 @@ Inventory snapshot to make planning sprawl visible and navigable.
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap by Domain](../roadmap/roadmap-by-domain.md)
 - [Planning Roadmap Diagrams](../roadmap/diagrams/index.md)
-- [Execution Workboard](execution-workboard.md)
+- [Planning Control Tower](./planning-control-tower.md)

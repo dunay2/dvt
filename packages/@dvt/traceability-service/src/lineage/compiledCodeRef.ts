@@ -33,8 +33,19 @@ export function isCompiledCodeRef(value: unknown): value is CompiledCodeRef {
 
 export function extractCompiledCodeRefFromPayload(payload: unknown): CompiledCodeRef | null {
   if (!isRecord(payload)) return null;
-  const candidate = payload['compiledCodeRef'];
-  return isCompiledCodeRef(candidate) ? candidate : null;
+  const stepArtifactRef = payload['stepArtifactRef'];
+  if (isRecord(stepArtifactRef)) {
+    const artifactKind = stepArtifactRef['artifactKind'];
+    if (
+      (artifactKind === 'dbt.compiled-sql' || artifactKind === 'compiled-sql') &&
+      isCompiledCodeRef(stepArtifactRef)
+    ) {
+      return stepArtifactRef;
+    }
+  }
+
+  const compiledCodeRef = payload['compiledCodeRef'];
+  return isCompiledCodeRef(compiledCodeRef) ? compiledCodeRef : null;
 }
 
 export function sha256HexUtf8(input: string): string {

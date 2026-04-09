@@ -25,9 +25,24 @@ try {
 }
 
 const requiredKeys = [
-  'adapter_postgres',
-  'adapter_postgres_integration',
-  'adapter_postgres_relevant',
+  ...(path.basename(policyPath) === 'workflow-scope.json'
+    ? [
+        'any_code',
+        'docs_changed',
+        'docs_structure_changed',
+        'lane_yaml_changed',
+        'generated_status_relevant',
+        'generated_capability_relevant',
+        'workspace_global',
+        'workspace_api',
+        'workspace_web',
+        'workspace_contracts',
+        'workspace_engine',
+        'workspace_adapter_postgres',
+        'workspace_adapter_temporal',
+        'workspace_cli',
+      ]
+    : ['adapter_postgres', 'adapter_postgres_integration', 'adapter_postgres_relevant']),
 ];
 let ok = true;
 for (const k of requiredKeys) {

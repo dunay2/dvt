@@ -1,0 +1,74 @@
+{
+  "any_code": [
+    "apps/**",
+    "packages/**",
+    "specs/**",
+    "tools/**",
+    ".github/workflows/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig*.json",
+    "vitest.config.ts",
+    "eslint.config.cjs",
+    ".prettierrc.json",
+    "commitlint.config.cjs"
+  ],
+  "docs_changed": [
+    "docs/**",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "scripts/docs-*.cjs",
+    "scripts/generate-*.cjs",
+    "scripts/check-markdown-locations.cjs",
+    "scripts/validate-arc-evidence-frontmatter.cjs",
+    ".markdownlint*"
+  ],
+  "docs_structure_changed": [
+    "docs/**",
+    "scripts/sync-docs.cjs",
+    "scripts/generate-planning-lanes.cjs"
+  ],
+  "lane_yaml_changed": ["docs/planning/state/agent-lane-*.yaml"],
+  "generated_status_relevant": [
+    "apps/**",
+    "packages/**",
+    "docs/planning/status/generated-code-state.md",
+    "scripts/generate-code-status.cjs",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml"
+  ],
+  "generated_capability_relevant": [
+    "apps/**",
+    "packages/**",
+    "specs/**",
+    "docs/planning/status/generated-capability-coverage.md",
+    "scripts/generate-capability-coverage.cjs",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml"
+  ],
+  "workspace_global": [
+    ".github/workflows/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig*.json",
+    "vitest.config.ts",
+    "eslint.config.cjs",
+    ".prettierrc.json",
+    "commitlint.config.cjs",
+    "scripts/**",
+    "packages/@dvt/traceability-service/**",
+    "traceability.config.json",
+    "docs/adr/**"
+  ],
+  "workspace_api": ["apps/api/**"],
+  "workspace_web": ["apps/web/**"],
+  "workspace_contracts": ["packages/@dvt/contracts/**"],
+  "workspace_engine": ["packages/@dvt/engine/**"],
+  "workspace_adapter_postgres": ["packages/@dvt/adapter-postgres/**"],
+  "workspace_adapter_temporal": ["packages/@dvt/adapter-temporal/**"],
+  "workspace_cli": ["packages/@dvt/cli/**"]
+}

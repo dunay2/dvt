@@ -1,4 +1,4 @@
----
+﻿---
 title: DVT System Map
 status: Active
 owner: Docs / Architecture
@@ -43,20 +43,21 @@ reader go next?
 
 ## Canonical Reading Order
 
-1. [Glossary](glossary.md)
-2. [Domain Language](domain-language.md)
+1. [Glossary](./glossary.md)
+2. [Domain Language](./domain-language.md)
 3. [System Delivery Status](../architecture/system-delivery-status.md)
 4. [Shared Package Architecture](../architecture/shared/index.md)
 5. [Architecture Index](../architecture/index.md)
 6. [Contracts Index](../contracts/index.md)
-7. [Planning Index](../planning/index.md)
+7. [Planning Control Tower](../planning/state/planning-control-tower.md)
 
 ## Where To Go By Question
 
-- "What does this term mean?" -> [Glossary](glossary.md)
+- "What does this term mean?" -> [Glossary](./glossary.md)
 - "What belongs to which subsystem?" -> [Architecture Index](../architecture/index.md)
 - "What do the small shared packages do?" -> [Shared Package Architecture](../architecture/shared/index.md)
-- "What code area is responsible?" -> [Repository Map](repository-map.md)
+- "What code area is responsible?" -> [Repository Map](./repository-map.md)
 - "What is true in the current implementation?" -> [System Delivery Status](../architecture/system-delivery-status.md)
-- "What is planned or still open?" -> [Planning](../planning/index.md)
+- "What is planned or still open?" ->
+  [Planning Control Tower](../planning/state/planning-control-tower.md)
 - "What decision governs this?" -> [ADRs](../adr/index.md)

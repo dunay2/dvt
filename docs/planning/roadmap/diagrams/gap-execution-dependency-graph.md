@@ -1,41 +1,33 @@
 ---
-title: Gap Execution Dependency Graph
+title: Execution Dependency Graph
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
-# Gap Execution Dependency Graph
+# Execution Dependency Graph
 
-Dependency graph for operational gap execution ordering.
+Dependency graph for the current execution-order assumptions that still shape
+follow-up work.
 
 ```mermaid
 flowchart LR
-  G1[G1 Temporal Adapter]
-  G2[G2 PostgresStateStore]
-  G3[G3 Intent Store + Reconciler]
-  G4[G4 compiledCodeRef Ownership]
-  G5[G5 Outbox Worker]
-  G6[G6 OpenLineage + Schema Pin]
-  G7[G7 Projector + Read Models]
-  G8[G8 API Auth + Query Runtime]
-  G9[G9 StepTypeRegistry]
-  G10[G10 outbox_lineage Worker]
+  A[Runtime foundations]
+  B[Admission and API hardening]
+  C[Planner and contract hardening]
+  D[Archive and retention hardening]
+  E[Traceability runtime hardening]
 
-  G1 --> G5
-  G2 --> G3
-  G2 --> G5
-  G3 --> G7
-  G4 --> G8
-  G4 --> G9
-  G5 --> G7
-  G6 --> G10
-  G7 --> G10
-  G9 --> G10
+  A --> B
+  A --> C
+  A --> D
+  B --> E
+  C --> E
+  D --> E
 ```
 
 ## Canonical References
 
-- [Gap Execution Plans](../../gaps/GAP_EXECUTION_PLANS.md)
-- [Gap Execution Route](../../state/gap-execution-route.md)
+- [Planning Control Tower](../../state/planning-control-tower.md)
+- [Roadmap By Domain](../roadmap-by-domain.md)

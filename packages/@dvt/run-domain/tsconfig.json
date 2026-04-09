@@ -4,8 +4,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
-      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
-      "@dvt/contracts/*": ["packages/@dvt/contracts/dist/*"]
+      "@dvt/contracts": ["../../../packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"]
     }
   },
   "include": ["src/**/*"],

@@ -2,7 +2,7 @@
 title: Planning Domains
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-08
 planning_type: reference
 ---
 
@@ -14,23 +14,22 @@ This surface reorganizes planning content by thematic ownership so teams can
 quickly answer:
 
 1. What is active in each domain now.
-2. Which roadmap and gap artifacts are authoritative.
+2. Which roadmap and status artifacts are authoritative.
 3. Where the latest reviews and closeouts live.
 
 This page does not replace canonical roadmap or status docs.
 
 ## Domain Index
 
-- [Execution Runtime](execution-runtime.md)
-- [API and Admission](api-and-admission.md)
-- [Planner and Contracts](planner-and-contracts.md)
-- [Event Lifecycle and Retention](event-lifecycle-and-retention.md)
-- [Documentation Governance](documentation-governance.md)
+- [Execution Runtime](./execution-runtime.md)
+- [API and Admission](./api-and-admission.md)
+- [Planner and Contracts](./planner-and-contracts.md)
+- [Event Lifecycle and Retention](./event-lifecycle-and-retention.md)
+- [Documentation Governance](./documentation-governance.md)
 
 ## Canonical Anchors
 
 - [Roadmap Of Record](../roadmap/index.md)
-- [Execution Workboard](../state/execution-workboard.md)
-- [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
+- [Planning Control Tower](../state/planning-control-tower.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
-- [Planning Status](../status/index.md)
+- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)

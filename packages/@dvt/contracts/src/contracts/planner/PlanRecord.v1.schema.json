@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:contracts:planner:PlanRecord:v1.0.0",
+  "title": "PlanRecordV1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planId",
+        "canonicalPlanJson",
+        "canonicalHash",
+        "planVersion",
+        "schemaVersion",
+        "contractVersion",
+        "sourceRef",
+        "createdAtIso",
+        "updatedAtIso",
+        "state"
+      ],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "canonicalPlanJson": { "type": "string", "minLength": 1 },
+        "canonicalHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "planVersion": { "type": "string", "enum": ["1.0"] },
+        "schemaVersion": { "type": "string", "const": "v1.2" },
+        "contractVersion": { "type": "string", "const": "1.0.0" },
+        "sourceRef": { "type": "string", "minLength": 1 },
+        "createdAtIso": { "type": "string", "minLength": 1 },
+        "updatedAtIso": { "type": "string", "minLength": 1 },
+        "derivedFromPlanId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "supersedesPlanId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "state": { "type": "string", "const": "ACTIVE" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planId",
+        "canonicalPlanJson",
+        "canonicalHash",
+        "planVersion",
+        "schemaVersion",
+        "contractVersion",
+        "sourceRef",
+        "createdAtIso",
+        "updatedAtIso",
+        "state"
+      ],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "canonicalPlanJson": { "type": "string", "minLength": 1 },
+        "canonicalHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "planVersion": { "type": "string", "enum": ["1.0"] },
+        "schemaVersion": { "type": "string", "const": "v1.2" },
+        "contractVersion": { "type": "string", "const": "1.0.0" },
+        "sourceRef": { "type": "string", "minLength": 1 },
+        "createdAtIso": { "type": "string", "minLength": 1 },
+        "updatedAtIso": { "type": "string", "minLength": 1 },
+        "derivedFromPlanId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "supersedesPlanId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "state": { "type": "string", "const": "SUPERSEDED" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planId",
+        "canonicalPlanJson",
+        "canonicalHash",
+        "planVersion",
+        "schemaVersion",
+        "contractVersion",
+        "sourceRef",
+        "createdAtIso",
+        "updatedAtIso",
+        "state",
+        "archivedAtIso"
+      ],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "canonicalPlanJson": { "type": "string", "minLength": 1 },
+        "canonicalHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "planVersion": { "type": "string", "enum": ["1.0"] },
+        "schemaVersion": { "type": "string", "const": "v1.2" },
+        "contractVersion": { "type": "string", "const": "1.0.0" },
+        "sourceRef": { "type": "string", "minLength": 1 },
+        "createdAtIso": { "type": "string", "minLength": 1 },
+        "updatedAtIso": { "type": "string", "minLength": 1 },
+        "derivedFromPlanId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "supersedesPlanId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "state": { "type": "string", "const": "ARCHIVED" },
+        "archivedAtIso": { "type": "string", "minLength": 1 }
+      }
+    }
+  ]
+}

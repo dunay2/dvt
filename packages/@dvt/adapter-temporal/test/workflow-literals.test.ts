@@ -21,8 +21,8 @@ describe('workflow literal parity', () => {
       expect(re.test(src)).toBe(true);
     }
 
-    // Signals listed in WorkflowSignals may include phase-2 entries (e.g. RETRY_*).
-    // We intentionally only assert on signals actually implemented in the workflow.
+    // Canonical workflow signals are limited to the run-control surface.
+    // Future recovery use cases must not silently widen WorkflowSignals again.
   });
 
   it('keeps gateway DSL evaluation outside workflow code (activity boundary)', () => {

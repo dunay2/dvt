@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -48,9 +48,10 @@ function toIsoDateUTC() {
 }
 
 function splitFrontmatter(source) {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  const normalizedSource = source.charCodeAt(0) === 0xfeff ? source.slice(1) : source;
+  const match = normalizedSource.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) {
-    return { frontmatter: {}, body: source };
+    return { frontmatter: {}, body: normalizedSource };
   }
 
   const frontmatter = {};
@@ -62,7 +63,7 @@ function splitFrontmatter(source) {
     }
   }
 
-  return { frontmatter, body: source.slice(match[0].length) };
+  return { frontmatter, body: normalizedSource.slice(match[0].length) };
 }
 
 function frontmatterWithDefaults(currentContent, defaults) {
@@ -286,7 +287,9 @@ function inferPlanningType(fileNameLower) {
 }
 
 function shouldIncludePlanningDoc(status) {
-  const normalized = String(status || '').trim().toLowerCase();
+  const normalized = String(status || '')
+    .trim()
+    .toLowerCase();
   return normalized !== 'superseded' && normalized !== 'archived';
 }
 
@@ -466,6 +469,13 @@ function generatePlanningIndexes() {
     status: 'Review',
     owner: 'docs',
   });
+  if (
+    String(planningMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    planningMeta.owner = 'Product / Architecture / Docs';
+  }
   const planningLines = [
     renderFrontmatter(planningMeta),
     '# Planning',
@@ -547,6 +557,13 @@ function generatePlanningIndexes() {
     status: 'Draft',
     owner: 'docs',
   });
+  if (
+    String(proposalsMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    proposalsMeta.owner = 'Product / Architecture / Docs';
+  }
   const proposalsLines = [
     renderFrontmatter(proposalsMeta),
     '# Planning Proposals',
@@ -572,6 +589,13 @@ function generatePlanningIndexes() {
     status: 'Review',
     owner: 'docs',
   });
+  if (
+    String(reviewsMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    reviewsMeta.owner = 'Product / Architecture / Docs';
+  }
   const reviewsLines = [
     renderFrontmatter(reviewsMeta),
     '# Planning Reviews',
@@ -597,6 +621,13 @@ function generatePlanningIndexes() {
     status: 'Review',
     owner: 'docs',
   });
+  if (
+    String(statusMeta.owner || '')
+      .trim()
+      .toLowerCase() === 'docs'
+  ) {
+    statusMeta.owner = 'Product / Architecture / Docs';
+  }
   const statusLines = [
     renderFrontmatter(statusMeta),
     '# Planning Status',
@@ -698,6 +729,8 @@ function generateContractSubIndexes() {
     status: 'Active',
     owner: 'docs',
   });
+  const plannerDocRows = scanSectionEntries('contracts/planner');
+  const plannerDocLines = renderBulletList(plannerDocRows);
   const plannerLines = [
     renderFrontmatter(plannerMeta),
     '# Planner Contracts',
@@ -707,6 +740,9 @@ function generateContractSubIndexes() {
     '## Normative Sources (`@dvt/contracts`)',
     '',
     ...renderContractSourceList(plannerSrc),
+    ...(plannerDocLines.length === 0
+      ? []
+      : ['', '## Repository-local documents', '', ...plannerDocLines]),
     '',
     '## Related',
     '',
@@ -735,12 +771,7 @@ function generateContractSubIndexes() {
     'Cross-cutting types and shared validation contracts.',
     ...(sharedDocLines.length === 0
       ? []
-      : [
-          '',
-          '## Repository-local documents',
-          '',
-          ...sharedDocLines,
-        ]),
+      : ['', '## Repository-local documents', '', ...sharedDocLines]),
     '',
     '## Normative Sources (`@dvt/contracts`)',
     '',
@@ -848,7 +879,7 @@ function renderConceptsIndex(meta, rows) {
     '3. [DVT System Map](system-map.md)',
     '4. [Repository Map](repository-map.md)',
     '5. [Architecture Index](../architecture/index.md)',
-    '6. [Planning Index](../planning/index.md)',
+    '6. [Planning Control Tower](../planning/state/planning-control-tower.md)',
     '',
     '## Index',
     '',

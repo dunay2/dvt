@@ -8,8 +8,9 @@ planning_type: guide
 
 # How to Add Tasks to an Agent Lane
 
-Tasks live in the `agent-lane-*.yaml` files. The workboard and open-task-route are
-generated views and must never be edited directly.
+Tasks live in the `agent-lane-*.yaml` files. The lane Markdown views,
+workboard, open-task-route, and planning landing indexes are generated local/CI
+artifacts and must never be edited directly or committed.
 
 The lane YAML is the verified planning registry, but task closure is evidence-based:
 
@@ -44,7 +45,7 @@ Open the lane file and append to the `tasks` list:
   effort_points: 5
   progress_pct: 40
   evidence_refs:
-    - docs/evidence/ED-20260331-s21-example.md
+    - docs/evidence/critical/ED-20260331-s21-example.md
     - docs/planning/closeouts/20260331-s21-closeout.md
   status_reason: implementation started; evidence and final validation still open
   last_verified: 2026-03-31
@@ -107,6 +108,24 @@ If you added, removed, or renamed documentation files under `docs/`, also run:
 ```bash
 pnpm docs:sync
 ```
+
+Do not stage the generated planning-derived files after regeneration:
+
+- `docs/planning/index.md`
+- `docs/planning/proposals/index.md`
+- `docs/planning/reviews/index.md`
+- `docs/planning/status/index.md`
+- `docs/planning/state/agent-lane-*.md`
+- `docs/planning/state/execution-workboard.md`
+- `docs/planning/state/open-task-route.md`
+
+For isolated local previews that avoid touching tracked docs surfaces:
+
+```bash
+pnpm docs:planning:preview:isolated
+```
+
+This renders lane and workboard outputs under `.generated-docs/docs/planning/state/`.
 
 ## Field reference
 

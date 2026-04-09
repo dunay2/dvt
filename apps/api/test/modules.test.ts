@@ -31,12 +31,24 @@ describe('modules', () => {
       authorizer: {} as never,
       engine: {} as never,
       adapters: new Map(),
+      startRunTargetAdapterRegistry: {
+        isSupported(_value: string): _value is 'mock' | 'temporal' {
+          return false;
+        },
+        listSupported(): ReadonlyArray<'mock' | 'temporal'> {
+          return [];
+        },
+      },
       stateStore: {
         read: {} as never,
         write: {} as never,
         maintenance: {} as never,
         snapshotStaleness: {} as never,
       },
+      planner: {} as never,
+      planStore: {} as never,
+      planValidator: {} as never,
+      executablePlanResolver: { fetch: async () => ({}) } as never,
       async migrate() {
         migrateCalls += 1;
       },
@@ -82,10 +94,23 @@ describe('modules', () => {
       } as never,
       {
         stateStore: {
+          async getRunMetadataByRunId() {
+            return null;
+          },
           async listEvents() {
             return [];
           },
         },
+        stateStoreWrite: {
+          async appendAndEnqueueTx() {
+            return {
+              appended: [],
+              deduped: [],
+              lastSeq: 0,
+            };
+          },
+        },
+        clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
         projector: {
           rebuild() {
             return {};

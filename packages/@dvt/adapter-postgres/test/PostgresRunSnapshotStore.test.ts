@@ -1,4 +1,8 @@
-import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
+import {
+  CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+  type EventEnvelope,
+  type WorkflowSnapshot,
+} from '@dvt/contracts';
 import { RunNotFoundError } from '@dvt/engine';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { buildArchivedTerminalSnapshot, buildPinnedTerminalSnapshot } from '@dvt/state-store';
@@ -226,6 +230,137 @@ describe('PostgresRunSnapshotStore', () => {
     expect(client.queries.some((entry) => entry.sql.includes('pg_advisory_xact_lock'))).toBe(false);
   });
 
+  it('rebuilds snapshot when persisted schemaVersion is outdated', async () => {
+    const client = new ScriptedClient(async <T>(sql: string) => {
+      if (isSnapshotReadQuery(sql)) {
+        return {
+          rows: [
+            {
+              snapshot: {
+                schemaVersion: 0,
+                runId: 'run-1',
+                status: 'PENDING',
+                paused: false,
+                cancelling: false,
+                gatewayDecisions: {},
+                steps: {},
+              } satisfies WorkflowSnapshot,
+              last_run_seq: 0,
+              latest_run_seq: 0,
+            },
+          ] as T[],
+          rowCount: 1,
+        };
+      }
+
+      if (sql.includes('FROM "dvt".run_metadata')) {
+        return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
+      }
+
+      if (sql.includes('pg_advisory_xact_lock')) {
+        return { rows: [] as T[], rowCount: 1 };
+      }
+
+      if (sql.includes('FROM "dvt".run_events') && sql.includes('ORDER BY run_seq ASC')) {
+        return { rows: [] as T[], rowCount: 0 };
+      }
+
+      if (sql.includes('COALESCE(MAX(run_seq), 0)')) {
+        return { rows: [{ max_seq: 0 }] as T[], rowCount: 1 };
+      }
+
+      if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
+        return { rows: [] as T[], rowCount: 1 };
+      }
+
+      return { rows: [] as T[], rowCount: 0 };
+    });
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-20T00:00:01.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+
+    const snapshot = await store.getSnapshot('tenant-1', 'run-1');
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.schemaVersion).toBe(CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION);
+    expect(client.queries.some((entry) => entry.sql.includes('ORDER BY run_seq ASC'))).toBe(true);
+  });
+
+  it('applies tail events when the persisted snapshot lags without persisting inline', async () => {
+    const client = new ScriptedClient(async <T>(sql: string) => {
+      if (isSnapshotReadQuery(sql)) {
+        return {
+          rows: [
+            {
+              snapshot: {
+                schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+                runId: 'run-1',
+                status: 'PENDING',
+                paused: false,
+                cancelling: false,
+                gatewayDecisions: {},
+                steps: {},
+              } satisfies WorkflowSnapshot,
+              last_run_seq: 1,
+              latest_run_seq: 3,
+            },
+          ] as T[],
+          rowCount: 1,
+        };
+      }
+
+      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $3')) {
+        return {
+          rows: [
+            {
+              payload: makeEvent({
+                runId: 'run-1',
+                runSeq: 2,
+                eventType: 'RunStarted',
+              }),
+            },
+            {
+              payload: makeEvent({
+                runId: 'run-1',
+                runSeq: 3,
+                eventType: 'RunCancelRequested',
+              }),
+            },
+          ] as T[],
+          rowCount: 2,
+        };
+      }
+
+      if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
+        throw new Error('getSnapshot should not persist inline catch-up');
+      }
+
+      return { rows: [] as T[], rowCount: 0 };
+    });
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-20T00:00:01.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+
+    const snapshot = await store.getSnapshot('tenant-1', 'run-1');
+
+    expect(snapshot).toMatchObject({
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+      runId: 'run-1',
+      status: 'RUNNING',
+      cancelling: true,
+    });
+    expect(client.queries.some((entry) => entry.sql.includes('run_seq > $3'))).toBe(true);
+    expect(
+      client.queries.some((entry) => entry.sql.includes('INSERT INTO "dvt".run_snapshots'))
+    ).toBe(false);
+  });
+
   it('pins terminal snapshots into run_snapshots with archive metadata', async () => {
     const client = new ScriptedClient(async <T>(sql: string) => {
       if (sql.includes('FROM "dvt".run_metadata')) {
@@ -245,6 +380,7 @@ describe('PostgresRunSnapshotStore', () => {
       async (fn) => fn(client as never)
     );
     const snapshot = {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId: 'run-1',
       status: 'COMPLETED' as const,
       startedAt: '2026-03-19T00:00:00.000Z',
@@ -293,6 +429,7 @@ describe('PostgresRunSnapshotStore', () => {
 
   it('surfaces a discarded terminal snapshot pin when the stored seq is newer', async () => {
     const existingSnapshot = {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId: 'run-1',
       status: 'COMPLETED' as const,
       startedAt: '2026-03-19T00:00:00.000Z',
@@ -321,6 +458,7 @@ describe('PostgresRunSnapshotStore', () => {
       archivedAtIso: '2026-03-20T00:00:00.000Z',
       pinned: buildPinnedTerminalSnapshot({
         snapshot: {
+          schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
           runId: 'run-1',
           status: 'FAILED',
           startedAt: '2026-03-19T00:00:00.000Z',
@@ -379,6 +517,7 @@ describe('PostgresRunSnapshotStore', () => {
       archivedAtIso: '2026-03-20T00:00:00.000Z',
       pinned: buildPinnedTerminalSnapshot({
         snapshot: {
+          schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
           runId: 'run-1',
           status: 'FAILED',
           startedAt: '2026-03-19T00:00:00.000Z',
@@ -424,6 +563,7 @@ describe('PostgresRunSnapshotStore', () => {
       archivedAtIso: '2026-03-20T00:00:00.000Z',
       pinned: buildPinnedTerminalSnapshot({
         snapshot: {
+          schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
           runId: 'run-1',
           status: 'FAILED',
           startedAt: '2026-03-19T00:00:00.000Z',
@@ -445,6 +585,7 @@ describe('PostgresRunSnapshotStore', () => {
 
   it('reads pinned terminal snapshots tenant-safely', async () => {
     const snapshot = {
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId: 'run-1',
       status: 'CANCELLED' as const,
       startedAt: '2026-03-19T00:00:00.000Z',
@@ -517,4 +658,12 @@ function makeEvent(overrides: Partial<EventEnvelope> = {}): EventEnvelope {
     persistedAt: '2026-03-19T00:00:00.000Z',
     ...overrides,
   };
+}
+
+function isSnapshotReadQuery(sql: string): boolean {
+  return (
+    sql.includes('s.snapshot') &&
+    sql.includes('FROM "dvt".run_metadata m') &&
+    sql.includes('LEFT JOIN "dvt".run_snapshots s ON s.run_id = m.run_id')
+  );
 }

@@ -5,6 +5,9 @@ import type { PlatformConnectionState } from '../../capabilities/platform-health
 import { Run, ExecutionPlan } from '../types/dbt';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from './sessionStore';
+import { useUiLayoutStore } from './uiLayoutStore';
+import { useCanvasInteractionStore } from './canvasInteractionStore';
+import { useExecutionStore } from './executionStore';
 
 type CanvasPosition = {
   x: number;
@@ -20,17 +23,27 @@ type WorkspaceCanvasLayout = {
   nodePositions: Record<string, CanvasPosition>;
 };
 
+type AppTabData = unknown;
+
+/**
+ * @deprecated This monolithic store is being decomposed. Use the sliced stores
+ * directly instead:
+ * - `useUiLayoutStore` for UI panels, focus, grid, tabs, connection
+ * - `useCanvasInteractionStore` for selection, overlays, canvas layouts
+ * - `useExecutionStore` for currentPlan, currentRun, permissions
+ * - `useSessionStore` for tenant, project, environment
+ */
 interface AppState {
   _hasHydrated: boolean;
 
-  // Global selectors
+  // Global selectors (delegated to sessionStore)
   selectedTenant: string;
   selectedProject: string;
   selectedEnvironment: string;
   gitBranch: string;
   gitSha: string;
 
-  // UI State
+  // UI State (delegated to uiLayoutStore)
   leftNavCollapsed: boolean;
   explorerPanelWidth: number;
   explorerPanelVisible: boolean;
@@ -39,34 +52,34 @@ interface AppState {
   consolePanelHeight: number;
   consolePanelVisible: boolean;
   focusMode: boolean;
-  gridSize: number; // Grid spacing for canvas
+  gridSize: number;
 
-  // Canvas State
+  // Canvas State (delegated to canvasInteractionStore)
   selectedNodes: string[];
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   canvasLayouts: Record<string, WorkspaceCanvasLayout>;
 
-  // Active tabs
+  // Active tabs (delegated to uiLayoutStore)
   activeTabs: Array<{
     id: string;
     type: TabType;
     label: string;
-    data?: any;
+    data?: AppTabData;
   }>;
   activeTabId: string | null;
 
-  // Connection status
+  // Connection status (delegated to uiLayoutStore)
   connectionStatus: PlatformConnectionState;
 
-  // Current execution plan & run
+  // Current execution plan & run (delegated to executionStore)
   currentPlan: ExecutionPlan | null;
   currentRun: Run | null;
 
-  // Inspector node
+  // Inspector node (delegated to canvasInteractionStore)
   inspectorNodeId: string | null;
 
-  // User permissions (mock RBAC)
+  // User permissions (delegated to executionStore)
   userPermissions: {
     canPlan: boolean;
     canRun: boolean;
@@ -93,7 +106,7 @@ interface AppState {
   toggleColumnLevelLineage: () => void;
   setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
   setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
-  addTab: (tab: { id: string; type: TabType; label: string; data?: any }) => void;
+  addTab: (tab: { id: string; type: TabType; label: string; data?: AppTabData }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   setConnectionStatus: (status: Partial<PlatformConnectionState>) => void;
@@ -154,7 +167,7 @@ export const useAppStore = create<AppState>()(
         canManageRBAC: true,
       },
 
-      // Actions
+      // Actions — delegate to sliced stores and sync local state
       setSelectedTenant: (tenant) => {
         useSessionStore.getState().setTenantId(tenant);
         set({ selectedTenant: tenant });
@@ -167,32 +180,59 @@ export const useAppStore = create<AppState>()(
         useSessionStore.getState().setEnvironmentId(env);
         set({ selectedEnvironment: env });
       },
-      toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
-      setExplorerPanelWidth: (width) => set({ explorerPanelWidth: width }),
-      setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
-      setConsolePanelHeight: (height) => set({ consolePanelHeight: height }),
-      toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
-      toggleExplorerPanel: () =>
-        set((state) => ({ explorerPanelVisible: !state.explorerPanelVisible })),
-      toggleInspectorPanel: () =>
-        set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible })),
-      toggleConsolePanel: () =>
+      toggleLeftNav: () => {
+        useUiLayoutStore.getState().toggleLeftNav();
+        set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed }));
+      },
+      setExplorerPanelWidth: (width) => {
+        useUiLayoutStore.getState().setExplorerPanelWidth(width);
+        set({ explorerPanelWidth: width });
+      },
+      setInspectorPanelWidth: (width) => {
+        useUiLayoutStore.getState().setInspectorPanelWidth(width);
+        set({ inspectorPanelWidth: width });
+      },
+      setConsolePanelHeight: (height) => {
+        useUiLayoutStore.getState().setConsolePanelHeight(height);
+        set({ consolePanelHeight: height });
+      },
+      toggleFocusMode: () => {
+        useUiLayoutStore.getState().toggleFocusMode();
+        set((state) => ({ focusMode: !state.focusMode }));
+      },
+      toggleExplorerPanel: () => {
+        useUiLayoutStore.getState().toggleExplorerPanel();
+        set((state) => ({ explorerPanelVisible: !state.explorerPanelVisible }));
+      },
+      toggleInspectorPanel: () => {
+        useUiLayoutStore.getState().toggleInspectorPanel();
+        set((state) => ({ inspectorPanelVisible: !state.inspectorPanelVisible }));
+      },
+      toggleConsolePanel: () => {
+        useUiLayoutStore.getState().toggleConsolePanel();
         set((state) => {
-          const isConsolePanelVisible = state.consolePanelVisible;
-          const nextConsolePanelVisible = !isConsolePanelVisible;
-
-          return {
-            consolePanelVisible: nextConsolePanelVisible,
-            consolePanelHeight: nextConsolePanelVisible ? 160 : 0,
-          };
-        }),
-      setGridSize: (size: number) => set({ gridSize: size }),
-      setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
-      toggleImpactOverlay: () =>
-        set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled })),
-      toggleColumnLevelLineage: () =>
-        set((state) => ({ columnLevelLineageEnabled: !state.columnLevelLineageEnabled })),
-      setCanvasViewport: (workspaceKey, viewport) =>
+          const next = !state.consolePanelVisible;
+          return { consolePanelVisible: next, consolePanelHeight: next ? 160 : 0 };
+        });
+      },
+      setGridSize: (size: number) => {
+        useUiLayoutStore.getState().setGridSize(size);
+        set({ gridSize: size });
+      },
+      setSelectedNodes: (nodes) => {
+        useCanvasInteractionStore.getState().setSelectedNodes(nodes);
+        set({ selectedNodes: nodes });
+      },
+      toggleImpactOverlay: () => {
+        useCanvasInteractionStore.getState().toggleImpactOverlay();
+        set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled }));
+      },
+      toggleColumnLevelLineage: () => {
+        useCanvasInteractionStore.getState().toggleColumnLevelLineage();
+        set((state) => ({ columnLevelLineageEnabled: !state.columnLevelLineageEnabled }));
+      },
+      setCanvasViewport: (workspaceKey, viewport) => {
+        useCanvasInteractionStore.getState().setCanvasViewport(workspaceKey, viewport);
         set((state) => ({
           canvasLayouts: {
             ...state.canvasLayouts,
@@ -201,8 +241,10 @@ export const useAppStore = create<AppState>()(
               nodePositions: state.canvasLayouts[workspaceKey]?.nodePositions ?? {},
             },
           },
-        })),
-      setCanvasNodePositions: (workspaceKey, positions) =>
+        }));
+      },
+      setCanvasNodePositions: (workspaceKey, positions) => {
+        useCanvasInteractionStore.getState().setCanvasNodePositions(workspaceKey, positions);
         set((state) => ({
           canvasLayouts: {
             ...state.canvasLayouts,
@@ -211,31 +253,50 @@ export const useAppStore = create<AppState>()(
               nodePositions: positions,
             },
           },
-        })),
+        }));
+      },
 
-      addTab: (tab) =>
+      addTab: (tab) => {
+        useUiLayoutStore.getState().addTab(tab);
         set((state) => ({
           activeTabs: [...state.activeTabs, tab],
           activeTabId: tab.id,
-        })),
+        }));
+      },
 
-      closeTab: (tabId) =>
+      closeTab: (tabId) => {
+        useUiLayoutStore.getState().closeTab(tabId);
         set((state) => {
           const newTabs = state.activeTabs.filter((t) => t.id !== tabId);
           const nextActiveTab = newTabs.at(-1);
           const newActiveId =
             state.activeTabId === tabId && nextActiveTab ? nextActiveTab.id : state.activeTabId;
           return { activeTabs: newTabs, activeTabId: newActiveId };
-        }),
+        });
+      },
 
-      setActiveTab: (tabId) => set({ activeTabId: tabId }),
-      setConnectionStatus: (status) =>
+      setActiveTab: (tabId) => {
+        useUiLayoutStore.getState().setActiveTab(tabId);
+        set({ activeTabId: tabId });
+      },
+      setConnectionStatus: (status) => {
+        useUiLayoutStore.getState().setConnectionStatus(status);
         set((state) => ({
           connectionStatus: { ...state.connectionStatus, ...status },
-        })),
-      setCurrentPlan: (plan) => set({ currentPlan: plan }),
-      setCurrentRun: (run) => set({ currentRun: run }),
-      setInspectorNode: (nodeId) => set({ inspectorNodeId: nodeId }),
+        }));
+      },
+      setCurrentPlan: (plan) => {
+        useExecutionStore.getState().setCurrentPlan(plan);
+        set({ currentPlan: plan });
+      },
+      setCurrentRun: (run) => {
+        useExecutionStore.getState().setCurrentRun(run);
+        set({ currentRun: run });
+      },
+      setInspectorNode: (nodeId) => {
+        useCanvasInteractionStore.getState().setInspectorNode(nodeId);
+        set({ inspectorNodeId: nodeId });
+      },
     }),
     {
       name: 'dvt-web-shell-layout',

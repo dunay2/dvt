@@ -1,3 +1,4 @@
+import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
@@ -6,9 +7,9 @@ import {
   PostStartIntentPersistenceError,
   type StartRunFailurePolicy,
 } from './StartRunFailurePolicy.js';
-import type { StartRunTraceContext } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
+type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type PlanRef = import('@dvt/contracts').PlanRef;
 type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
 type IObservability = import('@dvt/observability').IObservability;
@@ -35,6 +36,7 @@ export class StartRunExecutionService {
 
   async executeStartRun(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
@@ -53,13 +55,14 @@ export class StartRunExecutionService {
 
   private async startRunWithEstimatedRef(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     estimatedRef: EngineRunRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
+    const { adapter, plan, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
       planRef,
@@ -73,18 +76,20 @@ export class StartRunExecutionService {
 
     const runRef = await this.startAdapterAndMarkDispatched({
       adapter,
+      plan,
       planRef,
       resolvedContext,
       intentId,
     });
 
-    await this.saveProviderRefIfNeeded({
+    await this.reconcileEstimatedRunRef({
+      adapter,
       resolvedContext,
       estimatedRef,
       runRef,
       traceContext,
+      intentId,
     });
-
     await this.deps.failurePolicy.markIntentResolvedBestEffort({
       intentId,
       tenantId: resolvedContext.tenantId,
@@ -97,14 +102,16 @@ export class StartRunExecutionService {
 
   private async startRunWithoutEstimatedRef(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, traceContext, intentId } = input;
+    const { adapter, plan, planRef, resolvedContext, traceContext, intentId } = input;
     const runRef = await this.startAdapterAndMarkDispatched({
       adapter,
+      plan,
       planRef,
       resolvedContext,
       intentId,
@@ -128,13 +135,14 @@ export class StartRunExecutionService {
 
   private async startAdapterAndMarkDispatched(input: {
     adapter: IProviderAdapter;
+    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, intentId } = input;
+    const { adapter, plan, planRef, resolvedContext, intentId } = input;
     const runRef = await this.withTimeout(
-      adapter.startRun(planRef, resolvedContext),
+      adapter.startRun(plan, planRef, resolvedContext),
       this.deps.timeouts?.adapterCallMs ?? 30_000,
       'adapter.startRun'
     );
@@ -163,7 +171,7 @@ export class StartRunExecutionService {
         intentId,
         tenantId: bootMeta.tenantId,
         runId: bootMeta.runId,
-        provider: bootMeta.provider,
+        provider: bootMeta.providerRef.provider,
         traceContext,
       });
     } catch (bootstrapError) {
@@ -185,46 +193,75 @@ export class StartRunExecutionService {
         intentId,
         tenantId: bootMeta.tenantId,
         runId: bootMeta.runId,
-        provider: bootMeta.provider,
+        provider: bootMeta.providerRef.provider,
         traceContext,
       });
       throw bootstrapError;
     }
   }
 
-  private async saveProviderRefIfNeeded(input: {
+  private async reconcileEstimatedRunRef(input: {
+    adapter: IProviderAdapter;
     resolvedContext: ResolvedRunContext;
     estimatedRef: EngineRunRef;
     runRef: EngineRunRef;
     traceContext: StartRunTraceContext;
+    intentId: string;
   }): Promise<void> {
-    const { resolvedContext, estimatedRef, runRef, traceContext } = input;
-    const saveProviderRef = this.deps.stateStoreWrite.saveProviderRef;
-    if (saveProviderRef === undefined) return;
+    const { adapter, resolvedContext, estimatedRef, runRef, traceContext, intentId } = input;
+    if (engineRunRefsEqual(estimatedRef, runRef)) {
+      return;
+    }
 
-    const providerRefUnchanged =
-      runRef.runId === estimatedRef.runId && runRef.workflowId === estimatedRef.workflowId;
-    if (providerRefUnchanged) return;
-
-    await saveProviderRef(
-      resolvedContext.tenantId,
-      resolvedContext.runId,
-      this.deps.eventFactory.buildProviderRefUpdate(runRef)
-    ).catch((refErr: unknown) => {
+    try {
+      await this.deps.stateStoreWrite.saveProviderRef(
+        resolvedContext.tenantId,
+        resolvedContext.runId,
+        runRef
+      );
+    } catch (reconcileError) {
       try {
-        this.deps.observability.logs.warn({
-          msg: START_RUN_MESSAGE.saveProviderRefFailed,
+        this.deps.observability.logs.error({
+          msg: START_RUN_MESSAGE.providerRefReconciliationFailed,
           context: traceContext,
+          err: reconcileError,
           attributes: {
-            error: toErrorMessage(refErr),
-            provider: runRef.provider,
             runId: resolvedContext.runId,
+            provider: runRef.provider,
+            estimatedRunRef: JSON.stringify(estimatedRef),
+            actualRunRef: JSON.stringify(runRef),
           },
         });
       } catch {
-        // no-op: observability reporting must not fail startRun.
+        // no-op: observability reporting must not hide the reconciliation error.
       }
-    });
+
+      await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
+        try {
+          this.deps.observability.logs.error({
+            msg: START_RUN_MESSAGE.providerRefReconciliationCancelFailed,
+            context: traceContext,
+            err: cancelErr,
+            attributes: {
+              error: toErrorMessage(cancelErr),
+              provider: runRef.provider,
+            },
+          });
+        } catch {
+          // no-op: observability reporting must not hide the reconciliation error.
+        }
+      });
+
+      await this.deps.failurePolicy.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: resolvedContext.tenantId,
+        runId: resolvedContext.runId,
+        provider: runRef.provider,
+        traceContext,
+      });
+
+      throw reconcileError;
+    }
   }
 
   private async withTimeout<T>(
@@ -246,5 +283,29 @@ export class StartRunExecutionService {
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
+  }
+}
+
+function engineRunRefsEqual(left: EngineRunRef, right: EngineRunRef): boolean {
+  if (
+    left.provider !== right.provider ||
+    left.tenantId !== right.tenantId ||
+    left.workflowId !== right.workflowId ||
+    left.runId !== right.runId
+  ) {
+    return false;
+  }
+
+  switch (left.provider) {
+    case 'temporal':
+      return (
+        right.provider === 'temporal' &&
+        left.namespace === right.namespace &&
+        left.taskQueue === right.taskQueue
+      );
+    case 'conductor':
+      return right.provider === 'conductor' && left.conductorUrl === right.conductorUrl;
+    case 'mock':
+      return right.provider === 'mock';
   }
 }

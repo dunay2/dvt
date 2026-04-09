@@ -25,6 +25,8 @@ export {
   InvalidRunEventInputError,
   InvalidRunIdError,
   InvalidStateTransitionError,
+  ProviderRefProviderMismatchError,
+  RecoverySourceNotTerminalError,
   RunSequenceOverflowError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
@@ -34,4 +36,8 @@ export type {
   InvalidRunEventInputParams,
   InvalidStateTransitionParams,
 } from './errors/runErrors.js';
-export { InvalidSchemaVersionError, PlanUriNotAllowedError } from './errors/planErrors.js';
+export {
+  InvalidSchemaVersionError,
+  PlanUriNotAllowedError,
+  RunExecutionContextRejectedError,
+} from './errors/planErrors.js';

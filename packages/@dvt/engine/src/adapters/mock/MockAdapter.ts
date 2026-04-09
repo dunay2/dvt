@@ -7,35 +7,38 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type {
-  EngineRunRef,
-  PlanRef,
-  ResolvedRunContext,
-  RunStatusSnapshot,
-  SignalRequest,
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+  CURRENT_EXECUTION_PLAN_VERSION,
+  type EngineRunRef,
+  type ExecutionPlan,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunStatusSnapshot,
+  type SignalSemanticsVersion,
+  type SignalRequest,
 } from '@dvt/contracts';
 
-import type { ExecutionPlan } from '../../contracts/executionPlan.js';
+import { RunMetadataNotFoundError } from '../../contracts/errors.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
+import { buildRunEvents } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
-import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../../ports/IRunStateStore.js';
 import type { IClock } from '../../utils/clock.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
 export interface MockAdapterDeps {
   stateStore: IRunStateStoreRead;
-  /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
-  clock?: IClock;
-  /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
+  stateStoreWrite: IRunStateStoreWrite;
+  clock: Pick<IClock, 'nowIsoUtc'>;
   idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
-  planFetcher?: {
-    fetch(planRef: PlanRef): Promise<ExecutionPlan>;
-  };
 }
 
 /** Contract versions this adapter implementation can execute. */
-const SUPPORTED_CONTRACT_VERSIONS = ['1.0.0'] as const;
+const SUPPORTED_CONTRACT_VERSIONS = [CURRENT_EXECUTION_PLAN_CONTRACT_VERSION] as const;
 
 /** Capabilities declared by the mock adapter. Must stay in sync with adapters.capabilities.json. */
 const MOCK_CAPABILITIES = [
@@ -46,8 +49,13 @@ const MOCK_CAPABILITIES = [
 
 export class MockAdapter implements IProviderAdapter {
   readonly provider = 'mock' as const;
+  private readonly clock: Pick<IClock, 'nowIsoUtc'>;
+  private readonly idempotency: IdempotencyKeyBuilder;
 
-  constructor(private readonly deps: MockAdapterDeps) {}
+  constructor(private readonly deps: MockAdapterDeps) {
+    this.clock = deps.clock;
+    this.idempotency = deps.idempotency ?? new IdempotencyKeyBuilder();
+  }
 
   estimateRunRef(ctx: ResolvedRunContext): EngineRunRef {
     return {
@@ -58,20 +66,24 @@ export class MockAdapter implements IProviderAdapter {
     };
   }
 
-  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
-    const plan: ExecutionPlan = this.deps.planFetcher
-      ? await this.deps.planFetcher.fetch(planRef)
-      : {
-          metadata: {
-            planId: planRef.planId,
-            planVersion: planRef.planVersion,
-            schemaVersion: planRef.schemaVersion,
-            contractVersion: '1.0.0',
-          },
-          steps: [],
-        };
+  async startRun(
+    plan: ExecutionPlan,
+    planRef: PlanRef,
+    ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
+    const effectivePlan: ExecutionPlan = plan ?? {
+      metadata: {
+        planId: planRef.planId,
+        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+        inputHashSha256: planRef.sha256,
+        createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
+      },
+      steps: [],
+    };
 
-    validateMockPlanMetadata(plan.metadata);
+    validateMockPlanMetadata(effectivePlan.metadata);
 
     const runRef: EngineRunRef = {
       provider: 'mock',
@@ -80,15 +92,15 @@ export class MockAdapter implements IProviderAdapter {
       runId: ctx.runId,
     };
 
-    for (const step of plan.steps) {
+    for (const step of effectivePlan.steps) {
       validateMockStep(step);
     }
 
     return runRef;
   }
 
-  async cancelRun(_runRef: EngineRunRef): Promise<void> {
-    // For mock, cancellation is cooperative; engine emits RunCancelled.
+  async cancelRun(runRef: EngineRunRef): Promise<void> {
+    await this.appendCancelLifecycle(runRef);
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
@@ -96,12 +108,118 @@ export class MockAdapter implements IProviderAdapter {
     return this.deps.projector.rebuild(runRef.runId, events);
   }
 
-  async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {
-    // For mock, signals are interpreted by engine (pause/resume/cancel events).
+  async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
+    const dispatch = mapCanonicalSignalToMockDispatch(request);
+    switch (dispatch.kind) {
+      case 'cancel':
+        await this.appendCancelLifecycle(runRef);
+        return;
+      case 'pause':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunPaused');
+        return;
+      case 'resume':
+        await this.appendPauseResumeLifecycle(runRef, request, 'RunResumed');
+        return;
+    }
   }
 
   capabilities(): readonly string[] {
     return MOCK_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
+  }
+
+  private async appendCancelLifecycle(runRef: EngineRunRef): Promise<void> {
+    const meta = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    if (!meta) {
+      throw new RunMetadataNotFoundError(runRef.runId);
+    }
+
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(
+      runRef.runId,
+      buildRunEvents([
+        {
+          idempotency: this.idempotency,
+          clock: this.clock,
+          meta,
+          eventType: 'RunCancelRequested',
+        },
+        {
+          idempotency: this.idempotency,
+          clock: this.clock,
+          meta,
+          eventType: 'RunCancelled',
+        },
+      ]).map((event) => ({
+        ...event,
+        payloadVersion: 1,
+      }))
+    );
+  }
+
+  private async appendPauseResumeLifecycle(
+    runRef: EngineRunRef,
+    request: SignalRequest,
+    eventType: 'RunPaused' | 'RunResumed'
+  ): Promise<void> {
+    const meta = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    if (!meta) {
+      throw new RunMetadataNotFoundError(runRef.runId);
+    }
+
+    const snapshot = await this.deps.stateStore.getSnapshot(runRef.tenantId, runRef.runId);
+    if (eventType === 'RunPaused') {
+      if (!snapshot || snapshot.status !== 'RUNNING' || snapshot.paused) {
+        return;
+      }
+    } else if (!snapshot || snapshot.status !== 'PAUSED' || !snapshot.paused) {
+      return;
+    }
+
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(runRef.runId, [
+      {
+        eventId: this.idempotency.eventId(),
+        eventType,
+        payloadVersion: 1,
+        emittedAt: this.clock.nowIsoUtc(),
+        tenantId: meta.tenantId,
+        projectId: meta.projectId,
+        environmentId: meta.environmentId,
+        runId: meta.runId,
+        planId: meta.planId,
+        planVersion: meta.planVersion,
+        engineAttemptId: 1,
+        logicalAttemptId: meta.logicalAttemptId,
+        idempotencyKey: this.idempotency.signalKey(
+          {
+            runId: meta.runId,
+            logicalAttemptId: meta.logicalAttemptId,
+            planId: meta.planId,
+            planVersion: meta.planVersion,
+          },
+          request
+        ),
+      },
+    ]);
+  }
+}
+
+function mapCanonicalSignalToMockDispatch(request: SignalRequest): {
+  kind: 'cancel' | 'pause' | 'resume';
+} {
+  switch (request.type) {
+    case 'CANCEL':
+      return { kind: 'cancel' };
+    case 'PAUSE':
+      return { kind: 'pause' };
+    case 'RESUME':
+      return { kind: 'resume' };
+    default: {
+      const exhaustive: never = request.type;
+      throw new Error(`MOCK_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
+    }
   }
 }
 
@@ -115,8 +233,8 @@ function validateMockPlanMetadata(metadata: ExecutionPlan['metadata']): void {
 
 function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   // Adapter narrowing rule: reject unrecognized fields.
-  // For mock we only allow: stepId, kind, dependsOn.
-  const allowed = new Set(['stepId', 'kind', 'dependsOn']);
+  // For mock we allow the governed canonical step fields only.
+  const allowed = new Set(['stepId', 'kind', 'dependsOn', 'stepTypeConfig', 'type', 'gateway']);
   for (const k of Object.keys(step)) {
     if (!allowed.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);

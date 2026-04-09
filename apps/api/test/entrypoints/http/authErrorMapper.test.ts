@@ -1,6 +1,7 @@
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
+  RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
   RunNotFoundError,
@@ -209,8 +210,8 @@ describe('mapRuntimeDomainError', () => {
     });
   });
 
-  it('maps unsupported phase-2 signals to 422', () => {
-    const result = mapRuntimeDomainError(new SignalNotImplementedError('RETRY_RUN'));
+  it('maps unsupported provider-private commands to 422', () => {
+    const result = mapRuntimeDomainError(new SignalNotImplementedError('PROVIDER_PRIVATE_COMMAND'));
     expect(result).toEqual({
       status: 422,
       body: {
@@ -245,6 +246,25 @@ describe('mapRuntimeDomainError', () => {
           type: 'conflict',
           reason: 'run_already_exists',
           details: { runId: 'run-dup' },
+        },
+      },
+    });
+  });
+
+  it('maps non-terminal recovery source errors to 422', () => {
+    const result = mapRuntimeDomainError(
+      new RecoverySourceNotTerminalError('run-source', 'RUNNING')
+    );
+    expect(result).toEqual({
+      status: 422,
+      body: {
+        error: {
+          type: 'unprocessable',
+          reason: 'source_run_not_terminal',
+          details: {
+            runId: 'run-source',
+            status: 'RUNNING',
+          },
         },
       },
     });

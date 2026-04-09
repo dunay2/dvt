@@ -3,114 +3,210 @@
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0007: Run Cancellation Semantics
- * @decision Canonical pure-function event projection shared by engine and storage adapters.
- * @consequence One source of truth for run snapshot mutation rules and terminal guards.
+ * @decision Canonical run projection delegates envelope normalization to a mapper and mutates snapshots through focused handlers.
+ * @consequence Transition rules, payload normalization, and snapshot mutation no longer share one procedural blob.
  * @version 1.0.0
- * @date 2026-03-15
+ * @date 2026-04-08
  */
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 
 import { InvalidStateTransitionError } from './errors.js';
+import {
+  mapEventEnvelopeToProjectableEvent,
+  type ProjectableRunEvent,
+} from './mapEventEnvelopeToProjectableEvent.js';
+import {
+  RUN_EVENT_ALLOWED_FROM,
+  STEP_EVENT_ALLOWED_FROM,
+  TERMINAL_RUN_STATUSES,
+  TERMINAL_STEP_STATUSES,
+} from './transitionPolicy.js';
 
-const TERMINAL_RUN_STATUSES = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
-const TERMINAL_STEP_STATUSES = new Set(['COMPLETED', 'SKIPPED']);
+type StepSnapshot = WorkflowSnapshot['steps'][string];
+type StepStatus = WorkflowSnapshot['steps'][string]['status'];
+type ProjectionHandler<Kind extends ProjectableRunEvent['kind']> = (
+  snap: WorkflowSnapshot,
+  event: Extract<ProjectableRunEvent, { kind: Kind }>
+) => void;
+type ProjectionHandlerMap = {
+  [Kind in ProjectableRunEvent['kind']]: ProjectionHandler<Kind>;
+};
 
-export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
-  switch (e.eventType) {
-    case 'RunQueued':
-      break;
-
-    case 'RunStarted':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.status = 'RUNNING';
-      snap.startedAt = snap.startedAt ?? e.emittedAt;
-      break;
-
-    case 'RunPaused':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.status = 'PAUSED';
-      snap.paused = true;
-      break;
-
-    case 'RunResumed':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.status = 'RUNNING';
-      snap.paused = false;
-      break;
-
-    case 'RunCancelRequested':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.cancelling = true;
-      break;
-
-    case 'RunCancelled':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.status = 'CANCELLED';
-      snap.cancelling = false;
-      snap.completedAt = e.emittedAt;
-      break;
-
-    case 'RunCompleted':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.status = 'COMPLETED';
-      snap.completedAt = e.emittedAt;
-      break;
-
-    case 'RunFailed':
-      assertRunNotTerminal(snap, e.eventType);
-      snap.status = 'FAILED';
-      snap.completedAt = e.emittedAt;
-      break;
-
-    case 'StepStarted': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'RUNNING';
-      s.startedAt = s.startedAt ?? e.emittedAt;
-      s.attempts += 1;
-      snap.steps[stepId] = s;
-      break;
+const PROJECTION_HANDLERS: ProjectionHandlerMap = {
+  RunQueued: (_snap, _event) => {
+    // Deliberate no-op: queue admission is already represented by the
+    // bootstrapped pre-start snapshot state.
+  },
+  RunStarted: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    snap.status = 'RUNNING';
+    snap.startedAt = snap.startedAt ?? event.emittedAt;
+  },
+  RunPaused: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    assertRunStatusIn(snap, event.kind, RUN_EVENT_ALLOWED_FROM.RunPaused);
+    snap.status = 'PAUSED';
+    snap.paused = true;
+  },
+  RunResumed: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    assertRunStatusIn(snap, event.kind, RUN_EVENT_ALLOWED_FROM.RunResumed);
+    snap.status = 'RUNNING';
+    snap.paused = false;
+  },
+  RunCancelRequested: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    assertRunStatusIn(snap, event.kind, RUN_EVENT_ALLOWED_FROM.RunCancelRequested);
+    snap.cancelling = true;
+  },
+  RunCancelled: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    if (!snap.cancelling) {
+      throw new InvalidStateTransitionError({
+        runId: snap.runId,
+        fromStatus: snap.status,
+        eventType: event.kind,
+      });
     }
-
-    case 'StepCompleted': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'COMPLETED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
-      const decision = extractGatewayDecision(e);
-      if (decision !== undefined) {
-        snap.gatewayDecisions ??= {};
-        snap.gatewayDecisions[stepId] = decision;
-      }
-      break;
+    snap.status = 'CANCELLED';
+    snap.cancelling = false;
+    clearActiveStep(snap);
+    snap.completedAt = event.emittedAt;
+  },
+  RunCompleted: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    snap.status = 'COMPLETED';
+    clearActiveStep(snap);
+    snap.completedAt = event.emittedAt;
+  },
+  RunFailed: (snap, event) => {
+    assertRunNotTerminal(snap, event.kind);
+    snap.status = 'FAILED';
+    clearActiveStep(snap);
+    snap.completedAt = event.emittedAt;
+  },
+  StepStarted: (snap, event) => {
+    applyStepTransition(snap, event, STEP_EVENT_ALLOWED_FROM.StepStarted, (step, emittedAt) => {
+      step.status = 'RUNNING';
+      step.startedAt = step.startedAt ?? emittedAt;
+      step.attempts += 1;
+    });
+    setActiveStep(snap, event.stepId);
+  },
+  StepCompleted: (snap, event) => {
+    applyStepTransition(snap, event, STEP_EVENT_ALLOWED_FROM.StepCompleted, (step, emittedAt) => {
+      step.status = 'COMPLETED';
+      step.completedAt = emittedAt;
+    });
+    if (event.gatewayDecision !== undefined) {
+      snap.gatewayDecisions ??= {};
+      snap.gatewayDecisions[event.stepId] = event.gatewayDecision;
     }
-
-    case 'StepFailed': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'FAILED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
-      break;
+    clearActiveStepIfMatches(snap, event.stepId);
+    if (event.materialization !== undefined) {
+      setMaterializationEvidence(snap, event.materialization);
     }
+  },
+  StepFailed: (snap, event) => {
+    applyStepTransition(snap, event, STEP_EVENT_ALLOWED_FROM.StepFailed, (step, emittedAt) => {
+      step.status = 'FAILED';
+      step.completedAt = emittedAt;
+    });
+    setFailureEvidence(snap, event.failure);
+  },
+  StepSkipped: (snap, event) => {
+    applyStepTransition(snap, event, STEP_EVENT_ALLOWED_FROM.StepSkipped, (step, emittedAt) => {
+      step.status = 'SKIPPED';
+      step.completedAt = emittedAt;
+    });
+    clearActiveStepIfMatches(snap, event.stepId);
+  },
+} satisfies ProjectionHandlerMap;
 
-    case 'StepSkipped': {
-      const stepId = (e as EventEnvelope & { stepId: string }).stepId;
-      assertStepNotTerminal(snap, stepId, e.eventType);
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'SKIPPED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
-      break;
-    }
-
-    default:
-      break;
+export function applyRunEvent(snap: WorkflowSnapshot, eventEnvelope: EventEnvelope): void {
+  const event = mapEventEnvelopeToProjectableEvent(eventEnvelope);
+  if (!event) {
+    return;
   }
+
+  const handler = PROJECTION_HANDLERS[event.kind] as (
+    snapshot: WorkflowSnapshot,
+    projectableEvent: ProjectableRunEvent
+  ) => void;
+  handler(snap, event);
+}
+
+function applyStepTransition(
+  snap: WorkflowSnapshot,
+  event: Extract<ProjectableRunEvent, { stepId: string }>,
+  allowedStatuses: StepStatus[],
+  mutator: (step: StepSnapshot, emittedAt: string) => void
+): void {
+  assertStepNotTerminal(snap, event.stepId, event.kind);
+  const step = snap.steps[event.stepId] ?? { status: 'PENDING', attempts: 0 };
+  assertStepStatusIn(snap, event.stepId, event.kind, step.status, allowedStatuses);
+  mutator(step, event.emittedAt);
+  snap.steps[event.stepId] = step;
+}
+
+function ensureExecutionEvidence(
+  snap: WorkflowSnapshot
+): NonNullable<WorkflowSnapshot['execution']> {
+  snap.execution ??= {};
+  return snap.execution;
+}
+
+function trimExecutionEvidence(snap: WorkflowSnapshot): void {
+  const execution = snap.execution;
+  if (!execution) {
+    return;
+  }
+
+  if (
+    execution.activeStepId === undefined &&
+    execution.failure === undefined &&
+    execution.materialization === undefined
+  ) {
+    delete snap.execution;
+  }
+}
+
+function setActiveStep(snap: WorkflowSnapshot, stepId: string): void {
+  const execution = ensureExecutionEvidence(snap);
+  execution.activeStepId = stepId;
+  delete execution.failure;
+  trimExecutionEvidence(snap);
+}
+
+function clearActiveStep(snap: WorkflowSnapshot): void {
+  if (snap.execution?.activeStepId !== undefined) {
+    delete snap.execution.activeStepId;
+    trimExecutionEvidence(snap);
+  }
+}
+
+function clearActiveStepIfMatches(snap: WorkflowSnapshot, stepId: string): void {
+  if (snap.execution?.activeStepId === stepId) {
+    delete snap.execution.activeStepId;
+    trimExecutionEvidence(snap);
+  }
+}
+
+function setFailureEvidence(
+  snap: WorkflowSnapshot,
+  failure: NonNullable<NonNullable<WorkflowSnapshot['execution']>['failure']>
+): void {
+  const execution = ensureExecutionEvidence(snap);
+  delete execution.activeStepId;
+  execution.failure = failure;
+}
+
+function setMaterializationEvidence(
+  snap: WorkflowSnapshot,
+  materialization: NonNullable<NonNullable<WorkflowSnapshot['execution']>['materialization']>
+): void {
+  const execution = ensureExecutionEvidence(snap);
+  execution.materialization = materialization;
 }
 
 function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
@@ -135,12 +231,37 @@ function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType
   }
 }
 
-function extractGatewayDecision(e: EventEnvelope): boolean | undefined {
-  const payload = e.payload;
-  if (!payload || typeof payload !== 'object') {
-    return undefined;
+function assertRunStatusIn(
+  snap: WorkflowSnapshot,
+  eventType: string,
+  allowedStatuses: WorkflowSnapshot['status'][]
+): void {
+  if (allowedStatuses.includes(snap.status)) {
+    return;
   }
 
-  const maybeDecision = (payload as Record<string, unknown>)['gatewayDecision'];
-  return typeof maybeDecision === 'boolean' ? maybeDecision : undefined;
+  throw new InvalidStateTransitionError({
+    runId: snap.runId,
+    fromStatus: snap.status,
+    eventType,
+  });
+}
+
+function assertStepStatusIn(
+  snap: WorkflowSnapshot,
+  stepId: string,
+  eventType: string,
+  currentStatus: StepStatus,
+  allowedStatuses: StepStatus[]
+): void {
+  if (allowedStatuses.includes(currentStatus)) {
+    return;
+  }
+
+  throw new InvalidStateTransitionError({
+    runId: snap.runId,
+    fromStatus: currentStatus,
+    eventType,
+    stepId,
+  });
 }

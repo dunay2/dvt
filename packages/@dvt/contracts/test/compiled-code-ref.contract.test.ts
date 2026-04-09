@@ -5,9 +5,11 @@ import { parseRunEventRecord, parseRunEventWrite } from '../src/validation.js';
 import {
   STEP_STARTED_WITHOUT_COMPILED_CODE_REF_RECORD_FIXTURE,
   STEP_STARTED_WITHOUT_COMPILED_CODE_REF_WRITE_FIXTURE,
+  STEP_STARTED_WITH_STEP_ARTIFACT_REF_WRITE_FIXTURE,
   STEP_STARTED_WITH_COMPILED_CODE_REF_RECORD_FIXTURE,
   STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
   VALID_COMPILED_CODE_REF_FIXTURE,
+  VALID_STEP_ARTIFACT_REF_FIXTURE,
 } from './fixtures/run-event-compiled-code-ref.fixtures';
 
 describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
@@ -27,6 +29,15 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     expect(parsed.payloadVersion).toBe(1);
     expect(parsed.stepId).toBe('model.analytics.orders');
     expect(parsed.payload?.['compiledCodeRef']).toBeUndefined();
+  });
+
+  it('accepts StepStarted write event with stepArtifactRef payload', () => {
+    const parsed = parseRunEventWrite(STEP_STARTED_WITH_STEP_ARTIFACT_REF_WRITE_FIXTURE);
+
+    expect(parsed.eventType).toBe('StepStarted');
+    expect(parsed.payloadVersion).toBe(1);
+    expect(parsed.stepId).toBe('model.analytics.orders');
+    expect(parsed.payload?.['stepArtifactRef']).toEqual(VALID_STEP_ARTIFACT_REF_FIXTURE);
   });
 
   it('accepts persisted StepStarted record fixtures with and without compiledCodeRef', () => {
@@ -75,26 +86,69 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     expect(parsed.payload?.gatewayDecision).toBe(false);
   });
 
-  it('rejects StepCompleted payloads that omit gatewayDecision', () => {
-    expect(() =>
-      parseRunEventWrite({
-        eventId: 'evt-step-completed-invalid',
-        eventType: 'StepCompleted',
-        payloadVersion: 1,
-        emittedAt: '2026-03-07T10:00:00.000Z',
-        runId: 'run-compiled-code-ref-1',
-        tenantId: 'tenant-a',
-        projectId: 'project-analytics',
-        environmentId: 'prod',
-        planId: 'plan-compiled-code-ref-1',
-        planVersion: '1.0',
-        engineAttemptId: 1,
-        logicalAttemptId: 1,
-        stepId: 'model.analytics.orders',
-        idempotencyKey: 'StepCompleted|tenant-a|run-compiled-code-ref-1|1|gateway-missing',
-        payload: {},
-      })
-    ).toThrow();
+  it('accepts StepCompleted payloads with materialization evidence', () => {
+    const parsed = parseRunEventWrite({
+      eventId: 'evt-step-completed-materialized',
+      eventType: 'StepCompleted',
+      payloadVersion: 1,
+      emittedAt: '2026-03-07T10:00:00.000Z',
+      runId: 'run-compiled-code-ref-1',
+      tenantId: 'tenant-a',
+      projectId: 'project-analytics',
+      environmentId: 'prod',
+      planId: 'plan-compiled-code-ref-1',
+      planVersion: '1.0',
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      stepId: 'model.analytics.orders',
+      idempotencyKey: 'StepCompleted|tenant-a|run-compiled-code-ref-1|1|materialized',
+      payload: {
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'prod',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-03-07T10:00:00.000Z',
+          completedAt: '2026-03-07T10:00:03.000Z',
+          durationMs: 3000,
+        },
+      },
+    });
+
+    expect(parsed.eventType).toBe('StepCompleted');
+    expect(parsed.payload?.materialization).toMatchObject({
+      executor: 'postgres',
+      sinkTable: 'analytics.orders_daily',
+      rowsWritten: 42,
+    });
+  });
+
+  it('accepts StepFailed payloads with reason and message diagnostics', () => {
+    const parsed = parseRunEventWrite({
+      eventId: 'evt-step-failed-1',
+      eventType: 'StepFailed',
+      payloadVersion: 1,
+      emittedAt: '2026-03-07T10:00:00.000Z',
+      runId: 'run-compiled-code-ref-1',
+      tenantId: 'tenant-a',
+      projectId: 'project-analytics',
+      environmentId: 'prod',
+      planId: 'plan-compiled-code-ref-1',
+      planVersion: '1.0',
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      stepId: 'model.analytics.orders',
+      idempotencyKey: 'StepFailed|tenant-a|run-compiled-code-ref-1|1|model.analytics.orders',
+      payload: {
+        reason: 'SINK_WRITE_FAILED',
+        message: 'duplicate key value violates unique constraint',
+        failedAt: '2026-03-07T10:00:04.000Z',
+      },
+    });
+
+    expect(parsed.eventType).toBe('StepFailed');
+    expect(parsed.payload?.reason).toBe('SINK_WRITE_FAILED');
+    expect(parsed.payload?.message).toContain('duplicate key value');
   });
 
   it('rejects unsupported payload versions', () => {
@@ -102,6 +156,24 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
       parseRunEventWrite({
         ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
         payloadVersion: 2,
+      })
+    ).toThrow();
+  });
+
+  it('rejects write envelopes that omit payloadVersion', () => {
+    const withoutPayloadVersion = {
+      ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
+    } as Record<string, unknown>;
+    delete withoutPayloadVersion['payloadVersion'];
+
+    expect(() => parseRunEventWrite(withoutPayloadVersion)).toThrow();
+  });
+
+  it('rejects write envelopes whose runId is only whitespace', () => {
+    expect(() =>
+      parseRunEventWrite({
+        ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
+        runId: '   ',
       })
     ).toThrow();
   });

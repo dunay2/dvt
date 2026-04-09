@@ -2,9 +2,17 @@ param(
   [string]$BaseBranch = 'main',
   [string[]]$TargetBranches = @(),
   [switch]$SkipFetch,
+  [switch]$Preflight,
+  [string]$SliceCommand = '',
+  [switch]$PrCheckSummary,
+  [switch]$LogFirstTriage,
   [switch]$RunSliceChecks,
   [switch]$RunChecks,
   [string]$ChecksCommand = '',
+  [switch]$RunLaneCPreflight,
+  [switch]$PrintCiLogFirstTriage,
+  [string]$PreflightEvidenceFile = '',
+  [string]$PullRequest = '',
   [switch]$DeleteLocalSuperseded,
   [switch]$DeleteRemoteSuperseded,
   [switch]$Yes
@@ -13,13 +21,81 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Invoke-Git {
-  param([Parameter(Mandatory = $true)][string]$Args)
-  $output = & cmd /c "git $Args" 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $Args failed:`n$output"
+function Invoke-NativeCommandCapture {
+  param([Parameter(Mandatory = $true)][scriptblock]$Command)
+
+  $previousErrorPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = 'Continue'
+    $output = & $Command 2>&1 | ForEach-Object {
+      if ($_ -is [System.Management.Automation.ErrorRecord]) {
+        $_.ToString()
+      } else {
+        [string]$_
+      }
+    }
+
+    return [pscustomobject]@{
+      ExitCode = $LASTEXITCODE
+      Output = @($output)
+    }
+  } finally {
+    $ErrorActionPreference = $previousErrorPreference
   }
-  return $output
+}
+
+function Invoke-Git {
+  param([Parameter(Mandatory = $true)][string]$GitArgs)
+
+  $result = Invoke-NativeCommandCapture -Command { cmd /c "git $GitArgs" }
+  if ($result.ExitCode -ne 0) {
+    throw "git $GitArgs failed:`n$($result.Output -join "`n")"
+  }
+  return $result.Output
+}
+
+function Invoke-ShellCommandStrict {
+  param(
+    [Parameter(Mandatory = $true)][string]$Command,
+    [Parameter(Mandatory = $true)][string]$FailureMessage
+  )
+
+  $previousErrorPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = 'Continue'
+    $output = & cmd /c $Command 2>&1 | ForEach-Object {
+      if ($_ -is [System.Management.Automation.ErrorRecord]) {
+        $_.ToString()
+      } else {
+        [string]$_
+      }
+    }
+
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorPreference
+  }
+
+  foreach ($line in @($output)) {
+    if (-not [string]::IsNullOrWhiteSpace($line)) {
+      Write-Host $line
+    }
+  }
+
+  if ($exitCode -ne 0) {
+    throw "$FailureMessage`n$(@($output) -join "`n")"
+  }
+}
+
+function Invoke-JsonHelper {
+  param([Parameter(Mandatory = $true)][string[]]$NodeArgs)
+
+  $result = Invoke-NativeCommandCapture -Command { & node @NodeArgs }
+  if ($result.ExitCode -ne 0) {
+    throw "Node helper failed:`n$($result.Output -join "`n")"
+  }
+
+  return ($result.Output -join "`n") | ConvertFrom-Json
 }
 
 function Test-BranchExistsLocal {
@@ -64,8 +140,8 @@ function Get-SupersededSignal {
     throw "Unable to compute cherry signal for '$Branch'."
   }
 
-  $plusCount = ($cherry | Where-Object { $_ -match '^\+' }).Count
-  $minusCount = ($cherry | Where-Object { $_ -match '^-' }).Count
+  $plusCount = @($cherry | Where-Object { $_ -match '^\+' }).Count
+  $minusCount = @($cherry | Where-Object { $_ -match '^-' }).Count
 
   [pscustomobject]@{
     PlusCount = [int]$plusCount
@@ -125,6 +201,141 @@ function Confirm-OrStop {
   }
 }
 
+function Write-BranchDiagnostics {
+  param(
+    [Parameter(Mandatory = $true)][string]$Base,
+    [Parameter(Mandatory = $true)][string]$Branch,
+    [ref]$Accumulator
+  )
+
+  if (-not (Test-BranchExistsLocal -Branch $Branch)) {
+    Write-Warning "Skipping missing local branch: $Branch"
+    return
+  }
+
+  $delta = Get-BranchDelta -Base $Base -Branch $Branch
+  $superseded = Get-SupersededSignal -Base $Base -Branch $Branch
+  $changed = @(Get-ChangedFilesVsBase -Base $Base -Branch $Branch)
+
+  $Accumulator.Value += [pscustomobject]@{
+    Branch = $Branch
+    Ahead = $delta.Ahead
+    Behind = $delta.Behind
+    CherryPlus = $superseded.PlusCount
+    CherryMinus = $superseded.MinusCount
+    LikelySuperseded = $superseded.IsLikelySuperseded
+    ChangedFiles = @($changed).Count
+  }
+
+  Write-Host ''
+  Write-Host "[$Branch]"
+  Write-Host "  ahead=$($delta.Ahead) behind=$($delta.Behind) cherry(+/ -)=$($superseded.PlusCount)/$($superseded.MinusCount)"
+  Write-Host "  likely_superseded=$($superseded.IsLikelySuperseded) changed_files=$(@($changed).Count)"
+
+  if (@($changed).Count -gt 0) {
+    $preview = $changed | Select-Object -First 12
+    foreach ($line in $preview) {
+      Write-Host "    $line"
+    }
+    if (@($changed).Count -gt 12) {
+      Write-Host '    ...'
+    }
+  }
+}
+
+function Write-PrCheckSummary {
+  param([string]$PrRef = '')
+
+  Write-Host ''
+  Write-Host '=== PR Check Summary ==='
+
+  $args = @('tools/ci/pr-check-triage.mjs', 'summary')
+  if (-not [string]::IsNullOrWhiteSpace($PrRef)) {
+    $args += @('--pr', $PrRef)
+  }
+
+  $summary = Invoke-JsonHelper -NodeArgs $args
+
+  if ($summary.status -eq 'no_pr') {
+    Write-Host $summary.message
+    return
+  }
+
+  Write-Host "PR #$($summary.pr.number) [$($summary.pr.headRefName)]"
+  Write-Host "  $($summary.pr.url)"
+  Write-Host "  failed=$($summary.counts.failed) pending=$($summary.counts.pending) successful=$($summary.counts.successful) external=$($summary.counts.external) skipped=$($summary.counts.skipped)"
+
+  foreach ($failed in @($summary.failed)) {
+    Write-Host "  FAIL  $($failed.name)"
+    if ($failed.detailsUrl) {
+      Write-Host "        $($failed.detailsUrl)"
+    }
+  }
+
+  foreach ($pending in @($summary.pending)) {
+    Write-Host "  WAIT  $($pending.name)"
+    if ($pending.detailsUrl) {
+      Write-Host "        $($pending.detailsUrl)"
+    }
+  }
+
+  foreach ($external in @($summary.external)) {
+    Write-Host "  EXTERNAL  $($external.name)"
+    if ($external.detailsUrl) {
+      Write-Host "            $($external.detailsUrl)"
+    }
+  }
+}
+
+function Write-FirstRedTriage {
+  param([string]$PrRef = '')
+
+  Write-Host ''
+  Write-Host '=== CI Log-First Triage ==='
+
+  $args = @('tools/ci/pr-check-triage.mjs', 'first-failure')
+  if (-not [string]::IsNullOrWhiteSpace($PrRef)) {
+    $args += @('--pr', $PrRef)
+  }
+
+  $triage = Invoke-JsonHelper -NodeArgs $args
+
+  if ($triage.status -eq 'no_pr') {
+    Write-Host $triage.message
+    return
+  }
+
+  if ($triage.status -eq 'no_failing_actions_check') {
+    Write-Host "PR #$($triage.pr.number) has no failing GitHub Actions checks."
+    return
+  }
+
+  if ($triage.status -eq 'unloggable_failure') {
+    Write-Host "Found a failing check but its details URL is not a GitHub Actions job:"
+    Write-Host "  $($triage.check.name)"
+    if ($triage.check.detailsUrl) {
+      Write-Host "  $($triage.check.detailsUrl)"
+    }
+    return
+  }
+
+  Write-Host "PR #$($triage.pr.number) first failing job:"
+  Write-Host "  $($triage.check.name)"
+  if ($triage.check.workflowName) {
+    Write-Host "  workflow=$($triage.check.workflowName)"
+  }
+  if ($triage.check.detailsUrl) {
+    Write-Host "  $($triage.check.detailsUrl)"
+  }
+  Write-Host ''
+  Write-Host 'Failure snippet:'
+  if ($triage.snippet) {
+    Write-Host $triage.snippet
+  } else {
+    Write-Host '  No failed-step snippet was available from gh run view.'
+  }
+}
+
 Write-Host '=== Repo Hygiene (diagnostic-first) ==='
 Write-Host "Base branch: $BaseBranch"
 
@@ -140,13 +351,32 @@ if (-not $SkipFetch) {
 $currentBranch = (Invoke-Git 'branch --show-current').Trim()
 Write-Host "Current branch: $currentBranch"
 
+$useCurrentBranchDiagnostics = $Preflight -or $PrCheckSummary -or $LogFirstTriage
+
+if ($Preflight -and -not [string]::IsNullOrWhiteSpace($ChecksCommand)) {
+  throw 'Use -SliceCommand with -Preflight. -ChecksCommand is only for legacy -RunChecks mode.'
+}
+
+if ($RunSliceChecks -and -not [string]::IsNullOrWhiteSpace($SliceCommand)) {
+  throw 'Use either -RunSliceChecks or -SliceCommand, not both.'
+}
+
 $targets = if ($TargetBranches.Count -gt 0) {
   @($TargetBranches)
+} elseif ($useCurrentBranchDiagnostics) {
+  @($currentBranch)
 } else {
   @(Get-BranchCandidates -Base $BaseBranch)
 }
 
-if (@($targets).Count -eq 0) {
+if (
+  @($targets).Count -eq 0 -and
+  -not $RunSliceChecks -and
+  -not $RunChecks -and
+  -not $Preflight -and
+  -not $PrCheckSummary -and
+  -not $LogFirstTriage
+) {
   Write-Host 'No target branches to analyze.'
   exit 0
 }
@@ -154,44 +384,16 @@ if (@($targets).Count -eq 0) {
 $report = @()
 
 foreach ($branch in $targets) {
-  if (-not (Test-BranchExistsLocal -Branch $branch)) {
-    Write-Warning "Skipping missing local branch: $branch"
-    continue
-  }
-
-  $delta = Get-BranchDelta -Base $BaseBranch -Branch $branch
-  $superseded = Get-SupersededSignal -Base $BaseBranch -Branch $branch
-  $changed = @(Get-ChangedFilesVsBase -Base $BaseBranch -Branch $branch)
-
-  $report += [pscustomobject]@{
-    Branch = $branch
-    Ahead = $delta.Ahead
-    Behind = $delta.Behind
-    CherryPlus = $superseded.PlusCount
-    CherryMinus = $superseded.MinusCount
-    LikelySuperseded = $superseded.IsLikelySuperseded
-    ChangedFiles = @($changed).Count
-  }
-
-  Write-Host ''
-  Write-Host "[$branch]"
-  Write-Host "  ahead=$($delta.Ahead) behind=$($delta.Behind) cherry(+/ -)=$($superseded.PlusCount)/$($superseded.MinusCount)"
-  Write-Host "  likely_superseded=$($superseded.IsLikelySuperseded) changed_files=$(@($changed).Count)"
-
-  if (@($changed).Count -gt 0) {
-    $preview = $changed | Select-Object -First 12
-    foreach ($line in $preview) {
-      Write-Host "    $line"
-    }
-    if (@($changed).Count -gt 12) {
-      Write-Host '    ...'
-    }
-  }
+  Write-BranchDiagnostics -Base $BaseBranch -Branch $branch -Accumulator ([ref]$report)
 }
 
 Write-Host ''
 Write-Host '=== Summary ==='
-$report | Sort-Object Branch | Format-Table -AutoSize
+if ($report.Count -gt 0) {
+  $report | Sort-Object Branch | Format-Table -AutoSize
+} else {
+  Write-Host 'No branch diagnostics collected.'
+}
 
 $supersededBranches = @($report | Where-Object { $_.LikelySuperseded })
 
@@ -217,28 +419,89 @@ if ($DeleteRemoteSuperseded -and $supersededBranches.Count -gt 0) {
   }
 }
 
-if ($RunSliceChecks) {
+if ($Preflight) {
+  Write-Host ''
+  Write-Host '=== Preflight ==='
+
+  if ($RunSliceChecks) {
+    Write-Host 'Running default runtime command slice checks...'
+    $testCmd = 'pnpm --filter dvt-api test -- test/entrypoints/http/runCommandRouteExecutor.test.ts test/entrypoints/http/runCommandFieldParsers.test.ts test/entrypoints/http/signalRunRouteParser.test.ts test/entrypoints/http/cancelRunRouteParser.test.ts test/entrypoints/http/signalRunRoute.test.ts test/entrypoints/http/cancelRunRoute.test.ts'
+    Write-Host "  $testCmd"
+    Invoke-ShellCommandStrict -Command $testCmd -FailureMessage 'Slice tests failed.'
+  } elseif (-not [string]::IsNullOrWhiteSpace($SliceCommand)) {
+    Write-Host "Running custom slice command: $SliceCommand"
+    Invoke-ShellCommandStrict -Command $SliceCommand -FailureMessage 'Slice command failed.'
+  } else {
+    Write-Host 'Running affected-package preflight checks'
+    Invoke-ShellCommandStrict -Command 'pnpm preflight:affected' -FailureMessage 'pnpm preflight:affected failed.'
+  }
+
+  Write-Host 'Auto-fixing changed files (Prettier + ESLint) before verify gate'
+  Invoke-ShellCommandStrict -Command 'pnpm fix:changed' -FailureMessage 'pnpm fix:changed failed.'
+
+  Write-Host 'Running pnpm verify:prepush'
+  Invoke-ShellCommandStrict -Command 'pnpm verify:prepush' -FailureMessage 'pnpm verify:prepush failed.'
+}
+
+if ($RunSliceChecks -and -not $Preflight) {
   Write-Host ''
   Write-Host 'Running default runtime command slice checks...'
   $testCmd = 'pnpm --filter dvt-api test -- test/entrypoints/http/runCommandRouteExecutor.test.ts test/entrypoints/http/runCommandFieldParsers.test.ts test/entrypoints/http/signalRunRouteParser.test.ts test/entrypoints/http/cancelRunRouteParser.test.ts test/entrypoints/http/signalRunRoute.test.ts test/entrypoints/http/cancelRunRoute.test.ts'
   Write-Host "  $testCmd"
-  & pnpm --filter dvt-api test -- test/entrypoints/http/runCommandRouteExecutor.test.ts test/entrypoints/http/runCommandFieldParsers.test.ts test/entrypoints/http/signalRunRouteParser.test.ts test/entrypoints/http/cancelRunRouteParser.test.ts test/entrypoints/http/signalRunRoute.test.ts test/entrypoints/http/cancelRunRoute.test.ts
-  if ($LASTEXITCODE -ne 0) {
-    throw 'Slice tests failed.'
-  }
+  Invoke-ShellCommandStrict -Command $testCmd -FailureMessage 'Slice tests failed.'
 }
 
-if ($RunChecks) {
+if ($RunChecks -and -not $Preflight) {
   if ([string]::IsNullOrWhiteSpace($ChecksCommand)) {
     throw 'RunChecks requires -ChecksCommand "<command>".'
   }
 
   Write-Host ''
   Write-Host "Running custom checks command: $ChecksCommand"
-  & cmd /c $ChecksCommand
-  if ($LASTEXITCODE -ne 0) {
-    throw 'Custom checks command failed.'
+  Invoke-ShellCommandStrict -Command $ChecksCommand -FailureMessage 'Custom checks command failed.'
+}
+
+if ($PrCheckSummary) {
+  Write-PrCheckSummary
+}
+
+if ($LogFirstTriage) {
+  Write-FirstRedTriage
+}
+
+if ($RunLaneCPreflight) {
+  Write-Host ''
+  Write-Host '=== Lane C preflight chain ==='
+  $preflightStart = Get-Date
+  $preflightRecord = [ordered]@{
+    timestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+    baseBranch = $BaseBranch
+    branch = $currentBranch
+    targetBranchesAnalyzed = @($report).Count
+    supersededCandidates = @($supersededBranches).Count
+    verifyPrepush = 'failed'
+    durationSeconds = 0
   }
+
+  try {
+    Write-Host 'Running pnpm verify:prepush'
+    & pnpm verify:prepush
+    if ($LASTEXITCODE -ne 0) {
+      throw 'pnpm verify:prepush failed.'
+    }
+    $preflightRecord.verifyPrepush = 'passed'
+  } finally {
+    $preflightRecord.durationSeconds = [Math]::Round(((Get-Date) - $preflightStart).TotalSeconds, 1)
+    Write-Host "Lane C preflight summary: $($preflightRecord | ConvertTo-Json -Compress)"
+    if (-not [string]::IsNullOrWhiteSpace($PreflightEvidenceFile)) {
+      Append-JsonLine -Path $PreflightEvidenceFile -Payload $preflightRecord
+      Write-Host "Preflight evidence appended to: $PreflightEvidenceFile"
+    }
+  }
+}
+
+if ($PrintCiLogFirstTriage) {
+  Write-LaneCCiLogFirstTriage -Branch $currentBranch -PrNumber $PullRequest
 }
 
 Write-Host ''

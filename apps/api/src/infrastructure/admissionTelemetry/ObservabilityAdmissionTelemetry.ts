@@ -1,93 +1,92 @@
-import type { Attributes, IObservability } from '@dvt/observability';
+import type { IObservability } from '@dvt/observability';
 
-import type {
-  AdmissionDecisionRecord,
-  AdmissionTelemetry,
-  AdmissionTelemetryDecision,
+import {
+  ADMISSION_TELEMETRY_DECISION,
+  type AdmissionTelemetry,
 } from '../../application/ports/AdmissionTelemetry.js';
-import { ADMISSION_TELEMETRY_DECISION } from '../../application/ports/AdmissionTelemetry.js';
 
-import { ADMISSION_TELEMETRY_METRICS } from './admissionTelemetryMetrics.js';
-import { safeWarn } from './safeWarn.js';
+import {
+  ADMISSION_TELEMETRY_LOG,
+  ADMISSION_TELEMETRY_METRICS,
+} from './admissionTelemetryMetrics.js';
 
-const REJECTION_DECISIONS = new Set<AdmissionTelemetryDecision>([
-  ADMISSION_TELEMETRY_DECISION.rejectTenant,
-  ADMISSION_TELEMETRY_DECISION.rejectSystem,
-  ADMISSION_TELEMETRY_DECISION.wouldRejectTenant,
-  ADMISSION_TELEMETRY_DECISION.wouldRejectSystem,
-]);
-
-type RejectionRecord = Extract<AdmissionDecisionRecord, { readonly code: string }>;
-
-type DecisionLogAttributes = {
-  readonly requestId: string;
-  readonly tenantId: string;
-  readonly runId: string;
-  readonly mode: string;
-  readonly decision: string;
-  readonly code?: string;
-  readonly retryAfterSeconds?: number;
-  readonly duplicateOf?: string;
-};
-
-function isRejectionRecord(event: AdmissionDecisionRecord): event is RejectionRecord {
-  return REJECTION_DECISIONS.has(event.decision);
-}
+type DecisionInput = Parameters<AdmissionTelemetry['record']>[0];
 
 export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
-  private readonly decisionCounter;
-  private readonly rejectionCounter;
-
   public constructor(
     private readonly deps: {
       readonly observability: IObservability;
     }
-  ) {
-    this.decisionCounter = deps.observability.metrics.counter(
-      ADMISSION_TELEMETRY_METRICS.decisionTotal
-    );
-    this.rejectionCounter = deps.observability.metrics.counter(
-      ADMISSION_TELEMETRY_METRICS.rejectionTotal
-    );
-  }
+  ) {}
 
-  public async record(event: AdmissionDecisionRecord): Promise<void> {
+  public async record(input: DecisionInput): Promise<void> {
     try {
-      this.decisionCounter.add(1, { mode: event.mode, decision: event.decision });
+      this.deps.observability.metrics
+        .counter(ADMISSION_TELEMETRY_METRICS.decisionTotal)
+        .add(1, { mode: input.mode, decision: input.decision });
 
-      if (isRejectionRecord(event)) {
-        this.rejectionCounter.add(1, {
-          mode: event.mode,
-          decision: event.decision,
-          code: event.code,
-        });
-        this.deps.observability.logs.warn({
-          msg: 'admission.decision',
-          attributes: this.toLogAttributes(event),
-        });
-      } else {
-        this.deps.observability.logs.info({
-          msg: 'admission.decision',
-          attributes: this.toLogAttributes(event),
-        });
+      if (hasRejectionCode(input)) {
+        this.deps.observability.metrics
+          .counter(ADMISSION_TELEMETRY_METRICS.rejectionTotal)
+          .add(1, { mode: input.mode, decision: input.decision, code: input.code });
       }
-    } catch (err) {
-      // Telemetry must not break command admission.
-      safeWarn(this.deps.observability.logs, 'admission.telemetry_drop', err);
+
+      const attributes = {
+        requestId: input.requestId,
+        tenantId: input.tenantId,
+        runId: input.runId,
+        mode: input.mode,
+        decision: input.decision,
+        ...(hasRejectionCode(input) ? { code: input.code } : {}),
+        ...(hasRetryAfterSeconds(input) ? { retryAfterSeconds: input.retryAfterSeconds } : {}),
+        ...(hasDuplicateOf(input) ? { duplicateOf: input.duplicateOf } : {}),
+      };
+
+      if (isWarningDecision(input.decision)) {
+        this.deps.observability.logs.warn({
+          msg: ADMISSION_TELEMETRY_LOG.decision,
+          attributes,
+        });
+        return;
+      }
+
+      this.deps.observability.logs.info({
+        msg: ADMISSION_TELEMETRY_LOG.decision,
+        attributes,
+      });
+    } catch {
+      // Telemetry must not break admission flow.
     }
   }
+}
 
-  private toLogAttributes(event: AdmissionDecisionRecord): Attributes {
-    const attrs: DecisionLogAttributes = {
-      requestId: event.requestId,
-      tenantId: event.tenantId,
-      runId: event.runId,
-      mode: event.mode,
-      decision: event.decision,
-      ...('code' in event ? { code: event.code } : {}),
-      ...('retryAfterSeconds' in event ? { retryAfterSeconds: event.retryAfterSeconds } : {}),
-      ...('duplicateOf' in event ? { duplicateOf: event.duplicateOf } : {}),
-    };
-    return attrs as Attributes;
-  }
+function isRejectionDecision(decision: DecisionInput['decision']): boolean {
+  return (
+    decision === ADMISSION_TELEMETRY_DECISION.rejectTenant ||
+    decision === ADMISSION_TELEMETRY_DECISION.rejectSystem ||
+    decision === ADMISSION_TELEMETRY_DECISION.wouldRejectTenant ||
+    decision === ADMISSION_TELEMETRY_DECISION.wouldRejectSystem
+  );
+}
+
+function isWarningDecision(decision: DecisionInput['decision']): boolean {
+  return isRejectionDecision(decision);
+}
+
+function hasRejectionCode(
+  input: DecisionInput
+): input is DecisionInput & { readonly code: string } {
+  return 'code' in input;
+}
+
+function hasRetryAfterSeconds(
+  input: DecisionInput
+): input is DecisionInput & { readonly retryAfterSeconds: number } {
+  return 'retryAfterSeconds' in input;
+}
+
+function hasDuplicateOf(
+  input: DecisionInput
+): input is DecisionInput & { readonly duplicateOf: string } {
+  return 'duplicateOf' in input;
 }

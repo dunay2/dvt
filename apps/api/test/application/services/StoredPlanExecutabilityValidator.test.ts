@@ -1,13 +1,14 @@
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, type IStepTypeRegistry } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StoredPlanExecutabilityValidator } from '../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
 const PLAN_REF = {
-  uri: 'dvt-plan://postgres/plan-1',
+  uri: 'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   sha256: 'abc123',
   schemaVersion: 'v1.2',
-  planId: 'plan-1',
+  planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   planVersion: '1.0',
 };
 
@@ -15,7 +16,7 @@ describe('StoredPlanExecutabilityValidator', () => {
   it('returns OK when the stored executable plan matches the ref and capabilities', async () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
-        fetchForValidation: vi.fn(async () => executablePlanBytes()),
+        fetchForValidation: vi.fn(async () => storedPlanArtifact()),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution', 'workflow.fan.parallel'])]]),
     });
@@ -24,7 +25,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'OK',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
     });
   });
@@ -33,7 +34,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({ requiresCapabilities: ['workflow.pause'] })
+          storedPlanArtifact({ executionPolicy: { requiresCapabilities: ['workflow.pause'] } })
         ),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
@@ -43,7 +44,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'MISSING_CAPABILITY',
       degradable: false,
@@ -56,7 +57,7 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          executablePlanBytes({ requiresCapabilities: ['workflow.pause'] })
+          storedPlanArtifact({ executionPolicy: { requiresCapabilities: ['workflow.pause'] } })
         ),
       },
       adapters: new Map([
@@ -76,6 +77,9 @@ describe('StoredPlanExecutabilityValidator', () => {
             async signal() {
               throw new Error('not used');
             },
+            signalSemanticsVersions() {
+              return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
+            },
           } as IProviderAdapter,
         ],
       ]),
@@ -85,7 +89,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'REJECTED',
       degradable: false,
@@ -97,7 +101,11 @@ describe('StoredPlanExecutabilityValidator', () => {
   it('rejects when the persisted executable plan metadata no longer matches the ref', async () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
-        fetchForValidation: vi.fn(async () => executablePlanBytes({ planVersion: '9.9' })),
+        fetchForValidation: vi.fn(async () =>
+          storedPlanArtifact({
+            planId: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+          })
+        ),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
     });
@@ -106,12 +114,157 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'REJECTED',
       degradable: false,
-      reason: 'PLAN_REF_MISMATCH: planVersion',
+      reason: 'PLAN_REF_MISMATCH: planId',
       cause: 'plan_ref',
+    });
+  });
+
+  it('rejects invalid stepTypeConfig before capability checks', async () => {
+    const capabilitiesSpy = vi.fn(() => ['basic-execution']);
+    const validator = new StoredPlanExecutabilityValidator({
+      fetcher: {
+        fetchForValidation: vi.fn(async () =>
+          storedPlanArtifact({
+            stepTypeConfig: {
+              retries: {
+                maxAttempts: 3,
+                backoffMs: 'invalid-backoff-ms',
+              },
+            },
+          })
+        ),
+      },
+      adapters: new Map([
+        [
+          'mock',
+          {
+            ...makeAdapter(['basic-execution']),
+            capabilities: capabilitiesSpy,
+          },
+        ],
+      ]),
+    });
+
+    const result = await validator.validatePlan(PLAN_REF, 'mock');
+
+    expect(result).toEqual({
+      status: 'ERROR',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      adapterId: 'mock',
+      code: 'REJECTED',
+      degradable: false,
+      reason: expect.stringContaining('INVALID_STEP_TYPE_CONFIG'),
+      cause: 'plan_fetch',
+    });
+    expect(capabilitiesSpy).not.toHaveBeenCalled();
+  });
+
+  it('accepts custom step kinds when an explicit stepTypeRegistry is injected', async () => {
+    const validator = new StoredPlanExecutabilityValidator({
+      fetcher: {
+        fetchForValidation: vi.fn(async () =>
+          storedPlanArtifact({
+            stepKind: 'SPARK_SQL',
+          })
+        ),
+      },
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+      stepTypeRegistry: makeRegistryForKind('SPARK_SQL'),
+    });
+
+    const result = await validator.validatePlan(PLAN_REF, 'mock');
+
+    expect(result).toEqual({
+      status: 'OK',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      adapterId: 'mock',
+    });
+  });
+
+  it('rejects when a step kind is not executable on the selected adapter', async () => {
+    const validator = new StoredPlanExecutabilityValidator({
+      fetcher: {
+        fetchForValidation: vi.fn(async () =>
+          storedPlanArtifact({
+            stepKind: 'SPARK_SQL',
+          })
+        ),
+      },
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+      stepTypeRegistry: makeRegistryForKind('SPARK_SQL', {
+        supportedAdapters: ['temporal'],
+        requiredCapabilities: [],
+      }),
+    });
+
+    const result = await validator.validatePlan(PLAN_REF, 'mock');
+
+    expect(result).toEqual({
+      status: 'ERROR',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      adapterId: 'mock',
+      code: 'INVALID_STEP_KIND',
+      degradable: false,
+      reason: 'Step kind SPARK_SQL is not executable on adapter mock',
+      cause: 'SPARK_SQL',
+    });
+  });
+
+  it('derives required capabilities from step-kind registry profiles', async () => {
+    const validator = new StoredPlanExecutabilityValidator({
+      fetcher: {
+        fetchForValidation: vi.fn(async () =>
+          storedPlanArtifact({
+            stepKind: 'SPARK_SQL',
+          })
+        ),
+      },
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+      stepTypeRegistry: makeRegistryForKind('SPARK_SQL', {
+        supportedAdapters: ['mock'],
+        requiredCapabilities: ['spark.submit'],
+      }),
+    });
+
+    const result = await validator.validatePlan(PLAN_REF, 'mock');
+
+    expect(result).toEqual({
+      status: 'ERROR',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      adapterId: 'mock',
+      code: 'MISSING_CAPABILITY',
+      degradable: false,
+      reason: 'Missing adapter capability: spark.submit',
+      cause: 'spark.submit',
+    });
+  });
+
+  it('rejects unknown step kinds when no custom stepTypeRegistry is injected', async () => {
+    const validator = new StoredPlanExecutabilityValidator({
+      fetcher: {
+        fetchForValidation: vi.fn(async () =>
+          storedPlanArtifact({
+            stepKind: 'SPARK_SQL',
+          })
+        ),
+      },
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+    });
+
+    const result = await validator.validatePlan(PLAN_REF, 'mock');
+
+    expect(result).toEqual({
+      status: 'ERROR',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      adapterId: 'mock',
+      code: 'REJECTED',
+      degradable: false,
+      reason: expect.stringContaining('INVALID_STEP_KIND'),
+      cause: 'plan_fetch',
     });
   });
 
@@ -129,7 +282,7 @@ describe('StoredPlanExecutabilityValidator', () => {
 
     expect(result).toEqual({
       status: 'ERROR',
-      planId: 'plan-1',
+      planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       adapterId: 'mock',
       code: 'REJECTED',
       degradable: false,
@@ -139,29 +292,43 @@ describe('StoredPlanExecutabilityValidator', () => {
   });
 });
 
-function executablePlanBytes(
+function storedPlanArtifact(
   overrides?: Partial<{
     planId: string;
     planVersion: string;
     schemaVersion: string;
-    requiresCapabilities: string[];
+    stepKind: string;
+    stepTypeConfig: Record<string, unknown>;
+    executionPolicy: { requiresCapabilities?: string[] };
   }>
-): Uint8Array {
-  return Buffer.from(
-    JSON.stringify({
-      metadata: {
-        planId: overrides?.planId ?? 'plan-1',
-        planVersion: overrides?.planVersion ?? '1.0',
-        schemaVersion: overrides?.schemaVersion ?? 'v1.2',
-        contractVersion: '1.0.0',
-        ...(overrides?.requiresCapabilities === undefined
-          ? {}
-          : { requiresCapabilities: overrides.requiresCapabilities }),
-      },
-      steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
-    }),
-    'utf8'
-  );
+): { bytes: Uint8Array; executionPolicy: { requiresCapabilities?: string[] } } {
+  return {
+    bytes: Buffer.from(
+      JSON.stringify({
+        metadata: {
+          planId:
+            overrides?.planId ?? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+          planVersion: overrides?.planVersion ?? '1.0',
+          schemaVersion: overrides?.schemaVersion ?? 'v1.2',
+          contractVersion: '1.0.0',
+          inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          createdAtIso: '2026-03-01T00:00:00.000Z',
+        },
+        steps: [
+          {
+            stepId: 'step-1',
+            kind: overrides?.stepKind ?? 'DBT_MODEL',
+            dependsOn: [],
+            ...(overrides?.stepTypeConfig === undefined
+              ? {}
+              : { stepTypeConfig: overrides.stepTypeConfig }),
+          },
+        ],
+      }),
+      'utf8'
+    ),
+    executionPolicy: overrides?.executionPolicy ?? {},
+  };
 }
 
 function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
@@ -179,8 +346,37 @@ function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
     async signal() {
       throw new Error('not used');
     },
+    signalSemanticsVersions() {
+      return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
+    },
     capabilities() {
       return [...capabilities];
+    },
+  };
+}
+
+function makeRegistryForKind(
+  kind: string,
+  profile?: {
+    supportedAdapters: readonly ('temporal' | 'conductor' | 'mock')[];
+    requiredCapabilities: readonly string[];
+  }
+): IStepTypeRegistry {
+  return {
+    isKnown(candidate: string): boolean {
+      return candidate === kind;
+    },
+    validate(candidate: string): { success: true; data: Record<string, unknown> } {
+      if (candidate !== kind) {
+        throw new Error(`unexpected kind validation request: ${candidate}`);
+      }
+      return { success: true, data: {} };
+    },
+    getKinds(): readonly string[] {
+      return [kind];
+    },
+    getExecutionProfile(candidate: string) {
+      return candidate === kind ? profile : undefined;
     },
   };
 }

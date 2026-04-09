@@ -35,6 +35,7 @@ export const RUN_MAINTENANCE_METRIC = {
   cancellationTimeoutTotal: 'dvt.run.cancellation_timeout_total',
   intentExpiredAfterCancelTotal: 'dvt.intent.expired_after_cancel_total',
   intentExpiredTotal: 'dvt.intent.expired_total',
+  intentResolvedTotal: 'dvt.intent.resolved_total',
   intentCancelledTotal: 'dvt.intent.cancelled_total',
   intentDeferredLookupUnsupportedTotal: 'dvt.intent.deferred_lookup_unsupported_total',
   intentDeferredLookupFailedTotal: 'dvt.intent.deferred_lookup_failed_total',

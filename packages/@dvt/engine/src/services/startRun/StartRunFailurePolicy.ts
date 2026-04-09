@@ -1,8 +1,9 @@
+import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_FAILURE_REASON, START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
-import type { StartRunErrorContext, StartRunTraceContext } from './StartRunTypes.js';
+import type { StartRunErrorContext } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
@@ -96,7 +97,7 @@ export class StartRunFailurePolicy {
           ) {
             this.lastStderrFallbackAtMs = nowMs;
             process.stderr.write(
-              `[dvt][StartRunCoordinator] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
+              `[dvt][StartRunApplicationService] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
             );
           }
         } catch {

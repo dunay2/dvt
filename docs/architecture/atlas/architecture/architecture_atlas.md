@@ -1,8 +1,24 @@
-# DVT+ Architecture Atlas (Code-Aligned)
+---
+title: DVT+ Architecture Atlas Historical Snapshot
+status: Historical
+owner: Architecture / Docs
+last_reviewed: 2026-04-02
+---
 
-Date: 2026-03-06
-Source: repository code only (`apps/*`, `packages/@dvt/*`)
-Goal: reflect implemented architecture, not aspirational architecture.
+# DVT+ Architecture Atlas Historical Snapshot
+
+Snapshot date: 2026-03-06
+Source basis: repository code only (`apps/*`, `packages/@dvt/*`) as inspected on
+that date.
+
+This page is retained as a historical snapshot. It does not describe the
+current repository-wide runtime posture.
+
+For current truth, read:
+
+- [System Delivery Status](../../system-delivery-status.md)
+- [Architecture Surface Inventory 2026-04-02](../../architecture-surface-inventory-20260402.md)
+- [Canonical Doc Code Matrix](../../../planning/status/canonical-doc-code-matrix.md)
 
 ## Navigation
 
@@ -10,9 +26,24 @@ Goal: reflect implemented architecture, not aspirational architecture.
 - [Atlas Index](../index.md)
 - [Engineering Playbook](../engineering/engineering_playbook.md)
 - [Completion Assessment](../status/code_completion_assessment_2026-03-06.md)
-- [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md)
+- [Current System Delivery Status](../../system-delivery-status.md)
 
-## Current Reality Snapshot
+## Historical Snapshot Notes
+
+The sections below capture the 2026-03-06 topology assumptions. Several points
+are now superseded by current code and status:
+
+- `apps/api` now exposes protected run-domain endpoints in addition to infra
+  endpoints.
+- the runtime is no longer limited to intent reconciliation plus a mock-only
+  provider composition path.
+- delivery, projector, archive, and lineage workers now have dedicated shipped
+  runtime surfaces tracked in current status docs.
+
+Use the remainder of this page only to understand the earlier repository
+snapshot that informed subsequent remediation work.
+
+## 2026-03-06 Reality Snapshot
 
 - Engine orchestration is implemented as a library (`@dvt/engine`), but not yet composed as a runtime API service.
 - Temporal adapter exists in `@dvt/adapter-temporal`, but API runtime currently boots only intent reconciliation with `mock` provider.
@@ -108,7 +139,8 @@ ExecuteStep --> GatewayDSL["gateway DSL evaluation"]
 
 Current limits from code:
 
-- `RETRY_STEP` and `RETRY_RUN` signals are explicitly not implemented in adapter.
+- business run recovery is now treated as a separate recovery use case, not as a provider `signal(...)` path.
+- `RETRY_STEP` is no longer part of the canonical signal boundary.
 - `executeStep` still states real step dispatch is Phase 2+.
 
 ## Multi-Tenant Boundary (Implemented)
@@ -137,8 +169,10 @@ Notes:
 ## References in This Atlas
 
 - Completion and effort model: `../status/code_completion_assessment_2026-03-06.md`
-- Active execution roadmap: `../../../planning/gaps/GAP_EXECUTION_PLANS.md`
-- Parallel execution tracks: `../../../planning/gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`
+- Current execution status:
+  `../../system-delivery-status.md`
+- Current planning route:
+  `../../../planning/roadmap/index.md`
 
 ## Next
 

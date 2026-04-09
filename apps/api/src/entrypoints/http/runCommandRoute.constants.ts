@@ -1,5 +1,6 @@
 export const RUN_COMMAND_ACTION = {
   CANCEL: 'run:cancel',
+  RETRY: 'run:retry',
   SIGNAL: 'run:signal',
 } as const;
 

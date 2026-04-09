@@ -1,6 +1,7 @@
 ---
 slice: package-tsconfig-base
 date: 2026-03-17
+last_reviewed: 2026-03-17
 gap: monorepo-platform
 author: AI (Codex)
 ---

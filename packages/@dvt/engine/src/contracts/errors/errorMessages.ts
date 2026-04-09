@@ -12,6 +12,7 @@ export const ENGINE_ERROR_MESSAGE_KEY = {
   INVALID_RUN_ID: 'engine.error.invalid_run_id',
   PLAN_SCHEMA_VERSION_UNKNOWN: 'engine.error.plan_schema_version_unknown',
   RUN_METADATA_NOT_FOUND: 'engine.error.run_metadata_not_found',
+  RECOVERY_SOURCE_NOT_TERMINAL: 'engine.error.recovery_source_not_terminal',
   SIGNAL_NOT_IMPLEMENTED: 'engine.error.signal_not_implemented',
   OUTBOX_RATE_LIMIT_EXCEEDED: 'engine.error.outbox_rate_limit_exceeded',
   PLAN_URI_NOT_ALLOWED: 'engine.error.plan_uri_not_allowed',
@@ -19,6 +20,8 @@ export const ENGINE_ERROR_MESSAGE_KEY = {
   UNSUPPORTED_PLAN_VERSION: 'engine.error.unsupported_plan_version',
   INVALID_RUN_EVENT_INPUT: 'engine.error.invalid_run_event_input',
   RUN_SEQUENCE_OVERFLOW: 'engine.error.run_sequence_overflow',
+  RUN_EXECUTION_CONTEXT_REJECTED: 'engine.error.run_execution_context_rejected',
+  PROVIDER_REF_PROVIDER_MISMATCH: 'engine.error.provider_ref_provider_mismatch',
 } as const satisfies Record<EngineErrorCode, string>;
 
 export type EngineErrorMessageKey =
@@ -34,6 +37,7 @@ interface EngineErrorMessageParamMap {
   INVALID_RUN_ID: { runId: string };
   PLAN_SCHEMA_VERSION_UNKNOWN: { schemaVersion: string };
   RUN_METADATA_NOT_FOUND: { runId: string };
+  RECOVERY_SOURCE_NOT_TERMINAL: { runId: string; status: string };
   SIGNAL_NOT_IMPLEMENTED: { signalType: string };
   OUTBOX_RATE_LIMIT_EXCEEDED: { tenantId: string };
   PLAN_URI_NOT_ALLOWED: { uri: string; reason: PlanUriPolicyReason; subject?: string };
@@ -46,6 +50,12 @@ interface EngineErrorMessageParamMap {
   UNSUPPORTED_PLAN_VERSION: { planVersion: string; supportedVersions: readonly string[] };
   INVALID_RUN_EVENT_INPUT: { reason: string; index?: number; runId?: string };
   RUN_SEQUENCE_OVERFLOW: { runId: string; attemptedRunSeq: number };
+  RUN_EXECUTION_CONTEXT_REJECTED: { reason: string };
+  PROVIDER_REF_PROVIDER_MISMATCH: {
+    runId: string;
+    persistedProvider: string;
+    updateProvider: string;
+  };
 }
 
 export type EngineErrorMessageParams<C extends EngineErrorCode = EngineErrorCode> = Readonly<
@@ -94,6 +104,10 @@ export function defaultEngineErrorMessage<C extends EngineErrorCode>(
       const p = params as EngineErrorMessageParams<'RUN_METADATA_NOT_FOUND'>;
       return `Run metadata not found for runId: ${p.runId}`;
     }
+    case 'RECOVERY_SOURCE_NOT_TERMINAL': {
+      const p = params as EngineErrorMessageParams<'RECOVERY_SOURCE_NOT_TERMINAL'>;
+      return `Recover source run is not terminal: runId=${p.runId} status=${p.status}`;
+    }
     case 'SIGNAL_NOT_IMPLEMENTED': {
       const p = params as EngineErrorMessageParams<'SIGNAL_NOT_IMPLEMENTED'>;
       return `NotImplemented: ${p.signalType} signals are Phase 2`;
@@ -125,6 +139,14 @@ export function defaultEngineErrorMessage<C extends EngineErrorCode>(
     case 'RUN_SEQUENCE_OVERFLOW': {
       const p = params as EngineErrorMessageParams<'RUN_SEQUENCE_OVERFLOW'>;
       return `Run sequence overflow for runId=${p.runId}: attempted runSeq=${p.attemptedRunSeq}`;
+    }
+    case 'RUN_EXECUTION_CONTEXT_REJECTED': {
+      const p = params as EngineErrorMessageParams<'RUN_EXECUTION_CONTEXT_REJECTED'>;
+      return `Run execution context rejected: ${p.reason}`;
+    }
+    case 'PROVIDER_REF_PROVIDER_MISMATCH': {
+      const p = params as EngineErrorMessageParams<'PROVIDER_REF_PROVIDER_MISMATCH'>;
+      return `ProviderRef update rejected for runId=${p.runId}: persisted provider=${p.persistedProvider}, update provider=${p.updateProvider}`;
     }
   }
   return assertNever(code);

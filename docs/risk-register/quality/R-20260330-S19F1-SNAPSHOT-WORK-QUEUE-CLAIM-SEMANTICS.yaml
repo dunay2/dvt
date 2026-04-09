@@ -2,7 +2,7 @@
 id: R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS
 title:
   Snapshot work queue claim semantics can introduce duplicate rebuild churn under heavy write bursts
-status: Open
+status: Closed
 date: 2026-03-30
 owners:
   - packages/@dvt/adapter-postgres

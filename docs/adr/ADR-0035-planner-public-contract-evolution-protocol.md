@@ -15,8 +15,8 @@ Accepted.
 
 Stage 1.1 already fixes canonical ownership for the public planner contracts:
 
-- `ExecutionPlanV2`
-- `PlannerInputEnvelopeV2`
+- `ExecutionPlanV1`
+- `PlannerInputEnvelopeV1`
 - `IExecutionPlanner`
 
 Those types must live in `@dvt/contracts`, but their package location does not
@@ -34,7 +34,7 @@ The repository therefore needs one canonical protocol that answers:
 ## Decision
 
 This ADR is the single canonical protocol-of-record for changing the public
-planner contracts `ExecutionPlanV2`, `PlannerInputEnvelopeV2`, and
+planner contracts `ExecutionPlanV1`, `PlannerInputEnvelopeV1`, and
 `IExecutionPlanner`.
 
 ### 1. Initiation and semantic authorship
@@ -88,7 +88,7 @@ Any approved change to these contracts MUST include, as applicable:
 
 ### 6. Worked example
 
-If the planner needs to add a field `planVersion` to `ExecutionPlanV2`, the
+If the planner needs to add a field `planVersion` to `ExecutionPlanV1`, the
 expected flow is:
 
 1. The planner owner opens or sponsors the PR against the canonical contract in
@@ -110,5 +110,5 @@ expected flow is:
 - The contracts owner becomes a compatibility gatekeeper, not a hidden planning
   design veto.
 - Contributors now have exactly one canonical place to answer: "How do I
-  propose a change to `ExecutionPlanV2`, `PlannerInputEnvelopeV2`, or
+  propose a change to `ExecutionPlanV1`, `PlannerInputEnvelopeV1`, or
   `IExecutionPlanner`?"

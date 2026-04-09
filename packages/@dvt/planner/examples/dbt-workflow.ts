@@ -1,15 +1,21 @@
-import { Planner } from '../src/domain/Planner.js';
-import type { PlannerInputEnvelopeV2 } from '../src/domain/types.js';
+﻿import { Planner } from '../src/domain/Planner.js';
+import type { PlannerInputEnvelopeV1 } from '../src/domain/types.js';
 
 async function main(): Promise<void> {
   const planner = new Planner();
 
-  const input: PlannerInputEnvelopeV2 = {
-    nodes: [
-      { nodeId: 'model.stg_orders', resourceType: 'model', dependsOn: [] },
-      { nodeId: 'model.fct_orders', resourceType: 'model', dependsOn: ['model.stg_orders'] },
-      { nodeId: 'test.fct_orders_not_null', resourceType: 'test', dependsOn: ['model.fct_orders'] },
-    ],
+  const input: PlannerInputEnvelopeV1 = {
+    graphSource: {
+      nodes: [
+        { nodeId: 'model.stg_orders', stepKind: 'DBT_MODEL', dependsOn: [] },
+        { nodeId: 'model.fct_orders', stepKind: 'DBT_MODEL', dependsOn: ['model.stg_orders'] },
+        {
+          nodeId: 'test.fct_orders_not_null',
+          stepKind: 'DBT_TEST',
+          dependsOn: ['model.fct_orders'],
+        },
+      ],
+    },
     selection: { selectedNodeIds: ['test.fct_orders_not_null'], includeUpstream: true },
     policies: {
       retry: { kind: 'at-most-N', maxAttempts: 3 },
@@ -24,9 +30,9 @@ async function main(): Promise<void> {
     requestId: 'req-1',
   };
 
-  const { plan, canonicalPlanJson } = await planner.buildPlan(input);
+  const { plan, canonicalPlanCoreJson } = await planner.buildPlan(input);
   console.warn(plan.metadata.planId);
-  console.warn(canonicalPlanJson.length);
+  console.warn(canonicalPlanCoreJson.length);
 }
 
 void main();

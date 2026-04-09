@@ -1,60 +1,53 @@
 ---
-title: planner DDD Structure
-status: Draft
-owner: Planning Domain
-last_reviewed: 2026-03-28
+title: planner Structure and Module Map
+status: Active
+owner: Planning Domain / Architecture
+last_reviewed: 2026-04-08
 ---
 
-# planner DDD Structure
+# planner Structure and Module Map
 
-## DDD Diagram
+## Current structure
+
+The shipped planner is service-oriented and contract-first. It does not expose a
+mutable `PlanAggregate` API in the active runtime path.
 
 ```mermaid
-classDiagram
-  class PlanAggregate {
-    +createPlan(input)
-    +editPlan(planId, changes)
-    +compilePlan(planId)
-    +validatePlan(planId)
-    +transitionLifecycle(planId, state)
-  }
-  class StepAggregate {
-    +defineStep(stepDef)
-    +linkDependency(stepId, dependsOn)
-    +reportExecutionStatus(stepId)
-  }
-  class ValidationAggregate {
-    +storeValidationOutcome(result)
-    +associateErrorWithStep(stepId, error)
-    +checkPlanIntegrity(planId)
-  }
-  PlanAggregate --> StepAggregate : owns
-  PlanAggregate --> ValidationAggregate : uses
+flowchart LR
+  Facade["PlannerFacade"] --> Mapper["PlannerEnvelopeMapper"]
+  Facade --> Resolver["IGraphSourceResolver"]
+  Facade --> Planner["Planner"]
+  Planner --> Validator["InputEnvelopeValidator"]
+  Planner --> Graph["GraphBuilder"]
+  Planner --> Selector["NodeSelector"]
+  Planner --> Factory["step factories"]
+  Planner --> Registry["IStepTypeRegistry"]
+  Planner --> Assembler["PlanAssembler"]
+  Assembler --> Result["PlannerBuildResultV1"]
 ```
 
-## Aggregates & Entities
+## Module roles
 
-- **PlanAggregate**: Central plan model that owns all steps and dependencies. Manages the complete lifecycle of a plan from draft through compiled to validated, and enforces structural constraints.
-- **StepAggregate**: Represents an individual step within a plan. Defines step logic, parameters, and dependency links to other steps.
-- **ValidationAggregate**: Represents the validation results for a plan. Stores outcomes, associates errors and warnings with specific steps, and enables plan integrity checks.
+- `PlannerFacade`: contract boundary and orchestration entrypoint
+- `PlannerEnvelopeMapper`: converts contract-level input into planner-domain input
+- `IGraphSourceResolver`: resolves referenced graph artifacts without widening planner ownership
+- `Planner`: coordinates validation, graph construction, selection, and assembly
+- `GraphBuilder` and `NodeSelector`: derive the executable subgraph
+- step factories plus `IStepTypeRegistry`: keep per-kind config validation explicit
+- `PlanAssembler`: builds the canonical plan artifact
 
-## Domain Events
+## Current code anchors
 
-- `PlanCreated`: Emitted when a new plan is successfully created by PlanAggregate.
-- `PlanEdited`: Emitted when an existing plan's structure or steps are modified.
-- `PlanCompiled`: Emitted when a plan transitions to the compiled lifecycle state.
-- `PlanValidated`: Emitted when the ValidationAggregate confirms a plan passes all constraints.
-- `PlanValidationFailed`: Emitted when one or more constraint violations are detected during validation.
-- `StepDefined`: Emitted when a new step is registered within a plan by StepAggregate.
-- `DependencyLinked`: Emitted when a step-to-step dependency is established.
+- [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
+- [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
+- [IGraphSourceResolver.ts](../../../../packages/@dvt/planner/src/ports/IGraphSourceResolver.ts)
+- [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
+- [GraphBuilder.ts](../../../../packages/@dvt/planner/src/domain/graph/GraphBuilder.ts)
+- [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)
+- [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 
-## Key Files
+## Canonical references
 
-- `packages/@dvt/planner/src/domain/Planner.ts` — PlanAggregate orchestration
-- `packages/@dvt/planner/src/domain/graph/GraphBuilder.ts` — Dependency graph construction
-- `packages/@dvt/planner/src/domain/graph/TopoSort.ts` — Topological ordering of steps
-- `packages/@dvt/planner/src/domain/PlanAssembler.ts` — Final plan assembly and hash calculation
-- `packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts` — StepAggregate creation and policy application
-- `packages/@dvt/planner/src/domain/policies.ts` — Constraint and execution policy resolution
-- `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts` — ExecutionPlan schema
-- `packages/@dvt/contracts/src/planner-input.ts` — Input envelope schema and step type definitions
+- [Planner component entry](./index.md)
+- [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
+- [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)

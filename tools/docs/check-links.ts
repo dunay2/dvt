@@ -29,6 +29,18 @@ const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
 
 const CHANGED_ONLY = process.argv.includes('--changed-only');
+const EXCLUDE_DIRS = ['closeouts', 'plans', 'archive', 'working-notes'];
+const EXCLUDE_PATH_SEGMENTS = new Set([
+  'archive',
+  'closeouts',
+  'plans',
+  'working-notes',
+  '_archive',
+  '_drafts',
+  '_templates',
+  'superseded',
+  'disposable',
+]);
 
 // ── Known renamed paths (old basename → new basename) ────────────────────────
 // Update this when files are renamed so links are flagged immediately.
@@ -41,11 +53,12 @@ const KNOWN_RENAMES: Record<string, string> = {
 function main(): void {
   const report = new Report();
 
-  // Exclude historical/informal directories — links in these are not maintained
-  const EXCLUDE_DIRS = ['closeouts', 'plans', 'archive', 'working-notes'];
-  const files = CHANGED_ONLY
-    ? getChangedMarkdownFiles()
-    : walkMarkdown(DOCS_DIR, { excludeDirs: EXCLUDE_DIRS });
+  // Exclude historical/informal directories — links in these are not maintained.
+  // Keep a segment-based filter as a second guard so changed-only mode and
+  // future taxonomy drift do not re-introduce historical files into the scan.
+  const files = (
+    CHANGED_ONLY ? getChangedMarkdownFiles() : walkMarkdown(DOCS_DIR, { excludeDirs: EXCLUDE_DIRS })
+  ).filter((filePath) => !isIgnoredDocsSource(filePath));
 
   // Anchor cache — avoid re-reading the same target file multiple times
   const anchorCache = new Map<string, Set<string>>();
@@ -130,11 +143,21 @@ function getChangedMarkdownFiles(): string[] {
       .split('\n')
       .filter(Boolean)
       .map((f) => join(REPO_ROOT, f))
-      .filter((f) => f.startsWith(DOCS_DIR));
+      .filter((f) => f.startsWith(DOCS_DIR))
+      .filter((f) => !isIgnoredDocsSource(f));
   } catch {
     // Fall back to full scan if git is unavailable
-    return walkMarkdown(DOCS_DIR);
+    return walkMarkdown(DOCS_DIR, { excludeDirs: EXCLUDE_DIRS }).filter(
+      (f) => !isIgnoredDocsSource(f)
+    );
   }
+}
+
+function isIgnoredDocsSource(filePath: string): boolean {
+  return filePath
+    .replace(/\\/g, '/')
+    .split('/')
+    .some((segment) => EXCLUDE_PATH_SEGMENTS.has(segment));
 }
 
 main();

@@ -33,18 +33,18 @@ describe('planner MVP manifest.json -> DAG -> layers -> ExecutionPlan', () => {
     expect(Array.isArray(layers)).toBe(true);
     expect((layers as unknown[]).length).toBeGreaterThan(0);
 
-    expect(sha256Sync(a.canonicalPlanJson)).toBe(a.plan.metadata.planId);
+    expect(sha256Sync(a.canonicalPlanCoreJson)).toBe(a.plan.metadata.planId);
   });
 
   it('fixture 100: compila plan con capas y hash verificable', async () => {
     const planner = new Planner();
 
-    const { plan, canonicalPlanJson } = await planner.buildPlan(FIXTURE_MANIFEST_100);
+    const { plan, canonicalPlanCoreJson } = await planner.buildPlan(FIXTURE_MANIFEST_100);
 
     expect(plan.steps.length).toBe(100);
     expect(plan.steps[0]?.stepId).toBe('model.analytics.n000');
     expect(plan.steps[99]?.stepId).toBe('model.analytics.n099');
-    expect(sha256Sync(canonicalPlanJson)).toBe(plan.metadata.planId);
+    expect(sha256Sync(canonicalPlanCoreJson)).toBe(plan.metadata.planId);
 
     const layers = plan.observability?.extra?.['plannerLayers'] as unknown;
     expect(Array.isArray(layers)).toBe(true);
@@ -65,7 +65,7 @@ describe('planner MVP manifest.json -> DAG -> layers -> ExecutionPlan', () => {
     expect(one.plan.steps.length).toBe(500);
     expect(one.plan.metadata.planId).toBe(two.plan.metadata.planId);
     expect(one.plan.metadata.inputHashSha256).toBe(two.plan.metadata.inputHashSha256);
-    expect(sha256Sync(one.canonicalPlanJson)).toBe(one.plan.metadata.planId);
+    expect(sha256Sync(one.canonicalPlanCoreJson)).toBe(one.plan.metadata.planId);
 
     const layers = one.plan.observability?.extra?.['plannerLayers'] as unknown;
     expect(Array.isArray(layers)).toBe(true);

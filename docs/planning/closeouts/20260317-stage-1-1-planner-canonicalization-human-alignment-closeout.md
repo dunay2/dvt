@@ -1,6 +1,7 @@
 ---
 slice: 20260317-stage-1-1-planner-canonicalization-human-alignment
 date: 2026-03-17
+last_reviewed: 2026-03-17
 gap: planner-stage-1-1
 author: AI (GPT-5)
 ---
@@ -99,7 +100,7 @@ unnecessary document churn.
 - `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.machine-readable.md`
 - `packages/@dvt/planner/docs/PLANNER_IMPLEMENTATION_REVIEW_v2_3_2.md`
 - `docs/planning/proposals/principal-architecture-review-execution-plan-20260317.md`
-- `docs/planning/reviews/20260316-principal-architecture-review.md`
+- `docs/planning/archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md`
 
 ## Docs synced
 

@@ -1,4 +1,4 @@
----
+﻿---
 title: Admission Control Runbook
 status: Active
 owner: SRE / API
@@ -7,7 +7,7 @@ last_reviewed: 2026-03-26
 
 # Admission Control Runbook
 
-Covers the `DVT_START_RUN_BACKPRESSURE_MODE` system: off → observe → enforce.
+Covers the `DVT_START_RUN_BACKPRESSURE_MODE` system: off â†’ observe â†’ enforce.
 
 ---
 
@@ -16,23 +16,23 @@ Covers the `DVT_START_RUN_BACKPRESSURE_MODE` system: off → observe → enforce
 | Env var                                       | Default | Description                                      |
 | --------------------------------------------- | ------- | ------------------------------------------------ |
 | `DVT_START_RUN_BACKPRESSURE_MODE`             | `off`   | `off` \| `observe` \| `enforce`                  |
-| `DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT` | —       | Tenant-level pending event ceiling               |
-| `DVT_START_RUN_MAX_OUTBOX_LAG_MS`             | —       | Global outbox age ceiling (ms)                   |
-| `DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS`  | —       | Age threshold for "stuck" classification (ms)    |
+| `DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT` | â€”     | Tenant-level pending event ceiling               |
+| `DVT_START_RUN_MAX_OUTBOX_LAG_MS`             | â€”     | Global outbox age ceiling (ms)                   |
+| `DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS`  | â€”     | Age threshold for "stuck" classification (ms)    |
 | `DVT_START_RUN_RETRY_AFTER_SECONDS`           | `30`    | `Retry-After` returned on backpressure rejection |
-| `DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS`     | —       | Snapshot cache TTL (ms)                          |
-| `DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS` | —       | Max DB query time before circuit opens (ms)      |
+| `DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS`     | â€”     | Snapshot cache TTL (ms)                          |
+| `DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS` | â€”     | Max DB query time before circuit opens (ms)      |
 
 ---
 
-## Rollout Procedure: off → observe → enforce
+## Rollout Procedure: off â†’ observe â†’ enforce
 
-### Step 1 — Deploy with mode=off (baseline)
+### Step 1 â€” Deploy with mode=off (baseline)
 
 Verify all existing tests pass. Admission logic is in the code path but all requests are
 admitted unconditionally. Metrics are not emitted.
 
-### Step 2 — Switch to mode=observe
+### Step 2 â€” Switch to mode=observe
 
 ```bash
 DVT_START_RUN_BACKPRESSURE_MODE=observe
@@ -59,7 +59,7 @@ Validate thresholds are not triggering spuriously before proceeding to enforce.
 
 **Minimum observe window:** 1 week in production traffic, or until confidence in thresholds.
 
-### Step 3 — Switch to mode=enforce
+### Step 3 â€” Switch to mode=enforce
 
 ```bash
 DVT_START_RUN_BACKPRESSURE_MODE=enforce
@@ -79,7 +79,7 @@ In enforce mode:
 
 | Metric                                    | Type    | Labels                     | Alert threshold                                               |
 | ----------------------------------------- | ------- | -------------------------- | ------------------------------------------------------------- |
-| `dvt.admission.decision_total`            | counter | `mode`, `decision`         | —                                                             |
+| `dvt.admission.decision_total`            | counter | `mode`, `decision`         | â€”                                                           |
 | `dvt.admission.rejection_total`           | counter | `mode`, `decision`, `code` | > 0 in enforce (expected); spike in observe (unexpected load) |
 | `dvt.admission.pending_events_per_tenant` | gauge   | `source`                   | Alert if > 80% of `MAX_PENDING_EVENTS_PER_TENANT` for 5 min   |
 | `dvt.admission.outbox_oldest_age_ms`      | gauge   | `source`                   | Alert if > 80% of `MAX_OUTBOX_LAG_MS` for 5 min               |
@@ -89,27 +89,27 @@ In enforce mode:
 | Code                                | Meaning                                                    |
 | ----------------------------------- | ---------------------------------------------------------- |
 | `TENANT_BACKPRESSURE`               | This tenant's pending events exceed the per-tenant ceiling |
-| `SYSTEM_BACKPRESSURE`               | Global outbox lag exceeds ceiling — system is overloaded   |
+| `SYSTEM_BACKPRESSURE`               | Global outbox lag exceeds ceiling â€” system is overloaded |
 | `BACKPRESSURE_SNAPSHOT_UNAVAILABLE` | Could not fetch snapshot; treated as system backpressure   |
 
 ---
 
 ## Threshold Derivation Procedure
 
-Run in observe mode for a representative load period (≥ 1 week). Capture:
+Run in observe mode for a representative load period (â‰¥ 1 week). Capture:
 
 1. P99 of `dvt.admission.pending_events_per_tenant` during peak traffic.
 2. P99 of `dvt.admission.outbox_oldest_age_ms` during peak traffic.
 
-Set thresholds to **2× the observed P99** as initial ceiling. This gives 2× headroom before
+Set thresholds to **2Ã— the observed P99** as initial ceiling. This gives 2Ã— headroom before
 any rejection fires. Lower thresholds incrementally with each load increase observation.
 
 ```
-MAX_PENDING_EVENTS_PER_TENANT = 2 × p99_pending_per_tenant_at_peak
-MAX_OUTBOX_LAG_MS             = 2 × p99_outbox_age_ms_at_peak
+MAX_PENDING_EVENTS_PER_TENANT = 2 Ã— p99_pending_per_tenant_at_peak
+MAX_OUTBOX_LAG_MS             = 2 Ã— p99_outbox_age_ms_at_peak
 ```
 
-Do not set thresholds below observed maximums — that would cause false positives in
+Do not set thresholds below observed maximums â€” that would cause false positives in
 observe mode and rejections in enforce mode under normal load.
 
 ---
@@ -128,11 +128,11 @@ observe mode and rejections in enforce mode under normal load.
 
 ### `rejection_total{code="SYSTEM_BACKPRESSURE"}` spike
 
-1. Check outbox worker health — worker may be down or lagging.
+1. Check outbox worker health â€” worker may be down or lagging.
 2. Check `dvt.admission.outbox_oldest_age_ms{source="live"}` gauge trend.
 3. If worker is healthy but lag is growing, check downstream Snowflake/Temporal latency.
 4. If snapshot unavailable (`BACKPRESSURE_SNAPSHOT_UNAVAILABLE`): the circuit breaker has
-   opened — check DB connectivity.
+   opened â€” check DB connectivity.
 
 ### Fallback (circuit open)
 
@@ -148,8 +148,8 @@ Fallback file location: `{tmpdir}/dvt/{SERVICE_NAME}-start-run-backpressure-fall
 
 | Scenario                                    | Expected outcome                                                            |
 | ------------------------------------------- | --------------------------------------------------------------------------- |
-| DB down during snapshot query               | Circuit opens → fallback snapshot served → `source=fallback` gauge          |
-| Tenant submits 10× normal rate              | `pending_events_per_tenant` gauge rises; `reject_tenant` in enforce         |
+| DB down during snapshot query               | Circuit opens â†’ fallback snapshot served â†’ `source=fallback` gauge      |
+| Tenant submits 10Ã— normal rate             | `pending_events_per_tenant` gauge rises; `reject_tenant` in enforce         |
 | Outbox worker stopped for 5 min             | `outbox_oldest_age_ms` gauge rises; `reject_system` in enforce at threshold |
 | Redis/cache flush                           | Next request hits `source=live`; no impact on admission                     |
 | Snapshot TTL expired                        | Next request re-queries live snapshot; circuit check applies                |
@@ -161,4 +161,4 @@ Fallback file location: `{tmpdir}/dvt/{SERVICE_NAME}-start-run-backpressure-fall
 ## See Also
 
 - Emergency cleanup: [admission-control-emergency-cleanup.sql](./admission-control-emergency-cleanup.sql)
-- Proposal: `docs/planning/proposals/gap4-backpressure-admission-pr4-plan-20260326.md`
+- Proposal: `docs/planning/proposals/superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md`

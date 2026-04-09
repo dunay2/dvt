@@ -6,9 +6,11 @@
 // Governing: ADR-0034, ADR-0035, planner-slice3-physical-reorganization-plan.md
 //
 export { PlannerFacade, type PlannerFacadeOptions } from './application/PlannerFacade.js';
+export { derivePlannerGraphSourceFromManifest } from './application/derivePlannerGraphSourceFromManifest.js';
 
 export type { StepFactory } from './domain/stepFactory/StepFactory.js';
 export type { PlannerLimits } from './domain/limits.js';
+export type { IGraphSourceResolver } from './ports/IGraphSourceResolver.js';
 export type { IArtifactResolver } from './ports/IArtifactResolver.js';
 export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 
@@ -21,23 +23,18 @@ export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 // DO NOT add new contract re-exports here. Import from @dvt/contracts directly.
 //
 export type {
-  DbtManifestLike,
-  ExecutionPlanV2,
-  ExecutionStepV2,
-  GraphNode,
+  ExecutionPlan,
+  ExecutionStepV1,
+  GenericGraphSourceV1,
   IExecutionPlanner,
   IPlanner,
   PlanCore,
-  PlannerGraphSourceV1,
-  PlannerBuildResultV2,
-  PlannerInputEnvelopeV2,
+  PlannerBuildResultV1,
+  PlannerInputEnvelopeV1,
   PlannerSelection,
   ResolvedPolicies,
   StepKind,
 } from '@dvt/contracts';
-
-// Backward-compatible alias — deprecated, migrate to ExecutionPlanV2 from @dvt/contracts.
-export type { ExecutionPlanV2 as ExecutionPlan } from '@dvt/contracts';
 
 // ── Artifact concern — transitional compatibility bridge (Slice 4) ────────────
 //

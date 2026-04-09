@@ -20,7 +20,7 @@ validated in CI.
   `schema pin`, `canonical spec`, `verification tuple`, and `golden fixture`
 - [Domain Language](../../../../concepts/domain-language.md) for the distinction
   between planning docs, status docs, and normative contract artifacts
-- [G6 hub](index.md) for planning navigation
+- [G6 hub](./index.md) for planning navigation
 - [Traceability Contracts](../../../../contracts/traceability/index.md) for the
   normative emitted facet artifacts
 - [Canonical Doc Code Matrix](../../../status/canonical-doc-code-matrix.md) for

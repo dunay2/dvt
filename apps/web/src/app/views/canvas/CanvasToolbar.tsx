@@ -3,6 +3,7 @@ import { Columns, FileCheck, GitBranch, LayoutGrid, Play, Target, Upload } from 
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
+import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 type CanvasToolbarProps = {
   readonly onOpenDataRegistry: () => void;
@@ -12,10 +13,14 @@ type CanvasToolbarProps = {
   readonly onToggleColumns: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
+  readonly canStartRun: boolean;
+  readonly planStatusSummary: string;
+  readonly canvasAuthoringMode: 'transformation' | 'dbt';
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
   readonly canUseCostOverlay: boolean;
   readonly impactOverlayEnabled: boolean;
   readonly columnLevelLineageEnabled: boolean;
+  readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
 };
@@ -28,17 +33,27 @@ export default function CanvasToolbar({
   onToggleColumns,
   onPlan,
   onRun,
+  canStartRun,
+  planStatusSummary,
+  canvasAuthoringMode,
   exclusiveOverlayMode,
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  transformationValidation,
   nodeCount,
   edgeCount,
 }: CanvasToolbarProps) {
+  const canPlanTransformation = transformationValidation.valid;
+  const modeSummary =
+    canvasAuthoringMode === 'transformation'
+      ? 'Mode: source -> sql_transform -> sink'
+      : 'Mode: dbt graph';
+
   return (
     <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="hidden text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500 lg:block">
+        <div className="hidden text-[11px] font-medium uppercase tracking-[0.16em] text-slate-300 lg:block">
           Graph Tools
         </div>
 
@@ -110,13 +125,23 @@ export default function CanvasToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 select-none tabular-nums">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-300 select-none tabular-nums">
+          <span className="text-cyan-300">{modeSummary}</span>
+          <span className="text-slate-400">|</span>
           <span>
             {nodeCount} node{nodeCount !== 1 ? 's' : ''}
           </span>
-          <span className="text-slate-700">·</span>
+          <span className="text-slate-400">|</span>
           <span>
             {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
+          </span>
+          <span className="text-slate-400">|</span>
+          <span className={cn(canPlanTransformation ? 'text-emerald-300' : 'text-amber-300')}>
+            {transformationValidation.summary}
+          </span>
+          <span className="text-slate-400">|</span>
+          <span className={cn(canStartRun ? 'text-emerald-300' : 'text-slate-300')}>
+            {planStatusSummary}
           </span>
         </div>
         <Separator orientation="vertical" className="h-5 bg-slate-700" />
@@ -125,6 +150,7 @@ export default function CanvasToolbar({
           variant="outline"
           size="sm"
           onClick={onPlan}
+          disabled={!canPlanTransformation}
           className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
         >
           <FileCheck className="mr-1.5 size-4" />
@@ -135,6 +161,7 @@ export default function CanvasToolbar({
           variant="default"
           size="sm"
           onClick={onRun}
+          disabled={!canStartRun}
           className="h-8 px-3 text-xs"
         >
           <Play className="mr-1.5 size-4" />

@@ -1,22 +1,6 @@
-/**
- * @file StepTypeRegistry — G9 implementation
- *
- * Provides a kind-keyed registry that maps step kinds to Zod schemas,
- * replacing the opaque `Record<string, unknown>` stepTypeConfig with
- * schema-driven validation at planner output and adapter consumption boundaries.
- *
- * Design constraints:
- *  - Fail-open for unknown kinds: unregistered kinds pass through without error.
- *  - Fail-hard for known kinds with invalid config: returns a structured error.
- *  - Registry is immutable after construction.
- *  - `compiledCodeRef` is validated here per ADR-0032 (optional field in DbtStepTypeConfig).
- *
- * @see ADR-0006 — Extensibility strategy
- * @see ADR-0032 — compiledCodeRef ownership
- */
 import { z } from 'zod';
 
-// ── CompiledCodeRef schema (mirrors IRunStateStore.v1.ts, kept local to avoid circular import) ──
+import type { Provider } from '../types/contracts.js';
 
 const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
 
@@ -29,14 +13,16 @@ export const CompiledCodeRefSchema = z
   })
   .strict();
 
-// ── DbtStepTypeConfig ─────────────────────────────────────────────────────────
+export const StepArtifactRefSchema = z
+  .object({
+    artifactKind: z.string().min(1),
+    sha256: HexSha256Schema,
+    storageUri: z.string().min(1),
+    sizeBytes: z.number().int().nonnegative(),
+    encoding: z.literal('utf-8').optional(),
+  })
+  .strict();
 
-/**
- * Typed config for DBT_MODEL, DBT_TEST, DBT_SNAPSHOT step kinds.
- *
- * Written by the planner's dbtStepFactory (policy fields), then optionally
- * enriched with compiledCodeRef by attachCompiledCodeRefs (ADR-0032).
- */
 export interface DbtStepTypeConfig extends Record<string, unknown> {
   stepTimeoutMs?: number;
   retries?: {
@@ -47,7 +33,6 @@ export interface DbtStepTypeConfig extends Record<string, unknown> {
     maxInFlight: number;
   };
   custom?: Record<string, unknown>;
-  /** Set post-plan-build by attachCompiledCodeRefs. ADR-0032. */
   compiledCodeRef?: {
     sha256: string;
     storageUri: string;
@@ -77,96 +62,169 @@ export const DbtStepTypeConfigSchema = z
   })
   .strict();
 
-// ── IStepTypeRegistry ─────────────────────────────────────────────────────────
-
 export type StepTypeValidationResult =
   | { success: true; data: Record<string, unknown> }
   | { success: false; error: string };
 
-/**
- * Maps step kinds to their config schemas.
- * Unknown kinds always pass through (fail-open per ADR-0006 extensibility policy).
- */
-export interface IStepTypeRegistry {
+export interface StepKindExecutionProfile {
   /**
-   * Validate `config` against the schema registered for `kind`.
-   * Returns `{ success: true, data }` for known-valid or unknown kinds.
-   * Returns `{ success: false, error }` for known-invalid configs.
+   * Providers that can execute this kind.
+   * Keep the list explicit to avoid runtime-local allowlists.
    */
-  validate(kind: string, config: unknown): StepTypeValidationResult;
-
-  /** Returns true if this kind has a registered schema. */
-  isKnown(kind: string): boolean;
-
-  /** All registered kind names. */
-  getKinds(): readonly string[];
+  supportedAdapters: readonly Provider[];
+  /**
+   * Capabilities required when this kind is present in a plan.
+   */
+  requiredCapabilities: readonly string[];
 }
 
-// ── StepTypeRegistry ──────────────────────────────────────────────────────────
+export interface IStepTypeRegistry {
+  validate(kind: string, config: unknown): StepTypeValidationResult;
+  isKnown(kind: string): boolean;
+  getKinds(): readonly string[];
+  /**
+   * Optional to preserve compatibility with existing custom registries in tests.
+   */
+  getExecutionProfile?(kind: string): StepKindExecutionProfile | undefined;
+}
+
+type StepKindRegistryEntry = {
+  readonly schema: z.ZodType;
+  readonly profile: StepKindExecutionProfile;
+};
+
+const ALL_PROVIDERS: readonly Provider[] = ['temporal', 'conductor', 'mock'];
+const DEFAULT_PROFILE: StepKindExecutionProfile = {
+  supportedAdapters: ALL_PROVIDERS,
+  requiredCapabilities: [],
+};
+
+function isStepKindRegistryEntry(value: unknown): value is StepKindRegistryEntry {
+  if (value === null || typeof value !== 'object') return false;
+  const candidate = value as Partial<StepKindRegistryEntry>;
+  return (
+    candidate.schema !== undefined &&
+    typeof candidate.schema === 'object' &&
+    candidate.profile !== undefined
+  );
+}
+
+function normalizeConfig(config: unknown): Record<string, unknown> {
+  if (config !== null && typeof config === 'object' && !Array.isArray(config)) {
+    return config as Record<string, unknown>;
+  }
+  return {};
+}
+
+function normalizeProfile(profile: StepKindExecutionProfile | undefined): StepKindExecutionProfile {
+  if (profile === undefined) return DEFAULT_PROFILE;
+  return {
+    supportedAdapters: [...profile.supportedAdapters],
+    requiredCapabilities: [...profile.requiredCapabilities],
+  };
+}
 
 export class StepTypeRegistry implements IStepTypeRegistry {
-  private readonly schemas: ReadonlyMap<string, z.ZodType>;
+  private readonly entries: ReadonlyMap<string, StepKindRegistryEntry>;
 
-  constructor(schemas: ReadonlyMap<string, z.ZodType>) {
-    this.schemas = schemas;
+  constructor(
+    schemasOrEntries: ReadonlyMap<string, z.ZodType | StepKindRegistryEntry>,
+    profiles?: ReadonlyMap<string, StepKindExecutionProfile>
+  ) {
+    const normalized = new Map<string, StepKindRegistryEntry>();
+    for (const [kind, value] of schemasOrEntries) {
+      if (isStepKindRegistryEntry(value)) {
+        normalized.set(kind, {
+          schema: value.schema,
+          profile: normalizeProfile(value.profile),
+        });
+        continue;
+      }
+      normalized.set(kind, {
+        schema: value,
+        profile: normalizeProfile(profiles?.get(kind)),
+      });
+    }
+    this.entries = normalized;
   }
 
   validate(kind: string, config: unknown): StepTypeValidationResult {
-    const schema = this.schemas.get(kind);
-    if (schema === undefined) {
-      // Unknown kind: fail-open — pass through as-is
-      const data =
-        config !== null && typeof config === 'object' && !Array.isArray(config)
-          ? (config as Record<string, unknown>)
-          : {};
-      return { success: true, data };
+    const entry = this.entries.get(kind);
+    if (entry === undefined) {
+      return { success: true, data: normalizeConfig(config) };
     }
 
-    const result = schema.safeParse(config ?? {});
+    const result = entry.schema.safeParse(config ?? {});
     if (result.success) {
       return { success: true, data: result.data as Record<string, unknown> };
     }
 
     return {
       success: false,
-      error: `INVALID_STEP_TYPE_CONFIG[${kind}]: ${result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`,
+      error: `INVALID_STEP_TYPE_CONFIG[${kind}]: ${result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')}`,
     };
   }
 
   isKnown(kind: string): boolean {
-    return this.schemas.has(kind);
+    return this.entries.has(kind);
   }
 
   getKinds(): readonly string[] {
-    return Array.from(this.schemas.keys());
+    return Array.from(this.entries.keys());
+  }
+
+  getExecutionProfile(kind: string): StepKindExecutionProfile | undefined {
+    return this.entries.get(kind)?.profile;
   }
 }
 
-// ── Default registry ──────────────────────────────────────────────────────────
-
-/** DBT step kind constants (mirrors planner/src/domain/types.ts). */
 export const DBT_MODEL = 'DBT_MODEL';
 export const DBT_TEST = 'DBT_TEST';
 export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
 
-const DEFAULT_SCHEMAS = new Map<string, z.ZodType>([
-  [DBT_MODEL, DbtStepTypeConfigSchema],
-  [DBT_TEST, DbtStepTypeConfigSchema],
-  [DBT_SNAPSHOT, DbtStepTypeConfigSchema],
+const DEFAULT_ENTRIES = new Map<string, StepKindRegistryEntry>([
+  [DBT_MODEL, { schema: DbtStepTypeConfigSchema, profile: DEFAULT_PROFILE }],
+  [DBT_TEST, { schema: DbtStepTypeConfigSchema, profile: DEFAULT_PROFILE }],
+  [DBT_SNAPSHOT, { schema: DbtStepTypeConfigSchema, profile: DEFAULT_PROFILE }],
 ]);
 
-/**
- * Creates the default registry with built-in DBT step kind schemas.
- * Pass additional entries to extend for custom step kinds.
- */
 export function createDefaultStepTypeRegistry(
-  extensions?: ReadonlyMap<string, z.ZodType>
+  extensions?: ReadonlyMap<string, z.ZodType>,
+  extensionProfiles?: ReadonlyMap<string, StepKindExecutionProfile>
 ): IStepTypeRegistry {
-  const schemas = new Map(DEFAULT_SCHEMAS);
-  if (extensions) {
+  const entries = new Map(DEFAULT_ENTRIES);
+  if (extensions !== undefined) {
     for (const [kind, schema] of extensions) {
-      schemas.set(kind, schema);
+      entries.set(kind, {
+        schema,
+        profile: normalizeProfile(extensionProfiles?.get(kind)),
+      });
     }
   }
-  return new StepTypeRegistry(schemas);
+  return new StepTypeRegistry(entries);
+}
+
+export function isStepKindSupportedByAdapter(
+  registry: IStepTypeRegistry,
+  kind: string,
+  adapter: string
+): boolean {
+  const profile = registry.getExecutionProfile?.(kind);
+  if (profile === undefined) return true;
+  return profile.supportedAdapters.includes(adapter as Provider);
+}
+
+export function collectRequiredCapabilitiesForSteps(
+  registry: IStepTypeRegistry,
+  steps: readonly { kind: string }[]
+): readonly string[] {
+  const unique = new Set<string>();
+  for (const step of steps) {
+    const profile = registry.getExecutionProfile?.(step.kind);
+    if (profile === undefined) continue;
+    for (const capability of profile.requiredCapabilities) {
+      unique.add(capability);
+    }
+  }
+  return [...unique].sort((left, right) => left.localeCompare(right));
 }

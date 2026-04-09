@@ -12,9 +12,14 @@ Operational runbooks for incidents, recovery, and maintenance.
 ## Index
 
 - [Admission Control Runbook](admission-control-runbook.md)
+- [API Runtime SLA Canonical](api-runtime-sla-canonical-20260404.md)
+- [AR-C2 Dashboard And Alert Wiring Evidence](ar-c2-dashboard-alert-wiring-evidence-20260404.md)
+- [AR-C2 generated operational evidence](ar-c2-evidence-generated-latest.md)
+- [AR-C2 SLA Signal Threshold Mapping](ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [Backend MVP Control-Plane Runbook](backend-mvp-control-plane-runbook-20260329.md)
 - [Gap 5 Archive Operations Runbook](gap-5-archive-operations-runbook-20260319.md)
 - [Outbox Worker Runbook](outbox-worker-g5.md)
+- [Planning Generated Artifacts Operations](planning-generated-artifacts-operations-20260403.md)
 - [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)
 - [Workflow Isolation Testing Strategy](workflow-isolation-testing.md)
 

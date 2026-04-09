@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
+import { ENGINE_ERROR_CODE } from '../../src/contracts/errors.js';
 import type { RunEventInput } from '../../src/contracts/runEvents.js';
 import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -16,9 +17,12 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
       planId: 'plan-minimal',
       planVersion: '1.0',
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: `wf-${runId}`,
-      providerRunId: `pr-${runId}`,
+      providerRef: {
+        provider: 'mock',
+        tenantId,
+        workflowId: `wf-${runId}`,
+        runId: `pr-${runId}`,
+      },
     },
     firstEvents: [
       {
@@ -204,6 +208,23 @@ describe('InMemoryTxStore outbox semantics', () => {
 
     const t2DeadLetters = await store.listDeadLetter(10, 't2');
     expect(t2DeadLetters).toHaveLength(0);
+  });
+
+  it('rejects append when event tenantId does not match run tenant metadata', async () => {
+    const store = new InMemoryTxStore();
+    const runId = 'run-tenant-mismatch-append-tx';
+    await store.bootstrapRunTx(makeBootstrap(runId, 't1'));
+
+    await expect(
+      store.appendAndEnqueueTx(runId, [makeStarted(runId, `${runId}:started`, 't2')])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+
+    const events = await store.listEvents('t1', runId);
+    expect(events).toHaveLength(1);
+    expect(events[0]?.eventType).toBe('RunQueued');
   });
 
   it('replayDeadLetters only restores dead letters belonging to the requesting tenant', async () => {

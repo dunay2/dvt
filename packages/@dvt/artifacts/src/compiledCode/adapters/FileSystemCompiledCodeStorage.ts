@@ -37,14 +37,11 @@ export class FileSystemCompiledCodeStorage implements ICompiledCodeStorage {
     } catch (err: unknown) {
       const code = (err as NodeJS.ErrnoException).code;
       if (code === 'ENOENT') {
-        throw new ArtifactStoreError(
-          `Artifact not found: tenant=${tenantId} sha256=${sha256}`,
-          'ARTIFACT_NOT_FOUND'
-        );
+        throw ArtifactStoreError.notFound(tenantId, sha256, err);
       }
-      throw new ArtifactStoreError(
+      throw ArtifactStoreError.uploadFailed(
         `FS read failed: ${err instanceof Error ? err.message : String(err)}`,
-        'ARTIFACT_UPLOAD_FAILED'
+        err
       );
     }
   }

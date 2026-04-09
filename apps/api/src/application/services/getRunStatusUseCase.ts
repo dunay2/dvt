@@ -63,7 +63,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
       ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
       ...(snapshot.completedAt !== undefined ? { completedAt: snapshot.completedAt } : {}),
-      ...(snapshot.hash !== undefined ? { hash: snapshot.hash } : {}),
+      ...(snapshot.execution !== undefined ? { execution: snapshot.execution } : {}),
     };
   }
 

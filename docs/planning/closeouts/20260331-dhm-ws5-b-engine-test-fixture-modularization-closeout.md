@@ -1,6 +1,7 @@
 ---
 slice: 20260331-dhm-ws5-b-engine-test-fixture-modularization
 date: 2026-03-31
+last_reviewed: 2026-03-31
 work_item: DHM-WS5-B
 status: Done
 ---
@@ -37,7 +38,7 @@ infrastructure fixture is still repeated in multiple files.
   not create cross-context coupling.
 - `ADR-0039`: engine construction should stay explicit about ports and injected
   collaborators; test refactors must not change behavior.
-- `docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`:
+- `docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`:
   WS5-A already established helper-backed engine setup as the accepted direction
   for this modularization stream.
 
@@ -110,7 +111,7 @@ fixtures local to each test file.
   - `docs/planning/state/agent-lane-a.yaml`
   - `docs/planning/state/execution-workboard.md`
   - `docs/planning/state/open-task-route.md`
-  - `docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`
+  - `docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`
   - `docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md`
 
 ## Real Work Performed
@@ -141,7 +142,7 @@ fixtures local to each test file.
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 - `docs/planning/state/agent-lane-a.yaml`
-- `docs/evidence/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`
+- `docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`
 - `docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md`
 
 ## Validation evidence

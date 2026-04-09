@@ -12,8 +12,8 @@ Gap: G3 - IStartRunIntentStore Postgres + scheduler
 
 - Original date: 2026-03-04
 - Current review date: 2026-03-07
-- Primary source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Process guide: [`../../archive/dvt-traceability-pack-v2-lite-R6/index.md`](../../archive/dvt-traceability-pack-v2-lite-R6/index.md)
+- Primary source: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
+- Process guide: [`../../archive/dvt-traceability-pack-v2-lite-R6/index.md`](../dvt-traceability-pack-v2-lite-R6/index.md)
 
 ## Objective
 
@@ -77,5 +77,5 @@ G3 is closed.
 
 ## References
 
-- Master gap plan: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+- Master gap plan: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
+- Evidence: [`docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md)

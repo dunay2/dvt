@@ -1,0 +1,31 @@
+---
+id: R-20260401-EXECUTION-PLAN-IDENTITY-DRIFT
+title: ExecutionPlan public type identity could drift back into planner and engine shadow contracts
+status: Closed
+date: 2026-04-01
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/engine
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Planner, API, engine, and adapter layers previously exposed multiple public ExecutionPlan shapes
+  under the same conceptual name, which allowed silent schema divergence and bridge logic to mask
+  it.
+risk: >
+  A future change could reintroduce an engine-local or API-local shadow ExecutionPlan interface,
+  letting planner emission and engine consumption drift while tests still appear green at package
+  boundaries.
+mitigations:
+  - '@dvt/contracts now owns the only canonical public ExecutionPlan type, schema, parser, and
+    version constants.'
+  - 'IRunStateStore.v1.ts aliases the canonical contract instead of declaring an independent
+    interface.'
+  - 'packages/@dvt/engine/src/contracts/executionPlan.ts is a compatibility re-export only.'
+  - 'API storage parses persisted plans through parseExecutionPlan and no longer rewrites planner
+    output into a second shape.'
+  - 'Contract tests assert planner-visible and engine-visible ExecutionPlan assignability.'
+  - 'Planner determinism tests lock the non-hashed metadata boundary around schemaVersion,
+    contractVersion, and createdAtIso.'

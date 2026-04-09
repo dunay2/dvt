@@ -2,87 +2,202 @@
  * @file packages/@dvt/contracts/src/errors.ts
  * @baseline ADR-0005: Contract Formalization Tooling
  * @baseline ADR-0006: Contract Tooling Governance
- * @decision Section 2 — Contract-level error types are centralized for deterministic cross-module semantics
- * @consequence Consumers share a canonical authorization error contract across engine and adapters
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @decision Contract-level error types are centralized for deterministic cross-module semantics
+ * @consequence Consumers branch on typed metadata instead of stringly Error.message values
  * @version 1.0.0
- * @date 2026-02-21
+ * @date 2026-04-03
  */
-export class AuthorizationError extends Error {
-  public readonly code = 'AUTHZ_DENIED' as const;
 
-  constructor(message = 'Authorization denied') {
-    super(message);
+import {
+  CONTRACTS_ERROR_CODE,
+  DvtContractError,
+  type ContractsErrorMessageParams,
+} from './errorContract.js';
+
+export class AuthorizationError extends DvtContractError<'AUTHZ_DENIED'> {
+  readonly code = CONTRACTS_ERROR_CODE.AUTHZ_DENIED;
+
+  constructor(message?: string) {
+    super(CONTRACTS_ERROR_CODE.AUTHZ_DENIED, 'AUTHZ_DENIED', {
+      ...(message === undefined ? {} : { message }),
+    });
     this.name = 'AuthorizationError';
-    Object.setPrototypeOf(this, AuthorizationError.prototype);
   }
 }
 
-export class IntentNotFoundError extends Error {
-  readonly code = 'INTENT_NOT_FOUND' as const;
+export class IntentNotFoundError extends DvtContractError<'INTENT_NOT_FOUND'> {
+  readonly code = CONTRACTS_ERROR_CODE.INTENT_NOT_FOUND;
 
-  constructor(intentId: string) {
-    super(`Start-run intent not found: ${intentId}`);
+  constructor(readonly intentId: string) {
+    const messageParams = { intentId } as const;
+    super(CONTRACTS_ERROR_CODE.INTENT_NOT_FOUND, 'INTENT_NOT_FOUND', {
+      messageParams,
+    });
     this.name = 'IntentNotFoundError';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
-export class IntentInvalidTransitionError extends Error {
-  readonly code = 'INTENT_INVALID_TRANSITION' as const;
+export class IntentInvalidTransitionError extends DvtContractError<'INTENT_INVALID_TRANSITION'> {
+  readonly code = CONTRACTS_ERROR_CODE.INTENT_INVALID_TRANSITION;
 
-  constructor(intentId: string, from: string, to: string) {
-    super(`Cannot transition intent ${intentId} from ${from} to ${to}`);
+  constructor(
+    readonly intentId: string,
+    readonly from: string,
+    readonly to: string
+  ) {
+    const messageParams = { intentId, from, to } as const;
+    super(CONTRACTS_ERROR_CODE.INTENT_INVALID_TRANSITION, 'INTENT_INVALID_TRANSITION', {
+      messageParams,
+    });
     this.name = 'IntentInvalidTransitionError';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
-export class IntentActiveConflictError extends Error {
-  readonly code = 'INTENT_ACTIVE_CONFLICT' as const;
+export class IntentActiveConflictError extends DvtContractError<'INTENT_ACTIVE_CONFLICT'> {
+  readonly code = CONTRACTS_ERROR_CODE.INTENT_ACTIVE_CONFLICT;
 
-  constructor(tenantId: string, runId: string) {
-    super(`An active intent already exists for tenant=${tenantId} run=${runId}`);
+  constructor(
+    readonly tenantId: string,
+    readonly runId: string
+  ) {
+    const messageParams = { tenantId, runId } as const;
+    super(CONTRACTS_ERROR_CODE.INTENT_ACTIVE_CONFLICT, 'INTENT_ACTIVE_CONFLICT', {
+      messageParams,
+    });
     this.name = 'IntentActiveConflictError';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
-export class IntentDispatchConflictError extends Error {
-  readonly code = 'INTENT_DISPATCH_CONFLICT' as const;
+export class IntentDispatchConflictError extends DvtContractError<'INTENT_DISPATCH_CONFLICT'> {
+  readonly code = CONTRACTS_ERROR_CODE.INTENT_DISPATCH_CONFLICT;
 
-  constructor(intentId: string) {
-    super(`Intent ${intentId} is already DISPATCHED with a different engineRunRef`);
+  constructor(readonly intentId: string) {
+    const messageParams = { intentId } as const;
+    super(CONTRACTS_ERROR_CODE.INTENT_DISPATCH_CONFLICT, 'INTENT_DISPATCH_CONFLICT', {
+      messageParams,
+    });
     this.name = 'IntentDispatchConflictError';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
-export class StoreNotReadyError extends Error {
-  readonly code = 'STORE_NOT_READY' as const;
+export class StoreNotReadyError extends DvtContractError<'STORE_NOT_READY'> {
+  readonly code = CONTRACTS_ERROR_CODE.STORE_NOT_READY;
 
-  constructor(message: string) {
-    super(message);
+  constructor(message?: string) {
+    super(CONTRACTS_ERROR_CODE.STORE_NOT_READY, 'STORE_NOT_READY', {
+      ...(message === undefined ? {} : { message }),
+    });
     this.name = 'StoreNotReadyError';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
-
-// ─── Artifact store errors (G-2: typed error codes, no stringly-typed control flow) ─────
 
 export type ArtifactErrorCode =
+  | typeof CONTRACTS_ERROR_CODE.ARTIFACT_NOT_FOUND
+  | typeof CONTRACTS_ERROR_CODE.ARTIFACT_INTEGRITY_ERROR
+  | typeof CONTRACTS_ERROR_CODE.ARTIFACT_UPLOAD_FAILED
+  | typeof CONTRACTS_ERROR_CODE.ARTIFACT_TENANT_MISMATCH
+  | typeof CONTRACTS_ERROR_CODE.ARTIFACT_SIZE_EXCEEDED;
+
+type ArtifactStoreMessageKeyName =
   | 'ARTIFACT_NOT_FOUND'
-  | 'ARTIFACT_INTEGRITY_ERROR'
+  | 'ARTIFACT_INTEGRITY_DIGEST_MISMATCH'
+  | 'ARTIFACT_INTEGRITY_SIZE_MISMATCH'
   | 'ARTIFACT_UPLOAD_FAILED'
   | 'ARTIFACT_TENANT_MISMATCH'
   | 'ARTIFACT_SIZE_EXCEEDED';
 
-export class ArtifactStoreError extends Error {
-  constructor(
-    message: string,
-    public readonly code: ArtifactErrorCode
+export class ArtifactStoreError<
+  K extends ArtifactStoreMessageKeyName = ArtifactStoreMessageKeyName,
+> extends DvtContractError<K> {
+  readonly code: ArtifactErrorCode;
+
+  private constructor(
+    code: ArtifactErrorCode,
+    messageKeyName: K,
+    messageParams: ContractsErrorMessageParams<K>,
+    opts?: {
+      cause?: unknown;
+      details?: unknown;
+      message?: string;
+    }
   ) {
-    super(message);
+    super(code, messageKeyName, {
+      messageParams,
+      details: opts?.details ?? messageParams,
+      cause: opts?.cause,
+      ...(opts?.message === undefined ? {} : { message: opts.message }),
+    });
+    this.code = code;
     this.name = 'ArtifactStoreError';
-    Object.setPrototypeOf(this, ArtifactStoreError.prototype);
+  }
+
+  static notFound(
+    tenantId: string,
+    sha256: string,
+    cause?: unknown
+  ): ArtifactStoreError<'ARTIFACT_NOT_FOUND'> {
+    return new ArtifactStoreError(
+      CONTRACTS_ERROR_CODE.ARTIFACT_NOT_FOUND,
+      'ARTIFACT_NOT_FOUND',
+      { tenantId, sha256 },
+      { cause }
+    );
+  }
+
+  static uploadFailed(
+    reason: string,
+    cause?: unknown
+  ): ArtifactStoreError<'ARTIFACT_UPLOAD_FAILED'> {
+    return new ArtifactStoreError(
+      CONTRACTS_ERROR_CODE.ARTIFACT_UPLOAD_FAILED,
+      'ARTIFACT_UPLOAD_FAILED',
+      { reason },
+      { cause }
+    );
+  }
+
+  static tenantMismatch(
+    expectedTenantId: string,
+    actualTenantId: string
+  ): ArtifactStoreError<'ARTIFACT_TENANT_MISMATCH'> {
+    return new ArtifactStoreError(
+      CONTRACTS_ERROR_CODE.ARTIFACT_TENANT_MISMATCH,
+      'ARTIFACT_TENANT_MISMATCH',
+      { expectedTenantId, actualTenantId }
+    );
+  }
+
+  static sizeExceeded(
+    sizeBytes: number,
+    maxBytes: number
+  ): ArtifactStoreError<'ARTIFACT_SIZE_EXCEEDED'> {
+    return new ArtifactStoreError(
+      CONTRACTS_ERROR_CODE.ARTIFACT_SIZE_EXCEEDED,
+      'ARTIFACT_SIZE_EXCEEDED',
+      { sizeBytes, maxBytes }
+    );
+  }
+
+  static integrityDigestMismatch(
+    expectedSha256: string,
+    actualSha256: string
+  ): ArtifactStoreError<'ARTIFACT_INTEGRITY_DIGEST_MISMATCH'> {
+    return new ArtifactStoreError(
+      CONTRACTS_ERROR_CODE.ARTIFACT_INTEGRITY_ERROR,
+      'ARTIFACT_INTEGRITY_DIGEST_MISMATCH',
+      { expectedSha256, actualSha256 }
+    );
+  }
+
+  static integritySizeMismatch(
+    expectedBytes: number,
+    actualBytes: number
+  ): ArtifactStoreError<'ARTIFACT_INTEGRITY_SIZE_MISMATCH'> {
+    return new ArtifactStoreError(
+      CONTRACTS_ERROR_CODE.ARTIFACT_INTEGRITY_ERROR,
+      'ARTIFACT_INTEGRITY_SIZE_MISMATCH',
+      { expectedBytes, actualBytes }
+    );
   }
 }

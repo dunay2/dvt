@@ -1,41 +1,80 @@
 ---
 title: Shared Boundary Domain
-status: Draft
+status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-15
+last_reviewed: 2026-04-02
 ---
 
 # Shared Boundary Domain
 
-## Purpose
+This domain contains the intentionally shared technical surfaces used across
+planning, execution, delivery, API, and UI.
 
-Defines contracts, types, observability, traceability, and hashing for the DVT system.
+It is where genuinely shared contracts, telemetry abstractions, lineage
+mapping, and canonicalization helpers belong. It is not a fallback bucket for
+ownerless business logic.
 
-## Boundaries
+## Scope
 
-- [@dvt/contracts](../contracts/index.md)
-- [@dvt/crypto](../contracts/index.md)
-- [@dvt/observability](../contracts/index.md)
-- [@dvt/traceability-service](../contracts/index.md)
+- `@dvt/contracts`
+- `@dvt/planner-contracts`
+- `@dvt/observability`
+- `@dvt/observability-otel`
+- `@dvt/traceability-service`
+- `@dvt/crypto`
 
-## Responsibilities
+## Current Interactions
 
-- Define interfaces and contracts
-- Validate events and data
-- Provide observability and traceability
-- Manage cryptographic operations
+```mermaid
+flowchart LR
+  Planning["Planning"] --> Shared["Shared boundary"]
+  Execution["Execution"] --> Shared
+  Delivery["Delivery"] --> Shared
+  API["API"] --> Shared
+  UI["UI"] --> Shared
+```
 
-## Example interaction
+## Current Responsibilities
 
-- Defines interfaces, validates events, supports other domains
+- publish shared transport and contract shapes that multiple domains really use;
+- define observability contracts and the OTel binding path;
+- resolve and map lineage payload inputs for downstream emission;
+- provide canonicalization and hashing utilities used across planner and
+  runtime boundaries.
 
-## Related documentation
+## Code Anchors
 
-- [Domain Map](domain-map.md)
-- [Planning Domain](domain-planning.md)
-- [Execution Domain](domain-execution.md)
+- [contracts index](../../packages/@dvt/contracts/src/index.ts)
+- [ExecutionPlan.v1.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
+- [observability index](../../packages/@dvt/observability/src/index.ts)
+- [StepStartedLineageMapper.ts](../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
+- [crypto index](../../packages/@dvt/canonical/src/index.ts)
 
-## Status
+## Current Posture
 
-- Core shared boundary features implemented
-- See [Current Status Map](domain-map.md#current-status-map) for pending tasks
+The shared boundary is implemented, but its hardest requirement is discipline:
+keeping the shared surface intentionally small and moving domain-private
+behavior back to its owning context when drift is discovered.
+
+## Queued Delta
+
+- `RC-G1`: continue shared-kernel ownership cleanup across engine, planner,
+  delivery, and artifacts.
+- `S11`: tighten lineage sink facets without widening the shared surface beyond
+  what downstream consumers need.
+- keep OTel binding validation honest so observability docs do not overstate
+  production readiness.
+
+## Domain Rules
+
+- Only truly shared contracts and technical cross-cutting behavior belong here.
+- When ownership is ambiguous, the default fix is owner clarification, not a
+  new shared abstraction.
+- Shared packages should expose stable boundaries, not hidden orchestration.
+
+## Related Pages
+
+- [Contracts Index](../contracts/index.md)
+- [DVT Component Map](./component-map.md)
+- [Shared Package Architecture](./shared/index.md)
+- [System Delivery Status](./system-delivery-status.md)

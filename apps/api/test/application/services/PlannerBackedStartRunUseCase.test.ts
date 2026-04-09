@@ -1,6 +1,8 @@
-import type { PlannerBuildResultV2 } from '@dvt/contracts';
+import type { PlannerBuildResultV1 } from '@dvt/contracts';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
+import { ManifestArtifactResolutionError } from '../../../src/application/errors/ManifestArtifactResolutionError.js';
 import { PlannerBackedStartRunUseCase } from '../../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
@@ -28,8 +30,10 @@ const AUTHORIZED_CONTEXT = {
 
 const PLANNER_COMMAND = {
   graphSource: {
-    kind: 'normalized-graph-v1' as const,
-    nodes: [{ nodeId: 'model.orders', resourceType: 'model', dependsOn: [] }],
+    kind: 'generic-graph-v1' as const,
+    sourceFamily: 'dbt',
+    sourceVersion: 'manifest-v10',
+    nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
   },
   runId: 'run-1',
   targetAdapter: 'mock' as const,
@@ -45,7 +49,148 @@ const STORED_PLAN_REF = {
 };
 
 describe('PlannerBackedStartRunUseCase', () => {
+  it('keeps policy-first precedence through planner-backed flow', async () => {
+    let capturedBuildResult: PlannerBuildResultV1 | undefined;
+    const planStore = {
+      storePlan: vi.fn(async (buildResult: PlannerBuildResultV1) => {
+        capturedBuildResult = buildResult;
+        return STORED_PLAN_REF;
+      }),
+      markValid: vi.fn(async () => {}),
+      markInvalid: vi.fn(async () => {}),
+    };
+
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: new PlannerFacade() as never,
+      planStore: planStore as never,
+      validator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK' as const,
+          planId: 'plan-1',
+          adapterId: 'mock',
+        })),
+      } as never,
+      delegate: {
+        execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+      } as never,
+    });
+
+    await useCase.execute(
+      {
+        ...PLANNER_COMMAND,
+        policies: {
+          retry: { kind: 'at-most-N', maxAttempts: 2 },
+          timeout: { kind: 'budget', maxSeconds: 30 },
+          concurrency: { kind: 'bounded', maxParallel: 4 },
+        },
+        graphSource: {
+          ...PLANNER_COMMAND.graphSource,
+          nodes: [
+            {
+              nodeId: 'model.orders',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+              stepTypeConfig: {
+                retries: 99,
+                stepTimeoutMs: 900000,
+                concurrency: 128,
+              },
+            },
+          ],
+        },
+      },
+      AUTHORIZED_CONTEXT
+    );
+
+    expect(capturedBuildResult).toBeDefined();
+    expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
+      kind: 'DBT_MODEL',
+      stepTypeConfig: {
+        retries: {
+          maxAttempts: 2,
+        },
+        stepTimeoutMs: 30000,
+        concurrency: {
+          maxInFlight: 4,
+        },
+      },
+    });
+  });
+
+  it('clears node timeout and concurrency when policies are unbounded', async () => {
+    let capturedBuildResult: PlannerBuildResultV1 | undefined;
+    const planStore = {
+      storePlan: vi.fn(async (buildResult: PlannerBuildResultV1) => {
+        capturedBuildResult = buildResult;
+        return STORED_PLAN_REF;
+      }),
+      markValid: vi.fn(async () => {}),
+      markInvalid: vi.fn(async () => {}),
+    };
+
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: new PlannerFacade() as never,
+      planStore: planStore as never,
+      validator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK' as const,
+          planId: 'plan-1',
+          adapterId: 'mock',
+        })),
+      } as never,
+      delegate: {
+        execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+      } as never,
+    });
+
+    await useCase.execute(
+      {
+        ...PLANNER_COMMAND,
+        policies: {
+          retry: { kind: 'at-most-once' },
+          timeout: { kind: 'unbounded' },
+          concurrency: { kind: 'unbounded' },
+        },
+        graphSource: {
+          ...PLANNER_COMMAND.graphSource,
+          nodes: [
+            {
+              nodeId: 'model.orders',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+              stepTypeConfig: {
+                stepTimeoutMs: 900000,
+                concurrency: { maxInFlight: 128 },
+              },
+            },
+          ],
+        },
+      },
+      AUTHORIZED_CONTEXT
+    );
+
+    expect(capturedBuildResult).toBeDefined();
+    expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
+      kind: 'DBT_MODEL',
+      stepTypeConfig: {
+        retries: {
+          maxAttempts: 1,
+          backoffMs: 0,
+        },
+      },
+    });
+    expect(capturedBuildResult?.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
+    expect(capturedBuildResult?.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('concurrency');
+  });
+
   it('builds, stores, validates and delegates with the stored planRef', async () => {
+    const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const planner = {
       buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
     };
@@ -73,6 +218,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       planStore: planStore as never,
       validator: validator as never,
       delegate: delegate as never,
+      compileTelemetry: compileTelemetry as never,
     });
 
     const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
@@ -104,6 +250,8 @@ describe('PlannerBackedStartRunUseCase', () => {
       },
       AUTHORIZED_CONTEXT
     );
+    expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
+    expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe('built');
   });
 
   it('marks the plan invalid and returns a rejection when validation fails', async () => {
@@ -157,6 +305,7 @@ describe('PlannerBackedStartRunUseCase', () => {
   });
 
   it('delegates directly when the command already carries a planRef', async () => {
+    const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const delegate = {
       execute: vi.fn(async () => ({
         ok: true as const,
@@ -182,6 +331,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         })),
       } as never,
       delegate: delegate as never,
+      compileTelemetry: compileTelemetry as never,
     });
 
     const command = {
@@ -200,15 +350,145 @@ describe('PlannerBackedStartRunUseCase', () => {
     });
     expect(planner.buildPlan).not.toHaveBeenCalled();
     expect(delegate.execute).toHaveBeenCalledWith(command, AUTHORIZED_CONTEXT);
+    expect(compileTelemetry.recordPlanCompileLatency).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      kind: 'unsupported_scheme' as const,
+      expectedReason: 'Unsupported manifestRef URI scheme: ftp.',
+      expectedCause: 'manifest_ref_unsupported_scheme',
+    },
+    {
+      kind: 'invalid_artifact_locator' as const,
+      expectedReason: 'Manifest artifact locator is invalid: missing key.',
+      expectedCause: 'manifest_ref_invalid_locator',
+    },
+    {
+      kind: 'file_scheme_prohibited' as const,
+      expectedReason: 'file:// manifestRef is not allowed in production.',
+      expectedCause: 'manifest_ref_file_scheme_prohibited',
+    },
+    {
+      kind: 'artifact_not_found' as const,
+      expectedReason: 'Manifest artifact could not be found.',
+      expectedCause: 'manifest_ref_not_found',
+    },
+    {
+      kind: 'integrity_mismatch' as const,
+      expectedReason: 'Manifest artifact integrity mismatch.',
+      expectedCause: 'manifest_ref_integrity_mismatch',
+    },
+    {
+      kind: 'invalid_manifest_payload' as const,
+      expectedReason: 'Manifest artifact payload is invalid.',
+      expectedCause: 'manifest_ref_invalid_payload',
+    },
+  ])(
+    'maps predictable manifest resolution failure $kind to plan_rejected',
+    async ({ kind, expectedReason, expectedCause }) => {
+      const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
+      const planStore = {
+        storePlan: vi.fn(async () => STORED_PLAN_REF),
+        markValid: vi.fn(async () => {}),
+        markInvalid: vi.fn(async () => {}),
+      };
+      const delegate = {
+        execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+      };
+      const useCase = new PlannerBackedStartRunUseCase({
+        planner: {
+          buildPlan: vi.fn(async () =>
+            Promise.reject(
+              new ManifestArtifactResolutionError(kind, `fixture failure for ${kind}`, {
+                ...(kind === 'unsupported_scheme'
+                  ? { detail: 'ftp' }
+                  : kind === 'invalid_artifact_locator'
+                    ? { detail: 'missing key' }
+                    : {}),
+              })
+            )
+          ),
+        } as never,
+        planStore: planStore as never,
+        validator: {
+          validatePlan: vi.fn(async () => ({
+            status: 'OK' as const,
+            planId: 'plan-1',
+            adapterId: 'mock',
+          })),
+        } as never,
+        delegate: delegate as never,
+        compileTelemetry: compileTelemetry as never,
+      });
+
+      await expect(useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT)).resolves.toEqual({
+        ok: true,
+        value: {
+          kind: 'plan_rejected',
+          accepted: false,
+          code: 'REJECTED',
+          reason: expectedReason,
+          cause: expectedCause,
+        },
+      });
+      expect(planStore.storePlan).not.toHaveBeenCalled();
+      expect(planStore.markValid).not.toHaveBeenCalled();
+      expect(planStore.markInvalid).not.toHaveBeenCalled();
+      expect(delegate.execute).not.toHaveBeenCalled();
+      expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
+      expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe(
+        'manifest_resolution_error'
+      );
+    }
+  );
+
+  it('rethrows unexpected planner errors', async () => {
+    const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: {
+        buildPlan: vi.fn(async () => Promise.reject(new Error('s3 transport down'))),
+      } as never,
+      planStore: {
+        storePlan: vi.fn(async () => STORED_PLAN_REF),
+        markValid: vi.fn(async () => {}),
+        markInvalid: vi.fn(async () => {}),
+      } as never,
+      validator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK' as const,
+          planId: 'plan-1',
+          adapterId: 'mock',
+        })),
+      } as never,
+      delegate: {
+        execute: vi.fn(async () => ({
+          ok: true as const,
+          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        })),
+      } as never,
+      compileTelemetry: compileTelemetry as never,
+    });
+
+    await expect(useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT)).rejects.toThrow(
+      's3 transport down'
+    );
+    expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
+    expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe('error');
   });
 });
 
-function makeBuildResult(planId: string): PlannerBuildResultV2 {
+function makeBuildResult(planId: string): PlannerBuildResultV1 {
   return {
     plan: {
       metadata: {
         planId,
         planVersion: '1.0',
+        schemaVersion: 'v1.2',
+        contractVersion: '1.0.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: '2026-03-21T00:00:00.000Z',
       },
@@ -220,12 +500,11 @@ function makeBuildResult(planId: string): PlannerBuildResultV2 {
         },
       ],
     },
-    canonicalPlanJson: JSON.stringify({
+    executionPolicy: {},
+    canonicalPlanCoreJson: JSON.stringify({
       metadata: {
-        planId,
         planVersion: '1.0',
         inputHashSha256: '1'.repeat(64),
-        createdAtIso: '2026-03-21T00:00:00.000Z',
       },
       steps: [
         {

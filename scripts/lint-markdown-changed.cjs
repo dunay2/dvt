@@ -39,20 +39,26 @@ function hasRef(ref) {
 }
 
 function resolveDiffCommand() {
-  if (hasUpstream()) return 'git diff --name-only --diff-filter=ACMR @{u}...HEAD';
   if (hasRef('origin/main')) return 'git diff --name-only --diff-filter=ACMR origin/main...HEAD';
+  if (hasUpstream()) return 'git diff --name-only --diff-filter=ACMR @{u}...HEAD';
   return 'git diff --name-only --diff-filter=ACMR HEAD~1..HEAD';
 }
 
 function resolveMarkdownlintCli() {
-  const candidate = path.resolve(__dirname, '..', 'node_modules', 'markdownlint-cli2', 'markdownlint-cli2-bin.mjs');
+  const candidate = path.resolve(
+    __dirname,
+    '..',
+    'node_modules',
+    'markdownlint-cli2',
+    'markdownlint-cli2-bin.mjs'
+  );
   return require('node:fs').existsSync(candidate) ? candidate : null;
 }
 
 function listChangedMarkdownFiles() {
   try {
     return parseChangedFiles(gitExec(resolveDiffCommand())).filter((filePath) =>
-      /(^README\.md$|\.md$)/i.test(filePath),
+      /(^README\.md$|\.md$)/i.test(filePath)
     );
   } catch {
     return [];

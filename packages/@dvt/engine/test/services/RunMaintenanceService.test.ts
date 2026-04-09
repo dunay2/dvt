@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { buildRunEvents } from '../../src/core/lifecycle/coreRuntime.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import {
   RUN_MAINTENANCE_MESSAGE,
@@ -11,7 +12,12 @@ import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
-import { createWorkflowEngineFixture, makeProviderMap } from '../helpers/workflowEngine.fixture.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanRefForPlan,
+  makeProviderMap,
+} from '../helpers/workflowEngine.fixture.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type IObservability = import('@dvt/observability').IObservability;
@@ -22,14 +28,10 @@ type IProviderAdapter = import('../../src/adapters/IProviderAdapter.js').IProvid
 // helpers moved to module scope
 
 function makePlanRef(): PlanRef {
-  return {
-    uri: 'https://example.com/plan',
-    sha256: 'deadbeef',
-    schemaVersion: 'v1.1',
-    planId: 'p',
-    planVersion: '1.0',
-  };
+  return makePlanRefForPlan(makeDefaultExecutionPlan(), 'https://example.com/plan');
 }
+
+const TEST_PLAN_REF = makePlanRef();
 
 function makeContext(runId = 'r1'): RunContext {
   return {
@@ -44,7 +46,7 @@ function makeContext(runId = 'r1'): RunContext {
 function makeTemporalAdapter(): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef: PlanRef, ctx) {
+    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -217,6 +219,7 @@ function createContextFailingObservability(): IObservability {
 function createStatusSignalObservability(spy: {
   warnMessages: string[];
   counterNames: string[];
+  counterCalls: Array<{ name: string; labels: Record<string, string> }>;
 }): IObservability {
   const base = createNoopObservability();
   return {
@@ -228,6 +231,7 @@ function createStatusSignalObservability(spy: {
         return {
           add(value: number) {
             spy.counterNames.push(name);
+            spy.counterCalls.push({ name, labels: { ...labels } });
             counter.add(value);
           },
         };
@@ -247,7 +251,7 @@ function createStatusSignalObservability(spy: {
 function makeAdapterWithLookup(knownRunIds: Set<string>, cancelLog?: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef: PlanRef, ctx) {
+    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -290,7 +294,7 @@ function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapte
 function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_planRef, ctx) {
+    async startRun(_plan, _planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -314,7 +318,7 @@ function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
 function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
     provider: 'mock',
-    async startRun(_planRef, ctx) {
+    async startRun(_plan, _planRef, ctx) {
       return {
         provider: 'mock',
         tenantId: ctx.tenantId,
@@ -410,7 +414,7 @@ async function makeCancellingRun(
 ): Promise<EngineRunRef> {
   const ctx = makeContext(runId);
   ctx.tenantId = tenantId;
-  const runRef = await fixture.engine.startRun(makePlanRef(), ctx);
+  const runRef = await fixture.engine.startRun(TEST_PLAN_REF, ctx);
 
   // Transition to RUNNING
   await fixture.store.appendAndEnqueueTx(runId, [
@@ -422,23 +426,35 @@ async function makeCancellingRun(
       projectId: 'p',
       environmentId: 'dev',
       runId,
-      planId: 'p',
-      planVersion: '1.0',
+      planId: TEST_PLAN_REF.planId,
+      planVersion: TEST_PLAN_REF.planVersion,
       engineAttemptId: 1,
       logicalAttemptId: 1,
       idempotencyKey: fixture.idempotency.runEventKey({
         eventType: 'RunStarted',
         runId,
         logicalAttemptId: 1,
-        planId: 'p',
-        planVersion: '1.0',
+        planId: TEST_PLAN_REF.planId,
+        planVersion: TEST_PLAN_REF.planVersion,
       }),
       payloadVersion: 1,
     },
   ]);
 
-  // Cancel — emits RunCancelRequested, sets cancelling = true
-  await fixture.engine.cancelRun(runRef);
+  // Append cancel intent event to build RUNNING + cancelling snapshot state.
+  const meta = await fixture.store.getRunMetadataByRunId(tenantId, runId);
+  if (!meta) throw new Error(`Expected metadata for run ${runId}`);
+  await fixture.store.appendAndEnqueueTx(
+    runId,
+    buildRunEvents([
+      {
+        idempotency: fixture.idempotency,
+        clock: fixture.clock,
+        meta,
+        eventType: 'RunCancelRequested',
+      },
+    ])
+  );
 
   return runRef;
 }
@@ -563,9 +579,13 @@ describe('RunMaintenanceService', () => {
           planId: 'plan',
           planVersion: '1',
           logicalAttemptId: 1,
-          provider: 'temporal',
-          providerWorkflowId: 'wf-no-created-at',
-          providerRunId: 'no-created-at',
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-no-created-at',
+            runId: 'no-created-at',
+          },
           // createdAt intentionally absent
         },
         firstEvents: [],
@@ -609,9 +629,13 @@ describe('RunMaintenanceService', () => {
           planId: 'plan',
           planVersion: '1',
           logicalAttemptId: 1,
-          provider: 'temporal',
-          providerWorkflowId: 'wf-no-ts',
-          providerRunId: 'no-ts',
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-no-ts',
+            runId: 'no-ts',
+          },
         },
         firstEvents: [],
       });
@@ -634,6 +658,7 @@ describe('RunMaintenanceService', () => {
       expect(result).toEqual({
         inspected: 0,
         expired: [],
+        resolved: [],
         cancelled: [],
         cancelFailed: [],
         deferred: [],
@@ -641,7 +666,11 @@ describe('RunMaintenanceService', () => {
     });
 
     it('signals unexpected intent status with warn and metric without failing the sweep', async () => {
-      const spy = { warnMessages: [] as string[], counterNames: [] as string[] };
+      const spy = {
+        warnMessages: [] as string[],
+        counterNames: [] as string[],
+        counterCalls: [] as Array<{ name: string; labels: Record<string, string> }>,
+      };
       const { service } = createFixtureWithIntentStore(
         new UnknownStatusIntentStore(),
         createStatusSignalObservability(spy)
@@ -652,12 +681,77 @@ describe('RunMaintenanceService', () => {
       expect(result).toEqual({
         inspected: 1,
         expired: [],
+        resolved: [],
         cancelled: [],
         cancelFailed: [],
         deferred: [],
       });
       expect(spy.warnMessages).toContain(RUN_MAINTENANCE_MESSAGE.unexpectedIntentStatus);
       expect(spy.counterNames).toContain(RUN_MAINTENANCE_METRIC.intentUnexpectedStatusTotal);
+    });
+
+    it('emits provider-labelled resolved metric for DISPATCHED bootstrapped intent cleanup', async () => {
+      const cancelLog: string[] = [];
+      const spy = {
+        warnMessages: [] as string[],
+        counterNames: [] as string[],
+        counterCalls: [] as Array<{ name: string; labels: Record<string, string> }>,
+      };
+      const observability = createStatusSignalObservability(spy);
+      const store = new InMemoryTxStore();
+      const intentStore = new InMemoryStartRunIntentStore();
+      const service = new RunMaintenanceService({
+        stateStoreRead: store,
+        stateStoreWrite: store,
+        intentStore,
+        adapters: makeProviderMap(makeAdapterWithLookup(new Set(), cancelLog)),
+        authorizer: new AllowAllAuthorizer(),
+        clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+        idempotency: new IdempotencyKeyBuilder(),
+        observability,
+      });
+
+      await makePendingIntent(intentStore, 'dispatched-bootstrapped-metric', 'i-d-metric');
+      await intentStore.markDispatched('i-d-metric', {
+        provider: 'temporal',
+        tenantId: 't',
+        namespace: 'default',
+        workflowId: 'wf-dispatched-bootstrapped-metric',
+        runId: 'dispatched-bootstrapped-metric',
+      } as EngineRunRef);
+      await store.bootstrapRunTx({
+        metadata: {
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          runId: 'dispatched-bootstrapped-metric',
+          planId: 'plan',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-dispatched-bootstrapped-metric',
+            runId: 'dispatched-bootstrapped-metric',
+          },
+          createdAt: '1970-01-01T00:00:00.000Z',
+        },
+        firstEvents: [],
+      });
+
+      const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
+
+      expect(result.resolved).toEqual(['i-d-metric']);
+      expect(result.cancelled).toEqual([]);
+      expect(cancelLog).toHaveLength(0);
+      expect(spy.counterCalls).toContainEqual({
+        name: RUN_MAINTENANCE_METRIC.intentResolvedTotal,
+        labels: {
+          provider: 'temporal',
+          operation: 'reconcileOrphanedIntents',
+        },
+      });
     });
 
     it('keeps PENDING intent unresolved when adapter does not implement lookupRunRef', async () => {
@@ -667,6 +761,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual([]);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p1']);
@@ -680,6 +775,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual(['i-p2']);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect((await intentStore.getIntent('i-p2'))?.status).toBe('EXPIRED');
@@ -695,6 +791,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual(['i-p3']);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('run-with-wf-1');
@@ -711,6 +808,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.cancelFailed).toEqual(['i-p4']);
       expect(result.expired).toEqual([]);
+      expect(result.resolved).toEqual([]);
       expect(result.deferred).toEqual([]);
       // Intent stays PENDING for retry on next sweep (INV-INTENT-011)
       expect((await intentStore.getIntent('i-p4'))?.status).toBe('PENDING');
@@ -728,9 +826,13 @@ describe('RunMaintenanceService', () => {
           planId: 'plan',
           planVersion: '1.0',
           logicalAttemptId: 1,
-          provider: 'temporal',
-          providerWorkflowId: 'wf-pending-bootstrap-no-workflow',
-          providerRunId: 'pending-bootstrap-no-workflow',
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-pending-bootstrap-no-workflow',
+            runId: 'pending-bootstrap-no-workflow',
+          },
           createdAt: '1970-01-01T00:00:00.000Z',
         },
         firstEvents: [],
@@ -741,13 +843,14 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toEqual([]);
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p5']);
       expect((await intentStore.getIntent('i-p5'))?.status).toBe('PENDING');
     });
 
-    it('resolves DISPATCHED intent without cancelling when run was already bootstrapped', async () => {
+    it('classifies DISPATCHED bootstrapped intent as resolved without cancelling', async () => {
       const cancelLog: string[] = [];
       const { service, store, intentStore } = createFixtureWith(
         makeAdapterWithLookup(new Set(), cancelLog)
@@ -772,9 +875,13 @@ describe('RunMaintenanceService', () => {
           planId: 'plan',
           planVersion: '1.0',
           logicalAttemptId: 1,
-          provider: 'temporal',
-          providerWorkflowId: 'wf-dispatched-bootstrapped-1',
-          providerRunId: 'dispatched-bootstrapped-1',
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-dispatched-bootstrapped-1',
+            runId: 'dispatched-bootstrapped-1',
+          },
           createdAt: '1970-01-01T00:00:00.000Z',
         },
         firstEvents: [],
@@ -782,7 +889,9 @@ describe('RunMaintenanceService', () => {
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
-      expect(result.cancelled).toContain('i-d1');
+      expect(result.expired).toEqual([]);
+      expect(result.resolved).toContain('i-d1');
+      expect(result.cancelled).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toHaveLength(0); // no actual workflow cancel
       expect((await intentStore.getIntent('i-d1'))?.status).toBe('RESOLVED');
@@ -805,6 +914,7 @@ describe('RunMaintenanceService', () => {
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toContain('i-d2');
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('dispatched-orphan-1');
@@ -826,6 +936,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelFailed).toContain('i-d3');
+      expect(result.resolved).toEqual([]);
       expect(result.cancelled).toHaveLength(0);
       expect(result.deferred).toEqual([]);
     });
@@ -852,6 +963,7 @@ describe('RunMaintenanceService', () => {
 
       expect(result.inspected).toBe(1);
       expect(result.expired).toHaveLength(0);
+      expect(result.resolved).toHaveLength(0);
       expect(result.deferred).toEqual(['i-dry1']);
       expect((await intentStore.getIntent('i-dry1'))?.status).toBe('PENDING');
     });
@@ -887,6 +999,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.expired).toHaveLength(2);
+      expect(result.resolved).toHaveLength(0);
       expect(result.cancelFailed).toHaveLength(0);
       expect(result.deferred).toHaveLength(0);
       expect(cancelLogTemporal).toContain('run-temporal-mp');
@@ -914,6 +1027,7 @@ describe('RunMaintenanceService', () => {
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
       expect(result.cancelFailed).toContain('i-no-adapter');
+      expect(result.resolved).toHaveLength(0);
       expect(result.cancelled).toHaveLength(0);
       expect(result.deferred).toHaveLength(0);
     });
@@ -944,16 +1058,16 @@ describe('RunMaintenanceService', () => {
           projectId: 'p',
           environmentId: 'dev',
           runId: 'running-1',
-          planId: 'p',
-          planVersion: '1.0',
+          planId: TEST_PLAN_REF.planId,
+          planVersion: TEST_PLAN_REF.planVersion,
           engineAttemptId: 1,
           logicalAttemptId: 1,
           idempotencyKey: fixture.idempotency.runEventKey({
             eventType: 'RunStarted',
             runId: 'running-1',
             logicalAttemptId: 1,
-            planId: 'p',
-            planVersion: '1.0',
+            planId: TEST_PLAN_REF.planId,
+            planVersion: TEST_PLAN_REF.planVersion,
           }),
           payloadVersion: 1,
         },

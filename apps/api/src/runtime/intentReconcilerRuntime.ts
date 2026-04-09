@@ -115,7 +115,8 @@ function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
 
 function resolveReconcilerAdapters(
   providers: readonly EngineRunRef['provider'][],
-  stateStoreRead: IRunStateStoreRead
+  stateStoreRead: IRunStateStoreRead,
+  stateStoreWrite: IRunStateStoreWrite
 ): Map<EngineRunRef['provider'], IProviderAdapter> {
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
   for (const provider of providers) {
@@ -124,6 +125,8 @@ function resolveReconcilerAdapters(
         'mock',
         new MockAdapter({
           stateStore: stateStoreRead,
+          stateStoreWrite,
+          clock: SYSTEM_CLOCK,
           projector: new SnapshotProjector(),
         })
       );
@@ -219,7 +222,11 @@ export async function createIntentReconcilerRuntime(
   const stores = createRuntimeStores(config);
   const { stateStore, stateStoreRoles, intentStore } = stores;
   await Promise.all([stateStore.migrate(), intentStore.migrate()]);
-  const adapters = resolveReconcilerAdapters(config.providers, stateStoreRoles.read);
+  const adapters = resolveReconcilerAdapters(
+    config.providers,
+    stateStoreRoles.read,
+    stateStoreRoles.write
+  );
   if (adapters.size === 0) {
     throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
   }

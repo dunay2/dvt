@@ -5,11 +5,14 @@ import test from 'node:test';
 import {
   ADAPTER_POSTGRES_RELEVANT_PATTERNS,
   PR_QUALITY_SCOPE_PATTERNS,
+  WORKFLOW_SCOPE_PATTERNS,
   matchesAnyPattern,
 } from './scope-config.mjs';
 
 const policyPath = 'tools/ci/policy/adapter-postgres-relevance.json';
 const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
+const workflowScopePolicyPath = 'tools/ci/policy/workflow-scope.json';
+const workflowScopePolicy = JSON.parse(readFileSync(workflowScopePolicyPath, 'utf8'));
 
 function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
@@ -34,13 +37,53 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   );
 
   assert.deepEqual(ADAPTER_POSTGRES_RELEVANT_PATTERNS, policy.adapter_postgres_relevant);
-  assert.deepEqual(PR_QUALITY_SCOPE_PATTERNS.adapter_postgres_changed, policy.adapter_postgres_relevant);
+  assert.deepEqual(
+    PR_QUALITY_SCOPE_PATTERNS.adapter_postgres_changed,
+    policy.adapter_postgres_relevant
+  );
 
   assert.ok(
-    matchesAnyPattern('packages/@dvt/adapter-postgres/src/index.ts', ADAPTER_POSTGRES_RELEVANT_PATTERNS)
+    matchesAnyPattern(
+      'packages/@dvt/adapter-postgres/src/index.ts',
+      ADAPTER_POSTGRES_RELEVANT_PATTERNS
+    )
   );
   assert.ok(matchesAnyPattern('tsconfig.base.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(matchesAnyPattern('tsconfig.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
-  assert.ok(matchesAnyPattern('.github/workflows/pr-quality-gate.yml', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
-  assert.ok(!matchesAnyPattern('packages/@dvt/adapter-postgresx/src/index.ts', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
+  assert.ok(
+    matchesAnyPattern('.github/workflows/pr-quality-gate.yml', ADAPTER_POSTGRES_RELEVANT_PATTERNS)
+  );
+  assert.ok(
+    !matchesAnyPattern(
+      'packages/@dvt/adapter-postgresx/src/index.ts',
+      ADAPTER_POSTGRES_RELEVANT_PATTERNS
+    )
+  );
+});
+
+test('workflow scope policy stays wired into ci and pr quality workflows', () => {
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  assertWorkflowContains(
+    ciWorkflow,
+    'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
+  );
+  assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-workspace-matrix.mjs');
+
+  assertWorkflowContains(
+    prQualityGate,
+    'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
+  );
+  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode workflow');
+
+  assert.deepEqual(WORKFLOW_SCOPE_PATTERNS, {
+    any_code: workflowScopePolicy.any_code,
+    docs_changed: workflowScopePolicy.docs_changed,
+    docs_structure_changed: workflowScopePolicy.docs_structure_changed,
+    lane_yaml_changed: workflowScopePolicy.lane_yaml_changed,
+    generated_status_relevant: workflowScopePolicy.generated_status_relevant,
+    generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
+  });
 });

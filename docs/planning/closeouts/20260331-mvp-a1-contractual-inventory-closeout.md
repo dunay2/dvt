@@ -4,6 +4,8 @@ date: 2026-03-31
 author: AI (GPT-5)
 last_reviewed: 2026-03-31
 status: Accepted
+title: Closeout: MVP-A1 Contractual Inventory
+owner: docs
 ---
 
 # Closeout: MVP-A1 Contractual Inventory
@@ -19,12 +21,12 @@ and synchronized the dependent MVP lane states.
 
 ## Implementation
 
-- moved `docs/planning/proposals/mvp-a1-backend-contractual-inventory-20260329.md`
+- moved `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
   from `Proposed` to `Review`
 - added a code-grounded review at
-  `docs/planning/reviews/20260331-mvp-a1-backend-contractual-inventory-review.md`
+  `docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md`
 - added accepted evidence at
-  `docs/evidence/ED-20260331-mvp-a1-backend-contractual-inventory.md`
+  `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`
 - updated `MVP-B1`, `MVP-C1`, and `MVP-D1` closure posture to reflect the now
   stable backend baseline
 - moved `MVP-E1` from `blocked` to `queued`

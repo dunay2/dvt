@@ -2,21 +2,21 @@
 title: Planning Domain Map
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-04-02
 planning_type: reference
 ---
 
 # Planning Domain Map
 
 Cross-domain planning map showing canonical relationships between roadmap,
-status, gaps, and delivery artifacts.
+status, and delivery artifacts.
 
 ```mermaid
 flowchart TB
   RR[Roadmap Of Record]
   SD[System Delivery Status]
-  GE[Gap Execution Plans]
-  PS[Planning Status]
+  PT[Planning Control Tower]
+  GI[Governance Inventory]
 
   RR --> EX[Execution Runtime]
   RR --> API[API And Admission]
@@ -27,15 +27,15 @@ flowchart TB
   SD --> EX
   SD --> API
   SD --> PLC
-  GE --> EX
-  GE --> API
-  GE --> EVT
-  PS --> PLC
-  PS --> DOC
+  PT --> EX
+  PT --> API
+  PT --> EVT
+  GI --> PLC
+  GI --> DOC
 
-  EX --> EXR[Gap 5 roadmap and trackers]
-  API --> APR[Gap 4 proposal lanes]
-  PLC --> PLR[Planner target-state and manifests]
+  EX --> EXR[Runtime boards and reviews]
+  API --> APR[API proposals and reviews]
+  PLC --> PLR[Planner target state and manifests]
   EVT --> EVR[Archival, retention, restore]
   DOC --> DOR[Governance inventory and checks]
 ```

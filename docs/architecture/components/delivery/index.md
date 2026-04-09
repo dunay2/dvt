@@ -1,75 +1,64 @@
 ---
 title: '@dvt/delivery'
-status: Draft
-owner: Delivery Domain
-last_reviewed: 2026-03-28
+status: Active
+owner: Architecture / Docs
+last_reviewed: 2026-04-08
 ---
 
 # @dvt/delivery
 
-## Component Map
+`@dvt/delivery` is the runtime library for downstream delivery concerns.
+
+It provides the worker-facing primitives that drain outbox records, rebuild read
+models, emit lineage, and support admission or retention helpers without moving
+that behavior back into the engine or API layers.
+
+## Current Responsibilities
+
+- host the outbox worker runtime;
+- host projector and lineage runtimes;
+- provide delivery-side helpers such as the admission guard and lineage
+  observer;
+- keep delivery behavior reusable across multiple worker composition roots.
+
+## Interface Map
 
 ```mermaid
 flowchart LR
-  delivery[dvt/delivery]
-  outbox[dvt-outbox-worker]
-  engine[dvt/engine]
-  delivery --> outbox
-  engine --> delivery
+  RuntimeFacts["Run events / outbox / stale snapshots"] --> Delivery["@dvt/delivery"]
+  Delivery --> Admission["StartRunAdmissionGuard"]
+  Delivery --> Outbox["OutboxWorkerRuntime"]
+  Delivery --> Projector["ProjectorWorkerRuntime"]
+  Delivery --> Lineage["LineageWorkerRuntime"]
+  Outbox --> OutboxHost["apps/outbox-worker"]
+  Projector --> ProjectorHost["apps/projector-worker"]
+  Lineage --> LineageHost["apps/lineage-worker"]
+  Lineage --> Traceability["@dvt/traceability-service"]
 ```
 
-## Location
+## Code Anchors
 
-- `packages/@dvt/delivery`
+- [index.ts](../../../../packages/@dvt/delivery/src/index.ts)
+- [OutboxWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
+- [ProjectorWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
+- [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)
+- [StartRunAdmissionGuard.ts](../../../../packages/@dvt/delivery/src/backpressure/StartRunAdmissionGuard.ts)
 
-## Domain
+## Current Posture
 
-- [Delivery Domain](../../domain-delivery.md)
+This is a real library component with runtime authority over downstream event
+handling. It is no longer just a placeholder around worker apps.
 
-## Main Responsibilities
+## Planned Delta
 
-- Delivery orchestration, event publishing, ownership management
-- Root: `DeliveryAggregate` (central delivery model)
-- Aggregates: `OutboxAggregate`
-- Ensures event publication, ownership tracking, retry logic
+- tighten envelope and lineage seams under `S05`, `S07`, and `S11`;
+- keep retention and purge coordination explicit as delivery policy evolves.
+- keep worker runtimes reusable without hiding operational ownership in the
+  library surface.
 
-## Explanation
+## Historical Deep Dives
 
-`@dvt/delivery` is responsible for the lifecycle of delivery events:
-
-- **Root:** `DeliveryAggregate` — represents the central delivery model, owning
-  event publication and ownership.
-- **Aggregates:** `OutboxAggregate` — event publishing and retry.
-- **Responsibilities:**
-  - Orchestrate event delivery and publication.
-  - Track delivery ownership and status.
-  - Manage retry logic for failed events.
-
-**Interactions:**
-
-- **[OutboxWorker](../outbox-worker.md):** Publishes events and manages retries.
-- **[Engine](../engine/index.md):** Receives delivery events for workflow execution.
-
-## Detailed Documentation
-
-- [DDD Structure](delivery-ddd.md)
-- [Sequence Diagram & Flow](delivery-sequence.md)
-- [Constraints & Invariants](delivery-constraints.md)
-- [Functionalities](delivery-functional.md)
-
-## Key Files
-
-- `packages/@dvt/delivery/src/domain/DeliveryAggregate.ts`
-- `packages/@dvt/delivery/src/domain/OutboxAggregate.ts`
-- `packages/@dvt/delivery/src/domain/types.ts`
-
-## Restrictions
-
-- Must comply with contract definitions in [Delivery Contracts](../../../contracts/index.md)
-- Only interacts with Delivery domain components and engine
-
-## Related
-
-- [Component Map](../../component-map.md)
-- [Delivery Domain](../../domain-delivery.md)
-- [Engine Component](../engine/index.md)
+- [DDD Structure](./delivery-ddd.md)
+- [Sequence diagram and flow](./delivery-sequence.md)
+- [Constraints and invariants](./delivery-constraints.md)
+- [Functionalities](./delivery-functional.md)

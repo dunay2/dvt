@@ -1,6 +1,7 @@
 ---
 slice: g7-provider-ref-reconciliation
 date: 2026-03-16
+last_reviewed: 2026-03-16
 gap: G7
 author: AI (GPT-5)
 ---
@@ -61,16 +62,16 @@ the G7 docs/evidence to `Closed`.
 
 ## Changes made
 
-| File                                                                                                                        | Change                                                                                     | Why                                                                                     |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)               | Added `ProviderRefUpdate` and optional `saveProviderRef?`                                  | Give the engine a minimal contract to reconcile provider refs after pre-bootstrap start |
-| [packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts) | Mirrored the state-store contract change                                                   | Keep engine-facing and shared-kernel interfaces aligned                                 |
-| [packages/@dvt/engine/src/state/InMemoryRunStateStore.ts](../../../packages/@dvt/engine/src/state/InMemoryRunStateStore.ts) | Unified `saveProviderRef` signature and enforced tenant scoping                            | Match adapter semantics and cover tenant isolation in tests                             |
-| [packages/@dvt/engine/src/state/InMemoryTxStore.ts](../../../packages/@dvt/engine/src/state/InMemoryTxStore.ts)             | Unified `saveProviderRef` signature                                                        | Keep the transactional test store aligned with the port                                 |
-| [packages/@dvt/engine/src/core/WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)                 | Reconciles the real provider ref after `adapter.startRun()` in the `estimateRunRef()` path | Close the last open G7 code residual without changing lifecycle authority               |
-| [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts)     | Added reconcile, no-op, and fail-soft tests                                                | Prove the new path and guard against regressions                                        |
-| [docs/evidence/ED-20260316-g7-provider-ref-reconciliation.md](../../evidence/ED-20260316-g7-provider-ref-reconciliation.md) | Added sub-slice evidence                                                                   | Record the exact G7.3 behavior and validation                                           |
-| [docs/evidence/ED-20260316-g7-closeout.md](../../evidence/ED-20260316-g7-closeout.md)                                       | Added final G7 evidence                                                                    | Close G7 with a clean evidence surface                                                  |
+| File                                                                                                                                          | Change                                                                                     | Why                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)                                 | Added `ProviderRefUpdate` and optional `saveProviderRef?`                                  | Give the engine a minimal contract to reconcile provider refs after pre-bootstrap start |
+| [packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)                   | Mirrored the state-store contract change                                                   | Keep engine-facing and shared-kernel interfaces aligned                                 |
+| [packages/@dvt/engine/src/state/InMemoryRunStateStore.ts](../../../packages/@dvt/engine/src/state/InMemoryRunStateStore.ts)                   | Unified `saveProviderRef` signature and enforced tenant scoping                            | Match adapter semantics and cover tenant isolation in tests                             |
+| [packages/@dvt/engine/src/state/InMemoryTxStore.ts](../../../packages/@dvt/engine/src/state/InMemoryTxStore.ts)                               | Unified `saveProviderRef` signature                                                        | Keep the transactional test store aligned with the port                                 |
+| [packages/@dvt/engine/src/core/WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)                                   | Reconciles the real provider ref after `adapter.startRun()` in the `estimateRunRef()` path | Close the last open G7 code residual without changing lifecycle authority               |
+| [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts)                       | Added reconcile, no-op, and fail-soft tests                                                | Prove the new path and guard against regressions                                        |
+| [docs/evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md](../../evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md) | Added sub-slice evidence                                                                   | Record the exact G7.3 behavior and validation                                           |
+| [docs/evidence/critical/ED-20260316-g7-closeout.md](../../evidence/critical/ED-20260316-g7-closeout.md)                                       | Added final G7 evidence                                                                    | Close G7 with a clean evidence surface                                                  |
 
 ## Libraries evaluated
 

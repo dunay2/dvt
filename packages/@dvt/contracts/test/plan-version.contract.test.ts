@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSIONED_SCHEMAS,
-  ExecutionPlanV2Schema,
+  ExecutionPlanSchema,
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from '../src/index.js';
 
@@ -25,7 +25,7 @@ describe('contracts: planVersion governance surface', () => {
   });
 
   it('rechaza planes con planVersion no declarado en el registro', () => {
-    const result = ExecutionPlanV2Schema.safeParse({
+    const result = ExecutionPlanSchema.safeParse({
       ...VALID_EXECUTION_PLAN_V2_FIXTURE,
       metadata: {
         ...VALID_EXECUTION_PLAN_V2_FIXTURE.metadata,

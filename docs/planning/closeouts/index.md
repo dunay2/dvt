@@ -2,7 +2,7 @@
 title: Planning Closeouts
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-31
+last_reviewed: 2026-04-04
 ---
 
 # Planning Closeouts
@@ -22,21 +22,23 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
-- [20260331 MVP-A1 Contractual Inventory Closeout](20260331-mvp-a1-contractual-inventory-closeout.md)
-- [20260324 S12 Remove Deprecated State-Store Methods Closeout](20260324-s12-remove-deprecated-state-store-methods-closeout.md)
-- [20260324 Schema Migration Rollback Closeout](20260324-schema-migration-rollback-closeout.md)
-- [20260324 S18 Follow-Up Proposal Capture Closeout](20260324-s18-follow-up-proposal-capture-closeout.md)
-- [20260324 S18 Explicit State-Store Root Bindings Closeout](20260324-s18-explicit-state-store-root-bindings-closeout.md)
-- [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
-- [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
-- [20260321 Gap 5 PR1 Export Verifier Closeout](20260321-gap-5-pr1-export-verifier-closeout.md)
-- [20260320 API Runtime Query Integration Closeout](20260320-api-runtime-query-integration-closeout.md)
-- [20260320 Planner Assessment Roadmap Closeout](20260320-planner-assessment-roadmap-closeout.md)
-- [20260320 Planning Archive Sweep Closeout](20260320-planning-archive-sweep-closeout.md)
-- [20260316 G7 Provider Ref Reconciliation Closeout](20260316-g7-provider-ref-reconciliation-closeout.md)
-- [20260316 G7 Projector Worker Runtime Closeout](20260316-g7-projector-worker-runtime-closeout.md)
-- [20260316 Docs Governance Tooling Closeout](20260316-docs-governance-tooling-closeout.md)
-- [20260316 Principal Architecture Review Closeout](20260316-principal-architecture-review-closeout.md)
+- [20260404 AR-C2 SLA and Manuals Closeout](./20260404-ar-c2-sla-and-manuals-closeout.md)
+- [20260403 API Current To Target Architecture Closeout](./20260403-api-current-to-target-architecture-closeout.md)
+- [20260331 MVP-A1 Contractual Inventory Closeout](./20260331-mvp-a1-contractual-inventory-closeout.md)
+- [20260324 S12 Remove Deprecated State-Store Methods Closeout](./20260324-s12-remove-deprecated-state-store-methods-closeout.md)
+- [20260324 Schema Migration Rollback Closeout](./20260324-schema-migration-rollback-closeout.md)
+- [20260324 S18 Follow-Up Proposal Capture Closeout](./20260324-s18-follow-up-proposal-capture-closeout.md)
+- [20260324 S18 Explicit State-Store Root Bindings Closeout](./20260324-s18-explicit-state-store-root-bindings-closeout.md)
+- [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](./20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
+- [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](./20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
+- [20260321 Gap 5 PR1 Export Verifier Closeout](./20260321-gap-5-pr1-export-verifier-closeout.md)
+- [20260320 API Runtime Query Integration Closeout](./20260320-api-runtime-query-integration-closeout.md)
+- [20260320 Planner Assessment Roadmap Closeout](./20260320-planner-assessment-roadmap-closeout.md)
+- [20260320 Planning Archive Sweep Closeout](./20260320-planning-archive-sweep-closeout.md)
+- [20260316 G7 Provider Ref Reconciliation Closeout](./20260316-g7-provider-ref-reconciliation-closeout.md)
+- [20260316 G7 Projector Worker Runtime Closeout](./20260316-g7-projector-worker-runtime-closeout.md)
+- [20260316 Docs Governance Tooling Closeout](./20260316-docs-governance-tooling-closeout.md)
+- [20260316 Principal Architecture Review Closeout](./20260316-principal-architecture-review-closeout.md)
 
 ## Full Portfolio Views
 

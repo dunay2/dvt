@@ -1,26 +1,74 @@
 /**
  * @file packages/@dvt/engine/src/ports/IStartRunIntentStore.ts
- * @baseline ADR-0003: Execution Model Sovereignty
- * @baseline ADR-0013: bootstrapRunTx atomicity
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
- * @decision Pre-dispatch intent log prevents orphaned provider workflows on process crash
- * @consequence Reconciliation can detect and cancel provider workflows that were never bootstrapped
+ * @decision Canonical command/query contract for start-run intent durability
+ * @consequence Engine and adapters share one contract and status vocabulary
  * @version 1.0.0
- * @date 2026-03-03
+ * @date 2026-03-05
  */
-import type { IStartRunIntentStore as IStartRunIntentStoreContract } from '@dvt/contracts';
+import type { EngineRunRef } from '@dvt/contracts';
+
+export type StartRunIntentStatus = 'PENDING' | 'DISPATCHED' | 'RESOLVED' | 'EXPIRED';
+export type StartRunIntentTransitionTarget = Exclude<StartRunIntentStatus, 'PENDING'>;
+
+export interface StartRunIntent {
+  intentId: string;
+  tenantId: string;
+  runId: string;
+  provider: EngineRunRef['provider'];
+  status: StartRunIntentStatus;
+  engineRunRef?: EngineRunRef;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIntentInput {
+  intentId: string;
+  tenantId: string;
+  runId: string;
+  provider: EngineRunRef['provider'];
+  createdAt: string;
+}
 
 /**
- * Lifecycle of a startRun intent:
- *
- *   PENDING --adapter.startRun()--> DISPATCHED --bootstrapRunTx()--> RESOLVED
- *      |                              |
- *      +-- reconcile (expire) ------> EXPIRED
- *                                     +-- reconcile (cancel) ------> RESOLVED
+ * Commands mutate intent state.
  */
-export type { CreateIntentInput, StartRunIntent, StartRunIntentStatus } from '@dvt/contracts';
+export interface IStartRunIntentCommandStore {
+  /**
+   * Creates a new PENDING intent for the given (tenantId, runId).
+   *
+   * Idempotent on `intentId`: if an intent with the same `intentId` already
+   * exists, implementations MUST return the existing record unchanged.
+   *
+   * INV-INTENT-011: Callers MUST derive `intentId` deterministically from
+   * (tenantId, runId) so that a scheduler crash-restart produces the same
+   * `intentId` and the idempotency guarantee absorbs the retry. Generating a
+   * fresh UUID on every call breaks this guarantee.
+   *
+   * Normalization policy: derivation inputs are consumed as-is (no trimming,
+   * no case folding, no Unicode normalization). Callers MUST provide canonical
+   * tenantId/runId values before derivation.
+   *
+   * Canonicalization policy: derivation MUST use a versioned canonical payload
+   * shape so delimiter collisions do not alter semantic identity.
+   *
+   * If a different `intentId` is supplied but an active (PENDING or DISPATCHED)
+   * intent already exists for the same (tenantId, runId), implementations MUST
+   * throw `IntentActiveConflictError` - this indicates a caller bug.
+   */
+  createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
+  markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void>;
+  markResolved(intentId: string): Promise<void>;
+  markExpired(intentId: string): Promise<void>;
+}
 
 /**
- * Canonical contract alias. The source of truth is defined in @dvt/contracts.
+ * Queries read intent state without mutation.
  */
-export type IStartRunIntentStore = IStartRunIntentStoreContract;
+export interface IStartRunIntentQueryStore {
+  listOrphaned(thresholdMs: number, nowMs: number, limit?: number): Promise<StartRunIntent[]>;
+  getIntent(intentId: string): Promise<StartRunIntent | null>;
+}
+
+export interface IStartRunIntentStore
+  extends IStartRunIntentCommandStore, IStartRunIntentQueryStore {}

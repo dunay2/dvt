@@ -1,10 +1,10 @@
 import type {
   DbtManifestRef,
-  ExecutionPlanV2,
-  GraphNode,
+  ExecutionPlan,
+  GenericGraphSourceV1,
   PlannerEnvironmentContext,
-  PlannerGraphSourceV1,
   PlannerPolicyClassSet,
+  RunExecutionContextRef,
 } from '@dvt/contracts';
 
 export const START_RUN_TARGET_ADAPTER = {
@@ -14,6 +14,18 @@ export const START_RUN_TARGET_ADAPTER = {
 
 export type StartRunTargetAdapter =
   (typeof START_RUN_TARGET_ADAPTER)[keyof typeof START_RUN_TARGET_ADAPTER];
+
+export const SUPPORTED_START_RUN_TARGET_ADAPTERS: readonly StartRunTargetAdapter[] = [
+  START_RUN_TARGET_ADAPTER.temporal,
+  START_RUN_TARGET_ADAPTER.mock,
+] as const;
+
+export function isStartRunTargetAdapter(value: unknown): value is StartRunTargetAdapter {
+  return (
+    typeof value === 'string' &&
+    (SUPPORTED_START_RUN_TARGET_ADAPTERS as readonly string[]).includes(value)
+  );
+}
 
 export interface StartRunPlanRef {
   readonly uri: string;
@@ -25,13 +37,12 @@ export interface StartRunPlanRef {
 
 export interface StartRunCommand {
   readonly planRef?: StartRunPlanRef;
-  readonly graphSource?: PlannerGraphSourceV1;
+  readonly runExecutionContextRef?: RunExecutionContextRef;
+  readonly graphSource?: GenericGraphSourceV1;
   readonly manifestRef?: DbtManifestRef;
-  readonly manifest?: Record<string, unknown>;
-  readonly nodes?: ReadonlyArray<GraphNode>;
   readonly policies?: PlannerPolicyClassSet;
   readonly environment?: PlannerEnvironmentContext;
-  readonly observability?: ExecutionPlanV2['observability'];
+  readonly observability?: ExecutionPlan['observability'];
   readonly runId: string;
   readonly targetAdapter: StartRunTargetAdapter;
   readonly selection: ReadonlyArray<string>;

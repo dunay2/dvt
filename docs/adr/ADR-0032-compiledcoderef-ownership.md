@@ -5,14 +5,14 @@
 - **Owners**: Engine Domain / Planner / Traceability
 - **ARC Level**: ARC-2 (non-breaking contract extension, optional field)
 - **Related files**:
-  - [IRunStateStore.v1.ts](../../packages/@dvt/contracts/src/contracts/engine/IRunStateStore.v1.ts)
-  - [ExecutionPlan.v2.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
-  - [ADR-0003 — Execution Model](ADR-0003-execution-model.md)
-  - [ADR-0004 — Event Sourcing Strategy](ADR-0004-event-sourcing-strategy.md)
-  - [ADR-0012 — Plan Integrity Ownership](ADR-0012-plan-integrity-ownership.md)
+  - [IRunStateStore.v1.ts](../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+  - [ExecutionPlan.v1.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
+  - [ADR-0003 — Execution Model](./ADR-0003-execution-model.md)
+  - [ADR-0004 — Event Sourcing Strategy](./ADR-0004-event-sourcing-strategy.md)
+  - [ADR-0012 — Plan Integrity Ownership](./ADR-0012-plan-integrity-ownership.md)
   - `ADR-0020 — OpenLineage Integration Strategy` (not present in the repo at this time)
   - `ADR-0021 — RunEvents → OL Mapping` (not present in the repo at this time)
-  - [GAP_EXECUTION_PLANS.md — G4](../planning/gaps/GAP_EXECUTION_PLANS.md#g4---compiledcoderef-ownership)
+  - [GAP_EXECUTION_PLANS.md — G4](../planning/archive/gaps/GAP_EXECUTION_PLANS.md)
 
 ---
 
@@ -721,7 +721,7 @@ Source: [Dagster I/O managers docs](https://docs.dagster.io/guides/build/io-mana
 | REF-13 | OpenTelemetry SDK error handling specification (fail-open)      | https://opentelemetry.io/docs/specs/otel/error-handling/                                                             |
 | REF-14 | Dagster I/O Managers — Ports & Adapters for storage             | https://docs.dagster.io/guides/build/io-managers/                                                                    |
 | REF-15 | Airflow OpenLineage provider — fail-open observability          | https://airflow.apache.org/docs/apache-airflow-providers-openlineage/stable/index.html                               |
-| REF-16 | ADR-0003 — Execution Model                                      | [ADR-0003](ADR-0003-execution-model.md)                                                                              |
-| REF-17 | ADR-0004 — Event Sourcing Strategy                              | [ADR-0004](ADR-0004-event-sourcing-strategy.md)                                                                      |
-| REF-18 | ADR-0012 — Plan Integrity Ownership                             | [ADR-0012](ADR-0012-plan-integrity-ownership.md)                                                                     |
-| REF-19 | ADR-0013 — bootstrapRunTx Atomicity                             | [ADR-0013](ADR-0013-run-state-store-bootstrapRunTx.md)                                                               |
+| REF-16 | ADR-0003 — Execution Model                                      | [ADR-0003](./ADR-0003-execution-model.md)                                                                            |
+| REF-17 | ADR-0004 — Event Sourcing Strategy                              | [ADR-0004](./ADR-0004-event-sourcing-strategy.md)                                                                    |
+| REF-18 | ADR-0012 — Plan Integrity Ownership                             | [ADR-0012](./ADR-0012-plan-integrity-ownership.md)                                                                   |
+| REF-19 | ADR-0013 — bootstrapRunTx Atomicity                             | [ADR-0013](./ADR-0013-run-state-store-bootstrapRunTx.md)                                                             |

@@ -17,9 +17,9 @@ surface governed under `G6`.
 
 The repo-governed lineage facet artifacts live here:
 
-- [OpenLineage vendored facets provenance](facets/openlineage/index.md)
-- [OpenLineage SQL Job Facet 1-0-0 vendored copy](facets/openlineage/SqlJobFacet.1-0-0.schema.json)
-- [DvtDbtDetailsJobFacet v1](facets/DvtDbtDetailsJobFacet.v1.schema.json)
+- [OpenLineage vendored facets provenance](./facets/openlineage/index.md)
+- [OpenLineage SQL Job Facet 1-0-0 vendored copy](./facets/openlineage/SqlJobFacet.1-0-0.schema.json)
+- [DvtDbtDetailsJobFacet v1](./facets/DvtDbtDetailsJobFacet.v1.schema.json)
 - [CompiledCodeRef v1 shared contract](../shared/CompiledCodeRef.v1.schema.json)
 
 Contract ownership split:
@@ -53,7 +53,7 @@ The current builder and mapper surface is implemented in:
 
 ## Governance Rules
 
-- Planning docs under `docs/planning/gaps/g6/` explain execution sequence and
+- Planning docs under `docs/planning/archive/gaps/g6/` explain execution sequence and
   closure strategy, but they are not the normative facet contract.
 - Any change to emitted `_schemaURL`, facet field names, or required properties
   must update the schema artifact in this folder and the corresponding evidence
@@ -69,7 +69,7 @@ The current builder and mapper surface is implemented in:
 
 ## Related
 
-- [G6 Hub](../../planning/gaps/g6/index.md)
-- [G6 OpenLineage CI and Schema Pin Plan](../../planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-- [Gap Execution Plans](../../planning/gaps/GAP_EXECUTION_PLANS.md)
+- [G6 Hub](../../planning/archive/gaps/g6/index.md)
+- [G6 OpenLineage CI and Schema Pin Plan](../../planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+- [Gap Execution Plans](../../planning/archive/gaps/GAP_EXECUTION_PLANS.md)
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)

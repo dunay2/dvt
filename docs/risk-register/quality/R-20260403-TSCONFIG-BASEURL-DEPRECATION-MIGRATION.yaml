@@ -1,0 +1,25 @@
+id: R-20260403-TSCONFIG-BASEURL-DEPRECATION-MIGRATION
+title: Tsconfig baseUrl deprecation migration can regress package alias resolution
+status: Open
+date: 2026-04-03
+owners:
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/planner
+  - packages/@dvt/engine
+  - packages/@dvt/state-store
+severity: Medium
+probability: Low
+context: >
+  The repository removes deprecated `baseUrl` from the active tsconfig chain and migrates `paths` to
+  explicit relative mappings. A wrong relative segment can silently break cross-package type
+  resolution and surface as downstream compile failures.
+risk: >
+  If any alias map drifts after this migration, package builds and root type-check may fail in CI
+  even when local editor diagnostics look green. This can block integration and hide real regression
+  signals behind configuration noise.
+mitigations:
+  - 'Root and package-scoped `tsc --noEmit` validation is required in PR checks.'
+  - '`pnpm verify:prepush` is required before push for this branch.'
+  - '`tsc --showConfig` must confirm no effective `baseUrl` in adapter-postgres and
+    adapter-temporal.'

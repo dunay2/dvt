@@ -138,7 +138,7 @@ function claimSnapshotWorkSql(schema: string): string {
         )
       ORDER BY q.enqueued_at ASC
       LIMIT $1
-      FOR UPDATE SKIP LOCKED
+      FOR UPDATE OF q SKIP LOCKED
     )
     UPDATE ${quoteIdentifier(schema)}.snapshot_work_queue q
     SET claimed_at = NOW()

@@ -190,7 +190,11 @@ export interface PluginManifest {
 
   capabilities: PluginCapabilityId[];
 
-  /** Only valid when 'canvas.render' is in capabilities */
+  /**
+   * Only valid when 'canvas.render' is in capabilities.
+   * `previewStepKind`, when declared on a node kind entry, governs how the
+   * shell projects that kind into planner-facing generic preview nodes.
+   */
   nodeKinds?: import('./NodeRendering').NodeKindManifestEntry[];
 
   /** Intra-plugin connection rules. Cross-plugin connections use produces/consumes. */

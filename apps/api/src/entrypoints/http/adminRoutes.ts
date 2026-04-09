@@ -11,14 +11,29 @@
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import type { FastifyInstance } from 'fastify';
 
+import type { IAuthenticator } from '../../application/ports/auth.js';
+import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import { TenantId } from '../../domain/auth/types.js';
+
+import { authorizeAdminExecutionScope } from './authorizeAdminExecutionScope.js';
+import { extractBearerToken } from './extractBearerToken.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestIssue } from './routeParseIssue.js';
 
+const ADMIN_REBUILD_SNAPSHOT_ACTION = {
+  kind: 'command',
+  name: 'admin:rebuild-snapshot',
+} as const;
+
 export function registerAdminRoutes(
   app: FastifyInstance,
-  stateStore: IRunStateStoreMaintenance
+  stateStore: IRunStateStoreMaintenance,
+  auth: {
+    readonly authenticator: IAuthenticator;
+    readonly authorizer: AuthorizeCommandScopeService;
+  }
 ): void {
   /**
    * POST /admin/runs/:runId/rebuild-snapshot
@@ -43,6 +58,33 @@ export function registerAdminRoutes(
       }
 
       const tenantId = tenantIdResult.value;
+      const requestedTenant = TenantId.parse(tenantId);
+      if (!requestedTenant.ok) {
+        sendHttpResponse(
+          reply,
+          mapRouteParseIssue(
+            badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, {
+              target: 'tenantId',
+            })
+          )
+        );
+        return;
+      }
+
+      const authz = await authorizeAdminExecutionScope({
+        authenticator: auth.authenticator,
+        authorizer: auth.authorizer,
+        token: extractBearerToken(request.headers.authorization),
+        requestId: request.id,
+        requestedScope: {
+          tenantId: requestedTenant.value,
+          action: ADMIN_REBUILD_SNAPSHOT_ACTION,
+        },
+      });
+      if (!authz.ok) {
+        sendHttpResponse(reply, authz.response);
+        return;
+      }
 
       try {
         const snapshot = await stateStore.rebuildSnapshot(tenantId, runId);

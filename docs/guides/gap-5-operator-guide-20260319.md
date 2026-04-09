@@ -14,7 +14,7 @@ model once it is implemented.
 
 This is a user-facing operations guide, not the architecture-of-record. For the
 design source, use
-[Gap 5 Event Lifecycle And Archival Design](../planning/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md).
+[Gap 5 Event Lifecycle And Archival Design](../planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md).
 
 ## Audience
 
@@ -140,7 +140,7 @@ If an archive unit is `VERIFY_FAILED`:
 
 ## Related Documents
 
-- [Gap 5 User Reference](gap-5-user-reference-20260319.md)
-- [Gap 5 Event Lifecycle And Archival Design](../planning/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+- [Gap 5 User Reference](./gap-5-user-reference-20260319.md)
+- [Gap 5 Event Lifecycle And Archival Design](../planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
 - [Gap 5 Archive Operations Runbook](../runbooks/gap-5-archive-operations-runbook-20260319.md)
-- [Gap 5 Domain Design Companion](../planning/proposals/gap-5-domain-design-companion-20260319.md)
+- [Gap 5 Domain Design Companion](../planning/archive/proposals/gap-5-domain-design-companion-20260319.md)

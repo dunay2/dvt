@@ -1,4 +1,9 @@
-import type { RunContext } from '@dvt/contracts';
+import {
+  CONTRACTS_ERROR_CODE,
+  CONTRACTS_ERROR_MESSAGE_KEY,
+  ContractValidationError,
+  type RunContext,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
@@ -23,12 +28,21 @@ describe('WorkflowEngine startRun intent id determinism', () => {
     const { engine, intentStore } = createEngine({ adapters: makeAdapters() });
     const createSpy = vi.spyOn(intentStore, 'createIntent');
 
-    await expect(
-      engine.startRun(makePlanRef(), {
+    try {
+      await engine.startRun(makePlanRef(), {
         ...makeContext('attempted-run-1'),
         logicalAttemptId: 2,
-      } as unknown as RunContext)
-    ).rejects.toThrow(/Validation failed/);
+      } as unknown as RunContext);
+      throw new Error('Expected ContractValidationError');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ContractValidationError);
+      expect(error).toMatchObject({
+        code: CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED,
+        messageKey: CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED,
+        messageParams: {},
+        message: 'Validation failed',
+      });
+    }
 
     expect(createSpy).not.toHaveBeenCalled();
   });

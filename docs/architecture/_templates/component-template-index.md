@@ -28,10 +28,10 @@ Brief description of the component's purpose and domain.
 
 ## Documentation Pages
 
-- [DDD Structure](<component>-ddd.md)
-- [Sequence Diagram & Flow](<component>-sequence.md)
-- [Constraints & Invariants](<component>-constraints.md)
-- [Functionalities](<component>-functional.md)
+- [DDD Structure](./<component>-ddd.md)
+- [Sequence Diagram & Flow](./<component>-sequence.md)
+- [Constraints & Invariants](./<component>-constraints.md)
+- [Functionalities](./<component>-functional.md)
 
 ## Component File List
 
@@ -43,11 +43,11 @@ Brief description of the component's purpose and domain.
 
 ## Related Links
 
-- [Engine Component](../engine/index.md)
+- [Engine Component](../components/engine/index.md)
 - [Architecture Overview](../../index.md)
 
 ## Navigation
 
-- [Back to Component Index](index.md)
-- [Related: Engine Component](../engine/index.md)
+- [Back to Component Index](./index.md)
+- [Related: Engine Component](../components/engine/index.md)
 - [Related: Architecture Overview](../../index.md)

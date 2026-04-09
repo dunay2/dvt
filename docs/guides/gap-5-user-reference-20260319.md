@@ -76,8 +76,8 @@ Read these in order if you need more than this summary:
 
 1. [ADR-0037 - Run Event Lifecycle Archival, Verification, and Restore Model](../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md)
 2. [ADR-0038 - Delivery Buffer Retention and Purge Policy](../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)
-3. [Gap 5 Event Lifecycle And Archival Design](../planning/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
-4. [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
+3. [Gap 5 Event Lifecycle And Archival Design](../planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+4. [Gap 5 Operator Guide](./gap-5-operator-guide-20260319.md)
 5. [Gap 5 Archive Operations Runbook](../runbooks/gap-5-archive-operations-runbook-20260319.md)
 
 ## PR Breakdown
@@ -112,5 +112,5 @@ retention rules.
 
 ## Related
 
-- [Gap 5 Domain Design Companion](../planning/proposals/gap-5-domain-design-companion-20260319.md)
-- [Gap 5 Sequence And Module Design](../planning/proposals/gap-5-sequence-and-module-design-20260319.md)
+- [Gap 5 Domain Design Companion](../planning/archive/proposals/gap-5-domain-design-companion-20260319.md)
+- [Gap 5 Sequence And Module Design](../planning/archive/proposals/gap-5-sequence-and-module-design-20260319.md)

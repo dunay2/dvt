@@ -9,7 +9,11 @@
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { applyRunEvent, InvalidStateTransitionError } from '../src/index.js';
+import {
+  applyRunEvent,
+  InvalidRunEventShapeError,
+  InvalidStateTransitionError,
+} from '../src/index.js';
 
 function makeSnap(status: WorkflowSnapshot['status']): WorkflowSnapshot {
   return {
@@ -93,6 +97,14 @@ describe('applyRunEvent - run terminal guard', () => {
     }
   });
 
+  it('treats RunQueued as lifecycle evidence without mutating the snapshot', () => {
+    const snap = makeSnap('PENDING');
+
+    applyRunEvent(snap, makeRunEvent('RunQueued'));
+
+    expect(snap).toEqual(makeSnap('PENDING'));
+  });
+
   it('does not throw for unknown event types on terminal runs', () => {
     expect(() =>
       applyRunEvent(makeSnap('COMPLETED'), makeRunEvent('SomeUnknownEvent'))
@@ -141,11 +153,151 @@ describe('applyRunEvent - step terminal guard', () => {
 
   it('records gatewayDecision on StepCompleted', () => {
     const snap = makeSnap('RUNNING');
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-gw'));
     const event = {
       ...makeStepEvent('StepCompleted', 'step-gw'),
       payload: { gatewayDecision: true },
     } as unknown as EventEnvelope;
     applyRunEvent(snap, event);
     expect(snap.gatewayDecisions?.['step-gw']).toBe(true);
+  });
+});
+
+describe('applyRunEvent - explicit transition guards', () => {
+  it('allows RunCancelRequested when run is PENDING', () => {
+    const snap = makeSnap('PENDING');
+    applyRunEvent(snap, makeRunEvent('RunCancelRequested'));
+    expect(snap.cancelling).toBe(true);
+    expect(snap.status).toBe('PENDING');
+  });
+
+  it('rejects RunPaused when run is not RUNNING', () => {
+    expect(() => applyRunEvent(makeSnap('PENDING'), makeRunEvent('RunPaused'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects RunResumed when run is not PAUSED', () => {
+    expect(() => applyRunEvent(makeSnap('RUNNING'), makeRunEvent('RunResumed'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects RunCancelled without cancellation intent state', () => {
+    expect(() => applyRunEvent(makeSnap('RUNNING'), makeRunEvent('RunCancelled'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects StepCompleted when step is still PENDING', () => {
+    expect(() =>
+      applyRunEvent(makeSnap('RUNNING'), makeStepEvent('StepCompleted', 'step-p'))
+    ).toThrow(InvalidStateTransitionError);
+  });
+
+  it('rejects StepFailed when step is still PENDING', () => {
+    expect(() => applyRunEvent(makeSnap('RUNNING'), makeStepEvent('StepFailed', 'step-p'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects StepSkipped when step is already RUNNING', () => {
+    const snap = makeSnap('RUNNING');
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-running'));
+    expect(() => applyRunEvent(snap, makeStepEvent('StepSkipped', 'step-running'))).toThrow(
+      InvalidStateTransitionError
+    );
+  });
+
+  it('rejects malformed step events without stepId', () => {
+    const malformed = {
+      ...makeRunEvent('StepStarted'),
+      stepId: undefined,
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
+  });
+
+  it('rejects malformed step events with empty stepId', () => {
+    const malformed = {
+      ...makeStepEvent('StepStarted', ''),
+      stepId: '',
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
+  });
+});
+
+describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
+  it('projects current and failed step diagnostics from step lifecycle events', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-transform'));
+    expect(snap.execution?.activeStepId).toBe('step-transform');
+    expect(snap.execution?.failure).toBeUndefined();
+
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepFailed', 'step-transform'),
+      payload: {
+        reason: 'SINK_WRITE_FAILED',
+        message: 'duplicate key value violates unique constraint',
+      },
+    } as unknown as EventEnvelope);
+
+    expect(snap.execution?.activeStepId).toBeUndefined();
+    expect(snap.execution?.failure).toMatchObject({
+      stepId: 'step-transform',
+      reason: 'SINK_WRITE_FAILED',
+      message: 'duplicate key value violates unique constraint',
+    });
+  });
+
+  it('captures materialization evidence from step completion payloads', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-evidence'));
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepCompleted', 'step-evidence'),
+      payload: {
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-01-01T00:00:05Z',
+          completedAt: '2026-01-01T00:00:08Z',
+          durationMs: 3000,
+        },
+      },
+    } as unknown as EventEnvelope);
+
+    expect(snap.execution?.activeStepId).toBeUndefined();
+    expect(snap.execution?.materialization).toEqual({
+      executor: 'postgres',
+      environmentId: 'env-1',
+      sinkTable: 'analytics.orders_daily',
+      rowsWritten: 42,
+      startedAt: '2026-01-01T00:00:05Z',
+      completedAt: '2026-01-01T00:00:08Z',
+      durationMs: 3000,
+    });
   });
 });

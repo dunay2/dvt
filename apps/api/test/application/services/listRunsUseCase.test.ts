@@ -39,9 +39,12 @@ describe('ListRunsUseCase', () => {
             planId: 'plan-1',
             planVersion: '1.0',
             logicalAttemptId: 1,
-            provider: 'mock' as const,
-            providerWorkflowId: 'wf-1',
-            providerRunId: 'provider-run-1',
+            providerRef: {
+              provider: 'mock' as const,
+              tenantId: 'tenant-a',
+              workflowId: 'wf-1',
+              runId: 'provider-run-1',
+            },
             createdAt: '2026-03-19T00:00:00Z',
           },
           {
@@ -52,9 +55,12 @@ describe('ListRunsUseCase', () => {
             planId: 'plan-2',
             planVersion: '1.0',
             logicalAttemptId: 1,
-            provider: 'mock' as const,
-            providerWorkflowId: 'wf-2',
-            providerRunId: 'provider-run-2',
+            providerRef: {
+              provider: 'mock' as const,
+              tenantId: 'tenant-a',
+              workflowId: 'wf-2',
+              runId: 'provider-run-2',
+            },
           },
         ];
       },

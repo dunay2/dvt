@@ -33,7 +33,7 @@ non-MVP commitments while core operability remains the primary delivery need.
 3. Track frontend expectation alignment through `MVP-E1` before enabling new UI
    assumptions.
 4. Keep `MVP-D1` residual-risk baseline explicit and synchronized:
-   [20260330-mvp-d1-residual-risk-baseline-review](../../planning/reviews/20260330-mvp-d1-residual-risk-baseline-review.md).
+   [20260330-mvp-d1-residual-risk-baseline-review](../../planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md).
 
 ## Residual Baseline Snapshot (2026-03-31)
 

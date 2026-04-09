@@ -10,12 +10,16 @@
  * @version 1.2.0
  * @date 2026-03-08
  */
+import { Buffer } from 'node:buffer';
+
 import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
-  type IProviderAdapter,
+  type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunStatusSnapshot,
+  type SignalSemanticsVersion,
   type SignalRequest,
   parseEngineRunRef,
   parsePlanRef,
@@ -23,6 +27,7 @@ import {
   parseSignalRequest,
 } from '@dvt/contracts';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
+import type { IProviderAdapter } from '@dvt/engine';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
@@ -94,35 +99,39 @@ export class TemporalAdapter implements IProviderAdapter {
     });
   }
 
-  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
+  async startRun(
+    plan: ExecutionPlan,
+    planRef: PlanRef,
+    ctx: ResolvedRunContext
+  ): Promise<EngineRunRef> {
     const validatedPlanRef = parsePlanRef(planRef);
     const validatedCtx = parseResolvedRunContext(ctx);
     const workflowClient = await this.getClient();
 
     const workflowId = toTemporalWorkflowId(validatedCtx.runId);
     const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
+    const workflowInput = {
+      plan,
+      planRef: validatedPlanRef,
+      ctx: validatedCtx,
+      continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
+    };
+
+    assertWorkflowStartPayloadWithinLimit(workflowInput, this.deps.config.maxStartPayloadBytes);
 
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
-      args: [
-        {
-          planRef: validatedPlanRef,
-          ctx: validatedCtx,
-          continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
-        },
-      ],
+      args: [workflowInput],
     });
-
-    const runId =
-      typeof started.firstExecutionRunId === 'string' && started.firstExecutionRunId.length > 0
-        ? started.firstExecutionRunId
-        : validatedCtx.runId;
 
     return toTemporalRunRef({
       tenantId: validatedCtx.tenantId,
       workflowId: started.workflowId,
-      runId,
+      // Keep EngineRunRef keyed to the canonical logical runId. Temporal's
+      // execution runId is provider-internal; event/state stores are indexed
+      // by the caller-stable ctx.runId.
+      runId: validatedCtx.runId,
       config: this.deps.config,
       taskQueue,
     });
@@ -131,7 +140,7 @@ export class TemporalAdapter implements IProviderAdapter {
   async cancelRun(runRef: EngineRunRef): Promise<void> {
     const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
-    await workflowClient.getHandle(validatedRunRef.workflowId).cancel();
+    await workflowClient.getHandle(validatedRunRef.workflowId).signal(WorkflowSignals.CANCEL);
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
@@ -155,30 +164,16 @@ export class TemporalAdapter implements IProviderAdapter {
     const validatedRequest = parseSignalRequest(request);
     const workflowClient = await this.getClient();
     const workflow = workflowClient.getHandle(validatedRunRef.workflowId) as WorkflowHandleLike;
-
-    switch (validatedRequest.type) {
-      case 'PAUSE':
-        await workflow.signal(WorkflowSignals.PAUSE);
-        return;
-      case 'RESUME':
-        await workflow.signal(WorkflowSignals.RESUME);
-        return;
-      case 'CANCEL':
-        // Canonicalize cancellation on the provider-native cancel path so both
-        // cancelRun() and signal(CANCEL) follow the same execution semantics.
-        await workflow.cancel();
-        return;
-      case 'RETRY_STEP':
-      case 'RETRY_RUN':
-        throw new Error('NotImplemented: RETRY_* signals are Phase 2');
-      default: {
-        throw new Error(`Unknown signal type: ${String(validatedRequest.type)}`);
-      }
-    }
+    const dispatch = mapCanonicalSignalToTemporalDispatch(validatedRequest);
+    await workflow.signal(dispatch.signalName, ...dispatch.args);
   }
 
   capabilities(): readonly string[] {
     return TEMPORAL_CAPABILITIES;
+  }
+
+  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+    return [CURRENT_SIGNAL_SEMANTICS_VERSION];
   }
 
   /**
@@ -265,6 +260,56 @@ export class TemporalAdapter implements IProviderAdapter {
       handle.describe(),
       this.deps.config.requestTimeoutMs,
       'lookupRunRef.describe'
+    );
+  }
+}
+
+function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
+  signalName: (typeof WorkflowSignals)[keyof typeof WorkflowSignals];
+  args: unknown[];
+} {
+  switch (request.type) {
+    case 'PAUSE':
+      return {
+        signalName: WorkflowSignals.PAUSE,
+        args: [request.signalId],
+      };
+    case 'RESUME':
+      return {
+        signalName: WorkflowSignals.RESUME,
+        args: [request.signalId],
+      };
+    case 'CANCEL':
+      return {
+        signalName: WorkflowSignals.CANCEL,
+        args: [request.reason],
+      };
+    default: {
+      const exhaustive: never = request.type;
+      throw new Error(`TEMPORAL_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
+    }
+  }
+}
+
+function assertWorkflowStartPayloadWithinLimit(
+  workflowInput: {
+    plan: ExecutionPlan;
+    planRef: PlanRef;
+    ctx: ResolvedRunContext;
+    continueAsNewAfterLayerCount: number;
+  },
+  maxBytes: number
+): void {
+  if (workflowInput.planRef.sizeBytes !== undefined && workflowInput.planRef.sizeBytes > maxBytes) {
+    throw new Error(
+      `TEMPORAL_START_PAYLOAD_TOO_LARGE: sizeBytes=${workflowInput.planRef.sizeBytes} maxBytes=${maxBytes}`
+    );
+  }
+
+  const serializedSizeBytes = Buffer.byteLength(JSON.stringify([workflowInput]), 'utf8');
+  if (serializedSizeBytes > maxBytes) {
+    throw new Error(
+      `TEMPORAL_START_PAYLOAD_TOO_LARGE: sizeBytes=${serializedSizeBytes} maxBytes=${maxBytes}`
     );
   }
 }

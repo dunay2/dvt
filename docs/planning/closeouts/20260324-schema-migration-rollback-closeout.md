@@ -1,6 +1,7 @@
 ---
 slice: 20260324-schema-migration-rollback
 date: 2026-03-24
+last_reviewed: 2026-03-24
 work_item: schema-migration-rollback
 status: Done
 ---
@@ -30,7 +31,7 @@ target-version validation, or explicit recovery API.
   think-first analysis, validation, and closeout evidence.
 - `docs/planning/state/agent-lane-a.md`: `schema-migration-rollback` is the
   remaining queued lane-A task after the state-store split.
-- `docs/planning/reviews/20260324-dvt-architectural-review.md`: the current
+- `docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md`: the current
   forward-only migration runner is an operational gap and needs a real rollback
   path.
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`:
@@ -118,7 +119,7 @@ readiness reset.
 - Canonical planning sources:
   - `docs/planning/state/agent-lane-a.yaml`
   - `docs/planning/state/execution-workboard.md`
-  - `docs/planning/reviews/20260324-dvt-architectural-review.md`
+  - `docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md`
 
 ## Real Work Performed
 
@@ -148,7 +149,7 @@ readiness reset.
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/agent-lane-a.md`
 - `docs/planning/state/execution-workboard.md`
-- `docs/planning/reviews/20260324-dvt-architectural-review.md`
+- `docs/planning/archive/reviews/architecture-and-governance/20260324-dvt-architectural-review.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 

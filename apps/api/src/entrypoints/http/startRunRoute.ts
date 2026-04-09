@@ -1,6 +1,8 @@
 ﻿import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
+import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { extractBearerToken } from './extractBearerToken.js';
 import { sendHttpResponse } from './httpErrorContract.js';
@@ -14,9 +16,10 @@ import { parseStartRunBody } from './startRunRouteParser.js';
 export async function startRunRoute(
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
-  facade: StartRunAuthorizedFacade
+  facade: StartRunAuthorizedFacade,
+  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
 ): Promise<void> {
-  const parsed = parseStartRunBody(request.body);
+  const parsed = parseStartRunBody(request.body, adapterRegistry);
   if (!parsed.ok) {
     sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
     return;

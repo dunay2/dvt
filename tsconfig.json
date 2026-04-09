@@ -28,45 +28,52 @@
     "outDir": "./dist",
     "rootDir": ".",
     "types": ["node", "vitest/globals"],
-    "baseUrl": ".",
     "paths": {
-      "@dvt/crypto": ["packages/@dvt/canonical/src/index.ts"],
-      "@dvt/crypto/*": ["packages/@dvt/canonical/src/*"],
-      "@dvt/canonical": ["packages/@dvt/canonical/src/index.ts"],
-      "@dvt/canonical/*": ["packages/@dvt/canonical/src/*"],
-      "@dvt/dsl": ["packages/@dvt/dsl/src/index.ts"],
-      "@dvt/dsl/*": ["packages/@dvt/dsl/src/*"],
-      "@dvt/engine": ["packages/@dvt/engine/src/index.ts"],
-      "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
-      "@dvt/planner": ["packages/@dvt/planner/src/index.ts"],
-      "@dvt/planner/*": ["packages/@dvt/planner/src/*"],
-      "@dvt/plan-interpreter": ["packages/@dvt/plan-interpreter/src/index.ts"],
-      "@dvt/plan-interpreter/*": ["packages/@dvt/plan-interpreter/src/*"],
-      "@dvt/contracts": ["packages/@dvt/contracts/index.ts"],
-      "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
-      "@dvt/delivery": ["packages/@dvt/delivery/src/index.ts"],
-      "@dvt/delivery/*": ["packages/@dvt/delivery/src/*"],
-      "@dvt/run-domain": ["packages/@dvt/run-domain/src/index.ts"],
-      "@dvt/run-domain/*": ["packages/@dvt/run-domain/src/*"],
-      "@dvt/state-store": ["packages/@dvt/state-store/src/index.ts"],
-      "@dvt/state-store/*": ["packages/@dvt/state-store/src/*"],
-      "@dvt/adapter-postgres": ["packages/@dvt/adapter-postgres/src/index.ts"],
-      "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
-      "@dvt/adapter-temporal": ["packages/@dvt/adapter-temporal/src/index.ts"],
-      "@dvt/adapter-temporal/*": ["packages/@dvt/adapter-temporal/src/*"],
-      "@dvt/artifacts": ["packages/@dvt/artifacts/src/index.ts"],
-      "@dvt/artifacts/*": ["packages/@dvt/artifacts/src/*"],
-      "@dvt/observability": ["packages/@dvt/observability/src/index.ts"],
-      "@dvt/observability/*": ["packages/@dvt/observability/src/*"],
-      "@dvt/observability-otel": [
-        "packages/@dvt/observability-otel/src/index.ts"
+      "@dvt/crypto": ["./packages/@dvt/canonical/src/index.ts"],
+      "@dvt/crypto/*": ["./packages/@dvt/canonical/src/*"],
+      "@dvt/canonical": ["./packages/@dvt/canonical/src/index.ts"],
+      "@dvt/canonical/*": ["./packages/@dvt/canonical/src/*"],
+      "@dvt/dsl": ["./packages/@dvt/dsl/src/index.ts"],
+      "@dvt/dsl/*": ["./packages/@dvt/dsl/src/*"],
+      "@dvt/engine": ["./packages/@dvt/engine/src/index.ts"],
+      "@dvt/engine/*": ["./packages/@dvt/engine/src/*"],
+      "@dvt/planner": ["./packages/@dvt/planner/src/index.ts"],
+      "@dvt/planner/*": ["./packages/@dvt/planner/src/*"],
+      "@dvt/plan-verifier": ["./packages/@dvt/plan-verifier/src/index.ts"],
+      "@dvt/plan-verifier/*": ["./packages/@dvt/plan-verifier/src/*"],
+      "@dvt/plan-interpreter": [
+        "./packages/@dvt/plan-interpreter/src/index.ts"
       ],
-      "@dvt/observability-otel/*": ["packages/@dvt/observability-otel/src/*"],
+      "@dvt/plan-interpreter/*": ["./packages/@dvt/plan-interpreter/src/*"],
+      "@dvt/contracts": ["./packages/@dvt/contracts/index.ts"],
+      "@dvt/contracts/*": ["./packages/@dvt/contracts/src/*"],
+      "@dvt/delivery": ["./packages/@dvt/delivery/src/index.ts"],
+      "@dvt/delivery/*": ["./packages/@dvt/delivery/src/*"],
+      "@dvt/run-domain": ["./packages/@dvt/run-domain/src/index.ts"],
+      "@dvt/run-domain/*": ["./packages/@dvt/run-domain/src/*"],
+      "@dvt/state-store": ["./packages/@dvt/state-store/src/index.ts"],
+      "@dvt/state-store/*": ["./packages/@dvt/state-store/src/*"],
+      "@dvt/adapter-postgres": [
+        "./packages/@dvt/adapter-postgres/src/index.ts"
+      ],
+      "@dvt/adapter-postgres/*": ["./packages/@dvt/adapter-postgres/src/*"],
+      "@dvt/adapter-temporal": [
+        "./packages/@dvt/adapter-temporal/src/index.ts"
+      ],
+      "@dvt/adapter-temporal/*": ["./packages/@dvt/adapter-temporal/src/*"],
+      "@dvt/artifacts": ["./packages/@dvt/artifacts/src/index.ts"],
+      "@dvt/artifacts/*": ["./packages/@dvt/artifacts/src/*"],
+      "@dvt/observability": ["./packages/@dvt/observability/src/index.ts"],
+      "@dvt/observability/*": ["./packages/@dvt/observability/src/*"],
+      "@dvt/observability-otel": [
+        "./packages/@dvt/observability-otel/src/index.ts"
+      ],
+      "@dvt/observability-otel/*": ["./packages/@dvt/observability-otel/src/*"],
       "@dvt/traceability-service": [
-        "packages/@dvt/traceability-service/src/index.ts"
+        "./packages/@dvt/traceability-service/src/index.ts"
       ],
       "@dvt/traceability-service/*": [
-        "packages/@dvt/traceability-service/src/*"
+        "./packages/@dvt/traceability-service/src/*"
       ]
     }
   },

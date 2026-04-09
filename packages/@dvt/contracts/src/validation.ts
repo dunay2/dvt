@@ -10,10 +10,20 @@
  */
 import { z, ZodError, type ZodType } from 'zod';
 
+import type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
+import type { PlanExecutabilityRecord } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 import {
   PlannerPolicyClassSetSchema,
   type PlannerPolicyClassSetSchemaT,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+import type { PlanRecord } from './contracts/planner/PlanRecord.v1.js';
+import {
+  CONTRACTS_ERROR_CODE,
+  CONTRACTS_ERROR_MESSAGE_KEY,
+  DvtContractError,
+  type ContractsErrorMessageParams,
+  defaultContractsErrorMessage,
+} from './errorContract.js';
 import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
@@ -21,30 +31,39 @@ import {
   type DbtManifestRefSchemaT,
   EngineRunRefSchema,
   type EngineRunRefSchemaT,
-  ExecutionPlanV2Schema,
-  type ExecutionPlanV2SchemaT,
-  ExecutionStepV2Schema,
-  type ExecutionStepV2SchemaT,
-  GraphNodeSchema,
-  type GraphNodeSchemaT,
-  PlannerGraphSourceV1Schema,
-  type PlannerGraphSourceV1SchemaT,
-  PlannerBuildResultV2Schema,
-  type PlannerBuildResultV2SchemaT,
+  ExecutionPlanSchema,
+  type ExecutionPlanSchemaT,
+  ExecutionStepV1Schema,
+  type ExecutionStepV1SchemaT,
+  GenericGraphSourceV1Schema,
+  type GenericGraphSourceV1SchemaT,
+  PlannerBuildResultV1Schema,
+  type PlannerBuildResultV1SchemaT,
+  PlanAdmissionLinkSchema,
+  PlanExecutabilityRecordSchema,
+  PlanRecordSchema,
   PlannerEnvironmentContextSchema,
   type PlannerEnvironmentContextSchemaT,
-  PlannerInputEnvelopeV2Schema,
-  type PlannerInputEnvelopeV2SchemaT,
+  PlannerInputEnvelopeV1Schema,
+  type PlannerInputEnvelopeV1SchemaT,
   PlannerSelectionSchema,
   type PlannerSelectionSchemaT,
   PlanCoreSchema,
   type PlanCoreSchemaT,
   PlanRefSchema,
   type PlanRefSchemaT,
+  RunExecutionPolicySchema,
+  type RunExecutionPolicySchemaT,
+  RunExecutionContextRefSchema,
+  type RunExecutionContextRefSchemaT,
+  RunExecutionContextSchema,
+  type RunExecutionContextSchemaT,
   ResolvedRunContextSchema,
   type ResolvedRunContextSchemaT,
   RunContextSchema,
   type RunContextSchemaT,
+  RecoverRunCommandSchema,
+  type RecoverRunCommandSchemaT,
   RunEventWriteSchema,
   type RunEventWriteSchemaT,
   RunEventRecordSchema,
@@ -70,17 +89,23 @@ export interface ValidationIssue {
 export interface ValidationErrorResponse {
   statusCode: 400;
   error: 'Bad Request';
-  message: 'Validation failed';
+  code: typeof CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED;
+  messageKey: typeof CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED;
+  messageParams: ContractsErrorMessageParams<'CONTRACT_VALIDATION_FAILED'>;
+  message: string;
   details: ValidationIssue[];
 }
 
-export class ContractValidationError extends Error {
+export class ContractValidationError extends DvtContractError<'CONTRACT_VALIDATION_FAILED'> {
+  readonly code = CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED;
   readonly statusCode: 400;
   readonly error: 'Bad Request';
   readonly details: ValidationIssue[];
 
   constructor(details: ValidationIssue[]) {
-    super('Validation failed');
+    super(CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED, 'CONTRACT_VALIDATION_FAILED', {
+      details,
+    });
     this.name = 'ContractValidationError';
     this.statusCode = 400;
     this.error = 'Bad Request';
@@ -91,7 +116,10 @@ export class ContractValidationError extends Error {
     return {
       statusCode: this.statusCode,
       error: this.error,
-      message: 'Validation failed',
+      code: this.code,
+      messageKey: this.messageKey,
+      messageParams: this.messageParams,
+      message: this.message,
       details: this.details,
     };
   }
@@ -106,7 +134,10 @@ export function toValidationErrorResponse(error: unknown): ValidationErrorRespon
     return {
       statusCode: 400,
       error: 'Bad Request',
-      message: 'Validation failed',
+      code: CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED,
+      messageKey: CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED,
+      messageParams: {},
+      message: defaultContractsErrorMessage('CONTRACT_VALIDATION_FAILED', {}),
       details: mapZodIssues(error),
     };
   }
@@ -114,8 +145,17 @@ export function toValidationErrorResponse(error: unknown): ValidationErrorRespon
   return {
     statusCode: 400,
     error: 'Bad Request',
-    message: 'Validation failed',
-    details: [{ path: '$', code: 'unknown', message: 'Unknown validation error' }],
+    code: CONTRACTS_ERROR_CODE.CONTRACT_VALIDATION_FAILED,
+    messageKey: CONTRACTS_ERROR_MESSAGE_KEY.CONTRACT_VALIDATION_FAILED,
+    messageParams: {},
+    message: defaultContractsErrorMessage('CONTRACT_VALIDATION_FAILED', {}),
+    details: [
+      {
+        path: '$',
+        code: 'unknown',
+        message: 'Unknown validation error',
+      },
+    ],
   };
 }
 
@@ -137,6 +177,18 @@ export function parsePlanRef(input: unknown): PlanRefSchemaT {
   return parseWithSchema(PlanRefSchema, input);
 }
 
+export function parseRunExecutionPolicy(input: unknown): RunExecutionPolicySchemaT {
+  return parseWithSchema(RunExecutionPolicySchema, input);
+}
+
+export function parseRunExecutionContextRef(input: unknown): RunExecutionContextRefSchemaT {
+  return parseWithSchema(RunExecutionContextRefSchema, input);
+}
+
+export function parseRunExecutionContext(input: unknown): RunExecutionContextSchemaT {
+  return parseWithSchema(RunExecutionContextSchema, input);
+}
+
 export function parseRunContext(input: unknown): RunContextSchemaT {
   return parseWithSchema(RunContextSchema, input);
 }
@@ -147,6 +199,10 @@ export function parseResolvedRunContext(input: unknown): ResolvedRunContextSchem
 
 export function parseSignalRequest(input: unknown): SignalRequestSchemaT {
   return parseWithSchema(SignalRequestSchema, input);
+}
+
+export function parseRecoverRunCommand(input: unknown): RecoverRunCommandSchemaT {
+  return parseWithSchema(RecoverRunCommandSchema, input);
 }
 
 export function parseEngineRunRef(input: unknown): EngineRunRefSchemaT {
@@ -215,34 +271,44 @@ export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironme
   return parseWithSchema(PlannerEnvironmentContextSchema, input);
 }
 
-export function parseGraphNode(input: unknown): GraphNodeSchemaT {
-  return parseWithSchema(GraphNodeSchema, input);
-}
-
-export function parsePlannerGraphSourceV1(input: unknown): PlannerGraphSourceV1SchemaT {
-  return parseWithSchema(PlannerGraphSourceV1Schema, input);
+export function parseGenericGraphSourceV1(input: unknown): GenericGraphSourceV1SchemaT {
+  return parseWithSchema(GenericGraphSourceV1Schema, input);
 }
 
 export function parseDbtManifestRef(input: unknown): DbtManifestRefSchemaT {
   return parseWithSchema(DbtManifestRefSchema, input);
 }
 
-export function parseExecutionStepV2(input: unknown): ExecutionStepV2SchemaT {
-  return parseWithSchema(ExecutionStepV2Schema, input);
+export function parseExecutionStepV1(input: unknown): ExecutionStepV1SchemaT {
+  return parseWithSchema(ExecutionStepV1Schema, input);
 }
 
 export function parsePlanCore(input: unknown): PlanCoreSchemaT {
   return parseWithSchema(PlanCoreSchema, input);
 }
 
-export function parseExecutionPlanV2(input: unknown): ExecutionPlanV2SchemaT {
-  return parseWithSchema(ExecutionPlanV2Schema, input);
+export function parseExecutionPlan(input: unknown): ExecutionPlanSchemaT {
+  return parseWithSchema(ExecutionPlanSchema, input);
 }
 
-export function parsePlannerInputEnvelopeV2(input: unknown): PlannerInputEnvelopeV2SchemaT {
-  return parseWithSchema(PlannerInputEnvelopeV2Schema, input);
+export function parsePlannerInputEnvelopeV1(input: unknown): PlannerInputEnvelopeV1SchemaT {
+  return parseWithSchema(PlannerInputEnvelopeV1Schema, input);
 }
 
-export function parsePlannerBuildResultV2(input: unknown): PlannerBuildResultV2SchemaT {
-  return parseWithSchema(PlannerBuildResultV2Schema, input);
+export async function parsePlannerBuildResultV1(
+  input: unknown
+): Promise<PlannerBuildResultV1SchemaT> {
+  return parseWithSchema(PlannerBuildResultV1Schema, input);
+}
+
+export function parsePlanRecord(input: unknown): PlanRecord {
+  return parseWithSchema(PlanRecordSchema, input);
+}
+
+export function parsePlanExecutabilityRecord(input: unknown): PlanExecutabilityRecord {
+  return parseWithSchema(PlanExecutabilityRecordSchema, input);
+}
+
+export function parsePlanAdmissionLink(input: unknown): PlanAdmissionLink {
+  return parseWithSchema(PlanAdmissionLinkSchema, input);
 }

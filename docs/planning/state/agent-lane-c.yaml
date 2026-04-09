@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-03-31'
+last_reviewed: '2026-04-05'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -61,9 +61,9 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260329-mvp-c1-backend-control-plane-runbook.md
+      - docs/evidence/supporting/ED-20260329-mvp-c1-backend-control-plane-runbook.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
-      - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+      - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
     status_reason:
       The runbook already had accepted evidence, and the final `MVP-A1`/`MVP-B1` dependency chain is
       now closed.
@@ -79,7 +79,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md
-      - docs/planning/reviews/20260326-dvt-principal-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: Accepted ADR-0040 is the canonical closure artifact for retry ownership.
     last_verified: '2026-03-31'
   - task_id: S16
@@ -185,7 +185,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260329-lane-c-rbac-operation-level-closeout.md
+      - docs/evidence/critical/ED-20260329-lane-c-rbac-operation-level-closeout.md
     status_reason: Accepted evidence closes the operation-level authorization boundary.
     last_verified: '2026-03-31'
   - task_id: snapshot staleness in API
@@ -198,7 +198,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260330-snapshot-staleness-api-surface.md
+      - docs/evidence/critical/ED-20260330-snapshot-staleness-api-surface.md
     status_reason:
       Accepted evidence closes the caller-visible staleness surface and fallback telemetry.
     last_verified: '2026-03-31'
@@ -256,30 +256,405 @@ tasks:
     effort_points: 8
     progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/rc-c1-http-error-envelope-normalization-plan-20260331.md
+      - docs/planning/proposals/superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md
       - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
-      - docs/evidence/ED-20260331-rc-c1-boundary-legacy-hardening.md
+      - docs/evidence/critical/ED-20260331-rc-c1-boundary-legacy-hardening.md
       - docs/risk-register/quality/R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml
     status_reason: >-
       The HTTP error boundary is normalized in apps/api and the remaining `rebuildSnapshot`/parser
       legacy is closed with typed errors, docs, and validation evidence.
     last_verified: '2026-03-31'
-  - task_id: RC-C2
+  - task_id: manifestRef production path
+    priority: P1
+    status: done
+    objective: >-
+      restore manifestRef as the real protected-runtime planner path by composing a concrete
+      artifact resolver at the API boundary and mapping predictable resolution failures to the
+      existing plan_rejected result.
+    dependency: none
+    target: >-
+      Protected runtime start-run accepts file-backed test/dev manifestRef and production s3://
+      manifestRef through a real resolver, with stable 422 rejection mapping for caller-fixable
+      artifact failures.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260331-s1-manifestref-production-path-closeout.md
+      - docs/evidence/critical/ED-20260331-manifestref-production-path.md
+      - docs/risk-register/quality/R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml
+      - apps/api/test/integration/plannerEngineContract.test.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      The protected runtime now composes a real manifest artifact resolver, planner/API tests cover
+      the file and s3 paths, and predictable resolver failures map to plan_rejected with stable
+      cause tokens.
+    last_verified: '2026-03-31'
+  - task_id: AR-C1
+    priority: P0
+    status: review
+    objective: >-
+      add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
+      admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
+      required regardless of feature flag state.
+    dependency: none
+    target: >-
+      Admin routes enforce an explicit admin-role RBAC check; any authenticated principal without
+      admin grant receives 403; test coverage includes negative path for non-admin principals.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - apps/api/src/entrypoints/http/authorizeAdminExecutionScope.ts
+      - apps/api/src/entrypoints/http/adminRoutes.ts
+      - apps/api/test/entrypoints/http/adminRoutes.test.ts
+      - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
+    status_reason: >-
+      Explicit admin RBAC is now enforced through a dedicated admin-scope guard on the maintenance
+      route path; non-admin authorization outcomes return 403 and route + contract tests cover the
+      negative path. Remaining hardening is tracked in `AR-C1-T1..T4`.
+    last_verified: '2026-04-04'
+  - task_id: AR-C1-T1
+    parent_task: AR-C1
+    priority: P0
+    status: done
+    objective: >-
+      reduce duplication in admin route unit coverage by extracting reusable test builders for app
+      setup and route injection while preserving the current authorization matrix assertions.
+    dependency: none
+    target: >-
+      `adminRoutes.test.ts` uses shared `buildAuthorizedApp`/`injectRebuildSnapshot` helpers and
+      keeps behavior-equivalent assertions for 401/403/400/404/500/success paths.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t1-admin-route-test-harness-closeout.md
+      - apps/api/test/entrypoints/http/adminRoutes.test.ts
+    status_reason: >-
+      The admin route unit suite now uses a reusable local request harness for setup, injection, and
+      teardown while preserving the existing authorization and error-path assertions.
+    last_verified: '2026-04-07'
+  - task_id: AR-C1-T2
+    parent_task: AR-C1
+    priority: P0
+    status: done
+    objective: >-
+      add negative contract coverage for AdminRebuildSnapshotAccess schema so governance detects
+      invalid requiredAction/pipeline drift, not only happy-path constants.
+    dependency: AR-C1-T1
+    target: >-
+      Contract tests validate both positive invariants and at least one negative mutation (invalid
+      admin action or pipeline order) against `AdminRebuildSnapshotAccess.v1.schema.json`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t2-admin-rebuild-snapshot-contract-schema-closeout.md
+      - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
+      - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.schema.json
+      - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
+    status_reason: >-
+      The canonical access contract now exists as a governed Markdown/schema pair and the API
+      contract suite validates both the positive contract object and negative mutations for invalid
+      admin action and pipeline-order drift.
+    last_verified: '2026-04-07'
+  - task_id: AR-C1-T3
+    parent_task: AR-C1
+    priority: P1
+    status: done
+    objective: >-
+      add protected-runtime composition tests proving admin routes stay disabled when OIDC runtime
+      prerequisites are missing even if `DVT_ADMIN_ROUTES_ENABLED=true`.
+    dependency: AR-C1-T2
+    target: >-
+      Integration matrix covers OIDC-off + flag-on behavior and confirms no admin route execution
+      path is reachable without protected-runtime auth composition.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md
+      - apps/api/test/app.test.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+      - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
+    status_reason: >-
+      Composition-level bootstrap tests now prove protected and admin routes remain unmounted when
+      `DVT_ADMIN_ROUTES_ENABLED=true` but OIDC prerequisites are absent or partial, closing the
+      remaining admin-route activation guardrail.
+    last_verified: '2026-04-07'
+  - task_id: AR-C1-T4
+    parent_task: AR-C1
+    priority: P1
+    status: queued
+    objective: >-
+      extract a shared API-test snapshot fixture helper so admin/runtime tests stop embedding local
+      WorkflowSnapshot builders.
+    dependency: AR-C1-T3
+    target: >-
+      API tests use one shared snapshot fixture helper and remove duplicated inline snapshot object
+      construction in admin route coverage.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - apps/api/test/entrypoints/http/adminRoutes.test.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      Snapshot fixture duplication is small but recurring and creates avoidable maintenance drift.
+    last_verified: '2026-04-03'
+  - task_id: CFG-TS-T1
+    parent_task: AR-C1
     priority: P2
     status: queued
     objective: >-
-      institutionalize Lane C AI efficiency preflight (hygiene script + prepush chain + CI-failure
-      log-first triage) and track measurable round reduction.
-    dependency: none
-    target: Apply the Lane C efficiency playbook in three consecutive PR cycles.
-    complexity: S
-    effort_points: 3
+      produce a staged migration plan for TypeScript `baseUrl` deprecation covering inventory,
+      compatibility risks, rollout waves, and rollback points before any config change lands.
+    dependency: AR-C1-T4
+    target: >-
+      A reviewed migration proposal exists with workspace-by-workspace impact analysis and explicit
+      validation baseline (`typecheck`, tests, `verify:prepush`) for each wave.
+    complexity: M
+    effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
+      - tsconfig.node-runtime.base.json
+      - tsconfig.package-bundler.base.json
+      - apps/web/tsconfig.json
+    status_reason: >-
+      `baseUrl` deprecation warnings are visible in editor/runtime configs; implementation should be
+      gated behind an explicit migration plan to avoid module-resolution regressions.
+    last_verified: '2026-04-03'
+  - task_id: AR-C2
+    priority: P0
+    status: in_progress
+    objective: >-
+      define and document formal SLA targets for event delivery latency, snapshot freshness, plan
+      compilation time, run start latency, and outbox drain rate with measurable thresholds and
+      monitoring signals.
+    dependency: none
+    target: >-
+      SLA document defines p50/p99 targets for each metric; monitoring dashboards and alerts are
+      configured against those targets; operational runbook references the SLA definitions.
+    complexity: S
+    effort_points: 3
+    progress_pct: 88
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+      - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/guides/api-control-plane-user-manual-20260404.md
+      - docs/guides/api-control-plane-technical-manual-20260404.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts
+      - apps/api/src/application/services/startRunAuthorizedFacade.ts
+      - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+      - apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
+      - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
+    status_reason: >-
+      Canonical SLA/manuals are delivered and all AR-C2 metrics are now emitted in code (API
+      start-run/plan-compile plus outbox drain/event-delivery in outbox-worker); remaining closure
+      is dashboard/alert wiring and sustained threshold validation evidence; decomposition now
+      tracked as `AR-C2-T1..T4` in the AR-C2 operational closure plan and reviewed in the AR-C2
+      Fowler hard QA artifact, with a single closeout checklist artifact for pending evidence
+      tracking.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T1
+    parent_task: AR-C2
+    priority: P0
+    status: done
+    objective: >-
+      freeze one canonical metric -> panel -> alert -> threshold mapping for AR-C2 signals to remove
+      naming drift before dashboard/alert closure.
+    dependency: none
+    target: >-
+      A governed mapping table exists and every canonical AR-C2 signal has a target panel and alert
+      owner with unambiguous metric identity.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
+    status_reason: >-
+      Canonical signal-to-threshold mapping is now frozen in a single governed source, including
+      panel keys and alert policy posture for all AR-C2 signals.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T2
+    parent_task: AR-C2
+    priority: P0
+    status: in_progress
+    objective: >-
+      complete dashboard wiring evidence for all mapped AR-C2 signals.
+    dependency: AR-C2-T1
+    target: >-
+      Each mapped AR-C2 signal is represented by a dashboard panel with evidence reference and owner
+      attribution.
+    complexity: S
+    effort_points: 2
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+    status_reason: >-
+      Signal-to-panel mapping is frozen, and governed evidence capture baseline now exists; final
+      dashboard wiring proof is still pending because monitor configuration evidence has not yet
+      been attached, but the dashboard evidence matrix is now preloaded for row-by-row execution.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T3
+    parent_task: AR-C2
+    priority: P0
+    status: in_progress
+    objective: >-
+      complete alert wiring evidence for AR-C2 SLA thresholds and routing posture.
+    dependency: AR-C2-T1
+    target: >-
+      Every mapped AR-C2 threshold has an active alert rule with documented severity and routing.
+    complexity: S
+    effort_points: 2
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+    status_reason: >-
+      Alert routing expectations are defined and evidence-capture requirements are now explicit;
+      final rule-level wiring proof remains pending, but the alert evidence matrix is now preloaded
+      for row-by-row execution.
+    last_verified: '2026-04-04'
+  - task_id: AR-C2-T4
+    parent_task: AR-C2
+    priority: P0
+    status: queued
+    objective: >-
+      capture sustained threshold-validation evidence and update AR-C2 lane posture for closure.
+    dependency: AR-C2-T2, AR-C2-T3
+    target: >-
+      Governed evidence artifact records sustained validation outcomes and lane status can move to
+      done when closure criteria are met.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+      - docs/planning/state/agent-lane-c.yaml
+      - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+    status_reason: >-
+      AR-C2 requires sustained operational proof, not one-shot checks; this subtask owns final
+      validation evidence and closure posture.
+    last_verified: '2026-04-04'
+  - task_id: AR-C3
+    priority: P1
+    status: queued
+    objective: >-
+      add end-to-end backpressure from Temporal task queue saturation back to StartRunAdmissionGuard
+      so the system stops accepting runs it cannot execute when Temporal workers are saturated.
+    dependency: Temporal -> API backpressure
+    target: >-
+      Adapter exposes a capacity signal (queue depth or worker utilization); admission guard
+      incorporates adapter capacity into acceptance decision; runs are rejected with explicit
+      backpressure error when adapter is saturated.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Current backpressure only covers outbox lag and tenant pending events — adapter saturation is
+      invisible to admission control.
+    last_verified: '2026-04-02'
+  - task_id: AR-C4
+    priority: P1
+    status: queued
+    objective: >-
+      add circuit breaker between Temporal activities and IRunStateStore to prevent state store
+      unavailability from blocking all step execution with no fallback or degradation signal.
+    dependency: none
+    target: >-
+      Activities use a circuit-breaker-wrapped state store client; when state store is unavailable,
+      activities fail fast with a retryable error instead of hanging; circuit state is observable
+      via metrics.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Temporal activities write directly to IRunStateStore with no protection — state store latency
+      or unavailability cascades into workflow timeouts.
+    last_verified: '2026-04-02'
+  - task_id: AR-C5
+    priority: P1
+    status: queued
+    objective: >-
+      implement adapter-call circuit breaking for Temporal-facing engine operations so adapter
+      outages fail fast instead of exhausting timeout-only protection.
+    dependency: WE-HX-5
+    target: >-
+      Adapter wrapper enforces closed/open/half-open states for start/cancel/signal and enrichment
+      calls, emits breaker state metrics, and exposes breaker posture through health-check output.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+    status_reason: >-
+      The principal deep review identified timeout-only adapter failure handling as a cascade risk
+      when Temporal is degraded.
+    last_verified: '2026-04-04'
+  - task_id: MW-C1
+    priority: P0
+    status: queued
+    objective: >-
+      abstract step execution in Temporal adapter by separating DbtStepActivity from a
+      StepActivityDispatcher that routes by StepKind to the correct activity implementation,
+      enabling non-dbt step types (PYTHON_SCRIPT, SPARK_JOB, API_CALL).
+    dependency: MW-A1
+    target: >-
+      RunPlanWorkflow dispatches steps via StepActivityDispatcher.execute(step); dispatcher routes
+      to DbtStepActivity for DBT_MODEL/DBT_TEST and throws UnsupportedStepKindError for unregistered
+      kinds; adding a new kind requires registering an activity, not modifying workflow code.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+    status_reason: >-
+      Current Temporal activities assume every step is a dbt operation — this is the execution-layer
+      blocker for multi-workflow support.
+    last_verified: '2026-04-02'
+  - task_id: RC-C2
+    priority: P2
+    status: review
+    objective: >-
+      institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
+      efficiency measurement for Lane C before scaling the workflow repo-wide.
+    dependency: none
+    target: >-
+      Shared operator guide + `hygiene.ps1` preflight/triage modes + canonical YAML adoption log are
+      live, and final closure is gated on three consecutive Lane C PR cycles meeting the documented
+      20% round-reduction rule.
+    complexity: S
+    effort_points: 3
+    progress_pct: 67
+    evidence_refs:
+      - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
+      - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
+      - docs/guides/pr-preflight-and-ci-triage.md
+      - docs/planning/proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
+      - docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md
+      - docs/planning/status/ai-efficiency-adoption-log.yaml
+      - docs/planning/status/ai-efficiency-adoption-status.md
     status_reason:
-      The efficiency playbook exists, but the three-cycle institutionalization task has not started.
-    last_verified: '2026-03-31'
+      Shared tooling, guide, structured measurement, and a canonical friction review are shipped;
+      final closure still depends on three qualifying Lane C PR cycles logged against the new
+      workflow.
+    last_verified: '2026-04-01'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -318,6 +693,204 @@ tasks:
       Tenant access is asserted before plan-ref validation in code and the ordering is exercised by
       tests.
     last_verified: '2026-03-31'
+  - task_id: TF-C1
+    priority: P0
+    status: in_progress
+    objective: >-
+      implement the SQL-first `POST /plans/preview` boundary so design-graph input is validated,
+      canonical plan bytes are persisted with Git provenance, and callers receive the real `PlanRef`
+      required by runtime start.
+    dependency: TF-A1, TF-B1
+    target: >-
+      Protected runtime exposes preview as validate-plus-persist, rejects invalid graph and SQL
+      inputs with typed errors, persists immutable plan bytes plus provenance, and returns the real
+      `PlanRef` used by `POST /runs/start`.
+    complexity: M
+    effort_points: 5
+    progress_pct: 80
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/src/entrypoints/http/previewProfilePolicy.ts
+      - apps/api/src/entrypoints/http/previewProvenanceParser.ts
+    status_reason: >-
+      The protected preview boundary now validates explicit `previewProfile` intent, enforces
+      request-boundary graph and provenance rules, persists canonical plan bytes, and returns the
+      real runtime-safe `PlanRef`. Remaining closure is to finish Lane A or B contract adoption for
+      the transformation profile so the generic preview caller and SQL-first persisted path stop
+      diverging operationally.
+    last_verified: '2026-04-08'
+  - task_id: TF-C1-A
+    priority: P0
+    status: review
+    objective: >-
+      implement the protected preview route, typed validation failures, and authorization behavior
+      for SQL-first design-graph requests.
+    dependency: TF-A1-A, TF-B1-A
+    target: >-
+      `POST /plans/preview` exists behind the protected API boundary, enforces the draft contract,
+      and returns typed `400`, `401`, `403`, `422`, and `500` outcomes instead of ambiguous route
+      behavior.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/src/entrypoints/http/previewProfilePolicy.ts
+    status_reason: >-
+      The protected route, auth flow, and typed error envelope are now exercised against explicit
+      `previewProfile` parsing and request-boundary validation. Remaining follow-up belongs to the
+      parent TF-C1 convergence chain, not to the route behavior itself.
+    last_verified: '2026-04-08'
+  - task_id: TF-C1-B
+    priority: P0
+    status: review
+    objective: >-
+      persist canonical plan bytes plus provenance and issue the real `PlanRef` consumed by runtime
+      start.
+    dependency: TF-C1-A, TF-A1-B
+    target: >-
+      Successful preview writes the immutable plan record, stores Git provenance, and returns the
+      runtime-safe `PlanRef` later accepted by `POST /runs/start`.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - apps/api/src/entrypoints/http/planRoutes.ts
+      - apps/api/src/entrypoints/http/previewProvenanceParser.ts
+    status_reason: >-
+      Successful preview now persists the canonical plan and returns the real `PlanRef` through the
+      explicit preview-profile contract instead of step-kind heuristics. Remaining work is
+      downstream caller adoption of the transformation profile and provenance path, not persistence
+      correctness on the API boundary.
+    last_verified: '2026-04-08'
+  - task_id: TF-C2
+    priority: P0
+    status: queued
+    objective: >-
+      deliver the first execution-first vertical for SQL transformations against PostgreSQL,
+      including the local Docker PostgreSQL proof environment and caller-visible materialization
+      evidence.
+    dependency: TF-C1
+    target: >-
+      A persisted `PlanRef` can drive one PostgreSQL-backed SQL transformation end to end, local
+      acceptance uses Docker PostgreSQL, and runtime read surfaces expose sink evidence and failure
+      diagnostics.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      PostgreSQL is now the first locked execution target for the product roadmap, but no governed
+      runtime slice yet executes the persisted plan against PostgreSQL and returns materialization
+      evidence.
+    last_verified: '2026-04-05'
+  - task_id: TF-C2-A
+    priority: P0
+    status: queued
+    objective: >-
+      add the PostgreSQL executor path and the first repeatable Docker PostgreSQL proof baseline for
+      SQL-first persisted plans.
+    dependency: TF-C1-B
+    target: >-
+      Runtime can resolve a persisted plan into ordered PostgreSQL execution steps, and a documented
+      Docker PostgreSQL environment exists for local proof of success and failure paths.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      PostgreSQL is the locked v1 target, but the executor seam and its proof environment still need
+      a dedicated Lane C delivery slice.
+    last_verified: '2026-04-05'
+  - task_id: TF-C2-B
+    priority: P0
+    status: in_progress
+    objective: >-
+      expose caller-visible materialization evidence and step-attributed failure diagnostics on the
+      runtime read surfaces.
+    dependency: TF-C2-A, TF-B1-B
+    target: >-
+      `GET /runs/:runId` and `GET /runs/:runId/events` return executor identity, rows written, sink
+      target, failure step attribution, and timestamps needed for operator inspection.
+    complexity: S
+    effort_points: 3
+    progress_pct: 80
+    evidence_refs:
+      - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
+      - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
+      - docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
+      - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
+    status_reason: >-
+      Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
+      development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
+      not maintain a second snapshot-schema line. Two follow-up items remain explicitly accepted as
+      debt and logged in the quality risk register: canonical contract/architecture doc drift and
+      failed-run materialization semantics. Real executor payload emission from TF-C2-A or TF-B1-B
+      remains the downstream dependency for full TF-C2-B closure.
+    last_verified: '2026-04-09'
+  - task_id: TF-C3
+    priority: P1
+    status: queued
+    objective: >-
+      add phase-2 dbt engine integration behind the same preview-persist-run contract so dbt becomes
+      an execution mode instead of a second product path.
+    dependency: TF-C2
+    target: >-
+      dbt-backed execution reuses the same `POST /plans/preview` and `POST /runs/start` boundary,
+      executor identity is caller-visible, and the roadmap does not fork into a separate outer
+      product loop.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      Phase 2 is now explicitly sequenced after the PostgreSQL execution-first closure and must be
+      tracked as the next runtime mode, not as an ambiguous future idea.
+    last_verified: '2026-04-05'
+  - task_id: TF-C3-A
+    priority: P1
+    status: queued
+    objective: >-
+      add the dbt executor mode under the same preview-persist-run contract without creating a
+      second product loop.
+    dependency: TF-C2-B
+    target: >-
+      Runtime can dispatch eligible persisted plans to a dbt-backed executor while preserving the
+      same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+    status_reason: >-
+      Phase 2 is now product-scoped, but the dbt execution mode still needs its own explicit Lane C
+      slice instead of remaining a generic future note.
+    last_verified: '2026-04-05'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
@@ -332,14 +905,43 @@ dependency_notes:
     `RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed
     `rebuildSnapshot` not-found maintenance boundary.
   - '`RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.'
+  - >-
+    `RC-C2` moved to in-progress with cycle-1 preflight evidence captured; completion still requires
+    two additional consecutive PR cycles under the same protocol.
+  - >-
+    `AR-C1` and `AR-C2` are P0 tasks from the 2026-04-02 deep review: admin route RBAC and formal
+    SLA definitions.
+  - >-
+    `AR-C2` moved to in-progress with canonical SLA/manual artifacts delivered; closure still
+    requires dashboard and alert wiring evidence.
+  - >-
+    `AR-C1` is decomposed into `AR-C1-T1..T4` plus `CFG-TS-T1` to isolate test hardening, contract
+    negative coverage, runtime composition checks, fixture reuse, and `baseUrl` deprecation planning
+    without circular dependencies.
+  - >-
+    `AR-C1` moved to review with explicit admin-scope RBAC wired in code and negative-path
+    route/contract coverage; remaining subtasks track post-hardening cleanup and composition tests.
+  - >-
+    `AR-C3` and `AR-C4` are P1 tasks: end-to-end adapter backpressure and activity-to-state-store
+    circuit breaker.
+  - >-
+    The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
+    breaking and health surfacing at the engine-adapter boundary.
+  - >-
+    `MW-C1` is the P0 multi-workflow execution-layer blocker: abstract step execution in Temporal to
+    support non-dbt step kinds via StepActivityDispatcher.
+  - >-
+    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
+    subtasks so runtime closure can progress in smaller slices without losing the same outer
+    contract.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-03-31'
-  total_tasks: 15
-  total_effort_points: 54
-  completed_weighted_points: 39
-  lane_progress_pct: 72
+  verified_on: '2026-04-05'
+  total_tasks: 35
+  total_effort_points: 132
+  completed_weighted_points: 50.3
+  lane_progress_pct: 38
   notes: >-
-    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
+    parent umbrella tasks with subtasks carry coordination-only effort.

@@ -11,8 +11,11 @@
  * Requires a live PostgreSQL instance. Skips cleanly when DVT_PG_URL or
  * DATABASE_URL is absent.
  */
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import process from 'node:process';
+import { URL } from 'node:url';
 
 import { exportJWK, generateKeyPair, SignJWT, type JWK } from 'jose';
 import { Client } from 'pg';
@@ -30,13 +33,10 @@ const ENVIRONMENT_ID = 'env-api-it';
 const PRINCIPAL_ID = 'principal-api-it';
 const ISSUER = 'https://issuer.integration.example/';
 const AUDIENCE = 'dvt-api';
-const VALID_PLAN_REF = {
-  uri: 'https://plans.example.com/integration-plan.json',
-  sha256: 'integration-sha-256',
-  schemaVersion: 'v1.2',
-  planId: 'integration-plan',
-  planVersion: '1.0',
-};
+const PLANNER_MANIFEST_FIXTURE_URL = new URL(
+  '../fixtures/planner/basic-manifest.json',
+  import.meta.url
+);
 const TENANT_ACTIONS_FULL = [
   'run:start',
   'run:list',
@@ -44,6 +44,11 @@ const TENANT_ACTIONS_FULL = [
   'run:logs:view',
   'run:signal',
   'run:cancel',
+  'run:retry',
+] as const;
+const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [
+  ...TENANT_ACTIONS_FULL,
+  'admin:rebuild-snapshot',
 ] as const;
 
 type JwksServerHandle = {
@@ -90,6 +95,7 @@ describeIfPg('protected runtime integration', () => {
       'OIDC_ISSUER',
       'OIDC_AUDIENCE',
       'OIDC_ALGORITHMS',
+      'DVT_ADMIN_ROUTES_ENABLED',
     ]);
 
     process.env.NODE_ENV = 'test';
@@ -100,6 +106,7 @@ describeIfPg('protected runtime integration', () => {
     process.env.OIDC_ISSUER = ISSUER;
     process.env.OIDC_AUDIENCE = AUDIENCE;
     process.env.OIDC_ALGORITHMS = 'RS256';
+    process.env.DVT_ADMIN_ROUTES_ENABLED = 'true';
 
     const built = await buildApp();
     app = built.app;
@@ -158,8 +165,13 @@ describeIfPg('protected runtime integration', () => {
         tenantId: TENANT_ID,
         projectId: PROJECT_ID,
         environmentId: ENVIRONMENT_ID,
-        selection: ['model.orders'],
-        planRef: VALID_PLAN_REF,
+        selection: ['model.orders.persisted'],
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.orders.persisted', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
         runId,
         targetAdapter: 'mock',
       },
@@ -180,8 +192,8 @@ describeIfPg('protected runtime integration', () => {
           projectId: PROJECT_ID,
           environmentId: ENVIRONMENT_ID,
           runId,
-          planId: VALID_PLAN_REF.planId,
-          planVersion: VALID_PLAN_REF.planVersion,
+          planId: expect.any(String),
+          planVersion: expect.any(String),
           provider: 'mock',
           status: 'PENDING',
         },
@@ -224,7 +236,11 @@ describeIfPg('protected runtime integration', () => {
       headers: { authorization: `Bearer ${token}` },
     });
     expect(eventsResponse.statusCode).toBe(200);
-    expect(eventTypes(eventsResponse.json())).toEqual(['RunQueued', 'RunCancelRequested']);
+    expect(eventTypes(eventsResponse.json())).toEqual([
+      'RunQueued',
+      'RunCancelRequested',
+      'RunCancelled',
+    ]);
   });
 
   it('persists and validates a planner-backed run before execution starts', async () => {
@@ -248,8 +264,10 @@ describeIfPg('protected runtime integration', () => {
         environmentId: ENVIRONMENT_ID,
         selection: ['model.orders'],
         graphSource: {
-          kind: 'normalized-graph-v1',
-          nodes: [{ nodeId: 'model.orders', resourceType: 'model', dependsOn: [] }],
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
         runId,
         targetAdapter: 'mock',
@@ -289,6 +307,89 @@ describeIfPg('protected runtime integration', () => {
         }),
       ]),
     });
+  });
+
+  it('accepts planner-backed startRun requests using manifestRef', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+    const manifestRef = makeManifestRef(PLANNER_MANIFEST_FIXTURE_URL);
+    const runId = 'api-integration-run-manifestref-1';
+
+    const startResponse = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.analytics.order_items'],
+        manifestRef,
+        runId,
+        targetAdapter: 'mock',
+      },
+    });
+    expect(startResponse.statusCode).toBe(202);
+    expect(startResponse.json()).toEqual({ runId, accepted: true });
+
+    const storedPlan = await adminClient!.query<{
+      plan_id: string;
+      plan_uri: string;
+      validation_state: string;
+    }>(
+      `SELECT plan_id, plan_uri, validation_state
+         FROM ${quoteIdentifier(SCHEMA)}.stored_plans
+         ORDER BY stored_at DESC
+         LIMIT 1`
+    );
+    expect(storedPlan.rows[0]).toMatchObject({
+      validation_state: 'VALID',
+    });
+    expect(storedPlan.rows[0]?.plan_uri).toMatch(/^dvt-plan:\/\/postgres\//);
+  });
+
+  it('returns 422 plan_rejected when manifestRef sha256 does not match content', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.analytics.order_items'],
+        manifestRef: {
+          uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+          sha256: '0'.repeat(64),
+        },
+        runId: 'api-integration-run-manifestref-bad-sha',
+        targetAdapter: 'mock',
+      },
+    });
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json()).toEqual(
+      httpError('unprocessable', 'plan_rejected', {
+        details: {
+          message: 'Manifest artifact integrity mismatch.',
+          cause: 'manifest_ref_integrity_mismatch',
+        },
+      })
+    );
   });
 
   it('rejects a token whose asserted tenant conflicts with the requested tenant scope', async () => {
@@ -436,6 +537,212 @@ describeIfPg('protected runtime integration', () => {
 
       expect(response.statusCode).toBe(403);
       expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
+  });
+
+  it('rejects /runs/:runId/recover when principal lacks run:retry permission', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: [
+        'run:start',
+        'run:list',
+        'run:view',
+        'run:logs:view',
+        'run:signal',
+        'run:cancel',
+      ],
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+
+      const response = await app!.inject({
+        method: 'POST',
+        url: '/runs/non-authorized-recover/recover',
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          tenantId: TENANT_ID,
+          recoveryRunId: 'recover-target-1',
+          planRef: {
+            uri: 'https://plans.example/recover-plan.json',
+            sha256: 'a'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'recover-plan',
+            planVersion: '1.0.0',
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
+  });
+
+  it('rebuilds snapshot through admin route with valid token and explicit admin action grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_WITH_ADMIN_REBUILD,
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+      const runId = 'api-integration-admin-rebuild-success-1';
+
+      const startResponse = await app!.inject({
+        method: 'POST',
+        url: '/runs/start',
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          tenantId: TENANT_ID,
+          projectId: PROJECT_ID,
+          environmentId: ENVIRONMENT_ID,
+          selection: ['model.orders.admin'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model.orders.admin', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+          runId,
+          targetAdapter: 'mock',
+        },
+      });
+      expect(startResponse.statusCode).toBe(202);
+
+      const rebuildResponse = await app!.inject({
+        method: 'POST',
+        url: `/admin/runs/${runId}/rebuild-snapshot`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: { tenantId: TENANT_ID },
+      });
+
+      expect(rebuildResponse.statusCode).toBe(200);
+      expect(rebuildResponse.json()).toMatchObject({
+        runId,
+        status: 'PENDING',
+      });
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
+  });
+
+  it('returns forbidden on admin rebuild route when principal lacks explicit admin action grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_FULL,
+    });
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/admin/runs/api-integration-admin-forbidden/rebuild-snapshot',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { tenantId: TENANT_ID },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual(httpError('forbidden', 'action_not_granted'));
+  });
+
+  it('returns not_found on admin rebuild route for unknown run with valid admin grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: TENANT_ACTIONS_WITH_ADMIN_REBUILD,
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+
+      const response = await app!.inject({
+        method: 'POST',
+        url: '/admin/runs/api-integration-admin-missing-run/rebuild-snapshot',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { tenantId: TENANT_ID },
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        httpError('not_found', 'run_not_found', {
+          details: { runId: 'api-integration-admin-missing-run' },
+        })
+      );
     } finally {
       await upsertPrincipalGrant(adminClient!, {
         schema: SCHEMA,
@@ -600,4 +907,12 @@ async function closeServer(server: Server): Promise<void> {
       resolve();
     });
   });
+}
+
+function makeManifestRef(url: URL): { uri: string; sha256: string } {
+  const bytes = readFileSync(url);
+  return {
+    uri: url.href,
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+  };
 }

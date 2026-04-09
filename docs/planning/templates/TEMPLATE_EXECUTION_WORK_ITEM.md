@@ -8,8 +8,8 @@ planning_type: template
 
 # Execution Work Item Template
 
-Use this template when adding a new row to
-`docs/planning/state/execution-workboard.md`.
+Use this template when adding or updating a task entry in the relevant
+`docs/planning/state/agent-lane-*.yaml` file.
 
 ## Required Fields
 
@@ -37,5 +37,5 @@ next_slice: <smallest next shippable slice>
 
 ## Mapping Rule
 
-If the work originates in a review, include the review source in the
-`Review Intake To Workboard` section of the execution workboard.
+If the work originates in a review, include the review source in the relevant
+lane YAML task entry and regenerate the local planning-derived views.

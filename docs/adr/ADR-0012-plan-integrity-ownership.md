@@ -1,196 +1,145 @@
-# ADR-0012 — Plan Integrity Ownership
+# ADR-0012 - Plan Integrity Ownership
 
 Status: Accepted
-Date: 2026-02-20 (updated: 2026-02-21)
+Date: 2026-02-20 (updated: 2026-04-07)
 
 ---
 
 ## 1. Context
 
-The engine currently performs `planIntegrity.fetchAndValidate(...)` before invoking adapters, while adapters may also validate.  
-This causes double fetch, unclear ownership, and topology inconsistency.
-
-In a run-driven execution model, validation must occur in the same runtime context where execution happens (e.g., Temporal worker).
-
----
+The repository needs one authoritative proof that the plan dispatched for
+execution matches planner identity. The previous split between engine metadata
+admission and adapter/runtime plan fetch created no single auditable ownership
+point and left integrity drift distributed across layers.
 
 ## 2. Problem
 
 We must define:
 
-- Where plan bytes are fetched
-- Where integrity (SHA-256) is enforced
-- Where schema + semantic validation occur
-- How to avoid responsibility drift
+- where executable plan materialization occurs before dispatch;
+- where planner identity (`planId`) is recomputed and verified;
+- where executable-plan metadata alignment is enforced;
+- how the adapter receives the exact verified plan that the engine approved.
 
-The solution must preserve architectural boundaries and deterministic execution.
-
----
+The solution must preserve deterministic planner identity and fail closed
+before adapter dispatch.
 
 ## 3. Alternatives Considered
 
-### A. Engine owns fetch + validation
+### A. Adapter owns plan fetch + integrity
 
 Rejected because:
 
-- Violates Ports & Adapters separation (engine performs infrastructure IO)
-- Increases trusted surface of core domain
-- Breaks execution-context validation principle
+- the engine dispatches without holding the proof that the plan identity is
+  valid;
+- verification becomes decentralized and adapter-specific;
+- the start-run boundary cannot audit which plan was approved before dispatch.
 
-Reference:
-
-- Hexagonal Architecture (Cockburn)
-  https://alistair.cockburn.us/hexagonal-architecture/
-
----
-
-### B. Both engine and adapter validate
+### B. Engine and adapter both verify
 
 Rejected because:
 
-- Double network fetch
-- Drift risk between layers
-- Higher latency
-- No clear ownership
+- duplicate fetch and verification create cost without solving ownership drift;
+- two authoritative paths invite divergence in logic and observability;
+- review and audit still have no single source of truth.
 
-Reference:
+### C. Engine verifies but still dispatches only `PlanRef`
 
-- Single Responsibility Principle
-  https://martinfowler.com/bliki/SingleResponsibilityPrinciple.html
+Rejected because:
 
----
+- the adapter/runtime would still have to fetch the executable plan later;
+- execution could still depend on a later materialization step rather than the
+  exact plan object the engine approved;
+- centralized ownership would remain incomplete.
 
-### C. Embed plan bytes in workflow input
-
-Not chosen as baseline because:
-
-- Payload size limits (Temporal)
-- Logging/security risks
-- Still unclear integrity ownership
-
-Reference:
-
-- Temporal Workflow Execution & Payload Best Practices
-  https://docs.temporal.io/
-
----
-
-### D. Adapter owns byte-level integrity (Chosen)
+### D. Engine verifies and dispatches the resolved plan (Chosen)
 
 Accepted because:
 
-- Validation occurs where execution occurs
-- Engine remains metadata-only
-- Eliminates duplicate validation paths
-- Aligns with distributed system execution boundaries
-
-Reference:
-
-- Temporal execution model
-  https://docs.temporal.io/workflows
-- Clean Architecture boundary enforcement
-  https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-
----
+- one engine-side verification point exists before any adapter call;
+- planner identity can be recomputed from the resolved plan core and matched to
+  `planId`;
+- adapters execute the same verified plan object that the engine approved;
+- runtime behavior becomes auditable from a single start-run boundary.
 
 ## 4. Decision
 
-### Engine Responsibilities (Metadata Only)
+### Engine Responsibilities (Authoritative Integrity Gate)
 
 MUST:
 
-- Validate URI scheme/host allowlist
-- Validate schema version compatibility (string-level only)
-- Validate required PlanRef fields
+- validate `PlanRef` policy and required metadata;
+- fetch the executable plan before adapter dispatch;
+- parse the executable plan and validate metadata alignment with `PlanRef`;
+- recompute planner identity from the resolved plan core and verify it matches
+  `planId`;
+- reject `startRun()` before adapter dispatch when any integrity or compatibility
+  check fails;
+- dispatch the verified `ExecutionPlan` to the adapter.
 
 MUST NOT:
 
-- Fetch plan bytes
-- Parse plan bytes
-- Compute SHA-256 over plan content
+- delegate the authoritative integrity proof to the adapter;
+- dispatch a run before the verified plan has been materialized;
+- treat adapter/runtime re-fetch as the source of truth for plan identity.
 
-If metadata validation fails → reject startRun().
-
----
-
-### Adapter Responsibilities (Full Integrity)
+### Adapter Responsibilities (Execution Only)
 
 Adapters MUST:
 
-1. Fetch bytes from PlanRef.uri
-2. Verify sha256(bytes) == PlanRef.sha256
-3. Parse plan
-4. Verify identity (planId/version/tenant match)
-5. Validate schema
-6. Validate semantic invariants
-7. Apply provider-specific constraints
+1. receive the verified `ExecutionPlan` plus `PlanRef`;
+2. execute the verified plan under the provider runtime;
+3. apply provider-specific execution semantics and constraints;
+4. emit runtime events and lifecycle transitions.
 
-Failure → RunFailed with canonical PlanErrorCode.
+Adapters MUST NOT:
 
-Integrity is computed over raw downloaded bytes (not re-serialized JSON).
-
-Reference:
-
-- Supply chain integrity principles (SLSA)
-  https://slsa.dev/
-- OWASP Logging Guidelines (sanitized audit logging)
-  https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
-
----
+- own the authoritative fetch-and-verify responsibility for plan identity;
+- create a second competing integrity authority after engine dispatch.
 
 ## 5. Architectural Rationale
 
 This decision enforces:
 
-- Execution-context validation
-- Clear trust boundary definition
-- Deterministic replay compatibility
-- Reduced engine IO coupling
-
-Reference:
-
-- Deterministic workflow execution principles (Temporal)
-  https://docs.temporal.io/workflows
-- Ports and Adapters pattern
-  https://alistair.cockburn.us/hexagonal-architecture/
-
----
+- one start-run admission proof before dispatch;
+- clear integrity ownership at the engine lifecycle boundary;
+- deterministic planner identity verification independent of adapter behavior;
+- auditability of the exact verified plan that enters execution.
 
 ## 6. Shared Verifier Requirement
 
-To prevent drift across adapters, introduce:
+To prevent drift across call sites, use shared verifier logic in
+`@dvt/plan-verifier` or equivalent centralized helpers for:
 
-`@dvt/plan-verifier`
+- planner-identity recomputation from plan core;
+- schema and step-type validation helpers;
+- canonical error emission for integrity and compatibility failures.
 
-Responsibilities:
-
-- Hash validation
-- Schema validation
-- Identity validation
-- Canonical error emission
-
-All adapters MUST use it.
-
----
+The engine verification path is authoritative. Adapters may use verifier
+helpers for local defensive checks, but those checks are not the source of
+truth for plan identity approval.
 
 ## 7. Consequences
 
 Positive:
 
-- Cleaner engine boundary
-- Reduced hot-path IO
-- Clear integrity ownership
+- single auditable proof before dispatch;
+- elimination of decentralized verification ownership;
+- adapters receive the exact verified plan object to execute.
 
 Negative:
 
-- Adapter rigor increases
-- Migration effort required
-
----
+- engine/application wiring now includes plan materialization;
+- Temporal workflow input may grow because it now receives the verified plan;
+- migration effort is required across engine, API composition, and adapter
+  runtime tests/docs.
 
 ## 8. Acceptance Criteria
 
-- Engine performs no plan byte fetch
-- Adapters use shared verifier
-- Canonical error codes enforced
-- Contract tests validate behavior
+- Engine fetches and verifies the executable plan before adapter dispatch.
+- `planId` is recomputed from the resolved plan core and must match planner
+  identity.
+- Adapters no longer own the authoritative fetch-and-verify responsibility.
+- Temporal execution starts from the engine-verified plan, not a runtime
+  fetch-only integrity boundary.
+- Contract and runtime tests validate the centralized behavior.

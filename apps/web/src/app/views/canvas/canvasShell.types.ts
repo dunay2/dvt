@@ -2,6 +2,7 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { CanonicalNode } from '../../types/canonical';
+import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -18,6 +19,7 @@ export type CanvasShellProps = {
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;
+  canvasAuthoringMode: 'transformation' | 'dbt';
   nodesWithImpact: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
@@ -42,8 +44,11 @@ export type CanvasShellProps = {
   onToggleColumns: () => void;
   onPlan: () => void;
   onRun: () => void;
+  canStartRun: boolean;
+  planStatusSummary: string;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
+  transformationValidation: TransformationGraphValidationResult;
 };

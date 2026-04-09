@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto';
 
-import type { IPlanFetcher as IStoredPlanFetcher, PlanRef } from '@dvt/contracts';
-import type { ExecutionPlan } from '@dvt/engine';
+import {
+  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+  CURRENT_EXECUTION_PLAN_VERSION,
+  type PlanRef,
+  type IStepTypeRegistry,
+} from '@dvt/contracts';
+import type { ExecutionPlan, IPlanFetcher as IStoredPlanFetcher } from '@dvt/engine';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
 
@@ -9,14 +15,19 @@ export class StoredExecutablePlanResolver {
   public constructor(
     private readonly deps: {
       readonly fetcher: IStoredPlanFetcher;
+      readonly stepTypeRegistry?: IStepTypeRegistry;
     }
   ) {}
 
   public async fetch(planRef: PlanRef): Promise<ExecutionPlan> {
     if (planRef.uri.startsWith('dvt-plan://')) {
       const bytes = await this.deps.fetcher.fetch(planRef);
-      validateStoredPlanIntegrity(bytes, planRef);
-      const plan = parseStoredExecutablePlan(bytes);
+      validateStoredPlanIntegrity(bytes.bytes, planRef);
+      const plan = parseStoredExecutablePlan(bytes.bytes, {
+        ...(this.deps.stepTypeRegistry === undefined
+          ? {}
+          : { stepTypeRegistry: this.deps.stepTypeRegistry }),
+      });
       validateStoredPlanMetadata(plan, planRef);
       return plan;
     }
@@ -24,12 +35,11 @@ export class StoredExecutablePlanResolver {
     return {
       metadata: {
         planId: planRef.planId,
-        planVersion: planRef.planVersion,
-        schemaVersion: planRef.schemaVersion,
-        contractVersion: '1.0.0',
-        ...(planRef.requiresCapabilities === undefined
-          ? {}
-          : { requiresCapabilities: planRef.requiresCapabilities }),
+        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
+        inputHashSha256: planRef.sha256,
+        createdAtIso: new Date().toISOString(),
       },
       steps: [],
     };

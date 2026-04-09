@@ -12,9 +12,9 @@ Operational tracker for AI-assisted execution of the remaining `G5` work.
 
 ## Authority Rule
 
-- Canonical spec: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- Active status doc: [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-- Last completed slice contract: [G5 / US-G5.3 Correctness Hardening Plan](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
+- Canonical spec: [G5 - Outbox Worker Consolidated Plan](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- Active status doc: [DVT+ - Gap Execution Plans](./GAP_EXECUTION_PLANS.md)
+- Last completed slice contract: [G5 / US-G5.3 Correctness Hardening Plan](./G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
 
 This file is not a second source of truth.
 
@@ -56,11 +56,11 @@ Update this section before any substantial implementation turn.
 ## Execution Protocol For AI
 
 1. Before code changes, update [Current Pointer](#current-pointer).
-2. If scope or acceptance changes, update [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md) first, then update this tracker.
+2. If scope or acceptance changes, update [G5 - Outbox Worker Consolidated Plan](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md) first, then update this tracker.
 3. Keep the current stage tied to one GitHub issue at a time.
 4. Record the touched-files plan before implementation for the active stage.
 5. After each validation batch, append an execution-log entry with exact commands and pass/fail state.
-6. When a stage closes, sync this tracker, [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md), and any affected runbook/deployment docs in the same change.
+6. When a stage closes, sync this tracker, [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md), and any affected runbook/deployment docs in the same change.
 
 ## Stage Detail
 
@@ -265,7 +265,7 @@ Working checklist:
 
 Selected planning refs:
 
-- [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 Primary validation lane:
@@ -463,5 +463,5 @@ flowchart LR
   summary: added `scripts/outbox-worker-canary-evidence.ps1` — automated evidence-collection script that requires exactly one of `-PsqlDsn` / `-TriggerCommand`, awaits `/readyz` with `ready=true`, baselines and diffs `/metrics` for delivered/error counters, executes the trigger, waits for delivery increment, writes `docs/evidence/ED-<date>-g5-canary-<env>.md`, optionally captures `kubectl` deployment snapshot, and flags the dual-active proof step as requiring a human note; documented in `docs/runbooks/outbox-worker-g5.md` and `scripts/README.md`
   validation: script authored and usage documented; external canary execution against a real environment remains pending
 - `2026-03-12` `G5.4 / #413` `done`
-  summary: local-docker canary executed against the repo `postgres:16` compose service; the compiled worker started with `DVT_OUTBOX_OWNERSHIP_MODE=active` and `DVT_OUTBOX_EVENT_BUS_MODE=log`, `/readyz` returned `owner=true`, `dvt_outbox_delivered_records_total` went `0→1`, `dvt_outbox_runtime_errors_total` stayed at `0`, and the latest outbox row showed `delivered_at` populated with `attempts=0`; evidence written to `docs/evidence/ED-20260312-g5-canary-local-docker.md`
+  summary: local-docker canary executed against the repo `postgres:16` compose service; the compiled worker started with `DVT_OUTBOX_OWNERSHIP_MODE=active` and `DVT_OUTBOX_EVENT_BUS_MODE=log`, `/readyz` returned `owner=true`, `dvt_outbox_delivered_records_total` went `0→1`, `dvt_outbox_runtime_errors_total` stayed at `0`, and the latest outbox row showed `delivered_at` populated with `attempts=0`; evidence written to `docs/evidence/supporting/ED-20260312-g5-canary-local-docker.md`
   validation: `docker compose -f infra/docker/postgres/docker-compose.yml up -d`; `DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm db:migrate`; `pnpm --filter @dvt/adapter-postgres build`; `pnpm --filter @dvt/engine build`; `pnpm --filter dvt-outbox-worker build`; local worker start via `node apps/outbox-worker/dist/server.js`; `.\scripts\outbox-worker-canary-evidence.ps1 -EnvironmentName local-docker ... -TriggerCommand "docker cp ...; docker exec ... psql -f /tmp/g5-canary-trigger.sql"`; DB confirmation via `docker exec dvt-postgres psql -U dvt -d dvt -P pager=off -c "SELECT ... ORDER BY created_at DESC LIMIT 1;"`

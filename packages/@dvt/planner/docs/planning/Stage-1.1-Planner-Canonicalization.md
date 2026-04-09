@@ -216,7 +216,7 @@ sequenceDiagram
         Resolver-->>App: immutable manifest payload
     end
     App->>Core: build canonical plan input
-    Core-->>App: plan + canonicalPlanJson
+    Core-->>App: plan + canonicalPlanCoreJson
     App-->>Caller: built canonical plan
     Caller->>Store: storePlan(plan, PENDING_VALIDATION)
     Store-->>Caller: planRef
@@ -250,9 +250,9 @@ blank slate. The baseline in the current tree is:
 | ------------------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------- |
 | `ExecutionPlanV2` canonical contract                   | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`     |
 | `PlannerInputEnvelopeV2` canonical contract            | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`     |
-| `IExecutionPlanner` canonical contract                 | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts` |
+| `IExecutionPlanner` canonical contract                 | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts` |
 | planner-local public-like duplicates                   | still exist in planner domain types                    | `packages/@dvt/planner/src/domain/types.ts`                             |
-| planner-local contract wrapper for `IExecutionPlanner` | still exists and points at planner-local domain types  | `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v2.ts`   |
+| planner-local contract wrapper for `IExecutionPlanner` | still exists and points at planner-local domain types  | `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v1.ts`   |
 | planner-local contract wrapper for plan/input types    | still exists and re-exports planner-local domain types | `packages/@dvt/planner/src/contracts/planner/ExecutionPlan.v2.ts`       |
 
 So the starting point is **partial migration, not zero migration**:
@@ -1352,7 +1352,7 @@ docs/
       index.md
       ExecutionPlan.v2.md
       PlannerInputEnvelope.v2.md
-      IExecutionPlanner.v2.md
+      IExecutionPlanner.v1.md
   planning/
     proposals/
       planner-stage-1-1-canonicalization.md
@@ -1615,11 +1615,11 @@ Operational rule: exactly one discriminated branch is authoritative per request.
 ### Example B — planner output vs enrichment
 
 ```ts
-const { plan, canonicalPlanJson } = await planner.buildPlan(input);
+const { plan, canonicalPlanCoreJson } = await planner.buildPlan(input);
 const enrichedPlan = await attachCompiledCodeRefs(plan, storage);
 ```
 
-Rule: `canonicalPlanJson` and `plan.metadata.planId` derive from core plan
+Rule: `canonicalPlanCoreJson` and `plan.metadata.planId` derive from core plan
 content, not from the later enrichment.
 
 If the enriched binding needs to persist, it should persist as associated
@@ -1677,7 +1677,7 @@ transition. `startRun` consumes only a `VALID` plan reference. A best-effort
 - artifact resolver boundary note or equivalent planner application-boundary note
 - `docs/contracts/planner/ExecutionPlan.v2.md`
 - `docs/contracts/planner/PlannerInputEnvelope.v2.md`
-- `docs/contracts/planner/IExecutionPlanner.v2.md`
+- `docs/contracts/planner/IExecutionPlanner.v1.md`
 - engine executability validation contract doc or equivalent canonical contract surface
 
 ### Validation / tooling

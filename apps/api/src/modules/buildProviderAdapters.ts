@@ -1,5 +1,10 @@
-import type { PlanRef } from '@dvt/contracts';
-import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
+import type {
+  EngineRunRef,
+  IClock,
+  IProviderAdapter,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+} from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 
 import type { Env } from '../plugins/env.js';
@@ -7,6 +12,14 @@ import type { Env } from '../plugins/env.js';
 export interface BuildProviderAdaptersResult {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   close: () => Promise<void>;
+}
+
+async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
+  const results = await Promise.allSettled(closers.map((closer) => closer()));
+  const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'Failed to close provider adapters cleanly');
+  }
 }
 
 /**
@@ -19,17 +32,19 @@ export interface BuildProviderAdaptersResult {
 export async function buildProviderAdapters(
   env: Env,
   deps: {
-    stateStore: { listEvents(tenantId: string, runId: string): Promise<unknown[]> };
+    stateStore: Pick<IRunStateStoreRead, 'getRunMetadataByRunId' | 'listEvents'>;
+    stateStoreWrite: Pick<IRunStateStoreWrite, 'appendAndEnqueueTx'>;
+    clock: Pick<IClock, 'nowIsoUtc'>;
     projector: { rebuild(runId: string, events: unknown[]): unknown };
     observability: IObservability;
-    planFetcher?: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
   }
 ): Promise<BuildProviderAdaptersResult> {
   const { MockAdapter } = await import('@dvt/engine/testing');
   const mockAdapter = new MockAdapter({
     stateStore: deps.stateStore as never,
+    stateStoreWrite: deps.stateStoreWrite as never,
+    clock: deps.clock as never,
     projector: deps.projector as never,
-    ...(deps.planFetcher !== undefined ? { planFetcher: deps.planFetcher as never } : {}),
   });
 
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
@@ -45,6 +60,7 @@ export async function buildProviderAdapters(
       TEMPORAL_IDENTITY: env.TEMPORAL_IDENTITY,
       TEMPORAL_CONNECT_TIMEOUT_MS: env.TEMPORAL_CONNECT_TIMEOUT_MS,
       TEMPORAL_REQUEST_TIMEOUT_MS: env.TEMPORAL_REQUEST_TIMEOUT_MS,
+      TEMPORAL_MAX_START_PAYLOAD_BYTES: env.TEMPORAL_MAX_START_PAYLOAD_BYTES,
       TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
     });
     const clientManager = new TemporalClientManager(temporalConfig, deps.observability);
@@ -59,7 +75,7 @@ export async function buildProviderAdapters(
   return {
     adapters,
     close: async () => {
-      for (const closer of closers) await closer();
+      await closeAllClosers(closers);
     },
   };
 }

@@ -40,9 +40,9 @@ names depending on whether the reader is in planning, code, or architecture.
 
 ## Related Surfaces
 
-- [Glossary](glossary.md)
-- [System Map](system-map.md)
-- [Repository Map](repository-map.md)
+- [Glossary](./glossary.md)
+- [System Map](./system-map.md)
+- [Repository Map](./repository-map.md)
 
 ## Do Not Collapse Distinct Concepts
 
@@ -84,7 +84,7 @@ its canonical concept page when that improves reader orientation.
 
 Examples:
 
-- `roadmap` -> [Planning](../planning/index.md)
+- `roadmap` -> [Roadmap Of Record](../planning/roadmap/index.md)
 - `status` -> [System Delivery Status](../architecture/system-delivery-status.md)
 - `risk` -> [Risk Register](../risk-register/index.md)
 - `evidence` -> [Evidence](../evidence/index.md)

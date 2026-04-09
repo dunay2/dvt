@@ -19,8 +19,8 @@ This pack is no longer a canonical planning source. It remains in place as a his
 
 ## Supporting Assets
 
-- [Artifact Reference Schema](specs/contracts/artifact-ref.schema.json)
-- [Reference SQL](sql/artifact_store_reference.sql)
+- [Artifact Reference Schema](./specs/contracts/artifact-ref.schema.json)
+- [Reference SQL](./sql/artifact_store_reference.sql)
 
 ## Related Active Docs
 

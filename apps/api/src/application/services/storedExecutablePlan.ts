@@ -1,33 +1,27 @@
-import type { ExecutionPlan } from '@dvt/engine';
+import type { ExecutionPlan, IStepTypeRegistry } from '@dvt/contracts';
+import { PlanVerifierError, parseAndVerifyStepTypeConfigsOrThrow } from '@dvt/plan-verifier';
 
-export function parseStoredExecutablePlan(bytes: Uint8Array): ExecutionPlan {
-  const parsed: unknown = JSON.parse(Buffer.from(bytes).toString('utf8'));
-  if (!isExecutionPlan(parsed)) {
+export function parseStoredExecutablePlan(
+  bytes: Uint8Array,
+  options?: {
+    readonly stepTypeRegistry?: IStepTypeRegistry;
+    readonly rejectUnknownStepKinds?: boolean;
+  }
+): ExecutionPlan {
+  try {
+    return parseAndVerifyStepTypeConfigsOrThrow({
+      input: JSON.parse(Buffer.from(bytes).toString('utf8')),
+      ...(options?.stepTypeRegistry === undefined
+        ? {}
+        : { stepTypeRegistry: options.stepTypeRegistry }),
+      ...(options?.rejectUnknownStepKinds === undefined
+        ? {}
+        : { rejectUnknownStepKinds: options.rejectUnknownStepKinds }),
+    });
+  } catch (error) {
+    if (error instanceof PlanVerifierError) {
+      throw new Error(`${error.code}: ${error.message}`);
+    }
     throw new Error('INVALID_EXECUTABLE_PLAN');
   }
-  return parsed;
-}
-
-function isExecutionPlan(value: unknown): value is ExecutionPlan {
-  if (value === null || typeof value !== 'object') {
-    return false;
-  }
-
-  const record = value as Record<string, unknown>;
-  if (!Array.isArray(record['steps'])) {
-    return false;
-  }
-
-  const metadata = record['metadata'];
-  if (metadata === null || typeof metadata !== 'object') {
-    return false;
-  }
-
-  const meta = metadata as Record<string, unknown>;
-  return (
-    typeof meta['planId'] === 'string' &&
-    typeof meta['planVersion'] === 'string' &&
-    typeof meta['schemaVersion'] === 'string' &&
-    typeof meta['contractVersion'] === 'string'
-  );
 }

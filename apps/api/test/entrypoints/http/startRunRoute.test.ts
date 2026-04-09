@@ -64,6 +64,20 @@ function createReply(): {
   };
 }
 
+function registryWith(...supported: Array<'mock' | 'temporal'>): {
+  isSupported(value: string): value is 'mock' | 'temporal';
+  listSupported(): ReadonlyArray<'mock' | 'temporal'>;
+} {
+  return {
+    isSupported(value: string): value is 'mock' | 'temporal' {
+      return supported.includes(value as 'mock' | 'temporal');
+    },
+    listSupported() {
+      return [...supported];
+    },
+  };
+}
+
 describe('startRunRoute', () => {
   it('returns 400 when tenantId is missing', async () => {
     const reply = createReply();
@@ -177,7 +191,7 @@ describe('startRunRoute', () => {
     );
   });
 
-  it('accepts empty selection', async () => {
+  it('accepts empty selection when graph source contains nodes', async () => {
     const reply = createReply();
 
     let received: Record<string, unknown> | undefined;
@@ -198,8 +212,10 @@ describe('startRunRoute', () => {
           environmentId: 'e1',
           selection: [],
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
           runId: 'run-empty-selection',
           targetAdapter: 'mock',
@@ -213,8 +229,10 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual({ runId: 'r-empty-selection', accepted: true });
     expect(received?.command).toEqual({
       graphSource: {
-        kind: 'normalized-graph-v1',
-        nodes: [],
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
       runId: 'run-empty-selection',
       targetAdapter: 'mock',
@@ -488,6 +506,39 @@ describe('startRunRoute', () => {
     );
   });
 
+  it('returns 400 when target adapter is not available in runtime registry', async () => {
+    const reply = createReply();
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-adapter-unavailable',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-adapter-unavailable',
+          targetAdapter: 'temporal',
+        },
+      } as never,
+      reply as never,
+      facade as never,
+      registryWith('mock') as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_target_adapter', { target: 'targetAdapter' })
+    );
+  });
+
   it('returns 422 plan_rejected when engine reports command_invalid', async () => {
     const reply = createReply();
 
@@ -637,8 +688,10 @@ describe('startRunRoute', () => {
           environmentId: 'e1',
           selection: ['model_a'],
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
           runId: 'run-graph',
           targetAdapter: 'mock',
@@ -651,8 +704,10 @@ describe('startRunRoute', () => {
     expect(reply.statusCode).toBe(202);
     expect(received?.command).toEqual({
       graphSource: {
-        kind: 'normalized-graph-v1',
-        nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
       runId: 'run-graph',
       targetAdapter: 'mock',
@@ -680,8 +735,10 @@ describe('startRunRoute', () => {
           selection: ['model_a'],
           planRef: VALID_PLAN_REF,
           graphSource: {
-            kind: 'normalized-graph-v1',
-            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
           },
           runId: 'run-conflict',
           targetAdapter: 'mock',
@@ -730,7 +787,7 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
-  it('returns 400 when nodes and planRef are both supplied', async () => {
+  it('returns 400 when legacy nodes payload is supplied', async () => {
     const reply = createReply();
 
     const facade = {
@@ -759,10 +816,10 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
-  it('returns 400 when manifest and planRef are both supplied', async () => {
+  it('returns 400 when legacy manifest payload is supplied', async () => {
     const reply = createReply();
 
     const facade = {
@@ -791,7 +848,69 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
+  });
+
+  it('returns 400 when legacy nodes payload is supplied without planRef', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-legacy-nodes-no-plan-ref',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          runId: 'run-legacy-nodes-no-plan-ref',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
+  });
+
+  it('returns 400 when legacy manifest payload is supplied without planRef', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-legacy-manifest-no-plan-ref',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          manifest: { nodes: [] },
+          runId: 'run-legacy-manifest-no-plan-ref',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
   it('accepts lowercase bearer scheme', async () => {

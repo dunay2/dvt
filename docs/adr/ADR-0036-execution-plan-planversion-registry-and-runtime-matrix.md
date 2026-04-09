@@ -13,7 +13,7 @@ Accepted.
 
 ## Context
 
-`ExecutionPlanV2.metadata.planVersion` was modeled as the string literal `'2.3'`
+`ExecutionPlanV1.metadata.planVersion` was modeled as the string literal `'2.3'`
 inside `@dvt/contracts`.
 
 That shape created two problems:
@@ -40,7 +40,7 @@ defines the concrete mechanism for `planVersion` evolution itself.
 - `SUPPORTED_EXECUTION_PLAN_VERSIONS`
 - `EXECUTION_PLAN_VERSION_REGISTRY`
 
-`PlanCore` and `ExecutionPlanV2` are expressed as versioned unions derived from
+`PlanCore` and `ExecutionPlanV1` are expressed as versioned unions derived from
 that registry instead of a single inline literal type.
 
 This means adding a new supported plan version is done by extending the
@@ -111,5 +111,5 @@ plan version is added to the union.
 
 ## Related
 
-- [ADR-0017_ExecutionPlan_Schema_Versioning.md](ADR-0017_ExecutionPlan_Schema_Versioning.md)
-- [ADR-0035-planner-public-contract-evolution-protocol.md](ADR-0035-planner-public-contract-evolution-protocol.md)
+- [ADR-0017_ExecutionPlan_Schema_Versioning.md](./ADR-0017_ExecutionPlan_Schema_Versioning.md)
+- [ADR-0035-planner-public-contract-evolution-protocol.md](./ADR-0035-planner-public-contract-evolution-protocol.md)

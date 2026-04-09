@@ -56,6 +56,7 @@ const INPUT = {
 
 describe('StartRunAuthorizedFacade', () => {
   it('returns unauthenticated as ok=true value and does not call use case', async () => {
+    const telemetry = { recordStartRunLatency: vi.fn() };
     const execute = vi.fn(async () => {
       throw new Error('should not be called');
     });
@@ -72,7 +73,8 @@ describe('StartRunAuthorizedFacade', () => {
       } as never,
       {
         execute,
-      } as never
+      } as never,
+      telemetry as never
     );
 
     const result = await facade.execute(INPUT);
@@ -84,6 +86,8 @@ describe('StartRunAuthorizedFacade', () => {
       },
     });
     expect(execute).not.toHaveBeenCalled();
+    expect(telemetry.recordStartRunLatency).toHaveBeenCalledTimes(1);
+    expect(telemetry.recordStartRunLatency.mock.calls[0]?.[1]).toBe('unauthenticated');
   });
 
   it('returns unauthorized as ok=true value and does not call use case', async () => {
@@ -118,6 +122,7 @@ describe('StartRunAuthorizedFacade', () => {
   });
 
   it('returns accepted when auth and use case succeed', async () => {
+    const telemetry = { recordStartRunLatency: vi.fn() };
     const facade = new StartRunAuthorizedFacade(
       {
         async authenticateBearerToken() {
@@ -136,7 +141,8 @@ describe('StartRunAuthorizedFacade', () => {
             value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
           };
         },
-      } as never
+      } as never,
+      telemetry as never
     );
 
     const result = await facade.execute(INPUT);
@@ -148,6 +154,8 @@ describe('StartRunAuthorizedFacade', () => {
         accepted: true,
       },
     });
+    expect(telemetry.recordStartRunLatency).toHaveBeenCalledTimes(1);
+    expect(telemetry.recordStartRunLatency.mock.calls[0]?.[1]).toBe('accepted');
   });
 
   it('preserves duplicate result from the use case', async () => {
@@ -296,6 +304,7 @@ describe('StartRunAuthorizedFacade', () => {
   });
 
   it('rethrows unrelated use case errors', async () => {
+    const telemetry = { recordStartRunLatency: vi.fn() };
     const facade = new StartRunAuthorizedFacade(
       {
         async authenticateBearerToken() {
@@ -311,9 +320,12 @@ describe('StartRunAuthorizedFacade', () => {
         async execute() {
           throw new Error('engine unavailable');
         },
-      } as never
+      } as never,
+      telemetry as never
     );
 
     await expect(() => facade.execute(INPUT)).rejects.toThrow(/engine unavailable/);
+    expect(telemetry.recordStartRunLatency).toHaveBeenCalledTimes(1);
+    expect(telemetry.recordStartRunLatency.mock.calls[0]?.[1]).toBe('exception');
   });
 });

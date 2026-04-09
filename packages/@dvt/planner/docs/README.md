@@ -35,17 +35,18 @@ planCore = { metadata: { planVersion, inputHashSha256 }, steps }
 
 The planner returns:
 
-- `plan` (ExecutionPlanV2) — includes provenance fields for orchestrator usage
-- `canonicalPlanJson` — exactly `JCS(planCore)`
+- `plan` (ExecutionPlanV2) - includes provenance fields for orchestrator usage
+- `canonicalPlanCoreJson` - exactly `JCS(planCore)`
 
 Caller verification:
 
-- sha256(canonicalPlanJson) === plan.metadata.planId
+- sha256(canonicalPlanCoreJson) === plan.metadata.planId
 
 ## Integration flow (expected orchestration)
 
 1. Orchestrator calls `planner.buildPlan(input)`.
-2. On success, orchestrator persists `canonicalPlanJson` in `execution_plans` keyed by `planId`.
+2. On success, orchestrator uses `canonicalPlanCoreJson` to verify `planId` and persists the
+   full `ExecutionPlan` separately as `PlanRecord.canonicalPlanJson`.
 3. Orchestrator bootstraps a run in the state store with:
    - planId
    - inputHashSha256

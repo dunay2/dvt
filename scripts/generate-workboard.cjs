@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 'use strict';
 
 const fs = require('node:fs');
@@ -8,9 +8,36 @@ const yaml = require('js-yaml');
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const stateDir = path.join(repoRoot, 'docs', 'planning', 'state');
-const workboardPath = path.join(stateDir, 'execution-workboard.md');
-const openTaskPath = path.join(stateDir, 'open-task-route.md');
+
+function parseArgs(argv) {
+  const args = {
+    outputRoot: repoRoot,
+    sourceStateDir: path.join(repoRoot, 'docs', 'planning', 'state'),
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (token === '--output-root') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --output-root');
+      }
+      args.outputRoot = path.resolve(repoRoot, next);
+      index += 1;
+      continue;
+    }
+    if (token === '--source-state-dir') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --source-state-dir');
+      }
+      args.sourceStateDir = path.resolve(repoRoot, next);
+      index += 1;
+    }
+  }
+
+  return args;
+}
 
 const LANE_DOMAIN = {
   A: 'Execution Runtime',
@@ -26,20 +53,22 @@ function normalizeStatus(status) {
     .toLowerCase();
 }
 
-function loadLanes() {
+function loadLanes(sourceStateDir) {
   const laneFiles = fs
-    .readdirSync(stateDir)
+    .readdirSync(sourceStateDir)
     .filter((f) => /^agent-lane-[a-z]\.yaml$/i.test(f))
     .sort();
 
   return laneFiles.map((file) => {
-    const raw = fs.readFileSync(path.join(stateDir, file), 'utf8');
+    const raw = fs.readFileSync(path.join(sourceStateDir, file), 'utf8');
     return yaml.load(raw);
   });
 }
 
 function normalizeComplexity(task) {
-  const complexity = String(task.complexity || '-').trim().toUpperCase();
+  const complexity = String(task.complexity || '-')
+    .trim()
+    .toUpperCase();
   return complexity.length > 0 ? complexity : '-';
 }
 
@@ -77,8 +106,7 @@ function summarizeLane(lane) {
     total_tasks: tasks.length,
     total_effort_points: totalEffort,
     completed_weighted_points: Number(completedWeighted.toFixed(2)),
-    lane_progress_pct:
-      totalEffort > 0 ? Math.round((completedWeighted / totalEffort) * 100) : 0,
+    lane_progress_pct: totalEffort > 0 ? Math.round((completedWeighted / totalEffort) * 100) : 0,
     notes:
       'Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry coordination-only effort.',
   };
@@ -151,12 +179,12 @@ function buildLaneSummaryTable(lanes) {
   const headers = [
     'Lane',
     'Title',
-      'Progress',
-      'Completed weighted pts',
-      'Total effort',
-      'Tasks',
-      'Verified on',
-    ];
+    'Progress',
+    'Completed weighted pts',
+    'Total effort',
+    'Tasks',
+    'Verified on',
+  ];
   const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i].length)));
   const sep = widths.map((w) => '-'.repeat(w));
   const fmt = (row) => '| ' + row.map((c, i) => pad(c, widths[i])).join(' | ') + ' |';
@@ -250,7 +278,8 @@ function buildWorkboard(tasks, lanes, date) {
 
 function buildOpenTaskRoute(tasks, lanes, doneSet, date) {
   const unblocked = tasks.filter((task) => isUnblocked(task, doneSet));
-  const priorityOrder = (priority) => Number.parseInt(String(priority ?? 'P9').replace('P', ''), 10);
+  const priorityOrder = (priority) =>
+    Number.parseInt(String(priority ?? 'P9').replace('P', ''), 10);
 
   unblocked.sort((a, b) => {
     const pa = priorityOrder(a.priority);
@@ -335,11 +364,24 @@ function buildOpenTaskRoute(tasks, lanes, doneSet, date) {
 }
 
 function main() {
-  const lanes = loadLanes();
+  const args = parseArgs(process.argv.slice(2));
+  const sourceStateDir = args.sourceStateDir;
+  const outputStateDir = path.join(args.outputRoot, 'docs', 'planning', 'state');
+  const workboardPath = path.join(outputStateDir, 'execution-workboard.md');
+  const openTaskPath = path.join(outputStateDir, 'open-task-route.md');
+
+  if (!fs.existsSync(sourceStateDir)) {
+    throw new Error('Missing docs/planning/state directory.');
+  }
+  fs.mkdirSync(outputStateDir, { recursive: true });
+
+  const lanes = loadLanes(sourceStateDir);
   const tasks = collectTasks(lanes);
   const doneSet = buildDoneSet(tasks);
 
-  const workboardDate = resolveGeneratedDate(workboardPath, (date) => buildWorkboard(tasks, lanes, date));
+  const workboardDate = resolveGeneratedDate(workboardPath, (date) =>
+    buildWorkboard(tasks, lanes, date)
+  );
   const openTaskDate = resolveGeneratedDate(openTaskPath, (date) =>
     buildOpenTaskRoute(tasks, lanes, doneSet, date)
   );
@@ -347,7 +389,9 @@ function main() {
   fs.writeFileSync(workboardPath, buildWorkboard(tasks, lanes, workboardDate), 'utf8');
   fs.writeFileSync(openTaskPath, buildOpenTaskRoute(tasks, lanes, doneSet, openTaskDate), 'utf8');
 
-  console.log('[docs:workboard:generate] Updated execution-workboard.md and open-task-route.md');
+  console.log(
+    `[docs:workboard:generate] Updated ${path.relative(repoRoot, workboardPath)} and ${path.relative(repoRoot, openTaskPath)}`
+  );
 }
 
 main();

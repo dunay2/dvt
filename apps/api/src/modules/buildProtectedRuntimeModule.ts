@@ -1,7 +1,9 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createDefaultStepTypeRegistry } from '@dvt/contracts';
 import { StartRunAdmissionGuard } from '@dvt/delivery';
+import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import type { FastifyInstance } from 'fastify';
@@ -11,8 +13,8 @@ import { AuthorizeCommandScopeService } from '../application/services/authorizeC
 import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
-import { bridgePlannerBuildToExecutablePlan } from '../application/services/plannerExecutionPlanBridge.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
+import { createStartRunTargetAdapterRegistryFromValues } from '../application/services/startRunTargetAdapterRegistry.js';
 import { StoredExecutablePlanResolver } from '../application/services/StoredExecutablePlanResolver.js';
 import { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
@@ -29,12 +31,22 @@ import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure
 import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
+import { GraphSourceArtifactResolver } from '../infrastructure/planner/ManifestArtifactResolver.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
+import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
+
+async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
+  const results = await Promise.allSettled(closers.map((closer) => closer()));
+  const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'Failed to close protected runtime cleanly');
+  }
+}
 
 function requireDatabaseUrl(env: Env): string {
   if (!env.DATABASE_URL) {
@@ -53,13 +65,7 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
-  const pool = getPgPool({
-    connectionString: databaseUrl,
-    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
-    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
-  });
-  const nowIsoUtc = (): string => new Date().toISOString();
-  const nowDate = (): Date => new Date();
+  const pool = getPgPool(databaseUrl);
 
   const [adapterMod, engineMod] = await Promise.all([
     import('@dvt/adapter-postgres'),
@@ -74,7 +80,7 @@ export async function buildProtectedRuntimeModule(
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
   const stateStore = new PostgresStateStoreAdapter({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -82,7 +88,7 @@ export async function buildProtectedRuntimeModule(
   const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
-    pool,
+    connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -93,13 +99,10 @@ export async function buildProtectedRuntimeModule(
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
     toExecutablePlan: (buildResult) => {
-      const plan = bridgePlannerBuildToExecutablePlan(buildResult);
+      const plan: ExecutionPlan = buildResult.plan;
       return {
         schemaVersion: plan.metadata.schemaVersion,
         text: JSON.stringify(plan),
-        ...(plan.metadata.requiresCapabilities === undefined
-          ? {}
-          : { requiresCapabilities: plan.metadata.requiresCapabilities }),
       };
     },
   });
@@ -113,7 +116,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: nowIsoUtc,
+    now: () => new Date().toISOString(),
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -127,30 +130,41 @@ export async function buildProtectedRuntimeModule(
     snapshotMaxAgeMs:
       env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
   });
-  const cachedBackpressureStore = new CachedBackpressureStore({
+  const backpressureStore = new CachedBackpressureStore({
     delegate: resilientBackpressureStore,
     ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
   });
+  const capacityTelemetry = new ObservabilityBackpressureCapacityTelemetry({
+    observability,
+  });
+  const instrumentedBackpressureStore = new MetricsEmittingBackpressureStore({
+    delegate: backpressureStore,
+    capacityTelemetry,
+  });
   const admissionGuard = new StartRunAdmissionGuard({
-    backpressureStore: new MetricsEmittingBackpressureStore({
-      delegate: cachedBackpressureStore,
-      capacityTelemetry: new ObservabilityBackpressureCapacityTelemetry({ observability }),
-    }),
+    backpressureStore: instrumentedBackpressureStore,
     policy: {
       maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
     },
   });
+  const stepTypeRegistry = createDefaultStepTypeRegistry();
   const executablePlanResolver = new StoredExecutablePlanResolver({
     fetcher: planStore,
+    stepTypeRegistry,
   });
+  const systemClock = { nowIsoUtc: () => new Date().toISOString() };
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
+    stateStoreWrite: stateStoreRoles.write,
+    clock: systemClock,
     projector,
     observability,
-    planFetcher: executablePlanResolver,
   });
+  const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
+    adapters.keys()
+  );
 
   if (env.TEMPORAL_ADDRESS) {
     app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
@@ -165,10 +179,11 @@ export async function buildProtectedRuntimeModule(
       stateStoreRead: stateStoreRoles.read,
       stateStoreWrite: stateStoreRoles.write,
       intentStore,
+      planFetcher: planStore,
     },
     runtime: { adapters },
     infrastructure: {
-      clock: { nowIsoUtc },
+      clock: systemClock,
       observability,
     },
   });
@@ -180,7 +195,7 @@ export async function buildProtectedRuntimeModule(
     accessRepo,
     policy,
     auditLogger,
-    nowDate
+    () => new Date()
   );
   const authenticator = new OidcAuthenticator(
     new JwksJwtVerifier({
@@ -190,6 +205,15 @@ export async function buildProtectedRuntimeModule(
       algorithms: env.OIDC_ALGORITHMS.split(',').map((a) => a.trim()),
     })
   );
+  const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
+  const planner = new PlannerFacade({
+    graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: env.NODE_ENV }),
+  });
+  const planValidator = new StoredPlanExecutabilityValidator({
+    fetcher: planStore,
+    adapters,
+    stepTypeRegistry,
+  });
   const facade = new StartRunAuthorizedFacade(
     authenticator,
     commandAuthorizer,
@@ -200,15 +224,14 @@ export async function buildProtectedRuntimeModule(
       mode: env.DVT_START_RUN_BACKPRESSURE_MODE,
       retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
       delegate: new PlannerBackedStartRunUseCase({
-        planner: new PlannerFacade(),
+        planner,
         planStore,
-        validator: new StoredPlanExecutabilityValidator({
-          fetcher: planStore,
-          adapters,
-        }),
+        validator: planValidator,
+        compileTelemetry: startRunSlaTelemetry,
         delegate: new EngineStartRunUseCase(engine),
       }),
-    })
+    }),
+    startRunSlaTelemetry
   );
 
   return {
@@ -217,7 +240,12 @@ export async function buildProtectedRuntimeModule(
     authorizer: commandAuthorizer,
     engine,
     adapters,
+    startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,
+    planner,
+    planStore,
+    planValidator,
+    executablePlanResolver,
     migrate: async () => {
       await accessRepo.migrate();
       await stateStore.migrate();
@@ -225,23 +253,13 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      const results = await Promise.allSettled([
-        closeAdapters(),
-        planStore.close(),
-        stateStore.close(),
-        intentStore.close(),
+      await closeAllClosers([
+        () => closeAdapters(),
+        () => planStore.close(),
+        () => stateStore.close(),
+        () => intentStore.close(),
+        () => pool.end(),
       ]);
-      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
-      for (const { reason } of failures) {
-        app.log.error({ err: reason }, 'Teardown failure');
-      }
-      await pool.end();
-      if (failures.length > 0) {
-        throw new AggregateError(
-          failures.map((f) => f.reason),
-          `${failures.length} teardown failure(s)`
-        );
-      }
     },
   };
 }

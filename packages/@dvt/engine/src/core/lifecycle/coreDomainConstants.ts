@@ -1,5 +1,3 @@
-import type { EventType, SignalRequest } from '@dvt/contracts';
-
 export const CORE_TIMEOUT_MS = {
   adapterCall: 30_000,
 } as const;
@@ -46,14 +44,3 @@ export const RUN_EVENT_CONSTANTS = {
 export const TRACEABLE_ADAPTERS = ['temporal', 'conductor'] as const;
 
 export type TraceableAdapter = (typeof TRACEABLE_ADAPTERS)[number];
-
-export const SIGNAL_TO_EVENT_TYPE: Partial<Record<SignalRequest['type'], EventType>> = {
-  PAUSE: 'RunPaused',
-  RESUME: 'RunResumed',
-  CANCEL: 'RunCancelRequested',
-};
-
-export const NOT_IMPLEMENTED_SIGNAL_TYPES: ReadonlySet<SignalRequest['type']> = new Set([
-  'RETRY_STEP',
-  'RETRY_RUN',
-]);

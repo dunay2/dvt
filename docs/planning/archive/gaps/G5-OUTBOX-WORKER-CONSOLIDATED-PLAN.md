@@ -13,20 +13,20 @@ what the current repository can realistically absorb.
 
 ## Related documents
 
-- [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-- [G5 - AI Execution Tracker](G5-AI-EXECUTION-TRACKER.md)
-- [G5 / US-G5.4 Operability And Ownership Hardening Plan](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
-- [G5 / US-G5.5 Sharding And Fencing Plan](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [Gap Execution Plans](./GAP_EXECUTION_PLANS.md)
+- [G5 - AI Execution Tracker](./G5-AI-EXECUTION-TRACKER.md)
+- [G5 / US-G5.4 Operability And Ownership Hardening Plan](./G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+- [G5 / US-G5.5 Sharding And Fencing Plan](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [ADR-0009: Outbox Publication Ordering Guarantees](../../adr/ADR-0009_Outbox_Ordering.md)
 - [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
-- Reference material only: [archived gap5 review packs](../../archive/planning/gaps/gap5/)
+- Reference material only: [archived gap5 review packs](../planning/gaps/gap5)
 
 ## Traceability tuple
 
-- `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- `status_doc`: [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
+- `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](./G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- `status_doc`: [Gap Execution Plans](./GAP_EXECUTION_PLANS.md)
 - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/delivery/src/application/OutboxWorker.ts`, `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
 - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `packages/@dvt/delivery/test/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
 - `verification_cmd`: `pnpm --filter @dvt/delivery test`, `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm --filter dvt-outbox-worker test:arch`, `pnpm test:adapter-postgres`
@@ -76,7 +76,7 @@ For the current repository state, `G5` is **not**:
 - a CDC/polling coexistence framework,
 - or a drop-in import of the `gap5` repo-ready package.
 
-The archived material in [`docs/archive/planning/gaps/gap5/`](../../archive/planning/gaps/gap5/)
+The archived material in [`docs/archive/planning/gaps/gap5/`](../planning/gaps/gap5)
 remains useful as reference, but it is **reference design**, not an
 implementation source of truth.
 
@@ -84,7 +84,7 @@ implementation source of truth.
 
 The current repository already has the following real baseline:
 
-- standalone host scaffold in [`apps/outbox-worker/`](../../../apps/outbox-worker/),
+- standalone host scaffold in [`apps/outbox-worker/`](../../../apps/outbox-worker),
 - reusable worker logic in [`packages/@dvt/delivery/src/application/OutboxWorker.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorker.ts),
 - PostgreSQL claiming, retries, and DLQ support in [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts),
 - outbox payloads shaped as current run event envelopes, not generic side-effect records,
@@ -267,7 +267,7 @@ same stage.
 
 Design detail for this stage lives in:
 
-- [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 Acceptance:
@@ -299,7 +299,7 @@ Horizontal scale-out is blocked until PR-5 is complete.
 - [x] deployment docs forbid unsafe mixed ownership
 
 Closure evidence for the accepted `G5` scope is recorded in
-[ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md).
+[ED-20260312-g5-canary-local-docker](../../evidence/supporting/ED-20260312-g5-canary-local-docker.md).
 Downstream contract hardening and future delivery evolution remain tracked as
 separate follow-up work rather than open blockers for this gap.
 

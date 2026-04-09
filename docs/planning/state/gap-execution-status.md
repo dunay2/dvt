@@ -1,46 +1,29 @@
 ---
-title: Gap Execution Status
-status: Review
+title: Legacy Gap Program Status
+status: Historical
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-22
-planning_type: status
+last_reviewed: 2026-04-02
+planning_type: reference
 ---
 
-# Gap Execution Status
+# Legacy Gap Program Status
 
-Quick operational view of gap execution state.
+The repository-wide `G1` through `G10` gap program is retired.
 
-Authoritative source remains:
-[DVT+ Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md).
+This page is retained only as a compatibility marker for older links. It is not
+an active planning board and it does not carry the current delivery posture.
 
-## Snapshot
+## Use Instead
 
-- `as_of`: 2026-03-22
-- `source_last_sync`: 2026-03-16 (from GAP_EXECUTION_PLANS frontmatter/body)
-- `closed`: 10
-- `active`: 0
-- `partial`: 0
+- [Planning Control Tower](./planning-control-tower.md) for active work items,
+  lane routing, and task triage
+- [Domain Status Board](./domain-status-board.md) for domain-level priorities
+- [Roadmap Of Record](../roadmap/index.md) for sequencing and roadmap posture
+- [System Delivery Status](../../architecture/system-delivery-status.md) for
+  current implementation truth
 
-Gap closure does not mean no pending work. Active post-gap work is tracked in
-[Execution Workboard](execution-workboard.md).
+## Retirement Rule
 
-## Gap Board
-
-- `G1` Temporal adapter real: `Closed` (Phase 1)
-- `G2` PostgresStateStore complete: `Closed` (Phase 1)
-- `G3` Intent store + scheduler: `Closed` (Phase 1)
-- `G4` compiledCodeRef ownership: `Closed` (Phase 1)
-- `G5` Outbox worker independiente: `Closed` (Phase 1.5)
-- `G6` OpenLineage mapping tests + schema pin: `Closed` (Phase 1.5)
-- `G7` Read models + standalone projector: `Closed` (Phase 1.5)
-- `G8` Auth real en apps/api: `Closed` (Phase 1.5)
-- `G9` StepTypeRegistry + typed stepTypeConfig: `Closed` (Phase 2)
-- `G10` outbox_lineage worker + fail-open DLQ: `Closed` (Phase 2)
-
-## Execution Anchors
-
-- [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
-- [Gap Execution Route](gap-execution-route.md)
-- [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [System Delivery Status](../../architecture/system-delivery-status.md)
-- [Planning Domains](../domains/index.md)
+Do not reopen `G1` through `G10` as active planning identifiers. If new work is
+needed, express it as a sprint board, review intake item, roadmap slice, or
+lane task ID.

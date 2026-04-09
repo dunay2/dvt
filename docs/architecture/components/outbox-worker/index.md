@@ -1,85 +1,63 @@
 ---
 title: dvt-outbox-worker
-status: Draft
-owner: Delivery Domain
-last_reviewed: 2026-03-15
+status: Active
+owner: Architecture / Docs
+last_reviewed: 2026-04-08
 ---
 
 # dvt-outbox-worker
 
-## Component Map
+`dvt-outbox-worker` is the operational composition root under
+`apps/outbox-worker`.
+
+It hosts the delivery runtime in a standalone process and adds shard ownership,
+operational endpoints, retention wiring, and purge support around the shared
+`@dvt/delivery` runtime.
+
+## Current Responsibilities
+
+- start and stop the outbox runtime as a process host;
+- expose operational monitoring endpoints;
+- enforce shard ownership when running in fenced or distributed mode;
+- wire retention and purge runtimes into the worker process.
+
+## Interface Map
 
 ```mermaid
 flowchart LR
-  delivery[@dvt/delivery]
-  outbox[dvt-outbox-worker]
-  engine[@dvt/engine]
-  delivery --> outbox
-  engine --> delivery
+  Ops["Ops / deployment"] --> Worker["apps/outbox-worker"]
+  Worker --> Delivery["@dvt/delivery OutboxWorkerRuntime"]
+  Worker --> Ownership["PgShardOwnershipGate"]
+  Worker --> Retention["Retention + purge runtimes"]
+  Worker --> EventBus["HTTP / logging event bus"]
+  Delivery --> Postgres["@dvt/adapter-postgres"]
+  Retention --> State["@dvt/state-store"]
 ```
 
-## Location
+## Code Anchors
 
-- apps/outbox-worker
+- [server.ts](../../../../apps/outbox-worker/src/server.ts)
+- [runOutboxWorkerHost.ts](../../../../apps/outbox-worker/src/host/runOutboxWorkerHost.ts)
+- [OperationalServer.ts](../../../../apps/outbox-worker/src/ops/OperationalServer.ts)
+- [PgShardOwnershipGate.ts](../../../../apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts)
+- [DeliveryBufferPurgeRuntime.ts](../../../../apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts)
 
-## Domain
+## Current Posture
 
-- [Delivery Domain](../domain-delivery.md)
+This component is the delivery process host that operators actually run. Its
+documentation needs to stay explicit because operational behavior here matters
+as much as library behavior in `@dvt/delivery`.
 
-## Main Responsibilities
+## Planned Delta
 
-- Outbox worker, event publishing
-- Root: OutboxAggregate (central outbox model)
-- Aggregates: RetryAggregate
-- Ensures event publication, retry management
+- keep purge, retention, and shard ownership behavior explicit as event-lifecycle
+  policy continues to harden;
+- avoid leaking delivery runtime ownership back into unrelated composition
+  roots.
 
-## Explanation
+## Historical Deep Dives
 
-dvt-outbox-worker is responsible for publishing events and managing delivery ownership:
-
-- **Root:** [OutboxAggregate](outbox-worker.md#outboxaggregate) — represents the central outbox model, owning event publication and retry logic.
-- **Aggregates:** [RetryAggregate](outbox-worker.md#retryaggregate).
-- **Responsibilities:**
-  - Publish events to external systems.
-  - Manage retry attempts for failed events.
-  - Report delivery status to delivery.
-
-**Interactions:**
-
-- **[Delivery](delivery.md):** Receives published events and manages ownership.
-- **[Engine](engine.md):** Receives delivery status for workflow execution.
-
-Outbox worker coordinates these interactions to ensure reliable event publication and retry management.
-
-## OutboxAggregate
-
-Represents the central outbox model, owning event publication and retry logic. Responsible for:
-
-- Managing event publication
-- Tracking retry attempts
-- Reporting delivery status
-
-## RetryAggregate
-
-Represents retry management for outbox worker. Responsible for:
-
-- Storing retry attempts
-- Managing retry logic
-- Reporting retry status
-
-## Restrictions
-
-- Must comply with delivery contracts and event publishing requirements
-- Only interacts with Delivery domain components and engine
-
-## Related Documentation
-
-- [Component Map](../component-map.md)
-- [Delivery Domain](../domain-delivery.md)
-
-## Detailed Documentation
-
-- [DDD Structure](outbox-worker-ddd.md)
-- [Functionalities](outbox-worker-functional.md)
-- [Constraints & Invariants](outbox-worker-constraints.md)
-- [Sequence Diagrams](outbox-worker-sequence.md)
+- [DDD Structure](./outbox-worker-ddd.md)
+- [Functionalities](./outbox-worker-functional.md)
+- [Constraints and invariants](./outbox-worker-constraints.md)
+- [Sequence diagrams](./outbox-worker-sequence.md)

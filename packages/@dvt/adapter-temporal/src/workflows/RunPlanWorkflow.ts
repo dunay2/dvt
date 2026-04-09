@@ -32,7 +32,12 @@ import {
   setHandler,
 } from '@temporalio/workflow';
 
-import type { EventType, ExecutionPlan, ResolvedRunContext } from '../engine-types.js';
+import type {
+  EventType,
+  ExecutionPlan,
+  ExecutionStep,
+  ResolvedRunContext,
+} from '../engine-types.js';
 
 import {
   buildCompletedStepFact,
@@ -47,7 +52,7 @@ import {
   validateGatewayDependencies,
 } from './workflowHelpers.js';
 
-type WorkflowStep = ExecutionPlan['steps'][number];
+type WorkflowStep = ExecutionStep;
 
 type ExecutedStepResult = {
   stepId: string;
@@ -62,7 +67,6 @@ type ExecutedStepResult = {
 // ---------------------------------------------------------------------------
 
 type WorkflowActivitiesPort = {
-  fetchPlan(planRef: RunPlanWorkflowInput['planRef']): Promise<ExecutionPlan>;
   executeStep(input: {
     step: WorkflowStep;
     ctx: RunPlanWorkflowInput['ctx'];
@@ -83,6 +87,7 @@ type WorkflowActivitiesPort = {
 // ---------------------------------------------------------------------------
 
 export interface RunPlanWorkflowInput {
+  plan: ExecutionPlan;
   planRef: {
     uri: string;
     sha256: string;
@@ -105,6 +110,8 @@ export interface RunPlanWorkflowInput {
   completedStepResults?: Record<string, Record<string, unknown>>;
   /** Internal skipped-step set carried across continue-as-new rollovers. */
   skippedStepIds?: string[];
+  /** Internal processed control-signal ids carried across continue-as-new rollovers. */
+  processedControlSignalIds?: string[];
 }
 
 export interface RunPlanWorkflowResult {
@@ -121,8 +128,8 @@ export interface WorkflowState {
   status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   /** Dedicated pause flag: used by condition() predicate to avoid TypeScript CFA cast. */
   paused: boolean;
-  /** Dedicated cancel flag: used by condition() predicate to avoid TypeScript CFA cast. */
-  cancelled: boolean;
+  /** Dedicated cancel-request flag: used by condition() predicates at safe points. */
+  cancelRequested: boolean;
   cancelReason?: string;
   currentStepIndex: number;
   continuedAsNewCount: number;
@@ -133,9 +140,9 @@ export interface WorkflowState {
 // Signals & queries
 // ---------------------------------------------------------------------------
 
-export const pauseSignal = defineSignal('pause');
-export const resumeSignal = defineSignal('resume');
-export const cancelSignal = defineSignal<[string]>('cancel');
+export const pauseSignal = defineSignal<[string]>('pause');
+export const resumeSignal = defineSignal<[string]>('resume');
+export const cancelSignal = defineSignal<[string | undefined]>('cancel');
 export const statusQuery = defineQuery<WorkflowState>('status');
 
 // ---------------------------------------------------------------------------
@@ -163,7 +170,8 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   const ctrl = parseWorkflowControlInput(input);
 
   const state = createInitialWorkflowState(ctrl.continuedAsNewCount, input.gatewayDecisions);
-  registerSignalHandlers(state);
+  const processedControlSignalIds = new Set(ctrl.processedControlSignalIds);
+  registerSignalHandlers(state, processedControlSignalIds);
 
   const completedStepResults = cloneStepResults(input.completedStepResults);
   const skippedSteps = new Set<string>(ctrl.skippedStepIds);
@@ -171,7 +179,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   try {
     await bootstrapFirstExecutionIfNeeded(ctrl.resumeFromLayerIndex, ctx, planRef);
 
-    const plan = await activities.fetchPlan(planRef);
+    const plan = input.plan;
     validateGatewayDependencies(plan.steps);
     const executionLayers = planExecutionLayers<WorkflowStep>(plan.steps);
     if (ctrl.resumeFromLayerIndex > executionLayers.length) {
@@ -197,6 +205,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       planRef,
       state,
       runtime,
+      processedControlSignalIds,
     });
 
     return resolveLayerLoopOutcome({
@@ -221,6 +230,7 @@ interface WorkflowControlInput {
   resumeFromLayerIndex: number;
   continuedAsNewCount: number;
   skippedStepIds: string[];
+  processedControlSignalIds: string[];
 }
 
 function parseWorkflowControlInput(input: RunPlanWorkflowInput): WorkflowControlInput {
@@ -238,6 +248,10 @@ function parseWorkflowControlInput(input: RunPlanWorkflowInput): WorkflowControl
       'continuedAsNewCount'
     ),
     skippedStepIds: parseOptionalStringArray(input.skippedStepIds, 'skippedStepIds'),
+    processedControlSignalIds: parseOptionalStringArray(
+      input.processedControlSignalIds,
+      'processedControlSignalIds'
+    ),
   };
 }
 
@@ -254,6 +268,15 @@ async function resolveLayerLoopOutcome(args: {
 }): Promise<RunPlanWorkflowResult> {
   if (args.layerOutcome.kind === 'terminal') {
     return args.layerOutcome.result;
+  }
+  const cancelled = await finalizeCancellationIfRequested({
+    state: args.state,
+    ctx: args.ctx,
+    planRef: args.planRef,
+    continuedAsNewCount: args.continuedAsNewCount,
+  });
+  if (cancelled) {
+    return cancelled;
   }
   if (args.layerOutcome.kind === 'continue_as_new') {
     return continueAsNew<typeof runPlanWorkflow>(args.layerOutcome.nextInput);
@@ -298,30 +321,39 @@ function createInitialWorkflowState(
   return {
     status: 'RUNNING',
     paused: false,
-    cancelled: false,
+    cancelRequested: false,
     currentStepIndex: 0,
     continuedAsNewCount,
     gatewayDecisions: gatewayDecisions ? { ...gatewayDecisions } : undefined,
   };
 }
 
-function registerSignalHandlers(state: WorkflowState): void {
-  setHandler(pauseSignal, () => {
+function registerSignalHandlers(
+  state: WorkflowState,
+  processedControlSignalIds: Set<string>
+): void {
+  setHandler(pauseSignal, (signalId: string) => {
+    if (isDuplicateControlSignal(signalId, processedControlSignalIds)) return;
     if (state.status !== 'RUNNING') return;
     state.paused = true;
     state.status = 'PAUSED';
   });
 
-  setHandler(resumeSignal, () => {
+  setHandler(resumeSignal, (signalId: string) => {
+    if (isDuplicateControlSignal(signalId, processedControlSignalIds)) return;
     if (!state.paused) return;
     state.paused = false;
     state.status = 'RUNNING';
   });
 
-  setHandler(cancelSignal, (reason: string) => {
-    state.cancelled = true;
-    state.cancelReason = reason;
-    state.status = 'CANCELLED';
+  setHandler(cancelSignal, (reason: string | undefined) => {
+    if (state.status === 'COMPLETED' || state.status === 'FAILED' || state.status === 'CANCELLED') {
+      return;
+    }
+    state.cancelRequested = true;
+    if (reason !== undefined) {
+      state.cancelReason = reason;
+    }
   });
 
   setHandler(statusQuery, () => state);
@@ -360,7 +392,7 @@ type LayerLoopOutcome =
 
 interface ExecutePlanLayersArgs {
   input: RunPlanWorkflowInput;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   executionLayers: ReadonlyArray<ReadonlyArray<WorkflowStep>>;
   resumeFromLayerIndex: number;
   continueAsNewAfterLayerCount: number;
@@ -369,6 +401,7 @@ interface ExecutePlanLayersArgs {
   planRef: RunPlanWorkflowInput['planRef'];
   state: WorkflowState;
   runtime: LayerRuntimeState;
+  processedControlSignalIds: ReadonlySet<string>;
 }
 
 interface ProcessLayerArgs extends ExecutePlanLayersArgs {
@@ -401,11 +434,6 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     planRef: args.planRef,
   });
 
-  if (executableLayer.length === 0) {
-    args.runtime.processedLayersInCurrentExecution += 1;
-    return null;
-  }
-
   args.state.currentStepIndex = args.runtime.completedSteps;
 
   const terminalBeforeLayer = await handlePreLayerLifecycle({
@@ -415,6 +443,11 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     continuedAsNewCount: args.continuedAsNewCount,
   });
   if (terminalBeforeLayer) return { kind: 'terminal', result: terminalBeforeLayer };
+
+  if (executableLayer.length === 0) {
+    args.runtime.processedLayersInCurrentExecution += 1;
+    return null;
+  }
 
   await emitStepStartedForLayer(args.ctx, args.planRef, executableLayer);
 
@@ -436,6 +469,14 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
   });
   if (terminalFromResults) return { kind: 'terminal', result: terminalFromResults };
 
+  const terminalAfterLayer = await finalizeCancellationIfRequested({
+    state: args.state,
+    ctx: args.ctx,
+    planRef: args.planRef,
+    continuedAsNewCount: args.continuedAsNewCount,
+  });
+  if (terminalAfterLayer) return { kind: 'terminal', result: terminalAfterLayer };
+
   args.runtime.processedLayersInCurrentExecution += 1;
   return maybeBuildContinueAsNewOutcome({
     input: args.input,
@@ -447,6 +488,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     gatewayDecisions: args.state.gatewayDecisions ?? {},
     completedStepResults: args.runtime.completedStepResults,
     skippedStepIds: args.runtime.skippedSteps,
+    processedControlSignalIds: args.processedControlSignalIds,
   });
 }
 
@@ -460,6 +502,7 @@ function maybeBuildContinueAsNewOutcome(args: {
   gatewayDecisions: Record<string, boolean>;
   completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: ReadonlySet<string>;
+  processedControlSignalIds: ReadonlySet<string>;
 }): LayerLoopOutcome | null {
   const nextLayerIndex = args.layerIndex + 1;
   if (
@@ -483,6 +526,7 @@ function maybeBuildContinueAsNewOutcome(args: {
       gatewayDecisions: args.gatewayDecisions,
       completedStepResults: args.completedStepResults,
       skippedStepIds: args.skippedStepIds,
+      processedControlSignalIds: args.processedControlSignalIds,
     }),
   };
 }
@@ -528,33 +572,44 @@ async function handlePreLayerLifecycle(args: {
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
 }): Promise<RunPlanWorkflowResult | null> {
-  if (args.state.cancelled) {
-    await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
-    args.state.status = 'CANCELLED';
-    return {
-      runId: args.ctx.runId,
-      status: 'CANCELLED',
-      continuedAsNewCount: args.continuedAsNewCount,
-    };
-  }
+  const cancelled = await finalizeCancellationIfRequested(args);
+  if (cancelled) return cancelled;
 
   if (!args.state.paused) return null;
 
   await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunPaused' });
-  await condition(() => !args.state.paused || args.state.cancelled);
+  await condition(() => !args.state.paused || args.state.cancelRequested);
 
-  if (args.state.cancelled) {
-    await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
-    args.state.status = 'CANCELLED';
-    return {
-      runId: args.ctx.runId,
-      status: 'CANCELLED',
-      continuedAsNewCount: args.continuedAsNewCount,
-    };
-  }
+  const cancelledWhilePaused = await finalizeCancellationIfRequested(args);
+  if (cancelledWhilePaused) return cancelledWhilePaused;
 
   await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunResumed' });
   return null;
+}
+
+async function finalizeCancellationIfRequested(args: {
+  state: WorkflowState;
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+  continuedAsNewCount: number;
+}): Promise<RunPlanWorkflowResult | null> {
+  if (!args.state.cancelRequested) {
+    return null;
+  }
+
+  await activities.emitEvent({
+    ctx: args.ctx,
+    planRef: args.planRef,
+    eventType: 'RunCancelRequested',
+  });
+  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
+  args.state.status = 'CANCELLED';
+  args.state.paused = false;
+  return {
+    runId: args.ctx.runId,
+    status: 'CANCELLED',
+    continuedAsNewCount: args.continuedAsNewCount,
+  };
 }
 
 async function emitStepStartedForLayer(
@@ -586,7 +641,7 @@ interface LayerStepExecution {
 
 async function executeLayerSteps(args: {
   layer: ReadonlyArray<WorkflowStep>;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
   state: WorkflowState;
   runtime: LayerRuntimeState;
@@ -596,7 +651,7 @@ async function executeLayerSteps(args: {
 
 async function executeLayerStep(args: {
   step: WorkflowStep;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
   state: WorkflowState;
   runtime: LayerRuntimeState;
@@ -648,7 +703,7 @@ function resolveGatewayDecision(
 function applyGatewayDecisionEffects(args: {
   gatewayDecision: boolean | undefined;
   stepId: string;
-  planSteps: WorkflowStep[];
+  planSteps: ReadonlyArray<WorkflowStep>;
   state: WorkflowState;
   runtime: LayerRuntimeState;
 }): void {
@@ -755,4 +810,15 @@ function cloneStepResults(
     cloned[stepId] = { ...result };
   }
   return cloned;
+}
+
+function isDuplicateControlSignal(
+  signalId: string,
+  processedControlSignalIds: Set<string>
+): boolean {
+  if (processedControlSignalIds.has(signalId)) {
+    return true;
+  }
+  processedControlSignalIds.add(signalId);
+  return false;
 }

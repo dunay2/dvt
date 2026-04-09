@@ -19,10 +19,31 @@ export * from './core/WorkflowEngineCoreService.js';
 export * from './core/SnapshotProjector.js';
 export * from './core/idempotency.js';
 
-export * from './ports/IRunStateStore.js';
+export type {
+  EventInput,
+  IClock,
+  IIdempotencyKeyBuilder,
+  IPlanFetcher,
+  IPlanIntegrityValidator,
+  IRunStateStore,
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+  ListEventsOptions,
+  ListRunsOptions,
+  ProviderRefUpdate,
+  RetryAttemptReservation,
+  RunBootstrapInput,
+  RunStateCommandPort,
+  StoredPlanArtifact,
+  StepEventInput,
+} from './ports/IRunStateStore.js';
+export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './ports/IRunStateStore.js';
 export * from './ports/IRunSnapshotStalenessQuery.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
+export * from './ports/IProjector.js';
+export * from './ports/IRunExecutionContextResolver.js';
 export * from './adapters/IProviderAdapter.js';
 
 export * from './services/RunMaintenanceService.js';
@@ -33,7 +54,7 @@ export * from './domain/IWorkflowEngineCore.js';
 export * from './outbox/IOutboxRateLimiter.js';
 export * from './outbox/TokenBucketRateLimiter.js';
 
-export * from './utils/clock.js';
+export { SequenceClock, epochMsToIsoUtc, parseIsoUtcToEpochMs } from './utils/clock.js';
 
 export * from './security/authorizer.js';
 export * from './security/AuthorizationError.js';
@@ -43,4 +64,4 @@ export * from './security/RunAccessPolicy.js';
 
 export * from './application/providerSelection.js';
 export * from './application/StartRunAdmissionGuard.js';
-export * from './application/StartRunCoordinator.js';
+export * from './application/StartRunApplicationService.js';

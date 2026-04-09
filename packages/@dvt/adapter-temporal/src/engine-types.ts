@@ -12,14 +12,18 @@ export type {
   EventInput,
   EventType,
   ExecutionPlan,
+  ExecutionStep,
+  IOutboxStorage,
+  ResolvedRunContext,
+  RunBootstrapInput,
+  RunMetadata,
+} from '@dvt/contracts';
+
+export type {
   IClock,
   IIdempotencyKeyBuilder,
   IPlanFetcher,
   IPlanIntegrityValidator,
-  IOutboxStorage,
   IRunStateStore,
-  ResolvedRunContext,
-  RunBootstrapInput,
-  RunMetadata,
   RunStateCommandPort,
-} from '@dvt/contracts';
+} from '@dvt/engine';

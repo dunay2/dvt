@@ -12,5 +12,6 @@ Reusable templates for planning documents and lightweight working notes.
 
 ## Index
 
-- [Planning Document Template](TEMPLATE_PLANNING_DOC.md)
-- [Execution Work Item Template](TEMPLATE_EXECUTION_WORK_ITEM.md)
+- [Planning Document Template](./TEMPLATE_PLANNING_DOC.md)
+- [Execution Work Item Template](./TEMPLATE_EXECUTION_WORK_ITEM.md)
+- [QA Prompt Templates](./qa/index.md)

@@ -13,7 +13,7 @@ Status snapshot aligned with current repository state.
 - Original start: 2026-03-04
 - Current review: 2026-03-07
 - ADR: [`ADR-0032`](../../adr/ADR-0032-compiledcoderef-ownership.md)
-- Master plan: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
+- Master plan: [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md)
 
 ## Goal
 
@@ -74,7 +74,7 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 3. Added unit tests for valid/invalid/absent patterns.
    - [`packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
 4. Added QA architecture review for static-noise reduction aligned with SOLID/DDD/Hexagonal principles.
-   - [`docs/archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../../archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md)
+   - [`docs/archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md)
 
 ### Validation Notes
 
@@ -117,5 +117,5 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 ## References
 
-- Evidence draft: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
+- Evidence draft: [`docs/evidence/critical/ED-20260304-compiledcoderef-ownership.md`](../../evidence/critical/ED-20260304-compiledcoderef-ownership.md)
 - ADR detail: [`docs/adr/ADR-0032-compiledcoderef-ownership.md`](../../adr/ADR-0032-compiledcoderef-ownership.md)

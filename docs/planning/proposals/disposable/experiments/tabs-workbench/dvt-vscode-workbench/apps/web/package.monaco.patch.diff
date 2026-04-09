@@ -1,0 +1,10 @@
+diff --git a/apps/web/package.json b/apps/web/package.json
+--- a/apps/web/package.json
++++ b/apps/web/package.json
+@@
+   "dependencies": {
++    "@monaco-editor/react": "^4.7.0",
+     "@dvt/contracts": "workspace:*",
+@@
++    "monaco-editor": "^0.55.1",
+     "motion": "12.23.24",

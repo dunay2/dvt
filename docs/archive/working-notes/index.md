@@ -12,7 +12,7 @@ not belong in the active architecture or planning tree.
 
 ## Index
 
-- [State Store Extraction](state-store-extraction.md)
+- [State Store Extraction](./state-store-extraction.md)
 
 ## Use Policy
 

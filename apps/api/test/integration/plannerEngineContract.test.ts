@@ -1,8 +1,11 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
+  parseExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
   type RunContext,
@@ -14,16 +17,36 @@ import {
   RunAccessPolicy,
   SequenceClock,
   SnapshotProjector,
+  StartRunAdmissionGuard,
+  StartRunApplicationService,
   WorkflowEngine,
+  WorkflowEngineCoreService,
+  type EngineRunRef,
   type ExecutionPlan,
+  type IProviderAdapter,
   type RunEventInput,
 } from '@dvt/engine';
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
-import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
 
-function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
+import { GraphSourceArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
+
+const PLANNER_MANIFEST_FIXTURE_URL = new URL(
+  '../fixtures/planner/basic-manifest.json',
+  import.meta.url
+);
+
+function plannerOutputToEnginePlan(plannerPlan: {
+  metadata: {
+    planId: string;
+    planVersion: '1.0';
+    inputHashSha256: string;
+    createdAtIso: string;
+  };
+  steps: ExecutionPlan['steps'];
+}): ExecutionPlan {
   return {
     metadata: {
       planId: plannerPlan.metadata.planId,
@@ -31,6 +54,7 @@ function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan 
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
       inputHashSha256: plannerPlan.metadata.inputHashSha256,
+      createdAtIso: plannerPlan.metadata.createdAtIso,
     },
     steps: plannerPlan.steps.map((step) => ({
       stepId: step.stepId,
@@ -93,23 +117,60 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
 
   const mockAdapter = new MockAdapter({
     stateStore: store,
+    stateStoreWrite: store,
+    clock,
     projector,
-    planFetcher: { fetch: async () => enginePlan },
   });
+  const policy = new RunAccessPolicy({
+    authorizer: new AllowAllAuthorizer(),
+    planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+  });
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
 
   const engine = new WorkflowEngine({
+    startRunApplicationService: new StartRunApplicationService({
+      policy,
+      guard: new StartRunAdmissionGuard({
+        policy,
+        stateStoreRead: store,
+        adapters,
+      }),
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      idempotency,
+      clock,
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
+      planFetcher: {
+        fetch: async () => ({
+          bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+          executionPolicy: {},
+        }),
+      },
+    }),
+    core: new WorkflowEngineCoreService({
+      stateStoreRead: store,
+      stateStoreWrite: store,
+      projector,
+      idempotency,
+      policy,
+      adapters,
+      observability: createNoopObservability(),
+      clock,
+    }),
     stateStoreRead: store,
     stateStoreWrite: store,
     projector,
     idempotency,
     clock,
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
-    adapters: new Map([['mock', mockAdapter]]),
+    adapters,
+    planFetcher: {
+      fetch: async () => ({
+        bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+        executionPolicy: {},
+      }),
+    },
   });
 
   return { engine, store, clock, idempotency };
@@ -177,14 +238,46 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
+  it('PlannerFacade resolves manifestRef through the real API artifact resolver', async () => {
+    const planner = new PlannerFacade({
+      graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: 'test' }),
+    });
+    const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
+
+    const { plan } = await planner.buildPlan({
+      manifestRef: {
+        uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+        sha256: sha256Hex(bytes),
+      },
+      selection: {
+        selectedNodeIds: ['model.analytics.order_items'],
+        includeUpstream: true,
+      },
+    });
+
+    expect(plan.steps.map((step) => step.stepId)).toEqual([
+      'model.analytics.orders',
+      'model.analytics.order_items',
+    ]);
+  });
+
   it('full lifecycle with 3-step DAG', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
-      nodes: [
-        { nodeId: 'staging.orders', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'mart.revenue', resourceType: 'model', dependsOn: ['staging.orders'] },
-        { nodeId: 'test.revenue_not_null', resourceType: 'test', dependsOn: ['mart.revenue'] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'staging.orders', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'mart.revenue', stepKind: 'DBT_MODEL', dependsOn: ['staging.orders'] },
+          {
+            nodeId: 'test.revenue_not_null',
+            stepKind: 'DBT_TEST',
+            dependsOn: ['mart.revenue'],
+          },
+        ],
+      },
       selection: {
         selectedNodeIds: ['test.revenue_not_null'],
         includeUpstream: true,
@@ -200,7 +293,7 @@ describe('planner -> engine contract', () => {
     expect(indexOf('staging.orders') < indexOf('mart.revenue')).toBe(true);
     expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
-    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    const enginePlan = parseExecutionPlan(plannerPlan);
     expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
     expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
@@ -250,7 +343,6 @@ describe('planner -> engine contract', () => {
 
     const finalSnapshot = await engine.getRunStatus(runRef);
     expect(finalSnapshot.status).toBe('COMPLETED');
-    expect(finalSnapshot.hash).toMatch(/^[a-f0-9]{64}$/);
 
     const persistedSnapshot = await store.getSnapshot('test-tenant', runId);
     expect(persistedSnapshot).toBeTruthy();
@@ -268,10 +360,15 @@ describe('planner -> engine contract', () => {
   it('planner planId is deterministic for identical input', async () => {
     const planner = new PlannerFacade();
     const input = {
-      nodes: [
-        { nodeId: 'a', resourceType: 'model', dependsOn: [] as readonly string[] },
-        { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] as readonly string[] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1' as const,
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] as readonly string[] },
+          { nodeId: 'b', stepKind: 'DBT_MODEL', dependsOn: ['a'] as readonly string[] },
+        ],
+      },
       selection: { selectedNodeIds: ['b'], includeUpstream: true },
     };
 
@@ -282,13 +379,54 @@ describe('planner -> engine contract', () => {
     expect(plan1.metadata.inputHashSha256).toBe(plan2.metadata.inputHashSha256);
   });
 
+  it('planner plan identity is stable for provenance-only graphSource changes', async () => {
+    const planner = new PlannerFacade();
+
+    const baseNodes = [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] as readonly string[] }];
+
+    const { plan: first } = await planner.buildPlan({
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: baseNodes,
+      },
+      selection: { selectedNodeIds: ['a'] },
+    });
+
+    const { plan: second } = await planner.buildPlan({
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'imported',
+        sourceVersion: '2026-04-06',
+        nodes: [
+          {
+            nodeId: 'a',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+            metadata: { displayName: 'Only metadata changed', sourceRef: 'src://different' },
+          },
+        ],
+      },
+      selection: { selectedNodeIds: ['a'] },
+    });
+
+    expect(first.metadata.planId).toBe(second.metadata.planId);
+    expect(first.metadata.inputHashSha256).toBe(second.metadata.inputHashSha256);
+  });
+
   it('planner step fields remain compatible with engine step consumption', async () => {
     const planner = new PlannerFacade();
     const { plan } = await planner.buildPlan({
-      nodes: [
-        { nodeId: 'step-a', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'step-b', resourceType: 'test', dependsOn: ['step-a'] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'step-a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'step-b', stepKind: 'DBT_TEST', dependsOn: ['step-a'] },
+        ],
+      },
       selection: { selectedNodeIds: ['step-b'], includeUpstream: true },
     });
 
@@ -304,29 +442,36 @@ describe('planner -> engine contract', () => {
     const enginePlan = plannerOutputToEnginePlan(plan);
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
+    const clock = new SequenceClock('2026-03-01T00:00:00.000Z');
     const mock = new MockAdapter({
       stateStore: store,
+      stateStoreWrite: store,
+      clock,
       projector,
-      planFetcher: { fetch: async () => enginePlan },
     });
 
     const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
-    const runRef = await mock.startRun(planRef, makeResolvedRunContext('compat-run'));
+    const runRef = await mock.startRun(enginePlan, planRef, makeResolvedRunContext('compat-run'));
     expect(runRef.provider).toBe('mock');
   });
 
-  it('bridge preserves planner planId and step order', async () => {
+  it('canonical plan preserves planner planId and step order without a bridge', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({
-      nodes: [
-        { nodeId: 'x', resourceType: 'model', dependsOn: [] },
-        { nodeId: 'y', resourceType: 'model', dependsOn: ['x'] },
-        { nodeId: 'z', resourceType: 'model', dependsOn: ['x', 'y'] },
-      ],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [
+          { nodeId: 'x', stepKind: 'DBT_MODEL', dependsOn: [] },
+          { nodeId: 'y', stepKind: 'DBT_MODEL', dependsOn: ['x'] },
+          { nodeId: 'z', stepKind: 'DBT_MODEL', dependsOn: ['x', 'y'] },
+        ],
+      },
       selection: { selectedNodeIds: ['z'], includeUpstream: true },
     });
 
-    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    const enginePlan = parseExecutionPlan(plannerPlan);
 
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
     expect(enginePlan.steps.length).toBe(plannerPlan.steps.length);
@@ -337,16 +482,22 @@ describe('planner -> engine contract', () => {
     }
   });
 
-  it('planner output still documents current schema drift against engine metadata', async () => {
+  it('planner output already satisfies the engine-visible canonical metadata', async () => {
     const planner = new PlannerFacade();
     const { plan } = await planner.buildPlan({
-      nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'solo', stepKind: 'DBT_MODEL', dependsOn: [] }],
+      },
       selection: { selectedNodeIds: ['solo'] },
     });
 
     const metadata = plan.metadata as Record<string, unknown>;
-    expect(metadata['schemaVersion']).toBe(undefined);
-    expect(metadata['contractVersion']).toBe(undefined);
+    expect(() => parseExecutionPlan(plan)).not.toThrow();
+    expect(metadata['schemaVersion']).toBe('v1.2');
+    expect(metadata['contractVersion']).toBe('1.0.0');
     expect(metadata['planId']).not.toBe(undefined);
     expect(metadata['planVersion']).not.toBe(undefined);
     expect(metadata['inputHashSha256']).not.toBe(undefined);

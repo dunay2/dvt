@@ -16,6 +16,9 @@ Canonical reference for DVT architectural principles, bounded contexts, and top-
 - Event-sourced run lifecycle: `Run` is reconstructed from ordered events and optional snapshots; snapshots are derived, never authoritative over events.
 - Multi-tenant isolation: tenant context must be explicit in reads, writes, signals, and status queries.
 - Replaceable infrastructure: provider/runtime concerns stay behind stable contracts such as `IProviderAdapter`.
+- Boundary enforcement must be mechanical where the repo can enforce it: `@dvt/engine`
+  source depends on ports and shared contracts, not on `@dvt/planner` or concrete
+  provider adapters.
 
 ## Bounded Contexts
 
@@ -74,6 +77,6 @@ Engine --> ObservabilityPort["IObservability"]
 ## Canonical Companions
 
 - ADRs: [`docs/adr/`](../adr/index.md)
-- Engine architecture: [`docs/architecture/engine/`](engine/index.md)
-- Delivery status: [`docs/architecture/system-delivery-status.md`](system-delivery-status.md)
-- Code-aligned snapshot atlas: [`docs/architecture/atlas/`](atlas/index.md)
+- Engine architecture: [`docs/architecture/components/engine/`](./components/engine/index.md)
+- Delivery status: [`docs/architecture/system-delivery-status.md`](./system-delivery-status.md)
+- Code-aligned snapshot atlas: [`docs/architecture/atlas/`](./atlas/index.md)

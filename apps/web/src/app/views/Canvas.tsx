@@ -19,6 +19,7 @@ function CanvasContent() {
         activeRunId={controller.activeRunId}
         registeredPlugins={controller.registeredPlugins}
         userPermissions={controller.userPermissions}
+        canvasAuthoringMode={controller.canvasAuthoringMode}
         nodesWithImpact={controller.nodesWithImpact}
         edges={controller.edges}
         nodeTypes={controller.nodeTypes}
@@ -47,16 +48,21 @@ function CanvasContent() {
         onRun={() => {
           void controller.handleStartRun();
         }}
+        canStartRun={controller.canStartRun}
+        planStatusSummary={controller.planStatusSummary}
         exclusiveOverlayMode={controller.exclusiveOverlayMode}
         canUseCostOverlay={controller.canUseCostOverlay}
         impactOverlayEnabled={controller.impactOverlayEnabled}
         columnLevelLineageEnabled={controller.columnLevelLineageEnabled}
+        transformationValidation={controller.transformationValidation}
       />
 
       <PlanPreviewModal
         open={controller.planModalOpen}
         onClose={() => controller.setPlanModalOpen(false)}
         plan={controller.currentPlan as ExecutionPlan | null}
+        startRunDisabled={!controller.canStartRun}
+        startRunMessage={controller.planStatusSummary}
         onStartRun={() => {
           void controller.handleStartRun();
         }}

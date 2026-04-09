@@ -1,10 +1,12 @@
-import type { PlanRef, ResolvedRunContext, RunStateCommandPort } from '@dvt/contracts';
-import { describe, expect, it, vi } from 'vitest';
+import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { RunStateCommandPort } from '@dvt/engine';
+import { describe, expect, it } from 'vitest';
 
 import {
   createActivities,
   type Activities,
   type ActivityDeps,
+  type StepActivity,
   type StepExecutor,
   type StepInput,
 } from '../src/activities/stepActivities.js';
@@ -25,16 +27,6 @@ import {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const PLAN_JSON = {
-  metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1', contractVersion: '1.0.0' },
-  steps: [
-    { stepId: 'step-a', kind: 'test' },
-    { stepId: 'step-b', kind: 'test' },
-  ],
-};
-
-const PLAN_BYTES = Buffer.from(JSON.stringify(PLAN_JSON), 'utf-8');
 
 const PLAN_REF: PlanRef = {
   uri: 's3://bucket/plans/p1.json',
@@ -64,8 +56,6 @@ const TEST_ERRORS = {
 } as const;
 
 const EXPECTED_ERRORS = {
-  planRefMismatchPlanId: 'PLAN_REF_MISMATCH: planId',
-  planContractVersionUnknown: 'PLAN_CONTRACT_VERSION_UNKNOWN',
   transientDbError: 'TRANSIENT_DB_ERROR',
   dependsOnMustBeArray: 'INVALID_STEP_SCHEMA: dependsOn_must_be_array',
   dependsOnValuesMustBeString: 'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string',
@@ -76,6 +66,8 @@ const EXPECTED_ERRORS = {
   permanentStepErrorS1: 'PERMANENT_STEP_ERROR:s1',
   gatewayConfigRequired: 'INVALID_STEP_SCHEMA: gateway_config_required:gw-invalid',
   invalidGatewayDsl: 'INVALID_GATEWAY_DSL:gw-invalid-dsl',
+  stepKindRequired: 'INVALID_STEP_SCHEMA: step_kind_required:s1',
+  unsupportedStepKind: 'UNSUPPORTED_STEP_KIND:PYTHON_SCRIPT:s-python',
 } as const;
 
 class TestClock {
@@ -223,22 +215,19 @@ function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
     testStore: store,
     clock: new TestClock(),
     idempotency: new TestIdempotencyKeyBuilder(),
-    fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
-    integrity: {
-      fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
-    } as unknown as ActivityDeps['integrity'],
   };
 }
 
 function setupActivities(
   store: TestTxStore = new TestTxStore(),
-  stepExecutors?: readonly StepExecutor[]
+  stepExecutors?: readonly StepExecutor[],
+  stepActivitiesByKind?: ReadonlyMap<string, StepActivity>
 ): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
   const deps = buildDeps(store);
-  const acts = createActivities(deps, stepExecutors);
+  const acts = createActivities(deps, stepExecutors, stepActivitiesByKind);
   return { deps, acts };
 }
 
@@ -304,46 +293,6 @@ function expectExecuteStepRejects(step: unknown, expectedError: string) {
 // ---------------------------------------------------------------------------
 
 describe('stepActivities', () => {
-  describe('fetchPlan', () => {
-    it('validates integrity and parses plan', async () => {
-      const { deps, acts } = setupActivities();
-
-      const plan = await acts.fetchPlan(PLAN_REF);
-
-      expect(plan.metadata.planId).toBe('p1');
-      expect(plan.steps).toHaveLength(2);
-      expect(deps.integrity.fetchAndValidate).toHaveBeenCalledWith(PLAN_REF, deps.fetcher);
-    });
-
-    it('rejects plan when metadata does not match PlanRef', async () => {
-      const { acts } = setupActivities();
-
-      const badRef: PlanRef = { ...PLAN_REF, planId: 'wrong-id' };
-
-      await expect(acts.fetchPlan(badRef)).rejects.toThrow(EXPECTED_ERRORS.planRefMismatchPlanId);
-    });
-
-    it('rejects unsupported plan contractVersion', async () => {
-      const badPlan = {
-        ...PLAN_JSON,
-        metadata: {
-          ...PLAN_JSON.metadata,
-          contractVersion: '99.0.0',
-        },
-      };
-      const badBytes = Buffer.from(JSON.stringify(badPlan), 'utf-8');
-      const { deps, acts } = setupActivities();
-      deps.fetcher = { fetch: vi.fn(async () => badBytes) };
-      deps.integrity = {
-        fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
-      } as unknown as ActivityDeps['integrity'];
-
-      await expect(acts.fetchPlan(PLAN_REF)).rejects.toThrow(
-        EXPECTED_ERRORS.planContractVersionUnknown
-      );
-    });
-  });
-
   describe('emitEvent', () => {
     it('persists event to state store', async () => {
       const { deps, acts } = setupActivities();
@@ -465,29 +414,23 @@ describe('stepActivities', () => {
       const { acts } = setupActivities();
 
       const result = await acts.executeStep({
-        step: { stepId: 's1', kind: 'test' },
+        step: { stepId: 's1', kind: 'DBT_TEST' },
         ctx: CTX,
       });
 
       expect(result).toEqual({ stepId: 's1', status: 'COMPLETED' });
     });
 
-    it('accepts step with only stepId (kind is optional)', async () => {
-      const { acts } = setupActivities();
-
-      const result = await acts.executeStep({
-        step: { stepId: 's1' },
-        ctx: CTX,
-      });
-
-      expect(result.status).toBe('COMPLETED');
-    });
+    it(
+      'rejects non-gateway step when kind is missing',
+      expectExecuteStepRejects({ stepId: 's1' }, EXPECTED_ERRORS.stepKindRequired)
+    );
 
     it('accepts step with dependsOn array', async () => {
       const { acts } = setupActivities();
 
       const result = await acts.executeStep({
-        step: { stepId: 's2', kind: 'test', dependsOn: ['s1'] },
+        step: { stepId: 's2', kind: 'DBT_TEST', dependsOn: ['s1'] },
         ctx: CTX,
       });
 
@@ -498,7 +441,7 @@ describe('stepActivities', () => {
       const { acts } = setupActivities();
 
       const result = await acts.executeStep({
-        step: { stepId: 's3', kind: 'test', stepTypeConfig: { stepTimeoutMs: 5000 } },
+        step: { stepId: 's3', kind: 'DBT_MODEL', stepTypeConfig: { stepTimeoutMs: 5000 } },
         ctx: CTX,
       });
 
@@ -508,7 +451,7 @@ describe('stepActivities', () => {
     it(
       'rejects simulateError on runtime step input',
       expectExecuteStepRejects(
-        { stepId: 's1', kind: 'test', simulateError: 'permanent' },
+        { stepId: 's1', kind: 'DBT_TEST', simulateError: 'permanent' },
         EXPECTED_ERRORS.fieldNotAllowedSimulateError
       )
     );
@@ -563,7 +506,7 @@ describe('stepActivities', () => {
     it(
       'rejects step with unknown fields',
       expectExecuteStepRejects(
-        { stepId: 's1', kind: 'test', forbidden: 'field' },
+        { stepId: 's1', kind: 'DBT_TEST', forbidden: 'field' },
         EXPECTED_ERRORS.fieldNotAllowedForbidden
       )
     );
@@ -573,24 +516,52 @@ describe('stepActivities', () => {
       expectExecuteStepRejects(
         {
           stepId: 's1',
-          kind: 'test',
+          kind: 'DBT_TEST',
           inputBindings: [{ targetPath: '/x', sourceStepId: 's0', sourcePath: '/y' }],
         },
         EXPECTED_ERRORS.inputBindingsNotSupported
       )
     );
 
+    it(
+      'rejects unsupported task step kind when no activity is registered',
+      expectExecuteStepRejects(
+        { stepId: 's-python', kind: 'PYTHON_SCRIPT', dependsOn: [] },
+        EXPECTED_ERRORS.unsupportedStepKind
+      )
+    );
+
+    it('executes a registered non-DBT step kind without changing workflow logic', async () => {
+      const pythonActivity: StepActivity = {
+        async execute(step) {
+          return { stepId: step.stepId, status: 'COMPLETED' };
+        },
+      };
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        new Map([['PYTHON_SCRIPT', pythonActivity]])
+      );
+
+      const result = await acts.executeStep({
+        step: { stepId: 's-python', kind: 'PYTHON_SCRIPT', dependsOn: [] },
+        ctx: CTX,
+      });
+
+      expect(result).toEqual({ stepId: 's-python', status: 'COMPLETED' });
+    });
+
     it('throws transient error when executor raises retryable failure', async () => {
       const { acts } = setupActivities(undefined, withErrorExecutors(transientErrorExecutor('s1')));
       await expect(
-        acts.executeStep({ step: { stepId: 's1', kind: 'test' }, ctx: CTX })
+        acts.executeStep({ step: { stepId: 's1', kind: 'DBT_TEST' }, ctx: CTX })
       ).rejects.toThrow(EXPECTED_ERRORS.transientStepErrorS1);
     });
 
     it('throws permanent error when executor raises non-retryable failure', async () => {
       const { acts } = setupActivities(undefined, withErrorExecutors(permanentErrorExecutor('s1')));
       await expect(
-        acts.executeStep({ step: { stepId: 's1', kind: 'test' }, ctx: CTX })
+        acts.executeStep({ step: { stepId: 's1', kind: 'DBT_TEST' }, ctx: CTX })
       ).rejects.toThrow(EXPECTED_ERRORS.permanentStepErrorS1);
     });
 

@@ -221,9 +221,12 @@ async function bootstrapRun(
       planId: 'plan-1',
       planVersion: '1.0.0',
       logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: `wf-${runId}`,
-      providerRunId: `pr-${runId}`,
+      providerRef: {
+        provider: 'mock',
+        tenantId,
+        workflowId: `wf-${runId}`,
+        runId: `pr-${runId}`,
+      },
     },
     firstEvents: [
       {

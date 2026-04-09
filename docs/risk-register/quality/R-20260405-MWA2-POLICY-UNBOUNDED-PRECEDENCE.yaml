@@ -1,0 +1,28 @@
+---
+id: R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE
+title: Policy-first precedence drift for unbounded timeout and concurrency
+status: Open
+date: 2026-04-05
+owners:
+  - '@dvt/planner'
+  - 'dvt-api'
+severity: High
+probability: Medium
+---
+summary: >
+  Planner step config merging allowed node-provided timeout/concurrency caps to survive when
+  resolved policy declared unbounded, because omitted policy fields did not overwrite existing
+  stepTypeConfig keys.
+
+mitigations:
+  - Apply explicit overwrite/delete logic for policy-owned fields in dbtStepFactory.
+  - Add planner unit regression for unbounded timeout/concurrency policy behavior.
+  - Add planner-backed API regression to verify cross-boundary precedence.
+
+monitoring:
+  - Monitor planner validation failures tied to stepTypeConfig policy fields.
+  - Track regressions in PlannerBackedStartRunUseCase test slice for policy precedence.
+
+follow_up:
+  - Keep policy precedence invariants documented in planner component docs.
+  - Keep ARC-2 evidence and risk updates mandatory for planner/contracts boundary changes.

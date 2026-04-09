@@ -14,7 +14,7 @@ Accepted.
 ## Context
 
 The 2026-03-22 DDD and Hexagonal Port Audit
-([20260322-ddd-hexagonal-port-audit-review.md](../planning/reviews/20260322-ddd-hexagonal-port-audit-review.md))
+([20260322-ddd-hexagonal-port-audit-review.md](../planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md))
 identified five structural gaps after Phase 1 gap closure (G1–G10):
 
 | Finding | Violation                                                                                      |
@@ -120,7 +120,7 @@ sequenceDiagram
     SRAS->>Intent: save(intentId, runContext)
     SRAS->>Engine: startRun(planRef, runContext, intentId)
     Engine->>Provider: startRun(plan, runContext)
-    Provider-->>Engine: providerExecutionRunId
+    Provider-->>Engine: EngineRunRef
     Engine-->>SRAS: RunRef
     SRAS-->>API: RunRef
 ```
@@ -144,7 +144,7 @@ This decision formalizes the split contract so that S02 has a canonical shape.
 
 | Interface              | Role                                       | Methods                                                                            |
 | ---------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `IRunWriteStore`       | Command path — write domain facts          | `bootstrapRunTx`, `appendEvent`, `updateRunMetadata`, `saveProviderRef`            |
+| `IRunWriteStore`       | Command path — write domain facts          | `bootstrapRunTx`, `appendAndEnqueueTx`, `reserveRetryAttempt`                      |
 | `IRunReadStore`        | Query path — read current state            | `getRunEvents`, `getRunSnapshot`, `getRunsByTenant`, `getRunStatus`                |
 | `IRunMaintenanceStore` | Operational path — projector, purge, admin | `rebuildSnapshot`, `listStaleSnapshotRuns`, `markDelivered`, `countPendingByRunId` |
 
@@ -268,8 +268,8 @@ Recommended order: F1 → S02 → S03.
 
 ## References
 
-- [20260322 DDD and Hexagonal Port Audit](../planning/reviews/20260322-ddd-hexagonal-port-audit-review.md)
-- [ADR-0034 — Bounded Context Boundaries](ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [ADR-0018 — Contracts Package Ownership](ADR-0018-contracts-package-ownership.md)
-- [Phase 2 Roadmap — S02 and S03](../planning/proposals/phase2-arch-debt-roadmap-20260315.md)
-- [2026-03-14 Domain Cohesion Review](../planning/reviews/20260314-domain-cohesion-review.md)
+- [20260322 DDD and Hexagonal Port Audit](../planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
+- [ADR-0034 — Bounded Context Boundaries](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0018 — Shared Kernel Ownership Governance](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [Phase 2 Roadmap — S02 and S03](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md)
+- [2026-03-14 Domain Cohesion Review](../planning/reviews/architecture-and-governance/20260314-domain-cohesion-review.md)

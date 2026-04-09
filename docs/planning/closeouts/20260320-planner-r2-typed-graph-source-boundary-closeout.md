@@ -89,7 +89,7 @@ drift between the implementation core and the published entry surface.
   validator now enforces one-active-source over `graphSource` / `nodes`
 - [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts):
   planner core now consumes `graphSource.nodes` or direct `nodes`
-- [docs/planning/status/planner-current-state-assessment-20260320.md](../status/planner-current-state-assessment-20260320.md):
+- [docs/planning/status/planner-current-state-assessment.md](../status/planner-current-state-assessment.md):
   updated assessment scores, diagrams, and open items
 - [docs/planning/proposals/planner-target-state-roadmap-20260320.md](../proposals/planner-target-state-roadmap-20260320.md):
   marked `R2` closed and updated roadmap references
@@ -98,9 +98,9 @@ drift between the implementation core and the published entry surface.
 - [docs/planning/status/canonical-doc-code-matrix.md](../status/canonical-doc-code-matrix.md):
   added a topic row and detail section for the planner typed graph-source
   boundary
-- [docs/evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md](../../evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md):
+- [docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md](../../evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md):
   added slice evidence
-- [docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md](20260320-planner-r2-typed-graph-source-boundary-closeout.md):
+- [docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md](./20260320-planner-r2-typed-graph-source-boundary-closeout.md):
   added think-first analysis and validation record
 
 ## Test evidence

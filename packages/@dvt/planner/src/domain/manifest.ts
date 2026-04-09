@@ -11,6 +11,7 @@
  *   - ManifestGraphDeriver → Domain Service coordinating the above
  */
 import { PlannerError, PlannerErrorCode } from './errors.js';
+import { binaryCompare } from './sorting.js';
 import type { GraphNode } from './types.js';
 
 // ── Internal types ─────────────────────────────────────────────────────────────
@@ -69,7 +70,16 @@ class ManifestNodeParser {
     if (typeof resourceType !== 'string' || !SUPPORTED_RESOURCE_TYPES.has(resourceType)) {
       return undefined;
     }
-    return { nodeId, resourceType, dependsOn: this.parseDependsOn(raw) };
+    return {
+      nodeId,
+      stepKind:
+        resourceType === 'model'
+          ? 'DBT_MODEL'
+          : resourceType === 'test'
+            ? 'DBT_TEST'
+            : 'DBT_SNAPSHOT',
+      dependsOn: this.parseDependsOn(raw),
+    };
   }
 
   private parseDependsOn(raw: ManifestNodeLike): string[] {
@@ -91,9 +101,11 @@ export class ManifestGraphDeriver {
   execute(command: DeriveNodesCommand): readonly GraphNode[] {
     const root = command.manifest as ManifestLike;
     const rawNodes = this.validator.assertNodes(root);
+    const sortedNodeIds = Object.keys(rawNodes).sort(binaryCompare);
 
     const result: GraphNode[] = [];
-    for (const [nodeId, raw] of Object.entries(rawNodes)) {
+    for (const nodeId of sortedNodeIds) {
+      const raw = rawNodes[nodeId];
       if (raw === null || typeof raw !== 'object') continue;
       const node = this.parser.parse(nodeId, raw);
       if (node !== undefined) result.push(node);

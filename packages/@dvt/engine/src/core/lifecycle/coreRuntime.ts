@@ -15,8 +15,8 @@ import {
   CORE_ERROR_MESSAGE,
   RUN_EVENT_CONSTANTS,
   TRACEABLE_ADAPTERS,
-  type TraceableAdapter,
 } from './coreDomainConstants.js';
+import type { StartRunTraceContext } from './StartRunTraceContext.js';
 
 type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
 type IRunStateStoreRead = import('../../ports/IRunStateStore.js').IRunStateStoreRead;
@@ -70,17 +70,11 @@ export function buildTraceContext(
   input: Pick<RunMetadata, 'tenantId' | 'projectId' | 'environmentId' | 'runId'> & {
     targetAdapter?: EngineRunRef['provider'];
     provider?: EngineRunRef['provider'];
+    providerRef?: EngineRunRef;
   },
   planId?: string
-): {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
-  planId?: string;
-  adapter?: TraceableAdapter;
-} {
-  const raw = input.targetAdapter ?? input.provider;
+): StartRunTraceContext {
+  const raw = input.targetAdapter ?? input.provider ?? input.providerRef?.provider;
   const adapter = TRACEABLE_ADAPTERS.find((value) => value === raw);
   return {
     tenantId: input.tenantId,
@@ -107,7 +101,6 @@ export function normalizeSignalRequest(
     signalId: input.signalId,
     type: input.type,
   };
-  if (input.stepId !== undefined) request.stepId = input.stepId;
   if (input.reason !== undefined) request.reason = input.reason;
   if (input.requestedAt !== undefined) request.requestedAt = input.requestedAt;
   return request;
@@ -121,15 +114,18 @@ export async function emitRunEvent(input: {
   eventType: EventType;
   payload?: Record<string, unknown>;
 }): Promise<void> {
-  await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [
-    buildRunEvent({
-      idempotency: input.idempotency,
-      clock: input.clock,
-      meta: input.meta,
-      eventType: input.eventType,
-      ...(input.payload === undefined ? {} : { payload: input.payload }),
-    }),
-  ]);
+  await input.stateStoreWrite.appendAndEnqueueTx(
+    input.meta.runId,
+    buildRunEvents([
+      {
+        idempotency: input.idempotency,
+        clock: input.clock,
+        meta: input.meta,
+        eventType: input.eventType,
+        ...(input.payload === undefined ? {} : { payload: input.payload }),
+      },
+    ])
+  );
 }
 
 export async function emitSignalDerivedRunEvent(input: {
@@ -140,7 +136,18 @@ export async function emitSignalDerivedRunEvent(input: {
   req: SignalRequest;
   eventType: EventType;
 }): Promise<void> {
-  const event: RunEventInput = {
+  const event = buildSignalDerivedRunEventInput(input);
+  await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [event]);
+}
+
+export function buildSignalDerivedRunEventInput(input: {
+  idempotency: IdempotencyKeyBuilder;
+  clock: { nowIsoUtc(): string };
+  meta: RunMetadata;
+  req: SignalRequest;
+  eventType: EventType;
+}): RunEventInput {
+  return {
     eventId: input.idempotency.eventId(),
     eventType: input.eventType,
     payloadVersion: RUN_EVENT_CONSTANTS.payloadVersion,
@@ -163,7 +170,26 @@ export async function emitSignalDerivedRunEvent(input: {
       input.req
     ),
   };
-  await input.stateStoreWrite.appendAndEnqueueTx(input.meta.runId, [event]);
+}
+
+export function buildRunEvents(
+  inputs: Array<{
+    idempotency: IdempotencyKeyBuilder;
+    clock: { nowIsoUtc(): string };
+    meta: RunMetadata;
+    eventType: EventType;
+    payload?: Record<string, unknown>;
+  }>
+): RunEventInput[] {
+  return inputs.map((input) =>
+    buildRunEvent({
+      idempotency: input.idempotency,
+      clock: input.clock,
+      meta: input.meta,
+      eventType: input.eventType,
+      ...(input.payload === undefined ? {} : { payload: input.payload }),
+    })
+  );
 }
 
 function buildRunEvent(input: {

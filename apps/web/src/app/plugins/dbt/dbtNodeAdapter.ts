@@ -57,7 +57,6 @@ export function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
     lastDuration: node.lastDuration,
     lastCost: node.lastCost,
     metadata: {
-      dbtType: node.type,
       package: node.package,
       dependencies: node.dependencies,
       compiledSql: node.compiledSql,
@@ -73,9 +72,6 @@ export function mapDbtEdgeToCanonical(edge: DbtEdge): CanonicalEdge {
     sourceId: edge.source,
     targetId: edge.target,
     relation: EDGE_RELATION_BY_TYPE[edge.type],
-    metadata: {
-      dbtType: edge.type,
-    },
   };
 }
 
@@ -113,8 +109,8 @@ function isDbtEdge(value: unknown): value is DbtEdge {
   );
 }
 
-export const dbtCanvasGraphStrategy: CanvasGraphStrategy = {
-  id: 'dbt',
+const buildDbtCanvasGraphStrategy = (id: string): CanvasGraphStrategy => ({
+  id,
   mapNodeToCanonical: (node) => {
     if (!isDbtNode(node)) {
       return null;
@@ -143,4 +139,8 @@ export const dbtCanvasGraphStrategy: CanvasGraphStrategy = {
       return null;
     }
   },
-};
+});
+
+export const dbtCanvasGraphStrategy: CanvasGraphStrategy = buildDbtCanvasGraphStrategy('dbt');
+export const transformationCanvasGraphStrategy: CanvasGraphStrategy =
+  buildDbtCanvasGraphStrategy('transformation');

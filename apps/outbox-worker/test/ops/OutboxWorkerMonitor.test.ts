@@ -74,7 +74,7 @@ describe('OutboxWorkerMonitor', () => {
     });
 
     monitor.onStarted();
-    monitor.onBatchClaimed([makeRecord('1')]);
+    monitor.onBatchClaimed([makeRecord('1'), makeRecord('2')]);
     monitor.onRecordDelivered(makeRecord('1'));
     monitor.onRecordFailed(makeRecord('2', '2026-03-08T00:00:00.000Z', 1), 'transient', 'retry');
     monitor.onTick({
@@ -106,6 +106,8 @@ describe('OutboxWorkerMonitor', () => {
     expect(metrics).toMatch(/dvt_outbox_claimed_records_total 2/);
     expect(metrics).toMatch(/dvt_outbox_retried_records_total 1/);
     expect(metrics).toMatch(/dvt_outbox_oldest_claimed_lag_seconds 2.5/);
+    expect(metrics).toMatch(/dvt_delivery_outbox_drain_lag_seconds 2.5/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_count 2/);
     expect(metrics).toMatch(/dvt_outbox_runtime_state\{state="stopped"\} 1/);
 
     expect(entries.some((entry) => entry.msg === 'outbox records claimed')).toBe(true);
@@ -406,5 +408,29 @@ describe('OutboxWorkerMonitor', () => {
     expect(metrics).toMatch(/dvt_run_event_retention_last_cycle_duration_ms 9/);
     expect(metrics).toMatch(/dvt_run_event_retention_last_success_timestamp_seconds 1741392000/);
     expect(metrics).toMatch(/dvt_run_event_retention_last_failure_timestamp_seconds 1741392005/);
+  });
+
+  it('renders event-delivery latency histogram from claim to terminal delivery outcome', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
+
+    monitor.onBatchClaimed([makeRecord('1'), makeRecord('2')]);
+    clock.nowMs += 120;
+    monitor.onRecordDelivered(makeRecord('1'));
+    clock.nowMs += 380;
+    monitor.onRecordFailed(makeRecord('2'), 'downstream timeout', 'retry');
+
+    const metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="100"\} 0/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="250"\} 1/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="500"\} 2/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="\+Inf"\} 2/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_sum 620/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_count 2/);
   });
 });

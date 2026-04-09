@@ -1,6 +1,7 @@
 ---
 slice: intent-store-bug-fixes
 date: 2026-03-15
+last_reviewed: 2026-03-15
 gap: G3
 author: AI (GPT-5)
 ---
@@ -68,7 +69,7 @@ and Postgres behavior and aligns the ADR with the actual invariant.
 | `packages/@dvt/adapter-postgres/src/index.ts`                             | Exported the new intent conflict errors                                                                     | Keep the adapter package boundary complete                                             |
 | `packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts` | Hardened the integration contract expectations                                                              | Verify conflict/idempotency semantics at the adapter boundary                          |
 | `docs/adr/ADR-0030-pre-dispatch-intent-log.md`                            | Added `INV-INTENT-011`                                                                                      | Align ADR text with shipped contract semantics                                         |
-| `docs/evidence/ED-20260315-intent-store-bug-fixes.md`                     | Added validation evidence for the slice                                                                     | Provide auditable proof of the behavior and checks run                                 |
+| `docs/evidence/critical/ED-20260315-intent-store-bug-fixes.md`            | Added validation evidence for the slice                                                                     | Provide auditable proof of the behavior and checks run                                 |
 
 ## Libraries evaluated
 
@@ -77,7 +78,7 @@ None evaluated -- shared contract and store semantics only.
 ## Docs synced
 
 - [x] `docs/planning/closeouts/20260315-intent-store-bug-fixes-closeout.md` -- think-first and final evidence for this slice
-- [x] `docs/evidence/ED-20260315-intent-store-bug-fixes.md` -- evidence aligned with shipped behavior
+- [x] `docs/evidence/critical/ED-20260315-intent-store-bug-fixes.md` -- evidence aligned with shipped behavior
 - [x] `docs/adr/ADR-0030-pre-dispatch-intent-log.md` -- invariant text updated to match the corrected contract
 
 ## Test evidence

@@ -1,6 +1,7 @@
 ---
 slice: engine-deps-refactor
 date: 2026-03-14
+last_reviewed: 2026-03-14
 gap: none (maintenance + architecture)
 author: AI (claude-sonnet-4-6)
 ---

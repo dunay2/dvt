@@ -1,4 +1,4 @@
-import type { CompiledCodeRef, ExecutionPlanV2, ExecutionStepV2 } from '@dvt/contracts';
+import type { CompiledCodeRef, ExecutionPlan, ExecutionStepV1 } from '@dvt/contracts';
 import { KNOWN_STEP_KINDS } from '@dvt/contracts';
 
 import type { ICompiledCodeStorage } from '../ports/ICompiledCodeStorage.js';
@@ -22,7 +22,7 @@ export interface AttachCompiledCodeRefsOptions {
   onUploadFailure?: (stepId: string, error: Error) => void;
 }
 
-function canAttach(step: ExecutionStepV2): boolean {
+function canAttach(step: ExecutionStepV1): boolean {
   return step.kind === KNOWN_STEP_KINDS.DBT_MODEL || step.kind === KNOWN_STEP_KINDS.DBT_TEST;
 }
 
@@ -32,9 +32,9 @@ function canAttach(step: ExecutionStepV2): boolean {
  * All uploads are tenant-scoped — no cross-tenant namespace sharing.
  */
 export async function attachCompiledCodeRefs(
-  plan: ExecutionPlanV2,
+  plan: ExecutionPlan,
   options: AttachCompiledCodeRefsOptions
-): Promise<ExecutionPlanV2> {
+): Promise<ExecutionPlan> {
   const { tenantId } = options;
   const uploadCache = options.uploadCache ?? new Map<string, string>();
   const onUploadFailure = options.onUploadFailure ?? (() => undefined);

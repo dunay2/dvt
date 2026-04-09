@@ -13,16 +13,26 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
-- `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV2.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
+
+## Repository-local documents
+
+- [Plan store records v1](PlanStoreRecords.v1.md)
 
 ## Related
 
