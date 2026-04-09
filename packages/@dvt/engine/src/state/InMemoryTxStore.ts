@@ -43,6 +43,7 @@ import {
   assertEventTenantMatches,
   assertEventRunIdMatches,
   assertEventsMatchRunIdAndTenant,
+  buildPersistedRunEventRecord,
   assertRunEventInput,
   assertRunSequenceWithinSafeRange,
   cloneWorkflowSnapshot,
@@ -189,7 +190,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       const runSeq = baseRunSeq + appended.length + 1;
       assertRunSequenceWithinSafeRange(runSeq, runId);
 
-      const withSeq: RunEventPersisted = { ...event, runSeq, persistedAt };
+      const withSeq = buildPersistedRunEventRecord(event, runSeq, persistedAt, i);
       appended.push(withSeq);
       idempotencyIndex.set(withSeq.idempotencyKey, withSeq);
     }

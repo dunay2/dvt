@@ -1,5 +1,5 @@
-import { parseRunEventWrite } from '@dvt/contracts';
-import type { RunEventWriteSchemaT } from '@dvt/contracts';
+import { parseRunEventRecord, parseRunEventWrite } from '@dvt/contracts';
+import type { RunEventRecordSchemaT, RunEventWriteSchemaT } from '@dvt/contracts';
 
 import {
   InvalidRunEventEnvelopeError,
@@ -24,7 +24,7 @@ export function validateAndEnrichEnvelope(
   context: EnrichContext
 ): EventEnvelope {
   const validated = parseAndValidateEnvelope(envelope, context);
-  return enrichEnvelopeWithSeq(validated, context.runSeq, context.persistedAt);
+  return enrichEnvelopeWithSeq(validated, context);
 }
 
 function parseAndValidateEnvelope(
@@ -65,16 +65,20 @@ function assertEnvelopeTenantIdMatchesRunTenant(
 
 function enrichEnvelopeWithSeq(
   envelope: RunEventWriteSchemaT,
-  runSeq: number,
-  persistedAt: string
+  context: EnrichContext
 ): EventEnvelope {
   const normalizedInput = toNormalizedEventInput(envelope);
-
-  return {
+  const candidate: RunEventRecordSchemaT = {
     ...normalizedInput,
-    runSeq,
-    persistedAt,
+    runSeq: context.runSeq,
+    persistedAt: context.persistedAt,
   };
+
+  try {
+    return parseRunEventRecord(candidate) as EventEnvelope;
+  } catch (cause) {
+    throw new InvalidRunEventSchemaError(context.runId, context.index, cause);
+  }
 }
 
 function toNormalizedEventInput(envelope: RunEventWriteSchemaT): EventInput {

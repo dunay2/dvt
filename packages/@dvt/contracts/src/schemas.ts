@@ -321,7 +321,7 @@ const RunCompletedPayloadSchema = z
 const RunEventCommonSchema = z.object({
   eventId: z.string().min(1),
   eventType: z.string().min(1),
-  emittedAt: z.string().min(1),
+  emittedAt: NonBlankStringSchema,
   runId: NonBlankStringSchema,
   tenantId: z.string().min(1),
   projectId: z.string().min(1),
@@ -376,25 +376,25 @@ const RunFailedEventWriteSchema = RunEventCommonSchema.extend({
 
 const StepStartedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepStarted'),
-  stepId: z.string().min(1),
+  stepId: NonBlankStringSchema,
   payload: StepStartedPayloadSchema.optional(),
 }).strict();
 
 const StepCompletedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepCompleted'),
-  stepId: z.string().min(1),
+  stepId: NonBlankStringSchema,
   payload: StepCompletedPayloadSchema.optional(),
 }).strict();
 
 const StepFailedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepFailed'),
-  stepId: z.string().min(1),
+  stepId: NonBlankStringSchema,
   payload: z.union([EmptyEventPayloadSchema, StepFailedPayloadSchema]).optional(),
 }).strict();
 
 const StepSkippedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepSkipped'),
-  stepId: z.string().min(1),
+  stepId: NonBlankStringSchema,
   payload: EmptyEventPayloadSchema.optional(),
 }).strict();
 
@@ -418,51 +418,51 @@ export const RunEventWriteSchema = z.discriminatedUnion('eventType', [
 export const RunEventRecordSchema = z.discriminatedUnion('eventType', [
   RunQueuedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunStartedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunPausedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunResumedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunCancelRequestedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunCancelledEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunCompletedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   RunFailedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   StepStartedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   StepCompletedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   StepFailedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
   StepSkippedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: NonBlankStringSchema,
   }),
 ]);
 

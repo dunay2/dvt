@@ -68,6 +68,21 @@ flowchart LR
   D -. typed as stronger evidence shape .-> E
 ```
 
+## Target Flow For Option A
+
+```mermaid
+flowchart LR
+  A[RunEventWrite schema<br/>append-boundary invariants] --> B[Persisted EventEnvelope]
+  B --> C[mapper<br/>structural translation + deterministic derivation only]
+  C --> D[ProjectableRunEvent]
+  D --> E[Snapshot projector<br/>deterministic mutation only]
+  E --> F[Run read surfaces]
+
+  A -. owns trusted field validity .-> B
+  C -. may derive failedAt from emittedAt .-> D
+  E -. does not revalidate trusted evidence .-> F
+```
+
 ## Repository-Grounded Rationale
 
 The rationale for the next slice is not "be stricter because it feels cleaner".
@@ -302,6 +317,39 @@ matrix before any code change:
   accepted envelope time.
 - `RunFailureEvidence` strength promised to projectors:
   settle in the contract package after the field-ownership decision is made.
+
+## Pre-Implementation Brief
+
+- mode: `Full`
+- scope:
+  tighten append-boundary invariants for step-event identity and minimum time
+  validity, simplify mapper behavior so it no longer performs silent string
+  cleanup, and add tests plus documentation for the new ownership line
+- touched paths:
+  `packages/@dvt/contracts/src/**`,
+  `packages/@dvt/run-domain/src/**`,
+  focused tests under `packages/@dvt/contracts/test/**`,
+  `packages/@dvt/run-domain/test/**`,
+  `packages/@dvt/engine/test/**`,
+  `packages/@dvt/adapter-postgres/test/**`,
+  and this proposal doc
+- expected outcome:
+  append boundary becomes the owner of projector-trusted invariants for this
+  seam; mapper remains structural plus deterministic derivation
+- risks and mitigations:
+  contract tightening may break existing tests or fixtures; mitigate with
+  explicit negative-path tests and by keeping the first slice narrow
+- out of scope:
+  provider-ref modeling, snapshot versioning, and broad timestamp-contract
+  redesign outside run-event admission
+- validation plan:
+  touched package tests plus `pnpm verify:prepush`
+- test coverage plan:
+  add negative cases for whitespace-only `stepId`, weak `emittedAt` inputs if
+  tightened in this slice, and mapper/projector behavior once write-side facts
+  are valid
+- libraries evaluated:
+  `None evaluated — no custom implementation`
 
 ## Proposed Follow-up Slice
 

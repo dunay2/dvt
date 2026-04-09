@@ -115,7 +115,7 @@ export function mapEventEnvelopeToProjectableEvent(
         kind: 'StepFailed',
         emittedAt: event.emittedAt,
         stepId,
-        failure: readFailureEvidence(event.payload, stepId, event.emittedAt),
+        failure: readFailureEvidence(event, stepId),
       };
     }
 
@@ -133,14 +133,15 @@ export function mapEventEnvelopeToProjectableEvent(
 
 function requireStepId(event: EventEnvelope): string {
   const maybeStepId = (event as { stepId?: unknown }).stepId;
-  if (typeof maybeStepId === 'string' && maybeStepId.length > 0) {
-    return maybeStepId;
+  const stepId = asNonBlankString(maybeStepId);
+  if (stepId) {
+    return stepId;
   }
 
   throw new InvalidRunEventShapeError({
     runId: event.runId,
     eventType: event.eventType,
-    reason: 'stepId must be a non-empty string for step events',
+    reason: 'stepId must be a non-blank string for step events',
   });
 }
 
@@ -149,21 +150,36 @@ function readMaterializationEvidence(value: unknown): MaterializationEvidence | 
   return parsed.success ? parsed.data : undefined;
 }
 
-function readFailureEvidence(
-  value: unknown,
-  stepId: string,
-  emittedAt: string
-): RunFailureEvidence {
-  const payload = asRecord(value);
-  const failedAt = asNonBlankString(payload?.['failedAt']) ?? emittedAt;
-  const reason = asNonBlankString(payload?.['reason']);
-  const message = asNonBlankString(payload?.['message']);
+function readFailureEvidence(event: EventEnvelope, stepId: string): RunFailureEvidence {
+  const payload = asRecord(event.payload);
+  const reason = readOptionalFailureText(event, payload?.['reason'], 'reason');
+  const message = readOptionalFailureText(event, payload?.['message'], 'message');
   return {
     stepId,
-    failedAt,
+    failedAt: event.emittedAt,
     ...(reason ? { reason } : {}),
     ...(message ? { message } : {}),
   };
+}
+
+function readOptionalFailureText(
+  event: EventEnvelope,
+  value: unknown,
+  field: 'reason' | 'message'
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value;
+  }
+
+  throw new InvalidRunEventShapeError({
+    runId: event.runId,
+    eventType: event.eventType,
+    reason: `payload.${field} must be a non-blank string when provided`,
+  });
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
