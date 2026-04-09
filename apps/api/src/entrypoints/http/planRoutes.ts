@@ -115,7 +115,12 @@ export async function previewPlanRoute(
     let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
     try {
       buildResult = await deps.planner.buildPlan({
-        ...bindScopeToPlannerEnvelope(plannerEnvelope.value, routeContext, provenance.value),
+        ...bindScopeToPlannerEnvelope(
+          plannerEnvelope.value,
+          routeContext,
+          provenance.value,
+          previewProfile.value
+        ),
         selection: { selectedNodeIds: selection.value },
         requestedBy: authz.context.principal.principalId,
         requestId: request.id,
@@ -284,14 +289,25 @@ function bindScopeToPlannerEnvelope(
     ? T
     : never,
   context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>,
-  provenance: PreviewProvenance | undefined
+  provenance: PreviewProvenance | undefined,
+  previewProfile: PreviewProfilePolicy
 ): ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T> ? T : never {
   const observabilityExtra = envelope.observability?.extra ?? {};
-  const extraWithProvenance =
-    provenance === undefined
+  const extraWithRuntimeBinding =
+    previewProfile.executor === undefined
       ? observabilityExtra
       : {
           ...observabilityExtra,
+          transformationFlowRuntime: {
+            previewProfile: previewProfile.previewProfile,
+            executor: previewProfile.executor,
+          },
+        };
+  const extraWithProvenance =
+    provenance === undefined
+      ? extraWithRuntimeBinding
+      : {
+          ...extraWithRuntimeBinding,
           transformationFlowProvenance: provenance,
         };
   const hasExtra = Object.keys(extraWithProvenance).length > 0;

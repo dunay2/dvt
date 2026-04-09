@@ -20,6 +20,7 @@ export type EventId = string & { readonly __brand: 'EventId' };
 export type IdempotencyKey = string & { readonly __brand: 'IdempotencyKey' };
 
 export type Provider = 'temporal' | 'conductor' | 'mock';
+export type TransformationExecutor = 'postgres' | 'dbt';
 
 export type RunStatus =
   | 'PENDING'
@@ -39,16 +40,6 @@ export type RunSubstatus =
   | 'CANCELLING';
 
 export type AdapterScopedSubstatus = `${Provider}/${string}`;
-
-export interface MaterializationEvidence {
-  executor: 'postgres' | 'dbt';
-  environmentId: string;
-  sinkTable: string;
-  rowsWritten: number;
-  startedAt: IsoUtcString;
-  completedAt: IsoUtcString;
-  durationMs: number;
-}
 
 export interface RunFailureEvidence {
   stepId: string;
@@ -71,6 +62,21 @@ export interface RunStatusSnapshot {
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
   execution?: RunExecutionEvidence;
+}
+
+export interface MaterializationEvidence {
+  executor: TransformationExecutor;
+  environmentId: string;
+  sinkTable: string;
+  rowsWritten: number;
+  startedAt: IsoUtcString;
+  completedAt: IsoUtcString;
+  durationMs: number;
+}
+
+export interface TransformationFlowRuntimeBinding {
+  previewProfile: string;
+  executor: TransformationExecutor;
 }
 
 export interface PlanRef {

@@ -361,6 +361,52 @@ describe('stepActivities', () => {
       );
     });
 
+    it('persists structured result evidence and failure diagnostics payloads', async () => {
+      const { deps, acts } = setupActivities();
+
+      await acts.emitEvent({
+        ctx: CTX,
+        planRef: PLAN_REF,
+        eventType: 'RunCompleted',
+        payload: {
+          executor: 'postgres',
+          resultEvidence: {
+            executor: 'postgres',
+            environmentId: 'env-1',
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 42,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            completedAt: '2026-01-01T00:00:05.000Z',
+            durationMs: 5000,
+          },
+        },
+      });
+      await acts.emitEvent({
+        ctx: CTX,
+        planRef: PLAN_REF,
+        eventType: 'StepFailed',
+        stepId: 'sink-1',
+        payload: {
+          reason: 'SINK_WRITE_FAILED',
+          message: 'duplicate key value violates unique constraint',
+        },
+      });
+
+      const events = await deps.testStore.listEvents('run-1');
+      expect(events).toHaveLength(2);
+      expect(events[0]?.payload).toMatchObject({
+        executor: 'postgres',
+        resultEvidence: {
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+        },
+      });
+      expect(events[1]?.payload).toMatchObject({
+        reason: 'SINK_WRITE_FAILED',
+        message: 'duplicate key value violates unique constraint',
+      });
+    });
+
     it('retry-safe: transient failure then retry persists one logical event', async () => {
       const { deps, acts } = setupActivities(new FailingFirstAppendStateStore());
 

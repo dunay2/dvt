@@ -61,6 +61,10 @@ export type RunSnapshot = {
   message?: string;
   hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: MaterializationEvidence;
   execution?: RunExecutionEvidence;
 };
 

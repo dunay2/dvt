@@ -1,0 +1,11 @@
+---
+id: R-20260409-TF-C2-B-RUN-READ-EVIDENCE-ATTEMPT-SAFETY
+title: Run read evidence derivation can regress if attempt authority and event-history scope diverge
+status: Open
+date: 2026-04-09
+owners:
+  - apps/api
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Medium
+---

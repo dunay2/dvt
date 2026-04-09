@@ -51,6 +51,7 @@ import { sha256HexUtf8 } from './utils/sha256HexUtf8.js';
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
 export const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
+export const TransformationExecutorSchema = z.enum(['postgres', 'dbt']);
 
 export const RunStatusSchema = z.enum([
   'PENDING',
@@ -136,23 +137,11 @@ export const RecoverRunCommandSchema = z
   })
   .strict();
 
-export const MaterializationEvidenceSchema = z
-  .object({
-    executor: z.union([z.literal('postgres'), z.literal('dbt')]),
-    environmentId: NonBlankStringSchema,
-    sinkTable: NonBlankStringSchema,
-    rowsWritten: z.number().nonnegative(),
-    startedAt: z.string().min(1),
-    completedAt: z.string().min(1),
-    durationMs: z.number().nonnegative(),
-  })
-  .strict();
-
 export const RunFailureEvidenceSchema = z
   .object({
     stepId: NonBlankStringSchema,
-    reason: z.string().min(1).optional(),
-    message: z.string().min(1).optional(),
+    reason: NonBlankStringSchema.optional(),
+    message: NonBlankStringSchema.optional(),
     failedAt: z.string().min(1),
   })
   .strict();
@@ -161,7 +150,7 @@ export const RunExecutionEvidenceSchema = z
   .object({
     activeStepId: NonBlankStringSchema.optional(),
     failure: RunFailureEvidenceSchema.optional(),
-    materialization: MaterializationEvidenceSchema.optional(),
+    materialization: z.lazy(() => MaterializationEvidenceSchema).optional(),
   })
   .strict();
 
@@ -176,6 +165,25 @@ export const RunStatusSnapshotSchema = z.object({
   completedAt: z.string().optional(),
   execution: RunExecutionEvidenceSchema.optional(),
 });
+
+export const MaterializationEvidenceSchema = z
+  .object({
+    executor: TransformationExecutorSchema,
+    environmentId: NonBlankStringSchema,
+    sinkTable: NonBlankStringSchema,
+    rowsWritten: z.number().int().nonnegative(),
+    startedAt: z.string().min(1),
+    completedAt: z.string().min(1),
+    durationMs: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const TransformationFlowRuntimeBindingSchema = z
+  .object({
+    previewProfile: NonBlankStringSchema,
+    executor: TransformationExecutorSchema,
+  })
+  .strict();
 
 // ─── EngineRunRef (discriminated union) ──────────────────────────────────────
 
@@ -242,7 +250,7 @@ export const StepOutputSchema = z.object({
   error: StepErrorSchema.optional(),
 });
 
-// ─── Event schemas (aligned to RunEvents v2.0.1) ─────────────────────────────
+// ─── Event schemas (aligned to RunEvents v2.0.2) ─────────────────────────────
 // @see specs/contracts/engine/RunEvents.v2.0.md — Normative event contract
 
 export const RUN_EVENT_PAYLOAD_VERSION = 1 as const;
@@ -255,9 +263,16 @@ export const RunFailureReasonSchema = z.enum([
   'STEP_FAILURE',
   'WORKFLOW_FAILURE',
 ]);
+const RunStartedPayloadSchema = z
+  .object({
+    executor: TransformationExecutorSchema,
+  })
+  .strict();
 const RunFailedPayloadSchema = z
   .object({
     reason: RunFailureReasonSchema,
+    executor: TransformationExecutorSchema.optional(),
+    message: NonBlankStringSchema.optional(),
   })
   .strict();
 const StepStartedPayloadSchema = z
@@ -275,15 +290,31 @@ const StepStartedPayloadSchema = z
 const StepCompletedPayloadSchema = z
   .object({
     gatewayDecision: z.boolean().optional(),
-    materialization: MaterializationEvidenceSchema.optional(),
+    resultEvidence: MaterializationEvidenceSchema.optional(),
   })
+  .refine(
+    (payload) => payload.gatewayDecision !== undefined || payload.resultEvidence !== undefined,
+    {
+      message: 'StepCompleted payload must contain gatewayDecision or resultEvidence',
+    }
+  )
   .strict();
-
 const StepFailedPayloadSchema = z
   .object({
-    reason: z.string().min(1).optional(),
-    message: z.string().min(1).optional(),
-    failedAt: z.string().min(1).optional(),
+    reason: NonBlankStringSchema.optional(),
+    message: NonBlankStringSchema.optional(),
+  })
+  .refine((payload) => payload.reason !== undefined || payload.message !== undefined, {
+    message: 'StepFailed payload must contain reason or message',
+  })
+  .strict();
+const RunCompletedPayloadSchema = z
+  .object({
+    executor: TransformationExecutorSchema.optional(),
+    resultEvidence: MaterializationEvidenceSchema.optional(),
+  })
+  .refine((payload) => payload.executor !== undefined || payload.resultEvidence !== undefined, {
+    message: 'RunCompleted payload must contain executor or resultEvidence',
   })
   .strict();
 
@@ -310,7 +341,7 @@ const RunQueuedEventWriteSchema = RunEventCommonSchema.extend({
 
 const RunStartedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('RunStarted'),
-  payload: EmptyEventPayloadSchema.optional(),
+  payload: z.union([EmptyEventPayloadSchema, RunStartedPayloadSchema]).optional(),
 }).strict();
 
 const RunPausedEventWriteSchema = RunEventCommonSchema.extend({
@@ -335,7 +366,7 @@ const RunCancelledEventWriteSchema = RunEventCommonSchema.extend({
 
 const RunCompletedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('RunCompleted'),
-  payload: EmptyEventPayloadSchema.optional(),
+  payload: z.union([EmptyEventPayloadSchema, RunCompletedPayloadSchema]).optional(),
 }).strict();
 
 const RunFailedEventWriteSchema = RunEventCommonSchema.extend({
@@ -358,7 +389,7 @@ const StepCompletedEventWriteSchema = RunEventCommonSchema.extend({
 const StepFailedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepFailed'),
   stepId: z.string().min(1),
-  payload: StepFailedPayloadSchema.optional(),
+  payload: z.union([EmptyEventPayloadSchema, StepFailedPayloadSchema]).optional(),
 }).strict();
 
 const StepSkippedEventWriteSchema = RunEventCommonSchema.extend({

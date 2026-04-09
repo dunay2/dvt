@@ -73,10 +73,100 @@ function readArtifactFields(
   };
 }
 
+function readMaterializationFields(value: unknown): MaterializationEvidence | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const executor = value.executor;
+  const environmentId = value.environmentId;
+  const sinkTable = value.sinkTable;
+  const rowsWritten = value.rowsWritten;
+  const startedAt = value.startedAt;
+  const completedAt = value.completedAt;
+  const durationMs = value.durationMs;
+
+  if (
+    (executor !== 'postgres' && executor !== 'dbt') ||
+    typeof environmentId !== 'string' ||
+    typeof sinkTable !== 'string' ||
+    typeof rowsWritten !== 'number' ||
+    !Number.isFinite(rowsWritten) ||
+    typeof startedAt !== 'string' ||
+    typeof completedAt !== 'string' ||
+    typeof durationMs !== 'number' ||
+    !Number.isFinite(durationMs)
+  ) {
+    return null;
+  }
+
+  return {
+    executor,
+    environmentId,
+    sinkTable,
+    rowsWritten,
+    startedAt,
+    completedAt,
+    durationMs,
+  };
+}
+
+function deriveLatestLogicalAttemptId(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): number | undefined {
+  let latestLogicalAttemptId: number | undefined;
+
+  for (const event of events) {
+    const logicalAttemptId = event.logicalAttemptId;
+    if (!Number.isInteger(logicalAttemptId) || logicalAttemptId <= 0) {
+      continue;
+    }
+
+    if (latestLogicalAttemptId === undefined || logicalAttemptId > latestLogicalAttemptId) {
+      latestLogicalAttemptId = logicalAttemptId;
+    }
+  }
+
+  return latestLogicalAttemptId;
+}
+
+function selectCurrentAttemptEvents(
+  workspace: RunWorkspaceViewModel
+): ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]> {
+  const latestLogicalAttemptId = deriveLatestLogicalAttemptId(workspace.timeline.events);
+  if (latestLogicalAttemptId === undefined) {
+    return workspace.timeline.events;
+  }
+
+  return workspace.timeline.events.filter(
+    (event) => event.logicalAttemptId === latestLogicalAttemptId
+  );
+}
+
 function deriveMaterializationEvidence(
   workspace: RunWorkspaceViewModel
 ): MaterializationEvidence | undefined {
-  return workspace.snapshot.execution?.materialization;
+  if (workspace.snapshot.materialization) {
+    return workspace.snapshot.materialization;
+  }
+
+  for (const event of [...selectCurrentAttemptEvents(workspace)].reverse()) {
+    if (!isRecord(event.payload)) {
+      continue;
+    }
+
+    const fromPayloadMaterialization = readMaterializationFields(event.payload.materialization);
+    if (fromPayloadMaterialization) {
+      return fromPayloadMaterialization;
+    }
+
+    const fromPayloadResultEvidence = readMaterializationFields(event.payload.resultEvidence);
+    if (fromPayloadResultEvidence) {
+      return fromPayloadResultEvidence;
+    }
+  }
+
+  return undefined;
 }
 
 function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
@@ -129,8 +219,76 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
   return provenance;
 }
 
+function getRunFailedReason(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): string | undefined {
+  for (const event of [...events].reverse()) {
+    if (event.eventType !== 'RunFailed' || !event.payload || typeof event.payload !== 'object') {
+      continue;
+    }
+
+    const reason = (event.payload as { reason?: unknown }).reason;
+    if (typeof reason === 'string') {
+      return reason;
+    }
+  }
+
+  return undefined;
+}
+
+function getStepFailedReason(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): string | undefined {
+  for (const event of [...events].reverse()) {
+    if (event.eventType !== 'StepFailed' || !event.payload || typeof event.payload !== 'object') {
+      continue;
+    }
+
+    const payload = event.payload as { reason?: unknown; message?: unknown };
+    if (typeof payload.reason === 'string') {
+      return payload.reason;
+    }
+    if (typeof payload.message === 'string') {
+      return payload.message;
+    }
+  }
+
+  return undefined;
+}
+
+function getFailureEmittedAt(
+  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
+): string | undefined {
+  const failedEvent = [...events]
+    .reverse()
+    .find((event) => event.eventType === 'StepFailed' || event.eventType === 'RunFailed');
+  return failedEvent?.emittedAt;
+}
+
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
-  return workspace.snapshot.execution?.failure;
+  if (workspace.snapshot.status !== 'failed') {
+    return {
+      failedStepId: undefined,
+      errorReason: undefined,
+      failureEmittedAt: undefined,
+    };
+  }
+
+  const currentAttemptEvents = selectCurrentAttemptEvents(workspace);
+  const failedStepId =
+    workspace.snapshot.failedStepId ??
+    [...currentAttemptEvents].reverse().find((event) => event.eventType === 'StepFailed')?.stepId;
+  const errorReason =
+    workspace.snapshot.errorReason ??
+    getRunFailedReason(currentAttemptEvents) ??
+    getStepFailedReason(currentAttemptEvents);
+  const failureEmittedAt = getFailureEmittedAt(currentAttemptEvents);
+
+  return {
+    failedStepId,
+    errorReason,
+    failureEmittedAt,
+  };
 }
 
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
@@ -184,10 +342,10 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div className="font-mono">{snapshot.gitSha}</div>
               </div>
             ) : null}
-            {isKnownRunField(snapshot.execution?.activeStepId) ? (
+            {isKnownRunField(snapshot.currentStepId) ? (
               <div>
                 <span className="text-slate-400">{copy.currentStepLabel}</span>
-                <div className="font-mono">{snapshot.execution?.activeStepId}</div>
+                <div className="font-mono">{snapshot.currentStepId}</div>
               </div>
             ) : null}
             {isKnownRunField(snapshot.hash) ? (
@@ -286,32 +444,30 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           )}
         </Card>
 
-        {failureDiagnostics ? (
+        {failureDiagnostics.failedStepId ||
+        failureDiagnostics.errorReason ||
+        failureDiagnostics.failureEmittedAt ? (
           <Card className="border-slate-700 bg-slate-900 p-5">
             <h3 className="mb-3 text-sm font-semibold">{copy.failureDiagnosticsTitle}</h3>
             <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-              {failureDiagnostics.stepId ? (
+              {failureDiagnostics.failedStepId ? (
                 <div>
                   <span className="text-slate-400">{copy.failedStepLabel}</span>
-                  <div className="font-mono">{failureDiagnostics.stepId}</div>
+                  <div className="font-mono">{failureDiagnostics.failedStepId}</div>
                 </div>
               ) : null}
-              {failureDiagnostics.reason ? (
+              {failureDiagnostics.errorReason ? (
                 <div>
                   <span className="text-slate-400">{copy.errorReasonLabel}</span>
-                  <div>{failureDiagnostics.reason}</div>
+                  <div>{failureDiagnostics.errorReason}</div>
                 </div>
               ) : null}
-              {failureDiagnostics.message ? (
-                <div className="md:col-span-2">
-                  <span className="text-slate-400">{copy.errorMessageLabel}</span>
-                  <div>{failureDiagnostics.message}</div>
+              {failureDiagnostics.failureEmittedAt ? (
+                <div>
+                  <span className="text-slate-400">{copy.failedAtLabel}</span>
+                  <div>{new Date(failureDiagnostics.failureEmittedAt).toLocaleString()}</div>
                 </div>
               ) : null}
-              <div>
-                <span className="text-slate-400">{copy.failedAtLabel}</span>
-                <div>{new Date(failureDiagnostics.failedAt).toLocaleString()}</div>
-              </div>
             </div>
           </Card>
         ) : null}

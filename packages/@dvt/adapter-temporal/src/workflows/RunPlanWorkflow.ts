@@ -23,12 +23,14 @@
  */
 import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpreter';
 import {
+  ActivityFailure,
   ApplicationFailure,
   continueAsNew,
   condition,
   defineQuery,
   defineSignal,
   proxyActivities,
+  rootCause,
   setHandler,
 } from '@temporalio/workflow';
 
@@ -48,6 +50,8 @@ import {
   normalizeDependsOn,
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
+  resolveMaterializationEvidence,
+  resolveTransformationExecutor,
   shouldTriggerContinueAsNew,
   validateGatewayDependencies,
 } from './workflowHelpers.js';
@@ -58,6 +62,16 @@ type ExecutedStepResult = {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
   gatewayDecision?: boolean;
+  resultEvidence?: {
+    executor: 'postgres' | 'dbt';
+    environmentId: string;
+    sinkTable: string;
+    rowsWritten: number;
+    startedAt: string;
+    completedAt: string;
+    durationMs: number;
+  };
+  failureReason?: string;
   retriable?: boolean;
   error?: string;
 };
@@ -175,9 +189,10 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
   const completedStepResults = cloneStepResults(input.completedStepResults);
   const skippedSteps = new Set<string>(ctrl.skippedStepIds);
+  const runtimeExecutor = resolveTransformationExecutor(input.plan);
 
   try {
-    await bootstrapFirstExecutionIfNeeded(ctrl.resumeFromLayerIndex, ctx, planRef);
+    await bootstrapFirstExecutionIfNeeded(ctrl.resumeFromLayerIndex, ctx, planRef, runtimeExecutor);
 
     const plan = input.plan;
     validateGatewayDependencies(plan.steps);
@@ -201,6 +216,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       resumeFromLayerIndex: ctrl.resumeFromLayerIndex,
       continueAsNewAfterLayerCount: ctrl.continueAsNewAfterLayerCount,
       continuedAsNewCount: ctrl.continuedAsNewCount,
+      runtimeExecutor,
       ctx,
       planRef,
       state,
@@ -214,9 +230,11 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       planRef,
       state,
       continuedAsNewCount: ctrl.continuedAsNewCount,
+      runtimeExecutor,
+      completedStepResults,
     });
   } catch (err) {
-    await markWorkflowFailedIfNeeded(state, ctx, planRef);
+    await markWorkflowFailedIfNeeded(state, ctx, planRef, runtimeExecutor);
     throw err;
   }
 }
@@ -265,6 +283,8 @@ async function resolveLayerLoopOutcome(args: {
   planRef: RunPlanWorkflowInput['planRef'];
   state: WorkflowState;
   continuedAsNewCount: number;
+  runtimeExecutor?: 'postgres' | 'dbt';
+  completedStepResults: Record<string, Record<string, unknown>>;
 }): Promise<RunPlanWorkflowResult> {
   if (args.layerOutcome.kind === 'terminal') {
     return args.layerOutcome.result;
@@ -282,7 +302,20 @@ async function resolveLayerLoopOutcome(args: {
     return continueAsNew<typeof runPlanWorkflow>(args.layerOutcome.nextInput);
   }
 
-  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCompleted' });
+  const resultEvidence = resolveLatestResultEvidence(args.completedStepResults);
+  const runCompletedPayload =
+    args.runtimeExecutor === undefined && resultEvidence === undefined
+      ? undefined
+      : {
+          ...(args.runtimeExecutor === undefined ? {} : { executor: args.runtimeExecutor }),
+          ...(resultEvidence === undefined ? {} : { resultEvidence }),
+        };
+  await activities.emitEvent({
+    ctx: args.ctx,
+    planRef: args.planRef,
+    eventType: 'RunCompleted',
+    ...(runCompletedPayload === undefined ? {} : { payload: runCompletedPayload }),
+  });
   args.state.status = 'COMPLETED';
   return {
     runId: args.ctx.runId,
@@ -294,7 +327,8 @@ async function resolveLayerLoopOutcome(args: {
 async function markWorkflowFailedIfNeeded(
   state: WorkflowState,
   ctx: RunPlanWorkflowInput['ctx'],
-  planRef: RunPlanWorkflowInput['planRef']
+  planRef: RunPlanWorkflowInput['planRef'],
+  runtimeExecutor?: 'postgres' | 'dbt'
 ): Promise<void> {
   if (state.status === 'CANCELLED' || state.status === 'FAILED') return;
   try {
@@ -302,7 +336,10 @@ async function markWorkflowFailedIfNeeded(
       ctx,
       planRef,
       eventType: 'RunFailed',
-      payload: { reason: 'WORKFLOW_FAILURE' },
+      payload: {
+        reason: 'WORKFLOW_FAILURE',
+        ...(runtimeExecutor === undefined ? {} : { executor: runtimeExecutor }),
+      },
     });
   } catch {
     // best-effort; do not mask the original error
@@ -366,12 +403,18 @@ function registerSignalHandlers(
 async function bootstrapFirstExecutionIfNeeded(
   resumeFromLayerIndex: number,
   ctx: RunPlanWorkflowInput['ctx'],
-  planRef: RunPlanWorkflowInput['planRef']
+  planRef: RunPlanWorkflowInput['planRef'],
+  runtimeExecutor?: 'postgres' | 'dbt'
 ): Promise<void> {
   if (resumeFromLayerIndex !== 0) return;
   // run_metadata + RunQueued are committed by WorkflowEngine before adapter.startRun(),
   // so the event store is guaranteed to exist by the time this activity executes.
-  await activities.emitEvent({ ctx, planRef, eventType: 'RunStarted' });
+  await activities.emitEvent({
+    ctx,
+    planRef,
+    eventType: 'RunStarted',
+    ...(runtimeExecutor === undefined ? {} : { payload: { executor: runtimeExecutor } }),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -397,6 +440,7 @@ interface ExecutePlanLayersArgs {
   resumeFromLayerIndex: number;
   continueAsNewAfterLayerCount: number;
   continuedAsNewCount: number;
+  runtimeExecutor?: 'postgres' | 'dbt';
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   state: WorkflowState;
@@ -466,6 +510,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     state: args.state,
     runtime: args.runtime,
     continuedAsNewCount: args.continuedAsNewCount,
+    runtimeExecutor: args.runtimeExecutor,
   });
   if (terminalFromResults) return { kind: 'terminal', result: terminalFromResults };
 
@@ -721,12 +766,13 @@ function applyGatewayDecisionEffects(args: {
 }
 
 function buildFailedLayerStepExecution(stepId: string, error: unknown): LayerStepExecution {
-  const message = error instanceof Error ? error.message : formatUnknownError(error);
+  const message = resolveFailureMessage(error);
   return {
     stepId,
     result: {
       stepId,
       status: 'FAILED',
+      failureReason: extractFailureReason(error, message),
       retriable: isRetriableStepError(error),
       error: message,
     },
@@ -734,8 +780,71 @@ function buildFailedLayerStepExecution(stepId: string, error: unknown): LayerSte
 }
 
 function isRetriableStepError(error: unknown): boolean {
-  if (!(error instanceof ApplicationFailure)) return true;
-  return error.nonRetryable !== true;
+  const applicationFailure = findApplicationFailure(error);
+  if (applicationFailure) {
+    return applicationFailure.nonRetryable !== true;
+  }
+
+  if (error instanceof ActivityFailure) {
+    return error.retryState !== 'NON_RETRYABLE_FAILURE';
+  }
+
+  return true;
+}
+
+function extractFailureReason(error: unknown, message: string): string | undefined {
+  const applicationFailure = findApplicationFailure(error);
+  if (
+    applicationFailure &&
+    typeof applicationFailure.type === 'string' &&
+    applicationFailure.type.length > 0
+  ) {
+    return applicationFailure.type;
+  }
+
+  const [prefix] = message.split(':', 1);
+  return typeof prefix === 'string' && prefix.trim().length > 0 ? prefix.trim() : undefined;
+}
+
+function resolveFailureMessage(error: unknown): string {
+  const message =
+    rootCause(error) ?? (error instanceof Error ? error.message : formatUnknownError(error));
+  return typeof message === 'string' && message.length > 0 ? message : 'Unknown workflow failure';
+}
+
+function findApplicationFailure(error: unknown): ApplicationFailure | undefined {
+  if (error instanceof ApplicationFailure) {
+    return error;
+  }
+
+  const cause = resolveCause(error);
+  return cause === undefined ? undefined : findApplicationFailure(cause);
+}
+
+function resolveCause(error: unknown): unknown {
+  if (typeof error !== 'object' || error === null) {
+    return undefined;
+  }
+
+  if ('cause' in error) {
+    return (error as { cause?: unknown }).cause;
+  }
+
+  return undefined;
+}
+
+function resolveLatestResultEvidence(
+  completedStepResults: Record<string, Record<string, unknown>>
+): ExecutedStepResult['resultEvidence'] {
+  const results = Object.values(completedStepResults);
+  for (let index = results.length - 1; index >= 0; index -= 1) {
+    const resultEvidence = resolveMaterializationEvidence(results[index]?.['resultEvidence']);
+    if (resultEvidence !== undefined) {
+      return resultEvidence;
+    }
+  }
+
+  return undefined;
 }
 
 async function applyLayerResults(args: {
@@ -745,11 +854,19 @@ async function applyLayerResults(args: {
   state: WorkflowState;
   runtime: LayerRuntimeState;
   continuedAsNewCount: number;
+  runtimeExecutor?: 'postgres' | 'dbt';
 }): Promise<RunPlanWorkflowResult | null> {
   for (const { stepId, result, gatewayDecision } of args.layerResults) {
     if (result.status === 'COMPLETED') {
       const completedPayload =
-        typeof gatewayDecision === 'boolean' ? { gatewayDecision } : undefined;
+        typeof gatewayDecision === 'boolean' || result.resultEvidence !== undefined
+          ? {
+              ...(typeof gatewayDecision === 'boolean' ? { gatewayDecision } : {}),
+              ...(result.resultEvidence === undefined
+                ? {}
+                : { resultEvidence: result.resultEvidence }),
+            }
+          : undefined;
       await activities.emitEvent({
         ctx: args.ctx,
         planRef: args.planRef,
@@ -758,23 +875,39 @@ async function applyLayerResults(args: {
         ...(completedPayload ? { payload: completedPayload } : {}),
       });
 
-      args.runtime.completedStepResults[stepId] = buildCompletedStepFact(stepId, gatewayDecision);
+      args.runtime.completedStepResults[stepId] = buildCompletedStepFact(
+        stepId,
+        gatewayDecision,
+        result.resultEvidence
+      );
       args.runtime.completedSteps += 1;
       args.state.currentStepIndex = args.runtime.completedSteps;
       continue;
     }
 
+    const stepFailedPayload =
+      result.failureReason !== undefined || result.error !== undefined
+        ? {
+            ...(result.failureReason === undefined ? {} : { reason: result.failureReason }),
+            ...(result.error === undefined ? {} : { message: result.error }),
+          }
+        : undefined;
     await activities.emitEvent({
       ctx: args.ctx,
       planRef: args.planRef,
       eventType: 'StepFailed',
       stepId,
+      ...(stepFailedPayload === undefined ? {} : { payload: stepFailedPayload }),
     });
     await activities.emitEvent({
       ctx: args.ctx,
       planRef: args.planRef,
       eventType: 'RunFailed',
-      payload: { reason: 'STEP_FAILURE' },
+      payload: {
+        reason: 'STEP_FAILURE',
+        ...(args.runtimeExecutor === undefined ? {} : { executor: args.runtimeExecutor }),
+        ...(result.error === undefined ? {} : { message: result.error }),
+      },
     });
     args.state.status = 'FAILED';
     return {

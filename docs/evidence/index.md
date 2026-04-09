@@ -35,6 +35,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260408 Tf C2 B Read Surface Evidence](ED-20260408-tf-c2-b-read-surface-evidence.md)
 - [ED 20260409 Provider Ref Contract Hardening](ED-20260409-provider-ref-contract-hardening.md)
 - [ED 20260409 Provider Ref Empty String Preservation](ED-20260409-provider-ref-empty-string-preservation.md)
+- [ED 20260409 Tf C2 B Run Read Evidence Attempt Safety](ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md)
 - [ED 20260409 Trace Context Adapter Type Alignment](ED-20260409-trace-context-adapter-type-alignment.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)

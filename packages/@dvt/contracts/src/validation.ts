@@ -221,7 +221,7 @@ export function parseStepOutput(input: unknown): StepOutputSchemaT {
   return parseWithSchema(StepOutputSchema, input);
 }
 
-/** Validate a write-side event envelope (RunEvents v2.0.1). */
+/** Validate a write-side event envelope (RunEvents v2.0.2). */
 export function parseRunEventWrite(input: unknown): RunEventWriteSchemaT {
   return parseWithSchema(RunEventWriteSchema, input);
 }
@@ -246,7 +246,7 @@ export function parseCanonicalEngineEvent(input: unknown): LegacyCanonicalEngine
   return parseWithSchema(LegacyCanonicalEngineEventSchema, input);
 }
 
-/** Validate a persisted event record (RunEvents v2.0.1). */
+/** Validate a persisted event record (RunEvents v2.0.2). */
 export function parseRunEventRecord(input: unknown): RunEventRecordSchemaT {
   return parseWithSchema(RunEventRecordSchema, input);
 }

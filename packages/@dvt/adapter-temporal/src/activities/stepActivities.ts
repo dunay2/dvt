@@ -9,7 +9,7 @@
  * @date 2026-03-07
  */
 import { parsePlanRef, parseResolvedRunContext, RUN_EVENT_PAYLOAD_VERSION } from '@dvt/contracts';
-import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
@@ -73,6 +73,8 @@ export interface StepResult {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
   gatewayDecision?: boolean;
+  resultEvidence?: MaterializationEvidence;
+  failureReason?: string;
   retriable?: boolean;
   error?: string;
 }
