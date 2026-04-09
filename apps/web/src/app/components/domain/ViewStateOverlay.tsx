@@ -48,7 +48,9 @@ export function ViewStateOverlay({
         <div className="min-w-0 flex-1 space-y-1">
           <div className="font-medium text-[var(--text-strong)]">{title}</div>
           <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{description}</p>
-          {detail ? <div className={cn('text-sm', routeWorkbenchSubtleTextClassName)}>{detail}</div> : null}
+          {detail ? (
+            <div className={cn('text-sm', routeWorkbenchSubtleTextClassName)}>{detail}</div>
+          ) : null}
           {action ? (
             <Button className="mt-2" size="sm" variant="outline" onClick={action.onClick}>
               {action.label}

@@ -1,8 +1,7 @@
 import { routeWorkbenchMonacoSurfaceClassName } from '../workbench/RouteWorkbenchFrame';
 import { cn } from '../ui/utils';
 
-export const DEFAULT_MONACO_CONTAINER_CLASS_NAME =
-  routeWorkbenchMonacoSurfaceClassName;
+export const DEFAULT_MONACO_CONTAINER_CLASS_NAME = routeWorkbenchMonacoSurfaceClassName;
 
 type MonacoViewerFallbackProps = Readonly<{
   label: string;
