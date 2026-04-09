@@ -30,7 +30,7 @@ describe('Calendar', () => {
     await act(async () => {
       root.render(
         <Calendar
-          captionLayout="dropdown-buttons"
+          captionLayout="dropdown"
           defaultMonth={new Date(2026, 3, 1)}
           fromYear={2020}
           toYear={2030}

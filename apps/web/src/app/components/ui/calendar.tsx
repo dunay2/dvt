@@ -1,24 +1,24 @@
 'use client';
 
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import * as React from 'react';
-import { DayPicker, type CustomComponents } from 'react-day-picker';
+import { DayPicker, type ChevronProps } from 'react-day-picker';
 
 import { buttonVariants } from './button';
 import { cn } from './utils';
 
-const CalendarIconLeft: NonNullable<CustomComponents['IconLeft']> = ({ className, ...props }) => (
-  <ChevronLeft className={cn('size-4', className)} {...props} />
-);
-
-const CalendarIconRight: NonNullable<CustomComponents['IconRight']> = ({ className, ...props }) => (
-  <ChevronRight className={cn('size-4', className)} {...props} />
-);
-
-const CalendarIconDropdown: NonNullable<CustomComponents['IconDropdown']> = ({
-  className,
-  ...props
-}) => <ChevronDown className={cn('size-4', className)} {...props} />;
+function CalendarChevron({ className, orientation = 'right', ...props }: ChevronProps) {
+  if (orientation === 'left') {
+    return <ChevronLeft className={cn('size-4', className)} {...props} />;
+  }
+  if (orientation === 'up') {
+    return <ChevronUp className={cn('size-4', className)} {...props} />;
+  }
+  if (orientation === 'down') {
+    return <ChevronDown className={cn('size-4', className)} {...props} />;
+  }
+  return <ChevronRight className={cn('size-4', className)} {...props} />;
+}
 
 function Calendar({
   className,
@@ -70,9 +70,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: CalendarIconLeft,
-        IconRight: CalendarIconRight,
-        IconDropdown: CalendarIconDropdown,
+        Chevron: CalendarChevron,
       }}
       {...props}
     />
