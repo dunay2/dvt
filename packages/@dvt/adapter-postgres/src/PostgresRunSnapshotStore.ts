@@ -119,12 +119,8 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     if (read === null) {
       return null;
     }
-    if (
-      read.snapshot.schemaVersion !== CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION ||
-      hasLegacyFlatOutcomeFields(read.snapshot)
-    ) {
-      // Schema mismatch or legacy flat evidence fields means the stored read
-      // model shape is stale.
+    if (read.snapshot.schemaVersion !== CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION) {
+      // Schema-version mismatch means the stored read model shape is stale.
       // Rebuild from canonical event history before serving.
       return this.rebuildSnapshot(tenantId, runId);
     }
@@ -574,17 +570,6 @@ function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnapshot {
     steps,
     gatewayDecisions: snapshot.gatewayDecisions ? { ...snapshot.gatewayDecisions } : {},
   };
-}
-
-function hasLegacyFlatOutcomeFields(snapshot: WorkflowSnapshot): boolean {
-  const candidate = snapshot as unknown as Record<string, unknown>;
-
-  return (
-    'currentStepId' in candidate ||
-    'failedStepId' in candidate ||
-    'errorReason' in candidate ||
-    'materialization' in candidate
-  );
 }
 
 const MAX_SAFE_RUN_SEQUENCE = BigInt(Number.MAX_SAFE_INTEGER);

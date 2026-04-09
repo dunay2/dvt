@@ -48,8 +48,8 @@ Debt handling for this review:
 - the failed-run materialization semantics finding is accepted as open debt in
   `R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS`
 - the previous snapshot schema-version blocker is closed in development by
-  keeping `schemaVersion = 1` and treating legacy flat-shape rows as stale for
-  rebuild
+  keeping `schemaVersion = 1` on the disposable local Docker baseline instead
+  of carrying a second snapshot-schema line
 
 ## Governing Sources
 
@@ -72,25 +72,22 @@ Debt handling for this review:
 ### High
 
 - Title: Persisted snapshot safety now stays on one schema line and rebuilds
-  legacy flat-shape rows.
+  one disposable development baseline.
   Why it matters: the development branch explicitly wants one internal snapshot
-  schema line. That only stays safe if legacy flat-shape rows are detected and
-  rebuilt from canonical events instead of introducing a second schema number.
+  schema line. In the current disposable local Docker posture, that means
+  staying on `schemaVersion = 1` instead of introducing a second schema number.
   Evidence:
   - `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts:142-148` now
     states the development baseline remains on `schemaVersion = 1`.
-  - `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts:122-128`
-    now rebuilds when either the schema value mismatches or legacy flat TF-C2-B
-    keys are present on the stored snapshot.
-  - `packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts:15-55`
-    now marks legacy flat-shape rows as stale for projector refresh.
-  - `packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts`
-    now includes a regression proving legacy flat-shape rows rebuild even when
-    `schemaVersion` stays on the current value.
-    Risk: the multi-line snapshot-version concern is removed for this branch,
-    but legacy-shape detection must remain aligned with the real retired fields.
-    Recommendation: keep the single-line development policy explicit and retain
-    regression coverage for flat-shape snapshot rebuild.
+  - `packages/@dvt/engine/src/ports/IRunStateStore.ts:142-148` mirrors the same
+    single-line baseline for engine consumers.
+  - `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts:122-126`
+    still rebuilds on real schema mismatch, but the branch no longer introduces
+    a `2` line purely for this TF-C2-B development slice.
+    Risk: if persisted snapshots become a compatibility concern outside the
+    disposable local baseline, this posture will need a governed revisit.
+    Recommendation: keep the single-line development policy explicit and avoid
+    inventing snapshot-schema branches until a real migration problem exists.
 
 - Title: Canonical contract docs still describe the old run-status shape.
   Why it matters: this slice changes caller-visible runtime read semantics. If
@@ -172,9 +169,9 @@ Debt handling for this review:
   Not aligned. The proposal says `execution.materialization` is success-only,
   while the implementation and tests allow it to coexist with failure.
 - Tests vs claims:
-  Partial alignment. The new tests now protect the single-line snapshot rebuild
-  policy, but they still do not settle the failed-run materialization semantics
-  explicitly.
+  Partial alignment. The branch now reflects the chosen single-line snapshot
+  posture, but it still does not settle the failed-run materialization
+  semantics explicitly.
 - Current truth vs planned truth:
   The branch now matches the chosen development posture for snapshots, but
   canonical-doc drift and failed-run materialization semantics still remain
@@ -197,8 +194,8 @@ Debt handling for this review:
   Improved. Normalization moved out of the projector, but the architecture docs
   still depict the old seam.
 - CQRS if relevant:
-  Improved. Persisted snapshot safety now keeps one development schema line and
-  rebuilds legacy flat-shape rows from events instead of serving them directly.
+  Improved. The branch keeps one development snapshot schema line and avoids a
+  premature migration story in a disposable local environment.
 - Complexity:
   Reasonable in the implementation, but documentary complexity is high because
   current-state truth is split across code, closeout, and stale contract docs.
@@ -221,12 +218,10 @@ Debt handling for this review:
   - no documentary fitness test guarding canonical contract docs against stale
     `RunStatusSnapshot` examples
 - Regression status:
-  Repo gate is green, and the snapshot-safety regression is now covered, but
-  documentary and semantic blockers remain.
+  Repo gate is green, but documentary and semantic blockers remain.
 - Determinism:
-  The mapper-first projection remains deterministic. Legacy flat-shape rows are
-  now forced back through event-authoritative rebuild instead of being served
-  directly.
+  The mapper-first projection remains deterministic. Snapshot-version posture is
+  no longer the hard-QA blocker for this branch.
 - Local suite vs meaningful global confidence:
   Good code confidence for touched packages; insufficient closure confidence for
   persisted snapshot migration and canonical-doc truth.
@@ -234,8 +229,7 @@ Debt handling for this review:
   Yes. This review checked contracts, persisted snapshots, API/web consumers,
   architecture docs, and planning surfaces together.
 - Harness or shared fixture need:
-  No additional harness blocker. The persisted old-shape snapshot regression is
-  now covered in the adapter store tests.
+  No additional harness blocker was required for the snapshot-version posture.
 - Test grouping by type (`unit` / `integration` / `contract` / `e2e` / regression) and rationale:
   - `contract`: `packages/@dvt/contracts/test/validation.test.ts`
   - `unit/regression`: `packages/@dvt/run-domain/test/applyRunEvent.test.ts`
@@ -267,8 +261,8 @@ Debt handling for this review:
 
 ```mermaid
 flowchart LR
-  A[Persisted snapshot contract changed] --> B[Legacy flat-shape rows detected]
-  B --> C[Rows rebuild from canonical events while schemaVersion stays at 1]
+  A[Persisted snapshot contract changed] --> B[Branch keeps schemaVersion at 1]
+  B --> C[Disposable local Docker baseline avoids a second schema line]
 
   D[Proposal says materialization on success] --> E[Projector preserves materialization on failure]
   E --> F[UI test renders both failure and materialization]
@@ -310,7 +304,7 @@ Target:
 
 ### Task Checklist
 
-- [x] `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` and rebuild legacy flat-shape rows by detection
+- [x] `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` for the disposable development baseline
 - [ ] `TF-C2-B-QA-02` Update canonical engine and frontend contract docs for `RunStatusSnapshot.execution`
 - [ ] `TF-C2-B-QA-03` Reconcile failed-run materialization semantics in code, tests, and contract docs
 - [ ] `TF-C2-B-QA-04` Update canonical architecture diagrams to show mapper-first projection
@@ -318,7 +312,7 @@ Target:
 
 ### Task Details
 
-#### `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` and rebuild legacy flat-shape rows by detection
+#### `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` for the disposable development baseline
 
 - Objective: Prevent stale persisted snapshot rows from being treated as current
   truth after the `execution` shape landed while keeping one development schema
@@ -335,8 +329,9 @@ Target:
   affects persisted state truth, not just prose.
 - Definition of Done:
   - `CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION` stays at `1`;
-  - legacy flat-shape snapshots trigger rebuild;
-  - regression coverage proves that legacy-shape handling works end to end.
+  - the branch does not introduce a `2` snapshot-schema line for TF-C2-B;
+  - planning and QA surfaces reflect the disposable development posture
+    explicitly.
 
 #### `TF-C2-B-QA-02` Update canonical engine and frontend contract docs for `RunStatusSnapshot.execution`
 

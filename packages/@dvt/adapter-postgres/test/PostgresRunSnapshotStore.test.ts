@@ -289,67 +289,6 @@ describe('PostgresRunSnapshotStore', () => {
     expect(client.queries.some((entry) => entry.sql.includes('ORDER BY run_seq ASC'))).toBe(true);
   });
 
-  it('rebuilds snapshot when persisted rows still use legacy flat outcome fields', async () => {
-    const client = new ScriptedClient(async <T>(sql: string) => {
-      if (isSnapshotReadQuery(sql)) {
-        return {
-          rows: [
-            {
-              snapshot: {
-                schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
-                runId: 'run-1',
-                status: 'RUNNING',
-                paused: false,
-                cancelling: false,
-                currentStepId: 'step-legacy',
-                errorReason: 'LEGACY_SHAPE',
-                gatewayDecisions: {},
-                steps: {},
-              } as T,
-              last_run_seq: 0,
-              latest_run_seq: 0,
-            },
-          ],
-          rowCount: 1,
-        };
-      }
-
-      if (sql.includes('FROM "dvt".run_metadata')) {
-        return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
-      }
-
-      if (sql.includes('pg_advisory_xact_lock')) {
-        return { rows: [] as T[], rowCount: 1 };
-      }
-
-      if (sql.includes('FROM "dvt".run_events') && sql.includes('ORDER BY run_seq ASC')) {
-        return { rows: [] as T[], rowCount: 0 };
-      }
-
-      if (sql.includes('COALESCE(MAX(run_seq), 0)')) {
-        return { rows: [{ max_seq: 0 }] as T[], rowCount: 1 };
-      }
-
-      if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
-        return { rows: [] as T[], rowCount: 1 };
-      }
-
-      return { rows: [] as T[], rowCount: 0 };
-    });
-    const store = new PostgresRunSnapshotStore(
-      'dvt',
-      () => '2026-03-20T00:00:01.000Z',
-      async (fn) => fn(client as never),
-      async (fn) => fn(client as never)
-    );
-
-    const snapshot = await store.getSnapshot('tenant-1', 'run-1');
-
-    expect(snapshot).not.toBeNull();
-    expect(snapshot?.schemaVersion).toBe(CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION);
-    expect(client.queries.some((entry) => entry.sql.includes('ORDER BY run_seq ASC'))).toBe(true);
-  });
-
   it('applies tail events when the persisted snapshot lags without persisting inline', async () => {
     const client = new ScriptedClient(async <T>(sql: string) => {
       if (isSnapshotReadQuery(sql)) {
