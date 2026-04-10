@@ -1184,10 +1184,10 @@ tasks:
   - task_id: MW-A5
     parent_task: RC-G1-D-A
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: >-
       narrow Temporal workflow helper artifact extraction to shared generic facts and remove full
       DBT config schema parsing from the adapter helper seam.
@@ -1202,10 +1202,11 @@ tasks:
       - docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md
       - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
       - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
+      - docs/planning/closeouts/20260410-mw-a5-temporal-helper-artifact-facts-narrowing-closeout.md
     status_reason: >-
-      After planner ingress compatibility, the next bounded architecture slice is runtime-helper
-      narrowing: keep payload shaping in Temporal, but remove the helper dependency on full
-      `DbtStepTypeConfigSchema` width.
+      Completed. `workflowHelpers.ts` now validates only the narrow `compiledCodeRef` fact needed
+      for `StepStarted` payload shaping, unrelated DBT config width no longer controls runtime
+      helper success, and focused Temporal helper tests lock the boundary.
     last_verified: '2026-04-10'
   - task_id: AR-A4
     priority: P2

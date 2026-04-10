@@ -46,8 +46,30 @@ describe('buildStepStartedPayload', () => {
     });
   });
 
+  it('ignores unrelated DBT config width when compiledCodeRef itself is valid', () => {
+    const ref = extractCompiledCodeRef({
+      compiledCodeRef: VALID_REF,
+      stepTimeoutMs: -1,
+      retries: 'not-a-retry-policy',
+      concurrency: {
+        maxInFlight: 0,
+      },
+    });
+
+    expect(ref).toEqual(VALID_REF);
+  });
+
   it('returns undefined when compiledCodeRef is absent', () => {
     expect(buildStepStartedPayload(makeStep())).toBeUndefined();
+  });
+
+  it('returns undefined when compiledCodeRef is absent even if unrelated DBT fields are invalid', () => {
+    expect(
+      extractCompiledCodeRef({
+        stepTimeoutMs: -1,
+        retries: 'not-a-retry-policy',
+      })
+    ).toBeUndefined();
   });
 
   it('returns undefined for non-DBT step kinds with arbitrary stepTypeConfig', () => {
