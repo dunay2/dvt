@@ -1650,11 +1650,12 @@ tasks:
       the header stack, fixes the shared field token so it works on neutral elements like compare
       pills, applies shared tab and Monaco tokens across the first `Diff` and `Artifacts` cleanup
       slice, now moves the shell top bar plus left navigation rail away from route-level `slate-*`
-      chrome into governed shell tokens, and extracts the shared shell controls under
-      `components/shell/*` with Root-shell characterization coverage for top-bar presence,
-      navigation order, focus-mode rail hiding, and stable shell-control seams. Remaining work is
-      broader panel, table, Canvas, and deeper Monaco convergence across the rest of the operator
-      path.
+      chrome into governed shell tokens, extracts the shared shell controls under
+      `components/shell/*`, and routes left-rail navigation through an explicit shell navigation
+      model so the rail no longer knows plugin view internals or fixed footer item ownership.
+      Root-shell characterization now covers top-bar presence, navigation order, focus-mode rail
+      hiding, and stable shell-control seams. Remaining work is broader panel, table, Canvas, and
+      deeper Monaco convergence across the rest of the operator path.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components

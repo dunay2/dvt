@@ -19,6 +19,11 @@ describe('buildShellRuntimeState', () => {
     expect(state.enabledPluginIds.has('cost')).toBe(false);
     expect(state.registeredPluginIds.has('cost')).toBe(false);
     expect(state.navigationViews.some((view) => view.path === '/cost')).toBe(false);
+    expect(state.navigationModel.primaryItems.some((item) => item.to === '/cost')).toBe(false);
+    expect(state.navigationModel.footerItems.map((item) => item.to)).toEqual([
+      '/plugins',
+      '/admin',
+    ]);
   });
 
   it('keeps plugin runtime views when backend capability data is absent', () => {
@@ -27,5 +32,6 @@ describe('buildShellRuntimeState', () => {
     expect(state.enabledPluginIds.has('cost')).toBe(true);
     expect(state.registeredPluginIds.has('cost')).toBe(true);
     expect(state.navigationViews.some((view) => view.path === '/canvas')).toBe(true);
+    expect(state.navigationModel.primaryItems.some((item) => item.to === '/canvas')).toBe(true);
   });
 });
