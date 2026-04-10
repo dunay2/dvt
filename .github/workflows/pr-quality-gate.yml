@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      run_temporal_postgres_integration:
+        description: 'Run temporal adapter Postgres capability integration tests'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: pr-quality-gate-${{ github.event.pull_request.number || github.ref }}
@@ -182,11 +187,15 @@ jobs:
       - name: Set temporal_changed for workflow_dispatch
         id: wd_scope
         if:
-          github.event_name == 'workflow_dispatch' && github.event.inputs.run_temporal_integration
-          == 'true'
+          github.event_name == 'workflow_dispatch' && (github.event.inputs.run_temporal_integration
+          == 'true' || github.event.inputs.run_temporal_postgres_integration == 'true')
         run: |
-          echo "temporal_changed=true" >> $GITHUB_OUTPUT
-          echo "temporal_postgres_changed=true" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event.inputs.run_temporal_integration }}" == "true" ]]; then
+            echo "temporal_changed=true" >> $GITHUB_OUTPUT
+          fi
+          if [[ "${{ github.event.inputs.run_temporal_postgres_integration }}" == "true" ]]; then
+            echo "temporal_postgres_changed=true" >> $GITHUB_OUTPUT
+          fi
 
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
@@ -208,11 +217,11 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Build contracts for integration
-        run: pnpm --filter @dvt/contracts build
+      - name: Prepare Temporal adapter integration runtime
+        run: pnpm --filter @dvt/adapter-temporal run prepare:integration
 
       - name: Run Temporal adapter integration (time-skipping)
-        run: pnpm --filter @dvt/adapter-temporal test:integration
+        run: pnpm --filter @dvt/adapter-temporal run test:integration
 
   temporal-postgres-integration:
     name: Temporal adapter integration (postgres capability)
@@ -222,7 +231,7 @@ jobs:
     if: >-
       needs.pr-checks.outputs.temporal_postgres_changed == 'true' && (github.event_name !=
       'workflow_dispatch' ||
-       github.event.inputs.run_temporal_integration == 'true')
+       github.event.inputs.run_temporal_postgres_integration == 'true')
     services:
       postgres:
         image: postgres:15
@@ -249,11 +258,11 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Build contracts for integration
-        run: pnpm --filter @dvt/contracts build
+      - name: Prepare Temporal adapter Postgres integration runtime
+        run: pnpm --filter @dvt/adapter-temporal run prepare:integration:postgres
 
       - name: Run Temporal adapter integration (postgres capability)
-        run: pnpm --filter @dvt/adapter-temporal test:integration:postgres
+        run: pnpm --filter @dvt/adapter-temporal run test:integration:postgres
 
   all-checks-passed:
     name: All Checks Required for Merge

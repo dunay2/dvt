@@ -59,6 +59,7 @@ See also:
 | PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`              | [`package.json`](../../package.json)                                               |
 | Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                               |
 | Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                               |
+| Temporal Postgres integration      | `pnpm test:adapter-temporal:integration:postgres`                          | Capability-specific PG path          | [`package.json`](../../package.json)                                               |
 | CLI package tests                  | `pnpm test:cli`                                                            | `@dvt/cli`                           | [`package.json`](../../package.json)                                               |
 | Delivery package tests             | `pnpm --filter @dvt/delivery test`                                         | `@dvt/delivery`                      | [`packages/@dvt/delivery/package.json`](../../packages/@dvt/delivery/package.json) |
 | Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)         |
@@ -192,6 +193,13 @@ These files are intended to become the canonical source of truth for:
   locally.
 - For local PR-green work, the canonical operator recipe is
   [PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md).
+- `pnpm test:adapter-temporal:integration` is the canonical local wrapper and
+  performs the required runtime preparation before invoking the Temporal
+  integration suite. CI mirrors that contract through explicit
+  `prepare:integration` and `test:integration` steps.
+- `pnpm test:adapter-temporal:integration:postgres` is capability-specific
+  verification for the relational Postgres path. It is not the baseline
+  closeout command for every Temporal slice.
 - `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
   `DVT_PG_URL` is absent; when configured it exercises the real API protected
   runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.

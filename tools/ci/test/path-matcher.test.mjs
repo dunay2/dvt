@@ -54,4 +54,17 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
   );
   assert.equal(fromWorkflowConfig.temporal_changed, true);
   assert.equal(fromWorkflowConfig.temporal_postgres_changed, true);
+
+  const fromRuntimeDepsHelper = computeBooleanScope(
+    ['scripts/build-workspace-runtime-deps.cjs'],
+    PR_QUALITY_SCOPE_PATTERNS
+  );
+  assert.equal(fromRuntimeDepsHelper.temporal_changed, true);
+  assert.equal(fromRuntimeDepsHelper.temporal_postgres_changed, true);
+
+  const fromPostgresIntegrationFile = computeBooleanScope(
+    ['packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts'],
+    PR_QUALITY_SCOPE_PATTERNS
+  );
+  assert.equal(fromPostgresIntegrationFile.temporal_postgres_changed, true);
 });

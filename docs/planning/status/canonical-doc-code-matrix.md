@@ -115,6 +115,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `pnpm test:adapter-temporal`
   and
   `pnpm test:adapter-temporal:integration`
+- Capability-specific verification:
+  `pnpm test:adapter-temporal:integration:postgres` when the relational
+  Postgres execution path is in scope.
 
 ### Postgres state store
 
