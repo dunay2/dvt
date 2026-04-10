@@ -1412,6 +1412,28 @@ tasks:
       Retry semantics are currently static in adapter code, limiting step-kind-specific behavior and
       hiding policy ownership from contracts.
     last_verified: '2026-04-04'
+  - task_id: AR-A12
+    priority: P1
+    status: queued
+    objective: >-
+      separate logical run identity from provider-owned execution coordinates so shared contracts do
+      not keep widening `EngineRunRef` as a provider detail bag.
+    dependency: RC-G1-B, WE-HX-1
+    target: >-
+      Shared contracts stop treating one polymorphic `EngineRunRef` as both the logical run handle
+      and the provider execution reference; the engine and adapters use explicit owner-scoped value
+      objects or seams for provider-native coordinates.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
+      - docs/architecture/diagrams/implementation-architecture-diagrams.md
+      - packages/@dvt/contracts/src/types/contracts.ts
+    status_reason: >-
+      Current architecture still mixes logical run identity with provider-owned execution
+      coordinates in `EngineRunRef`, which keeps leaking adapter detail into the shared kernel.
+    last_verified: '2026-04-10'
   - task_id: DOC-ARCH-01
     priority: P1
     status: done
@@ -1822,6 +1844,10 @@ dependency_notes:
     truthfulness (Conductor removal), planner cycle fail-closed behavior, API-engine contract
     formalization, and step-level retry policy governance.
   - >-
+    The 2026-04-10 runtime/shared-kernel triage review adds `AR-A12` as the explicit follow-up for
+    separating logical run identity from provider-owned execution coordinates instead of continuing
+    to widen `EngineRunRef` inside the shared kernel.
+  - >-
     `AR-A9` is now decomposed into `AR-A9-A..E` and closed with docs-first/TDD-first evidence while
     preserving `PlannerErrorCode.GRAPH_CYCLE` as the canonical cycle contract.
   - >-
@@ -1846,11 +1872,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-07'
-  total_tasks: 82
-  total_effort_points: 279
+  verified_on: '2026-04-10'
+  total_tasks: 83
+  total_effort_points: 282
   completed_weighted_points: 167.15
-  lane_progress_pct: 60
+  lane_progress_pct: 59
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

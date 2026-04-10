@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 planning_type: proposal
 ---
 
@@ -46,11 +46,12 @@ flowchart LR
   [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md),
   [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md),
   [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
-  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: close the remaining `WE-HX` hardening waves while opening
-  `TF-C2` for the PostgreSQL executor path and caller-visible runtime evidence,
-  while keeping Conductor cleanup scoped as truthfulness debt (`AR-A8`) rather
-  than a second-provider phase.
+  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+  Near-term target: fix `AR-C6` first, then close the `EngineRunRef` and
+  shared-kernel ownership boundary (`AR-A12`, `RC-G1-B`) before extracting the
+  delivery runtime harness (`AR-A7`) and treating Conductor cleanup (`AR-A8`)
+  as truthfulness debt rather than a second-provider phase.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
@@ -62,17 +63,21 @@ flowchart LR
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),
-  [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
+  [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
+  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: freeze the first `DesignGraphDraft`, `GitArtifactRef`, and
   compiler mapping so downstream API, runtime, and UI work stop depending on
-  local assumptions.
+  local assumptions, while `S05-TRUTH-SYNC` keeps payload-version closure truth
+  aligned across planning and status surfaces.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),
-  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: keep the shipped retention baseline explicit while adding a
   repeatable Docker PostgreSQL reset/cleanup lifecycle for transformation proof
-  runs.
+  runs and making default retention wiring (`AR-D8`) part of the mandatory
+  operational baseline.
 - `UI and Frontend`
   Current sources: [web component](../../architecture/components/web/index.md),
   [Read subsystem](../../architecture/system/subsystems/read/index.md),
