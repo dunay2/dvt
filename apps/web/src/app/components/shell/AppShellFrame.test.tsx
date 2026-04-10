@@ -54,6 +54,8 @@ describe('AppShellFrame', () => {
     expect(body).not.toBeNull();
     expect(leftNavigation?.textContent).toContain('Left nav');
     expect(leftNavigation?.parentElement).toBe(body);
+    expect(leftNavigation?.className).toContain('flex');
+    expect(leftNavigation?.className).toContain('h-full');
     expect(main?.parentElement).toBe(body);
     expect(outlet?.textContent).toContain('Route outlet');
     expect(outlet?.closest('[data-slot="app-shell-main"]')).toBe(main);

@@ -35,7 +35,7 @@ export function AppShellFrame({
 
         <div data-slot="app-shell-body" className="flex min-h-0 flex-1 overflow-hidden">
           {showLeftNavigation && (
-            <div data-slot="app-shell-left-navigation" className="shrink-0">
+            <div data-slot="app-shell-left-navigation" className="flex h-full shrink-0">
               {leftNavigation}
             </div>
           )}
