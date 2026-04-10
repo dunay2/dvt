@@ -215,7 +215,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
-      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.md
+      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.yaml
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
     status_reason: >-
       The freshness SLO contract is documented with measurable telemetry outcomes and backed by API

@@ -94,6 +94,41 @@ class ProviderRefUpdateClient extends RecordingClient {
   }
 }
 
+class InvalidTaskQueueRowClient extends RecordingClient {
+  override async query(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ rows: Array<Record<string, unknown>> }> {
+    this.queries.push({ sql, params });
+
+    if (sql.includes('WHERE tenant_id = $1 AND run_id = $2') && !sql.includes('FOR UPDATE')) {
+      return {
+        rows: [
+          {
+            tenant_id: 'tenant-a',
+            project_id: 'project-a',
+            environment_id: 'env-a',
+            run_id: 'run-a',
+            plan_id: 'plan-a',
+            plan_version: '1.0.0',
+            logical_attempt_id: 1,
+            parent_run_id: null,
+            origin_run_id: null,
+            provider: 'temporal',
+            provider_workflow_id: 'wf-run-a',
+            provider_run_id: 'pr-run-a',
+            provider_namespace: 'default',
+            provider_task_queue: '',
+            provider_conductor_url: null,
+          },
+        ],
+      };
+    }
+
+    return super.query(sql, params) as Promise<{ rows: Array<Record<string, unknown>> }>;
+  }
+}
+
 describe('PostgresRunMetadataRepository upsertWithClient', () => {
   it('writes tenant context and upserts run metadata inside the provided client', async () => {
     const client = new RecordingClient();
@@ -149,5 +184,12 @@ describe('PostgresRunMetadataRepository upsertWithClient', () => {
     expect(client.queries.some((query) => query.sql.includes('UPDATE "dvt".run_metadata'))).toBe(
       false
     );
+  });
+
+  it('getByRunId rejects persisted temporal provider refs with empty taskQueue', async () => {
+    const client = new InvalidTaskQueueRowClient();
+    const repo = new PostgresRunMetadataRepository('dvt', async (fn) => fn(client as never));
+
+    await expect(repo.getByRunId('tenant-a', 'run-a')).rejects.toThrow('RUN_METADATA_ROW_INVALID');
   });
 });

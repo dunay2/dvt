@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-08'
+last_reviewed: '2026-04-10'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -518,6 +518,28 @@ tasks:
       The roadmap now requires caller-visible provenance and evidence, but the result-side linkage
       is not yet broken into a concrete Lane B execution slice.
     last_verified: '2026-04-05'
+  - task_id: AR-B4
+    priority: P1
+    status: done
+    objective: >-
+      define the canonical ownership boundary between the event contract, mapper normalization, and
+      projected read-evidence shapes for step-failure and adjacent runtime evidence.
+    dependency: none
+    target: >-
+      One governed proposal isolates which invariants belong to the append boundary, which
+      derivations belong to the mapper, and what downstream projectors may rely on as canonical.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
+      - docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md
+    status_reason: >-
+      The narrow Option A slice is now implemented and validated: append-boundary invariants own
+      trusted step-failure fields, persisted records validate enriched timestamps, mapper cleanup
+      policy was removed, and the public contract surface now aligns on semantic aliases for
+      step-scoped evidence fields.
+    last_verified: '2026-04-10'
 dependency_notes:
   - >-
     `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
@@ -550,13 +572,16 @@ dependency_notes:
   - >-
     `TF-B1` is now decomposed into `TF-B1-A` and `TF-B1-B` so preview-time provenance and
     result-time evidence linkage can move independently while remaining under one Git-first policy.
+  - >-
+    `AR-B4` is now closed with a governed proposal, implemented narrow Option A hardening, and ARC
+    evidence for the contract-to-mapper-to-projector ownership boundary.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 20
-  total_effort_points: 79
-  completed_weighted_points: 52.6
+  verified_on: '2026-04-10'
+  total_tasks: 21
+  total_effort_points: 81
+  completed_weighted_points: 54.6
   lane_progress_pct: 67
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry

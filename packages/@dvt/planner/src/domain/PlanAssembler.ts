@@ -9,6 +9,8 @@
  *       attach observability layers. Knows nothing about graph topology or node selection.
  */
 import {
+  asNonBlankString,
+  asSha256HexString,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -133,9 +135,11 @@ export class PlanAssembler {
     requiredCapabilities: readonly string[]
   ): RunExecutionPolicy {
     return {
-      pluginCompatibilityFingerprint,
+      pluginCompatibilityFingerprint: asSha256HexString(pluginCompatibilityFingerprint),
       ...(requiredCapabilities.length > 0
-        ? { requiresCapabilities: [...requiredCapabilities] }
+        ? {
+            requiresCapabilities: [...requiredCapabilities].map((value) => asNonBlankString(value)),
+          }
         : {}),
     };
   }

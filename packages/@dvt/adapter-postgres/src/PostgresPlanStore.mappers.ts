@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto';
 
 import {
+  asNonBlankString,
+  parsePlanRef,
+  parseRunExecutionPolicy,
   type PlanExecutabilityRecord,
   type PlanExecutabilityRejectionReport,
   type PlanRefSchemaT,
@@ -130,38 +133,38 @@ export function buildPlanRef(input: {
   uriScheme: string;
 }): PlanRefSchemaT {
   const sha256 = createHash('sha256').update(input.executableBytes).digest('hex');
-  return {
+  return parsePlanRef({
     uri: `${input.uriScheme}://postgres/${input.planId}`,
     sha256,
     schemaVersion: input.schemaVersion,
     planId: input.planId,
     planVersion: input.planVersion,
     sizeBytes: input.executableBytes.byteLength,
-  };
+  });
 }
 
 export function buildPlanRefFromStoredRow(row: StoredPlanRow): PlanRefSchemaT {
-  return {
+  return parsePlanRef({
     uri: row.plan_uri,
     sha256: row.plan_sha256,
     schemaVersion: row.schema_version,
     planId: row.plan_id,
     planVersion: row.plan_version,
     sizeBytes: row.size_bytes,
-  };
+  });
 }
 
 export function buildExecutionPolicyFromStoredRow(
   row: Pick<StoredPlanRow, 'plugin_compatibility_fingerprint' | 'requires_capabilities'>
 ): RunExecutionPolicy {
   const requiresCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
-  return {
+  return parseRunExecutionPolicy({
     ...(row.plugin_compatibility_fingerprint === undefined ||
     row.plugin_compatibility_fingerprint === null
       ? {}
       : { pluginCompatibilityFingerprint: row.plugin_compatibility_fingerprint }),
     ...(requiresCapabilities.length > 0 ? { requiresCapabilities } : {}),
-  };
+  });
 }
 
 export function assertStoredPlanMatchesRequest(
@@ -206,7 +209,11 @@ export function assertStoredPlanMatchesRequest(
   }
 }
 
-function normalizeRequiresCapabilities(value: unknown): string[] {
+function normalizeRequiresCapabilities(
+  value: unknown
+): ReturnType<typeof parseRunExecutionPolicy>['requiresCapabilities'] extends infer T
+  ? Exclude<T, undefined>
+  : never {
   if (value === null || value === undefined) {
     return [];
   }
@@ -215,5 +222,7 @@ function normalizeRequiresCapabilities(value: unknown): string[] {
     throw new Error('PLAN_STORE_ROW_INVALID: requires_capabilities');
   }
 
-  return [...value].sort((left, right) => left.localeCompare(right));
+  return [...value]
+    .sort((left, right) => left.localeCompare(right))
+    .map((item) => asNonBlankString(item));
 }

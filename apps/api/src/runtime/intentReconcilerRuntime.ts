@@ -1,5 +1,5 @@
 import { PostgresStartRunIntentStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
-import type { EngineRunRef } from '@dvt/contracts';
+import { asIsoUtcString, type EngineRunRef } from '@dvt/contracts';
 import {
   IdempotencyKeyBuilder,
   IntentReconcilerWorker,
@@ -48,7 +48,7 @@ interface ReconcilerRuntimeConfig {
 }
 
 const SYSTEM_CLOCK: Pick<IClock, 'nowIsoUtc'> = {
-  nowIsoUtc: () => new Date().toISOString(),
+  nowIsoUtc: () => asIsoUtcString(new Date().toISOString()),
 };
 
 function resolveRuntimeConfig(env: Env, logger: FastifyBaseLogger): ReconcilerRuntimeConfig | null {
@@ -188,7 +188,8 @@ function createWorker(input: {
         observability.metrics.gauge(name).set(value);
       },
     } satisfies IntentReconcilerWorkerMetrics,
-    options
+    options,
+    { clock: SYSTEM_CLOCK }
   );
 }
 

@@ -8,7 +8,11 @@
  * @version 1.1.0
  * @date 2026-02-21
  */
-import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, type RunStatusSnapshot } from '@dvt/contracts';
+import {
+  asNonBlankString,
+  CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+  type RunStatusSnapshot,
+} from '@dvt/contracts';
 import { applyRunEvent as applyCanonicalRunEvent } from '@dvt/run-domain';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
@@ -39,7 +43,7 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
   const execution = toRunExecutionEvidence(snap);
 
   return {
-    runId: snap.runId,
+    runId: asNonBlankString(snap.runId),
     status: snap.status,
     ...(snap.cancelling ? { substatus: 'CANCELLING' as const } : {}),
     ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),

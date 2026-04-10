@@ -73,100 +73,10 @@ function readArtifactFields(
   };
 }
 
-function readMaterializationFields(value: unknown): MaterializationEvidence | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const executor = value.executor;
-  const environmentId = value.environmentId;
-  const sinkTable = value.sinkTable;
-  const rowsWritten = value.rowsWritten;
-  const startedAt = value.startedAt;
-  const completedAt = value.completedAt;
-  const durationMs = value.durationMs;
-
-  if (
-    (executor !== 'postgres' && executor !== 'dbt') ||
-    typeof environmentId !== 'string' ||
-    typeof sinkTable !== 'string' ||
-    typeof rowsWritten !== 'number' ||
-    !Number.isFinite(rowsWritten) ||
-    typeof startedAt !== 'string' ||
-    typeof completedAt !== 'string' ||
-    typeof durationMs !== 'number' ||
-    !Number.isFinite(durationMs)
-  ) {
-    return null;
-  }
-
-  return {
-    executor,
-    environmentId,
-    sinkTable,
-    rowsWritten,
-    startedAt,
-    completedAt,
-    durationMs,
-  };
-}
-
-function deriveLatestLogicalAttemptId(
-  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
-): number | undefined {
-  let latestLogicalAttemptId: number | undefined;
-
-  for (const event of events) {
-    const logicalAttemptId = event.logicalAttemptId;
-    if (!Number.isInteger(logicalAttemptId) || logicalAttemptId <= 0) {
-      continue;
-    }
-
-    if (latestLogicalAttemptId === undefined || logicalAttemptId > latestLogicalAttemptId) {
-      latestLogicalAttemptId = logicalAttemptId;
-    }
-  }
-
-  return latestLogicalAttemptId;
-}
-
-function selectCurrentAttemptEvents(
-  workspace: RunWorkspaceViewModel
-): ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]> {
-  const latestLogicalAttemptId = deriveLatestLogicalAttemptId(workspace.timeline.events);
-  if (latestLogicalAttemptId === undefined) {
-    return workspace.timeline.events;
-  }
-
-  return workspace.timeline.events.filter(
-    (event) => event.logicalAttemptId === latestLogicalAttemptId
-  );
-}
-
 function deriveMaterializationEvidence(
   workspace: RunWorkspaceViewModel
 ): MaterializationEvidence | undefined {
-  if (workspace.snapshot.materialization) {
-    return workspace.snapshot.materialization;
-  }
-
-  for (const event of [...selectCurrentAttemptEvents(workspace)].reverse()) {
-    if (!isRecord(event.payload)) {
-      continue;
-    }
-
-    const fromPayloadMaterialization = readMaterializationFields(event.payload.materialization);
-    if (fromPayloadMaterialization) {
-      return fromPayloadMaterialization;
-    }
-
-    const fromPayloadResultEvidence = readMaterializationFields(event.payload.resultEvidence);
-    if (fromPayloadResultEvidence) {
-      return fromPayloadResultEvidence;
-    }
-  }
-
-  return undefined;
+  return workspace.snapshot.materialization ?? workspace.snapshot.execution?.materialization;
 }
 
 function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
@@ -219,52 +129,6 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
   return provenance;
 }
 
-function getRunFailedReason(
-  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
-): string | undefined {
-  for (const event of [...events].reverse()) {
-    if (event.eventType !== 'RunFailed' || !event.payload || typeof event.payload !== 'object') {
-      continue;
-    }
-
-    const reason = (event.payload as { reason?: unknown }).reason;
-    if (typeof reason === 'string') {
-      return reason;
-    }
-  }
-
-  return undefined;
-}
-
-function getStepFailedReason(
-  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
-): string | undefined {
-  for (const event of [...events].reverse()) {
-    if (event.eventType !== 'StepFailed' || !event.payload || typeof event.payload !== 'object') {
-      continue;
-    }
-
-    const payload = event.payload as { reason?: unknown; message?: unknown };
-    if (typeof payload.reason === 'string') {
-      return payload.reason;
-    }
-    if (typeof payload.message === 'string') {
-      return payload.message;
-    }
-  }
-
-  return undefined;
-}
-
-function getFailureEmittedAt(
-  events: ReadonlyArray<RunWorkspaceViewModel['timeline']['events'][number]>
-): string | undefined {
-  const failedEvent = [...events]
-    .reverse()
-    .find((event) => event.eventType === 'StepFailed' || event.eventType === 'RunFailed');
-  return failedEvent?.emittedAt;
-}
-
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
   if (workspace.snapshot.status !== 'failed') {
     return {
@@ -274,15 +138,12 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
     };
   }
 
-  const currentAttemptEvents = selectCurrentAttemptEvents(workspace);
+  const nestedFailure = workspace.snapshot.execution?.failure;
   const failedStepId =
-    workspace.snapshot.failedStepId ??
-    [...currentAttemptEvents].reverse().find((event) => event.eventType === 'StepFailed')?.stepId;
+    workspace.snapshot.failedStepId ?? nestedFailure?.stepId;
   const errorReason =
-    workspace.snapshot.errorReason ??
-    getRunFailedReason(currentAttemptEvents) ??
-    getStepFailedReason(currentAttemptEvents);
-  const failureEmittedAt = getFailureEmittedAt(currentAttemptEvents);
+    workspace.snapshot.errorReason ?? nestedFailure?.reason ?? nestedFailure?.message;
+  const failureEmittedAt = nestedFailure?.failedAt;
 
   return {
     failedStepId,
@@ -346,6 +207,11 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
               <div>
                 <span className="text-slate-400">{copy.currentStepLabel}</span>
                 <div className="font-mono">{snapshot.currentStepId}</div>
+              </div>
+            ) : isKnownRunField(snapshot.execution?.activeStepId) ? (
+              <div>
+                <span className="text-slate-400">{copy.currentStepLabel}</span>
+                <div className="font-mono">{snapshot.execution?.activeStepId}</div>
               </div>
             ) : null}
             {isKnownRunField(snapshot.hash) ? (

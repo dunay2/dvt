@@ -110,6 +110,7 @@ function validatePlanFile(filePath) {
     runCheck('EngineRunRef schema', () => {
       parseEngineRunRef({
         provider: 'mock',
+        tenantId: 'tenant-demo',
         workflowId: payload?.metadata?.planId || 'workflow',
         runId: 'run-1',
       });

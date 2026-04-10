@@ -2,6 +2,7 @@ import type { ExecutionPlan as CanonicalExecutionPlan } from '@dvt/contracts';
 import type {
   EngineRunRef,
   IsoUtcString,
+  StepId,
   PlanRef,
   Provider,
   RunExecutionEvidence,
@@ -40,7 +41,7 @@ export interface RunEventInputBase {
   payload?: Record<string, unknown>;
 }
 
-export type StepEventInput = RunEventInputBase & { stepId: string };
+export type StepEventInput = RunEventInputBase & { stepId: StepId };
 export type RunEventInput = RunEventInputBase & { stepId?: never };
 export type EventInput = StepEventInput | RunEventInput;
 
@@ -266,7 +267,7 @@ export interface EventIdempotencyInput {
   logicalAttemptId: number;
   planId: string;
   planVersion: string;
-  stepId?: string;
+  stepId?: StepId;
 }
 
 export interface IIdempotencyKeyBuilder {

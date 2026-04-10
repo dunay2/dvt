@@ -133,16 +133,14 @@ async function unusedWithClient<T>(_fn: (client: never) => Promise<T>): Promise<
   throw new Error('unused_with_client');
 }
 
-function makeAppendStoreHarness(storage: RunEventStoragePort = new InMemoryRunEventStorage()): {
+function makeAppendStoreHarness(
+  storage: RunEventStoragePort = new InMemoryRunEventStorage(),
+  now: () => string = () => TEST_NOW_ISO
+): {
   store: PostgresRunEventStore;
   executor: SqlCommandExecutor;
 } {
-  const store = new PostgresRunEventStore(
-    TEST_SCHEMA,
-    () => TEST_NOW_ISO,
-    unusedWithClient,
-    storage
-  );
+  const store = new PostgresRunEventStore(TEST_SCHEMA, now, unusedWithClient, storage);
   return { store, executor: NOOP_SQL_EXECUTOR };
 }
 
@@ -214,6 +212,66 @@ describe('PostgresRunEventStore append invariants', () => {
 
     await expect(
       store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [invalidSchemaEnvelope])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventSchemaError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_EVENT_SCHEMA,
+    });
+  });
+
+  it('throws typed stable error when stepId is only whitespace', async () => {
+    const { store, executor } = makeAppendStoreHarness();
+    const invalidSchemaEnvelope = {
+      ...makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:blank-step-id`,
+        eventType: 'StepFailed',
+      }),
+      stepId: '   ',
+      payload: {
+        reason: 'SINK_WRITE_FAILED',
+      },
+    } as unknown as EventInput;
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [invalidSchemaEnvelope])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventSchemaError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_EVENT_SCHEMA,
+    });
+  });
+
+  it('throws typed stable error when emittedAt is only whitespace', async () => {
+    const { store, executor } = makeAppendStoreHarness();
+    const invalidSchemaEnvelope = {
+      ...makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:blank-emitted-at`,
+      }),
+      emittedAt: '   ',
+    } as unknown as EventInput;
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [invalidSchemaEnvelope])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventSchemaError',
+      code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,
+      messageKey: RUN_EVENT_STORE_MESSAGE_KEY.INVALID_EVENT_SCHEMA,
+    });
+  });
+
+  it('throws typed stable error when generated persistedAt is only whitespace', async () => {
+    const { store, executor } = makeAppendStoreHarness(new InMemoryRunEventStorage(), () => '   ');
+
+    await expect(
+      store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+        makeEvent({
+          runId: TEST_RUN_ID,
+          idempotencyKey: `${TEST_RUN_ID}:invalid-generated-persisted-at`,
+          eventType: 'RunStarted',
+        }),
+      ])
     ).rejects.toMatchObject({
       name: 'InvalidRunEventSchemaError',
       code: RUN_EVENT_STORE_ERROR_CODE.INVALID_EVENT_SCHEMA,

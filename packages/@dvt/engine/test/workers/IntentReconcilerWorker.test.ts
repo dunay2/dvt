@@ -8,6 +8,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { IRunMaintenanceService } from '../../src/ports/IRunMaintenanceService.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 import {
   IntentReconcilerWorker,
   type IntentReconcilerWorkerDeps,
@@ -71,12 +72,16 @@ function setupTest(
 ): { worker: IntentReconcilerWorker; metrics: ReturnType<typeof makeMetrics> } {
   vi.useFakeTimers();
   const metrics = makeMetrics();
+  const resolvedDeps: IntentReconcilerWorkerDeps = {
+    clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    ...deps,
+  };
   const worker = new IntentReconcilerWorker(
     makeMaintenance(reconcile),
     makeLogger(),
     metrics,
     options ?? { intervalMs: 20, jitterRatio: 0 },
-    deps
+    resolvedDeps
   );
   return { worker, metrics };
 }

@@ -6,7 +6,12 @@ import type {
   PlanRef,
   RunContextSchemaT,
 } from '@dvt/contracts';
-import { jcsCanonicalize, parseRunContext, sha256HexUtf8 } from '@dvt/contracts';
+import {
+  asNonBlankString,
+  jcsCanonicalize,
+  parseRunContext,
+  sha256HexUtf8,
+} from '@dvt/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import {
@@ -222,7 +227,8 @@ export async function importPlanRoute(
 
   try {
     const planRef = planRefResult.value;
-    const plan = await deps.planResolver.fetch(planRef);
+    const contractPlanRef = toContractPlanRef(planRef);
+    const plan = await deps.planResolver.fetch(contractPlanRef);
     if (!isPlanOwnedByScope(plan, routeContext)) {
       sendHttpResponse(
         reply,
@@ -234,7 +240,7 @@ export async function importPlanRoute(
       );
       return;
     }
-    reply.code(200).send({ plan, planRef: normalizePlanRef(planRef) });
+    reply.code(200).send({ plan, planRef: normalizePlanRef(contractPlanRef) });
   } catch (error) {
     request.log.error({ err: error }, 'plan import failed');
     sendHttpResponse(
@@ -388,7 +394,7 @@ function buildPreviewResponse(
 function normalizePlanRef(
   planRef: Pick<PlanRef, 'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion'> & {
     sizeBytes?: number | undefined;
-    expiresAt?: string | undefined;
+    expiresAt?: PlanRef['expiresAt'] | undefined;
   }
 ): PlanRef {
   return {
@@ -399,6 +405,22 @@ function normalizePlanRef(
     planVersion: planRef.planVersion,
     ...(planRef.sizeBytes === undefined ? {} : { sizeBytes: planRef.sizeBytes }),
     ...(planRef.expiresAt === undefined ? {} : { expiresAt: planRef.expiresAt }),
+  };
+}
+
+function toContractPlanRef(planRef: {
+  uri: string;
+  sha256: string;
+  schemaVersion: string;
+  planId: string;
+  planVersion: string;
+}): PlanRef {
+  return {
+    uri: asNonBlankString(planRef.uri),
+    sha256: asNonBlankString(planRef.sha256),
+    schemaVersion: asNonBlankString(planRef.schemaVersion),
+    planId: asNonBlankString(planRef.planId),
+    planVersion: asNonBlankString(planRef.planVersion),
   };
 }
 

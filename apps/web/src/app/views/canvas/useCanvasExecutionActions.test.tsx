@@ -9,6 +9,7 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import { makeMockRunRef, makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolvePlanRefForStartRun, useCanvasExecutionActions } from './useCanvasExecutionActions';
 
@@ -86,7 +87,7 @@ function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
     ...mockExecutionPlan,
     planRef: {
       ...mockExecutionPlan.planRef!,
-      sha256: persistedSha,
+      sha256: nb(persistedSha),
     },
     preview: {
       ...mockExecutionPlan.preview,
@@ -96,6 +97,33 @@ function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
         canonicalPlanSha256: persistedSha,
       },
     },
+  };
+}
+
+function createPlansServiceMock(
+  plan: typeof mockExecutionPlan = mockExecutionPlan
+): IPlansPort {
+  return {
+    previewPlan: vi.fn(async () => plan),
+    importPlan: vi.fn(async () => plan),
+  };
+}
+
+function createRunsServiceMock(
+  overrides: Partial<IRunsPort> = {}
+): IRunsPort {
+  return {
+    listRunSummaries: vi.fn(async () => []),
+    getRunSnapshot: vi.fn(async () => null),
+    startRun: vi.fn(async () =>
+      makeMockRunRef({
+        tenantId: 't',
+        workflowId: 'w',
+        runId: 'run',
+      })
+    ),
+    listRunEvents: vi.fn(async () => ({ events: [] })),
+    ...overrides,
   };
 }
 
@@ -191,13 +219,13 @@ describe('resolvePlanRefForStartRun', () => {
       targetAdapter: 'mock',
     }),
     subscribeWorkspaceScope: () => () => undefined,
-    buildRunContext: (runId) => ({
-      runId,
-      tenantId: 'tenant',
-      projectId: 'project',
-      environmentId: 'env',
-      targetAdapter: 'mock',
-    }),
+    buildRunContext: (runId) =>
+      makeRunContext(runId, {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'env',
+        targetAdapter: 'mock',
+      }),
   };
   const canonicalNodes: CanonicalNode[] = [
     {
@@ -267,21 +295,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('does not call startRun and reopens the modal when planRef is missing', async () => {
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
+    const runsService = createRunsServiceMock();
+    const plansService = createPlansServiceMock();
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -313,21 +328,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('blocks startRun when preview has no persisted proof', async () => {
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
+    const runsService = createRunsServiceMock();
+    const plansService = createPlansServiceMock();
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -370,21 +372,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('blocks startRun when persisted proof hash does not match planRef hash', async () => {
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
+    const runsService = createRunsServiceMock();
+    const plansService = createPlansServiceMock();
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -430,21 +419,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('does not call previewPlan when the transformation graph is invalid', async () => {
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
 
     await act(async () => {
       root.render(
@@ -475,21 +451,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('calls previewPlan when the transformation graph is valid', async () => {
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
 
     await act(async () => {
       root.render(
@@ -581,21 +544,8 @@ describe('resolvePlanRefForStartRun', () => {
 
   it('stores a persisted preview result and enables Start Run after a valid plan', async () => {
     const persistedPlan = buildPersistedPreviewPlan();
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => persistedPlan),
-      importPlan: vi.fn(async () => persistedPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock(persistedPlan);
+    const runsService = createRunsServiceMock();
 
     await act(async () => {
       root.render(
@@ -630,21 +580,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('blocks startRun when the graph has changed since preview', async () => {
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -702,21 +639,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('keeps preview current when only raw metadata changes without changing the projected graph source', async () => {
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -758,7 +682,7 @@ describe('resolvePlanRefForStartRun', () => {
             ...mockExecutionPlan,
             planRef: {
               ...mockExecutionPlan.planRef!,
-              sha256: 'c'.repeat(64),
+              sha256: nb('c'.repeat(64)),
             },
           }}
           onRunStarted={onRunStarted}
@@ -800,21 +724,8 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('marks preview stale and rebuilds payload when node kind changes without id changes', async () => {
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -899,21 +810,16 @@ describe('resolvePlanRefForStartRun', () => {
   });
 
   it('starts run with persisted plan and forwards run id to navigation', async () => {
-    const plansService: IPlansPort = {
-      previewPlan: vi.fn(async () => mockExecutionPlan),
-      importPlan: vi.fn(async () => mockExecutionPlan),
-    };
-    const runsService: IRunsPort = {
-      listRunSummaries: vi.fn(async () => []),
-      getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        runId: 'run-success',
-        tenantId: 't',
-        workflowId: 'w',
-      })),
-      listRunEvents: vi.fn(async () => ({ events: [] })),
-    };
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock({
+      startRun: vi.fn(async () =>
+        makeMockRunRef({
+          runId: 'run-success',
+          tenantId: 't',
+          workflowId: 'w',
+        })
+      ),
+    });
     const onRunStarted = vi.fn();
 
     await act(async () => {
@@ -925,7 +831,7 @@ describe('resolvePlanRefForStartRun', () => {
             ...mockExecutionPlan,
             planRef: {
               ...mockExecutionPlan.planRef!,
-              sha256: 'c'.repeat(64),
+              sha256: nb('c'.repeat(64)),
             },
           }}
           onRunStarted={onRunStarted}

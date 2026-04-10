@@ -1,4 +1,4 @@
-import type { RunExecutionContextRef } from '@dvt/contracts';
+import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
@@ -14,30 +14,29 @@ export function parseStartRunRunExecutionContextRef(
   }
 
   const record = raw as Record<string, unknown>;
-  const uri = asNonEmptyTrimmedStringOrUndefined(record.uri);
-  const sha256 = asNonEmptyTrimmedStringOrUndefined(record.sha256);
-  const schemaVersion = asNonEmptyTrimmedStringOrUndefined(record.schemaVersion);
-  const planId = asNonEmptyTrimmedStringOrUndefined(record.planId);
-  const planVersion = asNonEmptyTrimmedStringOrUndefined(record.planVersion);
-  const pluginCompatibilityFingerprint = asNonEmptyTrimmedStringOrUndefined(
-    record.pluginCompatibilityFingerprint
-  );
+  const normalized = {
+    uri: asNonEmptyTrimmedStringOrUndefined(record.uri),
+    sha256: asNonEmptyTrimmedStringOrUndefined(record.sha256),
+    schemaVersion: asNonEmptyTrimmedStringOrUndefined(record.schemaVersion),
+    planId: asNonEmptyTrimmedStringOrUndefined(record.planId),
+    planVersion: asNonEmptyTrimmedStringOrUndefined(record.planVersion),
+    ...(asNonEmptyTrimmedStringOrUndefined(record.pluginCompatibilityFingerprint) === undefined
+      ? {}
+      : {
+          pluginCompatibilityFingerprint: asNonEmptyTrimmedStringOrUndefined(
+            record.pluginCompatibilityFingerprint
+          ),
+        }),
+  };
 
-  if (uri && sha256 && schemaVersion && planId && planVersion) {
+  try {
     return {
       ok: true,
-      value: {
-        uri,
-        sha256,
-        schemaVersion,
-        planId,
-        planVersion,
-        ...(pluginCompatibilityFingerprint === undefined ? {} : { pluginCompatibilityFingerprint }),
-      },
+      value: parseRunExecutionContextRef(normalized),
     };
+  } catch {
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunExecutionContextRef, {
+      target: 'runExecutionContextRef',
+    });
   }
-
-  return badRequestResult(HTTP_ERROR_REASON.invalidRunExecutionContextRef, {
-    target: 'runExecutionContextRef',
-  });
 }
