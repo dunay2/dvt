@@ -20,14 +20,14 @@ export function CostStatGrid({
   copy,
 }: CostStatGridProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div data-slot="cost-stat-grid" className="grid grid-cols-1 gap-4 md:grid-cols-4">
       <StatCard
         icon={<DollarSign className="size-5" />}
         value={formatCurrency(totalCost)}
         label={copy.totalObservedNodeCost}
         tone="success"
         trend={
-          <div className="flex items-center gap-1 text-green-400">
+          <div className="flex items-center gap-1 text-[var(--status-success)]">
             <TrendingDown className="size-3" />
             <span>{copy.workspace}</span>
           </div>
@@ -39,7 +39,7 @@ export function CostStatGrid({
         label={copy.runsAvailable}
         tone="info"
         trend={
-          <div className="flex items-center gap-1 text-blue-300">
+          <div className="flex items-center gap-1 text-[var(--status-info)]">
             <TrendingUp className="size-3" />
             <span>{copy.tracked}</span>
           </div>
