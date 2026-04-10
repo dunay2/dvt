@@ -1,4 +1,4 @@
-export type TopAppBarCopy = {
+export type ShellTopBarCopy = {
   readonly shell: string;
   readonly workspaceControls: string;
   readonly explorerPanel: string;
@@ -21,7 +21,7 @@ export type TopAppBarCopy = {
   readonly degradedTooltipFallback: string;
 };
 
-const EN_COPY: TopAppBarCopy = {
+const EN_COPY: ShellTopBarCopy = {
   shell: 'Shell',
   workspaceControls: 'Workspace controls',
   explorerPanel: 'Explorer Panel',
@@ -44,20 +44,20 @@ const EN_COPY: TopAppBarCopy = {
   degradedTooltipFallback: 'Platform in degraded state',
 };
 
-const ES_COPY: TopAppBarCopy = {
+const ES_COPY: ShellTopBarCopy = {
   shell: 'Shell',
   workspaceControls: 'Controles del workspace',
   explorerPanel: 'Panel explorador',
   inspectorPanel: 'Panel inspector',
   consolePanel: 'Consola',
   focusMode: 'Modo foco',
-  gridSize: 'Tamaño de rejilla',
-  quickActions: 'Acciones rápidas',
+  gridSize: 'Tama\u00f1o de rejilla',
+  quickActions: 'Acciones r\u00e1pidas',
   notifications: 'Notificaciones',
-  profileSettings: 'Configuración de perfil',
+  profileSettings: 'Configuraci\u00f3n de perfil',
   apiKeys: 'Claves API',
-  documentation: 'Documentación',
-  signOut: 'Cerrar sesión',
+  documentation: 'Documentaci\u00f3n',
+  signOut: 'Cerrar sesi\u00f3n',
   gitTooltip: 'Rama Git y SHA del commit actual',
   checking: 'Comprobando',
   checkingTooltip: 'Comprobando endpoints de salud de plataforma',
@@ -74,7 +74,7 @@ function detectBrowserLocale(): string {
   return navigator.language || 'en';
 }
 
-export function resolveTopAppBarCopy(locale = detectBrowserLocale()): TopAppBarCopy {
+export function resolveShellTopBarCopy(locale = detectBrowserLocale()): ShellTopBarCopy {
   if (locale.toLowerCase().startsWith('es')) {
     return ES_COPY;
   }

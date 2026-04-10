@@ -16,17 +16,17 @@ multi-language ready, and style-consistent.
 ## Scope
 
 - `apps/web/src/app/components/TopAppBar.tsx`
-- `apps/web/src/app/components/topAppBar/*`
+- `apps/web/src/app/components/shell/*`
 
 ## Component Boundary
 
 `TopAppBar.tsx` is a composition root only. It owns store wiring and delegates
 rendering to small UI components:
 
-- `TopAppBarWorkspaceSelectors`
-- `TopAppBarGitRef`
-- `TopAppBarConnectionStatus`
-- `TopAppBarShellMenu`
+- `ShellWorkspaceSelectors`
+- `ShellGitRef`
+- `ShellConnectionStatus`
+- `ShellMenu`
 
 ## Runtime Composition
 
@@ -34,16 +34,16 @@ rendering to small UI components:
 flowchart LR
   A[TopAppBar Composition Root] --> B[Session Store Selectors]
   A --> C[UI Layout Store Selectors]
-  A --> D[resolveTopAppBarCopy locale]
-  A --> E[TopAppBarWorkspaceSelectors]
-  A --> F[TopAppBarGitRef]
-  A --> G[TopAppBarConnectionStatus]
-  A --> H[TopAppBarShellMenu]
+  A --> D[resolveShellTopBarCopy locale]
+  A --> E[ShellWorkspaceSelectors]
+  A --> F[ShellGitRef]
+  A --> G[ShellConnectionStatus]
+  A --> H[ShellMenu]
 ```
 
 ## Multi-Language Strategy
 
-- `topAppBar/copy.ts` is the single copy authority for app bar text.
+- `shell/copy.ts` is the single copy authority for app bar text.
 - Current locales:
   - `en` default
   - `es` selected when browser locale starts with `es`.
@@ -51,13 +51,13 @@ flowchart LR
 
 ## Styling Strategy
 
-- `topAppBar/styles.ts` contains reusable class tokens for recurring visual
+- `shell/chrome.ts` contains reusable shell chrome tokens for recurring visual
   patterns.
 - Subcomponents consume these tokens instead of duplicating Tailwind strings.
 
 ## SRP Rules
 
-- Each file in `topAppBar/` should keep one UI responsibility.
+- Each file in `components/shell/` should keep one shell UI responsibility.
 - `TopAppBar.tsx` should not contain menu internals, health rendering branches,
   or selector option rendering loops.
 
@@ -66,12 +66,13 @@ flowchart LR
 - Missing locale key fallback must resolve to `en`.
 - `connectionStateOverride` must still override store state.
 - Menu controls must continue toggling layout flags.
+- Shell-owned controls must not import `topAppBar/*` support files.
 
 ## Definition Of Done
 
 - [ ] `TopAppBar.tsx` stays as composition root only.
-- [ ] App bar labels come from `copy.ts`.
-- [ ] Reused class tokens come from `styles.ts`.
+- [ ] App bar labels come from `components/shell/copy.ts`.
+- [ ] Reused class tokens come from `components/shell/chrome.ts`.
 - [ ] `pnpm --filter @dvt/web typecheck` passes.
 - [ ] `pnpm --filter @dvt/web test` passes.
 - [ ] `pnpm --filter @dvt/web build` passes.

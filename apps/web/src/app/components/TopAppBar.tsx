@@ -3,12 +3,12 @@ import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
+import { resolveShellTopBarCopy } from './shell/copy';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
+import type { ShellTopBarProps } from './shell/types';
 import { ShellWorkspaceSelectors } from './shell/ShellWorkspaceSelectors';
-import { resolveTopAppBarCopy } from './topAppBar/copy';
-import type { TopAppBarProps } from './topAppBar/types';
 import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
@@ -17,7 +17,7 @@ export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
-}: TopAppBarProps) {
+}: ShellTopBarProps) {
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
@@ -36,7 +36,7 @@ export function ShellTopBar({
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
-  const copy = resolveTopAppBarCopy();
+  const copy = resolveShellTopBarCopy();
 
   return (
     <TooltipProvider>

@@ -1,12 +1,12 @@
 import { GitBranch } from 'lucide-react';
-import type { TopAppBarCopy } from '../topAppBar/copy';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { topAppBarClasses } from './chrome';
+import type { ShellTopBarCopy } from './copy';
 
 type ShellGitRefProps = {
   readonly gitBranch: string;
   readonly gitSha: string;
-  readonly copy: TopAppBarCopy;
+  readonly copy: ShellTopBarCopy;
 };
 
 export function ShellGitRef({ gitBranch, gitSha, copy }: ShellGitRefProps) {

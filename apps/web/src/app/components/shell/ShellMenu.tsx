@@ -8,7 +8,6 @@ import {
   TerminalSquare,
   User,
 } from 'lucide-react';
-import type { TopAppBarCopy } from '../topAppBar/copy';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
@@ -24,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { topAppBarClasses } from './chrome';
+import type { ShellTopBarCopy } from './copy';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -44,7 +44,7 @@ type ShellMenuProps = {
   readonly toggleConsolePanel: () => void;
   readonly toggleFocusMode: () => void;
   readonly setGridSize: (size: number) => void;
-  readonly copy: TopAppBarCopy;
+  readonly copy: ShellTopBarCopy;
 };
 
 export function ShellMenu({
