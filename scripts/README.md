@@ -95,6 +95,29 @@ Intended usage:
 - CI workflows call this helper explicitly before integration tests instead of
   relying on implicit `pretest:*` hooks
 
+### `run-temporal-postgres-proof.cjs`
+
+Canonical local operator wrapper for the Temporal Postgres capability proof
+environment.
+
+Usage:
+
+```bash
+node scripts/run-temporal-postgres-proof.cjs up
+node scripts/run-temporal-postgres-proof.cjs reset
+node scripts/run-temporal-postgres-proof.cjs test --reset
+node scripts/run-temporal-postgres-proof.cjs down
+```
+
+Behavior:
+
+- manages `infra/docker/postgres/docker-compose.yml`
+- waits for the `dvt-postgres` container healthcheck
+- exports `DVT_PG_INTEGRATION=1`
+- exports the canonical local DSN as `DVT_PG_URL` and `DATABASE_URL` unless
+  already set
+- runs the `@dvt/adapter-temporal` Postgres capability integration lane
+
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by

@@ -2,7 +2,7 @@
 title: Implementation Architecture Diagrams
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # Implementation Architecture Diagrams
@@ -376,6 +376,13 @@ The **Security Layer** cross-cuts all paths: `RunAccessPolicy` gates tenant
 access, `PlanIntegrityValidator` verifies plan bytes via SHA-256 + JCS
 canonicalization, and `PlanRefPolicy` enforces URI allowlists.
 
+Temporal runtime internals no longer assume dbt-only step execution. The
+runtime now routes task steps through `StepActivityDispatcher`, and
+provider-owned capability registries can attach non-dbt execution paths without
+editing workflow control flow. The shipped example is the relational PostgreSQL
+capability in `@dvt/adapter-postgres`, exercised through separate Temporal
+baseline, transformation, and Postgres integration lanes.
+
 Seven **ports** define the declared southbound contract surface. Five are
 runtime-wired in the current delivery path. Two remain intentionally exposed as
 target-line seams so the architecture keeps them visible while their dedicated
@@ -534,6 +541,21 @@ flowchart TB
   IMIS -.-> ISRIS
   TSTUB -.-> IPA
   CSTUB -.-> IPA
+```
+
+### Runtime capability dispatch inside the shipped Temporal path
+
+```mermaid
+flowchart LR
+  classDef impl fill:#2E7D32,color:#fff,stroke:#1B5E20
+
+  WF["RunPlanWorkflow"]:::impl --> DISP["StepActivityDispatcher"]:::impl
+  DISP --> GATE["GatewayStepActivity"]:::impl
+  DISP --> DBT["DbtStepActivity"]:::impl
+  DISP --> PG["PostgresRelationalExecutionCapability"]:::impl
+  PG --> P1["PREPARE_POSTGRES_TRANSFORM"]:::impl
+  PG --> P2["POSTGRES_SQL_TRANSFORM"]:::impl
+  PG --> P3["CAPTURE_MATERIALIZATION_EVIDENCE"]:::impl
 ```
 
 ---
@@ -1234,6 +1256,7 @@ flowchart TB
     E8["Signal transition guard"]:::impl
     E9["Run access policy + authorizer"]:::impl
     E10["Mock adapter (testing)"]:::impl
+    E11["Step-kind dispatch plus provider-owned<br/>Postgres relational capability"]:::impl
   end
 
   subgraph "Planned / In Progress"
