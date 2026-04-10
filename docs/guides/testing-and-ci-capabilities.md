@@ -61,6 +61,7 @@ See also:
 | Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                               |
 | Temporal transformation tests      | `pnpm test:adapter-temporal:integration:transformation`                    | Transformation runtime path          | [`package.json`](../../package.json)                                               |
 | Temporal Postgres integration      | `pnpm test:adapter-temporal:integration:postgres`                          | Capability-specific PG path          | [`package.json`](../../package.json)                                               |
+| Temporal Postgres Docker proof     | `pnpm test:adapter-temporal:integration:postgres:docker`                   | Canonical local Docker PG proof      | [`package.json`](../../package.json)                                               |
 | CLI package tests                  | `pnpm test:cli`                                                            | `@dvt/cli`                           | [`package.json`](../../package.json)                                               |
 | Delivery package tests             | `pnpm --filter @dvt/delivery test`                                         | `@dvt/delivery`                      | [`packages/@dvt/delivery/package.json`](../../packages/@dvt/delivery/package.json) |
 | Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)         |
@@ -203,6 +204,10 @@ These files are intended to become the canonical source of truth for:
 - `pnpm test:adapter-temporal:integration:postgres` is capability-specific
   verification for the relational Postgres path. It is not the baseline
   closeout command for every Temporal slice.
+- `pnpm test:adapter-temporal:integration:postgres:docker` is the canonical
+  local proof wrapper for the relational Postgres capability path; it resets
+  the Docker PostgreSQL environment, waits for readiness, and then runs the
+  capability-specific lane with the canonical local DSN.
 - `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
   `DVT_PG_URL` is absent; when configured it exercises the real API protected
   runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.

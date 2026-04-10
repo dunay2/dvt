@@ -2,7 +2,7 @@
 title: WorkflowEngine target architecture v1
 status: Draft
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-10
 ---
 
 # WorkflowEngine target architecture v1
@@ -123,8 +123,18 @@ flowchart LR
   Adapter -. separate capability or profile .-> Other["Non-relational path, for example Kafka"]
 ```
 
-This is a target-state rule, not a claim that the current code already has this
-seam.
+Mainline now partially realizes this seam:
+
+- `@dvt/adapter-temporal` dispatches runtime task steps through
+  `StepActivityDispatcher`
+- provider-owned capability registries can register non-dbt step activity
+  implementations
+- `@dvt/adapter-postgres` supplies the first relational implementation through
+  `PostgresRelationalExecutionCapability`
+
+What remains target-state rather than normative public contract is the broader
+promotion of this seam into a repository-wide adapter policy or ADR-backed
+contract.
 
 If a future slice promotes this distinction into a normative public contract or
 repo-wide adapter policy, that change should be captured in an ADR. At this

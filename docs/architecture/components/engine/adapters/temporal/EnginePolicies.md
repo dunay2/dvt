@@ -216,6 +216,10 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Capability-specific verification command:
   `pnpm test:adapter-temporal:integration:postgres` when the relational
   Postgres execution path is in scope
+- Canonical local Docker proof wrapper:
+  `pnpm test:adapter-temporal:integration:postgres:docker`
+- Canonical runbook:
+  [Temporal Postgres Proof Environment](../../../../../runbooks/temporal-postgres-proof-environment.md)
 - Evidence:
   [ED-20260308 - Temporal adapter operational close-out](../../../../../evidence/critical/ED-20260308-temporal-operational-close-out.md)
 - Residual risk:

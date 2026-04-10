@@ -2,7 +2,7 @@
 title: MW-C1 To TF-C2 Runtime Vertical Sequence Analysis 2026-04-09
 status: Proposed
 owner: Product / Architecture / Delivery / Runtime
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 planning_type: proposal
 lane: C
 task_id: TF-C2
@@ -37,7 +37,7 @@ delivery plan, and the current open task route.
 
 ## Why this document exists
 
-The active planning surfaces already imply the sequence:
+The active planning surfaces and current codebase already imply the sequence:
 
 1. `MW-C1`
 2. `TF-C2-A`
@@ -45,15 +45,18 @@ The active planning surfaces already imply the sequence:
 
 What was missing was one short document that explains why this order is
 correct, what each slice actually changes, and why adjacent queued work should
-not jump ahead of it.
+not jump ahead of it. `MW-C1` is now absorbed into mainline, and the canonical
+local proof surface for `TF-C2-A` is now landed, so the practical next move is
+to close the remaining `TF-C2-B` and provenance convergence on top of that
+dispatch seam.
 
 ## Recommended sequence
 
-| Order | Slice     | What will be implemented                                                                                                                                               | Why this slice goes here                                                                                                                                                                                                   |
-| ----- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `1`   | `MW-C1`   | Temporal step dispatch moves from direct `DbtStepActivity` coupling to a `StepActivityDispatcher` keyed by `StepKind`.                                                 | The runtime must stop assuming dbt-only execution before the first relational SQL executor seam is introduced. Otherwise the new vertical arrives on top of the same execution bottleneck the roadmap is trying to remove. |
-| `2`   | `TF-C2-A` | The first relational SQL executor seam for persisted plans, with PostgreSQL as the reference implementation and proof environment.                                     | Once dispatch is generic enough, the first real non-dbt execution path can be added without hard-coding a second special case into the workflow layer.                                                                     |
-| `3`   | `TF-C2-B` | Caller-visible runtime evidence on `GET /runs/:runId` and `GET /runs/:runId/events`: executor identity, sink materialization, row counts, and failed-step diagnostics. | Evidence belongs after a real executor path exists. Before `TF-C2-A`, the read surface can only expose placeholders or partial semantics.                                                                                  |
+| Order | Slice     | What will be implemented                                                                                                                                               | Why this slice goes here                                                                                                                                   |
+| ----- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | `MW-C1`   | Temporal step dispatch moved from direct `DbtStepActivity` coupling to a `StepActivityDispatcher` keyed by `StepKind`.                                                 | The runtime had to stop assuming dbt-only execution before the first relational SQL executor seam could land without duplicating workflow control flow.    |
+| `2`   | `TF-C2-A` | The first relational SQL executor seam for persisted plans, with PostgreSQL as the reference implementation and proof environment.                                     | With dispatch generalized, the first real non-dbt execution path can now close around a capability-led runtime seam and a repeatable local proof surface.  |
+| `3`   | `TF-C2-B` | Caller-visible runtime evidence on `GET /runs/:runId` and `GET /runs/:runId/events`: executor identity, sink materialization, row counts, and failed-step diagnostics. | Evidence belongs after a real executor path exists. The remaining job is convergence and closure around emitted payloads, not placeholder contract design. |
 
 ## Sequence rationale in one diagram
 
@@ -68,21 +71,19 @@ flowchart LR
 
 Three facts govern the sequence:
 
-1. the engine roadmap says the active runtime path after recent signal cleanup
-   is `MW-C1` plus `TF-C2-A/B`
-2. Lane C keeps `MW-C1` queued as the execution-layer blocker for
-   multi-workflow support
-3. `TF-C2-B` is already partially advanced in docs and contract reasoning, but
-   it still depends on real executor payloads from `TF-C2-A` and evidence
-   linkage from `TF-B1-B`
+1. `MW-C1` is now landed in code through `StepActivityDispatcher`
+2. the engine roadmap still correctly keeps `TF-C2-A` and `TF-C2-B` as the
+   active runtime vertical
+3. `TF-C2-B` is materially advanced, but it still depends on full closure of
+   the `TF-C2-A` proof surface and deeper evidence linkage from `TF-B1-B`
 
 That means the right next move is not "the smallest queued task." The right
-next move is the first slice that removes the execution-model blocker on the
-vertical.
+next move is the first still-open slice on top of the now-landed
+execution-model blocker removal.
 
-## Slice 1 - `MW-C1`
+## Slice 1 - `MW-C1` (absorbed into mainline)
 
-### What will be implemented
+### What was implemented
 
 - Introduce a `StepActivityDispatcher` in the Temporal execution path.
 - Move step execution routing out of direct `DbtStepActivity` assumptions.
@@ -103,12 +104,12 @@ Without it, `TF-C2-A` would have only two bad options:
 
 Both options increase the exact drift that `MW-C1` exists to remove.
 
-### Why now
+### Why it had to go first
 
-- `MW-C1` is `P0` and strictly unblocked in the open route.
-- The engine roadmap explicitly puts `MW-C1` ahead of `TF-C2-A/B`.
-- It unlocks the runtime vertical without forcing a second architecture clean-up
-  pass afterward.
+- It removed the dbt-only execution bottleneck without forcing a second
+  architecture cleanup pass afterward.
+- It let `TF-C2-A` arrive as a capability registration problem instead of a
+  workflow branching problem.
 
 ### Non-goals
 
@@ -116,17 +117,22 @@ Both options increase the exact drift that `MW-C1` exists to remove.
 - add all future step kinds immediately
 - reopen a multi-provider runtime program
 
-## Slice 2 - `TF-C2-A`
+## Slice 2 - `TF-C2-A` (now materially landed)
 
-### What will be implemented
+### What is already implemented vs still open
 
-- Add a capability-oriented relational SQL executor seam for persisted
-  SQL-first plans.
-- Provide PostgreSQL as the first implementation of that seam.
-- Resolve the persisted plan into executable relational SQL-oriented steps.
-- Define success and failure behavior for the PostgreSQL implementation.
-- Establish the repeatable Docker PostgreSQL proof environment for local
-  acceptance, reset, and rerun.
+- Implemented already:
+  - capability-oriented relational SQL executor seam for persisted SQL-first
+    plans
+  - PostgreSQL as the first implementation of that seam
+  - persisted-plan resolution into executable relational SQL-oriented steps
+  - success and failure behavior for the PostgreSQL implementation
+- Implemented in this follow-through:
+  - one canonical Docker PostgreSQL proof surface for local acceptance,
+    rerun, and operator-facing verification
+- Remaining downstream follow-through:
+  - repeatability/retention discipline under Lane D
+  - deeper provenance linkage under `TF-B1-B`
 
 ### Rationale
 
@@ -256,7 +262,9 @@ Treat the sequence as materially complete only when:
 
 ## Recommended execution rule
 
-If only one runtime slice is started next, start `MW-C1`.
+If only one runtime slice is started next, start the remaining `TF-C2-B`
+closure and its provenance convergence on top of landed `MW-C1` and the now
+shipped `TF-C2-A` proof surface.
 
 If the goal is the first operator-visible runtime vertical, execute this chain
 without reordering:
