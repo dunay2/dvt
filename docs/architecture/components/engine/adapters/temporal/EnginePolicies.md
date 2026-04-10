@@ -36,8 +36,15 @@ Primary implementation references:
 
 ### 1.2 Status source of truth
 
-- `getRunStatus()` reads events from state store and projects snapshot (`stateStore.listEvents()` + `projector.rebuild()`).
-- The adapter **does not** use workflow query state as operational authority.
+- `TemporalAdapter.getRunStatus()` currently queries the workflow `status`
+  query and returns a provider-live `RunStatusSnapshot`.
+- The engine's canonical caller-visible status still remains the event-log plus
+  snapshot read path governed outside the adapter boundary.
+- Provider status should therefore be treated as live runtime enrichment, not
+  as the authoritative state-store replacement.
+- In the current implementation, the provider-live query may observe terminal
+  `CANCELLED` before the event log has persisted `RunCancelled`; that gap is
+  exactly why provider status must not be treated as the canonical caller view.
 
 ---
 
@@ -62,21 +69,27 @@ Workflow defines and handles:
 - `cancel` signal (with optional reason payload)
 - `status` query
 
-Current adapter policy still canonicalizes cancellation on the workflow signal
-path, which is the known `T-01` bug: `cancelRun()` currently behaves like a
-signal alias instead of using Temporal-native cancellation.
+Current adapter policy splits cancellation into two governed paths:
+
+- `cancelRun()` uses Temporal-native `WorkflowHandle.cancel()`
+- `signal(CANCEL)` remains the cooperative reason-carrying path
+
+The remaining open work is no longer the provider boundary itself; it is the
+architecture and contract truth sync around who owns
+`RunCancelRequested` / `RunCancelled` and how provider live status relates to
+the canonical read model.
 
 ### 2.3 Cancellation reason semantics (CURRENT)
 
 - Workflow defines a `cancel` signal with `reason` payload.
-- Current adapter cancellation path sends the workflow `cancel` signal.
-- `signal(CANCEL)` can forward a reason payload; `cancelRun()` uses the same
-  workflow signal path without a reason payload.
+- `signal(CANCEL)` forwards that reason payload through the cooperative signal
+  path.
+- `cancelRun()` uses Temporal-native cancellation and therefore does not carry
+  a structured reason payload.
 - Therefore, `cancelReason` should be treated as **best-effort** and may be
   empty in runs cancelled through `cancelRun()`.
-- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter. The
-  current adapter avoids that path so cancellation stays aligned with the
-  workflow-owned signal semantics.
+- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter, so
+  the native cancel path necessarily leaves `cancelReason` optional.
 
 Consumer guidance for v1.1:
 
@@ -84,13 +97,12 @@ Consumer guidance for v1.1:
 - Apply fallback messaging when absent (for example: `Cancelled by system`).
 - Emit diagnostic logs/metrics when a reason is expected by product flow but arrives empty.
 
-Planned correction under `AR-C6`:
+Contract-pack reset tracked under `AR-A12-A`:
 
-- `cancelRun()` moves to Temporal-native `WorkflowHandle.cancel()`
-- `signal(CANCEL)` remains the cooperative reason-carrying path
-- native cancellation cleanup emits terminal `RunCancelled` from workflow
-  context; `cancelReason` therefore remains best-effort and may be empty for
-  `cancelRun()` calls
+- normalize whether `RunCancelRequested` is governed as a runtime-owned
+  lifecycle fact across ADR and contract surfaces
+- clarify that provider live status is enrichment and not the authoritative
+  caller-visible read model
 
 ---
 
@@ -98,6 +110,11 @@ Planned correction under `AR-C6`:
 
 - Workflow state tracks: `status`, `paused`, `cancelled`, `cancelReason`, `currentStepIndex`.
 - Before each step, workflow checks cancellation and emits `RunCancelled` when applicable.
+- Native Temporal cancellation is caught in workflow cleanup, which currently
+  emits ordered cancellation lifecycle events from workflow context.
+- The workflow currently flips in-memory status before terminal cancellation
+  events are persisted, so ordered lifecycle truth still belongs to the
+  event-log-backed read path rather than the live workflow query.
 - During pause, workflow blocks with `condition(() => !state.paused || state.cancelled)`.
 - On pause/resume transitions, lifecycle events are emitted via activities (`RunPaused`, `RunResumed`).
 - Step execution emits `StepStarted` and either `StepCompleted` or (`StepFailed` + `RunFailed`).
@@ -154,7 +171,7 @@ Timeout interaction note:
 - `engineAttemptId` starts at `1` and increments on activity retries.
 - Multiple attempt-level event pairs for the same `stepId` are expected in failure/retry paths (diagnostic value), e.g. repeated `StepStarted`/`StepFailed` across attempts.
 - Idempotency still must dedupe duplicate delivery within the **same** attempt boundary (e.g., crash after persistence and before ack).
-- Activities are designed under Temporal’s at-least-once execution assumption; side effects must remain idempotent.
+- Activities are designed under Temporalâ€™s at-least-once execution assumption; side effects must remain idempotent.
 - This follows Temporal guidance that activities should be idempotent in durable execution systems.
 
 Concrete key-shape example (illustrative):

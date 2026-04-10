@@ -2,7 +2,7 @@
 title: Proposal Portfolio Map 2026-04-03
 status: Active
 owner: Product / Architecture / Delivery
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-10
 planning_type: proposal
 ---
 
@@ -23,6 +23,8 @@ planning_type: proposal
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [MW-A2 GenericGraphSource plan](./mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 - [AR-C6 Temporal cancel semantics plan](./mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md)
+- [Contract pack and read boundary reset plan](./mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md)
+- [AR-A12-B status model split plan](./mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md)
 - [MW-C1 to TF-C2 runtime vertical sequence analysis](./mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md)
 - [Transformation Flow Proposal Set](./mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [S08-4 StepKind stepTypeConfig hardening plan](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

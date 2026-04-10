@@ -28,7 +28,7 @@ Canonical execution tracking remains in:
 - `docs/adr/ADR-0004-event-sourcing-strategy.md`
 - `docs/adr/ADR-0005-contract-formalization-tooling.md`
 - `docs/adr/ADR-0010-run-event-envelope-split.md`
-- `docs/architecture/engine/contracts/engine/RunEvents.v2.0.md`
+- `docs/architecture/engine/contracts/engine/RunEvents.v1.md`
 
 ## Findings
 

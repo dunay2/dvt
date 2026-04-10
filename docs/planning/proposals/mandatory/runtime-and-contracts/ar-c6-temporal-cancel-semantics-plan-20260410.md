@@ -10,34 +10,43 @@ planning_type: proposal
 
 ## Summary
 
-`@dvt/adapter-temporal` currently implements `cancelRun()` by forwarding the
-canonical `cancel` signal into the workflow. That keeps cancellation on the
-cooperative signal path and leaves the known `T-01` bug open: if the workflow
-is blocked in a place where the signal does not get processed, cancellation can
-be lost.
+`AR-C6` started from a concrete defect: `@dvt/adapter-temporal` implemented
+`cancelRun()` by forwarding the canonical `cancel` signal into the workflow.
+That kept cancellation on the cooperative signal path and left the known
+`T-01` bug open: if the workflow was blocked in a place where the signal did
+not get processed, cancellation could be lost.
 
 `AR-C6` corrects that boundary without widening the slice into a full signal
 taxonomy redesign.
+
+That implementation slice is no longer the place where final cancel-lifecycle
+ownership truth is decided. The broader engine-runtime contract-pack reset
+under [`Contract pack and read boundary reset plan`](./contract-pack-and-read-boundary-reset-plan-20260410.md)
+now governs the target contract and diagram before additional runtime
+cancellation work lands.
 
 ## Governing sources
 
 - [ADR-0003](../../../../adr/ADR-0003-execution-model.md)
 - [ADR-0007](../../../../adr/ADR-0007_RunCancellation.md)
 - [ADR-0014](../../../../adr/ADR-0014-run-driven-adapter-model.md)
+- [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [Implementation architecture diagrams](../../../../architecture/diagrams/implementation-architecture-diagrams.md)
 - [Temporal Engine Policies](../../../../architecture/components/engine/adapters/temporal/EnginePolicies.md)
-- [Runtime hardening, shared-kernel, and operations roadmap](./runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+- [20260407 engine boundary current-target and migration review](../../../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
+- [Contract pack and read boundary reset plan](./contract-pack-and-read-boundary-reset-plan-20260410.md)
 
-## Current problem
+## Original problem statement
 
-Today the Temporal adapter collapses two different concepts into one path:
+Before `AR-C6`, the Temporal adapter collapsed two different concepts into one
+path:
 
 - `signal(CANCEL)` as a cooperative workflow control message
 - `cancelRun()` as a provider-native cancellation request
 
-Current code sends both through `WorkflowSignals.CANCEL`.
+The old implementation sent both through `WorkflowSignals.CANCEL`.
 
-That creates two issues:
+That created two issues:
 
 1. `cancelRun()` is not actually provider-native.
 2. The workflow cannot distinguish a signal-driven cooperative cancel from a
@@ -67,12 +76,16 @@ Keep both control surfaces, but stop treating them as aliases.
 - For cooperative signal cancellation, the workflow continues to finalize at
   safe points.
 
-### 4. `RunCancelRequested` remains request-level, not terminal
+### 4. Ownership truth is absorbed by the contract-pack reset
 
-- The slice does not redesign the global request-event taxonomy.
-- For the Temporal workflow implementation, both cooperative and native
-  cancellation cleanup may emit `RunCancelRequested` before `RunCancelled`.
-- The important rule is that `RunCancelled` remains workflow-owned and terminal.
+- This implementation slice corrects the provider-native cancel boundary.
+- It does not claim final authority over the long-term ownership semantics of
+  `RunCancelRequested`.
+- That target truth is now carried by
+  [`Contract pack and read boundary reset plan`](./contract-pack-and-read-boundary-reset-plan-20260410.md),
+  which absorbs the `AR-C6-A` lesson and aligns `ADR-0007`, `RunEvents`,
+  `IProviderAdapter`, registries, and component-level diagrams before more
+  runtime cancellation work lands.
 
 ## Current vs target
 
@@ -115,8 +128,8 @@ Out of scope:
 1. Unit red test:
    - `TemporalAdapter.cancelRun()` uses `handle.cancel()`, not `signal(CANCEL)`.
 2. Workflow/integration red test:
-   - a native Temporal cancel request still results in
-     `RunCancelRequested -> RunCancelled` and never `RunCompleted`.
+   - a native Temporal cancel request results in a workflow-owned terminal
+     cancellation path and never `RunCompleted`.
 3. Regression coverage:
    - `signal(CANCEL)` still works as the cooperative reason-carrying path.
 
@@ -128,3 +141,6 @@ Out of scope:
   cooperative path.
 - Temporal workflow cancellation cleanup is deterministic and emits terminal
   cancellation from workflow context, not from engine guesswork.
+- The longer-term ownership and contract truth is tracked explicitly in the
+  `AR-C6` truth-sync slice instead of being left implicit in this
+  implementation-only plan.

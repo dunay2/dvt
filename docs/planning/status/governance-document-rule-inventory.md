@@ -142,15 +142,36 @@ Usage rules already declared in the ADR index:
 
 ### Normative contract and execution documents
 
-| Source                                                                                                                                                        | Type                      | Main rule family                                                                                                                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [docs/contracts/index.md](../../contracts/index.md)                                                                                                           | `normative entrypoint`    | Boundaries must be read by contract family: planner, shared, traceability, engine.                                                                                      |
-| [docs/architecture/components/engine/contracts/VERSIONING.md](../../architecture/components/engine/contracts/VERSIONING.md)                                   | `normative`               | One canonical file per active major line; patch and minor updates stay in-file; major changes create a new canonical file; default 90-day deprecation window.           |
-| [docs/architecture/components/engine/dev/determinism-tooling.md](../../architecture/components/engine/dev/determinism-tooling.md)                             | `normative-operational`   | Plans must be deterministic; determinism lint and replay checks are part of the engineering baseline.                                                                   |
-| [docs/planning/execution-model/dvt-execution-model.md](../execution-model/dvt-execution-model.md)                                                             | `working normative draft` | Core boundaries such as UI vs execution, planner vs persistence, state as source of truth, enrichment vs authority, idempotency, ordering, and status read-model rules. |
-| [docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v2.0.md](../../architecture/components/engine/contracts/engine/IWorkflowEngine.v2.0.md) | `normative contract`      | Engine boundary, accepted inputs, lifecycle requirements, event emission, compatibility expectations.                                                                   |
-| [docs/architecture/components/engine/contracts/engine/RunEvents.v2.0.md](../../architecture/components/engine/contracts/engine/RunEvents.v2.0.md)             | `normative contract`      | Event envelope, `eventId`, `idempotencyKey`, ordering, duplicate handling, enforcement layers, and vector requirements.                                                 |
-| [docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md](../../architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md)       | `normative contract`      | Signal authorization, audit, rejection policy, effective role, tenant isolation, and persistence requirements.                                                          |
+- [docs/contracts/index.md](../../contracts/index.md)
+  Type: `normative entrypoint`
+  Rule family: boundaries must be read by contract family: planner, shared,
+  traceability, engine.
+- [docs/architecture/components/engine/contracts/VERSIONING.md](../../architecture/components/engine/contracts/VERSIONING.md)
+  Type: `normative`
+  Rule family: pre-stable engine-runtime pack uses one live `v1` line,
+  rewrites that line in place, and removes sibling active generations or
+  migration companions in the same slice.
+- [docs/architecture/components/engine/dev/determinism-tooling.md](../../architecture/components/engine/dev/determinism-tooling.md)
+  Type: `normative-operational`
+  Rule family: plans must be deterministic; determinism lint and replay checks
+  are part of the engineering baseline.
+- [docs/planning/execution-model/dvt-execution-model.md](../execution-model/dvt-execution-model.md)
+  Type: `working normative draft`
+  Rule family: core boundaries such as UI vs execution, planner vs persistence,
+  state as source of truth, enrichment vs authority, idempotency, ordering, and
+  status read-model rules.
+- [docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md](../../architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md)
+  Type: `normative contract`
+  Rule family: engine boundary, accepted inputs, lifecycle requirements, event
+  emission, compatibility expectations.
+- [docs/architecture/components/engine/contracts/engine/RunEvents.v1.md](../../architecture/components/engine/contracts/engine/RunEvents.v1.md)
+  Type: `normative contract`
+  Rule family: event envelope, `eventId`, `idempotencyKey`, ordering, duplicate
+  handling, enforcement layers, and vector requirements.
+- [docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md](../../architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md)
+  Type: `normative contract`
+  Rule family: signal authorization, audit, rejection policy, effective role,
+  tenant isolation, and persistence requirements.
 
 ### Explicit rule extracts from the foundational ADRs
 

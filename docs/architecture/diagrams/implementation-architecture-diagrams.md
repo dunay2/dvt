@@ -25,7 +25,7 @@ whether that port is `runtime-wired` today or intentionally kept visible as a
 
 ---
 
-## 1. Domain Model — Bounded Contexts
+## 1. Domain Model ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Bounded Contexts
 
 Maps the actual repository packages to their bounded context and shows
 real import-time dependency direction.
@@ -151,14 +151,15 @@ flowchart TB
 
 ### Aggregate and Value Object Map
 
-**Design note**: `Run` is not a first-class aggregate class in the codebase —
-it is an implicit aggregate composed of `RunMetadata` (identity and provider
-references), `WorkflowSnapshot` (projected state), and `EventEnvelope[]`
-(event log). There is no `Run` class; the aggregate behavior is distributed
-across `applyRunEvent` (projection), `InMemoryRunStateStore` (persistence),
-and `WorkflowEngineCoreService` (commands). This is a deliberate event-sourcing
-choice: the aggregate is reconstructed from events, not stored as a mutable
-object.
+**Current drift**: `Run` is not modeled as a first-class aggregate class in the
+codebase. Instead, its behavior is spread across `RunMetadata` (identity and
+provider references), `WorkflowSnapshot` (projected state), and
+`EventEnvelope[]` (event log), with responsibilities distributed across
+`applyRunEvent` (projection), `InMemoryRunStateStore` (persistence), and
+`WorkflowEngineCoreService` (commands). Event sourcing explains why state is
+reconstructed from events, but it does not require aggregate behavior to remain
+this dispersed. The current shape should be treated as cohesion debt, not as
+target architecture.
 
 **Unidentified concern**: `EngineRunRef` carries both the logical `runId` and
 the provider-assigned `providerWorkflowId` / `providerRunId`, but these two
@@ -362,7 +363,7 @@ internal layers:
    private builder methods (`buildStartRunApplicationService`,
    `buildCoreService`).
 2. **Application Services**: `StartRunApplicationService` orchestrates the
-   happy path (admission → plan integrity → intent → execution) and the failure
+   happy path (admission ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ plan integrity ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ intent ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ execution) and the failure
    path (`StartRunFailurePolicy`). `StartRunAdmissionGuard` composes validation
    and capability checks.
 3. **Core Domain**: `WorkflowEngineCoreService` handles cancel, signal, status,
@@ -419,7 +420,7 @@ label carries the current posture (`runtime-wired` or `target-line exposed`).
 - **`coreRuntime.ts` is a utility grab-bag**: It contains `getAdapterOrThrow`,
   `resolveMetaOrThrow`, `withTimeout`, `buildMetricTags`, `buildTraceContext`,
   `normalizeEngineRunRef`, `emitSignalDerivedRunEvent`, and `buildRunEvents`.
-  These span adapter resolution, observability, and event construction — three
+  These span adapter resolution, observability, and event construction ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â three
   different concerns. A refactor into focused modules (`adapterResolution.ts`,
   `observabilityHelpers.ts`, `eventBuilders.ts`) would improve discoverability.
 - **No explicit error taxonomy at the facade boundary**: Each internal service
@@ -573,9 +574,10 @@ Key design decisions:
 
 - **CANCELLING is a flag, not a state**: `RunCancelRequested` sets
   `snapshot.cancelling = true` but does NOT change `snapshot.status`. The run
-  remains in its current status (PENDING, RUNNING, or PAUSED) until the adapter
-  confirms cancellation by emitting `RunCancelled`. This is per ADR-0007:
-  the engine emits the intent, the adapter confirms the terminal transition.
+  remains in its current status (PENDING, RUNNING, or PAUSED) until the runtime
+  execution context emits `RunCancelled`. This is per ADR-0007 and ADR-0047:
+  the engine dispatches the cancel command, while the runtime owns the realized
+  lifecycle facts `RunCancelRequested` and `RunCancelled`.
 - **Terminal states are absorbing**: Once a run reaches COMPLETED, FAILED, or
   CANCELLED, `assertRunNotTerminal` rejects all further events.
 - **`RunQueued` is a deliberate no-op**: The event exists for audit trail
@@ -587,20 +589,21 @@ Key design decisions:
 
 ### Known Problems
 
-- **`CANCELLING` is invisible in `RunStatus`**: Since cancelling is a boolean
-  flag and not a discrete status value, API consumers querying `getRunStatus`
-  see `RUNNING` (or `PAUSED`) and have no indication that a cancel has been
-  requested. The `RunStatusSnapshot` must be inspected for the `cancelling`
-  field separately.
+- **`CANCELLING` is expressed as substatus, not top-level status**:
+  `RunCancelRequested` leaves the base `status` unchanged and sets the
+  cancelling flag on the snapshot. `SnapshotProjector.snapshotToStatus()`
+  projects that flag as substatus = 'CANCELLING', so callers do see the
+  cancellation window, but they must interpret it through `substatus` rather
+  than through a dedicated `CANCELLING` status value.
 
 ### Unidentified Design Concerns
 
-- **No `PAUSED` → `FAILED` transition**: If a run is paused and the underlying
+- **No `PAUSED` ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ `FAILED` transition**: If a run is paused and the underlying
   infrastructure fails (provider crash, Temporal server outage), there is no
   direct path from PAUSED to FAILED. The stuck-run detector only checks PENDING
   and RUNNING+cancelling runs, not PAUSED runs that have been idle beyond a
   threshold. A long-paused run with a dead provider will not be detected.
-- **No `PAUSED` → `CANCELLED` without RESUME**: The `RunCancelRequested`
+- **No `PAUSED` ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ `CANCELLED` without RESUME**: The `RunCancelRequested`
   transition is allowed from PAUSED (the flag is set), but the adapter must
   still confirm `RunCancelled`. If the adapter is unable to cancel a paused
   workflow (e.g., Temporal workflow is sleeping in a `condition()` with no
@@ -609,7 +612,7 @@ Key design decisions:
   events carry `gatewayDecision` in `payload`, but the snapshot projects this
   into `gatewayDecisions` map. If the snapshot is rebuilt from events, gateway
   decisions are recovered. However, if a consumer reads events directly
-  (bypassing snapshot), they must parse payload to discover gateway outcomes —
+  (bypassing snapshot), they must parse payload to discover gateway outcomes ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
   there is no dedicated event type for gateway resolution.
 
 Derived from `@dvt/run-domain/src/transitionPolicy.ts` and
@@ -659,7 +662,7 @@ retry visibility.
 **Unidentified concern**: There is no maximum retry limit enforced at the state
 machine level. The retry limit is expected to be enforced by the adapter or
 the execution policy, but nothing in `transitionPolicy.ts` prevents infinite
-`FAILED → RUNNING → FAILED` cycles. A runaway step retry loop would produce
+`FAILED ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ RUNNING ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FAILED` cycles. A runaway step retry loop would produce
 unbounded events in the event log.
 
 Derived from `STEP_EVENT_ALLOWED_FROM` in `transitionPolicy.ts`.
@@ -675,7 +678,7 @@ stateDiagram-v2
 
   note right of COMPLETED
     Terminal step states: COMPLETED, SKIPPED.
-    FAILED is NOT terminal — supports step retries.
+    FAILED is NOT terminal ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â supports step retries.
   end note
 ```
 
@@ -687,13 +690,13 @@ stateDiagram-v2
 
 `startRun` is the most complex flow in the engine, involving seven collaborators
 across three layers. The key architectural challenge is ordering two
-non-transactional operations — adapter dispatch and state-store bootstrap — so
+non-transactional operations ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â adapter dispatch and state-store bootstrap ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â so
 that crashes at any point leave the system in a recoverable state.
 
 Two execution paths exist:
 
 1. **`startRunWithEstimatedRef`** (preferred): The adapter supports
-   `estimateRunRef()` — it can predict the `providerWorkflowId` before
+   `estimateRunRef()` ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â it can predict the `providerWorkflowId` before
    dispatch. This allows bootstrapping state (metadata + `RunQueued` +
    `RunStarted`) BEFORE calling `adapter.startRun()`. If the adapter returns a
    different `providerRunId`, the engine calls `saveProviderRef()` to patch
@@ -711,10 +714,10 @@ the provider-side run or mark it expired.
 ### Known Problems
 
 - **Intent log `markDispatched`/`markResolved` ordering**: After successful
-  execution, the intent transitions PENDING → DISPATCHED → RESOLVED in a
+  execution, the intent transitions PENDING ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ DISPATCHED ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ RESOLVED in a
   fire-and-forget style. If the process crashes between `markDispatched` and
   `markResolved`, the reconciler will find a DISPATCHED intent and must fall
-  back to checking run metadata existence — which it does correctly.
+  back to checking run metadata existence ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â which it does correctly.
 - **`saveProviderRef` is optional and fail-soft**: If the state store does not
   implement `saveProviderRef?`, the metadata retains the estimated reference
   even if the adapter returned a different one. This is documented as acceptable
@@ -825,9 +828,10 @@ multi-strategy approach depending on signal type and snapshot freshness:
   `IRunSnapshotStalenessQuery.isSnapshotStale()`, the guard checks whether the
   snapshot is behind the event log and falls back to full replay if stale.
 
-Cancel follows a simpler path: the engine emits `RunCancelRequested` (intent),
-then forwards to `adapter.cancelRun()`. Per ADR-0007, the adapter/workflow is
-responsible for emitting the terminal `RunCancelled` event.
+Cancel no longer follows an engine-emits-intent path in the current
+implementation. The engine validates and dispatches the cancel command, while
+the runtime workflow owns the ordered cancellation lifecycle that reaches the
+event log.
 
 ### Known Problems
 
@@ -837,19 +841,23 @@ responsible for emitting the terminal `RunCancelled` event.
   negative if the snapshot was written before the PAUSE event was committed
   (race window). In the worst case, a duplicate PAUSE signal could be forwarded
   to the adapter.
-- **Bug T-01: Temporal `cancelRun` uses `signal('cancel')` instead of
-  `handle.cancel()`**: At `TemporalAdapter.ts:143`, cancellation is sent as a
-  workflow signal rather than the Temporal-native cancel API. This means the
-  workflow must have a signal handler for `CANCEL` — if the handler is missing
-  or the workflow is in a state where signals are not processed (e.g., blocked
-  on an activity), the cancellation will be silently lost.
+- **Truth drift after `T-01` closure**: the provider-native Temporal cancel
+  path is now implemented, but older ADR and contract surfaces still disagree
+  on whether `RunCancelRequested` is engine-owned request intent or
+  runtime-owned cancellation lifecycle.
 
-Planned correction under `AR-C6`:
+Current correction under `AR-C6`:
 
-- `cancelRun()` moves to `WorkflowHandle.cancel()`
+- `cancelRun()` uses `WorkflowHandle.cancel()`
 - `signal(CANCEL)` remains the cooperative reason-carrying path
-- the workflow catches native cancellation and emits terminal `RunCancelled`
-  from workflow context instead of treating `cancelRun()` as a signal alias
+- the workflow catches native cancellation and emits ordered cancellation
+  lifecycle from workflow context instead of treating `cancelRun()` as a signal
+  alias
+
+Follow-on contract-pack reset under `AR-A12-A`:
+
+- align `ADR-0007`, `RunEvents`, and `IProviderAdapter` with the runtime-owned
+  cancellation lifecycle already accepted elsewhere
 
 ### Unidentified Design Concerns
 
@@ -935,15 +943,14 @@ sequenceDiagram
   Core->>Core: resolveMetaOrThrow(tenantId, runId)
   Core->>Core: getAdapterOrThrow(provider)
 
-  Core->>CR: buildRunEvents([RunCancelRequested])
-  CR->>Store: appendAndEnqueueTx(runId, [RunCancelRequested])
-  Store-->>CR: AppendResult
-
   Core->>Adapter: cancelRun(engineRunRef)
-  Note over Adapter: Temporal uses handle.signal('cancel')<br/>instead of handle.cancel() (bug T-01)
+  Note over Adapter: Provider-native cancel request boundary
+  Adapter->>CR: runtime-owned cancel lifecycle
+  CR->>Store: appendAndEnqueueTx(runId, [RunCancelRequested])
+  CR->>Store: appendAndEnqueueTx(runId, [RunCancelled])
   Adapter-->>Core: cancelled
 
-  Note over Core: RunCancelled event is emitted by<br/>the adapter/workflow, NOT the engine.<br/>ADR-0007: engine emits intent,<br/>adapter confirms terminal.
+  Note over Core: Engine dispatches only.<br/>Runtime owns ordered cancellation lifecycle.
 
   Core-->>WE: void
   WE-->>Caller: void
@@ -965,17 +972,17 @@ The system operates on two independent axes:
    intents stuck in PENDING or DISPATCHED beyond a configurable threshold.
    Two policies handle each status:
    - `PendingIntentReconciliationPolicy`: The intent was created but never
-     dispatched. Checks if run metadata exists → if so, looks up the adapter
-     → cancels or expires.
+     dispatched. Checks if run metadata exists ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ if so, looks up the adapter
+     ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ cancels or expires.
    - `DispatchedIntentReconciliationPolicy`: The intent was dispatched but
-     never resolved. Checks if run metadata exists → if so, marks resolved
+     never resolved. Checks if run metadata exists ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ if so, marks resolved
      (the run succeeded). If no metadata, attempts adapter cancel.
 
 2. **Stuck Run Detection** (`RunMaintenanceStuckRunService`):
-   - `detectStuckRuns`: PENDING runs past a time threshold → emits `RunFailed`
+   - `detectStuckRuns`: PENDING runs past a time threshold ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ emits `RunFailed`
      with `{reason: 'QUEUED_TIMEOUT'}`.
    - `detectStuckCancellingRuns`: RUNNING runs with `cancelling=true` past a
-     threshold → emits `RunFailed` with `{reason: 'CANCEL_TIMEOUT'}`.
+     threshold ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ emits `RunFailed` with `{reason: 'CANCEL_TIMEOUT'}`.
 
 The worker uses exponential backoff with jitter to avoid thundering herd on
 recovery. Infra errors (adapter unavailable) trigger backoff increase; business
@@ -988,7 +995,7 @@ outcomes (expired, resolved) reset backoff.
   calls `markResolved()` but the earlier version returned
   `{ cancelled: intentId }` instead of `{ resolved: intentId }`. This was
   fixed in a later iteration, but the current code at line 42 returns
-  `{ resolved: intentId }` — verify against current source.
+  `{ resolved: intentId }` ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â verify against current source.
 - **Stuck-run detection does not check PAUSED runs**: A run paused for longer
   than any reasonable threshold will never be detected as stuck. If the
   provider underneath crashed while the run was paused, the run will remain
@@ -1127,7 +1134,7 @@ telemetry failures from breaking delivery.
   Parallelizing with `Promise.allSettled()` or a concurrency pool would
   significantly improve throughput. The sequential approach was likely chosen
   for simplicity and ordering guarantees, but outbox records are already
-  independently identifiable — ordering is provided by `runSeq` at the
+  independently identifiable ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ordering is provided by `runSeq` at the
   consumer side, not by publish order.
 
 ### Unidentified Design Concerns
@@ -1150,7 +1157,7 @@ telemetry failures from breaking delivery.
   processing the same outbox table will claim overlapping records unless the
   storage implementation provides row-level locking via
   `listPendingForClaim`. The in-memory implementation has no locking, and the
-  PostgreSQL implementation should use `SELECT FOR UPDATE SKIP LOCKED` — but
+  PostgreSQL implementation should use `SELECT FOR UPDATE SKIP LOCKED` ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â but
   this is an implementation detail not enforced by the `IOutboxStorage`
   contract.
 - **Observer error swallowing hides instrumentation bugs**: `safelyObserve()`
@@ -1228,23 +1235,30 @@ architecture, gathered from the section analyses above.
 | T-01  | TemporalAdapter.cancelRun            | Uses signal instead of handle.cancel()                        | High     |
 | DL-01 | OutboxWorker.processBatch            | Sequential record processing                                  | Medium   |
 
-**Design improvement opportunities (not previously identified)**:
+**Design improvement opportunities (not previously identified):**
 
-| Area                         | Concern                                                                  | Impact                    |
-| ---------------------------- | ------------------------------------------------------------------------ | ------------------------- |
-| `@dvt/contracts`             | Zod runtime bundled with types; leaf packages carry unnecessary weight   | Build size, compile speed |
-| `@dvt/delivery`              | Three workers in one package with coupled release cycle                  | Operational flexibility   |
-| Engine facade                | No facade-level error mapper; callers must handle wide error taxonomy    | API stability             |
-| `coreRuntime.ts`             | Utility grab-bag spanning 3 concerns (adapter, observability, events)    | Discoverability           |
-| `StartRunApplicationService` | Constructs own collaborators; no injection seam for testing              | Testability               |
-| Signal flow                  | Signal-derived event emission is fire-and-forget after adapter success   | Data consistency          |
-| Reconciler                   | No concurrency control; `getRunMetadata` errors swallowed as null        | Correctness under load    |
-| Outbox                       | No publish timeout; no claim lock in contract; observer errors swallowed | Reliability               |
-| State machine                | No PAUSED stuck-run detection; no PAUSED→FAILED transition               | Operational coverage      |
-| Plan fetch                   | No size limit or timeout on plan byte fetch                              | Security, availability    |
-
-What is **planned or desired** but not yet implemented (orange elements from
-above diagrams), consolidated here.
+- `@dvt/contracts`: Zod runtime bundled with types; leaf packages carry
+  unnecessary weight. Impact: build size and compile speed.
+- `@dvt/delivery`: Three workers in one package with a coupled release cycle.
+  Impact: operational flexibility.
+- Engine facade: No facade-level error mapper; callers must handle a wide error
+  taxonomy. Impact: API stability.
+- `coreRuntime.ts`: Utility grab-bag spanning adapter, observability, and event
+  concerns. Impact: discoverability.
+- `StartRunApplicationService`: Constructs its own collaborators and lacks an
+  injection seam for tests. Impact: testability.
+- Signal flow: Signal-derived event emission is fire-and-forget after adapter
+  success. Impact: data consistency.
+- Reconciler: No concurrency control; `getRunMetadata` errors are swallowed as
+  null. Impact: correctness under load.
+- Outbox: No publish timeout, no claim lock in contract, and observer errors
+  are swallowed. Impact: reliability.
+- State machine: No PAUSED stuck-run detection and no `PAUSED -> FAILED`
+  transition. Impact: operational coverage.
+- Plan fetch: No size limit or timeout on plan byte fetch. Impact: security and
+  availability.
+  What is **planned or desired** but not yet implemented (orange elements from
+  above diagrams), consolidated here.
 
 ```mermaid
 flowchart TB

@@ -864,6 +864,54 @@ tasks:
       Postgres capability path; remaining closure is deeper provenance convergence with `TF-B1-B`
       and cleanup of the accepted residual risks.
     last_verified: '2026-04-10'
+  - task_id: AR-C6
+    priority: P0
+    status: in_progress
+    objective: >-
+      normalize Temporal cancellation semantics so provider-native cancel, runtime-owned lifecycle
+      facts, and caller-visible status authority follow one governed model.
+    dependency: none
+    target: >-
+      Temporal cancellation no longer relies on signal aliasing, and the component-level ownership
+      model for `RunCancelRequested`, `RunCancelled`, and provider status authority is explicit
+      across planning and architecture surfaces.
+    complexity: M
+    effort_points: 3
+    progress_pct: 85
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
+    status_reason: >-
+      The provider-native Temporal cancel boundary is implemented and the repository-wide
+      cancellation ownership truth is now synchronized across planning, ADR, and contract surfaces.
+      Remaining work is runtime convergence on the provider-live versus persisted terminal-status
+      gap.
+    last_verified: '2026-04-10'
+  - task_id: AR-C6-A
+    parent_task: AR-C6
+    priority: P0
+    status: done
+    objective: >-
+      capture the cancel-lifecycle ownership lesson and hand it off to the broader engine-runtime
+      contract-pack reset without leaving a second active contract direction in planning.
+    dependency: none
+    target: >-
+      A governed proposal records the target ownership model across `WorkflowEngineCoreService`,
+      `IProviderAdapter`, runtime workflow, projector/read model, and caller-visible status
+      consumption, while the contract-pack reset and active registry cleanup continue only under
+      `AR-A12-A`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+    status_reason: >-
+      The cancel-lifecycle ownership lesson is captured and accepted as local rationale. Further
+      contract-pack normalization is now explicitly absorbed by `AR-A12-A`, so Lane C no longer
+      carries a parallel active direction.
+    last_verified: '2026-04-10'
   - task_id: TF-C3
     priority: P1
     status: queued
@@ -947,6 +995,10 @@ dependency_notes:
     blocker moved to finishing `TF-C2-A` local proof closure and the remaining evidence/provenance
     convergence under `TF-C2-B` and `TF-B1-B`.
   - >-
+    `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
+    follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
+    stale ADR and contract surfaces.
+  - >-
     `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
     subtasks so runtime closure can progress in smaller slices without losing the same outer
     contract.
@@ -954,11 +1006,13 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-10'
-  total_tasks: 35
-  total_effort_points: 132
-  completed_weighted_points: 69.8
-  lane_progress_pct: 53
+  total_tasks: 37
+  total_effort_points: 137
+  completed_weighted_points: 74.4
+  lane_progress_pct: 54
   notes: >-
     Weighted progress uses effort_points. `MW-C1` now contributes full accepted closure, while
     `TF-C2`, `TF-C2-A`, and `TF-C2-B` now reflect the shipped dispatch seam, canonical proof
-    surface, and runtime-evidence progress rather than the older queued-only posture.
+    surface, and runtime-evidence progress rather than the older queued-only posture. `AR-C6` now
+    also records the short truth-sync slice that must normalize cancel-lifecycle ownership before
+    additional runtime cancellation work expands.

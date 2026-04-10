@@ -1,4 +1,4 @@
-# Signals and Authorization Contract (Draft v1)
+# Signals and Authorization Contract (Normative v1)
 
 > Historical note: this draft no longer treats `RETRY_STEP` as part of the
 > canonical signal boundary. See
@@ -10,20 +10,18 @@
 
 [Back to Contracts Registry](../README.md)
 
-**Status**: DRAFT  
+**Status**: NORMATIVE - active pre-stable line  
 **Version**: v1  
-**Stability**: Contracts - breaking changes require version bump  
+**Stability**: Active pre-stable line - rewrite in place  
 **Consumers**: Engine, Authorization Service, Audit Systems, UI  
-**Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)  
+**Parent Contract**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md)  
 **References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [ADR-0040](../../../../../adr/ADR-0040-retry-ownership-and-attempt-authority.md), [ADR-0048](../../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md), [ADR-0049](../../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
-
-**Version alignment**: Contract v1 aligns with parent IWorkflowEngine.v1 and ExecutionSemantics.v1.
 
 ---
 
 ## 1) Scope
 
-This draft governs the canonical engine signal boundary and the minimum
+This contract governs the canonical engine signal boundary and the minimum
 authorization/idempotency rules for those signals.
 
 It does not govern speculative admin/operator commands that are not present in
@@ -55,11 +53,11 @@ Transport note:
 
 ### 2.1 Signal intent summary
 
-| SignalType | Canonical? | Intent                           | Notes                                                    |
-| ---------- | ---------- | -------------------------------- | -------------------------------------------------------- |
-| `PAUSE`    | yes        | stop scheduling new work         | realized lifecycle fact is `RunPaused`, runtime-owned    |
-| `RESUME`   | yes        | resume scheduling work           | realized lifecycle fact is `RunResumed`, runtime-owned   |
-| `CANCEL`   | yes        | request cooperative cancellation | realized lifecycle fact is `RunCancelled`, runtime-owned |
+| SignalType | Canonical? | Intent                           | Notes                                                           |
+| ---------- | ---------- | -------------------------------- | --------------------------------------------------------------- |
+| `PAUSE`    | yes        | stop scheduling new work         | realized lifecycle fact is `RunPaused`, runtime-owned           |
+| `RESUME`   | yes        | resume scheduling work           | realized lifecycle fact is `RunResumed`, runtime-owned          |
+| `CANCEL`   | yes        | request cooperative cancellation | runtime-owned lifecycle is `RunCancelRequested -> RunCancelled` |
 
 Business run recovery is intentionally outside this table. It is not a generic
 signal and must be governed by a dedicated recovery contract.
@@ -121,7 +119,8 @@ For signal-driven realized lifecycle events:
 - the engine core MUST NOT append the same realized lifecycle `EventType` on
   submission.
 
-This applies to `RunPaused`, `RunResumed`, and `RunCancelled`.
+This applies to `RunPaused`, `RunResumed`, `RunCancelRequested`, and
+`RunCancelled`.
 
 ---
 
@@ -138,7 +137,7 @@ signal handling MUST preserve these distinctions:
 
 ---
 
-## 6) Out of scope for this draft
+## 6) Out of scope for this contract
 
 - speculative admin-only commands such as `UPDATE_PARAMS`, `INJECT_OVERRIDE`,
   `UPDATE_TARGET`, or `EMERGENCY_STOP`;

@@ -2,7 +2,7 @@
 title: WorkflowEngine subsystem context
 status: Review
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # WorkflowEngine subsystem context
@@ -182,7 +182,8 @@ sequenceDiagram
   Client->>Engine: enrichRunStatus(runRef)
   Engine->>Core: enrichStatus(runRef)
   Core->>State: base snapshot/events
-  Core->>Adapter: getRunStatus(runRef)
+  Note over State,Adapter: Snapshot/events remain canonical. Provider status is live enrichment only.
+  Core->>Adapter: getRunStatus(runRef) [live provider view]
   Core-->>Engine: base + provider enrichment
 ```
 

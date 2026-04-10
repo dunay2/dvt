@@ -1,234 +1,124 @@
 # IWorkflowEngine Contract (Normative v1)
 
-> Historical note: references in this v1 surface to `retryStep` as a signal are
-> superseded by [ADR-0048](../../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md).
-> The current canonical signal boundary no longer includes `RETRY_STEP`.
-> Business run recovery is also outside the generic signal boundary; see
-> [ADR-0049](../../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md).
-> References in this v1 surface to engine-owned realized lifecycle events for
-> `RunPaused`, `RunResumed`, or `RunCancelled` are superseded by
-> [ADR-0047](../../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md).
-> Those realized lifecycle facts are runtime-owned in the current model.
+[<- Back to Contracts Registry](../README.md)
 
-[Back to Contracts Registry](../README.md)
-
-**Status**: DRAFT  
-**Version**: v1  
-**Stability**: Draft baseline (subject to controlled changes)  
-**Consumers**: Planner, Engine, State Store, UI  
-**Supersedes**: None  
-**Reference artifact**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
+**Status**: NORMATIVE - active pre-stable line
+**Version**: 1.0
+**Scope**: Engine command and read boundary
+**Consumers**: API, planner-facing application services, adapters, UI-facing read paths
+**Sub-contracts**: [RunEvents.v1.md](./RunEvents.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md)
+**Related ADRs**: [ADR-0003](../../../../../adr/ADR-0003-execution-model.md), [ADR-0014](../../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0015](../../../../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ADR-0047](../../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md), [ADR-0048](../../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md), [ADR-0049](../../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 
 ---
 
-## 1) Purpose
+## Purpose
 
-Define the minimum, unambiguous contract for workflow execution orchestration.
+Define the single active engine boundary for run execution, control, canonical
+status reads, and opt-in status enrichment.
 
-This baseline is intentionally small and normative for the blocked base-contract
-workstream (#133).
-
----
-
-## 2) Engine boundary
+## Boundary rules
 
 ### MUST
 
-- Start a run from a validated plan reference.
-- Cancel a run.
-- Return run status.
-- Accept runtime signals (`PAUSE`, `RESUME`, `CANCEL`).
-- Persist run and step lifecycle events through the event pipeline.
-- Include correlation identifiers on operations/events: `tenantId`,
-  `projectId`, `environmentId`, `runId`.
+- accept a verified `PlanRef` for `startRun()` and `recoverRun()`
+- validate command legality before dispatching to the adapter
+- keep event log plus snapshot projection as canonical caller-visible status
+  authority
+- expose a distinct enrichment path when provider-live diagnostics are needed
+- preserve tenant, project, environment, run, and attempt correlation across
+  operations
 
 ### MUST NOT
 
-- Perform planning or step ordering decisions.
-- Be source of truth for final state (State Store is authoritative).
-- Persist secrets.
+- become the source of truth for persisted lifecycle state
+- let provider-live status replace the event-log-backed read model
+- reuse one semantic status DTO across canonical truth, enrichment, and
+  provider diagnostics
+- append realized lifecycle facts merely because a command was accepted
 
----
-
-## 3) Minimal contract surface
+## Contract surface
 
 ```ts
 interface IWorkflowEngine {
   startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
+  recoverRun(sourceRunId: string, planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
   cancelRun(engineRunRef: EngineRunRef): Promise<void>;
-  getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot>;
+  getRunStatus(engineRunRef: EngineRunRef): Promise<CanonicalRunStatus>;
+  getRunEnrichment(engineRunRef: EngineRunRef): Promise<RunStatusEnrichment>;
   signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }
 ```
 
-### 3.1 RunContext
+## Status models
 
 ```ts
-interface RunContext {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string; // globally unique, UUID v4 recommended
-  targetAdapter: 'temporal' | 'conductor';
-}
-```
-
-### 3.2 EngineRunRef
-
-```ts
-type EngineRunRef =
-  | {
-      provider: 'temporal';
-      namespace: string;
-      workflowId: string;
-      runId: string;
-      taskQueue?: string;
-    }
-  | {
-      provider: 'conductor';
-      workflowId: string;
-      runId: string;
-      conductorUrl: string;
-    };
-```
-
-**Invariants**:
-
-- `runId` is REQUIRED for both providers.
-- Temporal refs MUST include `namespace`.
-- Conductor refs MUST include `conductorUrl`.
-
-### 3.3 RunStatusSnapshot
-
-```ts
-type RunStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'RUNNING'
-  | 'PAUSED'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
-
-interface RunStatusSnapshot {
+interface CanonicalRunStatus {
   runId: string;
   status: RunStatus;
+  substatus?: RunSubstatus;
   message?: string;
-  startedAt?: string; // ISO 8601 UTC
-  completedAt?: string; // ISO 8601 UTC when terminal
+  startedAt?: IsoUtcString;
+  completedAt?: IsoUtcString;
+  execution?: RunExecutionEvidence;
+}
+
+interface RunStatusEnrichment {
+  canonical: CanonicalRunStatus;
+  providerView: ProviderRunStatusView;
 }
 ```
 
----
+`ProviderRunStatusView` is defined by
+[IProviderAdapter.v1.md](./IProviderAdapter.v1.md).
 
-## 4) Plan input contract (v1)
+### Read-path authority
 
-`startRun()` accepts `PlanRef`.
+- `getRunStatus()` returns the canonical caller-visible status owned by the
+  event log and snapshot projection.
+- `getRunEnrichment()` composes canonical status with provider-live diagnostics.
+- `getRunEnrichment()` MUST reject on adapter timeout or failure. It MUST NOT
+  silently degrade to `getRunStatus()`.
+- canonical `substatus` values belong to the engine-owned read model only.
+  Provider-specific status tokens do not belong inside `CanonicalRunStatus`.
 
-```ts
-type PlanRef = {
-  uri: string;
-  sha256: string;
-  schemaVersion: string;
-  planId: string;
-  planVersion: string;
-};
-```
+### Lifecycle ownership
 
-### Normative checks
+The runtime execution context owns realized lifecycle facts for signal-driven
+transitions, including:
 
-- Engine MUST reject unknown `schemaVersion`.
-- Engine MUST validate plan integrity (`sha256`) before execution.
-- Engine MUST reject disallowed URI schemes (`file://`, `ftp://`, link-local
-  metadata endpoints).
-
----
-
-## 5) Event and idempotency baseline
-
-The execution system MUST persist at least:
-
-- `RunStarted`
-- `StepStarted`
-- `StepCompleted`
-- `StepFailed`
-- `StepSkipped`
 - `RunPaused`
 - `RunResumed`
-- `RunCompleted`
-- `RunFailed`
+- `RunCancelRequested`
 - `RunCancelled`
 
-For signal-driven realized lifecycle events:
+The engine validates and dispatches commands, but it MUST NOT append those
+realized lifecycle events on submission.
 
-- `RunPaused`, `RunResumed`, and `RunCancelled` are runtime-owned facts;
-- the engine core validates and dispatches the command, but MUST NOT append the
-  same realized lifecycle event on submission.
+### Canonical signal boundary
 
-Minimum event envelope fields:
+Canonical `SignalType` is limited to:
 
-- `tenantId`
-- `projectId`
-- `environmentId`
-- `runId`
-- `stepId` (required for step-level events)
-- `planId`
-- `planVersion`
-- `eventType`
-- `runSeq` (assigned by append authority)
-- `idempotencyKey`
-- `logicalAttemptId`
-- `engineAttemptId`
-- `emittedAt`
-- `persistedAt` (required on persisted records)
+- `PAUSE`
+- `RESUME`
+- `CANCEL`
 
-Idempotency rule (normative):
+Dedicated step retry and run recovery remain separate use cases.
 
-- `idempotencyKey` MUST be derived from `logicalAttemptId` (not
-  `engineAttemptId`).
+## Current implementation note
 
----
+This contract is ahead of the current code during `AR-A12-B`.
+The shipped implementation still uses `enrichRunStatus(): Promise<RunStatusSnapshot>`.
+Convergence of method names and return shapes belongs to `AR-A12-C`.
 
-## 6) Signals baseline
+## Related contracts
 
-```ts
-type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
+- [RunEvents.v1.md](./RunEvents.v1.md)
+- [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
+- [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md)
+- [GlossaryContract.v1.md](./GlossaryContract.v1.md)
+- [StartRunProtocol.v1.md](./StartRunProtocol.v1.md)
 
-interface SignalRequest {
-  signalId: string;
-  type: SignalType;
-  reason?: string;
-}
-```
+## Change log
 
-Rules:
-
-- `RETRY_RUN` is not part of canonical `SignalType`; business recovery
-  requires a dedicated engine or application use case per ADR-0040 and
-  ADR-0049.
-- `RETRY_STEP` is not part of canonical `SignalType`; future step retry
-  requires a dedicated use case per ADR-0048.
-- Signal operations MUST be tenant-authorized before execution.
-- Signal idempotency key MUST include `(tenantId, runId, signalId)`.
-
----
-
-## 7) Out of scope for v1
-
-- Substatus taxonomy and adapter-scoped substatus extensions.
-- Full capability validation matrix and fallback policies (`emulate` /
-  `degrade`).
-- Extended glossary governance.
-
-These are formalized in [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
-and linked sub-contracts.
-
----
-
-## 8) Change log
-
-- **v1 (2026-02-16)**: Initial draft baseline contract for domain-contract
-  bootstrap (#133).
-- **v1 (2026-04-08)**: Clarified runtime-owned realized lifecycle ownership for
-  signal-driven events and aligned the baseline signal contract with ADR-0047,
-  ADR-0048, and ADR-0049.
+- **1.0 (2026-04-11)**: Modeled explicit canonical status and enrichment objects in the active `v1` engine contract line.
+- **1.0 (2026-04-10)**: Reset the active engine boundary to one canonical pre-stable `v1` line, aligned with the real code surface and read-authority model.

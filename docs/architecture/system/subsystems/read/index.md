@@ -2,7 +2,7 @@
 title: Read subsystem
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # Read subsystem
@@ -27,6 +27,7 @@ flowchart LR
   GetRun --> Metadata["IRunStateStoreRead.getRunMetadataByRunId"]
   GetEvents --> EventStore["IRunStateStoreRead.listEvents"]
   Engine --> StateRead
+  Engine --> Provider["IProviderAdapter.getRunStatus (live provider view) when query.enriched = true"]
   Api --> Web
 ```
 
@@ -34,6 +35,8 @@ flowchart LR
 
 - run-list summaries are read from state-store metadata plus snapshot status;
 - run detail starts from run metadata and engine-backed snapshot status;
+- provider live status can enrich operator detail, but it must not override the
+  canonical event-log-backed status returned by `getRunStatus`;
 - timeline events come from event-store reads, not from the summary list path;
 - the web shell renders read results, but it does not derive runtime truth by
   itself.
@@ -70,8 +73,21 @@ patterns:
 - snapshot-backed summary and detail reads;
 - event-timeline reads for operator diagnostics.
 
+The current API shape keeps canonical status and optional enrichment inside one
+use case:
+
+- `GetRunStatusUseCase` calls `engine.getRunStatus(...)` by default;
+- the same use case switches to `engine.enrichRunStatus(...)` when
+  `query.enriched = true`;
+- there is no separate `EnrichRunStatusUseCase` in the current code.
+
 The documentation rule is to explain those two paths as one subsystem while
-keeping the source of truth explicit at each step.
+keeping the source of truth explicit at each step and avoiding target-state
+interactors on active/current pages.
+
+The contract-reset target under `AR-A12-B` splits `CanonicalRunStatus`,
+`RunStatusEnrichment`, and `ProviderRunStatusView`, but that target does not
+change the current implementation shape until `AR-A12-C` lands.
 
 ## Related Pages
 

@@ -257,16 +257,24 @@ sequenceDiagram
   Client->>Facade: getRunStatus(runRef)
   Facade->>Query: execute(runRef)
   Query->>State: snapshot/events only
-  Query-->>Facade: deterministic status
-  Facade-->>Client: deterministic status
+  Query-->>Facade: CanonicalRunStatus
+  Facade-->>Client: CanonicalRunStatus
 
-  Client->>Facade: enrichRunStatus(runRef)
+  Client->>Facade: getRunEnrichment(runRef)
   Facade->>Enrich: execute(runRef)
-  Enrich->>State: deterministic base
-  Enrich->>Provider: provider substatus/message
-  Enrich-->>Facade: enriched status
-  Facade-->>Client: enriched status
+  Enrich->>State: CanonicalRunStatus
+  Enrich->>Provider: getProviderStatusView(runRef)
+  Provider-->>Enrich: ProviderRunStatusView
+  Enrich-->>Facade: RunStatusEnrichment
+  Facade-->>Client: RunStatusEnrichment
 ```
+
+Target model note:
+
+- `CanonicalRunStatus` is the only canonical caller-visible lifecycle object
+- `ProviderRunStatusView` remains diagnostic-only
+- `RunStatusEnrichment` is engine-owned composition, not a second canonical
+  status source
 
 ## Derivation roadmap
 

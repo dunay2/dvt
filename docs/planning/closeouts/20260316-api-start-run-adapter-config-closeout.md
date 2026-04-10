@@ -29,7 +29,7 @@ failure and the route cannot express it as a stable contract.
   must be surfaced from DVT semantics, not leaked as provider-specific behavior.
 - `ADR-0014`: adapters are selected through the run-driven boundary, so a
   missing adapter is a boundary/configuration failure of `startRun`.
-- `IWorkflowEngine.v2.0`: the engine boundary owns `startRun(planRef, context)`
+- `IWorkflowEngine.v1`: the engine boundary owns `startRun(planRef, context)`
   behavior and callers need deterministic failure handling.
 - `AGENTS.md`: think-first before edits, no hidden debt, no stubs, closeout
   required.

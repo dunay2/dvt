@@ -1,4 +1,4 @@
-﻿---
+---
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
@@ -192,6 +192,15 @@ classDiagram
     SnapshotProjector --> RunDomain
 ```
 
+Current-versus-target note:
+
+- current code still exposes `WorkflowEngine.enrichRunStatus()` and
+  `IProviderAdapter.getRunStatus()` over `RunStatusSnapshot`
+- the active contract reset under `AR-A12-B` defines the target split as
+  `CanonicalRunStatus`, `RunStatusEnrichment`, and
+  `ProviderRunStatusView`
+- method-name and return-shape convergence remains pending under `AR-A12-C`
+
 ### Engine Domain Structure
 
 Reflects the current merged implementation:
@@ -200,7 +209,8 @@ Reflects the current merged implementation:
 classDiagram
     class WorkflowEngine {
         +startRun()
-        +getRunStatus()
+        +cancelRun()
+        +getRunStatus() canonical read model
         +signal()
         +healthCheck()
     }
@@ -216,7 +226,8 @@ classDiagram
     }
     class IProviderAdapter {
         +startRun()
-        +getRunStatus()
+        +cancelRun()
+        +getRunStatus() live provider view
         +signal()
         +ping()
     }

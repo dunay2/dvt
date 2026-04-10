@@ -107,7 +107,7 @@ decision content and diagrams while exposing:
 - `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md`
 - `docs/planning/archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md`
 - `docs/planning/proposals/principal-architecture-review-execution-plan-20260317.md`
-- `docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md`
+- `docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md`
 - `docs/architecture/engine/contracts/capabilities/README.md`
 
 ## Libraries evaluated
@@ -116,8 +116,8 @@ None.
 
 ## Docs synced
 
-- [ ] `docs/planning/index.md` — not required for package-local planner companion doc
-- [ ] `docs/planning/proposals/index.md` — not required for package-local planner companion doc
+- [ ] `docs/planning/index.md` â€” not required for package-local planner companion doc
+- [ ] `docs/planning/proposals/index.md` â€” not required for package-local planner companion doc
 
 ## Test evidence
 
