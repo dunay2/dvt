@@ -1,15 +1,23 @@
 import { z } from 'zod';
 
 import type { RunExecutionContext, RunExecutionContextRef } from '../../types/contracts.js';
+import {
+  isIsoUtcString,
+  isNonBlankString,
+  NON_BLANK_STRING_MESSAGE,
+  STRICT_ISO_UTC_STRING_MESSAGE,
+} from '../../utils/contractPrimitives.js';
 
 const NonBlankStringSchema = z
   .string()
   .min(1)
-  .refine((value) => value.trim().length > 0, {
-    message: 'String must contain at least one non-whitespace character',
+  .refine((value) => isNonBlankString(value), {
+    message: NON_BLANK_STRING_MESSAGE,
   })
   .brand<'NonBlankString'>();
-const IsoUtcStringSchema = NonBlankStringSchema.brand<'IsoUtcString'>();
+const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString(value), {
+  message: STRICT_ISO_UTC_STRING_MESSAGE,
+}).brand<'IsoUtcString'>();
 
 const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
 

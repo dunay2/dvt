@@ -13,6 +13,7 @@ import {
   parsePlanRef,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
+  parseRunEventWrite,
   parseRunStatusSnapshot,
   parseRecoverRunCommand,
   parseResolvedRunContext,
@@ -181,6 +182,42 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
+  it('rejects RunStatusSnapshot when failure.failedAt is not strict ISO UTC', () => {
+    expect(() =>
+      parseRunStatusSnapshot({
+        runId: 'run-1',
+        status: 'FAILED',
+        execution: {
+          failure: {
+            stepId: 'step-transform',
+            reason: 'SINK_WRITE_FAILED',
+            failedAt: '2026-02-30T10:00:00.000Z',
+          },
+        },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunEventWrite when emittedAt is not strict ISO UTC', () => {
+    expect(() =>
+      parseRunEventWrite({
+        eventId: 'evt-run-started-invalid-time',
+        eventType: 'RunStarted',
+        payloadVersion: 1,
+        emittedAt: '2026-04-08 10:00:00Z',
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'run-started-invalid-time',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunContext with optional runExecutionContextRef', () => {
     const ctx = parseRunContext({
       tenantId: 'tenant-a',
@@ -223,6 +260,28 @@ describe('contracts: validation helpers', () => {
         schemaVersion: 'v1.0',
         planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
         planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionContext when createdAtIso is not strict ISO UTC', () => {
+    expect(() =>
+      parseRunExecutionContext({
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        planSha256: 'a'.repeat(64),
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        targetAdapter: 'temporal',
+        createdAtIso: '2026-13-01T00:00:00.000Z',
+        createdBy: 'system',
+        pluginContexts: {
+          temporal: {
+            namespace: 'default',
+          },
+        },
       })
     ).toThrow(ContractValidationError);
   });

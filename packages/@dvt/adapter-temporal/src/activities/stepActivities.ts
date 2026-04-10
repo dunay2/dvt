@@ -9,10 +9,10 @@
  * @date 2026-03-07
  */
 import {
+  asStepId,
   parsePlanRef,
   parseResolvedRunContext,
   RUN_EVENT_PAYLOAD_VERSION,
-  StepIdSchema,
 } from '@dvt/contracts';
 import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
@@ -259,7 +259,7 @@ export function createActivities(
       const ctx = parseResolvedRunContext(input.ctx);
       const validatedPlanRef = parsePlanRef(input.planRef);
       const { eventType, stepId, payload } = input;
-      const validatedStepId = stepId === undefined ? undefined : StepIdSchema.parse(stepId);
+      const validatedStepId = stepId === undefined ? undefined : asStepId(stepId);
 
       const engineAttemptId =
         typeof deps.getEngineAttemptId === 'function'

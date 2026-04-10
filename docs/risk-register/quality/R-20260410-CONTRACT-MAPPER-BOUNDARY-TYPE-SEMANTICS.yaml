@@ -8,4 +8,11 @@ owners:
   - packages/@dvt/engine
 severity: Medium
 probability: Medium
+context: >
+  The boundary slice initially tightened runtime schemas and mapper behavior before all public
+  primitive constructors and timestamp semantics were fully centralized.
+resolution: >
+  Closed after the contracts package adopted canonical non-blank, step-id, and strict ISO UTC
+  helpers, and the affected engine/adapter consumers stopped relying on alias-only branding or ad
+  hoc timestamp casts at the active seam.
 ---

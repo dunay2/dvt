@@ -12,19 +12,27 @@ breaking: false
 code_refs:
   - packages/@dvt/contracts/src/schemas.ts
   - packages/@dvt/contracts/src/types/contracts.ts
+  - packages/@dvt/contracts/src/utils/contractPrimitives.ts
   - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
   - packages/@dvt/engine/src/state/runEventWritePolicy.ts
+  - packages/@dvt/engine/src/state/InMemoryOutboxState.ts
   - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
   - packages/@dvt/engine/src/state/InMemoryTxStore.ts
   - packages/@dvt/engine/src/ports/IRunStateStore.ts
+  - packages/@dvt/engine/src/utils/clock.ts
   - packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts
+  - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
   - packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts
+  - apps/api/src/runtime/intentReconcilerRuntime.ts
   - docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
 evidence:
   tests:
     - pnpm --filter @dvt/contracts build
     - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/run-domain test
+    - pnpm --filter @dvt/adapter-temporal test
     - pnpm --filter @dvt/engine test
+    - pnpm docs:status:generate
     - pnpm verify:prepush
 ---
 
@@ -40,7 +48,7 @@ deterministic `failedAt` derivation from the accepted envelope timestamp.
 ## Scope
 
 1. `stepId` for step events is now enforced as non-blank at the write boundary.
-2. `emittedAt` is now enforced as non-blank at the write boundary.
+2. `emittedAt` is now enforced as strict ISO UTC at the write boundary.
 3. Persisted event records validate `persistedAt` after enrichment in both
    in-memory and Postgres write paths.
 4. `StepFailed` mapper cleanup for blank `reason` and `message` was removed so
@@ -48,16 +56,15 @@ deterministic `failedAt` derivation from the accepted envelope timestamp.
 5. Public contract types now use schema-aligned branded primitives for
    `stepId`, trusted failure evidence fields, and envelope timestamps instead
    of leaking raw `string` through the hardened boundary surface.
-6. The governing proposal now records the before-state, implemented Option A
+6. Canonical primitive helpers now centralize non-blank, step-id, and ISO UTC
+   branding so engine, adapters, and projectors do not need scattered casts or
+   schema-specific parsing for the same boundary facts.
+7. The governing proposal now records the before-state, implemented Option A
    flow, and repository-grounded rationale.
 
 ## Residual Considerations
 
-1. `emittedAt`, `persistedAt`, and `failedAt` now share one branded timestamp
-   vocabulary, but the active append boundary still validates them as non-blank
-   facts rather than full ISO UTC structure.
-2. The planner and ancillary runtime surfaces still use some legacy plain
+1. The planner and ancillary runtime surfaces still use some legacy plain
    `string` timestamp contracts outside this narrow run-event boundary slice.
-3. `emittedAt` and `persistedAt` remain non-blank boundary facts, not full ISO
-   UTC contract proofs, because the active write schema does not yet validate
-   full timestamp structure.
+2. Some engine/internal stores outside this slice still carry local timestamp
+   helpers that can be converged further on the canonical contracts utility.

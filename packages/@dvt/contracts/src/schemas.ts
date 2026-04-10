@@ -45,6 +45,12 @@ import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/StepTypeRegistry.js';
+import {
+  isIsoUtcString,
+  isNonBlankString,
+  NON_BLANK_STRING_MESSAGE,
+  STRICT_ISO_UTC_STRING_MESSAGE,
+} from './utils/contractPrimitives.js';
 import { jcsCanonicalize } from './utils/jcsCanonicalize.js';
 import { sha256HexUtf8 } from './utils/sha256HexUtf8.js';
 
@@ -80,11 +86,13 @@ export const StepOutputStatusSchema = z.enum(['SUCCESS', 'FAILED', 'SKIPPED']);
 export const NonBlankStringSchema = z
   .string()
   .min(1)
-  .refine((value) => value.trim().length > 0, {
-    message: 'String must contain at least one non-whitespace character',
+  .refine((value) => isNonBlankString(value), {
+    message: NON_BLANK_STRING_MESSAGE,
   })
   .brand<'NonBlankString'>();
-export const IsoUtcStringSchema = NonBlankStringSchema.brand<'IsoUtcString'>();
+export const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString(value), {
+  message: STRICT_ISO_UTC_STRING_MESSAGE,
+}).brand<'IsoUtcString'>();
 export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 
 // ─── Core contract schemas ───────────────────────────────────────────────────

@@ -87,8 +87,8 @@ flowchart LR
 
 The narrow Option A slice in this branch now does the following:
 
-- step-event `stepId` is admitted through `NonBlankStringSchema`
-- `emittedAt` is admitted through `NonBlankStringSchema`
+- step-event `stepId` is admitted through `StepIdSchema`
+- `emittedAt` is admitted through `IsoUtcStringSchema`
 - persisted records validate `persistedAt` after enrichment, not only on paper
 - `StepFailed` payload `reason` and `message` are non-blank when present
 - the mapper no longer performs silent trimming for failure diagnostics
@@ -201,6 +201,7 @@ The contracts package already contains the stronger semantics the runtime read
 surface expects:
 
 - `NonBlankStringSchema` rejects whitespace-only strings
+- `IsoUtcStringSchema` now rejects malformed or calendar-invalid UTC timestamps
 - `RunFailureEvidenceSchema` already uses the stronger rule for `stepId`,
   optional `reason`, and optional `message`
 
@@ -217,8 +218,8 @@ contract is stronger than the upstream event admission contract.
 
 This slice closes the first two gaps for the active boundary:
 
-- step-event `stepId` now uses `NonBlankStringSchema`
-- `RunEventCommonSchema.emittedAt` now uses `NonBlankStringSchema`
+- step-event `stepId` now uses `StepIdSchema`
+- `RunEventCommonSchema.emittedAt` now uses `IsoUtcStringSchema`
 - persisted records now validate `persistedAt` after enrichment
 - `StepFailedPayloadSchema` still does not emit `failedAt` by design; mapper
   derivation remains the intended ownership line for that field

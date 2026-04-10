@@ -2,20 +2,20 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-09.
+Generated automatically from repository code on 2026-04-10.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 747   |
+| Total source files           | 749   |
 | Total test files             | 290   |
 | Workspaces with build script | 23/23 |
 | Workspaces with test script  | 22/23 |
@@ -24,7 +24,7 @@ Generated automatically from repository code on 2026-04-09.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 137       | 63         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 138       | 63         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 20         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
@@ -34,7 +34,7 @@ Generated automatically from repository code on 2026-04-09.
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 44        | 13         | yes   | yes  | no        | 38                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 45        | 13         | yes   | yes  | no        | 39                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 10        | 4          | yes   | yes  | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/engine               | `packages/@dvt/engine`               | 92        | 41         | yes   | yes  | no        | 34                      |

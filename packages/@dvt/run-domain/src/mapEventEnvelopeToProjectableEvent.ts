@@ -8,8 +8,8 @@
  */
 import {
   MaterializationEvidenceSchema,
-  NonBlankStringSchema,
-  StepIdSchema,
+  asNonBlankString,
+  asStepId,
   type EventEnvelope,
   type IsoUtcString,
   type MaterializationEvidence,
@@ -137,16 +137,24 @@ export function mapEventEnvelopeToProjectableEvent(
 }
 
 function requireStepId(event: EventEnvelope): StepId {
-  const parsed = StepIdSchema.safeParse((event as { stepId?: unknown }).stepId);
-  if (parsed.success) {
-    return parsed.data;
+  const rawStepId = (event as { stepId?: unknown }).stepId;
+  if (typeof rawStepId !== 'string') {
+    throw new InvalidRunEventShapeError({
+      runId: event.runId,
+      eventType: event.eventType,
+      reason: 'stepId must be a non-blank string for step events',
+    });
   }
 
-  throw new InvalidRunEventShapeError({
-    runId: event.runId,
-    eventType: event.eventType,
-    reason: 'stepId must be a non-blank string for step events',
-  });
+  try {
+    return asStepId(rawStepId);
+  } catch {
+    throw new InvalidRunEventShapeError({
+      runId: event.runId,
+      eventType: event.eventType,
+      reason: 'stepId must be a non-blank string for step events',
+    });
+  }
 }
 
 function readMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
@@ -175,9 +183,12 @@ function readOptionalFailureText(
     return undefined;
   }
 
-  const parsed = NonBlankStringSchema.safeParse(value);
-  if (parsed.success) {
-    return parsed.data;
+  if (typeof value === 'string') {
+    try {
+      return asNonBlankString(value);
+    } catch {
+      // Fall through to canonical error below.
+    }
   }
 
   throw new InvalidRunEventShapeError({
