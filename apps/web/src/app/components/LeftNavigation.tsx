@@ -3,7 +3,7 @@ import { NavLink } from 'react-router';
 
 import { useShellRuntime } from '../shell/useShellRuntime';
 import { resolveString } from '../plugins/contracts/PluginManifest';
-import { leftNavigationRailClasses } from './topAppBar/styles';
+import { leftNavigationRailClasses } from './shell/chrome';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
 

@@ -1,7 +1,7 @@
 import { Activity, AlertTriangle, LoaderCircle, WifiOff } from 'lucide-react';
 import type { PlatformConnectionState } from '../../../capabilities/platform-health';
+import { topAppBarClasses } from '../shell/chrome';
 import type { TopAppBarCopy } from './copy';
-import { topAppBarClasses } from './styles';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 type TopAppBarConnectionStatusProps = {

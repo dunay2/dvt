@@ -2,12 +2,12 @@ import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceCon
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import AppBrandMark from './AppBrandMark';
+import { topAppBarClasses } from './shell/chrome';
 
 import { TopAppBarConnectionStatus } from './topAppBar/TopAppBarConnectionStatus';
 import { resolveTopAppBarCopy } from './topAppBar/copy';
 import { TopAppBarGitRef } from './topAppBar/TopAppBarGitRef';
 import { TopAppBarShellMenu } from './topAppBar/TopAppBarShellMenu';
-import { topAppBarClasses } from './topAppBar/styles';
 import { TopAppBarWorkspaceSelectors } from './topAppBar/TopAppBarWorkspaceSelectors';
 import type { TopAppBarProps } from './topAppBar/types';
 import { TooltipProvider } from './ui/tooltip';

@@ -229,6 +229,7 @@ describe('RootShell platform health UX', () => {
       expect(shellTopBar?.textContent).toContain('Raven');
       expect(shellTopBar?.textContent).toContain('Shell');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
+      expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
       expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');

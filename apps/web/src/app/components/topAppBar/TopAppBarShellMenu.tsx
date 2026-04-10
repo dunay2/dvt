@@ -8,8 +8,8 @@ import {
   TerminalSquare,
   User,
 } from 'lucide-react';
+import { topAppBarClasses } from '../shell/chrome';
 import type { TopAppBarCopy } from './copy';
-import { topAppBarClasses } from './styles';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {

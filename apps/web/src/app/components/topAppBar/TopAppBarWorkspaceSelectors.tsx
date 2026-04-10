@@ -1,5 +1,5 @@
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { topAppBarClasses } from './styles';
+import { topAppBarClasses } from '../shell/chrome';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type TopAppBarWorkspaceSelectorsProps = {

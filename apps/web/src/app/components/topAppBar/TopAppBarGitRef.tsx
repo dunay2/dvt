@@ -1,6 +1,6 @@
 import { GitBranch } from 'lucide-react';
+import { topAppBarClasses } from '../shell/chrome';
 import type { TopAppBarCopy } from './copy';
-import { topAppBarClasses } from './styles';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 type TopAppBarGitRefProps = {
