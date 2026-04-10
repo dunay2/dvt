@@ -1,0 +1,20 @@
+---
+id: R-20260410-PLANNER-KERNEL-DBT-INGRESS-LEAKAGE
+title: Shared planner kernel exposed DBT-native ingress alongside canonical graph admission
+status: Closed
+date: 2026-04-10
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  The planner public contract had already declared GenericGraphSourceV1 as the canonical ingress,
+  but it still exposed DBT-native caller shapes such as manifestRef and DBT-profile semantics in the
+  shared kernel boundary.
+resolution: >
+  Closed after planner admission became graphSource-only, manifest resolution moved to the API
+  compatibility boundary, and the kernel-facing PlannerFacade stopped resolving DBT-native ingress
+  directly.
+---

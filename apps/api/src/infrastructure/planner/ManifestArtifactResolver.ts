@@ -3,18 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath, URL } from 'node:url';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import type { DbtManifestRef, GenericGraphSourceV1 } from '@dvt/contracts';
-import {
-  PlannerErrorCode,
-  derivePlannerGraphSourceFromManifest,
-  type IGraphSourceResolver,
-} from '@dvt/planner';
+import type { GenericGraphSourceV1 } from '@dvt/contracts';
+import { PlannerErrorCode, derivePlannerGraphSourceFromManifest } from '@dvt/planner';
 
 import {
   formatManifestArtifactResolutionReason,
   ManifestArtifactResolutionError,
   MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND,
 } from '../../application/errors/ManifestArtifactResolutionError.js';
+import type { IPlannerCompatibilityResolver } from '../../application/ports/IPlannerCompatibilityResolver.js';
+import type { StartRunManifestRef } from '../../application/ports/startRunCommandContract.js';
 
 type S3LikeClient = Pick<S3Client, 'send'>;
 
@@ -23,7 +21,7 @@ export interface ManifestArtifactResolverOptions {
   readonly s3Client?: S3LikeClient;
 }
 
-export class ManifestArtifactResolver implements IGraphSourceResolver {
+export class ManifestArtifactResolver implements IPlannerCompatibilityResolver {
   private readonly nodeEnv: string;
   private readonly s3Client: S3LikeClient;
 
@@ -32,7 +30,7 @@ export class ManifestArtifactResolver implements IGraphSourceResolver {
     this.s3Client = options?.s3Client ?? new S3Client({});
   }
 
-  public async resolveGraphSource(ref: DbtManifestRef): Promise<GenericGraphSourceV1> {
+  public async resolveManifestRef(ref: StartRunManifestRef): Promise<GenericGraphSourceV1> {
     const uri = this.parseUri(ref.uri);
     const bytes = await this.readArtifactBytes(uri);
     this.assertSha256(bytes, ref.sha256);

@@ -48,7 +48,6 @@ export const VALID_PLANNER_INPUT_FIXTURE = {
   },
   environment: {
     environmentId: 'prod',
-    targetProfile: 'warehouse',
     vars: {
       full_refresh: false,
       threads: 4,
@@ -74,13 +73,9 @@ export const NO_SOURCE_PLANNER_INPUT_FIXTURE = {
   },
 };
 
-export const MULTI_SOURCE_PLANNER_INPUT_FIXTURE = {
+export const INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE = {
   ...VALID_PLANNER_INPUT_FIXTURE,
-  manifestRef: {
-    uri: 's3://acme-dbt-artifacts/prod/manifest.json',
-    sha256: HEX_64_A,
-    artifactId: 'manifest-prod-20260226',
-  },
+  graphSource: undefined,
 };
 
 export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
@@ -142,8 +137,15 @@ export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
 
 export const INVALID_PLANNER_INPUT_FIXTURE = {
   ...VALID_PLANNER_INPUT_FIXTURE,
-  manifestRef: {
-    uri: 's3://acme-dbt-artifacts/prod/manifest.json',
-    sha256: 'not-a-sha256',
+  graphSource: {
+    ...VALID_PLANNER_INPUT_FIXTURE.graphSource,
+    nodes: [
+      ...VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes,
+      {
+        nodeId: 'model.analytics.orders',
+        stepKind: 'DBT_MODEL',
+        dependsOn: [],
+      },
+    ],
   },
 };

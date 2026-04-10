@@ -8,6 +8,7 @@ import type {
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
+import type { IPlannerCompatibilityResolver } from '../application/ports/IPlannerCompatibilityResolver.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
@@ -23,6 +24,7 @@ export interface ProtectedRuntimeModule {
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;
   planner: IPlanner;
+  plannerCompatibilityResolver: IPlannerCompatibilityResolver;
   planStore: IPlanValidationLifecycleStore;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };

@@ -532,7 +532,6 @@ export const PlannerSelectionSchema = z
 export const PlannerEnvironmentContextSchema = z
   .object({
     environmentId: z.string().min(1).optional(),
-    targetProfile: z.string().min(1).optional(),
     vars: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
@@ -588,17 +587,6 @@ export const GenericGraphSourceV1Schema = z
   })
   .strict();
 
-export const DbtManifestRefSchema = z
-  .object({
-    uri: z
-      .string()
-      .min(1)
-      .regex(/^[a-z][a-z0-9+.-]*:\/\//i, 'uri must be an absolute URI'),
-    sha256: HexSha256Schema,
-    artifactId: z.string().min(1).optional(),
-  })
-  .strict();
-
 /**
  * Generic structural schema for an execution step.
  * stepTypeConfig is intentionally untyped here — per-kind validation is
@@ -622,7 +610,7 @@ export const ExecutionStepV1Schema = z
   })
   .strict();
 
-const ExecutionPlanObservabilitySchema = z
+export const PlannerObservabilitySchema = z
   .object({
     tags: z.record(z.string(), z.string()).optional(),
     extra: z.record(z.string(), z.unknown()).optional(),
@@ -654,7 +642,7 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
       plannerGitSha: z.string().length(40).optional(),
     })
     .strict(),
-  observability: ExecutionPlanObservabilitySchema,
+  observability: PlannerObservabilitySchema,
 }).strict();
 
 export const PLAN_CORE_VERSIONED_SCHEMAS = {
@@ -671,28 +659,14 @@ export const ExecutionPlanSchema = CurrentExecutionPlanV1Schema as z.ZodType<Exe
 
 export const PlannerInputEnvelopeV1Schema = z
   .object({
-    graphSource: GenericGraphSourceV1Schema.optional(),
-    manifestRef: DbtManifestRefSchema.optional(),
+    graphSource: GenericGraphSourceV1Schema,
     selection: PlannerSelectionSchema,
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
-    observability: ExecutionPlanObservabilitySchema,
+    observability: PlannerObservabilitySchema,
     requestedBy: z.string().min(1).optional(),
     requestId: z.string().min(1).optional(),
     requestedAtIso: z.string().min(1).optional(),
-  })
-  .superRefine((input, ctx) => {
-    const activeSources = [input.graphSource, input.manifestRef].filter(
-      (value) => value !== undefined
-    ).length;
-
-    if (activeSources !== 1) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'PlannerInputEnvelopeV1 requires exactly one active source: graphSource or manifestRef.',
-      });
-    }
   })
   .strict();
 
@@ -932,9 +906,9 @@ export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
 export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
+export type PlannerObservabilitySchemaT = z.infer<typeof PlannerObservabilitySchema>;
 export type GenericGraphNodeV1SchemaT = z.infer<typeof GenericGraphNodeV1Schema>;
 export type GenericGraphSourceV1SchemaT = z.infer<typeof GenericGraphSourceV1Schema>;
-export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
 export type ExecutionStepV1SchemaT = z.infer<typeof ExecutionStepV1Schema>;
 export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;
 export type ExecutionPlanSchemaT = z.infer<typeof ExecutionPlanSchema>;

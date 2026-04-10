@@ -206,9 +206,8 @@ export async function buildProtectedRuntimeModule(
     })
   );
   const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
-  const planner = new PlannerFacade({
-    graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: env.NODE_ENV }),
-  });
+  const plannerCompatibilityResolver = new GraphSourceArtifactResolver({ nodeEnv: env.NODE_ENV });
+  const planner = new PlannerFacade();
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
     adapters,
@@ -225,6 +224,7 @@ export async function buildProtectedRuntimeModule(
       retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
       delegate: new PlannerBackedStartRunUseCase({
         planner,
+        plannerCompatibilityResolver,
         planStore,
         validator: planValidator,
         compileTelemetry: startRunSlaTelemetry,
@@ -243,6 +243,7 @@ export async function buildProtectedRuntimeModule(
     startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,
     planner,
+    plannerCompatibilityResolver,
     planStore,
     planValidator,
     executablePlanResolver,

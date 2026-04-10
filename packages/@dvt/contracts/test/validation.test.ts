@@ -492,15 +492,9 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
-  it('throws ContractValidationError when planner input has more than one active source', () => {
+  it('throws ContractValidationError when planner input uses legacy manifestRef source', () => {
     expect(() =>
       parsePlannerInputEnvelopeV1({
-        graphSource: {
-          kind: 'generic-graph-v1',
-          sourceFamily: 'dbt',
-          sourceVersion: '1.0',
-          nodes: [{ nodeId: 'model.analytics.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
-        },
         manifestRef: {
           uri: 's3://bucket/manifest.json',
           sha256: 'a'.repeat(64),

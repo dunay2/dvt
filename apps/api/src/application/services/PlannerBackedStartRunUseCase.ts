@@ -2,7 +2,6 @@ import type {
   IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
-  GenericGraphSourceV1,
   PlannerInputEnvelopeV1,
   PlanRef,
 } from '@dvt/contracts';
@@ -13,6 +12,7 @@ import {
   mapManifestArtifactResolutionCause,
 } from '../errors/ManifestArtifactResolutionError.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
+import type { IPlannerCompatibilityResolver } from '../ports/IPlannerCompatibilityResolver.js';
 import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
 import {
   START_RUN_PLAN_REJECTION_CODE,
@@ -23,6 +23,7 @@ import type {
   PlanCompileLatencyOutcome,
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
@@ -34,6 +35,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
+      readonly plannerCompatibilityResolver?: IPlannerCompatibilityResolver;
       readonly planStore: IPlanValidationLifecycleStore;
       readonly validator: IPlanExecutabilityValidator;
       readonly delegate: IStartRunUseCase;
@@ -53,7 +55,12 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     const compileStartMs = Date.now();
     let compileOutcome: PlanCompileLatencyOutcome = 'error';
     try {
-      buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+      const plannerInput = await toPlannerInput(
+        command,
+        context,
+        this.deps.plannerCompatibilityResolver
+      );
+      buildResult = await this.deps.planner.buildPlan(plannerInput);
       compileOutcome = 'built';
     } catch (error) {
       const rejection = mapManifestResolutionFailure(error);
@@ -120,27 +127,33 @@ function toRoutePlanRef(
   };
 }
 
-function toPlannerInput(
+async function toPlannerInput(
   command: StartRunCommand,
-  context: AuthorizedCommandExecutionContext
-): PlannerInputEnvelopeV1 {
-  return {
-    ...(command.graphSource === undefined
-      ? {}
-      : { graphSource: toPlannerGraphSource(command.graphSource) }),
-    ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
-    ...(command.policies === undefined ? {} : { policies: command.policies }),
-    ...(command.environment === undefined ? {} : { environment: command.environment }),
-    ...(command.observability === undefined ? {} : { observability: command.observability }),
-    selection: { selectedNodeIds: command.selection },
-    requestedBy: context.principal.principalId,
-    requestId: context.requestId,
-    requestedAtIso: context.authorizedAt.toISOString(),
-  };
+  context: AuthorizedCommandExecutionContext,
+  resolver: IPlannerCompatibilityResolver | undefined
+): Promise<PlannerInputEnvelopeV1> {
+  return resolveCanonicalPlannerInputEnvelope(
+    {
+      ...(command.graphSource === undefined
+        ? {}
+        : { graphSource: toPlannerGraphSource(command.graphSource) }),
+      ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
+      ...(command.policies === undefined ? {} : { policies: command.policies }),
+      ...(command.environment === undefined ? {} : { environment: command.environment }),
+      ...(command.observability === undefined ? {} : { observability: command.observability }),
+      selection: { selectedNodeIds: command.selection },
+      requestedBy: context.principal.principalId,
+      requestId: context.requestId,
+      requestedAtIso: context.authorizedAt.toISOString(),
+    },
+    resolver
+  );
 }
 
-function toPlannerGraphSource(graphSource: StartRunCommand['graphSource']): GenericGraphSourceV1 {
-  const source = graphSource!;
+function toPlannerGraphSource(
+  graphSource: NonNullable<StartRunCommand['graphSource']>
+): NonNullable<PlannerInputEnvelopeV1['graphSource']> {
+  const source = graphSource;
   return {
     kind: source.kind,
     sourceFamily: source.sourceFamily,

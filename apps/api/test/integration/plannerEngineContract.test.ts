@@ -34,7 +34,7 @@ import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
 
-import { GraphSourceArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
+import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
 
 const PLANNER_MANIFEST_FIXTURE_URL = new URL(
   '../fixtures/planner/basic-manifest.json',
@@ -241,17 +241,17 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
-  it('PlannerFacade resolves manifestRef through the real API artifact resolver', async () => {
-    const planner = new PlannerFacade({
-      graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: 'test' }),
-    });
+  it('API compatibility resolver translates manifestRef before PlannerFacade runs', async () => {
+    const planner = new PlannerFacade();
+    const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
     const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
+    const graphSource = await resolver.resolveManifestRef({
+      uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+      sha256: sha256Hex(bytes),
+    });
 
     const { plan } = await planner.buildPlan({
-      manifestRef: {
-        uri: PLANNER_MANIFEST_FIXTURE_URL.href,
-        sha256: sha256Hex(bytes),
-      },
+      graphSource,
       selection: {
         selectedNodeIds: ['model.analytics.order_items'],
         includeUpstream: true,

@@ -20,7 +20,9 @@ import {
   mapManifestArtifactResolutionCause,
 } from '../../application/errors/ManifestArtifactResolutionError.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
+import type { IPlannerCompatibilityResolver } from '../../application/ports/IPlannerCompatibilityResolver.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import { resolveCanonicalPlannerInputEnvelope } from '../../application/services/resolveCanonicalPlannerInputEnvelope.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
@@ -42,6 +44,7 @@ type PlanRoutesDeps = {
   readonly authenticator: IAuthenticator;
   readonly authorizer: AuthorizeCommandScopeService;
   readonly planner: IPlanner;
+  readonly plannerCompatibilityResolver?: IPlannerCompatibilityResolver;
   readonly planStore: IPlanValidationLifecycleStore;
   readonly planValidator: IPlanExecutabilityValidator;
   readonly planResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
@@ -119,17 +122,23 @@ export async function previewPlanRoute(
     const requestedAtIso = authz.context.authorizedAt.toISOString();
     let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
     try {
+      const canonicalEnvelope = await resolveCanonicalPlannerInputEnvelope(
+        {
+          ...bindScopeToPlannerEnvelope(
+            plannerEnvelope.value,
+            routeContext,
+            provenance.value,
+            previewProfile.value
+          ),
+          selection: { selectedNodeIds: selection.value },
+          requestedBy: authz.context.principal.principalId,
+          requestId: request.id,
+          requestedAtIso,
+        },
+        deps.plannerCompatibilityResolver
+      );
       buildResult = await deps.planner.buildPlan({
-        ...bindScopeToPlannerEnvelope(
-          plannerEnvelope.value,
-          routeContext,
-          provenance.value,
-          previewProfile.value
-        ),
-        selection: { selectedNodeIds: selection.value },
-        requestedBy: authz.context.principal.principalId,
-        requestId: request.id,
-        requestedAtIso,
+        ...canonicalEnvelope,
       });
     } catch (error) {
       const manifestResolutionResponse = mapManifestResolutionFailure(error);

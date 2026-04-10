@@ -412,8 +412,9 @@ describe('planRoutes', () => {
     const reply = createReply();
     const deps = {
       ...okAuthDeps(),
-      planner: {
-        buildPlan: vi.fn(async () => {
+      planner: { buildPlan: vi.fn() },
+      plannerCompatibilityResolver: {
+        resolveManifestRef: vi.fn(async () => {
           throw new ManifestArtifactResolutionError(
             MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.integrityMismatch,
             'Manifest artifact integrity mismatch.',
@@ -463,6 +464,7 @@ describe('planRoutes', () => {
       },
     });
     expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
   });
 
   it('returns 422 when postgres transformation preview omits required provenance', async () => {
