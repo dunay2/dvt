@@ -2,7 +2,7 @@
 title: App Shell
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-10
 planning_type: architecture
 ---
 
@@ -48,6 +48,66 @@ composes typed service instances for views and plugins through hooks.
 This prevents route-level components from instantiating mode-aware services or
 reading `resolveDataSource()` directly.
 
+## Shell Navigation Ownership
+
+The left rail now follows the same boundary rule as the rest of the shell:
+
+- runtime capability data decides which plugin-contributed views are available;
+- the shell normalizes those runtime views into a render-ready navigation model;
+- the rail renders plain navigation items and does not know plugin manifest
+  structure, label resolution, or shell footer ownership.
+
+Current flow:
+
+```mermaid
+flowchart LR
+  Query["useCapabilitiesQuery()"] --> Runtime["useShellRuntime()"]
+  Runtime --> State["buildShellRuntimeState(capabilities)"]
+  State --> Views["getNavigationViews(capabilities)"]
+  Views --> Model["buildShellNavigationModel(navigationViews)"]
+  Model --> Primary["primaryItems"]
+  Model --> Footer["footerItems"]
+  Primary --> Rail["LeftNavigationRail"]
+  Footer --> Rail
+```
+
+Responsibility split:
+
+```mermaid
+flowchart TB
+  subgraph Runtime["Runtime-owned truth"]
+    Caps["Capabilities DTO"]
+    Reg["Plugin registry navigation views"]
+  end
+
+  subgraph Shell["Shell-owned normalization"]
+    State["buildShellRuntimeState"]
+    Model["buildShellNavigationModel"]
+    Footer["Shell footer items: Plugins, Admin"]
+  end
+
+  subgraph Render["Render-only rail"]
+    Rail["LeftNavigationRail"]
+    Link["NavLink + Tooltip"]
+  end
+
+  Caps --> State
+  Reg --> State
+  State --> Model
+  Footer --> Model
+  Model --> Rail
+  Rail --> Link
+```
+
+Rules for this seam:
+
+- `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
+  fixed shell footer item definitions;
+- plugin-contributed views become `primaryItems` inside the shell model;
+- shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
+- the rail consumes render-ready `{ to, label, icon }` items and stays focused
+  on navigation chrome and routing behavior.
+
 ## UX Rules
 
 - the top bar stays visible across all routed views;
@@ -76,13 +136,13 @@ reading `resolveDataSource()` directly.
 The shell already exists in working form. The missing step is to turn implicit
 composition into explicit primitives.
 
-| Target primitive      | Current anchor                                                                                                                                               | Decision                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `AppShellFrame`       | [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                                                                                                       | extract the current shell composition instead of rewriting it             |
-| `ShellTopBar`         | [`TopAppBar.tsx`](../../../../../apps/web/src/app/components/TopAppBar.tsx)                                                                                  | keep the global context behavior, narrow the contract, and token-clean it |
-| `LeftNavigationRail`  | [`LeftNavigation.tsx`](../../../../../apps/web/src/app/components/LeftNavigation.tsx)                                                                        | keep plugin routing logic, normalize shell chrome and labels              |
-| `ShellHealthBanner`   | [`ShellHealthBanner.tsx`](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                  | keep and restyle through semantic tokens                                  |
-| `BottomConsoleDrawer` | [`Console.tsx`](../../../../../apps/web/src/app/components/Console.tsx) plus `ResizablePanelGroup` in [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx) | keep the drawer pattern, harden content model later                       |
+| Target primitive      | Current anchor                                                                                                                                                                        | Decision                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `AppShellFrame`       | [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                                                                                                                                | extract the current shell composition instead of rewriting it             |
+| `ShellTopBar`         | [`TopAppBar.tsx`](../../../../../apps/web/src/app/components/TopAppBar.tsx)                                                                                                           | keep the global context behavior, narrow the contract, and token-clean it |
+| `LeftNavigationRail`  | [`LeftNavigation.tsx`](../../../../../apps/web/src/app/components/LeftNavigation.tsx) plus [`shellNavigationModel.ts`](../../../../../apps/web/src/app/shell/shellNavigationModel.ts) | keep render-only rail plus shell-owned navigation model                   |
+| `ShellHealthBanner`   | [`ShellHealthBanner.tsx`](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                                           | keep and restyle through semantic tokens                                  |
+| `BottomConsoleDrawer` | [`Console.tsx`](../../../../../apps/web/src/app/components/Console.tsx) plus `ResizablePanelGroup` in [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                          | keep the drawer pattern, harden content model later                       |
 
 ## Shell Organization Rules
 
