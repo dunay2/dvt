@@ -7,7 +7,7 @@ import {
   usePlatformHealthSnapshotQuery,
 } from '../capabilities/platform-health';
 
-import Console from './components/Console';
+import BottomConsoleDrawer from './components/Console';
 import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
@@ -64,7 +64,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
   return (
     <AppShellFrame
-      bottomDrawer={<Console />}
+      bottomDrawer={<BottomConsoleDrawer />}
       focusMode={focusMode}
       healthBanner={
         <ShellHealthBanner

@@ -1656,7 +1656,8 @@ tasks:
       shell layout itself now lives in an explicit `AppShellFrame` instead of remaining embedded in
       `Root.tsx`, while preserving focus-mode rail hiding and bottom-console drawer ownership.
       Root-shell characterization now covers top-bar presence, navigation order, focus-mode rail
-      hiding, stable shell-control seams, and frame-owned console rendering. Remaining work is
+      hiding, stable shell-control seams, frame-owned console rendering, and a shell-owned bottom
+      drawer state model for `idle`, `loading`, and `streaming` console states. Remaining work is
       broader panel, table, Canvas, and deeper Monaco convergence across the rest of the operator
       path.
     definition_of_done:

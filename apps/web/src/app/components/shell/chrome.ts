@@ -24,3 +24,17 @@ export const leftNavigationRailClasses = {
     'border-[color:var(--status-running)] bg-[var(--surface-selected)] text-[var(--text-strong)]',
   icon: 'size-[18px] shrink-0',
 };
+
+export const bottomConsoleDrawerClasses = {
+  drawer:
+    'flex h-full flex-col border-t border-[color:var(--border-default)] bg-[var(--surface-shell)] text-[var(--text-default)]',
+  header:
+    'flex items-center justify-between border-b border-[color:var(--border-default)] px-4 py-2',
+  headerMain: 'flex items-center gap-2',
+  titleIcon: 'size-4 text-[var(--text-subtle)]',
+  title: 'text-sm font-medium text-[var(--text-strong)]',
+  closeButton: 'size-6 text-[var(--text-subtle)] hover:text-[var(--text-strong)]',
+  body: 'flex min-h-0 flex-1',
+  bodyMessage:
+    'flex h-full w-full items-center justify-center px-4 text-center text-sm text-[var(--text-subtle)]',
+};

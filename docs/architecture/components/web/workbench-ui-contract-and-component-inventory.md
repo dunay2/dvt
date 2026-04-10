@@ -2,7 +2,7 @@
 title: Workbench UI Contract And Component Inventory
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-10
 planning_type: architecture
 ---
 
@@ -133,7 +133,7 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | `RouteToolbar`        | Standard route command bar                                                | Needed as explicit shared primitive |
 | `ContextPanel`        | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
 | `PrimarySurfaceFrame` | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
-| `BottomConsoleDrawer` | Shared shell console surface                                              | Current, needs product hardening    |
+| `BottomConsoleDrawer` | Shared shell console surface                                              | Current, content model now explicit |
 | `AppIcon`             | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
 | `LoadingState`        | Standard loading treatment                                                | Needed as reusable primitive        |
 | `EmptyState`          | Standard empty treatment                                                  | Needed as reusable primitive        |
@@ -166,19 +166,37 @@ Its active contract is:
 - left or right contextual panels are not part of the current primitive and
   remain future work under `ContextPanel` and route-toolbar extraction.
 
-| Target primitive                                                             | Current implementation                                                                                                                                              | Reuse decision                     | Current gap                                                                               |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
-| `AppShellFrame`                                                              | [`AppShellFrame.tsx`](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [`Root.tsx`](../../../../apps/web/src/app/Root.tsx)                     | Reuse within the v1 shell contract | shell frame exists, but console product hardening and richer frame API remain future work |
-| `ShellTopBar`                                                                | [`TopAppBar.tsx`](../../../../apps/web/src/app/components/TopAppBar.tsx) plus shell controls under `components/shell/*`                                             | Reuse core behavior                | shell ownership is aligned, but the top-bar composition still needs a deeper split        |
-| `ShellHealthBanner`                                                          | [`ShellHealthBanner.tsx`](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                            | Reuse as-is with styling cleanup   | still directly styled per component                                                       |
-| `LeftNavigationRail`                                                         | [`LeftNavigation.tsx`](../../../../apps/web/src/app/components/LeftNavigation.tsx) plus shell navigation model under `apps/web/src/app/shell/*`                     | Reuse plugin-aware routing logic   | route badges and richer unavailable-state treatment still need a shared navigation state  |
-| `BottomConsoleDrawer`                                                        | [`AppShellFrame.tsx`](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [`Console.tsx`](../../../../apps/web/src/app/components/Console.tsx)    | Reuse layout pattern               | live streaming and product-ready console states are not hardened yet                      |
-| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                  | Use as the first extraction source | other routes still hand-build headers instead of using one toolbar primitive              |
-| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                           | Reuse within the v1 frame contract | side panels, shared route toolbars, and richer shell extraction remain future primitives  |
-| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) | Reuse panel behavior and content   | panel frame, header, collapse affordance, and scroll treatment are duplicated             |
-| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                   | Missing shared primitive           | each route owns its own surface chrome and spacing                                        |
-| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | partial ad hoc states in [`RunStates.tsx`](../../../../apps/web/src/app/views/runs/RunStates.tsx) and inline route markup                                           | Missing reusable primitives        | route states are inconsistent and mostly text-plus-card implementations                   |
-| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                               | Missing shared wrapper             | size, stroke, semantic color, and accessibility are not standardized                      |
+Shell-specific current fit:
+
+- `AppShellFrame`
+  Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Root.tsx](../../../../apps/web/src/app/Root.tsx)
+  Reuse decision: reuse within the v1 shell contract.
+  Current gap: shell frame exists, but console product hardening and richer frame API remain future work.
+- `ShellTopBar`
+  Current implementation: [TopAppBar.tsx](../../../../apps/web/src/app/components/TopAppBar.tsx) plus shell controls under `components/shell/*`
+  Reuse decision: reuse core behavior.
+  Current gap: shell ownership is aligned, but the top-bar composition still needs a deeper split.
+- `ShellHealthBanner`
+  Current implementation: [ShellHealthBanner.tsx](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
+  Reuse decision: reuse as-is with styling cleanup.
+  Current gap: still directly styled per component.
+- `LeftNavigationRail`
+  Current implementation: [LeftNavigation.tsx](../../../../apps/web/src/app/components/LeftNavigation.tsx) plus shell navigation model under `apps/web/src/app/shell/*`
+  Reuse decision: reuse plugin-aware routing logic.
+  Current gap: route badges and richer unavailable-state treatment still need a shared navigation state.
+- `BottomConsoleDrawer`
+  Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Console.tsx](../../../../apps/web/src/app/components/Console.tsx) and [bottomConsoleDrawerModel.ts](../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+  Reuse decision: reuse the layout pattern and explicit state model.
+  Current gap: typed live-log semantics and richer terminal-grade product states remain future work.
+
+| Target primitive                                                             | Current implementation                                                                                                                                              | Reuse decision                     | Current gap                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                  | Use as the first extraction source | other routes still hand-build headers instead of using one toolbar primitive             |
+| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                           | Reuse within the v1 frame contract | side panels, shared route toolbars, and richer shell extraction remain future primitives |
+| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) | Reuse panel behavior and content   | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
+| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                   | Missing shared primitive           | each route owns its own surface chrome and spacing                                       |
+| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | partial ad hoc states in [`RunStates.tsx`](../../../../apps/web/src/app/views/runs/RunStates.tsx) and inline route markup                                           | Missing reusable primitives        | route states are inconsistent and mostly text-plus-card implementations                  |
+| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                               | Missing shared wrapper             | size, stroke, semantic color, and accessibility are not standardized                     |
 
 ## Reuse, Extract, Retire
 

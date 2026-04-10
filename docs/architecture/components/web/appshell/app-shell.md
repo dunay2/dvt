@@ -25,6 +25,8 @@ Primary code anchors:
 - [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
+- [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
+- [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
 
 Current shell regions:
 
@@ -102,6 +104,24 @@ flowchart TB
   Rail --> Link
 ```
 
+## Bottom Console Drawer Ownership
+
+The bottom drawer now follows the same separation rule as the rest of the shell:
+
+- shell copy and shell chrome stay in shell-owned modules;
+- the drawer resolves a small, explicit state model before rendering;
+- the render surface stays focused on header, badges, close action, and body slot ownership.
+
+Current state model:
+
+```mermaid
+flowchart LR
+  Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomConsoleDrawerModel(...)"]
+  Model --> Idle["idle: empty-state guidance"]
+  Model --> Loading["loading: run badge + loading copy"]
+  Model --> Streaming["streaming: run badge + xterm surface"]
+```
+
 Rules for this seam:
 
 - `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
@@ -131,21 +151,29 @@ Rules for this seam:
 - the shell store still carries too much non-shell state through `appStore.ts`;
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
-- the console drawer exists as a shell primitive, but the product-level console
-  story is not yet fully hardened.
+- the console drawer now has an explicit shell-owned content model, but richer
+  live-stream semantics and typed log states remain future work.
 
 ## Current-To-Target Mapping
 
 The shell already exists in working form. The current step is to keep making
 the extracted primitives honest and small.
 
-| Target primitive      | Current anchor                                                                                                                                                                        | Decision                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `AppShellFrame`       | [`AppShellFrame.tsx`](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                                 | keep the extracted shell frame small and behavior-preserving              |
-| `ShellTopBar`         | [`TopAppBar.tsx`](../../../../../apps/web/src/app/components/TopAppBar.tsx)                                                                                                           | keep the global context behavior, narrow the contract, and token-clean it |
-| `LeftNavigationRail`  | [`LeftNavigation.tsx`](../../../../../apps/web/src/app/components/LeftNavigation.tsx) plus [`shellNavigationModel.ts`](../../../../../apps/web/src/app/shell/shellNavigationModel.ts) | keep render-only rail plus shell-owned navigation model                   |
-| `ShellHealthBanner`   | [`ShellHealthBanner.tsx`](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                                           | keep and restyle through semantic tokens                                  |
-| `BottomConsoleDrawer` | [`Console.tsx`](../../../../../apps/web/src/app/components/Console.tsx) rendered through [`AppShellFrame.tsx`](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)    | keep the drawer pattern, harden content model later                       |
+- `AppShellFrame`
+  Current anchor: [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Root.tsx](../../../../../apps/web/src/app/Root.tsx)
+  Decision: keep the extracted shell frame small and behavior-preserving.
+- `ShellTopBar`
+  Current anchor: [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
+  Decision: keep the global context behavior, narrow the contract, and token-clean it.
+- `LeftNavigationRail`
+  Current anchor: [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx) plus [shellNavigationModel.ts](../../../../../apps/web/src/app/shell/shellNavigationModel.ts)
+  Decision: keep a render-only rail plus a shell-owned navigation model.
+- `ShellHealthBanner`
+  Current anchor: [ShellHealthBanner.tsx](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
+  Decision: keep and restyle through semantic tokens.
+- `BottomConsoleDrawer`
+  Current anchor: [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx) plus [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+  Decision: keep the drawer pattern, with a shell-owned state model and future log hardening.
 
 ## Shell Organization Rules
 

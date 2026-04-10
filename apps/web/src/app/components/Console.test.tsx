@@ -1,25 +1,52 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppServicesProvider } from '../services/AppServicesContext';
-import Console from './Console';
+import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import BottomConsoleDrawer from './Console';
+
+const consoleLogStreamState = {
+  lines: [] as string[],
+  isLoading: false,
+  runId: undefined as string | undefined,
+};
 
 vi.mock('./console/useConsoleLogStream', () => ({
-  useConsoleLogStream: () => ({
-    lines: [],
-    isLoading: false,
-    runId: undefined,
-  }),
+  useConsoleLogStream: () => consoleLogStreamState,
 }));
 
-describe('Console copy by data-source mode', () => {
+vi.mock('./console/XtermConsole', () => ({
+  default: ({ lines }: { lines: string[] }) => (
+    <div data-testid="xterm-console">{lines.join('\n')}</div>
+  ),
+}));
+
+describe('BottomConsoleDrawer', () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
+    consoleLogStreamState.lines = [];
+    consoleLogStreamState.isLoading = false;
+    consoleLogStreamState.runId = undefined;
+    useUiLayoutStore.setState({
+      leftNavCollapsed: false,
+      explorerPanelWidth: 280,
+      explorerPanelVisible: false,
+      inspectorPanelWidth: 380,
+      inspectorPanelVisible: false,
+      consolePanelHeight: 160,
+      consolePanelVisible: true,
+      focusMode: false,
+      gridSize: 20,
+      activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
+      activeTabId: 'main-canvas',
+      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
+    });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -39,25 +66,78 @@ describe('Console copy by data-source mode', () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={{ mode: 'api' }}>
-          <Console />
+          <BottomConsoleDrawer />
         </AppServicesProvider>
       );
     });
 
-    expect(document.body.textContent).toContain(
+    expect(
+      document.body.querySelector('[data-slot="bottom-console-drawer-idle"]')?.textContent
+    ).toContain(
       'Start a run to see run events here. Live log streaming is not available in API mode yet.'
     );
+    expect(
+      document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')
+    ).toBeNull();
   });
 
-  it('shows generic execution copy in mock mode', async () => {
+  it('shows loading state with run and mode badges', async () => {
+    consoleLogStreamState.isLoading = true;
+    consoleLogStreamState.runId = 'run-42';
+
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={{ mode: 'mock' }}>
-          <Console />
+          <BottomConsoleDrawer />
         </AppServicesProvider>
       );
     });
 
-    expect(document.body.textContent).toContain('Start a run to see execution output here.');
+    expect(
+      document.body.querySelector('[data-slot="bottom-console-drawer-loading"]')?.textContent
+    ).toContain('Loading run events...');
+    expect(
+      document.body.querySelector('[data-slot="bottom-console-drawer-run-badge"]')?.textContent
+    ).toContain('Run run-42');
+    expect(
+      document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')?.textContent
+    ).toContain('Mock');
+  });
+
+  it('renders the terminal when the stream is ready', async () => {
+    consoleLogStreamState.lines = ['step: started', 'step: finished'];
+    consoleLogStreamState.runId = 'run-42';
+
+    await act(async () => {
+      root.render(
+        <AppServicesProvider overrides={{ mode: 'mock' }}>
+          <BottomConsoleDrawer />
+        </AppServicesProvider>
+      );
+    });
+
+    expect(document.body.querySelector('[data-slot="bottom-console-drawer-stream"]')).toBeTruthy();
+    expect(document.body.querySelector('[data-testid="xterm-console"]')?.textContent).toContain(
+      'step: started'
+    );
+  });
+
+  it('closes the drawer by hiding it in the layout store', async () => {
+    await act(async () => {
+      root.render(
+        <AppServicesProvider overrides={{ mode: 'mock' }}>
+          <BottomConsoleDrawer />
+        </AppServicesProvider>
+      );
+    });
+
+    const closeButton = document.body.querySelector<HTMLButtonElement>(
+      '[data-slot="bottom-console-drawer-close"]'
+    );
+
+    expect(closeButton).toBeTruthy();
+    fireEvent.click(closeButton!);
+    expect(useUiLayoutStore.getState().consolePanelHeight).toBe(0);
+    expect(useUiLayoutStore.getState().consolePanelVisible).toBe(false);
   });
 });
