@@ -1,3 +1,4 @@
+import { asIsoUtcString } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
@@ -54,7 +55,7 @@ describe('SignalRunUseCase', () => {
     const useCase = new SignalRunUseCase(
       engine as never,
       stateStore as never,
-      () => '2026-03-19T00:00:00.000Z'
+      () => asIsoUtcString('2026-03-19T00:00:00.000Z')
     );
 
     await expect(

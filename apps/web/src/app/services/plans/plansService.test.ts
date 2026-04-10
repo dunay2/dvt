@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiClient } from '../api/createApiClient';
-import type { PlanRef } from '../../types/engine';
+import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { createPlansService } from './plansService';
 
 const VALID_GRAPH_SOURCE = {
@@ -31,14 +31,14 @@ function buildValidContractPlan(): Readonly<Record<string, unknown>> {
   } as const;
 }
 
-function buildValidPlanRef(): PlanRef {
-  return {
+function buildValidPlanRef() {
+  return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     sha256: 'b'.repeat(64),
     schemaVersion: 'v1.2',
     planId: 'b'.repeat(64),
     planVersion: 'v1',
-  } as const;
+  });
 }
 
 function buildApiClientStub(overrides: Partial<ApiClient> = {}): ApiClient {
@@ -64,13 +64,12 @@ describe('createPlansService', () => {
       graphSource: VALID_GRAPH_SOURCE,
       selectedNodeIds: ['node_1'],
       persist: true,
-      context: {
-        runId: 'run-1',
+      context: makeRunContext('run-1', {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
         targetAdapter: 'mock',
-      },
+      }),
     });
 
     expect(plan.planId).toBeTypeOf('string');
@@ -115,13 +114,12 @@ describe('createPlansService', () => {
       graphSource: VALID_GRAPH_SOURCE,
       selectedNodeIds: ['node_1'],
       persist: true,
-      context: {
-        runId: 'run-1',
+      context: makeRunContext('run-1', {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
         targetAdapter: 'temporal',
-      },
+      }),
     });
 
     expect(plan.planRef).toEqual(buildValidPlanRef());
@@ -172,13 +170,12 @@ describe('createPlansService', () => {
         graphSource: VALID_GRAPH_SOURCE,
         selectedNodeIds: ['node_1'],
         persist: true,
-        context: {
-          runId: 'run-1',
+        context: makeRunContext('run-1', {
           tenantId: 't1',
           projectId: 'p1',
           environmentId: 'e1',
           targetAdapter: 'temporal',
-        },
+        }),
       })
     ).rejects.toThrow('Invalid plans payload: expected { plan, planRef }');
   });
@@ -197,13 +194,12 @@ describe('createPlansService', () => {
         postJson: postJsonMock as ApiClient['postJson'],
       })
     );
-    const context = {
-      runId: 'run-1',
+    const context = makeRunContext('run-1', {
       tenantId: 't1',
       projectId: 'p1',
       environmentId: 'e1',
-      targetAdapter: 'temporal' as const,
-    };
+      targetAdapter: 'temporal',
+    });
 
     const plan = await service.importPlan(buildValidPlanRef(), context);
 
@@ -230,11 +226,12 @@ describe('createPlansService', () => {
 
     await expect(
       service.importPlan(buildValidPlanRef(), {
-        runId: 'run-1',
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        targetAdapter: 'temporal',
+        ...makeRunContext('run-1', {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          targetAdapter: 'temporal',
+        }),
       })
     ).rejects.toThrow('Invalid plans payload: expected { plan, planRef }');
   });

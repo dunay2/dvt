@@ -1,3 +1,5 @@
+import { asIsoUtcString, asNonBlankString, asStepId } from '@dvt/contracts';
+
 import { mockRun } from '../../data/mockDbtData';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
@@ -90,17 +92,17 @@ function buildMockRunEvents(
         eventId: event.id,
         eventType: mapMockEventType(event.type),
         runId,
-        emittedAt: event.timestamp,
-        tenantId,
-        projectId,
-        environmentId,
+        emittedAt: asIsoUtcString(event.timestamp),
+        tenantId: asNonBlankString(tenantId),
+        projectId: asNonBlankString(projectId),
+        environmentId: asNonBlankString(environmentId),
         planId: mockRun.planId,
         planVersion: '1.0.0',
         engineAttemptId: 1,
         logicalAttemptId: 1,
         idempotencyKey: `${runId}-${event.id}`,
         payloadVersion: 1,
-        stepId: event.stepId ?? 'step_runtime',
+        stepId: asStepId(event.stepId ?? 'step_runtime'),
         payload: event.nodeId
           ? {
               nodeId: event.nodeId,
@@ -108,7 +110,7 @@ function buildMockRunEvents(
             }
           : undefined,
         runSeq: index + 1,
-        persistedAt: event.timestamp,
+        persistedAt: asIsoUtcString(event.timestamp),
       };
     }),
   };
@@ -127,14 +129,14 @@ export function createMockRunsService(
     startRun: async (input) => {
       const base = {
         tenantId: input.context.tenantId,
-        workflowId: `wf_${input.context.runId}`,
+        workflowId: asNonBlankString(`wf_${input.context.runId}`),
         runId: input.context.runId,
       };
 
       if (input.context.targetAdapter === 'temporal') {
         return {
           provider: 'temporal',
-          namespace: 'default',
+          namespace: asNonBlankString('default'),
           ...base,
         };
       }
@@ -142,7 +144,7 @@ export function createMockRunsService(
       if (input.context.targetAdapter === 'conductor') {
         return {
           provider: 'conductor',
-          conductorUrl: 'http://localhost:8080',
+          conductorUrl: asNonBlankString('http://localhost:8080'),
           ...base,
         };
       }
