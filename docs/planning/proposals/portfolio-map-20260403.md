@@ -22,6 +22,7 @@ planning_type: proposal
 - [Doc-Driven Framework And Tooling Plan](./mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [MW-A2 GenericGraphSource plan](./mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+- [Planner kernel DBT boundary extraction follow-up 2026-04-10](./mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
 - [MW-C1 to TF-C2 runtime vertical sequence analysis](./mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md)
 - [Runtime hardening, shared-kernel, and operations roadmap](./mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
 - [Transformation Flow Proposal Set](./mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)

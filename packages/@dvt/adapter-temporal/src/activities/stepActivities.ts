@@ -8,7 +8,12 @@
  * @version 1.1.0
  * @date 2026-03-07
  */
-import { parsePlanRef, parseResolvedRunContext, RUN_EVENT_PAYLOAD_VERSION } from '@dvt/contracts';
+import {
+  asStepId,
+  parsePlanRef,
+  parseResolvedRunContext,
+  RUN_EVENT_PAYLOAD_VERSION,
+} from '@dvt/contracts';
 import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
@@ -264,6 +269,7 @@ export function createActivities(
       const ctx = parseResolvedRunContext(input.ctx);
       const validatedPlanRef = parsePlanRef(input.planRef);
       const { eventType, stepId, payload } = input;
+      const validatedStepId = stepId === undefined ? undefined : asStepId(stepId);
 
       const engineAttemptId =
         typeof deps.getEngineAttemptId === 'function'
@@ -284,7 +290,7 @@ export function createActivities(
         runId: ctx.runId,
         planId: validatedPlanRef.planId,
         planVersion: validatedPlanRef.planVersion,
-        ...(stepId === undefined ? {} : { stepId }),
+        ...(validatedStepId === undefined ? {} : { stepId: validatedStepId }),
         engineAttemptId,
         logicalAttemptId,
         idempotencyKey: deps.idempotency.runEventKey({
@@ -294,7 +300,7 @@ export function createActivities(
           logicalAttemptId,
           planId: validatedPlanRef.planId,
           planVersion: validatedPlanRef.planVersion,
-          ...(stepId === undefined ? {} : { stepId }),
+          ...(validatedStepId === undefined ? {} : { stepId: validatedStepId }),
         }),
       };
       const envelope: EventInput =

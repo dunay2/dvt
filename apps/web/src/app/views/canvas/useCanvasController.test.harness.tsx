@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 import { AppServicesProvider } from '../../services/AppServicesContext';
+import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import { useCanvasController } from './useCanvasController';
 import {
   configureDefaultCanvasHarnessMocks,
@@ -77,12 +78,13 @@ const state = vi.hoisted(() => ({
     runsService: {
       listRunSummaries: vi.fn(async () => []),
       getRunSnapshot: vi.fn(async () => null),
-      startRun: vi.fn(async () => ({
-        provider: 'mock' as const,
-        tenantId: 'tenant-a',
-        workflowId: 'workflow_ui_1',
-        runId: 'run_ui_1',
-      })),
+      startRun: vi.fn(async () =>
+        makeMockRunRef({
+          tenantId: 'tenant-a',
+          workflowId: 'workflow_ui_1',
+          runId: 'run_ui_1',
+        })
+      ),
       listRunEvents: vi.fn(async () => ({ events: [] })),
     },
     sessionContext: {
@@ -99,13 +101,13 @@ const state = vi.hoisted(() => ({
         targetAdapter: 'mock' as const,
       }),
       subscribeWorkspaceScope: () => () => undefined,
-      buildRunContext: (runId: string) => ({
-        tenantId: 'tenant-a',
-        projectId: 'project-a',
-        environmentId: 'dev',
-        targetAdapter: 'mock' as const,
-        runId,
-      }),
+      buildRunContext: (runId: string) =>
+        makeRunContext(runId, {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+          targetAdapter: 'mock',
+        }),
     },
     shellFeedback: {
       success: vi.fn(),

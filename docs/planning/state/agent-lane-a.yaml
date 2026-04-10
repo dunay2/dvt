@@ -413,6 +413,29 @@ tasks:
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
     last_verified: '2026-04-02'
+  - task_id: RC-G1-D-A
+    parent_task: RC-G1-D
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    objective: >-
+      remove DBT-specific planner ingress concepts from the shared kernel and keep DBT-native source
+      input behind an adapter or plugin boundary.
+    dependency: RC-G1-C
+    target: >-
+      `GenericGraphSourceV1` remains the only canonical planner ingress, `DbtManifestRef` and dbt
+      profile inputs leave the shared planner contract, and runtime helpers consume only narrow
+      generic facts instead of dbt config width.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md
+      - docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md
+    status_reason: >-
+      GenericGraphSource is already canonical, but DBT-specific ingress and helper-level parsing
+      drift still remain as a queued shared-kernel cleanup slice.
+    last_verified: '2026-04-10'
   - task_id: GOV-S1
     priority: P2
     status: done

@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { createDefaultStepTypeRegistry } from '@dvt/contracts';
+import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -116,7 +116,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: () => new Date().toISOString(),
+    now: () => asIsoUtcString(new Date().toISOString()),
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -153,7 +153,7 @@ export async function buildProtectedRuntimeModule(
     fetcher: planStore,
     stepTypeRegistry,
   });
-  const systemClock = { nowIsoUtc: () => new Date().toISOString() };
+  const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,

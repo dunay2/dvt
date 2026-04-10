@@ -5,6 +5,7 @@ import {
   RunAlreadyExistsError,
   UnsupportedPlanVersionError,
 } from '@dvt/engine';
+import { asNonBlankString } from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';
@@ -167,11 +168,11 @@ describe('EngineStartRunUseCase', () => {
       {
         ...mkCommand(),
         runExecutionContextRef: {
-          uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
-          sha256: 'ctxsha',
-          schemaVersion: 'v1.0',
-          planId: PLAN_REF.planId,
-          planVersion: PLAN_REF.planVersion,
+          uri: asNonBlankString('dvt-runctx://tenant-1/run-test-1/context.json'),
+          sha256: asNonBlankString('ctxsha'),
+          schemaVersion: asNonBlankString('v1.0'),
+          planId: asNonBlankString(PLAN_REF.planId),
+          planVersion: asNonBlankString(PLAN_REF.planVersion),
         },
       },
       mkContext()

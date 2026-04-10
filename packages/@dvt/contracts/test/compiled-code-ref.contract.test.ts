@@ -172,6 +172,24 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     ).toThrow();
   });
 
+  it('rejects step events whose stepId is only whitespace', () => {
+    expect(() =>
+      parseRunEventWrite({
+        ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
+        stepId: '   ',
+      })
+    ).toThrow();
+  });
+
+  it('rejects write envelopes whose emittedAt is only whitespace', () => {
+    expect(() =>
+      parseRunEventWrite({
+        ...STEP_STARTED_WITH_COMPILED_CODE_REF_WRITE_FIXTURE,
+        emittedAt: '   ',
+      })
+    ).toThrow();
+  });
+
   it('rejects RunFailed payloads that do not expose a reason', () => {
     expect(() =>
       parseRunEventWrite({
@@ -280,6 +298,30 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
       reason: 'SINK_WRITE_FAILED',
       message: 'duplicate key value violates unique constraint',
     });
+  });
+
+  it('rejects StepFailed payloads whose reason is only whitespace', () => {
+    expect(() =>
+      parseRunEventWrite({
+        eventId: 'evt-step-failed-blank-reason',
+        eventType: 'StepFailed',
+        payloadVersion: 1,
+        emittedAt: '2026-03-07T10:00:05.000Z',
+        runId: 'run-compiled-code-ref-1',
+        tenantId: 'tenant-a',
+        projectId: 'project-analytics',
+        environmentId: 'prod',
+        planId: 'plan-compiled-code-ref-1',
+        planVersion: '1.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        stepId: 'model.analytics.orders',
+        idempotencyKey: 'StepFailed|tenant-a|run-compiled-code-ref-1|1|blank-reason',
+        payload: {
+          reason: '   ',
+        },
+      })
+    ).toThrow();
   });
 
   it('rejects RunFailed write events with unknown reasons', () => {

@@ -21,6 +21,7 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
+import type { MaterializationEvidence } from '@dvt/contracts';
 import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpreter';
 import {
   ActivityFailure,
@@ -62,15 +63,7 @@ type ExecutedStepResult = {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
   gatewayDecision?: boolean;
-  resultEvidence?: {
-    executor: 'postgres' | 'dbt';
-    environmentId: string;
-    sinkTable: string;
-    rowsWritten: number;
-    startedAt: string;
-    completedAt: string;
-    durationMs: number;
-  };
+  resultEvidence?: MaterializationEvidence;
   failureReason?: string;
   retriable?: boolean;
   error?: string;

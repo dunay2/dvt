@@ -7,6 +7,7 @@ import type { IWorkspacePort } from '../ports/workspace';
 import type { IRunsPort } from '../ports/runs';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useExecutionStore } from '../stores/executionStore';
+import { makeMockRunRef } from '../testing/contractTestUtils';
 import type { Run } from '../types/dbt';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import CostView from './CostView';
@@ -105,12 +106,12 @@ function buildRunsService(overrides?: Partial<IRunsPort>): IRunsPort {
       },
     ],
     getRunSnapshot: async () => null,
-    startRun: async () => ({
-      provider: 'mock',
-      tenantId: 'tenant-1',
-      workflowId: 'workflow-1',
-      runId: 'run_1',
-    }),
+    startRun: async () =>
+      makeMockRunRef({
+        tenantId: 'tenant-1',
+        workflowId: 'workflow-1',
+        runId: 'run_1',
+      }),
     listRunEvents: async () => ({ events: [] }),
     ...overrides,
   };

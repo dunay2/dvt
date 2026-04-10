@@ -9,7 +9,7 @@ describe('StartRunEventFactory provider ref preservation', () => {
     clock: { nowIsoUtc: () => '2026-04-09T00:00:00.000Z' },
   });
 
-  it('preserves an explicit empty providerTaskQueue in run metadata', () => {
+  it('omits temporal taskQueue when it is not supplied', () => {
     const metadata = factory.buildRunMetadata(
       {
         tenantId: 't',
@@ -33,18 +33,18 @@ describe('StartRunEventFactory provider ref preservation', () => {
         namespace: 'default',
         workflowId: 'wf-run-1',
         runId: 'provider-run-1',
-        taskQueue: '',
       },
       '2026-04-09T00:00:00.000Z'
     );
 
-    expect(metadata).toMatchObject({
-      providerRef: {
-        provider: 'temporal',
-        namespace: 'default',
-        taskQueue: '',
-      },
+    expect(metadata.providerRef).toEqual({
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'default',
+      workflowId: 'wf-run-1',
+      runId: 'provider-run-1',
     });
+    expect(metadata.providerRef).not.toHaveProperty('taskQueue');
   });
 
   it('persists provider-specific fields inside the discriminated providerRef', () => {

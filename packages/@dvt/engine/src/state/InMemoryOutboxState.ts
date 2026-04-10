@@ -2,12 +2,15 @@ import { createHash } from 'node:crypto';
 
 import {
   MAX_OUTBOX_ATTEMPTS,
+  asIsoUtcString,
+  epochMsToIsoUtc,
   type IsoUtcString,
   type DeadLetterRecord,
   type EventEnvelope,
   type IOutboxStorage,
   type OutboxClaimSelection,
   type OutboxRecord,
+  parseIsoUtcToEpochMs,
 } from '@dvt/contracts';
 
 type ReplayDeadLetterOptions = {
@@ -26,7 +29,9 @@ interface PersistedDeadLetterRecord extends DeadLetterRecord {
 }
 
 export class InMemoryOutboxState implements IOutboxStorage {
-  private static readonly EPOCH_MS = parseIsoUtcToEpochMs('1970-01-01T00:00:00.000Z');
+  private static readonly EPOCH_MS = parseIsoUtcToEpochMs(
+    asIsoUtcString('1970-01-01T00:00:00.000Z')
+  );
 
   private readonly pending: PersistedOutboxRecord[] = [];
   private readonly deadLetters: PersistedDeadLetterRecord[] = [];
@@ -39,11 +44,11 @@ export class InMemoryOutboxState implements IOutboxStorage {
     this.shardCount = Math.max(1, deps?.shardCount ?? 1);
   }
 
-  private nowIsoUtc(): string {
+  private nowIsoUtc(): IsoUtcString {
     return epochMsToIsoUtc(this.nowMs());
   }
 
-  private computeNextAttemptAtIso(attempts: number): string {
+  private computeNextAttemptAtIso(attempts: number): IsoUtcString {
     const delayMs = Math.min(60_000, 1_000 * 2 ** Math.max(0, attempts - 1));
     return epochMsToIsoUtc(this.nowMs() + delayMs);
   }
@@ -300,16 +305,4 @@ function stripPersistedShardId(record: PersistedOutboxRecord): OutboxRecord {
 function stripPersistedDeadLetterShardId(record: PersistedDeadLetterRecord): DeadLetterRecord {
   const { shardId: _shardId, ...deadLetterRecord } = record;
   return deadLetterRecord;
-}
-
-function parseIsoUtcToEpochMs(isoUtc: string): number {
-  const epochMs = Date.parse(isoUtc);
-  if (!Number.isFinite(epochMs)) {
-    throw new Error(`INVALID_ISO_UTC: ${isoUtc}`);
-  }
-  return epochMs;
-}
-
-function epochMsToIsoUtc(epochMs: number): IsoUtcString {
-  return new globalThis.Date(epochMs).toISOString() as IsoUtcString;
 }

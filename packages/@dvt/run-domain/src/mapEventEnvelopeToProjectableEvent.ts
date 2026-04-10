@@ -8,9 +8,14 @@
  */
 import {
   MaterializationEvidenceSchema,
+  asNonBlankString,
+  asStepId,
   type EventEnvelope,
+  type IsoUtcString,
   type MaterializationEvidence,
+  type NonBlankString,
   type RunFailureEvidence,
+  type StepId,
 } from '@dvt/contracts';
 
 import { InvalidRunEventShapeError } from './errors.js';
@@ -27,34 +32,34 @@ type RunEventKind =
 
 type ProjectableRunLifecycleEvent<Kind extends RunEventKind> = {
   kind: Kind;
-  emittedAt: string;
+  emittedAt: IsoUtcString;
 };
 
 type ProjectableStepStartedEvent = {
   kind: 'StepStarted';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
 };
 
 type ProjectableStepCompletedEvent = {
   kind: 'StepCompleted';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
   gatewayDecision?: boolean;
   materialization?: MaterializationEvidence;
 };
 
 type ProjectableStepFailedEvent = {
   kind: 'StepFailed';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
   failure: RunFailureEvidence;
 };
 
 type ProjectableStepSkippedEvent = {
   kind: 'StepSkipped';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
 };
 
 export type ProjectableRunEvent =
@@ -115,7 +120,7 @@ export function mapEventEnvelopeToProjectableEvent(
         kind: 'StepFailed',
         emittedAt: event.emittedAt,
         stepId,
-        failure: readFailureEvidence(event.payload, stepId, event.emittedAt),
+        failure: readFailureEvidence(event, stepId),
       };
     }
 
@@ -131,17 +136,25 @@ export function mapEventEnvelopeToProjectableEvent(
   }
 }
 
-function requireStepId(event: EventEnvelope): string {
-  const maybeStepId = (event as { stepId?: unknown }).stepId;
-  if (typeof maybeStepId === 'string' && maybeStepId.length > 0) {
-    return maybeStepId;
+function requireStepId(event: EventEnvelope): StepId {
+  const rawStepId = (event as { stepId?: unknown }).stepId;
+  if (typeof rawStepId !== 'string') {
+    throw new InvalidRunEventShapeError({
+      runId: event.runId,
+      eventType: event.eventType,
+      reason: 'stepId must be a non-blank string for step events',
+    });
   }
 
-  throw new InvalidRunEventShapeError({
-    runId: event.runId,
-    eventType: event.eventType,
-    reason: 'stepId must be a non-empty string for step events',
-  });
+  try {
+    return asStepId(rawStepId);
+  } catch {
+    throw new InvalidRunEventShapeError({
+      runId: event.runId,
+      eventType: event.eventType,
+      reason: 'stepId must be a non-blank string for step events',
+    });
+  }
 }
 
 function readMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
@@ -149,27 +162,42 @@ function readMaterializationEvidence(value: unknown): MaterializationEvidence | 
   return parsed.success ? parsed.data : undefined;
 }
 
-function readFailureEvidence(
-  value: unknown,
-  stepId: string,
-  emittedAt: string
-): RunFailureEvidence {
-  const payload = asRecord(value);
-  const failedAt = asNonBlankString(payload?.['failedAt']) ?? emittedAt;
-  const reason = asNonBlankString(payload?.['reason']);
-  const message = asNonBlankString(payload?.['message']);
+function readFailureEvidence(event: EventEnvelope, stepId: StepId): RunFailureEvidence {
+  const payload = asRecord(event.payload);
+  const reason = readOptionalFailureText(event, payload?.['reason'], 'reason');
+  const message = readOptionalFailureText(event, payload?.['message'], 'message');
   return {
     stepId,
-    failedAt,
+    failedAt: event.emittedAt,
     ...(reason ? { reason } : {}),
     ...(message ? { message } : {}),
   };
 }
 
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
+function readOptionalFailureText(
+  event: EventEnvelope,
+  value: unknown,
+  field: 'reason' | 'message'
+): NonBlankString | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return asNonBlankString(value);
+    } catch {
+      // Fall through to canonical error below.
+    }
+  }
+
+  throw new InvalidRunEventShapeError({
+    runId: event.runId,
+    eventType: event.eventType,
+    reason: `payload.${field} must be a non-blank string when provided`,
+  });
 }
 
-function asNonBlankString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
 }

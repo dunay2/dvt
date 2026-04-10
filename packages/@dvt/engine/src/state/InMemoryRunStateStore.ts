@@ -1,6 +1,8 @@
 /**
  * @baseline ADR-0003
  */
+import { parseEngineRunRef } from '@dvt/contracts';
+
 import {
   InvalidRunIdError,
   ProviderRefProviderMismatchError,
@@ -15,6 +17,7 @@ import type {
   RunMetadata,
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
+import { normalizeEngineRunRef } from '../core/lifecycle/coreRuntime.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
 import type { IRunSnapshotStalenessQuery } from '../ports/IRunSnapshotStalenessQuery.js';
 import type {
@@ -35,6 +38,7 @@ import {
   assertEventTenantMatches,
   assertEventRunIdMatches,
   assertEventsMatchRunIdAndTenant,
+  buildPersistedRunEventRecord,
   assertRunEventInput,
   assertRunSequenceWithinSafeRange,
   cloneWorkflowSnapshot,
@@ -62,59 +66,57 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     runId: string,
     providerRef: RunMetadata['providerRef']
   ): Promise<RunMetadata> {
+    const validatedProviderRef = normalizeEngineRunRef(parseEngineRunRef(providerRef));
     const current = this.metadataByRunId.get(runId);
     if (!current) {
       throw new RunNotFoundError(runId);
     }
-    if (current.tenantId !== tenantId || providerRef.tenantId !== tenantId) {
+    if (current.tenantId !== tenantId || validatedProviderRef.tenantId !== tenantId) {
       throw new TenantAccessDeniedError(tenantId);
     }
-    if (current.providerRef.provider !== providerRef.provider) {
+    if (current.providerRef.provider !== validatedProviderRef.provider) {
       throw new ProviderRefProviderMismatchError(
         runId,
         current.providerRef.provider,
-        providerRef.provider
+        validatedProviderRef.provider
       );
     }
 
     const updated: RunMetadata = {
       ...current,
-      providerRef,
+      providerRef: validatedProviderRef,
     };
     this.metadataByRunId.set(runId, updated);
     return updated;
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
-    if (this.metadataByRunId.has(input.metadata.runId)) {
-      throw new RunAlreadyExistsError(input.metadata.runId);
+    const metadata: RunMetadata = {
+      ...input.metadata,
+      providerRef: normalizeEngineRunRef(parseEngineRunRef(input.metadata.providerRef)),
+    };
+    if (this.metadataByRunId.has(metadata.runId)) {
+      throw new RunAlreadyExistsError(metadata.runId);
     }
 
-    assertEventsMatchRunIdAndTenant(
-      input.metadata.runId,
-      input.metadata.tenantId,
-      input.firstEvents
-    );
+    assertEventsMatchRunIdAndTenant(metadata.runId, metadata.tenantId, input.firstEvents);
     const retryLineageCheckpoint = captureRetryLineageCheckpoint(
       this.nextRetryAttemptByOriginRunId,
-      input.metadata
+      metadata
     );
 
     // Atomic block (no awaits): write metadata + first events together.
-    this.metadataByRunId.set(input.metadata.runId, input.metadata);
-    initializeRetryLineageFromMetadata(this.nextRetryAttemptByOriginRunId, input.metadata);
+    this.metadataByRunId.set(metadata.runId, metadata);
+    initializeRetryLineageFromMetadata(this.nextRetryAttemptByOriginRunId, metadata);
     // Seed empty snapshot so getSnapshot never returns null for a bootstrapped run.
-    this.snapshotByRunId.set(
-      input.metadata.runId,
-      createDefaultWorkflowSnapshot(input.metadata.runId)
-    );
-    this.snapshotLastRunSeqByRunId.set(input.metadata.runId, 0);
+    this.snapshotByRunId.set(metadata.runId, createDefaultWorkflowSnapshot(metadata.runId));
+    this.snapshotLastRunSeqByRunId.set(metadata.runId, 0);
     try {
-      return await this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
+      return await this.appendAndEnqueueTx(metadata.runId, input.firstEvents);
     } catch (error) {
-      this.metadataByRunId.delete(input.metadata.runId);
-      this.snapshotByRunId.delete(input.metadata.runId);
-      this.snapshotLastRunSeqByRunId.delete(input.metadata.runId);
+      this.metadataByRunId.delete(metadata.runId);
+      this.snapshotByRunId.delete(metadata.runId);
+      this.snapshotLastRunSeqByRunId.delete(metadata.runId);
       restoreRetryLineageCheckpoint(this.nextRetryAttemptByOriginRunId, retryLineageCheckpoint);
       throw error;
     }
@@ -148,7 +150,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
 
       const runSeq = baseRunSeq + appended.length + 1;
       assertRunSequenceWithinSafeRange(runSeq, runId);
-      const withSeq: RunEventPersisted = { ...env, runSeq, persistedAt };
+      const withSeq = buildPersistedRunEventRecord(env, runSeq, persistedAt, i);
       appended.push(withSeq);
       idx.set(withSeq.idempotencyKey, withSeq);
     }

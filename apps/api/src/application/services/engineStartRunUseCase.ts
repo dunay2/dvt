@@ -8,6 +8,7 @@ import {
   type RunContext,
   type IWorkflowEngine,
 } from '@dvt/engine';
+import { asNonBlankString } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
@@ -158,11 +159,11 @@ function validateAndExtractPlanRef(
 
 function toEnginePlanRef(planRef: StartRunPlanRef): PlanRef {
   return {
-    uri: planRef.uri,
-    sha256: planRef.sha256,
-    schemaVersion: planRef.schemaVersion,
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
+    uri: asNonBlankString(planRef.uri),
+    sha256: asNonBlankString(planRef.sha256),
+    schemaVersion: asNonBlankString(planRef.schemaVersion),
+    planId: asNonBlankString(planRef.planId),
+    planVersion: asNonBlankString(planRef.planVersion),
   };
 }
 
@@ -171,10 +172,10 @@ function toEngineRunContext(
   context: AuthorizedCommandExecutionContext
 ): RunContext {
   const runContext: RunContext = {
-    tenantId: context.scope.tenantId.value,
-    projectId: context.scope.projectId?.value ?? '',
-    environmentId: context.scope.environmentId?.value ?? '',
-    runId: command.runId,
+    tenantId: asNonBlankString(context.scope.tenantId.value),
+    projectId: asNonBlankString(context.scope.projectId?.value ?? ''),
+    environmentId: asNonBlankString(context.scope.environmentId?.value ?? ''),
+    runId: asNonBlankString(command.runId),
     targetAdapter: command.targetAdapter,
   };
   if (command.runExecutionContextRef !== undefined) {

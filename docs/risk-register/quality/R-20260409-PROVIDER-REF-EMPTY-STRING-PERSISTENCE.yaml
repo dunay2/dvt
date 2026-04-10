@@ -1,26 +1,30 @@
 ---
 id: R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE
-title: Provider ref updates discard explicit empty optional values
-status: Open
+title: Empty temporal taskQueue values can re-enter provider-ref runtime state
+status: Closed
 date: 2026-04-09
 owners:
   - packages/@dvt/engine
-severity: Low
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-postgres
+severity: Medium
 probability: Medium
 context: >
-  In-memory provider-ref persistence and the start-run provider-ref builder used truthy checks for
-  optional provider fields. As a result, an explicit empty string was treated as absent and silently
-  removed from the persisted update.
+  A prior slice preserved explicit empty temporal task-queue values in provider refs. Once
+  `EngineRunRef.taskQueue` was hardened to an optional non-blank contract field, that behavior
+  became semantically invalid and could turn stored metadata into a self-rejecting runtime round
+  trip.
 risk: >
-  Truthy-based provider-ref updates blur the difference between "field not supplied" and "field
-  supplied as empty", which weakens model rigor and creates least-surprise drift in engine test
-  stores and producer helpers.
+  If empty task queues are treated as meaningful instead of invalid, engine stores, API mapping, and
+  Postgres materialization can preserve a provider ref that no longer satisfies the canonical
+  `EngineRunRef` contract.
 mitigations:
-  - 'InMemoryRunStateStore and InMemoryTxStore now persist optional provider fields whenever they
-    are not undefined.'
-  - 'StartRunEventFactory now preserves an explicit empty providerTaskQueue in run metadata and
-    provider ref updates.'
-  - 'Regression tests cover producer and store seams for empty-string provider-ref values.'
+  - 'Temporal `taskQueue` now follows absent-or-nonblank semantics everywhere; empty strings are not
+    accepted as valid provider-ref state.'
+  - 'StartRunEventFactory, in-memory stores, and Postgres run-metadata persistence now validate
+    provider refs through the hardened `EngineRunRef` contract boundary.'
+  - 'Contracts and adapter tests now cover empty temporal task queues as invalid input or invalid
+    persisted state.'
   - 'verify:prepush remains required before marking the slice ready.'
 review_after: 2026-06-01
 ---

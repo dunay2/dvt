@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { IStepTypeRegistry } from '@dvt/contracts';
+import { asNonBlankString, type IStepTypeRegistry, type PlanRef } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StoredExecutablePlanResolver } from '../../../src/application/services/StoredExecutablePlanResolver.js';
@@ -17,12 +17,14 @@ const EXECUTABLE_PLAN_TEXT = JSON.stringify({
   steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
 });
 
-const PLAN_REF = {
-  uri: 'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-  sha256: createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex'),
-  schemaVersion: 'v1.2',
-  planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-  planVersion: '1.0',
+const PLAN_REF: PlanRef = {
+  uri: asNonBlankString(
+    'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+  ),
+  sha256: asNonBlankString(createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex')),
+  schemaVersion: asNonBlankString('v1.2'),
+  planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+  planVersion: asNonBlankString('1.0'),
 };
 
 describe('StoredExecutablePlanResolver', () => {
@@ -84,7 +86,7 @@ describe('StoredExecutablePlanResolver', () => {
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
     const planRef = {
       ...PLAN_REF,
-      sha256: createHash('sha256').update(mismatchedText).digest('hex'),
+      sha256: asNonBlankString(createHash('sha256').update(mismatchedText).digest('hex')),
     };
 
     await expect(resolver.fetch(planRef)).rejects.toThrow('PLAN_REF_MISMATCH: planId');
@@ -109,7 +111,7 @@ describe('StoredExecutablePlanResolver', () => {
     });
     const planRef = {
       ...PLAN_REF,
-      sha256: createHash('sha256').update(executablePlanText).digest('hex'),
+      sha256: asNonBlankString(createHash('sha256').update(executablePlanText).digest('hex')),
     };
 
     await expect(resolver.fetch(planRef)).resolves.toMatchObject({
@@ -125,7 +127,7 @@ describe('StoredExecutablePlanResolver', () => {
 
     const plan = await resolver.fetch({
       ...PLAN_REF,
-      uri: 'https://plans.example.com/plan-1.json',
+      uri: asNonBlankString('https://plans.example.com/plan-1.json'),
     });
 
     expect(plan).toEqual({

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { useSessionStore } from '../../stores/sessionStore';
+import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { createRunsService, type StartRunInput } from './runsService';
 
 function createApiClientMock(): ApiClient {
@@ -15,20 +16,19 @@ function createApiClientMock(): ApiClient {
 
 function createStartRunInput(runId = 'run_123'): StartRunInput {
   return {
-    planRef: {
+    planRef: makePlanRef({
       uri: 's3://plans/plan.json',
       sha256: 'abc123',
       schemaVersion: '1.0.0',
       planId: 'plan_123',
       planVersion: '1.0.0',
-    },
-    context: {
+    }),
+    context: makeRunContext(runId, {
       tenantId: 'tenant-1',
       projectId: 'project-1',
       environmentId: 'env-1',
-      runId,
       targetAdapter: 'mock',
-    },
+    }),
   };
 }
 
