@@ -7,7 +7,12 @@
  *   startRun to StartRunApplicationService and lifecycle operations to WorkflowEngineCoreService.
  * @consequence Runtime orchestration responsibilities are split into focused collaborators.
  */
-import { parsePlanRef, parseRecoverRunCommand, parseRunContext } from '@dvt/contracts';
+import {
+  asNonBlankString,
+  parsePlanRef,
+  parseRecoverRunCommand,
+  parseRunContext,
+} from '@dvt/contracts';
 import type {
   EngineRunRef,
   PlanRef,
@@ -163,8 +168,8 @@ export class WorkflowEngine implements IWorkflowEngine {
     const resolvedContext: ResolvedRunContext = {
       ...validatedContext,
       logicalAttemptId: reservedAttempt.logicalAttemptId,
-      parentRunId: reservedAttempt.parentRunId,
-      originRunId: reservedAttempt.originRunId,
+      parentRunId: asNonBlankString(reservedAttempt.parentRunId),
+      originRunId: asNonBlankString(reservedAttempt.originRunId),
     };
     const traceContext = buildTraceContext(resolvedContext, validatedPlanRef.planId);
 
@@ -397,8 +402,8 @@ export class WorkflowEngine implements IWorkflowEngine {
     const preflightContext: ResolvedRunContext = {
       ...context,
       logicalAttemptId: sourceMetadata.logicalAttemptId + 1,
-      parentRunId: sourceMetadata.runId,
-      originRunId: sourceMetadata.originRunId ?? sourceMetadata.runId,
+      parentRunId: asNonBlankString(sourceMetadata.runId),
+      originRunId: asNonBlankString(sourceMetadata.originRunId ?? sourceMetadata.runId),
     };
 
     await guard.assertStartRunAllowed(planRef, preflightContext);

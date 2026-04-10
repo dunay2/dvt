@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import type { RunExecutionContext, RunExecutionContextRef } from '../../types/contracts.js';
 import {
   isIsoUtcString,
   isNonBlankString,
@@ -21,7 +20,7 @@ const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString
 
 const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
 
-export const RunExecutionContextRefSchema: z.ZodType<RunExecutionContextRef> = z
+export const RunExecutionContextRefSchema = z
   .object({
     uri: NonBlankStringSchema,
     sha256: NonBlankStringSchema,
@@ -32,7 +31,7 @@ export const RunExecutionContextRefSchema: z.ZodType<RunExecutionContextRef> = z
   })
   .strict();
 
-export const RunExecutionContextSchema: z.ZodType<RunExecutionContext> = z
+export const RunExecutionContextSchema = z
   .object({
     schemaVersion: NonBlankStringSchema,
     planId: NonBlankStringSchema,

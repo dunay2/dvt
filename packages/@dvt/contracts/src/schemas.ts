@@ -98,20 +98,20 @@ export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 // ─── Core contract schemas ───────────────────────────────────────────────────
 
 export const PlanRefSchema = z.object({
-  uri: z.string().min(1),
-  sha256: z.string().min(1),
-  schemaVersion: z.string().min(1),
-  planId: z.string().min(1),
-  planVersion: z.string().min(1),
+  uri: NonBlankStringSchema,
+  sha256: NonBlankStringSchema,
+  schemaVersion: NonBlankStringSchema,
+  planId: NonBlankStringSchema,
+  planVersion: NonBlankStringSchema,
   sizeBytes: z.number().int().nonnegative().optional(),
   expiresAt: IsoUtcStringSchema.optional(),
 });
 
 export const RunContextSchema = z
   .object({
-    tenantId: z.string().min(1),
-    projectId: z.string().min(1),
-    environmentId: z.string().min(1),
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
     runId: NonBlankStringSchema,
     targetAdapter: ProviderSchema,
     runExecutionContextRef: RunExecutionContextRefSchema.optional(),

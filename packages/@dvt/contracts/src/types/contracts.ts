@@ -66,7 +66,7 @@ export interface RunExecutionEvidence {
 }
 
 export interface RunStatusSnapshot {
-  runId: string;
+  runId: NonBlankString;
   status: RunStatus;
   substatus?: RunSubstatus | AdapterScopedSubstatus;
   message?: string;
@@ -77,8 +77,8 @@ export interface RunStatusSnapshot {
 
 export interface MaterializationEvidence {
   executor: TransformationExecutor;
-  environmentId: string;
-  sinkTable: string;
+  environmentId: NonBlankString;
+  sinkTable: NonBlankString;
   rowsWritten: number;
   startedAt: IsoUtcString;
   completedAt: IsoUtcString;
@@ -86,16 +86,16 @@ export interface MaterializationEvidence {
 }
 
 export interface TransformationFlowRuntimeBinding {
-  previewProfile: string;
+  previewProfile: NonBlankString;
   executor: TransformationExecutor;
 }
 
 export interface PlanRef {
-  uri: string;
-  sha256: string;
-  schemaVersion: string;
-  planId: string;
-  planVersion: string;
+  uri: NonBlankString;
+  sha256: NonBlankString;
+  schemaVersion: NonBlankString;
+  planId: NonBlankString;
+  planVersion: NonBlankString;
   sizeBytes?: number;
   expiresAt?: IsoUtcString;
 }
@@ -115,42 +115,42 @@ export interface RunExecutionPolicy {
 }
 
 export interface RunExecutionContextRef {
-  uri: string;
-  sha256: string;
-  schemaVersion: string;
-  planId: string;
-  planVersion: string;
+  uri: NonBlankString;
+  sha256: NonBlankString;
+  schemaVersion: NonBlankString;
+  planId: NonBlankString;
+  planVersion: NonBlankString;
   /**
    * Optional echoed compatibility fingerprint bound to the referenced context.
    * If supplied, it MUST match the governing plan-level fingerprint.
    */
-  pluginCompatibilityFingerprint?: string | undefined;
+  pluginCompatibilityFingerprint?: NonBlankString | undefined;
 }
 
 export interface RunExecutionContext {
-  schemaVersion: string;
-  planId: string;
-  planVersion: string;
-  planSha256: string;
+  schemaVersion: NonBlankString;
+  planId: NonBlankString;
+  planVersion: NonBlankString;
+  planSha256: NonBlankString;
   /**
    * Deterministic fingerprint used to verify plugin/runtime compatibility
    * against the governing plan artifact at admission and replay boundaries.
    */
-  pluginCompatibilityFingerprint?: string | undefined;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
+  pluginCompatibilityFingerprint?: NonBlankString | undefined;
+  tenantId: NonBlankString;
+  projectId: NonBlankString;
+  environmentId: NonBlankString;
   targetAdapter: Exclude<Provider, 'mock'> | 'mock';
   createdAtIso: IsoUtcString;
-  createdBy: string;
-  pluginContexts: Record<string, Record<string, string>>;
+  createdBy: NonBlankString;
+  pluginContexts: Record<string, Record<string, NonBlankString>>;
 }
 
 export interface RunContext {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
+  tenantId: NonBlankString;
+  projectId: NonBlankString;
+  environmentId: NonBlankString;
+  runId: NonBlankString;
   targetAdapter: Exclude<Provider, 'mock'> | 'mock';
   runExecutionContextRef?: RunExecutionContextRef;
 }
@@ -171,12 +171,12 @@ export interface ResolvedRunContext extends RunContext {
    * Immediate source run for a recovery/retry-created run.
    * Undefined for the first run in a chain.
    */
-  parentRunId?: string;
+  parentRunId?: NonBlankString;
   /**
    * First run in the recovery chain.
    * For an initial run this SHOULD equal `runId`.
    */
-  originRunId?: string;
+  originRunId?: NonBlankString;
 }
 
 /**
@@ -184,7 +184,7 @@ export interface ResolvedRunContext extends RunContext {
  * Recovery is NOT part of generic signal(...) semantics.
  */
 export interface RecoverRunCommand {
-  sourceRunId: string;
+  sourceRunId: NonBlankString;
   planRef: PlanRef;
   context: RunContext;
 }

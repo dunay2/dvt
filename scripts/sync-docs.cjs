@@ -796,6 +796,7 @@ function scanSectionEntries(sectionRelativePath) {
     return [];
   }
 
+  const allowYaml = sectionRelativePath.startsWith('risk-register');
   const entries = fs.readdirSync(dirAbs, { withFileTypes: true });
   const rows = [];
   for (const entry of entries) {
@@ -813,11 +814,20 @@ function scanSectionEntries(sectionRelativePath) {
     }
     if (!entry.isFile()) continue;
     const ext = path.extname(entry.name).toLowerCase();
-    if (ext !== '.md' && ext !== '.txt') continue;
+    if (ext !== '.md' && ext !== '.txt' && (!allowYaml || (ext !== '.yaml' && ext !== '.yml'))) {
+      continue;
+    }
     if (/^index\.md$/i.test(entry.name)) continue;
     const fileContent = readIfExists(absPath) || '';
     const heading = ext === '.md' ? extractFirstHeading(fileContent) : null;
-    rows.push({ type: 'file', label: heading || humanizeName(entry.name), link: entry.name });
+    const parsed =
+      allowYaml && (ext === '.yaml' || ext === '.yml') ? splitFrontmatter(fileContent) : null;
+    rows.push({
+      type: 'file',
+      label:
+        heading || parsed?.frontmatter.title || parsed?.frontmatter.id || humanizeName(entry.name),
+      link: entry.name,
+    });
   }
 
   rows.sort((a, b) => {

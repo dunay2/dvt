@@ -7,6 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import { asNonBlankString } from '@dvt/contracts';
 import type { EngineRunRef, RunStatus, RunStatusSnapshot } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
@@ -74,7 +75,7 @@ export function toRunStatusSnapshot(args: {
   message?: string;
 }): RunStatusSnapshot {
   return {
-    runId: args.runId,
+    runId: asNonBlankString(args.runId),
     status: mapTemporalStatusToRunStatus(args.runtimeStatus),
     message: args.message,
   };
@@ -90,7 +91,7 @@ export function toRunStatusSnapshotFromWorkflowState(args: {
       : undefined;
 
   return {
-    runId: args.runId,
+    runId: asNonBlankString(args.runId),
     status: args.state.status,
     ...(message === undefined ? {} : { message }),
   };
