@@ -1680,7 +1680,7 @@ tasks:
       command-palette contributions, and plugin readiness semantics for frontend surfaces.
     complexity: S
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 50
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md
@@ -1690,18 +1690,21 @@ tasks:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
       - apps/web/src/app/plugins/contracts/PluginManifest.ts
       - apps/web/src/app/plugins/registry.ts
+      - apps/web/src/app/views/PluginsView.tsx
+      - apps/web/src/app/views/PluginsView.test.tsx
     status_reason: >-
       The repo has strong technical plugin seams, and the professionalization bundle is now
-      normalized in English across shell grammar, plugin docking, rollout, and wireframe docs, so
-      Lane E has an active governed baseline for dock policy, route metadata, command-palette
-      contributions, bottom-panel contributions, and plugin readiness semantics. Remaining work is
-      contract extension and live surface adoption.
+      normalized in English across shell grammar, plugin docking, rollout, and wireframe docs.
+      `PluginsView` now adopts the shared route frame and exposes route-level probe plus
+      declared/frontend/backend/executable readiness states inside governed cards, so the contract
+      has a first live surface adoption. Remaining work is broader dock integration and denser
+      shared plugin capability surfaces.
     definition_of_done:
       - allowed and forbidden plugin docks are documented against the stable shell grammar
       - proposed frontend contract extensions are named and scoped in active docs
       - plugin readiness and availability states are tied to user-facing surfaces
       - downstream plugin workbench slices reference this contract instead of inventing local chrome
-    last_verified: '2026-04-09'
+    last_verified: '2026-04-10'
   - task_id: TF-E1
     priority: P0
     status: in_progress
