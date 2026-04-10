@@ -1624,7 +1624,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 70
+    progress_pct: 75
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
@@ -1646,12 +1646,14 @@ tasks:
       The bundle is normalized in English and now governs an explicit `RouteWorkbenchFrame` v1
       contract instead of an over-broad future shape: header and summary bands stay outside the
       scroll-owned body, `scroll={false}` remains available for split-pane routes, and contextual
-      side panels remain future primitives. The implementation now restores `Diff` summary ownership
-      to the header stack, fixes the shared field token so it works on neutral elements like compare
-      pills, and applies shared tab and Monaco tokens across the first `Diff` and `Artifacts`
-      cleanup slice. Tests now cover frame header or body ownership and the `Diff`
-      header-versus-body contract. Remaining work is broader panel, table, shell, Canvas, and deeper
-      Monaco convergence across the rest of the operator path.
+      side panels remain future primitives. The implementation restores `Diff` summary ownership to
+      the header stack, fixes the shared field token so it works on neutral elements like compare
+      pills, applies shared tab and Monaco tokens across the first `Diff` and `Artifacts` cleanup
+      slice, and now moves the shell top bar plus left navigation rail away from route-level
+      `slate-*` chrome into governed shell tokens with Root-shell characterization coverage for
+      top-bar presence, navigation order, and focus-mode rail hiding. Remaining work is broader
+      panel, table, shell-menu decomposition, Canvas, and deeper Monaco convergence across the rest
+      of the operator path.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components

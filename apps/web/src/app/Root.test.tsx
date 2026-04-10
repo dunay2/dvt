@@ -16,6 +16,7 @@ import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHar
 import Root, { RootShell } from './Root';
 import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
+import { useUiLayoutStore } from './stores/uiLayoutStore';
 
 function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
   const capabilitiesPort: CapabilitiesPort = {
@@ -48,6 +49,23 @@ function resetAppStore(): void {
   });
 }
 
+function resetUiLayoutStore(): void {
+  useUiLayoutStore.setState({
+    leftNavCollapsed: false,
+    explorerPanelWidth: 280,
+    explorerPanelVisible: false,
+    inspectorPanelWidth: 380,
+    inspectorPanelVisible: false,
+    consolePanelHeight: 0,
+    consolePanelVisible: false,
+    focusMode: false,
+    gridSize: 20,
+    activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
+    activeTabId: 'main-canvas',
+    connectionStatus: { rest: 'ok', liveEvents: 'connected' },
+  });
+}
+
 function RootServicesProbe(): JSX.Element {
   const mode = useAppDataSourceMode();
   return <div data-testid="root-services-probe">mode:{mode}</div>;
@@ -57,6 +75,7 @@ describe('RootShell platform health UX', () => {
   beforeEach(() => {
     localStorage.clear();
     resetAppStore();
+    resetUiLayoutStore();
   });
 
   afterEach(() => {
@@ -175,6 +194,79 @@ describe('RootShell platform health UX', () => {
       );
 
       expect(mounted.container.querySelector('[data-testid="shell-health-banner"]')).toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('renders shell top bar and left navigation with governed shell chrome', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(createRootShellNode(capability));
+
+    try {
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query',
+        }
+      );
+
+      const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
+      const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
+      const leftNavigationRail = mounted.container.querySelector(
+        '[data-slot="left-navigation-rail"]'
+      );
+      const leftNavigationLinks = [
+        ...mounted.container.querySelectorAll<HTMLAnchorElement>(
+          '[data-slot="left-navigation-link"]'
+        ),
+      ];
+
+      expect(shellTopBar?.textContent).toContain('Raven');
+      expect(shellTopBar?.textContent).toContain('Shell');
+      expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
+      expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
+      expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
+      expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
+      expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual([
+        '/canvas',
+        '/lineage',
+        '/code',
+        '/diff',
+        '/artifacts',
+        '/runs',
+        '/cost',
+        '/plugins',
+        '/admin',
+      ]);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('preserves focus-mode behavior by hiding the left rail while keeping the shell top bar', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    useUiLayoutStore.setState({ focusMode: true });
+    const mounted = await withTestQueryClient(createRootShellNode(capability));
+
+    try {
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query',
+        }
+      );
+
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="shell-top-bar"]')).toBeTruthy();
     } finally {
       await mounted.cleanup();
     }

@@ -21,7 +21,10 @@ export function TopAppBarConnectionStatus({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`${topAppBarClasses.smallStatusText} select-none text-slate-400`}>
+          <div
+            data-slot="shell-connection-status"
+            className={`${topAppBarClasses.smallStatusText} select-none text-[var(--text-subtle)]`}
+          >
             <LoaderCircle className="size-3.5 animate-spin" />
             <span>{copy.checking}</span>
           </div>
@@ -37,8 +40,11 @@ export function TopAppBarConnectionStatus({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`${topAppBarClasses.smallStatusText} text-slate-300`}>
-            <div className="size-1.5 rounded-full bg-green-500" />
+          <div
+            data-slot="shell-connection-status"
+            className={`${topAppBarClasses.smallStatusText} text-[var(--text-default)]`}
+          >
+            <div className="size-1.5 rounded-full bg-[var(--status-success)]" />
             <Activity className="size-3.5" />
           </div>
         </TooltipTrigger>
@@ -54,7 +60,10 @@ export function TopAppBarConnectionStatus({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`${topAppBarClasses.smallStatusText} select-none text-slate-300`}>
+          <div
+            data-slot="shell-connection-status"
+            className={`${topAppBarClasses.smallStatusText} select-none text-[var(--status-offline)]`}
+          >
             <WifiOff className="size-3.5" />
             <span>{copy.offline}</span>
           </div>
@@ -69,7 +78,10 @@ export function TopAppBarConnectionStatus({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className={`${topAppBarClasses.smallStatusText} select-none text-amber-500`}>
+        <div
+          data-slot="shell-connection-status"
+          className={`${topAppBarClasses.smallStatusText} select-none text-[var(--status-degraded)]`}
+        >
           <AlertTriangle className="size-3.5" />
           <span>{copy.degraded}</span>
         </div>

@@ -117,7 +117,7 @@ export function TopAppBarShellMenu({
         <DropdownMenuItem>
           <Bell className="size-4 mr-2" />
           {copy.notifications}
-          <Badge className="ml-auto size-4 p-0 flex items-center justify-center bg-red-500 text-[10px]">
+          <Badge className="ml-auto flex size-4 items-center justify-center bg-[var(--status-danger)] p-0 text-[10px] text-[var(--text-strong)]">
             3
           </Badge>
         </DropdownMenuItem>

@@ -7,13 +7,14 @@ import { TopAppBarConnectionStatus } from './topAppBar/TopAppBarConnectionStatus
 import { resolveTopAppBarCopy } from './topAppBar/copy';
 import { TopAppBarGitRef } from './topAppBar/TopAppBarGitRef';
 import { TopAppBarShellMenu } from './topAppBar/TopAppBarShellMenu';
+import { topAppBarClasses } from './topAppBar/styles';
 import { TopAppBarWorkspaceSelectors } from './topAppBar/TopAppBarWorkspaceSelectors';
 import type { TopAppBarProps } from './topAppBar/types';
 import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
-export default function TopAppBar({
+export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
@@ -40,10 +41,10 @@ export default function TopAppBar({
 
   return (
     <TooltipProvider>
-      <div className="flex h-10 flex-shrink-0 items-center gap-2 border-b border-slate-700 bg-slate-900 px-3">
+      <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
         <div className="mr-1 flex shrink-0 items-center gap-2">
           <AppBrandMark className="size-6 shrink-0" />
-          <span className="text-base leading-none font-semibold text-slate-50">Raven</span>
+          <span className={topAppBarClasses.brand}>Raven</span>
         </div>
 
         <TopAppBarWorkspaceSelectors
@@ -86,3 +87,5 @@ export default function TopAppBar({
     </TooltipProvider>
   );
 }
+
+export default ShellTopBar;

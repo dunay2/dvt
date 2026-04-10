@@ -1,5 +1,6 @@
 import { GitBranch } from 'lucide-react';
 import type { TopAppBarCopy } from './copy';
+import { topAppBarClasses } from './styles';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 type TopAppBarGitRefProps = {
@@ -12,11 +13,11 @@ export function TopAppBarGitRef({ gitBranch, gitSha, copy }: TopAppBarGitRefProp
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex h-8 items-center gap-2 rounded-md border border-slate-600 bg-slate-950 px-2.5 text-xs">
-          <GitBranch className="size-3.5 text-slate-300" />
+        <div data-slot="shell-git-ref" className={topAppBarClasses.gitRef}>
+          <GitBranch className={topAppBarClasses.gitRefIcon} />
           <span>{gitBranch}</span>
-          <span className="text-slate-400">@</span>
-          <code className="text-xs text-slate-300">{gitSha}</code>
+          <span className={topAppBarClasses.gitRefSeparator}>@</span>
+          <code className={topAppBarClasses.gitRefSha}>{gitSha}</code>
         </div>
       </TooltipTrigger>
       <TooltipContent>

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router';
 
 import { useShellRuntime } from '../shell/useShellRuntime';
 import { resolveString } from '../plugins/contracts/PluginManifest';
+import { leftNavigationRailClasses } from './topAppBar/styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
 
@@ -12,18 +13,13 @@ const SHELL_NAV = [
   { to: '/admin', icon: Shield, label: 'Admin', level: 'admin' as const },
 ];
 
-const NAV_LINK_CLASS =
-  'flex size-10 items-center justify-center rounded-xl border border-transparent text-slate-300 transition-colors shrink-0';
-
-const NAV_ICON_CLASS = 'size-[18px] shrink-0';
-
-export default function LeftNavigation() {
+export function LeftNavigationRail() {
   const { navigationViews } = useShellRuntime();
 
   return (
-    <div className="w-16 shrink-0 border-r border-slate-700 bg-slate-900">
+    <div data-slot="left-navigation-rail" className={leftNavigationRailClasses.rail}>
       <TooltipProvider delayDuration={300}>
-        <nav className="flex h-full flex-col items-center gap-3.5 overflow-y-auto py-4">
+        <nav data-slot="left-navigation-nav" className={leftNavigationRailClasses.nav}>
           {/* Plugin-contributed nav items (core + extended), sorted by order */}
           {navigationViews.map((view) => {
             const Icon = view.nav.icon;
@@ -35,13 +31,14 @@ export default function LeftNavigation() {
                     to={view.path}
                     className={({ isActive }) =>
                       cn(
-                        NAV_LINK_CLASS,
-                        'hover:bg-slate-950 hover:text-white',
-                        isActive && 'bg-slate-950 text-white border-blue-500'
+                        leftNavigationRailClasses.link,
+                        leftNavigationRailClasses.linkInteractive,
+                        isActive && leftNavigationRailClasses.linkActive
                       )
                     }
+                    data-slot="left-navigation-link"
                   >
-                    <Icon className={NAV_ICON_CLASS} />
+                    <Icon className={leftNavigationRailClasses.icon} />
                   </NavLink>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -62,13 +59,14 @@ export default function LeftNavigation() {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      NAV_LINK_CLASS,
-                      'hover:bg-slate-950 hover:text-white',
-                      isActive && 'bg-slate-950 text-white border-blue-500'
+                      leftNavigationRailClasses.link,
+                      leftNavigationRailClasses.linkInteractive,
+                      isActive && leftNavigationRailClasses.linkActive
                     )
                   }
+                  data-slot="left-navigation-link"
                 >
-                  <item.icon className={NAV_ICON_CLASS} />
+                  <item.icon className={leftNavigationRailClasses.icon} />
                 </NavLink>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -81,3 +79,5 @@ export default function LeftNavigation() {
     </div>
   );
 }
+
+export default LeftNavigationRail;
