@@ -62,9 +62,9 @@ Workflow defines and handles:
 - `cancel` signal (with optional reason payload)
 - `status` query
 
-Current adapter policy canonicalizes cancellation on the workflow signal path so
-both `cancelRun()` and `signal(CANCEL)` share the same runtime-owned lifecycle
-behavior.
+Current adapter policy still canonicalizes cancellation on the workflow signal
+path, which is the known `T-01` bug: `cancelRun()` currently behaves like a
+signal alias instead of using Temporal-native cancellation.
 
 ### 2.3 Cancellation reason semantics (CURRENT)
 
@@ -84,10 +84,13 @@ Consumer guidance for v1.1:
 - Apply fallback messaging when absent (for example: `Cancelled by system`).
 - Emit diagnostic logs/metrics when a reason is expected by product flow but arrives empty.
 
-Planned clarification for a future version:
+Planned correction under `AR-C6`:
 
-- Either keep best-effort semantics explicitly, or
-- Send `cancel(reason)` signal before native cancel when product requirements need deterministic reason persistence.
+- `cancelRun()` moves to Temporal-native `WorkflowHandle.cancel()`
+- `signal(CANCEL)` remains the cooperative reason-carrying path
+- native cancellation cleanup emits terminal `RunCancelled` from workflow
+  context; `cancelReason` therefore remains best-effort and may be empty for
+  `cancelRun()` calls
 
 ---
 

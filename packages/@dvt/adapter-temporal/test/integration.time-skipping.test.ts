@@ -88,6 +88,11 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   }
 
   const status = await waitForTerminalStatus(args.adapter, runRef, args.waitForCondition);
+  await args.waitForCondition(
+    () => args.store.listRunEvents(args.runId),
+    (events) => events.some((event) => event.eventType === 'RunCancelled'),
+    { timeoutMs: 30_000 }
+  );
   const events = await args.store.listRunEvents(RunId.of(runRef.runId));
   const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
   const eventTypes = events.map((event) => event.eventType);
@@ -435,6 +440,80 @@ describe('temporal integration (time-skipping)', () => {
 
         const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
         expect(status).toBe('CANCELLED');
+        await waitForCondition(
+          () => store.listRunEvents(RunId.of(runRef.runId)),
+          (events) => events.some((event) => event.eventType === 'RunCancelled'),
+          { timeoutMs: 30_000 }
+        );
+
+        const eventTypes = (await store.listRunEvents(RunId.of(runRef.runId))).map(
+          (event) => event.eventType
+        );
+        expect(eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
+        expect(eventTypes.indexOf('RunCancelled')).toBeGreaterThan(
+          eventTypes.indexOf('RunCancelRequested')
+        );
+        expect(eventTypes).not.toContain('RunCompleted');
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
+  it(
+    'native Temporal handle cancellation emits RunCancelRequested before RunCancelled and never RunCompleted',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+      const store = new TestStateStore();
+      const outbox = new TestOutbox();
+      const plan = mkLinearPlan(10);
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const planRef = createPlanRef('it-plan', planBytes);
+      const ctx = createRunContext(RunId.of('run-it-native-cancel-1'));
+
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-native-cancel',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
+
+      const worker = new TemporalWorkerHost({
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, outbox, planBytes),
+      });
+
+      await worker.start(env.nativeConnection);
+
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+      });
+
+      try {
+        const runRef = await adapter.startRun(plan, planRef, ctx);
+
+        await waitForCondition(
+          () => store.listRunEvents(RunId.of(ctx.runId)),
+          (events) => events.some((event) => event.eventType === 'StepStarted'),
+          { timeoutMs: 30_000 }
+        );
+
+        await env.client.workflow.getHandle(runRef.workflowId).cancel();
+
+        const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
+        expect(status).toBe('CANCELLED');
+        await waitForCondition(
+          () => store.listRunEvents(RunId.of(ctx.runId)),
+          (events) => events.some((event) => event.eventType === 'RunCancelled'),
+          { timeoutMs: 30_000 }
+        );
 
         const eventTypes = (await store.listRunEvents(RunId.of(runRef.runId))).map(
           (event) => event.eventType

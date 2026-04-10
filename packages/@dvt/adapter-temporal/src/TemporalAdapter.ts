@@ -140,7 +140,7 @@ export class TemporalAdapter implements IProviderAdapter {
   async cancelRun(runRef: EngineRunRef): Promise<void> {
     const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
-    await workflowClient.getHandle(validatedRunRef.workflowId).signal(WorkflowSignals.CANCEL);
+    await workflowClient.getHandle(validatedRunRef.workflowId).cancel();
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {

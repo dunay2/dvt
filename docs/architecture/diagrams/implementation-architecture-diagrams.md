@@ -844,6 +844,13 @@ responsible for emitting the terminal `RunCancelled` event.
   or the workflow is in a state where signals are not processed (e.g., blocked
   on an activity), the cancellation will be silently lost.
 
+Planned correction under `AR-C6`:
+
+- `cancelRun()` moves to `WorkflowHandle.cancel()`
+- `signal(CANCEL)` remains the cooperative reason-carrying path
+- the workflow catches native cancellation and emits terminal `RunCancelled`
+  from workflow context instead of treating `cancelRun()` as a signal alias
+
 ### Unidentified Design Concerns
 
 - **Signal-derived event emission is fire-and-forget**: After

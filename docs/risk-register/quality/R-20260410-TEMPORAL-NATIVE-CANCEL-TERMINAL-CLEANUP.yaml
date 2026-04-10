@@ -1,0 +1,25 @@
+---
+id: R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP
+title: Temporal native cancellation depends on local-activity terminal cleanup
+status: Open
+date: 2026-04-10
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Medium
+context: >
+  AR-C6 fixes Temporal cancellation semantics by switching adapter-level cancellation to
+  `WorkflowHandle.cancel()` and completing terminal event emission through non-cancellable local
+  activities inside RunPlanWorkflow.
+risk: >
+  If Temporal SDK or workflow-cancellation behaviour changes around local activity completion, the
+  workflow could regress in its ability to persist RunCancelRequested and RunCancelled in the
+  intended order after provider-native cancellation is requested.
+mitigations:
+  - Unit coverage asserts that TemporalAdapter.cancelRun() calls native cancel instead of signal.
+  - Time-skipping integration coverage exercises signal cancellation, native cancellation, and
+    cancellation during finalization.
+  - EnginePolicies and implementation diagrams now record the expected cancellation ownership and
+    terminal event path explicitly for future regression review.
+review_after: 2026-06-15
+---
