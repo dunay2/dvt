@@ -1610,6 +1610,98 @@ tasks:
       - docs, route ownership, and runtime expectations remain aligned with the Git-mode
         architecture
     last_verified: '2026-04-07'
+  - task_id: F-24
+    priority: P1
+    status: in_progress
+    objective: >-
+      formalize the operator-workbench visual system and token-convergence path so the shell,
+      canvas, Monaco, and dense route surfaces stop mixing semantic tokens with route-level visual
+      hardcodes.
+    dependency: F-15
+    target: >-
+      A governed operator-workbench visual system defines token usage, density modes, route-header
+      and panel primitives, React Flow and Monaco theming rules, and the migration path away from
+      route-level `slate-*` and hex hardcodes in the main product surfaces.
+    complexity: M
+    effort_points: 5
+    progress_pct: 70
+    evidence_refs:
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/06-impact-matrix.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - apps/web/src/app/components/domain/ViewHeader.tsx
+      - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
+      - apps/web/src/app/views/AdminView.tsx
+      - apps/web/src/app/views/ArtifactsView.tsx
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/DiffView.tsx
+      - apps/web/src/app/views/LineageView.tsx
+      - apps/web/src/styles/theme.css
+    status_reason: >-
+      The bundle is normalized in English and now governs an explicit `RouteWorkbenchFrame` v1
+      contract instead of an over-broad future shape: header and summary bands stay outside the
+      scroll-owned body, `scroll={false}` remains available for split-pane routes, and contextual
+      side panels remain future primitives. The implementation now restores `Diff` summary ownership
+      to the header stack, fixes the shared field token so it works on neutral elements like compare
+      pills, and applies shared tab and Monaco tokens across the first `Diff` and `Artifacts`
+      cleanup slice. Tests now cover frame header or body ownership and the `Diff`
+      header-versus-body contract. Remaining work is broader panel, table, shell, Canvas, and deeper
+      Monaco convergence across the rest of the operator path.
+    definition_of_done:
+      - operator-workbench tokens and density modes are documented in active frontend governance
+      - route-level hardcode cleanup targets are mapped to concrete surfaces and components
+      - Monaco and React Flow visual integration rules are documented without changing shell
+        ownership
+      - downstream implementation slices can remove route-level `slate-*` and hex usage without
+        inventing a parallel style system
+      - the shared frame documents its v1 scope precisely and does not imply left or right panels
+        that do not exist yet
+      - header bands, summary bands, and scroll-owned bodies preserve prior route behavior unless a
+        governed UX change says otherwise
+      - shared field or tab tokens work on both primitives and neutral elements used in route chrome
+      - tests cover the frame scroll contract and at least one route-level header or body ownership
+        assertion
+    last_verified: '2026-04-09'
+  - task_id: F-25
+    priority: P1
+    status: in_progress
+    objective: >-
+      formalize the plugin UX integration contract and governed docks so plugin contributions extend
+      the shell predictably instead of deforming route chrome or inventing local integration rules.
+    dependency: F-15
+    target: >-
+      A governed plugin UX contract defines allowed docks, route metadata, route-header
+      contributions, local-toolbar rules, inspector rules, bottom-diagnostics contributions,
+      command-palette contributions, and plugin readiness semantics for frontend surfaces.
+    complexity: S
+    effort_points: 3
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/05-plugin-ux-integration-contract.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
+      - apps/web/src/app/plugins/contracts/PluginManifest.ts
+      - apps/web/src/app/plugins/registry.ts
+    status_reason: >-
+      The repo has strong technical plugin seams, and the professionalization bundle is now
+      normalized in English across shell grammar, plugin docking, rollout, and wireframe docs, so
+      Lane E has an active governed baseline for dock policy, route metadata, command-palette
+      contributions, bottom-panel contributions, and plugin readiness semantics. Remaining work is
+      contract extension and live surface adoption.
+    definition_of_done:
+      - allowed and forbidden plugin docks are documented against the stable shell grammar
+      - proposed frontend contract extensions are named and scoped in active docs
+      - plugin readiness and availability states are tied to user-facing surfaces
+      - downstream plugin workbench slices reference this contract instead of inventing local chrome
+    last_verified: '2026-04-09'
   - task_id: TF-E1
     priority: P0
     status: in_progress
@@ -1763,17 +1855,25 @@ dependency_notes:
     `F-23` captures the next Git-facing UX slice as governed file-history review inside `Code` and
     `Diff`. It explicitly avoids a VS Code-style Git explorer and keeps route ownership aligned with
     the Git-mode architecture.
+  - >-
+    The UX professionalization bundle extracted three governed slices: shell grammar stays under
+    `F-15` with `F-01`, `F-18`, and `F-23` as downstream consumers, while `F-24` now owns the
+    operator-workbench visual system and `F-25` owns the plugin UX integration contract so neither
+    concern remains hidden inside generic shell cleanup or Monaco planning.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-08'
-  total_tasks: 58
-  total_effort_points: 205
-  completed_weighted_points: 71.17
+  verified_on: '2026-04-09'
+  total_tasks: 60
+  total_effort_points: 213
+  completed_weighted_points: 74.97
   lane_progress_pct: 35
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
     tasks (parent + 6 subtasks) for Monaco embedded review surfaces across Diff, Artifacts, and
     Templates rather than a Canvas takeover. `F-23` now has a governed docs-first baseline for
-    Code-owned file-history review with Diff-owned revision comparison.
+    Code-owned file-history review with Diff-owned revision comparison, and `F-24` plus `F-25` now
+    have English-normalized bundle docs covering shell grammar, visual system, plugin UX, rollout,
+    drift notes, and wireframes so downstream implementation can consume a governed baseline instead
+    of a proposal pack with stale language and encoding issues.

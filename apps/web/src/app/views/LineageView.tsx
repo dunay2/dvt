@@ -1,4 +1,4 @@
-import { ScrollArea } from '../components/ui/scroll-area';
+import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { LineageBreadcrumb } from './lineage/LineageBreadcrumb';
 import { LineageColumnPanel } from './lineage/LineageColumnPanel';
 import { LineageGraphPanel } from './lineage/LineageGraphPanel';
@@ -25,40 +25,38 @@ export default function LineageView() {
   } = useLineageViewData();
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-slate-950">
-      <LineageHeader
-        searchQuery={searchQuery}
-        columnLevel={columnLevel}
-        isLoading={isLoading}
-        nodeCount={canonicalNodes.length}
-        onSearchQueryChange={setSearchQuery}
-        onColumnLevelChange={setColumnLevel}
-      />
+    <RouteWorkbenchFrame
+      header={
+        <>
+          <LineageHeader
+            searchQuery={searchQuery}
+            columnLevel={columnLevel}
+            isLoading={isLoading}
+            nodeCount={canonicalNodes.length}
+            onSearchQueryChange={setSearchQuery}
+            onColumnLevelChange={setColumnLevel}
+          />
+          <LineageBreadcrumb nodes={breadcrumbPath} focusNodeId={focusNode?.id} />
+        </>
+      }
+      bodyContainerClassName="mx-auto max-w-4xl space-y-4"
+    >
+      {!focusNode && !isLoading ? (
+        <p className="text-sm text-[var(--text-muted)]">{copy.noNodesLoaded}</p>
+      ) : null}
 
-      <LineageBreadcrumb nodes={breadcrumbPath} focusNodeId={focusNode?.id} />
-
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="p-6 pb-10">
-          <div className="mx-auto max-w-4xl space-y-4">
-            {!focusNode && !isLoading ? (
-              <p className="text-sm text-slate-400">{copy.noNodesLoaded}</p>
-            ) : null}
-
-            {!columnLevel ? (
-              <>
-                <LineageGraphPanel focusNode={focusNode} nodesByLevel={nodesByLevel} />
-                <LineageImpactSummary
-                  upstreamCount={upstreamCount}
-                  downstreamCount={downstreamCount}
-                  exposureCount={exposureCount}
-                />
-              </>
-            ) : (
-              <LineageColumnPanel focusNode={focusNode} columnLineage={columnLineage} />
-            )}
-          </div>
-        </div>
-      </ScrollArea>
-    </div>
+      {!columnLevel ? (
+        <>
+          <LineageGraphPanel focusNode={focusNode} nodesByLevel={nodesByLevel} />
+          <LineageImpactSummary
+            upstreamCount={upstreamCount}
+            downstreamCount={downstreamCount}
+            exposureCount={exposureCount}
+          />
+        </>
+      ) : (
+        <LineageColumnPanel focusNode={focusNode} columnLineage={columnLineage} />
+      )}
+    </RouteWorkbenchFrame>
   );
 }

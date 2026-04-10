@@ -1,4 +1,4 @@
-import { ScrollArea } from '../components/ui/scroll-area';
+import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { DiffHeader } from './diff/DiffHeader';
 import { DiffSummaryCards } from './diff/DiffSummaryCards';
 import { DiffTabs } from './diff/DiffTabs';
@@ -18,24 +18,25 @@ export default function DiffView() {
   } = useDiffData();
 
   return (
-    <div className="flex h-full flex-col bg-slate-950 text-slate-50">
-      <DiffHeader
-        compareMode={compareMode}
-        severityFilter={severityFilter}
-        comparePreset={comparePreset}
-        onCompareModeChange={setCompareMode}
-        onSeverityFilterChange={setSeverityFilter}
-      />
-      <DiffSummaryCards summary={summary} />
-      <ScrollArea className="flex-1">
-        <div className="p-6">
-          <DiffTabs
-            catalogDocument={catalogDocument}
-            changes={filteredChanges}
-            sqlDocument={sqlDocument}
+    <RouteWorkbenchFrame
+      header={
+        <>
+          <DiffHeader
+            compareMode={compareMode}
+            severityFilter={severityFilter}
+            comparePreset={comparePreset}
+            onCompareModeChange={setCompareMode}
+            onSeverityFilterChange={setSeverityFilter}
           />
-        </div>
-      </ScrollArea>
-    </div>
+          <DiffSummaryCards summary={summary} />
+        </>
+      }
+    >
+      <DiffTabs
+        catalogDocument={catalogDocument}
+        changes={filteredChanges}
+        sqlDocument={sqlDocument}
+      />
+    </RouteWorkbenchFrame>
   );
 }

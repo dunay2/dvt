@@ -117,4 +117,41 @@ describe('ArtifactsView', () => {
     expect(mounted.container.textContent).toContain('target/manifest.json');
     expect(mounted.container.textContent).toContain('About dbt Artifacts');
   });
+
+  it('keeps route header outside the scroll body and preserves section-title spacing', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService(),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('target/manifest.json') === true,
+      { description: 'workspace artifact previews render before layout assertions' }
+    );
+
+    const header = mounted.container.querySelector('[data-slot="route-workbench-header"]');
+    const body = mounted.container.querySelector('[data-slot="route-workbench-body"]');
+    const routeTitle = header?.querySelector('h1');
+    const importHeading = Array.from(mounted.container.querySelectorAll('h2')).find((heading) =>
+      heading.textContent?.includes('Import Manifest')
+    );
+    const artifactsHeading = Array.from(mounted.container.querySelectorAll('h2')).find((heading) =>
+      heading.textContent?.includes('Server Artifacts')
+    );
+
+    expect(routeTitle?.textContent).toContain('dbt Artifacts');
+    expect(header?.textContent).toContain('a3f2b91');
+    expect(body?.textContent).toContain('Import Manifest');
+    expect(body?.textContent).toContain('Server Artifacts');
+    expect(body?.querySelector('h1')).toBeNull();
+    expect(body?.textContent).not.toContain('a3f2b91');
+    expect(importHeading?.className).toContain('mb-3');
+    expect(artifactsHeading?.className).toContain('mb-3');
+  });
 });

@@ -76,8 +76,18 @@ describe('domain components', () => {
       );
     });
 
+    const statusIndicator = container.querySelector('[data-slot="status-indicator"]');
+    const overlay = container.querySelector('[data-slot="view-state-overlay"]');
+
     expect(container.textContent).toContain('Warning');
     expect(container.textContent).toContain('Cost data unavailable');
     expect(container.textContent).toContain('Retry');
+    expect(statusIndicator?.className).toContain('border-[color:var(--status-warning)]');
+    expect(statusIndicator?.className).toContain('text-[var(--status-warning)]');
+    expect(statusIndicator?.className).not.toContain('border-yellow-500');
+    expect(overlay?.className).toContain('bg-[var(--surface-panel)]');
+    expect(overlay?.className).toContain('border-[color:var(--border-default)]');
+    expect(overlay?.innerHTML).toContain('text-[var(--status-danger)]');
+    expect(overlay?.innerHTML).not.toContain('text-red-400');
   });
 });

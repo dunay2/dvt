@@ -131,6 +131,16 @@ describe('CostView', () => {
     expect(mounted.container.textContent).toContain('Cost');
     expect(mounted.container.textContent).toContain('Top cost drivers');
     expect(mounted.container.textContent).toContain('fct_sales');
+
+    const alertsList = mounted.container.querySelector('[data-slot="cost-alerts-list"]');
+    const alertCard = mounted.container.querySelector('[data-slot="cost-alert-card"]');
+
+    expect(alertsList?.className).toContain('bg-[var(--surface-panel)]');
+    expect(alertsList?.className).toContain('border-[color:var(--border-default)]');
+    expect(alertCard?.className).toContain('border-[color:var(--status-warning)]');
+    expect(alertCard?.className).toContain('bg-[var(--surface-elevated)]');
+    expect(alertCard?.innerHTML).not.toContain('border-yellow-800');
+    expect(alertCard?.innerHTML).not.toContain('text-yellow-400');
   });
 
   it('renders error state when services fail', async () => {
