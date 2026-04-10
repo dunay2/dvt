@@ -215,6 +215,13 @@ describe('RootShell platform health UX', () => {
         }
       );
 
+      const appShellFrame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
+      const appShellBody = mounted.container.querySelector('[data-slot="app-shell-body"]');
+      const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
+      const appShellLeftNavigation = mounted.container.querySelector(
+        '[data-slot="app-shell-left-navigation"]'
+      );
+      const appShellOutlet = mounted.container.querySelector('[data-slot="app-shell-outlet"]');
       const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
       const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
       const shellWorkspaceSelectors = mounted.container.querySelector(
@@ -230,6 +237,12 @@ describe('RootShell platform health UX', () => {
         ),
       ];
 
+      expect(appShellFrame).not.toBeNull();
+      expect(appShellBody).not.toBeNull();
+      expect(appShellLeftNavigation?.parentElement).toBe(appShellBody);
+      expect(appShellMain?.parentElement).toBe(appShellBody);
+      expect(appShellOutlet?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+      expect(appShellOutlet?.textContent).toContain('Workspace route');
       expect(shellTopBar?.textContent).toContain('Raven');
       expect(shellTopBar?.textContent).toContain('Shell');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
@@ -275,7 +288,37 @@ describe('RootShell platform health UX', () => {
       );
 
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]')).toBeNull();
       expect(mounted.container.querySelector('[data-slot="shell-top-bar"]')).toBeTruthy();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('renders the bottom console drawer inside the app shell frame when enabled', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    useUiLayoutStore.setState({ consolePanelVisible: true, consolePanelHeight: 160 });
+    const mounted = await withTestQueryClient(createRootShellNode(capability));
+
+    try {
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query',
+        }
+      );
+
+      const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
+      const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
+
+      expect(bottomDrawer).not.toBeNull();
+      expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+      expect(bottomDrawer?.textContent).toContain('Console');
+      expect(bottomDrawer?.textContent).toContain('Start a run to see execution output here.');
     } finally {
       await mounted.cleanup();
     }
