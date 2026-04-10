@@ -28,13 +28,13 @@ describe('formatRunEventAsLogLine', () => {
   it('formats a StepStarted event', () => {
     const line = formatRunEventAsLogLine(makeEvent());
     expect(line).toContain('[INFO]');
-    expect(line).toContain('Step stg_orders started');
+    expect(line).toContain('Step started (stg_orders)');
   });
 
   it('formats a StepCompleted event', () => {
     const line = formatRunEventAsLogLine(makeEvent({ eventType: 'StepCompleted' }));
     expect(line).toContain('[SUCCESS]');
-    expect(line).toContain('Step stg_orders completed');
+    expect(line).toContain('Step completed (stg_orders)');
   });
 
   it('formats a StepFailed event with payload message', () => {
@@ -45,7 +45,7 @@ describe('formatRunEventAsLogLine', () => {
       })
     );
     expect(line).toContain('[ERROR]');
-    expect(line).toContain('Step stg_orders failed: OOM killed');
+    expect(line).toContain('Step failed (stg_orders): OOM killed');
   });
 
   it('formats a RunStarted event', () => {
@@ -61,7 +61,7 @@ describe('formatRunEventAsLogLine', () => {
       makeEvent({ eventType: 'RunCompleted', stepId: undefined as never })
     );
     expect(line).toContain('[SUCCESS]');
-    expect(line).toContain('Run completed successfully');
+    expect(line).toContain('Run completed');
   });
 
   it('formats a RunFailed event with payload message', () => {

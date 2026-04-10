@@ -67,7 +67,9 @@ function buildRunEvent(overrides: RunEventFixture = {}): RunEvent {
     logicalAttemptId: overrides.logicalAttemptId ?? 1,
     idempotencyKey: overrides.idempotencyKey ?? 'id-1',
     payloadVersion: overrides.payloadVersion ?? 1,
-    ...(overrides.stepId === undefined ? { stepId: stepId('step-1') } : { stepId: stepId(overrides.stepId) }),
+    ...(overrides.stepId === undefined
+      ? { stepId: stepId('step-1') }
+      : { stepId: stepId(overrides.stepId) }),
     runSeq: overrides.runSeq ?? 1,
     persistedAt: iso(overrides.persistedAt ?? overrides.emittedAt ?? '2026-03-28T10:01:00.000Z'),
     ...(overrides.payload === undefined ? {} : { payload: overrides.payload }),
@@ -196,8 +198,13 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('snapshot+timeline');
+    expect(container.textContent).toContain('Runtime snapshot');
+    expect(container.textContent).toContain('Event timeline');
     expect(container.textContent).toContain('StepStarted');
+    expect(container.textContent).toContain('INFO');
+    expect(container.textContent).toContain('Step started');
     expect(container.textContent).toContain('Step: step-1');
+    expect(container.textContent).not.toContain('Console');
     expect(container.textContent).toContain(
       'Result evidence is not available yet for this run snapshot.'
     );
@@ -403,11 +410,11 @@ describe('RunStates', () => {
   it('renders execution provenance from step-started artifact refs', async () => {
     const workspace = buildWorkspace(undefined, {
       state: 'available',
-        events: [
-          buildStepStartedEvent({
-            stepId: stepId('step-transform'),
-            payload: {
-              stepArtifactRef: {
+      events: [
+        buildStepStartedEvent({
+          stepId: stepId('step-transform'),
+          payload: {
+            stepArtifactRef: {
               artifactKind: 'dbt.compiled-sql',
               storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
               sha256: 'a'.repeat(64),
@@ -416,11 +423,11 @@ describe('RunStates', () => {
             },
           },
         }),
-          buildStepStartedEvent({
-            eventId: 'evt-step-started-2',
-            stepId: stepId('step-evidence'),
-            payload: {
-              compiledCodeRef: {
+        buildStepStartedEvent({
+          eventId: 'evt-step-started-2',
+          stepId: stepId('step-evidence'),
+          payload: {
+            compiledCodeRef: {
               storageUri: 's3://dvt-artifacts/dev/compiled/evidence.sql',
               sha256: 'b'.repeat(64),
               sizeBytes: 128,
@@ -580,4 +587,3 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('run_missing');
   });
 });
-

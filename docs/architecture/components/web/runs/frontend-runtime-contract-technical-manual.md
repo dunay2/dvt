@@ -108,6 +108,73 @@ flowchart LR
 | fetch run snapshot      | `GET /runs/:runId`        | API / Entry | status truth and detail truth        |
 | list run events         | `GET /runs/:runId/events` | API / Entry | ordered timeline feed for monitoring |
 
+## Runs Versus Bottom Console Drawer
+
+`GET /runs/:runId/events` now has two governed frontend consumers, but they do
+not own the same product responsibility:
+
+- `RunWorkspaceFacade` composes snapshot plus timeline into the durable
+  run-detail workbench;
+- `useConsoleLogStream()` mirrors the active run as a shell-level live stream
+  companion;
+- only the Runs workspace combines timeline with snapshot authority;
+- the shell drawer must not present itself as the authoritative run-detail
+  surface.
+
+Current consumer split:
+
+```mermaid
+flowchart LR
+  Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
+  Events --> Facade["RunWorkspaceFacade.loadRunWorkspace(runId)"]
+  Snapshot["GET /runs/:runId"] --> Facade
+  DrawerHook --> Drawer["BottomConsoleDrawer"]
+  Facade --> Runs["RunWorkspaceStateView"]
+```
+
+Authority rules:
+
+1. `BottomConsoleDrawer` may show ordered live lines for the active run.
+2. `BottomConsoleDrawer` must not derive snapshot truth, failure diagnostics,
+   or result evidence on its own.
+3. `RunWorkspaceStateView` owns snapshot truth and timeline degradation
+   semantics for `/runs/:runId`.
+4. Future convergence of logs, timeline, and terminal-grade streaming belongs
+   to `F-10` and `F-18`, not to ad hoc shell copy drift.
+
+## Shared Run Event Presentation Model
+
+The shell drawer and the Runs route now share one event-presentation seam
+before they render their different surfaces:
+
+```mermaid
+flowchart LR
+  Event["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
+  SharedCopy --> Drawer["formatRunEventAsLogLine(...)"]
+  SharedCopy --> Timeline["RunWorkspaceStateView timeline event card"]
+```
+
+The shared model owns:
+
+- event level (`INFO`, `WARN`, `ERROR`, `SUCCESS`);
+- headline key;
+- optional detail copied from runtime event payload message when present;
+- step identity when the event belongs to one step.
+
+The shared copy resolver owns:
+
+- the governed human-readable headline text used by both drawer and timeline
+  surfaces.
+
+It does not change authority:
+
+- `BottomConsoleDrawer` still renders a shell-level companion stream;
+- `BottomConsoleDrawer` still owns terminal-style log-line composition;
+- `RunWorkspaceStateView` still owns durable timeline interpretation;
+- snapshot truth, failure diagnostics, and result evidence remain outside the
+  shared event-presentation seam.
+
 ## PlanRef handoff prerequisite
 
 The start-run contract is now preceded by backend-owned plan handoff routes:

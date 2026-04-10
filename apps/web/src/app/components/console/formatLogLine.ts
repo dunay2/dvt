@@ -1,35 +1,9 @@
+import {
+  buildRunEventPresentationModel,
+  levelForEventType,
+} from '../../services/runs/runEventPresentationModel';
+import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
 import type { RunEvent } from '../../types/engine';
-
-const EVENT_LEVEL: Record<string, string> = {
-  RunQueued: 'INFO',
-  RunStarted: 'INFO',
-  RunPaused: 'WARN',
-  RunResumed: 'INFO',
-  RunCancelRequested: 'WARN',
-  RunCancelled: 'WARN',
-  RunCompleted: 'SUCCESS',
-  RunFailed: 'ERROR',
-  StepStarted: 'INFO',
-  StepCompleted: 'SUCCESS',
-  StepFailed: 'ERROR',
-  StepSkipped: 'WARN',
-};
-
-const EVENT_MESSAGE: Record<string, (event: RunEvent) => string> = {
-  RunQueued: () => 'Run queued for execution',
-  RunStarted: () => 'Run started',
-  RunPaused: () => 'Run paused',
-  RunResumed: () => 'Run resumed',
-  RunCancelRequested: () => 'Cancellation requested',
-  RunCancelled: () => 'Run cancelled',
-  RunCompleted: () => 'Run completed successfully',
-  RunFailed: (e) => `Run failed${e.payload?.message ? `: ${e.payload.message}` : ''}`,
-  StepStarted: (e) => `Step ${e.stepId ?? 'unknown'} started`,
-  StepCompleted: (e) => `Step ${e.stepId ?? 'unknown'} completed`,
-  StepFailed: (e) =>
-    `Step ${e.stepId ?? 'unknown'} failed${e.payload?.message ? `: ${e.payload.message}` : ''}`,
-  StepSkipped: (e) => `Step ${e.stepId ?? 'unknown'} skipped`,
-};
 
 function formatTimestamp(iso: string): string {
   try {
@@ -42,12 +16,11 @@ function formatTimestamp(iso: string): string {
 
 export function formatRunEventAsLogLine(event: RunEvent): string {
   const time = formatTimestamp(event.emittedAt);
-  const level = EVENT_LEVEL[event.eventType] ?? 'INFO';
-  const messageFn = EVENT_MESSAGE[event.eventType];
-  const message = messageFn ? messageFn(event) : `${event.eventType}`;
-  return `${time}  [${level}]  ${message}`;
+  const presentation = buildRunEventPresentationModel(event);
+  const headline = resolveRunEventHeadline(presentation.headlineKey, presentation.fallbackHeadline);
+  const baseMessage = presentation.stepId ? `${headline} (${presentation.stepId})` : headline;
+  const message = presentation.detail ? `${baseMessage}: ${presentation.detail}` : baseMessage;
+  return `${time}  [${presentation.level}]  ${message}`;
 }
 
-export function levelForEventType(eventType: string): string {
-  return EVENT_LEVEL[eventType] ?? 'INFO';
-}
+export { levelForEventType };

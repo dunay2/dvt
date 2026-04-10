@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 planning_type: review
 ---
 
@@ -55,6 +55,13 @@ Sprint execution board:
 | [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
 
 Additional active rationale:
+
+- [20260410 Runtime and shared-kernel risk triage review](./architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
+  - domain: `architecture-and-governance`
+  - role: current triage reference for shared-kernel and runtime risks
+  - linkage: `RC-G1-B`, `AR-A7`, `AR-A12`, `AR-C6`, `AR-D8`, `AR-C2-T2..T4`
+  - status: `reference`
+  - progress: `n/a`
 
 - [20260407 Execution plan and run execution policy rationale](./architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md)
   - domain: `architecture-and-governance`
