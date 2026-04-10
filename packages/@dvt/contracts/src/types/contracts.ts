@@ -14,6 +14,7 @@ import type { $brand } from 'zod';
 
 export type NonBlankString = string & $brand<'NonBlankString'>;
 export type IsoUtcString = NonBlankString & $brand<'IsoUtcString'>;
+export type Sha256HexString = NonBlankString & $brand<'Sha256HexString'>;
 
 // Branded primitive aliases
 export type TenantId = string & { readonly __brand: 'TenantId' };
@@ -28,6 +29,7 @@ export type ContractPrimitiveBrandAssertions = [
   Assert<string extends StepId ? false : true>,
   Assert<StepId extends NonBlankString ? true : false>,
   Assert<IsoUtcString extends NonBlankString ? true : false>,
+  Assert<Sha256HexString extends NonBlankString ? true : false>,
 ];
 
 export type Provider = 'temporal' | 'conductor' | 'mock';
@@ -106,12 +108,12 @@ export interface RunExecutionPolicy {
    * When present, admission-time runExecutionContext artifacts MUST align with
    * this value.
    */
-  pluginCompatibilityFingerprint?: string | undefined;
+  pluginCompatibilityFingerprint?: Sha256HexString | undefined;
   /**
    * Capabilities this run requires from the selected adapter.
    * Strings MUST be drawn from the normative enum in capabilities.schema.json.
    */
-  requiresCapabilities?: string[] | undefined;
+  requiresCapabilities?: NonBlankString[] | undefined;
 }
 
 export interface RunExecutionContextRef {
@@ -124,7 +126,7 @@ export interface RunExecutionContextRef {
    * Optional echoed compatibility fingerprint bound to the referenced context.
    * If supplied, it MUST match the governing plan-level fingerprint.
    */
-  pluginCompatibilityFingerprint?: NonBlankString | undefined;
+  pluginCompatibilityFingerprint?: Sha256HexString | undefined;
 }
 
 export interface RunExecutionContext {
@@ -136,7 +138,7 @@ export interface RunExecutionContext {
    * Deterministic fingerprint used to verify plugin/runtime compatibility
    * against the governing plan artifact at admission and replay boundaries.
    */
-  pluginCompatibilityFingerprint?: NonBlankString | undefined;
+  pluginCompatibilityFingerprint?: Sha256HexString | undefined;
   tenantId: NonBlankString;
   projectId: NonBlankString;
   environmentId: NonBlankString;
@@ -192,30 +194,30 @@ export interface RecoverRunCommand {
 export type EngineRunRef =
   | {
       provider: 'temporal';
-      tenantId: string;
-      namespace: string;
-      workflowId: string;
-      runId: string;
-      taskQueue?: string;
+      tenantId: NonBlankString;
+      namespace: NonBlankString;
+      workflowId: NonBlankString;
+      runId: NonBlankString;
+      taskQueue?: NonBlankString;
     }
   | {
       provider: 'conductor';
-      tenantId: string;
-      workflowId: string;
-      runId: string;
-      conductorUrl: string;
+      tenantId: NonBlankString;
+      workflowId: NonBlankString;
+      runId: NonBlankString;
+      conductorUrl: NonBlankString;
     }
   | {
       provider: 'mock';
-      tenantId: string;
-      workflowId: string;
-      runId: string;
+      tenantId: NonBlankString;
+      workflowId: NonBlankString;
+      runId: NonBlankString;
     };
 
 export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 
 export interface SignalRequest {
-  signalId: string; // caller-provided idempotency id
+  signalId: NonBlankString; // caller-provided idempotency id
   type: SignalType;
   reason?: string;
   requestedAt?: IsoUtcString;

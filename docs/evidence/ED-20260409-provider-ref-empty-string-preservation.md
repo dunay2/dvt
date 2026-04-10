@@ -1,5 +1,5 @@
 ---
-title: Provider ref updates preserve explicit empty optional values
+title: Historical intermediate provider-ref empty-string preservation policy
 status: Accepted
 date: 2026-04-09
 owners:
@@ -28,6 +28,9 @@ when the caller had supplied it as the value to persist.
 
 This slice aligns provider-ref update semantics with the repository's normal
 `undefined`-means-absent model.
+
+> Historical note: this intermediate behavior was superseded on 2026-04-10.
+> Temporal `taskQueue` values are now valid only when absent or non-blank.
 
 ## What changed
 

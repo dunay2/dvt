@@ -48,7 +48,9 @@ import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/St
 import {
   isIsoUtcString,
   isNonBlankString,
+  isSha256HexString,
   NON_BLANK_STRING_MESSAGE,
+  SHA256_HEX_STRING_MESSAGE,
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from './utils/contractPrimitives.js';
 import { jcsCanonicalize } from './utils/jcsCanonicalize.js';
@@ -93,6 +95,12 @@ export const NonBlankStringSchema = z
 export const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString(value), {
   message: STRICT_ISO_UTC_STRING_MESSAGE,
 }).brand<'IsoUtcString'>();
+export const Sha256HexStringSchema = NonBlankStringSchema.refine(
+  (value) => isSha256HexString(value),
+  {
+    message: SHA256_HEX_STRING_MESSAGE,
+  }
+).brand<'Sha256HexString'>();
 export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 
 // ─── Core contract schemas ───────────────────────────────────────────────────
@@ -125,7 +133,7 @@ export const ResolvedRunContextSchema = RunContextSchema.extend({
 }).strict();
 
 export const SignalRequestSchema = z.object({
-  signalId: z.string().min(1),
+  signalId: NonBlankStringSchema,
   type: SignalTypeSchema,
   reason: z.string().optional(),
   requestedAt: IsoUtcStringSchema.optional(),
@@ -200,25 +208,25 @@ export const TransformationFlowRuntimeBindingSchema = z
 
 const TemporalRunRefSchema = z.object({
   provider: z.literal('temporal'),
-  tenantId: z.string().min(1),
-  namespace: z.string().min(1),
-  workflowId: z.string().min(1),
+  tenantId: NonBlankStringSchema,
+  namespace: NonBlankStringSchema,
+  workflowId: NonBlankStringSchema,
   runId: NonBlankStringSchema,
-  taskQueue: z.string().optional(),
+  taskQueue: NonBlankStringSchema.optional(),
 });
 
 const ConductorRunRefSchema = z.object({
   provider: z.literal('conductor'),
-  tenantId: z.string().min(1),
-  workflowId: z.string().min(1),
+  tenantId: NonBlankStringSchema,
+  workflowId: NonBlankStringSchema,
   runId: NonBlankStringSchema,
-  conductorUrl: z.string().min(1),
+  conductorUrl: NonBlankStringSchema,
 });
 
 const MockRunRefSchema = z.object({
   provider: z.literal('mock'),
-  tenantId: z.string().min(1),
-  workflowId: z.string().min(1),
+  tenantId: NonBlankStringSchema,
+  workflowId: NonBlankStringSchema,
   runId: NonBlankStringSchema,
 });
 

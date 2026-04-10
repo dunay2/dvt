@@ -3,7 +3,9 @@ import { z } from 'zod';
 import {
   isIsoUtcString,
   isNonBlankString,
+  isSha256HexString,
   NON_BLANK_STRING_MESSAGE,
+  SHA256_HEX_STRING_MESSAGE,
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
 
@@ -17,6 +19,9 @@ const NonBlankStringSchema = z
 const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString(value), {
   message: STRICT_ISO_UTC_STRING_MESSAGE,
 }).brand<'IsoUtcString'>();
+const Sha256HexStringSchema = NonBlankStringSchema.refine((value) => isSha256HexString(value), {
+  message: SHA256_HEX_STRING_MESSAGE,
+}).brand<'Sha256HexString'>();
 
 const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
 
@@ -27,7 +32,7 @@ export const RunExecutionContextRefSchema = z
     schemaVersion: NonBlankStringSchema,
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,
-    pluginCompatibilityFingerprint: NonBlankStringSchema.optional(),
+    pluginCompatibilityFingerprint: Sha256HexStringSchema.optional(),
   })
   .strict();
 
@@ -37,7 +42,7 @@ export const RunExecutionContextSchema = z
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,
     planSha256: NonBlankStringSchema,
-    pluginCompatibilityFingerprint: NonBlankStringSchema.optional(),
+    pluginCompatibilityFingerprint: Sha256HexStringSchema.optional(),
     tenantId: NonBlankStringSchema,
     projectId: NonBlankStringSchema,
     environmentId: NonBlankStringSchema,

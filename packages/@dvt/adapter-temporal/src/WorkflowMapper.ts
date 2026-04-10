@@ -42,11 +42,11 @@ export function toTemporalRunRef(args: {
 }): Extract<EngineRunRef, { provider: 'temporal' }> {
   return {
     provider: 'temporal',
-    tenantId: args.tenantId,
-    namespace: args.config.namespace,
-    workflowId: args.workflowId,
-    runId: args.runId,
-    taskQueue: args.taskQueue,
+    tenantId: asNonBlankString(args.tenantId),
+    namespace: asNonBlankString(args.config.namespace),
+    workflowId: asNonBlankString(args.workflowId),
+    runId: asNonBlankString(args.runId),
+    ...(args.taskQueue === undefined ? {} : { taskQueue: asNonBlankString(args.taskQueue) }),
   };
 }
 

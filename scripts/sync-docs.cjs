@@ -191,6 +191,42 @@ function extractField(content, fieldName) {
   return '-';
 }
 
+function extractStructuredField(content, fieldName) {
+  const { frontmatter } = splitFrontmatter(content);
+  const frontmatterValue = frontmatter[fieldName];
+  if (typeof frontmatterValue === 'string' && frontmatterValue.trim().length > 0) {
+    return frontmatterValue.trim();
+  }
+
+  const topLevelPattern = new RegExp(`^${fieldName}:\\s*(.+)$`, 'im');
+  const topLevelMatch = content.match(topLevelPattern);
+  if (!topLevelMatch) {
+    return null;
+  }
+  return topLevelMatch[1].trim();
+}
+
+function riskRegisterEntryKey(entryName, fileContent) {
+  return (
+    extractStructuredField(fileContent, 'id') || path.basename(entryName, path.extname(entryName))
+  ).toLowerCase();
+}
+
+function riskRegisterEntryPrecedence(entryName) {
+  switch (path.extname(entryName).toLowerCase()) {
+    case '.yaml':
+      return 4;
+    case '.yml':
+      return 3;
+    case '.md':
+      return 2;
+    case '.txt':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 function generateAdrLanding() {
   if (!fs.existsSync(adrDir)) {
     throw new Error('Missing docs/adr directory.');
@@ -799,6 +835,7 @@ function scanSectionEntries(sectionRelativePath) {
   const allowYaml = sectionRelativePath.startsWith('risk-register');
   const entries = fs.readdirSync(dirAbs, { withFileTypes: true });
   const rows = [];
+  const dedupedRiskRows = allowYaml ? new Map() : null;
   for (const entry of entries) {
     if (entry.name.startsWith('.')) continue;
     const absPath = path.join(dirAbs, entry.name);
@@ -820,21 +857,47 @@ function scanSectionEntries(sectionRelativePath) {
     if (/^index\.md$/i.test(entry.name)) continue;
     const fileContent = readIfExists(absPath) || '';
     const heading = ext === '.md' ? extractFirstHeading(fileContent) : null;
-    const parsed =
-      allowYaml && (ext === '.yaml' || ext === '.yml') ? splitFrontmatter(fileContent) : null;
-    rows.push({
+    const label = allowYaml
+      ? heading ||
+        extractStructuredField(fileContent, 'title') ||
+        extractStructuredField(fileContent, 'id') ||
+        humanizeName(entry.name)
+      : heading || humanizeName(entry.name);
+    const row = {
       type: 'file',
-      label:
-        heading || parsed?.frontmatter.title || parsed?.frontmatter.id || humanizeName(entry.name),
+      label,
       link: entry.name,
-    });
+    };
+
+    if (!allowYaml) {
+      rows.push(row);
+      continue;
+    }
+
+    const key = riskRegisterEntryKey(entry.name, fileContent);
+    const existing = dedupedRiskRows.get(key);
+    if (!existing) {
+      dedupedRiskRows.set(key, row);
+      continue;
+    }
+
+    const existingPrecedence = riskRegisterEntryPrecedence(existing.link);
+    const candidatePrecedence = riskRegisterEntryPrecedence(row.link);
+    if (
+      candidatePrecedence > existingPrecedence ||
+      (candidatePrecedence === existingPrecedence &&
+        row.link.localeCompare(existing.link, 'en', { sensitivity: 'base' }) < 0)
+    ) {
+      dedupedRiskRows.set(key, row);
+    }
   }
 
-  rows.sort((a, b) => {
+  const normalizedRows = allowYaml ? [...rows, ...dedupedRiskRows.values()] : rows;
+  normalizedRows.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
     return a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
   });
-  return rows;
+  return normalizedRows;
 }
 
 function orderRowsByPreferredLinks(rows, preferredLinks) {

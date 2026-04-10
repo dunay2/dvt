@@ -1,10 +1,13 @@
-import type { IsoUtcString, NonBlankString, StepId } from '../types/contracts.js';
+import type { IsoUtcString, NonBlankString, Sha256HexString, StepId } from '../types/contracts.js';
 
 export const NON_BLANK_STRING_MESSAGE = 'String must contain at least one non-whitespace character';
 export const STRICT_ISO_UTC_STRING_MESSAGE =
   'String must be a strict ISO UTC timestamp (YYYY-MM-DDTHH:mm:ss.mmmZ)';
+export const SHA256_HEX_STRING_MESSAGE =
+  'String must be a 64-character lowercase hex SHA-256 value';
 
 const ISO_UTC_REGEX = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
+const SHA256_HEX_REGEX = /^[a-f0-9]{64}$/;
 const MS_PER_SECOND = 1000;
 const MS_PER_MINUTE = 60 * MS_PER_SECOND;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
@@ -24,6 +27,17 @@ export function asNonBlankString(value: string): NonBlankString {
 
 export function asStepId(value: string): StepId {
   return asNonBlankString(value) as StepId;
+}
+
+export function isSha256HexString(value: string): value is Sha256HexString {
+  return isNonBlankString(value) && SHA256_HEX_REGEX.test(value);
+}
+
+export function asSha256HexString(value: string): Sha256HexString {
+  if (!isSha256HexString(value)) {
+    throw new Error(SHA256_HEX_STRING_MESSAGE);
+  }
+  return value as Sha256HexString;
 }
 
 function isLeapYear(year: number): boolean {

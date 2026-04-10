@@ -1,7 +1,9 @@
 import type { EngineRunRef, IsoUtcString, PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import { parseEngineRunRef } from '@dvt/contracts';
 
 import type { EventType, RunEventInput, RunMetadata } from '../../contracts/runEvents.js';
 import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
+import { normalizeEngineRunRef } from '../../core/lifecycle/coreRuntime.js';
 import type { IClock } from '../../utils/clock.js';
 
 export interface StartRunEventFactoryDeps {
@@ -47,6 +49,7 @@ export class StartRunEventFactory {
     runRef: EngineRunRef,
     createdAt: IsoUtcString
   ): RunMetadata {
+    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(runRef));
     return {
       tenantId: context.tenantId,
       projectId: context.projectId,
@@ -57,7 +60,7 @@ export class StartRunEventFactory {
       logicalAttemptId: context.logicalAttemptId,
       ...(context.parentRunId !== undefined ? { parentRunId: context.parentRunId } : {}),
       ...(context.originRunId !== undefined ? { originRunId: context.originRunId } : {}),
-      providerRef: runRef,
+      providerRef: validatedRunRef,
       createdAt,
     };
   }

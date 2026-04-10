@@ -11,8 +11,10 @@ import {
   parsePlanRecord,
   parsePlannerInputEnvelopeV1,
   parsePlanRef,
+  parseRunExecutionPolicy,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
+  parseEngineRunRef,
   parseRunEventWrite,
   parseRunStatusSnapshot,
   parseRecoverRunCommand,
@@ -57,6 +59,15 @@ describe('contracts: validation helpers', () => {
       parseSignalRequest({
         signalId: 'sig-1',
         type: 'INVALID_SIGNAL',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects SignalRequest when signalId is only whitespace', () => {
+    expect(() =>
+      parseSignalRequest({
+        signalId: '   ',
+        type: 'PAUSE',
       })
     ).toThrow(ContractValidationError);
   });
@@ -134,6 +145,22 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(ctx.targetAdapter).toBe('temporal');
+  });
+
+  it('rejects RunExecutionPolicy when pluginCompatibilityFingerprint is not canonical sha256', () => {
+    expect(() =>
+      parseRunExecutionPolicy({
+        pluginCompatibilityFingerprint: 'not-a-sha',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionPolicy when requiresCapabilities contains whitespace-only entries', () => {
+    expect(() =>
+      parseRunExecutionPolicy({
+        requiresCapabilities: ['basic-execution', '   '],
+      })
+    ).toThrow(ContractValidationError);
   });
 
   it('parses RunStatusSnapshot with TF-C2-B result evidence fields', () => {
@@ -237,6 +264,31 @@ describe('contracts: validation helpers', () => {
     expect(ctx.runExecutionContextRef?.uri).toContain('dvt-runctx://');
   });
 
+  it('rejects EngineRunRef when provider identifiers are only whitespace', () => {
+    expect(() =>
+      parseEngineRunRef({
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'temporal-main',
+        workflowId: '   ',
+        runId: 'run-1',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects EngineRunRef when temporal taskQueue is empty', () => {
+    expect(() =>
+      parseEngineRunRef({
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'temporal-main',
+        workflowId: 'workflow-1',
+        runId: 'run-1',
+        taskQueue: '',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunExecutionContextRef with valid input', () => {
     const ref = parseRunExecutionContextRef({
       uri: 'dvt-runctx://tenant-a/run-1/context.json',
@@ -260,6 +312,19 @@ describe('contracts: validation helpers', () => {
         schemaVersion: 'v1.0',
         planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
         planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionContextRef when pluginCompatibilityFingerprint is not canonical sha256', () => {
+    expect(() =>
+      parseRunExecutionContextRef({
+        uri: 'dvt-runctx://tenant-a/run-1/context.json',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        pluginCompatibilityFingerprint: 'invalid-fingerprint',
       })
     ).toThrow(ContractValidationError);
   });

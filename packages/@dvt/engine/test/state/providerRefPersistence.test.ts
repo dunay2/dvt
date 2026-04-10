@@ -19,7 +19,7 @@ function makeBootstrap(runId: string): {
       namespace: string;
       workflowId: string;
       runId: string;
-      taskQueue: string;
+      taskQueue?: string;
     };
   };
   firstEvents: [];
@@ -39,7 +39,6 @@ function makeBootstrap(runId: string): {
         namespace: 'default',
         workflowId: `wf-${runId}`,
         runId: `pr-${runId}`,
-        taskQueue: '',
       },
     },
     firstEvents: [],
@@ -50,22 +49,22 @@ describe.each([
   ['InMemoryRunStateStore', () => new InMemoryRunStateStore()],
   ['InMemoryTxStore', () => new InMemoryTxStore()],
 ] as const)('%s providerRef persistence', (_label, createStore) => {
-  it('preserves provider-specific values inside the discriminated providerRef', async () => {
+  it('omits missing temporal taskQueue instead of materializing an empty value', async () => {
     const store = createStore();
     const runId = 'provider-ref-empty-1';
 
     await store.bootstrapRunTx(makeBootstrap(runId));
 
-    await expect(store.getRunMetadataByRunId('tenant-1', runId)).resolves.toMatchObject({
-      providerRef: {
-        provider: 'temporal',
-        tenantId: 'tenant-1',
-        namespace: 'default',
-        workflowId: `wf-${runId}`,
-        runId: `pr-${runId}`,
-        taskQueue: '',
-      },
+    const metadata = await store.getRunMetadataByRunId('tenant-1', runId);
+
+    expect(metadata?.providerRef).toEqual({
+      provider: 'temporal',
+      tenantId: 'tenant-1',
+      namespace: 'default',
+      workflowId: `wf-${runId}`,
+      runId: `pr-${runId}`,
     });
+    expect(metadata?.providerRef).not.toHaveProperty('taskQueue');
   });
 
   it('reconciles providerRef when the update keeps the same provider discriminator', async () => {

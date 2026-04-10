@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
 
 import {
+  asNonBlankString,
   parsePlanRef,
+  parseRunExecutionPolicy,
   type PlanExecutabilityRecord,
   type PlanExecutabilityRejectionReport,
   type PlanRefSchemaT,
@@ -156,13 +158,13 @@ export function buildExecutionPolicyFromStoredRow(
   row: Pick<StoredPlanRow, 'plugin_compatibility_fingerprint' | 'requires_capabilities'>
 ): RunExecutionPolicy {
   const requiresCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
-  return {
+  return parseRunExecutionPolicy({
     ...(row.plugin_compatibility_fingerprint === undefined ||
     row.plugin_compatibility_fingerprint === null
       ? {}
       : { pluginCompatibilityFingerprint: row.plugin_compatibility_fingerprint }),
     ...(requiresCapabilities.length > 0 ? { requiresCapabilities } : {}),
-  };
+  });
 }
 
 export function assertStoredPlanMatchesRequest(
@@ -207,7 +209,11 @@ export function assertStoredPlanMatchesRequest(
   }
 }
 
-function normalizeRequiresCapabilities(value: unknown): string[] {
+function normalizeRequiresCapabilities(
+  value: unknown
+): ReturnType<typeof parseRunExecutionPolicy>['requiresCapabilities'] extends infer T
+  ? Exclude<T, undefined>
+  : never {
   if (value === null || value === undefined) {
     return [];
   }
@@ -216,5 +222,7 @@ function normalizeRequiresCapabilities(value: unknown): string[] {
     throw new Error('PLAN_STORE_ROW_INVALID: requires_capabilities');
   }
 
-  return [...value].sort((left, right) => left.localeCompare(right));
+  return [...value]
+    .sort((left, right) => left.localeCompare(right))
+    .map((item) => asNonBlankString(item));
 }
