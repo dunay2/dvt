@@ -81,7 +81,12 @@ describe('startRunRoute parser helpers', () => {
     });
   });
 
-  it('parses planRef and normalizes trimmed strings', () => {
+  it('parses canonical planRef fields and rejects surrounding whitespace', () => {
+    expect(parseStartRunPlanRef(VALID_PLAN_REF)).toEqual({
+      ok: true,
+      value: VALID_PLAN_REF,
+    });
+
     expect(
       parseStartRunPlanRef({
         uri: ' https://plans.example.com/p.json ',
@@ -91,14 +96,8 @@ describe('startRunRoute parser helpers', () => {
         planVersion: ' 1.0 ',
       })
     ).toEqual({
-      ok: true,
-      value: {
-        uri: 'https://plans.example.com/p.json',
-        sha256: 'abc123',
-        schemaVersion: '1.0.0',
-        planId: 'p1',
-        planVersion: '1.0',
-      },
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
     });
 
     expect(parseStartRunPlanRef({})).toEqual({
@@ -107,14 +106,14 @@ describe('startRunRoute parser helpers', () => {
     });
   });
 
-  it('parses runExecutionContextRef and validates shape', () => {
+  it('parses canonical runExecutionContextRef and rejects surrounding whitespace', () => {
     expect(
       parseStartRunRunExecutionContextRef({
-        uri: ' dvt-runctx://tenant-a/run-1/context.json ',
-        sha256: ' abc123 ',
-        schemaVersion: ' v1.0 ',
-        planId: ' p1 ',
-        planVersion: ' 1.0 ',
+        uri: 'dvt-runctx://tenant-a/run-1/context.json',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: 'p1',
+        planVersion: '1.0',
       })
     ).toEqual({
       ok: true,
@@ -124,6 +123,23 @@ describe('startRunRoute parser helpers', () => {
         schemaVersion: 'v1.0',
         planId: 'p1',
         planVersion: '1.0',
+      },
+    });
+
+    expect(
+      parseStartRunRunExecutionContextRef({
+        uri: ' dvt-runctx://tenant-a/run-1/context.json ',
+        sha256: ' abc123 ',
+        schemaVersion: ' v1.0 ',
+        planId: ' p1 ',
+        planVersion: ' 1.0 ',
+      })
+    ).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_execution_context_ref',
+        target: 'runExecutionContextRef',
       },
     });
 
@@ -163,17 +179,14 @@ describe('startRunRoute parser helpers', () => {
   });
 
   it('maps planner envelope fields and rejects invalid planner source', () => {
-    const parsed = parseStartRunPlannerEnvelope(
-      {
-        graphSource: {
-          kind: 'generic-graph-v1',
-          sourceFamily: 'dbt',
-          sourceVersion: 'manifest-v10',
-          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
-        },
+    const parsed = parseStartRunPlannerEnvelope({
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: 'manifest-v10',
+        nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
-      ['model_a']
-    );
+    });
 
     expect(parsed).toEqual({
       ok: true,
@@ -187,58 +200,69 @@ describe('startRunRoute parser helpers', () => {
       },
     });
 
-    expect(parseStartRunPlannerEnvelope({ graphSource: { kind: 'bad' } }, ['model_a'])).toEqual({
+    expect(parseStartRunPlannerEnvelope({ graphSource: { kind: 'bad' } })).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
 
     expect(
-      parseStartRunPlannerEnvelope(
-        {
-          graphSource: {
-            kind: 'generic-graph-v1',
-            sourceFamily: 'dbt',
-            sourceVersion: 'manifest-v10',
-            nodes: [
-              { nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] },
-              { nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] },
-            ],
-          },
+      parseStartRunPlannerEnvelope({
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [
+            { nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] },
+            { nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] },
+          ],
         },
-        ['model_a']
-      )
+      })
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
 
     expect(
-      parseStartRunPlannerEnvelope(
-        {
-          graphSource: {
-            kind: 'generic-graph-v1',
-            sourceFamily: 'dbt',
-            sourceVersion: 'manifest-v10',
-            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: ['missing'] }],
-          },
+      parseStartRunPlannerEnvelope({
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: ['missing'] }],
         },
-        ['model_a']
-      )
+      })
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
 
     expect(
-      parseStartRunPlannerEnvelope(
-        {
-          manifestRef: {
-            uri: 'manifest.json',
-            sha256: 'a'.repeat(64),
-          },
+      parseStartRunPlannerEnvelope({
+        manifestRef: {
+          uri: 'manifest.json',
+          sha256: 'a'.repeat(64),
         },
-        ['model_a']
-      )
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+  });
+
+  it('rejects environment targetProfile now that planner ingress is canonical-only', () => {
+    expect(
+      parseStartRunPlannerEnvelope({
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
+        environment: {
+          environmentId: 'env-1',
+          targetProfile: 'dbt-dev',
+        },
+      })
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
@@ -282,6 +306,53 @@ describe('startRunRoute parser helpers', () => {
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
+    });
+  });
+
+  it('rejects non-canonical surrounding whitespace in runId, targetAdapter, and selection', () => {
+    expect(
+      parseStartRunBody({
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: [' model_a '],
+        runId: 'run-1',
+        targetAdapter: 'mock',
+        planRef: VALID_PLAN_REF,
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_selection', target: 'selection' },
+    });
+
+    expect(
+      parseStartRunBody({
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: ['model_a'],
+        runId: ' run-1 ',
+        targetAdapter: 'mock',
+        planRef: VALID_PLAN_REF,
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_run_id', target: 'runId' },
+    });
+
+    expect(
+      parseStartRunBody({
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: ['model_a'],
+        runId: 'run-1',
+        targetAdapter: ' mock ',
+        planRef: VALID_PLAN_REF,
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },
     });
   });
 });

@@ -1,12 +1,14 @@
 ---
 title: Planner generic ingress compatibility slice 2026-04-10
-status: Active
+status: Superseded
 owner: Architecture / Planner / Contracts / API / Docs
 last_reviewed: 2026-04-10
 planning_type: proposal
 ---
 
 # Planner generic ingress compatibility slice 2026-04-10
+
+Superseded by [Planner hard-cut boundary remediation 2026-04-10](./planner-hard-cut-boundary-remediation-20260410.md).
 
 ## Summary
 

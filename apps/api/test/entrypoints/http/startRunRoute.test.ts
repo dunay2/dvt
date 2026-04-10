@@ -752,7 +752,7 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
   });
 
-  it('returns 400 when manifestRef and planRef are both supplied', async () => {
+  it('returns 400 when manifestRef is supplied on the hard-cut planner boundary', async () => {
     const reply = createReply();
 
     const facade = {
@@ -784,7 +784,7 @@ describe('startRunRoute', () => {
     );
 
     expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual(httpError('bad_request', 'conflicting_plan_inputs'));
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
   it('returns 400 when legacy nodes payload is supplied', async () => {
@@ -947,14 +947,12 @@ describe('startRunRoute', () => {
     expect(received?.token).toBe('token');
   });
 
-  it('normalizes trim-sensitive fields', async () => {
+  it('rejects non-canonical surrounding whitespace on planner boundary fields', async () => {
     const reply = createReply();
 
-    let received: Record<string, unknown> | undefined;
     const facade = {
-      async execute(input: Record<string, unknown>) {
-        received = input;
-        return okResult({ kind: 'accepted' as const, runId: 'r3', accepted: true });
+      async execute() {
+        throw new Error('should not be called');
       },
     };
 
@@ -982,20 +980,76 @@ describe('startRunRoute', () => {
       facade as never
     );
 
-    expect(reply.statusCode).toBe(202);
-    expect(reply.payload).toEqual({ runId: 'r3', accepted: true });
-    expect(received?.command).toEqual({
-      planRef: {
-        uri: 'https://plans.example.com/plan-2.json',
-        sha256: 'abc456',
-        schemaVersion: '1.0.0',
-        planId: 'plan-2',
-        planVersion: '3.0',
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_run_id', { target: 'runId' })
+    );
+  });
+
+  it('returns 400 on selection entries with surrounding whitespace', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
       },
-      runId: 'run-with-spaces',
-      targetAdapter: 'mock',
-      selection: ['model_a'],
-    });
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-selection-whitespace',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: [' model_a '],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-selection-whitespace',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_selection', { target: 'selection' })
+    );
+  });
+
+  it('returns 400 on targetAdapter with surrounding whitespace', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-target-adapter-whitespace',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-target-adapter-whitespace',
+          targetAdapter: ' mock ',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(
+      httpError('bad_request', 'invalid_target_adapter', { target: 'targetAdapter' })
+    );
   });
 
   it('returns 202 for duplicate idempotent retry', async () => {

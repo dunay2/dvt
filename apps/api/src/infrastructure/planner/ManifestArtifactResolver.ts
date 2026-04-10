@@ -11,17 +11,20 @@ import {
   ManifestArtifactResolutionError,
   MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND,
 } from '../../application/errors/ManifestArtifactResolutionError.js';
-import type { IPlannerCompatibilityResolver } from '../../application/ports/IPlannerCompatibilityResolver.js';
-import type { StartRunManifestRef } from '../../application/ports/startRunCommandContract.js';
 
 type S3LikeClient = Pick<S3Client, 'send'>;
+
+export interface ManifestArtifactRef {
+  readonly uri: string;
+  readonly sha256: string;
+}
 
 export interface ManifestArtifactResolverOptions {
   readonly nodeEnv?: string;
   readonly s3Client?: S3LikeClient;
 }
 
-export class ManifestArtifactResolver implements IPlannerCompatibilityResolver {
+export class ManifestArtifactResolver {
   private readonly nodeEnv: string;
   private readonly s3Client: S3LikeClient;
 
@@ -30,7 +33,7 @@ export class ManifestArtifactResolver implements IPlannerCompatibilityResolver {
     this.s3Client = options?.s3Client ?? new S3Client({});
   }
 
-  public async resolveManifestRef(ref: StartRunManifestRef): Promise<GenericGraphSourceV1> {
+  public async resolveManifestRef(ref: ManifestArtifactRef): Promise<GenericGraphSourceV1> {
     const uri = this.parseUri(ref.uri);
     const bytes = await this.readArtifactBytes(uri);
     this.assertSha256(bytes, ref.sha256);
@@ -269,8 +272,3 @@ export class ManifestArtifactResolver implements IPlannerCompatibilityResolver {
   }
 }
 
-/**
- * Canonical name for graph-source resolver wiring.
- * Legacy `ManifestArtifactResolver` name is retained for compatibility.
- */
-export class GraphSourceArtifactResolver extends ManifestArtifactResolver {}

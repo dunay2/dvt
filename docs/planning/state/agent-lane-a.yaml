@@ -434,12 +434,13 @@ tasks:
       - docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md
     status_reason: >-
       GenericGraphSource is already canonical, but DBT-specific ingress and helper-level parsing
-      drift still remain; `RC-G1-D-A1` now defines the first compatibility-first extraction slice.
+      drift still remain; compatibility-first posture is now rejected and `MW-A6` defines the active
+      hard-cut remediation direction.
     last_verified: '2026-04-10'
   - task_id: RC-G1-D-A1
     parent_task: RC-G1-D-A
     priority: P1
-    status: queued
+    status: blocked
     complexity: M
     effort_points: 3
     progress_pct: 0
@@ -456,9 +457,33 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/planner-generic-ingress-compatibility-slice-20260410.md
       - docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md
     status_reason: >-
-      First execution slice is now defined: move DBT-native ingress ownership out of the shared
-      planner kernel, keep one explicit compatibility translator, and defer workflow-helper
-      narrowing to the next slice.
+      Compatibility-first ingress extraction is superseded by the no-retrocompatibility hard-cut
+      posture. Retained only as historical rationale; do not execute this slice.
+    last_verified: '2026-04-10'
+  - task_id: MW-A6
+    parent_task: RC-G1-D-A
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    objective: >-
+      hard-cut planner-backed runtime ingress to canonical `graphSource` and remove DBT-native
+      compatibility inputs from the protected runtime API.
+    dependency: RC-G1-C
+    target: >-
+      `start-run` and `preview` share one fail-closed source-admission policy, `manifestRef` and
+      `targetProfile` leave runtime planner-backed command paths, and the protected runtime no
+      longer depends on `IPlannerCompatibilityResolver` or `ManifestArtifactResolver`.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md
+      - docs/planning/closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md
+      - docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md
+    status_reason: >-
+      Hard cut delivered in `apps/api`: planner-backed protected runtime now admits canonical
+      `graphSource` only, `manifestRef` is fail-closed at the route boundary, and runtime
+      composition no longer depends on planner compatibility resolution.
     last_verified: '2026-04-10'
   - task_id: GOV-S1
     priority: P2
@@ -1897,11 +1922,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-07'
-  total_tasks: 82
-  total_effort_points: 279
-  completed_weighted_points: 167.15
-  lane_progress_pct: 60
+  verified_on: '2026-04-10'
+  total_tasks: 86
+  total_effort_points: 295
+  completed_weighted_points: 182.39
+  lane_progress_pct: 62
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.

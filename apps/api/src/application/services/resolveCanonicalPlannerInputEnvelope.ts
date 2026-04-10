@@ -5,15 +5,10 @@ import type {
   PlannerPolicyClassSet,
 } from '@dvt/contracts';
 
-import type { IPlannerCompatibilityResolver } from '../ports/IPlannerCompatibilityResolver.js';
-import type {
-  StartRunManifestRef,
-  StartRunPlannerEnvironmentInput,
-} from '../ports/startRunCommandContract.js';
+import type { StartRunPlannerEnvironmentInput } from '../ports/startRunCommandContract.js';
 
-export interface PlannerCompatibilityEnvelopeInput {
-  readonly graphSource?: GenericGraphSourceV1;
-  readonly manifestRef?: StartRunManifestRef;
+export interface CanonicalPlannerInputEnvelopeInput {
+  readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerInputEnvelopeV1['selection'];
   readonly policies?: PlannerPolicyClassSet;
   readonly environment?: StartRunPlannerEnvironmentInput;
@@ -23,14 +18,11 @@ export interface PlannerCompatibilityEnvelopeInput {
   readonly requestedAtIso?: string;
 }
 
-export async function resolveCanonicalPlannerInputEnvelope(
-  input: PlannerCompatibilityEnvelopeInput,
-  resolver: IPlannerCompatibilityResolver | undefined
-): Promise<PlannerInputEnvelopeV1> {
-  const graphSource = await resolveGraphSource(input, resolver);
-
+export function resolveCanonicalPlannerInputEnvelope(
+  input: CanonicalPlannerInputEnvelopeInput
+): PlannerInputEnvelopeV1 {
   return {
-    graphSource,
+    graphSource: input.graphSource,
     selection: input.selection,
     ...(input.policies === undefined ? {} : { policies: input.policies }),
     ...(input.environment === undefined
@@ -48,27 +40,4 @@ export async function resolveCanonicalPlannerInputEnvelope(
     ...(input.requestId === undefined ? {} : { requestId: input.requestId }),
     ...(input.requestedAtIso === undefined ? {} : { requestedAtIso: input.requestedAtIso }),
   };
-}
-
-async function resolveGraphSource(
-  input: Pick<PlannerCompatibilityEnvelopeInput, 'graphSource' | 'manifestRef'>,
-  resolver: IPlannerCompatibilityResolver | undefined
-): Promise<GenericGraphSourceV1> {
-  if (input.graphSource !== undefined && input.manifestRef !== undefined) {
-    throw new Error('Planner compatibility boundary received both graphSource and manifestRef.');
-  }
-
-  if (input.graphSource !== undefined) {
-    return input.graphSource;
-  }
-
-  if (input.manifestRef === undefined) {
-    throw new Error('Planner compatibility boundary requires graphSource or manifestRef.');
-  }
-
-  if (resolver === undefined) {
-    throw new Error('manifestRef provided but no planner compatibility resolver is configured.');
-  }
-
-  return resolver.resolveManifestRef(input.manifestRef);
 }

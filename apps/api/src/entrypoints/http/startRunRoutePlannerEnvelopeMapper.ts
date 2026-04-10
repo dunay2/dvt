@@ -9,45 +9,25 @@ import {
   parsePlannerObservability,
   parsePlannerPolicyClassSet,
 } from '@dvt/contracts';
-import { isSha256HexString } from '@dvt/contracts';
 
-import type {
-  StartRunCommand,
-  StartRunManifestRef,
-  StartRunPlannerEnvironmentInput,
-} from '../../application/ports/startRunCommandContract.js';
+import type { StartRunCommand, StartRunPlannerEnvironmentInput } from '../../application/ports/startRunCommandContract.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 type PlannerCommandFields = {
-  -readonly [K in
-    | 'graphSource'
-    | 'manifestRef'
-    | 'policies'
-    | 'environment'
-    | 'observability']?: StartRunCommand[K];
+  -readonly [K in 'graphSource' | 'policies' | 'environment' | 'observability']?: StartRunCommand[K];
 };
 
 export function parseStartRunPlannerEnvelope(
-  record: Record<string, unknown>,
-  _selection: ReadonlyArray<string>
-): RouteParseResult<
-  Pick<
-    StartRunCommand,
-    'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
-  >
-> {
+  record: Record<string, unknown>
+): RouteParseResult<Pick<StartRunCommand, 'graphSource' | 'policies' | 'environment' | 'observability'>> {
   try {
+    assertNoForbiddenPlannerIngress(record);
     const result: PlannerCommandFields = {};
 
     if (record.graphSource !== undefined) {
       result.graphSource = mapGraphSource(parseGenericGraphSourceV1(record.graphSource));
-    }
-
-    if (record.manifestRef !== undefined) {
-      result.manifestRef = parseStartRunManifestRef(record.manifestRef);
     }
 
     if (record.policies !== undefined) {
@@ -137,50 +117,23 @@ function normalizePlannerObservability(
   return normalized;
 }
 
-function parseStartRunManifestRef(raw: unknown): StartRunManifestRef {
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
-    throw new Error('Invalid manifestRef');
-  }
-
-  const record = raw as Record<string, unknown>;
-  const uri = asNonEmptyTrimmedStringOrUndefined(record.uri);
-  const sha256 = asNonEmptyTrimmedStringOrUndefined(record.sha256);
-  const artifactId = asNonEmptyTrimmedStringOrUndefined(record.artifactId);
-
-  if (uri === undefined || !/^[a-z][a-z0-9+.-]*:\/\//i.test(uri)) {
-    throw new Error('Invalid manifestRef.uri');
-  }
-
-  if (sha256 === undefined || !isSha256HexString(sha256)) {
-    throw new Error('Invalid manifestRef.sha256');
-  }
-
-  return {
-    uri,
-    sha256,
-    ...(artifactId === undefined ? {} : { artifactId }),
-  };
-}
-
 function parseStartRunPlannerEnvironment(raw: unknown): StartRunPlannerEnvironmentInput {
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
-    throw new Error('Invalid environment');
-  }
-
-  const record = raw as Record<string, unknown>;
-  const targetProfile = asNonEmptyTrimmedStringOrUndefined(record.targetProfile);
-  const canonicalEnvironment = parsePlannerEnvironmentContext({
-    ...(asNonEmptyTrimmedStringOrUndefined(record.environmentId) === undefined
-      ? {}
-      : { environmentId: asNonEmptyTrimmedStringOrUndefined(record.environmentId) }),
-    ...(record.vars === undefined ? {} : { vars: record.vars }),
-  });
+  const canonicalEnvironment = parsePlannerEnvironmentContext(raw);
 
   return {
     ...(canonicalEnvironment.environmentId === undefined
       ? {}
       : { environmentId: canonicalEnvironment.environmentId }),
-    ...(targetProfile === undefined ? {} : { targetProfile }),
     ...(canonicalEnvironment.vars === undefined ? {} : { vars: canonicalEnvironment.vars }),
   };
+}
+
+function assertNoForbiddenPlannerIngress(record: Record<string, unknown>): void {
+  if (
+    record.manifestRef !== undefined ||
+    record.manifest !== undefined ||
+    record.nodes !== undefined
+  ) {
+    throw new Error('Forbidden planner ingress');
+  }
 }

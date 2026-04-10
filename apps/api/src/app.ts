@@ -221,7 +221,6 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         authenticator: protectedModule.authenticator,
         authorizer: protectedModule.authorizer,
         planner: protectedModule.planner,
-        plannerCompatibilityResolver: protectedModule.plannerCompatibilityResolver,
         planStore: protectedModule.planStore,
         planValidator: protectedModule.planValidator,
         planResolver: protectedModule.executablePlanResolver,

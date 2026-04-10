@@ -2,7 +2,7 @@ import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/c
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 export function parseStartRunRunExecutionContextRef(
   raw: unknown
@@ -15,15 +15,15 @@ export function parseStartRunRunExecutionContextRef(
 
   const record = raw as Record<string, unknown>;
   const normalized = {
-    uri: asNonEmptyTrimmedStringOrUndefined(record.uri),
-    sha256: asNonEmptyTrimmedStringOrUndefined(record.sha256),
-    schemaVersion: asNonEmptyTrimmedStringOrUndefined(record.schemaVersion),
-    planId: asNonEmptyTrimmedStringOrUndefined(record.planId),
-    planVersion: asNonEmptyTrimmedStringOrUndefined(record.planVersion),
-    ...(asNonEmptyTrimmedStringOrUndefined(record.pluginCompatibilityFingerprint) === undefined
+    uri: asCanonicalNonEmptyStringOrUndefined(record.uri),
+    sha256: asCanonicalNonEmptyStringOrUndefined(record.sha256),
+    schemaVersion: asCanonicalNonEmptyStringOrUndefined(record.schemaVersion),
+    planId: asCanonicalNonEmptyStringOrUndefined(record.planId),
+    planVersion: asCanonicalNonEmptyStringOrUndefined(record.planVersion),
+    ...(asCanonicalNonEmptyStringOrUndefined(record.pluginCompatibilityFingerprint) === undefined
       ? {}
       : {
-          pluginCompatibilityFingerprint: asNonEmptyTrimmedStringOrUndefined(
+          pluginCompatibilityFingerprint: asCanonicalNonEmptyStringOrUndefined(
             record.pluginCompatibilityFingerprint
           ),
         }),
