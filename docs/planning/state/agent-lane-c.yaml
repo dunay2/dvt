@@ -607,6 +607,28 @@ tasks:
       The principal deep review identified timeout-only adapter failure handling as a cascade risk
       when Temporal is degraded.
     last_verified: '2026-04-04'
+  - task_id: AR-C6
+    priority: P0
+    status: queued
+    objective: >-
+      fix Temporal cancellation semantics so `cancelRun()` no longer relies only on `signal(CANCEL)`
+      and can use provider-native cancellation when cooperative cancel does not take effect.
+    dependency: WE-HX-4-B
+    target: >-
+      `@dvt/adapter-temporal` documents and implements the governed cancel path, integration tests
+      prove the runtime behavior, and Temporal cancellation no longer depends on a signal-only path
+      for terminal cancel semantics.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
+      - docs/architecture/diagrams/implementation-architecture-diagrams.md
+      - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+    status_reason: >-
+      `TemporalAdapter.cancelRun()` still forwards `WorkflowSignals.CANCEL` instead of using a
+      provider-native cancellation path, leaving the known `T-01` runtime bug unresolved.
+    last_verified: '2026-04-10'
   - task_id: MW-C1
     priority: P0
     status: done
@@ -943,6 +965,10 @@ dependency_notes:
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
   - >-
+    The 2026-04-10 runtime/shared-kernel triage review adds `AR-C6` as the explicit owner for the
+    Temporal `cancelRun()` semantics bug (`T-01`) so the cancellation defect is no longer tracked
+    only as a diagram-side finding.
+  - >-
     `MW-C1` is now code-grounded by the accepted step-kind dispatcher evidence; the active runtime
     blocker moved to finishing `TF-C2-A` local proof closure and the remaining evidence/provenance
     convergence under `TF-C2-B` and `TF-B1-B`.
@@ -954,10 +980,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-10'
-  total_tasks: 35
-  total_effort_points: 132
+  total_tasks: 36
+  total_effort_points: 135
   completed_weighted_points: 69.8
-  lane_progress_pct: 53
+  lane_progress_pct: 52
   notes: >-
     Weighted progress uses effort_points. `MW-C1` now contributes full accepted closure, while
     `TF-C2`, `TF-C2-A`, and `TF-C2-B` now reflect the shipped dispatch seam, canonical proof

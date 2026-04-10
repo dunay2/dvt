@@ -165,6 +165,29 @@ tasks:
     status_reason:
       Accepted evidence explicitly records the per-eventType payload-content validation slice.
     last_verified: '2026-03-31'
+  - task_id: S05-TRUTH-SYNC
+    priority: P1
+    status: queued
+    objective: >-
+      reconcile active planning and architecture surfaces that still describe `S05
+      EventEnvelope.payloadVersion` hardening as open after accepted closure.
+    dependency: S05
+    target: >-
+      `system-delivery-status`, planning boards, and active architecture summaries agree that `S05`
+      is closed while any residual work is tracked under narrower follow-up tasks instead of
+      re-opening the umbrella.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/state/agent-lane-b.yaml
+    status_reason: >-
+      Lane B already records `S05` as done, but active status and architecture surfaces still
+      describe payload-version hardening as open, which creates sequencing drift for later contract
+      work.
+    last_verified: '2026-04-10'
   - task_id: RC-B1
     priority: P1
     status: done
@@ -550,14 +573,17 @@ dependency_notes:
   - >-
     `TF-B1` is now decomposed into `TF-B1-A` and `TF-B1-B` so preview-time provenance and
     result-time evidence linkage can move independently while remaining under one Git-first policy.
+  - >-
+    `S05-TRUTH-SYNC` is the explicit follow-up that keeps payload-version closure truthful in active
+    status and architecture surfaces after `S05` landed with accepted evidence.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 20
-  total_effort_points: 79
+  verified_on: '2026-04-10'
+  total_tasks: 21
+  total_effort_points: 81
   completed_weighted_points: 52.6
-  lane_progress_pct: 67
+  lane_progress_pct: 65
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
