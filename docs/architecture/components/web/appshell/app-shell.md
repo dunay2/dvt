@@ -22,6 +22,7 @@ Primary code anchors:
 - [App.tsx](../../../../../apps/web/src/app/App.tsx)
 - [Root.tsx](../../../../../apps/web/src/app/Root.tsx)
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
+- [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
 
@@ -29,10 +30,12 @@ Current shell regions:
 
 ```mermaid
 flowchart TB
-  Root["Root shell"] --> TopBar["TopAppBar"]
-  Root --> Health["ShellHealthBanner"]
-  Root --> Main["Main content"]
-  Main --> Nav["LeftNavigation"]
+  Root["Root shell"] --> Frame["AppShellFrame"]
+  Frame --> TopBar["TopAppBar"]
+  Frame --> Health["ShellHealthBanner"]
+  Frame --> Body["Shell body"]
+  Body --> Nav["LeftNavigation"]
+  Body --> Main["Main content"]
   Main --> Outlet["Route outlet"]
   Main --> Console["Console drawer"]
 ```
@@ -133,16 +136,16 @@ Rules for this seam:
 
 ## Current-To-Target Mapping
 
-The shell already exists in working form. The missing step is to turn implicit
-composition into explicit primitives.
+The shell already exists in working form. The current step is to keep making
+the extracted primitives honest and small.
 
 | Target primitive      | Current anchor                                                                                                                                                                        | Decision                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `AppShellFrame`       | [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                                                                                                                                | extract the current shell composition instead of rewriting it             |
+| `AppShellFrame`       | [`AppShellFrame.tsx`](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                                 | keep the extracted shell frame small and behavior-preserving              |
 | `ShellTopBar`         | [`TopAppBar.tsx`](../../../../../apps/web/src/app/components/TopAppBar.tsx)                                                                                                           | keep the global context behavior, narrow the contract, and token-clean it |
 | `LeftNavigationRail`  | [`LeftNavigation.tsx`](../../../../../apps/web/src/app/components/LeftNavigation.tsx) plus [`shellNavigationModel.ts`](../../../../../apps/web/src/app/shell/shellNavigationModel.ts) | keep render-only rail plus shell-owned navigation model                   |
 | `ShellHealthBanner`   | [`ShellHealthBanner.tsx`](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                                           | keep and restyle through semantic tokens                                  |
-| `BottomConsoleDrawer` | [`Console.tsx`](../../../../../apps/web/src/app/components/Console.tsx) plus `ResizablePanelGroup` in [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                          | keep the drawer pattern, harden content model later                       |
+| `BottomConsoleDrawer` | [`Console.tsx`](../../../../../apps/web/src/app/components/Console.tsx) rendered through [`AppShellFrame.tsx`](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)    | keep the drawer pattern, harden content model later                       |
 
 ## Shell Organization Rules
 
