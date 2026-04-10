@@ -2,7 +2,7 @@
 title: Runs Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-11
 domain: frontend
 ---
 
@@ -21,6 +21,7 @@ Primary code anchors:
 
 - [RunsView.tsx](../../../../../apps/web/src/app/views/RunsView.tsx)
 - [RunStates.tsx](../../../../../apps/web/src/app/views/runs/RunStates.tsx)
+- [runWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts)
 - [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - [runsService.ts](../../../../../apps/web/src/app/services/runs/runsService.ts)
 
@@ -35,6 +36,53 @@ Current composition:
 - workspace detail state when a run is selected;
 - snapshot card is always present;
 - timeline card is available, empty, or degraded based on runtime events.
+
+## Runs Workbench State Contract
+
+The current workbench state model now formalizes one explicit state contract for
+`/runs` and `/runs/:runId` so route composition does not keep deciding state ad
+hoc inside multiple components.
+
+Current state split:
+
+- `runs-index` owns loading, error, empty, and populated list behavior for `/runs`;
+- `run-loading` owns focused-route loading treatment for `/runs/:runId`;
+- `run-missing` owns the governed run-not-found treatment;
+- `run-error` owns snapshot load failure treatment;
+- `run-workspace` owns the focused snapshot-plus-timeline workspace;
+- `run-degraded` remains a workspace-level state inside the focused run, not a
+  second route root, because snapshot truth is still available even when the
+  timeline feed is stale or partially unavailable.
+
+```mermaid
+flowchart TD
+  Route["Runs route input"] --> HasRunId{"runId present?"}
+  HasRunId -- "no" --> Index["runs-index"]
+  HasRunId -- "yes" --> WorkspaceLoad{"workspace load state"}
+  Index --> IndexLoading["loading"]
+  Index --> IndexError["RunsErrorState"]
+  Index --> IndexEmpty["RunsEmptyState"]
+  Index --> IndexReady["run list"]
+  WorkspaceLoad --> RunLoading["RunDetailLoadingState"]
+  WorkspaceLoad --> RunError["RunDetailErrorState"]
+  WorkspaceLoad --> RunMissing["RunMissingState"]
+  WorkspaceLoad --> RunWorkspace["RunWorkspaceState"]
+  RunWorkspace --> TimelineState{"timeline state"}
+  TimelineState --> TimelineAvailable["timeline cards"]
+  TimelineState --> TimelineEmpty["empty timeline note"]
+  TimelineState --> TimelineDegraded["RunDegradedState notice"]
+```
+
+Rationale:
+
+- the list route and focused run route are different workbench states, not one
+  oversized component with inline conditions;
+- missing and degraded are different product truths:
+  - missing means the route cannot identify a run workspace at all;
+  - degraded means snapshot truth exists, but event chronology is partial or
+    temporarily unavailable;
+- empty list state must keep guiding the operator back to Canvas instead of
+  presenting `/runs` as a dead end.
 
 ## UX Rules
 

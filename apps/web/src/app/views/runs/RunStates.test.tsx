@@ -11,8 +11,11 @@ import { iso, stepId } from '../../testing/contractTestUtils';
 import type { RunEvent } from '../../types/engine';
 import {
   RunDetailErrorState,
+  RunDegradedState,
   RunListState,
-  RunNotFoundState,
+  RunMissingState,
+  RunsEmptyState,
+  RunsErrorState,
   RunWorkspaceState,
 } from './RunStates';
 
@@ -158,6 +161,19 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('Environment: dev');
     expect(container.textContent).toContain('Environment: prod');
     expect(container.textContent).toContain('View Details');
+  });
+
+  it('renders the governed empty state with canvas guidance', async () => {
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunsEmptyState />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('No runs available');
+    expect(container.textContent).toContain('Go to canvas to plan and start a run');
   });
 
   it('renders snapshot-only run detail state', async () => {
@@ -569,21 +585,38 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('Step: step-current');
   });
 
-  it('renders error and not-found states', async () => {
+  it('renders error and missing states', async () => {
     await act(async () => {
       root.render(
         <MemoryRouter>
           <>
+            <RunsErrorState message="Runtime service is unavailable" />
             <RunDetailErrorState runId="run_500" message="Runtime service is unavailable" />
-            <RunNotFoundState runId="run_missing" />
+            <RunMissingState runId="run_missing" />
           </>
         </MemoryRouter>
       );
     });
 
+    expect(container.textContent).toContain('Run list unavailable');
     expect(container.textContent).toContain('Run workspace unavailable');
     expect(container.textContent).toContain('Runtime service is unavailable');
     expect(container.textContent).toContain('Run not found');
     expect(container.textContent).toContain('run_missing');
+  });
+
+  it('renders the explicit degraded state notice', async () => {
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunDegradedState message="Timeline is temporarily unavailable because runtime event service is degraded." />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Timeline degraded');
+    expect(container.textContent).toContain(
+      'Snapshot truth is still available for this run. Timeline detail is partial or temporarily unavailable.'
+    );
   });
 });
