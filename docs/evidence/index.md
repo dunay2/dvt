@@ -39,6 +39,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260409 Tf C2 B Run Read Evidence Attempt Safety](ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md)
 - [ED 20260409 Trace Context Adapter Type Alignment](ED-20260409-trace-context-adapter-type-alignment.md)
 - [ED 20260410 Contract Mapper Boundary Option A](ED-20260410-contract-mapper-boundary-option-a.md)
+- [ED 20260410 Temporal Baseline And Capability Lane Partition](ED-20260410-temporal-baseline-and-capability-lane-partition.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

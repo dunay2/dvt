@@ -50,6 +50,22 @@ describe('buildStepStartedPayload', () => {
     expect(buildStepStartedPayload(makeStep())).toBeUndefined();
   });
 
+  it('returns undefined for non-DBT step kinds with arbitrary stepTypeConfig', () => {
+    expect(
+      buildStepStartedPayload({
+        stepId: 'step-relational',
+        kind: 'POSTGRES_SQL_TRANSFORM',
+        stepTypeConfig: {
+          sql: 'SELECT 1',
+          sinkSchema: 'analytics',
+          sinkTable: 'orders_daily',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      })
+    ).toBeUndefined();
+  });
+
   it('throws when compiledCodeRef does not match the canonical contract', () => {
     expect(() =>
       buildStepStartedPayload(

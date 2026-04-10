@@ -19,6 +19,7 @@ import type {
 } from '@dvt/contracts';
 import {
   DbtStepTypeConfigSchema,
+  KNOWN_STEP_KINDS,
   MaterializationEvidenceSchema,
   TransformationFlowRuntimeBindingSchema,
 } from '@dvt/contracts';
@@ -171,7 +172,16 @@ type StepStartedPayload = {
   stepArtifactRef: StepArtifactRef;
 };
 
+const COMPILED_CODE_REF_STEP_KINDS = new Set<string>([
+  KNOWN_STEP_KINDS.DBT_MODEL,
+  KNOWN_STEP_KINDS.DBT_TEST,
+  KNOWN_STEP_KINDS.DBT_SNAPSHOT,
+]);
+
 export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload | undefined {
+  if (!COMPILED_CODE_REF_STEP_KINDS.has(step.kind)) {
+    return undefined;
+  }
   const compiledCodeRef = extractCompiledCodeRef(step.stepTypeConfig);
   if (!compiledCodeRef) return undefined;
   return {
