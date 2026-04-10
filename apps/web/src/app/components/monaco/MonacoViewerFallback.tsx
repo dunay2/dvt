@@ -1,5 +1,7 @@
-export const DEFAULT_MONACO_CONTAINER_CLASS_NAME =
-  'h-[420px] overflow-hidden rounded border border-slate-700 bg-slate-950';
+import { routeWorkbenchMonacoSurfaceClassName } from '../workbench/RouteWorkbenchFrame';
+import { cn } from '../ui/utils';
+
+export const DEFAULT_MONACO_CONTAINER_CLASS_NAME = routeWorkbenchMonacoSurfaceClassName;
 
 type MonacoViewerFallbackProps = Readonly<{
   label: string;
@@ -12,7 +14,10 @@ export function MonacoViewerFallback({
 }: MonacoViewerFallbackProps) {
   return (
     <div
-      className={`${containerClassName} flex items-center justify-center text-sm text-slate-400`}
+      className={cn(
+        containerClassName,
+        'flex items-center justify-center text-sm text-[var(--text-muted)]'
+      )}
       role="status"
     >
       {label}

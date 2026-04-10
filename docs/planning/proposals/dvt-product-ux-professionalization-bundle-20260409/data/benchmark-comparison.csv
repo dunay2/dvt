@@ -1,0 +1,8 @@
+product,category,pattern_to_borrow,what_to_avoid,dvt_takeaway
+VS Code,workbench shell,"activity rail, editor/panel grammar, quick open, persistent layout",excessive IDE complexity in first layer,stabilize shell and move Code/Diff toward contextual tabs
+dbt Studio IDE,analytics IDE,single interface for build/test/run/versioned artifacts,over-centering everything on text editing,keep graph advantage but unify code/diff/run in one workspace
+Miro,large board,"frames, board wayfinding, structured navigation on large surfaces",free-form chaos and too many floating tools,"add saved views, frames/zones, quick jump"
+FigJam / Figma,design board + inspector,"sections, clear sidebars, contextual properties panel",tooling overload for non-design tasks,strong inspector and structured left/right panels
+Grafana Explore / Dashboards,iterative analysis,"dense operational views, clear split between exploration and monitoring",panel sprawl,make Runs/Admin/Plugins denser and task-oriented
+Dagster,graph + runtime operations,"tight connection between graph, lineage, and execution state",exposing too much conceptual complexity too early,connect Canvas ↔ Runs ↔ Lineage more directly
+Backstage,plugin platform,app-first composition and route-aware plugin integration,portal-like bloat,formalize plugin UX docking rules

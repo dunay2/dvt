@@ -4,7 +4,12 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
+import {
+  routeWorkbenchFieldClassName,
+  routeWorkbenchHeaderBandClassName,
+} from '../../components/workbench/RouteWorkbenchFrame';
 import { ViewHeader } from '../../components/domain';
+import { cn } from '../../components/ui/utils';
 import { lineageViewCopy as copy } from './copy';
 
 interface LineageHeaderProps {
@@ -25,16 +30,16 @@ export function LineageHeader({
   onColumnLevelChange,
 }: LineageHeaderProps) {
   return (
-    <div className="space-y-4 border-b border-slate-700 bg-slate-900 px-6 py-4">
+    <div className={cn('space-y-4', routeWorkbenchHeaderBandClassName)}>
       <ViewHeader
         className="border-0 bg-transparent p-0"
         title={copy.title}
-        icon={<GitGraph className="size-6 text-purple-400" />}
+        icon={<GitGraph className="size-6 text-[var(--status-info)]" />}
         subtitle={
           isLoading ? (
-            <span className="text-xs text-slate-400">{copy.loading}</span>
+            <span className="text-xs text-[var(--text-muted)]">{copy.loading}</span>
           ) : (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-[var(--text-subtle)]">
               {nodeCount} {copy.nodesSuffix}
             </span>
           )
@@ -42,12 +47,12 @@ export function LineageHeader({
       />
       <div className="flex items-center gap-4">
         <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
           <Input
             value={searchQuery}
             onChange={(event) => onSearchQueryChange(event.target.value)}
             placeholder={copy.searchPlaceholder}
-            className="border-slate-600 bg-slate-950 pl-10"
+            className={cn(routeWorkbenchFieldClassName, 'pl-10')}
           />
         </div>
         <div className="flex items-center gap-2">

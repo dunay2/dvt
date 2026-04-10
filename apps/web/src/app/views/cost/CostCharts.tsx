@@ -1,17 +1,16 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 
+import { routeWorkbenchPanelClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { Card } from '../../components/ui/card';
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '../../components/ui/chart';
+import { cn } from '../../components/ui/utils';
 import type { CostViewCopy } from './copy';
 
 type CostChartsProps = {
@@ -20,47 +19,59 @@ type CostChartsProps = {
   readonly copy: CostViewCopy;
 };
 
-const tooltipStyle = {
-  backgroundColor: '#0f172a',
-  border: '1px solid #334155',
-  borderRadius: '8px',
-};
-
 export function CostCharts({ costByRun, durationByModel, copy }: CostChartsProps) {
+  const costByRunChartConfig = {
+    cost: {
+      label: copy.costSeriesLabel,
+      color: 'var(--status-success)',
+    },
+  } satisfies ChartConfig;
+
+  const durationByModelChartConfig = {
+    duration: {
+      label: copy.durationSeriesLabel,
+      color: 'var(--status-info)',
+    },
+  } satisfies ChartConfig;
+
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-      <Card className="border-slate-700 bg-slate-900 p-4">
-        <h3 className="mb-4 font-semibold">{copy.estimatedCostByRun}</h3>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={[...costByRun]}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
-            <YAxis stroke="#94a3b8" fontSize={12} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Legend />
-            <Bar dataKey="cost" fill="#22c55e" name="Cost" />
+      <Card data-slot="cost-chart-cost-by-run" className={cn(routeWorkbenchPanelClassName, 'p-4')}>
+        <h3 className="mb-4 font-semibold text-[var(--text-strong)]">{copy.estimatedCostByRun}</h3>
+        <ChartContainer config={costByRunChartConfig} className="h-[260px] w-full">
+          <BarChart accessibilityLayer data={[...costByRun]}>
+            <CartesianGrid vertical={false} />
+            <XAxis axisLine={false} dataKey="name" tickLine={false} tickMargin={8} />
+            <YAxis axisLine={false} tickLine={false} tickMargin={8} />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Bar dataKey="cost" fill="var(--color-cost)" name={copy.costSeriesLabel} radius={4} />
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </Card>
 
-      <Card className="border-slate-700 bg-slate-900 p-4">
-        <h3 className="mb-4 font-semibold">{copy.durationByModel}</h3>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={[...durationByModel]}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
-            <YAxis stroke="#94a3b8" fontSize={12} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Legend />
+      <Card
+        data-slot="cost-chart-duration-by-model"
+        className={cn(routeWorkbenchPanelClassName, 'p-4')}
+      >
+        <h3 className="mb-4 font-semibold text-[var(--text-strong)]">{copy.durationByModel}</h3>
+        <ChartContainer config={durationByModelChartConfig} className="h-[260px] w-full">
+          <LineChart accessibilityLayer data={[...durationByModel]}>
+            <CartesianGrid vertical={false} />
+            <XAxis axisLine={false} dataKey="name" tickLine={false} tickMargin={8} />
+            <YAxis axisLine={false} tickLine={false} tickMargin={8} />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+            <ChartLegend content={<ChartLegendContent />} />
             <Line
               type="monotone"
               dataKey="duration"
-              stroke="#3b82f6"
+              dot={false}
+              name={copy.durationSeriesLabel}
+              stroke="var(--color-duration)"
               strokeWidth={2}
-              name="Duration (s)"
             />
           </LineChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </Card>
     </div>
   );

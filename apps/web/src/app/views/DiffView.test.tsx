@@ -173,6 +173,36 @@ describe('DiffView', () => {
     expect(mounted.container.textContent).toContain('fct_sales');
   });
 
+  it('keeps diff header and summary outside the scroll-owned body', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService(),
+        }}
+      >
+        <DiffView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_sales') === true, {
+      description: 'diff changes render before layout assertions',
+    });
+
+    const header = mounted.container.querySelector('[data-slot="route-workbench-header"]');
+    const body = mounted.container.querySelector('[data-slot="route-workbench-body"]');
+    const compareCodes = Array.from(header?.querySelectorAll('code') ?? []);
+
+    expect(header?.querySelector('[data-slot="diff-header"]')).not.toBeNull();
+    expect(header?.querySelector('[data-slot="diff-summary-cards"]')).not.toBeNull();
+    expect(body?.querySelector('[data-slot="diff-header"]')).toBeNull();
+    expect(body?.querySelector('[data-slot="diff-summary-cards"]')).toBeNull();
+    expect(body?.querySelector('[data-slot="diff-tabs"]')).not.toBeNull();
+    expect(compareCodes.length).toBeGreaterThanOrEqual(2);
+    expect(compareCodes[0]?.className).toContain('border');
+    expect(compareCodes[1]?.className).toContain('border');
+  });
+
   it('renders Monaco-backed SQL diff when the SQL tab is selected', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
