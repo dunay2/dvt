@@ -157,6 +157,8 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
   temporal_transformation_changed: [
     'packages/@dvt/adapter-temporal/src/activities/**',
     'packages/@dvt/adapter-temporal/src/workflows/**',
+    'packages/@dvt/adapter-temporal/src/index.ts',
+    'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
     'packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts',
     'packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts',
     'packages/@dvt/adapter-temporal/test/helpers/**',
@@ -173,6 +175,8 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/adapter-postgres/**',
     'packages/@dvt/adapter-temporal/src/activities/**',
     'packages/@dvt/adapter-temporal/src/workflows/**',
+    'packages/@dvt/adapter-temporal/src/index.ts',
+    'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
     'packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts',
     'packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts',
     'packages/@dvt/adapter-temporal/test/helpers/**',

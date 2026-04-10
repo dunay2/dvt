@@ -82,6 +82,30 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
       PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
     )
   );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/index.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/index.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
   assert.ok(matchesAnyPattern('tsconfig.base.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(matchesAnyPattern('tsconfig.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(
