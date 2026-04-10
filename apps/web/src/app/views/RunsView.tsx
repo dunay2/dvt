@@ -6,12 +6,15 @@ import {
   RunDetailErrorState,
   RunDetailLoadingState,
   RunListState,
-  RunNotFoundState,
+  RunMissingState,
+  RunsEmptyState,
+  RunsErrorState,
   RunWorkspaceState,
 } from './runs/RunStates';
 import { useExecutionStore } from '../stores/executionStore';
 import type { Run } from '../types/dbt';
 import { useRunWorkspace } from './runs/useRunWorkspace';
+import { buildRunsWorkbenchState } from './runs/runWorkbenchStateModel';
 
 function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
   const { snapshot } = workspace;
@@ -48,6 +51,8 @@ export default function RunsView() {
   const {
     runs,
     isLoadingRuns,
+    runsError,
+    runsErrorMessage,
     workspace,
     isLoadingWorkspace,
     workspaceError,
@@ -66,21 +71,32 @@ export default function RunsView() {
     };
   }, [setCurrentRun]);
 
-  if (!runId) {
-    return <RunListState runs={runs} isLoading={isLoadingRuns} />;
-  }
+  const state = buildRunsWorkbenchState({
+    runId,
+    runs,
+    isLoadingRuns,
+    runsError,
+    runsErrorMessage,
+    workspace,
+    isLoadingWorkspace,
+    workspaceError,
+    workspaceErrorMessage,
+  });
 
-  if (isLoadingWorkspace) {
-    return <RunDetailLoadingState runId={runId} />;
+  switch (state.kind) {
+    case 'runs-error':
+      return <RunsErrorState message={state.message} />;
+    case 'runs-empty':
+      return <RunsEmptyState />;
+    case 'runs-list':
+      return <RunListState runs={state.runs} isLoading={state.isLoading} />;
+    case 'run-loading':
+      return <RunDetailLoadingState runId={state.runId} />;
+    case 'run-error':
+      return <RunDetailErrorState runId={state.runId} message={state.message} />;
+    case 'run-missing':
+      return <RunMissingState runId={state.runId} />;
+    case 'run-workspace':
+      return <RunWorkspaceState workspace={state.workspace} />;
   }
-
-  if (workspaceError) {
-    return <RunDetailErrorState runId={runId} message={workspaceErrorMessage} />;
-  }
-
-  if (!workspace) {
-    return <RunNotFoundState runId={runId} />;
-  }
-
-  return <RunWorkspaceState workspace={workspace} />;
 }

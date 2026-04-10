@@ -1,10 +1,14 @@
 import { Clock, GitCommit } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
+import {
+  routeWorkbenchMutedTextClassName,
+  routeWorkbenchPanelClassName,
+} from '../../components/workbench/RouteWorkbenchFrame';
 import type { RunSummaryItem } from '../../ports/runs';
 import { RunStateFrame } from './RunStateFrame';
 import { runStatesCopy as copy } from './runStatesCopy';
@@ -20,20 +24,17 @@ export function RunListStateView({ runs, isLoading }: RunListStateProps) {
   return (
     <RunStateFrame title={copy.runsTitle}>
       <div className="mx-auto max-w-4xl space-y-4">
-        {isLoading ? <p className="text-sm text-slate-400">{copy.loadingRuns}</p> : null}
-        {!isLoading && runs.length === 0 ? (
-          <Card className="border-slate-700 bg-slate-900 p-8 text-center">
-            <p className="mb-3 text-sm text-slate-400">{copy.emptyRuns}</p>
-            <Link to="/canvas" className="text-sm text-blue-400 underline underline-offset-2">
-              {copy.emptyRunsLink}
-            </Link>
-          </Card>
+        {isLoading ? (
+          <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.loadingRuns}</p>
         ) : null}
 
         {runs.map((runRecord) => (
           <Card
             key={runRecord.runId}
-            className="cursor-pointer border-slate-700 bg-slate-900 p-4 transition-colors hover:border-slate-600"
+            className={cn(
+              routeWorkbenchPanelClassName,
+              'cursor-pointer p-4 transition-colors hover:border-[color:var(--border-strong)]'
+            )}
             onClick={() => {
               void navigate(`/runs/${runRecord.runId}`);
             }}
@@ -49,7 +50,7 @@ export function RunListStateView({ runs, isLoading }: RunListStateProps) {
                     <Badge variant="outline">{runRecord.substatus}</Badge>
                   ) : null}
                 </div>
-                <div className="flex gap-4 text-sm text-slate-300">
+                <div className={cn('flex gap-4 text-sm', routeWorkbenchMutedTextClassName)}>
                   {isKnownRunField(runRecord.gitSha) ? (
                     <div className="flex items-center gap-1">
                       <GitCommit className="size-3" />

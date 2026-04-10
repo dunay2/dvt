@@ -1108,7 +1108,7 @@ tasks:
       when available. Empty states, loading, and error states are implemented.
     complexity: M
     effort_points: 5
-    progress_pct: 70
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - apps/web/src/app/views/RunsView.tsx
@@ -1117,10 +1117,12 @@ tasks:
       - apps/web/src/app/services/runs/runWorkspaceFacade.ts
     status_reason: >-
       RunsView now consumes real run list and run-detail surfaces via scoped summaries query plus
-      `RunWorkspaceFacade` over governed runtime reads, and loading, not-found, and error states are
-      implemented. Remaining closure is status-refresh policy and final acceptance of polling/SSE
-      behavior rather than missing runtime wiring.
-    last_verified: '2026-04-10'
+      `RunWorkspaceFacade` over governed runtime reads, and the route now chooses explicit workbench
+      states for list-error, empty, loading, missing, focused-run error, and workspace treatment
+      instead of scattering those decisions across inline view branches. Remaining closure is
+      status-refresh policy and final acceptance of polling/SSE behavior rather than missing runtime
+      wiring.
+    last_verified: '2026-04-11'
   - task_id: F-10
     priority: P1
     status: review

@@ -5,6 +5,7 @@ import { resolveRunEventHeadline } from '../../services/runs/runEventPresentatio
 import { buildRunEventPresentationModel } from '../../services/runs/runEventPresentationModel';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 import { RunStateFrame } from './RunStateFrame';
+import { RunDegradedStateView } from './RunDetailStateViews';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
 
@@ -343,9 +344,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>
 
           {timeline.state === 'degraded' ? (
-            <div className="rounded border border-yellow-900 bg-yellow-950/30 px-3 py-2 text-sm text-yellow-100">
-              {timeline.message}
-            </div>
+            <RunDegradedStateView message={timeline.message} />
           ) : null}
 
           {timeline.state === 'empty' ? (
