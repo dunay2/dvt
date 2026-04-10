@@ -79,6 +79,8 @@ describe('BottomConsoleDrawer', () => {
     expect(
       document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')
     ).toBeNull();
+    expect(document.body.textContent).not.toContain('Runtime snapshot');
+    expect(document.body.textContent).not.toContain('Event timeline');
   });
 
   it('shows loading state with run and mode badges', async () => {

@@ -187,7 +187,7 @@ Shell-specific current fit:
 - `BottomConsoleDrawer`
   Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Console.tsx](../../../../apps/web/src/app/components/Console.tsx) and [bottomConsoleDrawerModel.ts](../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
   Reuse decision: reuse the layout pattern and explicit state model.
-  Current gap: typed live-log semantics and richer terminal-grade product states remain future work.
+  Current gap: typed live-log semantics remain future work, while durable run-detail authority stays with the Runs workspace rather than the shell drawer.
 
 | Target primitive                                                             | Current implementation                                                                                                                                              | Reuse decision                     | Current gap                                                                              |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |

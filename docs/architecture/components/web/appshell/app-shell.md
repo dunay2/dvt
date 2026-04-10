@@ -111,6 +111,7 @@ The bottom drawer now follows the same separation rule as the rest of the shell:
 - shell copy and shell chrome stay in shell-owned modules;
 - the drawer resolves a small, explicit state model before rendering;
 - the render surface stays focused on header, badges, close action, and body slot ownership.
+- the drawer is a shell companion surface, not the durable run workspace authority.
 
 Current state model:
 
@@ -121,6 +122,24 @@ flowchart LR
   Model --> Loading["loading: run badge + loading copy"]
   Model --> Streaming["streaming: run badge + xterm surface"]
 ```
+
+Authority split with the Runs route:
+
+```mermaid
+flowchart LR
+  Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
+  Events --> RunsFacade["RunWorkspaceFacade"]
+  Snapshot["GET /runs/:runId"] --> RunsFacade
+  DrawerHook --> Drawer["BottomConsoleDrawer"]
+  RunsFacade --> Runs["Runs workspace"]
+```
+
+Boundary rules for these two surfaces:
+
+- `BottomConsoleDrawer` mirrors the currently active run as a shell-level live companion;
+- `BottomConsoleDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
+- `Runs` owns durable run monitoring through snapshot plus timeline composition;
+- `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
 
 Rules for this seam:
 
@@ -152,7 +171,9 @@ Rules for this seam:
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
 - the console drawer now has an explicit shell-owned content model, but richer
-  live-stream semantics and typed log states remain future work.
+  live-stream semantics and typed log states remain future work;
+- the drawer and the Runs route still need a later convergence slice for shared
+  event/log presentation semantics beyond the current authority split.
 
 ## Current-To-Target Mapping
 

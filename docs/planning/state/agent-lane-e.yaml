@@ -1467,15 +1467,18 @@ tasks:
       and implementation choice between structured log panels and xterm.js-backed streaming view.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 25
     evidence_refs:
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
     status_reason: >-
       The shell already has a console drawer and the current frontend includes an xterm-backed
-      implementation, but there is still no accepted governed slice for typed live-log behavior,
-      run-log UX states, or the authority boundary between structured logs and terminal-grade
-      streaming.
+      implementation. The authority split between shell live-stream companionship and Runs workspace
+      snapshot-plus-timeline monitoring is now documented, but typed live-log behavior, richer
+      run-log UX states, and the final structured-versus-terminal presentation choice remain pending
+      behind F-10.
     last_verified: '2026-04-03'
   - task_id: F-19
     priority: P2

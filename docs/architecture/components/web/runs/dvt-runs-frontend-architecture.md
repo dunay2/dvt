@@ -57,7 +57,9 @@ Current composition:
 - the Runs route is useful but still lighter than a full operational table and
   diagnostics workbench;
 - the frontend contract around run start and richer diagnostics still needs
-  tightening with the protected API route map.
+  tightening with the protected API route map;
+- the shell drawer may mirror active run events, but the Runs route remains the
+  durable authority for snapshot plus timeline monitoring.
 
 ## Runtime Contract Baseline (F-07)
 
