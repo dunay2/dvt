@@ -3,6 +3,8 @@ export type CostViewCopy = {
   readonly subtitle: string;
   readonly focusedRun: string;
   readonly currentRunEstimate: string;
+  readonly costSeriesLabel: string;
+  readonly durationSeriesLabel: string;
   readonly loadingTitle: string;
   readonly loadingDescription: string;
   readonly errorTitle: string;
@@ -31,6 +33,8 @@ const EN_COPY: CostViewCopy = {
   subtitle: 'Node cost data is derived from the active workspace graph.',
   focusedRun: 'Focused run',
   currentRunEstimate: 'Current run estimate',
+  costSeriesLabel: 'Cost',
+  durationSeriesLabel: 'Duration (s)',
   loadingTitle: 'Loading cost coverage',
   loadingDescription: 'Loading cost coverage from workspace and runs...',
   errorTitle: 'Cost data unavailable',
@@ -55,45 +59,30 @@ const EN_COPY: CostViewCopy = {
   totalObservedDuration: 'Total observed duration',
 };
 
-const ES_COPY: CostViewCopy = {
-  title: 'Coste',
-  subtitle: 'Los datos de coste por nodo se derivan del grafo activo del workspace.',
-  focusedRun: 'Run enfocado',
-  currentRunEstimate: 'Estimación del run actual',
-  loadingTitle: 'Cargando cobertura de costes',
-  loadingDescription: 'Cargando cobertura de costes desde workspace y runs...',
-  errorTitle: 'Datos de coste no disponibles',
-  errorDescription: 'No se pudieron cargar los datos de coste desde el data source actual.',
-  totalObservedNodeCost: 'Coste total observado por nodo',
-  runsAvailable: 'Runs disponibles',
-  averageCostPerRun: 'Coste medio por run',
-  costAlerts: 'Alertas de coste',
-  tracked: 'trazado',
-  workspace: 'workspace',
-  estimatedCostByRun: 'Coste estimado por run',
-  durationByModel: 'Duración por modelo',
-  topCostDrivers: 'Principales impulsores de coste',
-  noNodeCostData: 'No hay datos de coste por nodo disponibles.',
-  alerts: 'Alertas',
-  noActiveAlerts: 'No hay alertas de coste activas.',
-  warning: 'Warning',
-  coverage: 'Cobertura',
-  coverageDescription:
-    'La cobertura de costes usa actualmente `lastCost` y `lastDuration` a nivel de nodo desde el grafo del workspace. El mapa de calor de costes del canvas lee esa misma fuente cuando el overlay `Cost` está habilitado en la toolbar.',
-  nodesWithCostData: 'Nodos con datos de coste',
-  totalObservedDuration: 'Duración total observada',
-};
+const COPY_BY_LOCALE = {
+  en: EN_COPY,
+} as const satisfies Record<string, CostViewCopy>;
 
 function detectBrowserLocale(): string {
   if (typeof navigator === 'undefined') {
     return 'en';
   }
+
   return navigator.language || 'en';
 }
 
-export function resolveCostViewCopy(locale = detectBrowserLocale()): CostViewCopy {
-  if (locale.toLowerCase().startsWith('es')) {
-    return ES_COPY;
+function resolveSupportedCostViewLocale(locale: string): keyof typeof COPY_BY_LOCALE {
+  const normalizedLocale = locale.toLowerCase();
+
+  for (const supportedLocale of Object.keys(COPY_BY_LOCALE) as Array<keyof typeof COPY_BY_LOCALE>) {
+    if (normalizedLocale.startsWith(supportedLocale)) {
+      return supportedLocale;
+    }
   }
-  return EN_COPY;
+
+  return 'en';
+}
+
+export function resolveCostViewCopy(locale = detectBrowserLocale()): CostViewCopy {
+  return COPY_BY_LOCALE[resolveSupportedCostViewLocale(locale)];
 }
