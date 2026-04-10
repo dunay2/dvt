@@ -188,7 +188,8 @@ function createWorker(input: {
         observability.metrics.gauge(name).set(value);
       },
     } satisfies IntentReconcilerWorkerMetrics,
-    options
+    options,
+    { clock: SYSTEM_CLOCK }
   );
 }
 

@@ -7,7 +7,9 @@ const NonBlankStringSchema = z
   .min(1)
   .refine((value) => value.trim().length > 0, {
     message: 'String must contain at least one non-whitespace character',
-  });
+  })
+  .brand<'NonBlankString'>();
+const IsoUtcStringSchema = NonBlankStringSchema.brand<'IsoUtcString'>();
 
 const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
 
@@ -33,7 +35,7 @@ export const RunExecutionContextSchema: z.ZodType<RunExecutionContext> = z
     projectId: NonBlankStringSchema,
     environmentId: NonBlankStringSchema,
     targetAdapter: ProviderSchema,
-    createdAtIso: NonBlankStringSchema,
+    createdAtIso: IsoUtcStringSchema,
     createdBy: NonBlankStringSchema,
     pluginContexts: z.record(
       z.string().min(1),

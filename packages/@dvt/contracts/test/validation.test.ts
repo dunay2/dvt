@@ -165,6 +165,22 @@ describe('contracts: validation helpers', () => {
     expect(snapshot.execution?.materialization?.rowsWritten).toBe(42);
   });
 
+  it('rejects RunStatusSnapshot when failure.failedAt is only whitespace', () => {
+    expect(() =>
+      parseRunStatusSnapshot({
+        runId: 'run-1',
+        status: 'FAILED',
+        execution: {
+          failure: {
+            stepId: 'step-transform',
+            reason: 'SINK_WRITE_FAILED',
+            failedAt: '   ',
+          },
+        },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunContext with optional runExecutionContextRef', () => {
     const ctx = parseRunContext({
       tenantId: 'tenant-a',

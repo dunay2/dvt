@@ -8,9 +8,14 @@
  */
 import {
   MaterializationEvidenceSchema,
+  NonBlankStringSchema,
+  StepIdSchema,
   type EventEnvelope,
+  type IsoUtcString,
   type MaterializationEvidence,
+  type NonBlankString,
   type RunFailureEvidence,
+  type StepId,
 } from '@dvt/contracts';
 
 import { InvalidRunEventShapeError } from './errors.js';
@@ -27,34 +32,34 @@ type RunEventKind =
 
 type ProjectableRunLifecycleEvent<Kind extends RunEventKind> = {
   kind: Kind;
-  emittedAt: string;
+  emittedAt: IsoUtcString;
 };
 
 type ProjectableStepStartedEvent = {
   kind: 'StepStarted';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
 };
 
 type ProjectableStepCompletedEvent = {
   kind: 'StepCompleted';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
   gatewayDecision?: boolean;
   materialization?: MaterializationEvidence;
 };
 
 type ProjectableStepFailedEvent = {
   kind: 'StepFailed';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
   failure: RunFailureEvidence;
 };
 
 type ProjectableStepSkippedEvent = {
   kind: 'StepSkipped';
-  emittedAt: string;
-  stepId: string;
+  emittedAt: IsoUtcString;
+  stepId: StepId;
 };
 
 export type ProjectableRunEvent =
@@ -131,11 +136,10 @@ export function mapEventEnvelopeToProjectableEvent(
   }
 }
 
-function requireStepId(event: EventEnvelope): string {
-  const maybeStepId = (event as { stepId?: unknown }).stepId;
-  const stepId = asNonBlankString(maybeStepId);
-  if (stepId) {
-    return stepId;
+function requireStepId(event: EventEnvelope): StepId {
+  const parsed = StepIdSchema.safeParse((event as { stepId?: unknown }).stepId);
+  if (parsed.success) {
+    return parsed.data;
   }
 
   throw new InvalidRunEventShapeError({
@@ -150,7 +154,7 @@ function readMaterializationEvidence(value: unknown): MaterializationEvidence | 
   return parsed.success ? parsed.data : undefined;
 }
 
-function readFailureEvidence(event: EventEnvelope, stepId: string): RunFailureEvidence {
+function readFailureEvidence(event: EventEnvelope, stepId: StepId): RunFailureEvidence {
   const payload = asRecord(event.payload);
   const reason = readOptionalFailureText(event, payload?.['reason'], 'reason');
   const message = readOptionalFailureText(event, payload?.['message'], 'message');
@@ -166,13 +170,14 @@ function readOptionalFailureText(
   event: EventEnvelope,
   value: unknown,
   field: 'reason' | 'message'
-): string | undefined {
+): NonBlankString | undefined {
   if (value === undefined) {
     return undefined;
   }
 
-  if (typeof value === 'string' && value.trim().length > 0) {
-    return value;
+  const parsed = NonBlankStringSchema.safeParse(value);
+  if (parsed.success) {
+    return parsed.data;
   }
 
   throw new InvalidRunEventShapeError({
@@ -184,8 +189,4 @@ function readOptionalFailureText(
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
-}
-
-function asNonBlankString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
 }

@@ -45,19 +45,19 @@ deterministic `failedAt` derivation from the accepted envelope timestamp.
    in-memory and Postgres write paths.
 4. `StepFailed` mapper cleanup for blank `reason` and `message` was removed so
    semantic repair no longer hides in the read path.
-5. Public contract types now use semantic aliases for `stepId`,
-   `RunFailureEvidence`, and `activeStepId` instead of leaking raw `string`
-   for the fields hardened by this slice.
+5. Public contract types now use schema-aligned branded primitives for
+   `stepId`, trusted failure evidence fields, and envelope timestamps instead
+   of leaking raw `string` through the hardened boundary surface.
 6. The governing proposal now records the before-state, implemented Option A
    flow, and repository-grounded rationale.
 
 ## Residual Considerations
 
-1. Public TypeScript types still express semantic aliases rather than
-   schema-branded non-blank strings; a future slice can derive stronger
-   compile-time truth directly from schema outputs.
-2. `emittedAt` and `persistedAt` remain non-blank boundary facts, not full ISO
+1. `emittedAt`, `persistedAt`, and `failedAt` now share one branded timestamp
+   vocabulary, but the active append boundary still validates them as non-blank
+   facts rather than full ISO UTC structure.
+2. The planner and ancillary runtime surfaces still use some legacy plain
+   `string` timestamp contracts outside this narrow run-event boundary slice.
+3. `emittedAt` and `persistedAt` remain non-blank boundary facts, not full ISO
    UTC contract proofs, because the active write schema does not yet validate
    full timestamp structure.
-3. ARC publication for this branch still requires the corresponding risk entry
-   and synced documentation indexes before PR creation.

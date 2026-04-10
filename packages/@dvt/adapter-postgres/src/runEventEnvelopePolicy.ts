@@ -47,7 +47,7 @@ function assertEnvelopeRunIdMatchesBatchRunId(
   runId: RunId,
   index: number
 ): void {
-  if (envelope.runId !== runId) {
+  if (envelope.runId !== String(runId)) {
     throw new InvalidRunEventEnvelopeError(runId, index, envelope.runId);
   }
 }

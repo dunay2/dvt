@@ -1,3 +1,5 @@
+import type { $brand } from 'zod';
+
 /**
  * @file packages/@dvt/contracts/src/types/contracts.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -10,15 +12,23 @@
 // Contracts: types.ts
 // Version: v1.1.1 (subset needed for this implementation)
 
-export type NonBlankString = string;
-export type IsoUtcString = NonBlankString;
+export type NonBlankString = string & $brand<'NonBlankString'>;
+export type IsoUtcString = NonBlankString & $brand<'IsoUtcString'>;
 
 // Branded primitive aliases
 export type TenantId = string & { readonly __brand: 'TenantId' };
 export type RunId = string & { readonly __brand: 'RunId' };
-export type StepId = NonBlankString;
+export type StepId = NonBlankString & $brand<'StepId'>;
 export type EventId = string & { readonly __brand: 'EventId' };
 export type IdempotencyKey = string & { readonly __brand: 'IdempotencyKey' };
+
+type Assert<T extends true> = T;
+export type ContractPrimitiveBrandAssertions = [
+  Assert<string extends NonBlankString ? false : true>,
+  Assert<string extends StepId ? false : true>,
+  Assert<StepId extends NonBlankString ? true : false>,
+  Assert<IsoUtcString extends NonBlankString ? true : false>,
+];
 
 export type Provider = 'temporal' | 'conductor' | 'mock';
 export type TransformationExecutor = 'postgres' | 'dbt';

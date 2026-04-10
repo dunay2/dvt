@@ -1,4 +1,4 @@
-import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { EngineRunRef, IsoUtcString, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 
 import type { EventType, RunEventInput, RunMetadata } from '../../contracts/runEvents.js';
 import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
@@ -45,7 +45,7 @@ export class StartRunEventFactory {
     context: ResolvedRunContext,
     planRef: PlanRef,
     runRef: EngineRunRef,
-    createdAt: string
+    createdAt: IsoUtcString
   ): RunMetadata {
     return {
       tenantId: context.tenantId,

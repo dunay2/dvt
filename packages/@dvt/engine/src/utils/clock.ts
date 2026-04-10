@@ -155,7 +155,7 @@ export class SequenceClock implements IClock {
   private counter = 0;
   private readonly baseEpochMs: number;
 
-  constructor(baseIsoUtc: IsoUtcString = '2026-02-12T00:00:00.000Z') {
+  constructor(baseIsoUtc: IsoUtcString = '2026-02-12T00:00:00.000Z' as IsoUtcString) {
     this.baseEpochMs = parseIsoUtcToEpochMs(baseIsoUtc);
   }
 

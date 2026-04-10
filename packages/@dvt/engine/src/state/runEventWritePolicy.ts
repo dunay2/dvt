@@ -3,12 +3,12 @@ import {
   parseRunEventRecord,
   parseRunEventWrite,
 } from '@dvt/contracts';
-import type { RunEventWriteSchemaT } from '@dvt/contracts';
+import type { IsoUtcString, RunEventWriteSchemaT } from '@dvt/contracts';
 
 import { InvalidRunEventInputError, RunSequenceOverflowError } from '../contracts/errors.js';
 import type { RunEventInput, RunEventPersisted, WorkflowSnapshot } from '../contracts/runEvents.js';
 
-export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = '1970-01-01T00:00:00.000Z';
+export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = '1970-01-01T00:00:00.000Z' as IsoUtcString;
 
 export function createDefaultWorkflowSnapshot(runId: string): WorkflowSnapshot {
   return {
@@ -49,7 +49,7 @@ export function assertRunEventInput(event: RunEventInput, index: number): void {
 export function buildPersistedRunEventRecord(
   event: RunEventInput,
   runSeq: number,
-  persistedAt: string,
+  persistedAt: IsoUtcString,
   index: number
 ): RunEventPersisted {
   try {

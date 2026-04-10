@@ -77,12 +77,15 @@ export const StepStatusSchema = z.enum(['PENDING', 'RUNNING', 'SUCCESS', 'FAILED
 export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL']);
 
 export const StepOutputStatusSchema = z.enum(['SUCCESS', 'FAILED', 'SKIPPED']);
-const NonBlankStringSchema = z
+export const NonBlankStringSchema = z
   .string()
   .min(1)
   .refine((value) => value.trim().length > 0, {
     message: 'String must contain at least one non-whitespace character',
-  });
+  })
+  .brand<'NonBlankString'>();
+export const IsoUtcStringSchema = NonBlankStringSchema.brand<'IsoUtcString'>();
+export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 
 // ─── Core contract schemas ───────────────────────────────────────────────────
 
@@ -93,7 +96,7 @@ export const PlanRefSchema = z.object({
   planId: z.string().min(1),
   planVersion: z.string().min(1),
   sizeBytes: z.number().int().nonnegative().optional(),
-  expiresAt: z.string().optional(),
+  expiresAt: IsoUtcStringSchema.optional(),
 });
 
 export const RunContextSchema = z
@@ -117,7 +120,7 @@ export const SignalRequestSchema = z.object({
   signalId: z.string().min(1),
   type: SignalTypeSchema,
   reason: z.string().optional(),
-  requestedAt: z.string().optional(),
+  requestedAt: IsoUtcStringSchema.optional(),
 });
 
 export const RecoverRunCommandSchema = z
@@ -139,16 +142,16 @@ export const RecoverRunCommandSchema = z
 
 export const RunFailureEvidenceSchema = z
   .object({
-    stepId: NonBlankStringSchema,
+    stepId: StepIdSchema,
     reason: NonBlankStringSchema.optional(),
     message: NonBlankStringSchema.optional(),
-    failedAt: z.string().min(1),
+    failedAt: IsoUtcStringSchema,
   })
   .strict();
 
 export const RunExecutionEvidenceSchema = z
   .object({
-    activeStepId: NonBlankStringSchema.optional(),
+    activeStepId: StepIdSchema.optional(),
     failure: RunFailureEvidenceSchema.optional(),
     materialization: z.lazy(() => MaterializationEvidenceSchema).optional(),
   })
@@ -161,8 +164,8 @@ export const RunStatusSnapshotSchema = z.object({
     .union([RunSubstatusSchema, z.string().regex(/^(temporal|conductor|mock)\/.+$/)])
     .optional(),
   message: z.string().optional(),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
+  startedAt: IsoUtcStringSchema.optional(),
+  completedAt: IsoUtcStringSchema.optional(),
   execution: RunExecutionEvidenceSchema.optional(),
 });
 
@@ -172,8 +175,8 @@ export const MaterializationEvidenceSchema = z
     environmentId: NonBlankStringSchema,
     sinkTable: NonBlankStringSchema,
     rowsWritten: z.number().int().nonnegative(),
-    startedAt: z.string().min(1),
-    completedAt: z.string().min(1),
+    startedAt: IsoUtcStringSchema,
+    completedAt: IsoUtcStringSchema,
     durationMs: z.number().int().nonnegative(),
   })
   .strict();
@@ -321,7 +324,7 @@ const RunCompletedPayloadSchema = z
 const RunEventCommonSchema = z.object({
   eventId: z.string().min(1),
   eventType: z.string().min(1),
-  emittedAt: NonBlankStringSchema,
+  emittedAt: IsoUtcStringSchema,
   runId: NonBlankStringSchema,
   tenantId: z.string().min(1),
   projectId: z.string().min(1),
@@ -376,25 +379,25 @@ const RunFailedEventWriteSchema = RunEventCommonSchema.extend({
 
 const StepStartedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepStarted'),
-  stepId: NonBlankStringSchema,
+  stepId: StepIdSchema,
   payload: StepStartedPayloadSchema.optional(),
 }).strict();
 
 const StepCompletedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepCompleted'),
-  stepId: NonBlankStringSchema,
+  stepId: StepIdSchema,
   payload: StepCompletedPayloadSchema.optional(),
 }).strict();
 
 const StepFailedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepFailed'),
-  stepId: NonBlankStringSchema,
+  stepId: StepIdSchema,
   payload: z.union([EmptyEventPayloadSchema, StepFailedPayloadSchema]).optional(),
 }).strict();
 
 const StepSkippedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepSkipped'),
-  stepId: NonBlankStringSchema,
+  stepId: StepIdSchema,
   payload: EmptyEventPayloadSchema.optional(),
 }).strict();
 
@@ -418,61 +421,61 @@ export const RunEventWriteSchema = z.discriminatedUnion('eventType', [
 export const RunEventRecordSchema = z.discriminatedUnion('eventType', [
   RunQueuedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunStartedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunPausedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunResumedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunCancelRequestedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunCancelledEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunCompletedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   RunFailedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   StepStartedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   StepCompletedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   StepFailedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
   StepSkippedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: NonBlankStringSchema,
+    persistedAt: IsoUtcStringSchema,
   }),
 ]);
 
 export const StepSnapshotSchema = z.object({
-  stepId: z.string().min(1),
+  stepId: StepIdSchema,
   status: StepStatusSchema,
   logicalAttemptId: z.number().int().positive(),
   engineAttemptId: z.number().int().positive().optional(),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
+  startedAt: IsoUtcStringSchema.optional(),
+  completedAt: IsoUtcStringSchema.optional(),
   artifacts: z.array(z.unknown()),
   error: z
     .object({
@@ -489,8 +492,8 @@ export const RunSnapshotSchema = z.object({
   lastEventSeq: z.number().int().nonnegative(),
   steps: z.array(StepSnapshotSchema),
   artifacts: z.array(z.unknown()),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
+  startedAt: IsoUtcStringSchema.optional(),
+  completedAt: IsoUtcStringSchema.optional(),
   totalDurationMs: z.number().nonnegative().optional(),
 });
 
