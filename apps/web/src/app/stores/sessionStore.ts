@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { asNonBlankString } from '@dvt/contracts';
 
 import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
@@ -43,11 +44,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   buildRunContext: (runId) => {
     const { tenantId, projectId, environmentId, targetAdapter } = get();
     return {
-      tenantId,
-      projectId,
-      environmentId,
+      tenantId: asNonBlankString(tenantId),
+      projectId: asNonBlankString(projectId),
+      environmentId: asNonBlankString(environmentId),
       targetAdapter,
-      runId,
+      runId: asNonBlankString(runId),
     };
   },
 }));

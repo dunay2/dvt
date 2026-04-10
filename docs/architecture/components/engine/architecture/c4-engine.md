@@ -1,6 +1,6 @@
 # Engine C4 Architecture
 
-**Last reviewed**: 2026-04-09  
+**Last reviewed**: 2026-04-10  
 **Scope**: Logical architecture of `@dvt/engine` and direct collaborators.  
 **Note**: C4 containers are logical/runtime boundaries. `@dvt/engine` is a TypeScript library embedded by processes such as `apps/api`, reconciler workers, and outbox workers.
 
@@ -202,23 +202,23 @@ reconciliation, outbox), and package dependency graphs see
 ## 7. Current delivery posture
 
 This C4 view is structural. For delivery sequencing, use
-[Engine Roadmap](./roadmap/engine-phases.md) and the active Lane A/Lane C tasks.
+[Engine Roadmap](../roadmap/engine-phases.md) and the active Lane A/Lane C tasks.
 
 ```mermaid
 flowchart LR
   Core["Implemented core: WorkflowEngine plus state-store plus Temporal"] --> Hex["WE-HX derivation and facade narrowing"]
-  Hex --> Runtime["MW-C1 plus TF-C2 runtime vertical"]
+  Hex --> Runtime["Landed MW-C1 plus active TF-C2 runtime vertical"]
   Hex --> Cleanup["AR-A8 Conductor illusion cleanup"]
 ```
 
-| Area                                                  | Current posture                         | Code evidence                                                                                                 | Current projection                                                      |
-| ----------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Engine lifecycle core                                 | Implemented                             | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests                                   | Keep hardening under `WE-HX`, not a new MVP phase                       |
-| Postgres state, outbox, and read-model path           | Implemented                             | `@dvt/adapter-postgres`, delivery runtime, projector/read-model ownership in current docs                     | Already absorbed into mainline; no longer a future engine roadmap claim |
-| Temporal runtime adapter                              | Implemented with ongoing hardening      | `@dvt/adapter-temporal`, `RunPlanWorkflow`, integration coverage                                              | Continue hardening via `WE-HX`, `AR-C*`, and `MW-C1`                    |
-| Compatibility facade and ownership seams              | In progress                             | `workflow-engine-subsystem-context.md`, `workflow-engine-target-architecture.v1.md`, `StartRunProtocol.v1.md` | Close `WE-HX-0..3`, then `WE-HX-5..6`                                   |
-| Conductor truthfulness                                | Residual debt, not active product phase | `ConductorAdapterStub`, provider typing, draft Conductor docs                                                 | Close `AR-A8` before treating a second runtime as live roadmap work     |
-| First execution-first transformation runtime vertical | Queued                                  | Lane C `MW-C1`, `TF-C2-A`, `TF-C2-B`                                                                          | This is the next real runtime value path                                |
+| Area                                                  | Current posture                         | Code evidence                                                                                                                     | Current projection                                                       |
+| ----------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Engine lifecycle core                                 | Implemented                             | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests                                                       | Keep hardening under `WE-HX`, not a new MVP phase                        |
+| Postgres state, outbox, and read-model path           | Implemented                             | `@dvt/adapter-postgres`, delivery runtime, projector/read-model ownership in current docs                                         | Already absorbed into mainline; no longer a future engine roadmap claim  |
+| Temporal runtime adapter                              | Implemented with ongoing hardening      | `@dvt/adapter-temporal`, `RunPlanWorkflow`, `StepActivityDispatcher`, split baseline/transformation/Postgres integration coverage | Continue hardening via `WE-HX`, `AR-C*`, and `TF-C2`                     |
+| Compatibility facade and ownership seams              | In progress                             | `workflow-engine-subsystem-context.md`, `workflow-engine-target-architecture.v1.md`, `StartRunProtocol.v1.md`                     | Close `WE-HX-0..3`, then `WE-HX-5..6`                                    |
+| Conductor truthfulness                                | Residual debt, not active product phase | `ConductorAdapterStub`, provider typing, draft Conductor docs                                                                     | Close `AR-A8` before treating a second runtime as live roadmap work      |
+| First execution-first transformation runtime vertical | In progress                             | Lane C `MW-C1`, `TF-C2-A`, `TF-C2-B`, `PostgresRelationalExecutionCapability`, Temporal capability lanes                          | Finish the canonical local proof surface and downstream evidence closure |
 
 ## 8. Current sequencing
 
@@ -226,5 +226,6 @@ flowchart LR
    truthful and easier to evolve;
 2. remove the Conductor illusion from runtime typing and documentation through
    `AR-A8`;
-3. deliver `MW-C1` plus `TF-C2-A/B` so persisted plans can drive the first
-   PostgreSQL execution-first path with caller-visible evidence.
+3. finish `TF-C2-A/B` on top of landed `MW-C1` so persisted plans can drive
+   the first PostgreSQL execution-first path with caller-visible evidence and a
+   repeatable local proof surface.

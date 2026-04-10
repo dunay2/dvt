@@ -2,7 +2,7 @@
 title: WorkflowEngine target architecture v1
 status: Draft
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-10
 ---
 
 # WorkflowEngine target architecture v1
@@ -35,6 +35,7 @@ Target outbound engine-owned ports:
 - run execution context resolution
 - status projection
 - observability/telemetry policy
+- execution capability dispatch inside provider-owned runtime internals
 
 ```mermaid
 flowchart LR
@@ -77,6 +78,18 @@ Boundary rule to lock:
 - composition root adapts artifacts-owned reader to engine-owned resolver.
 - peer-domain runtime logic must not leak into engine internals.
 
+Additional target rule for the first transformation runtime vertical:
+
+- the core runtime must depend on execution capability, not on a vendor name
+- a whole-plan provider or executor profile may select a capability and then a
+  concrete implementation
+- PostgreSQL is the first implementation of the relational SQL execution
+  capability
+- future relational implementations such as Oracle may fit the same capability
+- non-relational systems such as Kafka do not automatically fit the same
+  contract and must be introduced as a different capability or provider
+  profile
+
 ## Inbound/outbound port model
 
 ```mermaid
@@ -87,6 +100,46 @@ flowchart TB
   OutPorts --> Adapters["Adapters wired in composition root"]
   Adapters --> Runtime["Provider runtimes + stores + artifacts + telemetry backends"]
 ```
+
+## Target execution capability seam
+
+This target architecture keeps the run-driven adapter model from `ADR-0014`,
+but it narrows the runtime internals so execution semantics are capability-led
+instead of vendor-led.
+
+That means:
+
+- the engine still starts a run by `PlanRef`
+- the provider-owned runtime still owns step dispatch
+- executor selection inside that runtime should be modeled by capability first
+- vendor implementations sit behind that capability boundary
+
+```mermaid
+flowchart LR
+  Plan["Persisted plan plus provider profile"] --> Adapter["Run-driven provider adapter"]
+  Adapter --> Capability["Relational SQL execution capability"]
+  Capability --> Pg["PostgreSQL implementation"]
+  Capability -. future .-> Ora["Oracle implementation"]
+  Adapter -. separate capability or profile .-> Other["Non-relational path, for example Kafka"]
+```
+
+Mainline now partially realizes this seam:
+
+- `@dvt/adapter-temporal` dispatches runtime task steps through
+  `StepActivityDispatcher`
+- provider-owned capability registries can register non-dbt step activity
+  implementations
+- `@dvt/adapter-postgres` supplies the first relational implementation through
+  `PostgresRelationalExecutionCapability`
+
+What remains target-state rather than normative public contract is the broader
+promotion of this seam into a repository-wide adapter policy or ADR-backed
+contract.
+
+If a future slice promotes this distinction into a normative public contract or
+repo-wide adapter policy, that change should be captured in an ADR. At this
+stage, the architecture document is enough because it is refining target shape
+under already accepted principles from `ADR-0003` and `ADR-0014`.
 
 ## Compatibility strategy
 

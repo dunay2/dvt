@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '../api/createApiClient';
+import { iso, stepId } from '../../testing/contractTestUtils';
 import { createRunWorkspaceFacade, RunWorkspaceLoadError } from './runWorkspaceFacade';
 import type { RunsService } from './runsService';
 
@@ -69,7 +70,7 @@ describe('runWorkspaceFacade', () => {
           eventId: 'evt_1',
           eventType: 'StepStarted',
           runId: 'run_1',
-          emittedAt: '2026-04-04T00:00:01.000Z',
+          emittedAt: iso('2026-04-04T00:00:01.000Z'),
           tenantId: 'tenant-1',
           projectId: 'project-1',
           environmentId: 'env-1',
@@ -79,9 +80,9 @@ describe('runWorkspaceFacade', () => {
           logicalAttemptId: 1,
           idempotencyKey: 'idemp-1',
           payloadVersion: 1,
-          stepId: 'step_1',
+          stepId: stepId('step_1'),
           runSeq: 1,
-          persistedAt: '2026-04-04T00:00:01.000Z',
+          persistedAt: iso('2026-04-04T00:00:01.000Z'),
         },
       ],
       nextAfterSeq: 2,

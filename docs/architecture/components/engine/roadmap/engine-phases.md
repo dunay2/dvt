@@ -2,7 +2,7 @@
 title: Engine Roadmap
 status: Active
 owner: Architecture / Engine / Delivery
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # Engine Roadmap
@@ -47,8 +47,8 @@ What is true now:
 - The active engine architecture program is `WE-HX`, not a quarterly phase
   ladder.
 - The active value path after the recent signal-boundary cleanup is the first
-  execution-first transformation runtime vertical (`MW-C1`, `TF-C2-A`,
-  `TF-C2-B`).
+  execution-first transformation runtime vertical on top of landed `MW-C1`
+  (`TF-C2-A`, `TF-C2-B`).
 - The outbox runtime and standalone read-model path are already shipped and are
   not future engine roadmap items anymore.
 
@@ -57,7 +57,7 @@ What is true now:
 ```mermaid
 flowchart LR
   Landed["Landed: StartRunProtocol, signal narrowing, runtime-owned PAUSE/RESUME"] --> Hex["WE-HX derivation"]
-  Hex --> Runtime["MW-C1 plus TF-C2 executor and evidence vertical"]
+  Hex --> Runtime["Landed MW-C1 plus active TF-C2 executor and evidence vertical"]
   Hex --> Cleanup["AR-A8 remove Conductor illusion"]
   Runtime --> Later["Later: second-runtime decision only after truthful boundary cleanup"]
 ```
@@ -73,8 +73,8 @@ flowchart LR
 | Query and signal split hardening                  | `WE-HX-4`            | Completed   | Closed signal ownership, canonical signal narrowing, provider mapping, and read/enrichment split | Removed a major source of semantic drift                           |
 | Provider and telemetry seam tightening            | `WE-HX-5`, `WE-HX-6` | Queued      | Consolidates provider resolution, telemetry seams, and fitness checks                            | Reduces orchestration duplication and hidden boundary drift        |
 | Conductor illusion cleanup                        | `AR-A8`              | Queued      | Removes stub-driven portability promises from runtime typing and docs                            | Prevents roadmap and product claims from outrunning implementation |
-| Step-kind dispatch generalization                 | `MW-C1`              | Queued      | Moves Temporal runtime dispatch from dbt-only assumptions to step-kind routing                   | Enables non-dbt execution paths                                    |
-| First PostgreSQL execution-first runtime vertical | `TF-C2-A`, `TF-C2-B` | Queued      | Adds executor path plus caller-visible materialization evidence                                  | Closes the first real transformation run loop                      |
+| Step-kind dispatch generalization                 | `MW-C1`              | Completed   | Moved Temporal runtime dispatch from dbt-only assumptions to step-kind routing                   | Enabled capability-specific non-dbt execution paths                |
+| First PostgreSQL execution-first runtime vertical | `TF-C2-A`, `TF-C2-B` | In progress | Adds executor path plus caller-visible materialization evidence                                  | Closes the first real transformation run loop                      |
 
 ## Near-term sequencing
 
@@ -86,7 +86,7 @@ flowchart LR
   HX2 --> A8["AR-A8 remove Conductor illusion"]
   HX3 --> HX5["WE-HX-5 provider and telemetry seams"]
   HX5 --> HX6["WE-HX-6 fitness checks"]
-  HX3 --> MW["MW-C1 step dispatcher"]
+  HX3 --> MW["MW-C1 step dispatcher (landed)"]
   MW --> TFC2A["TF-C2-A PostgreSQL executor path"]
   TFC2A --> TFC2B["TF-C2-B caller-visible evidence"]
 ```
@@ -100,6 +100,7 @@ These are not future engine roadmap items anymore:
 - Canonical `SignalType` is narrowed to run-control semantics.
 - Retry concerns are governed as dedicated future use cases, not generic signal
   verbs.
+- `MW-C1` step dispatch generalization is landed in the Temporal runtime path.
 - Outbox runtime and standalone read-model/projector delivery are already part
   of the shipped architecture surface.
 
@@ -124,8 +125,8 @@ planning context, not an active phase.
   [WorkflowEngine target architecture v1](../workflow-engine-target-architecture.v1.md).
 - If the question is `what engine slice should we execute next?`, read this page
   and then Lane A or Lane C.
-- If the question is `what unblocks the first governed runtime vertical?`, trace
-  `MW-C1` plus `TF-C2-A/B` in Lane C.
+- If the question is `what unblocks the first governed runtime vertical now?`,
+  trace `TF-C2-A/B` on top of landed `MW-C1` in Lane C.
 
 ## Historical snapshot
 

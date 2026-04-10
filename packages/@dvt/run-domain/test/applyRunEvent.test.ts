@@ -32,7 +32,7 @@ function makeRunEvent(eventType: string): EventEnvelope {
     runId: 'run-test',
     tenantId: 'tenant-1',
     eventType,
-    emittedAt: '2026-01-01T00:00:00Z',
+    emittedAt: '2026-01-01T00:00:00.000Z',
     runSeq: 1,
     payload: {},
   } as unknown as EventEnvelope;
@@ -45,7 +45,7 @@ function makeStepEvent(eventType: string, stepId: string): EventEnvelope {
     tenantId: 'tenant-1',
     eventType,
     stepId,
-    emittedAt: '2026-01-01T00:00:00Z',
+    emittedAt: '2026-01-01T00:00:00.000Z',
     runSeq: 1,
     payload: {},
   } as unknown as EventEnvelope;
@@ -244,6 +244,74 @@ describe('applyRunEvent - explicit transition guards', () => {
       eventType: 'StepStarted',
     });
   });
+
+  it('rejects malformed step events with whitespace-only stepId', () => {
+    const malformed = {
+      ...makeStepEvent('StepStarted', '   '),
+      stepId: '   ',
+    } as unknown as EventEnvelope;
+    let caught: unknown;
+    try {
+      applyRunEvent(makeSnap('RUNNING'), malformed);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepStarted',
+    });
+  });
+
+  it('rejects StepFailed payloads with whitespace-only reason', () => {
+    const snap = makeSnap('RUNNING');
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-invalid-reason'));
+
+    const malformed = {
+      ...makeStepEvent('StepFailed', 'step-invalid-reason'),
+      payload: {
+        reason: '   ',
+      },
+    } as unknown as EventEnvelope;
+
+    let caught: unknown;
+    try {
+      applyRunEvent(snap, malformed);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepFailed',
+    });
+  });
+
+  it('rejects StepFailed payloads with whitespace-only message', () => {
+    const snap = makeSnap('RUNNING');
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-invalid-message'));
+
+    const malformed = {
+      ...makeStepEvent('StepFailed', 'step-invalid-message'),
+      payload: {
+        message: '   ',
+      },
+    } as unknown as EventEnvelope;
+
+    let caught: unknown;
+    try {
+      applyRunEvent(snap, malformed);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(InvalidRunEventShapeError);
+    expect((caught as InvalidRunEventShapeError).code).toBe('INVALID_RUN_EVENT_SHAPE');
+    expect((caught as InvalidRunEventShapeError).details).toMatchObject({
+      eventType: 'StepFailed',
+    });
+  });
 });
 
 describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
@@ -268,6 +336,7 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
       reason: 'SINK_WRITE_FAILED',
       message: 'duplicate key value violates unique constraint',
     });
+    expect(snap.execution?.failure?.failedAt).toBe('2026-01-01T00:00:00.000Z');
   });
 
   it('captures materialization evidence from step completion payloads', () => {
@@ -282,8 +351,8 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
           environmentId: 'env-1',
           sinkTable: 'analytics.orders_daily',
           rowsWritten: 42,
-          startedAt: '2026-01-01T00:00:05Z',
-          completedAt: '2026-01-01T00:00:08Z',
+          startedAt: '2026-01-01T00:00:05.000Z',
+          completedAt: '2026-01-01T00:00:08.000Z',
           durationMs: 3000,
         },
       },
@@ -295,8 +364,8 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
       environmentId: 'env-1',
       sinkTable: 'analytics.orders_daily',
       rowsWritten: 42,
-      startedAt: '2026-01-01T00:00:05Z',
-      completedAt: '2026-01-01T00:00:08Z',
+      startedAt: '2026-01-01T00:00:05.000Z',
+      completedAt: '2026-01-01T00:00:08.000Z',
       durationMs: 3000,
     });
   });

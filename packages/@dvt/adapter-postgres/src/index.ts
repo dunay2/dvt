@@ -50,6 +50,13 @@ export type {
   RunEventWriteRepository,
   SqlCommandExecutor,
 } from './RunEventWriteRepository.js';
+export type {
+  PostgresRelationalExecutionCapabilityConfig,
+  RuntimeStepActivity,
+  RuntimeStepActivityRegistry,
+  RuntimeStepExecutionContext,
+  RuntimeStepResult,
+} from './PostgresRelationalExecutionCapability.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
 export { PostgresPlanStore } from './PostgresPlanStore.js';
@@ -81,3 +88,4 @@ export { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
 export { PostgresRunArchiveStore } from './PostgresRunArchiveStore.js';
 export { PostgresArchiveLeaseStore } from './PostgresArchiveLeaseStore.js';
 export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeStore.js';
+export { PostgresRelationalExecutionCapability } from './PostgresRelationalExecutionCapability.js';

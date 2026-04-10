@@ -8,7 +8,12 @@
  * @version 1.1.0
  * @date 2026-03-07
  */
-import { parsePlanRef, parseResolvedRunContext, RUN_EVENT_PAYLOAD_VERSION } from '@dvt/contracts';
+import {
+  asStepId,
+  parsePlanRef,
+  parseResolvedRunContext,
+  RUN_EVENT_PAYLOAD_VERSION,
+} from '@dvt/contracts';
 import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
@@ -94,7 +99,14 @@ export interface EmitEventInput {
 // ---------------------------------------------------------------------------
 
 export interface StepExecutionContext {
+  executionIdentity: StepExecutionIdentity;
   gatewayContext?: Record<string, unknown>;
+}
+
+export interface StepExecutionIdentity {
+  tenantId: string;
+  runId: string;
+  environmentId: string;
 }
 
 export interface StepExecutor {
@@ -241,7 +253,10 @@ export function createActivities(
       validateStepShape(input.step);
       return dispatcher.execute(
         input.step,
-        { gatewayContext: input.gatewayContext },
+        {
+          executionIdentity: toStepExecutionIdentity(input.ctx),
+          gatewayContext: input.gatewayContext,
+        },
         stepExecutors
       );
     },
@@ -254,6 +269,7 @@ export function createActivities(
       const ctx = parseResolvedRunContext(input.ctx);
       const validatedPlanRef = parsePlanRef(input.planRef);
       const { eventType, stepId, payload } = input;
+      const validatedStepId = stepId === undefined ? undefined : asStepId(stepId);
 
       const engineAttemptId =
         typeof deps.getEngineAttemptId === 'function'
@@ -274,7 +290,7 @@ export function createActivities(
         runId: ctx.runId,
         planId: validatedPlanRef.planId,
         planVersion: validatedPlanRef.planVersion,
-        ...(stepId === undefined ? {} : { stepId }),
+        ...(validatedStepId === undefined ? {} : { stepId: validatedStepId }),
         engineAttemptId,
         logicalAttemptId,
         idempotencyKey: deps.idempotency.runEventKey({
@@ -284,7 +300,7 @@ export function createActivities(
           logicalAttemptId,
           planId: validatedPlanRef.planId,
           planVersion: validatedPlanRef.planVersion,
-          ...(stepId === undefined ? {} : { stepId }),
+          ...(validatedStepId === undefined ? {} : { stepId: validatedStepId }),
         }),
       };
       const envelope: EventInput =
@@ -319,6 +335,14 @@ function resolveTemporalAttemptFromContext(): number {
     // Activity context not available (unit tests) — fall back to 1.
     return 1;
   }
+}
+
+function toStepExecutionIdentity(ctx: ResolvedRunContext): StepExecutionIdentity {
+  return {
+    tenantId: ctx.tenantId,
+    runId: ctx.runId,
+    environmentId: ctx.environmentId,
+  };
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {

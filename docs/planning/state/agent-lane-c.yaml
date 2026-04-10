@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-10'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -215,7 +215,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
-      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.md
+      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.yaml
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
     status_reason: >-
       The freshness SLO contract is documented with measurable telemetry outcomes and backed by API
@@ -609,7 +609,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: MW-C1
     priority: P0
-    status: queued
+    status: done
     objective: >-
       abstract step execution in Temporal adapter by separating DbtStepActivity from a
       StepActivityDispatcher that routes by StepKind to the correct activity implementation,
@@ -621,13 +621,16 @@ tasks:
       kinds; adding a new kind requires registering an activity, not modifying workflow code.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/evidence/ED-20260408-mw-c1-step-activity-dispatcher.md
+      - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
+      - packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts
     status_reason: >-
-      Current Temporal activities assume every step is a dbt operation — this is the execution-layer
-      blocker for multi-workflow support.
-    last_verified: '2026-04-02'
+      `StepActivityDispatcher` is now the runtime dispatch seam in `@dvt/adapter-temporal`; dbt and
+      gateway steps route by `StepKind`, and unregistered kinds fail closed through
+      `UnsupportedStepKindError` instead of editing workflow control flow.
+    last_verified: '2026-04-10'
   - task_id: RC-C2
     priority: P2
     status: review
@@ -777,7 +780,7 @@ tasks:
     last_verified: '2026-04-08'
   - task_id: TF-C2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       deliver the first execution-first vertical for SQL transformations against PostgreSQL,
       including the local Docker PostgreSQL proof environment and caller-visible materialization
@@ -789,19 +792,22 @@ tasks:
       diagnostics.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/ED-20260410-temporal-baseline-and-capability-lane-partition.md
+      - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
     status_reason: >-
-      PostgreSQL is now the first locked execution target for the product roadmap, but no governed
-      runtime slice yet executes the persisted plan against PostgreSQL and returns materialization
-      evidence.
-    last_verified: '2026-04-05'
+      The provider-owned relational execution path, split Temporal capability lanes, caller-visible
+      runtime evidence, and the canonical local Docker PostgreSQL proof surface are now
+      code-grounded in mainline. Remaining closure is downstream provenance/evidence convergence and
+      the repeatability/retention follow-through tracked outside this slice.
+    last_verified: '2026-04-10'
   - task_id: TF-C2-A
     priority: P0
-    status: queued
+    status: review
     objective: >-
       add the PostgreSQL executor path and the first repeatable Docker PostgreSQL proof baseline for
       SQL-first persisted plans.
@@ -811,14 +817,22 @@ tasks:
       Docker PostgreSQL environment exists for local proof of success and failure paths.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/ED-20260410-temporal-baseline-and-capability-lane-partition.md
+      - docs/runbooks/temporal-postgres-proof-environment.md
+      - scripts/run-temporal-postgres-proof.cjs
+      - packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
+      - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
     status_reason: >-
-      PostgreSQL is the locked v1 target, but the executor seam and its proof environment still need
-      a dedicated Lane C delivery slice.
-    last_verified: '2026-04-05'
+      The capability-led PostgreSQL execution seam now exists in `adapter-postgres`, CI runs a
+      dedicated Temporal Postgres integration lane, and the local Docker proof environment now has a
+      canonical operator-facing wrapper and runbook. Remaining downstream follow-through belongs to
+      Lane D repeatability discipline and TF-B1-B provenance convergence, not to the executor path
+      itself.
+    last_verified: '2026-04-10'
   - task_id: TF-C2-B
     priority: P0
     status: in_progress
@@ -831,7 +845,7 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 90
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
@@ -846,9 +860,10 @@ tasks:
       development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
       not maintain a second snapshot-schema line. Two follow-up items remain explicitly accepted as
       debt and logged in the quality risk register: canonical contract/architecture doc drift and
-      failed-run materialization semantics. Real executor payload emission from TF-C2-A or TF-B1-B
-      remains the downstream dependency for full TF-C2-B closure.
-    last_verified: '2026-04-09'
+      failed-run materialization semantics. Real executor payload emission now exists on the
+      Postgres capability path; remaining closure is deeper provenance convergence with `TF-B1-B`
+      and cleanup of the accepted residual risks.
+    last_verified: '2026-04-10'
   - task_id: TF-C3
     priority: P1
     status: queued
@@ -928,8 +943,9 @@ dependency_notes:
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
   - >-
-    `MW-C1` is the P0 multi-workflow execution-layer blocker: abstract step execution in Temporal to
-    support non-dbt step kinds via StepActivityDispatcher.
+    `MW-C1` is now code-grounded by the accepted step-kind dispatcher evidence; the active runtime
+    blocker moved to finishing `TF-C2-A` local proof closure and the remaining evidence/provenance
+    convergence under `TF-C2-B` and `TF-B1-B`.
   - >-
     `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
     subtasks so runtime closure can progress in smaller slices without losing the same outer
@@ -937,11 +953,12 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
+  verified_on: '2026-04-10'
   total_tasks: 35
   total_effort_points: 132
-  completed_weighted_points: 50.3
-  lane_progress_pct: 38
+  completed_weighted_points: 69.8
+  lane_progress_pct: 53
   notes: >-
-    Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
-    parent umbrella tasks with subtasks carry coordination-only effort.
+    Weighted progress uses effort_points. `MW-C1` now contributes full accepted closure, while
+    `TF-C2`, `TF-C2-A`, and `TF-C2-B` now reflect the shipped dispatch seam, canonical proof
+    surface, and runtime-evidence progress rather than the older queued-only posture.

@@ -4,6 +4,7 @@ import type {
   IPlanner,
   GenericGraphSourceV1,
   PlannerInputEnvelopeV1,
+  PlanRef,
 } from '@dvt/contracts';
 
 import {
@@ -12,7 +13,7 @@ import {
   mapManifestArtifactResolutionCause,
 } from '../errors/ManifestArtifactResolutionError.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { StartRunCommand } from '../ports/startRunCommandContract.js';
+import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
 import {
   START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
@@ -84,8 +85,39 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     }
 
     await this.deps.planStore.markValid(planRef);
-    return this.deps.delegate.execute({ ...command, planRef }, context);
+    return this.deps.delegate.execute(
+      {
+        runId: command.runId,
+        targetAdapter: command.targetAdapter,
+        selection: command.selection,
+        planRef: toRoutePlanRef(planRef),
+        ...(command.runExecutionContextRef === undefined
+          ? {}
+          : { runExecutionContextRef: command.runExecutionContextRef }),
+        ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
+        ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
+        ...(command.policies === undefined ? {} : { policies: command.policies }),
+        ...(command.environment === undefined ? {} : { environment: command.environment }),
+        ...(command.observability === undefined ? {} : { observability: command.observability }),
+      },
+      context
+    );
   }
+}
+
+function toRoutePlanRef(
+  planRef: Pick<PlanRef, 'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion'> & {
+    sizeBytes?: number | undefined;
+    expiresAt?: PlanRef['expiresAt'] | undefined;
+  }
+): StartRunPlanRef {
+  return {
+    uri: planRef.uri,
+    sha256: planRef.sha256,
+    schemaVersion: planRef.schemaVersion,
+    planId: planRef.planId,
+    planVersion: planRef.planVersion,
+  };
 }
 
 function toPlannerInput(

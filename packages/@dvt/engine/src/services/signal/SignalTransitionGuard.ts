@@ -11,11 +11,12 @@ import { buildSignalDerivedRunEventInput } from '../../core/lifecycle/coreRuntim
 import { applyRunEvent } from '../../core/SnapshotProjector.js';
 import type { IRunSnapshotStalenessQuery } from '../../ports/IRunSnapshotStalenessQuery.js';
 import type { EventEnvelope, IRunStateStoreRead } from '../../ports/IRunStateStore.js';
+import type { IClock } from '../../utils/clock.js';
 
 export interface SignalTransitionGuardDeps {
   stateStoreRead: IRunStateStoreRead;
   idempotency: IdempotencyKeyBuilder;
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
 }
 
 export class SignalTransitionGuard {

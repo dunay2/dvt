@@ -6,6 +6,7 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { parseEngineRunRef, type EngineRunRef } from '@dvt/contracts';
 import {
   ProviderRefProviderMismatchError,
   RunNotFoundError,
@@ -65,8 +66,63 @@ const RUN_METADATA_COLUMNS = `
 // Helpers
 // ---------------------------------------------------------------------------
 
+function validateInputProviderRef(
+  providerRef: RunMetadata['providerRef'],
+  runId: string
+): RunMetadata['providerRef'] {
+  try {
+    return normalizeEngineRunRefShape(parseEngineRunRef(providerRef));
+  } catch (error) {
+    throw new Error(`RUN_METADATA_INVALID_PROVIDER_REF: ${runId}`, { cause: error });
+  }
+}
+
+function parsePersistedProviderRef(
+  providerRef: unknown,
+  runId: string
+): RunMetadata['providerRef'] {
+  try {
+    return normalizeEngineRunRefShape(parseEngineRunRef(providerRef));
+  } catch (error) {
+    throw new Error(`RUN_METADATA_ROW_INVALID: ${runId}:providerRef`, { cause: error });
+  }
+}
+
+function normalizeEngineRunRefShape(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
+  if (input.provider === 'temporal') {
+    const runRef: EngineRunRef = {
+      provider: 'temporal',
+      tenantId: input.tenantId,
+      namespace: input.namespace,
+      workflowId: input.workflowId,
+      runId: input.runId,
+    };
+    if (input.taskQueue !== undefined) {
+      runRef.taskQueue = input.taskQueue;
+    }
+    return runRef;
+  }
+
+  if (input.provider === 'conductor') {
+    return {
+      provider: 'conductor',
+      tenantId: input.tenantId,
+      workflowId: input.workflowId,
+      runId: input.runId,
+      conductorUrl: input.conductorUrl,
+    };
+  }
+
+  return {
+    provider: 'mock',
+    tenantId: input.tenantId,
+    workflowId: input.workflowId,
+    runId: input.runId,
+  };
+}
+
 function toRunMetadata(row: RunMetadataRow): RunMetadata {
-  const providerRef =
+  const rawProviderRef =
     row.provider === 'temporal'
       ? ({
           provider: 'temporal',
@@ -90,6 +146,7 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
             workflowId: row.provider_workflow_id,
             runId: row.provider_run_id,
           } as const);
+  const providerRef = parsePersistedProviderRef(rawProviderRef, row.run_id);
 
   return {
     tenantId: row.tenant_id,
@@ -116,6 +173,7 @@ export class PostgresRunMetadataRepository {
   ) {}
 
   async insertWithClient(client: PoolClient, meta: RunMetadata): Promise<void> {
+    const providerRef = validateInputProviderRef(meta.providerRef, meta.runId);
     await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.run_metadata (
@@ -149,12 +207,12 @@ export class PostgresRunMetadataRepository {
         meta.parentRunId ?? null,
         meta.originRunId ?? meta.runId,
         meta.logicalAttemptId + 1,
-        meta.providerRef.provider,
-        meta.providerRef.workflowId,
-        meta.providerRef.runId,
-        meta.providerRef.provider === 'temporal' ? meta.providerRef.namespace : null,
-        meta.providerRef.provider === 'temporal' ? (meta.providerRef.taskQueue ?? null) : null,
-        meta.providerRef.provider === 'conductor' ? meta.providerRef.conductorUrl : null,
+        providerRef.provider,
+        providerRef.workflowId,
+        providerRef.runId,
+        providerRef.provider === 'temporal' ? providerRef.namespace : null,
+        providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
+        providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
       ]
     );
 
@@ -174,6 +232,7 @@ export class PostgresRunMetadataRepository {
 
   /** Transaction-scoped metadata upsert used by canonical write paths. */
   async upsertWithClient(client: PoolClient, meta: RunMetadata): Promise<void> {
+    const providerRef = validateInputProviderRef(meta.providerRef, meta.runId);
     await PostgresSchemaManager.setTenantContext(client, meta.tenantId);
 
     const existing = await client.query<{ tenant_id: string }>(
@@ -228,12 +287,12 @@ export class PostgresRunMetadataRepository {
         meta.environmentId,
         meta.planId,
         meta.planVersion,
-        meta.providerRef.provider,
-        meta.providerRef.workflowId,
-        meta.providerRef.runId,
-        meta.providerRef.provider === 'temporal' ? meta.providerRef.namespace : null,
-        meta.providerRef.provider === 'temporal' ? (meta.providerRef.taskQueue ?? null) : null,
-        meta.providerRef.provider === 'conductor' ? meta.providerRef.conductorUrl : null,
+        providerRef.provider,
+        providerRef.workflowId,
+        providerRef.runId,
+        providerRef.provider === 'temporal' ? providerRef.namespace : null,
+        providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
+        providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
       ]
     );
   }
@@ -243,7 +302,8 @@ export class PostgresRunMetadataRepository {
     runId: RunId,
     providerRef: RunMetadata['providerRef']
   ): Promise<RunMetadata> {
-    if (providerRef.tenantId !== tenantId) {
+    const validatedProviderRef = validateInputProviderRef(providerRef, runId);
+    if (validatedProviderRef.tenantId !== tenantId) {
       throw new TenantAccessDeniedError(tenantId);
     }
 
@@ -265,8 +325,12 @@ export class PostgresRunMetadataRepository {
       if (!current) {
         throw new RunNotFoundError(runId);
       }
-      if (current.provider !== providerRef.provider) {
-        throw new ProviderRefProviderMismatchError(runId, current.provider, providerRef.provider);
+      if (current.provider !== validatedProviderRef.provider) {
+        throw new ProviderRefProviderMismatchError(
+          runId,
+          current.provider,
+          validatedProviderRef.provider
+        );
       }
 
       const updated = await client.query<RunMetadataRow>(
@@ -281,11 +345,13 @@ export class PostgresRunMetadataRepository {
           RETURNING ${RUN_METADATA_COLUMNS}
         `,
         [
-          providerRef.workflowId,
-          providerRef.runId,
-          providerRef.provider === 'temporal' ? providerRef.namespace : null,
-          providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
-          providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
+          validatedProviderRef.workflowId,
+          validatedProviderRef.runId,
+          validatedProviderRef.provider === 'temporal' ? validatedProviderRef.namespace : null,
+          validatedProviderRef.provider === 'temporal'
+            ? (validatedProviderRef.taskQueue ?? null)
+            : null,
+          validatedProviderRef.provider === 'conductor' ? validatedProviderRef.conductorUrl : null,
           tenantId,
           runId,
         ]

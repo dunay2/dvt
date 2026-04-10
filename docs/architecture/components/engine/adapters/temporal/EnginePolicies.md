@@ -208,7 +208,18 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 ### 7.4 Closure Evidence and Navigation
 
 - Runtime closure verification command:
-  `pnpm test:adapter-temporal` and `pnpm test:adapter-temporal:integration`
+  `pnpm test:adapter-temporal`,
+  and `pnpm test:adapter-temporal:integration`
+- Capability-specific verification command:
+  `pnpm test:adapter-temporal:integration:transformation` when transformation
+  runtime semantics are in scope
+- Capability-specific verification command:
+  `pnpm test:adapter-temporal:integration:postgres` when the relational
+  Postgres execution path is in scope
+- Canonical local Docker proof wrapper:
+  `pnpm test:adapter-temporal:integration:postgres:docker`
+- Canonical runbook:
+  [Temporal Postgres Proof Environment](../../../../../runbooks/temporal-postgres-proof-environment.md)
 - Evidence:
   [ED-20260308 - Temporal adapter operational close-out](../../../../../evidence/critical/ED-20260308-temporal-operational-close-out.md)
 - Residual risk:

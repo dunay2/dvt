@@ -115,6 +115,17 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `pnpm test:adapter-temporal`
   and
   `pnpm test:adapter-temporal:integration`
+- Capability-specific verification:
+  `pnpm test:adapter-temporal:integration:transformation` when
+  transformation-flow runtime semantics are in scope
+  and
+  `pnpm test:adapter-temporal:integration:postgres` when the relational
+  Postgres execution path is in scope.
+- Canonical local proof wrapper:
+  `pnpm test:adapter-temporal:integration:postgres:docker`
+  with
+  [Temporal Postgres Proof Environment](../../runbooks/temporal-postgres-proof-environment.md)
+  as the operator runbook.
 
 ### Postgres state store
 
