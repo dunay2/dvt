@@ -141,6 +141,24 @@ Boundary rules for these two surfaces:
 - `Runs` owns durable run monitoring through snapshot plus timeline composition;
 - `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
 
+Shared event presentation seam:
+
+```mermaid
+flowchart LR
+  Events["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
+  SharedCopy --> DrawerRender["formatRunEventAsLogLine(...)"]
+  SharedCopy --> RunsRender["RunWorkspaceStateView timeline cards"]
+```
+
+Rules for the shared seam:
+
+- the shared model owns event level, headline key, optional detail, and step identity;
+- the shared copy resolver owns human-readable event headline text for shared event surfaces;
+- the shell drawer may render terminal-style lines from that shared semantics plus shared copy;
+- the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
+- the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
+
 Rules for this seam:
 
 - `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
@@ -172,8 +190,9 @@ Rules for this seam:
   behavior;
 - the console drawer now has an explicit shell-owned content model, but richer
   live-stream semantics and typed log states remain future work;
-- the drawer and the Runs route still need a later convergence slice for shared
-  event/log presentation semantics beyond the current authority split.
+- shared event presentation semantics now align on level, headline key, shared
+  headline copy, detail, and step identity, but typed live-log states and the
+  final structured-versus-terminal presentation choice remain future work.
 
 ## Current-To-Target Mapping
 

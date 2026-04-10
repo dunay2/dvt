@@ -142,6 +142,39 @@ Authority rules:
 4. Future convergence of logs, timeline, and terminal-grade streaming belongs
    to `F-10` and `F-18`, not to ad hoc shell copy drift.
 
+## Shared Run Event Presentation Model
+
+The shell drawer and the Runs route now share one event-presentation seam
+before they render their different surfaces:
+
+```mermaid
+flowchart LR
+  Event["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
+  SharedCopy --> Drawer["formatRunEventAsLogLine(...)"]
+  SharedCopy --> Timeline["RunWorkspaceStateView timeline event card"]
+```
+
+The shared model owns:
+
+- event level (`INFO`, `WARN`, `ERROR`, `SUCCESS`);
+- headline key;
+- optional detail copied from runtime event payload message when present;
+- step identity when the event belongs to one step.
+
+The shared copy resolver owns:
+
+- the governed human-readable headline text used by both drawer and timeline
+  surfaces.
+
+It does not change authority:
+
+- `BottomConsoleDrawer` still renders a shell-level companion stream;
+- `BottomConsoleDrawer` still owns terminal-style log-line composition;
+- `RunWorkspaceStateView` still owns durable timeline interpretation;
+- snapshot truth, failure diagnostics, and result evidence remain outside the
+  shared event-presentation seam.
+
 ## PlanRef handoff prerequisite
 
 The start-run contract is now preceded by backend-owned plan handoff routes:

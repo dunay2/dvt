@@ -201,6 +201,8 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('Runtime snapshot');
     expect(container.textContent).toContain('Event timeline');
     expect(container.textContent).toContain('StepStarted');
+    expect(container.textContent).toContain('INFO');
+    expect(container.textContent).toContain('Step started');
     expect(container.textContent).toContain('Step: step-1');
     expect(container.textContent).not.toContain('Console');
     expect(container.textContent).toContain(
