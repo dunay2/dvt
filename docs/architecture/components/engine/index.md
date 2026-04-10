@@ -37,6 +37,16 @@ not redefine which ports belong to the seven-port surface.
 `IObservability` remains the current telemetry facade in the shipped runtime.
 It is not counted inside the seven-port southbound surface.
 
+Target note:
+
+- the active transformation-runtime target keeps executor seams capability-led,
+  not vendor-led
+- PostgreSQL is the first implementation of the relational SQL execution
+  capability, not the semantic shape of the engine core
+- see
+  [workflow-engine-target-architecture.v1](./architecture/workflow-engine-target-architecture.v1.md)
+  for the target seam and its rationale
+
 ## Current Responsibilities
 
 - own run lifecycle semantics and provider dispatch;

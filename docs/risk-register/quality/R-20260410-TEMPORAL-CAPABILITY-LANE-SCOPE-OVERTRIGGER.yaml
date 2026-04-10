@@ -1,0 +1,26 @@
+---
+id: R-20260410-TEMPORAL-CAPABILITY-LANE-SCOPE-OVERTRIGGER
+title: Temporal capability-specific CI lanes can over-trigger on broad engine or contract diffs
+status: Open
+date: 2026-04-10
+owners:
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/engine
+severity: Low
+probability: Medium
+context: >
+  The PR quality gate now separates Temporal baseline, transformation, and Postgres capability
+  integrations. Scope routing remains intentionally broad for engine, contracts, workflow, and
+  helper changes so capability-specific regressions do not slip through.
+risk: >
+  Some pull requests that touch broad runtime surfaces can trigger transformation and Postgres
+  capability lanes even when the logical change is unrelated, increasing CI cost and wall-clock
+  time.
+mitigations:
+  - The baseline, transformation, and Postgres semantics are now isolated into separate suites and
+    commands.
+  - Scope logic is centralized in tools/ci/scope-config.mjs with parity tests.
+  - Over-triggering is accepted for now in favor of correctness until more precise change
+    classification is justified.
+review_after: 2026-06-15
+---

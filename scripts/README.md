@@ -65,6 +65,36 @@ Behavior:
 Use this only when CI already ran an explicit workspace-graph build step before
 the guarded command.
 
+### `build-workspace-runtime-deps.cjs`
+
+Builds the real workspace runtime dependency closure for a target package while
+excluding its `devDependencies`. Optional extra workspace packages can be added
+explicitly for integration-only lanes.
+
+Usage:
+
+```bash
+node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal
+node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres
+node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self
+```
+
+Behavior:
+
+- asks PNPM for the real runtime closure via `pnpm list --filter-prod <pkg>...`
+- follows only `dependencies` and `optionalDependencies` as resolved by PNPM
+- runs `pnpm ... run build` for the selected runtime closure with
+  `--workspace-concurrency=4` and `DVT_CI=1`, so dependency package hooks do
+  not recurse again inside the explicit orchestrator
+- `--build-self` rebuilds the target package afterward with `DVT_CI=1`, so its
+  own `prebuild` hook does not re-run the dependency closure
+
+Intended usage:
+
+- local package hooks keep dependency builds available for direct local runs
+- CI workflows call this helper explicitly before integration tests instead of
+  relying on implicit `pretest:*` hooks
+
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by

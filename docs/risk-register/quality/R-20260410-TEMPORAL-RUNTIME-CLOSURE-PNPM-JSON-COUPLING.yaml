@@ -1,0 +1,23 @@
+---
+id: R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING
+title: Temporal runtime closure helper depends on PNPM JSON output shape
+status: Open
+date: 2026-04-10
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Low
+context: >
+  The helper scripts/build-workspace-runtime-deps.cjs now delegates runtime dependency selection to
+  `pnpm list --filter-prod ... --json --depth -1` instead of walking workspace manifests by hand.
+risk: >
+  If PNPM changes the structure or semantics of its JSON output, the helper can stop discovering the
+  intended runtime closure and CI preparation for Temporal capability lanes may fail or under-build.
+mitigations:
+  - The helper fails fast when the requested workspace package is not present in the PNPM response.
+  - Validation runs exercise the helper through the baseline, transformation, and Postgres
+    integration lanes.
+  - The helper itself is syntax-checked and the downstream CI scope tests are part of the validation
+    baseline.
+review_after: 2026-06-15
+---

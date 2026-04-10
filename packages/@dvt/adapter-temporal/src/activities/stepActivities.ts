@@ -94,7 +94,14 @@ export interface EmitEventInput {
 // ---------------------------------------------------------------------------
 
 export interface StepExecutionContext {
+  executionIdentity: StepExecutionIdentity;
   gatewayContext?: Record<string, unknown>;
+}
+
+export interface StepExecutionIdentity {
+  tenantId: string;
+  runId: string;
+  environmentId: string;
 }
 
 export interface StepExecutor {
@@ -241,7 +248,10 @@ export function createActivities(
       validateStepShape(input.step);
       return dispatcher.execute(
         input.step,
-        { gatewayContext: input.gatewayContext },
+        {
+          executionIdentity: toStepExecutionIdentity(input.ctx),
+          gatewayContext: input.gatewayContext,
+        },
         stepExecutors
       );
     },
@@ -319,6 +329,14 @@ function resolveTemporalAttemptFromContext(): number {
     // Activity context not available (unit tests) — fall back to 1.
     return 1;
   }
+}
+
+function toStepExecutionIdentity(ctx: ResolvedRunContext): StepExecutionIdentity {
+  return {
+    tenantId: ctx.tenantId,
+    runId: ctx.runId,
+    environmentId: ctx.environmentId,
+  };
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
