@@ -254,6 +254,7 @@ describe('RootShell platform health UX', () => {
       expect(shellWorkspaceSelectors).toBeTruthy();
       expect(shellMenuTrigger?.textContent).toContain('Shell');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
+      expect(leftNavigationRail?.className).toContain('h-full');
       expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual([
         '/canvas',
         '/lineage',

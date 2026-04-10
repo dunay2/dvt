@@ -15,7 +15,7 @@ export const topAppBarClasses = {
 };
 
 export const leftNavigationRailClasses = {
-  rail: 'w-16 shrink-0 border-r border-[color:var(--border-default)] bg-[var(--surface-shell)]',
+  rail: 'h-full w-16 shrink-0 border-r border-[color:var(--border-default)] bg-[var(--surface-shell)]',
   nav: 'flex h-full flex-col items-center gap-3.5 overflow-y-auto py-4',
   link: 'flex size-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-[var(--text-subtle)] transition-colors',
   linkInteractive:
