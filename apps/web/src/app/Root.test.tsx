@@ -254,6 +254,7 @@ describe('RootShell platform health UX', () => {
       expect(shellWorkspaceSelectors).toBeTruthy();
       expect(shellMenuTrigger?.textContent).toContain('Shell');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
+      expect(leftNavigationRail?.className).toContain('h-full');
       expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual([
         '/canvas',
         '/lineage',
@@ -314,9 +315,11 @@ describe('RootShell platform health UX', () => {
 
       const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
       const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
+      const consoleDrawer = mounted.container.querySelector('[data-slot="bottom-console-drawer"]');
 
       expect(bottomDrawer).not.toBeNull();
       expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+      expect(consoleDrawer).not.toBeNull();
       expect(bottomDrawer?.textContent).toContain('Console');
       expect(bottomDrawer?.textContent).toContain('Start a run to see execution output here.');
     } finally {

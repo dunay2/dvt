@@ -65,6 +65,16 @@ flowchart LR
 - the dedicated timeline workbench remains a later convergence slice beyond the
   snapshot baseline
 
+### Shell Drawer Versus Runs Detail
+
+- the shell drawer is a quick live companion for the currently active run
+  stream;
+- the Runs detail route is the durable monitoring workspace for one run;
+- the shell drawer does not replace runtime snapshot, degraded timeline, or
+  failure-diagnostics treatment from `/runs/:runId`;
+- if an operator needs authoritative run explanation, they should use the Runs
+  workspace rather than the shell drawer.
+
 ## Failure Semantics For Operators
 
 | Status class | User meaning                            | UX posture                                |
