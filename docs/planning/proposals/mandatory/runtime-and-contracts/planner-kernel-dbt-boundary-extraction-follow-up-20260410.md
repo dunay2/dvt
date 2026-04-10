@@ -31,6 +31,15 @@ contract and adjacent helper seams:
 That means the canonical planner boundary is generic on paper, but not yet
 fully generic in the shared kernel.
 
+## Decision Package
+
+This proposal prepares one concrete follow-up package that answers:
+
+1. what remains in the shared planner kernel
+2. what moves to a dbt-specific adapter or plugin boundary
+3. how runtime helper parsing narrows after the contract move
+4. what migration order preserves current callers while the kernel is cleaned up
+
 ## Governing Sources
 
 - [ADR-0034](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
@@ -92,6 +101,23 @@ living entirely behind a source-adapter or plugin boundary.
 - The migration should preserve a bounded compatibility path long enough to
   avoid a flag day across API and planner composition roots.
 
+## Boundary Rule
+
+Use one rule for this slice:
+
+if an input concept exists only to admit or normalize one source technology,
+that concept belongs to the source adapter or plugin boundary, not to the
+shared planner kernel.
+
+Applied here, that means:
+
+- `GenericGraphSourceV1` stays shared because it is the cross-source canonical
+  planning contract
+- `DbtManifestRef` and dbt profile input move because they exist only to admit
+  DBT-native caller input
+- runtime helpers may consume shared artifact refs such as
+  `CompiledCodeRef`, but should not parse the full dbt config width to get them
+
 ## Current State
 
 ```mermaid
@@ -108,6 +134,23 @@ flowchart LR
   I --> J[DbtStepTypeConfigSchema width]
 ```
 
+## Current Boundary Ownership
+
+```mermaid
+flowchart LR
+  A[Shared planner kernel] --> B[GenericGraphSourceV1]
+  A --> C[ExecutionStep]
+  A --> D[PlanRef and CompiledCodeRef]
+  A --> E[DbtManifestRef]
+  A --> F[targetProfile]
+  G[Temporal workflow helper] --> H[compiledCodeRef extraction]
+  G --> I[full DbtStepTypeConfig parse]
+
+  E -. source-specific ingress leaked into kernel .-> A
+  F -. source-specific config leaked into kernel .-> A
+  I -. source-specific config width leaked into runtime helper .-> G
+```
+
 ## Target State
 
 ```mermaid
@@ -121,6 +164,23 @@ flowchart LR
   F --> G[Planner canonical boundary]
   G --> H[ExecutionPlan]
   H --> I[Runtime helpers read only narrow generic facts]
+```
+
+## Target Ownership Shape
+
+```mermaid
+flowchart LR
+  A[DBT plugin or source adapter] --> B[Dbt source input]
+  B --> C[DBT to GenericGraphSource translator]
+  C --> D[Shared planner kernel]
+  D --> E[GenericGraphSourceV1]
+  D --> F[ExecutionPlan]
+  D --> G[CompiledCodeRef]
+  H[Temporal workflow helpers] --> G
+
+  B -. owns dbt manifest refs and dbt profile input .-> A
+  D -. owns only cross-source graph and artifact refs .-> E
+  H -. reads narrow shared artifact facts only .-> G
 ```
 
 ## Field-Level Ownership Decision
@@ -201,6 +261,17 @@ The correct end state is:
 - plugin or adapter performs DBT -> `GenericGraphSourceV1` translation
 - runtime helpers consume only the narrow facts they need
 
+## Migration Sequence
+
+```mermaid
+flowchart LR
+  A[Phase 1<br/>document ownership split] --> B[Phase 2<br/>introduce dbt-native input outside kernel]
+  B --> C[Phase 3<br/>translate DBT to GenericGraphSourceV1 before planner admission]
+  C --> D[Phase 4<br/>deprecate manifestRef and dbt profile kernel fields]
+  D --> E[Phase 5<br/>remove kernel leakage and narrow runtime helper parsing]
+  E --> F[Phase 6<br/>lock with contract planner API and runtime tests]
+```
+
 ## Rejected Alternatives
 
 - Reopening `MW-A2` itself. The generic graph-source migration is already done;
@@ -238,7 +309,7 @@ The correct end state is:
   tests for dbt-only ingress at the generic planner boundary and helper tests
   proving narrow `CompiledCodeRef` extraction without full dbt config parsing
 - libraries evaluated:
-  `None evaluated � planning slice only`
+  `None evaluated - planning slice only`
 
 ## Proposed Implementation Sequence
 
