@@ -47,6 +47,7 @@
     "test:adapter-postgres:integration": "pnpm --filter @dvt/adapter-postgres test:integration",
     "test:adapter-temporal": "pnpm --filter @dvt/adapter-temporal test",
     "test:adapter-temporal:integration": "pnpm --filter @dvt/adapter-temporal run test:integration:local",
+    "test:adapter-temporal:integration:transformation": "pnpm --filter @dvt/adapter-temporal run test:integration:transformation:local",
     "test:adapter-temporal:integration:postgres": "pnpm --filter @dvt/adapter-temporal run test:integration:postgres:local",
     "test:api": "pnpm --filter dvt-api test",
     "test:cli": "pnpm --filter @dvt/cli test",

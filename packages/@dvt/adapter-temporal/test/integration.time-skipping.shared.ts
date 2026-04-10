@@ -480,50 +480,81 @@ export function createActivityDeps(
   };
 }
 
-export function mkPostgresTransformationPlan(schema: string, sinkTable: string): unknown {
-  return withTransformationRuntimeBinding({
+export function mkLinearThreeStepPlan(): unknown {
+  return {
     metadata: {
-      planId: 'it-plan-postgres-transform',
+      planId: 'it-plan-linear-3',
       planVersion: '1.0.0',
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
     },
     steps: [
-      {
-        stepId: 's-1',
-        kind: 'PREPARE_POSTGRES_TRANSFORM',
-        stepTypeConfig: {
-          targetSchema: schema,
-        },
-      },
-      {
-        stepId: 's-2',
-        kind: 'POSTGRES_SQL_TRANSFORM',
-        dependsOn: ['s-1'],
-        stepTypeConfig: {
-          sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
-          sinkSchema: schema,
-          sinkTable,
-          materialization: 'table',
-          writeMode: 'replace',
-        },
-      },
-      {
-        stepId: 's-3',
-        kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-        dependsOn: ['s-2'],
-        stepTypeConfig: {
-          sinkSchema: schema,
-          sinkTable,
-        },
-      },
+      { stepId: 's-1', kind: 'DBT_MODEL' },
+      { stepId: 's-2', kind: 'DBT_MODEL', dependsOn: ['s-1'] },
+      { stepId: 's-3', kind: 'DBT_MODEL', dependsOn: ['s-2'] },
     ],
-  } as const);
+  } as const;
+}
+
+export function mkPermanentFailurePlan(): unknown {
+  return {
+    metadata: {
+      planId: 'it-plan-permanent-failure',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+    },
+    steps: [{ stepId: 's-fail', kind: 'DBT_MODEL' }],
+  } as const;
+}
+
+export function mkPostgresTransformationPlan(schema: string, sinkTable: string): unknown {
+  return withTransformationRuntimeBinding(
+    {
+      metadata: {
+        planId: 'it-plan-postgres-transform',
+        planVersion: '1.0.0',
+        schemaVersion: 'v1.2',
+        contractVersion: '1.0.0',
+      },
+      steps: [
+        {
+          stepId: 's-1',
+          kind: 'PREPARE_POSTGRES_TRANSFORM',
+          stepTypeConfig: {
+            targetSchema: schema,
+          },
+        },
+        {
+          stepId: 's-2',
+          kind: 'POSTGRES_SQL_TRANSFORM',
+          dependsOn: ['s-1'],
+          stepTypeConfig: {
+            sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
+            sinkSchema: schema,
+            sinkTable,
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+        {
+          stepId: 's-3',
+          kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+          dependsOn: ['s-2'],
+          stepTypeConfig: {
+            sinkSchema: schema,
+            sinkTable,
+          },
+        },
+      ],
+    } as const,
+    'postgres'
+  );
 }
 
 export function withTransformationRuntimeBinding<T extends Record<string, unknown>>(
   plan: T,
-  executor: 'postgres' | 'dbt' = 'postgres'
+  executor: 'postgres' | 'dbt'
 ): T {
   const currentObservability =
     typeof plan['observability'] === 'object' && plan['observability'] !== null

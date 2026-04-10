@@ -60,6 +60,7 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
     PR_QUALITY_SCOPE_PATTERNS
   );
   assert.equal(fromRuntimeDepsHelper.temporal_changed, true);
+  assert.equal(fromRuntimeDepsHelper.temporal_transformation_changed, true);
   assert.equal(fromRuntimeDepsHelper.temporal_postgres_changed, true);
 
   const fromPostgresIntegrationFile = computeBooleanScope(
@@ -67,4 +68,15 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
     PR_QUALITY_SCOPE_PATTERNS
   );
   assert.equal(fromPostgresIntegrationFile.temporal_postgres_changed, true);
+  assert.equal(fromPostgresIntegrationFile.temporal_changed, false);
+});
+
+test('computeBooleanScope isolates transformation-specific integration changes', () => {
+  const fromTransformationIntegrationFile = computeBooleanScope(
+    ['packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts'],
+    PR_QUALITY_SCOPE_PATTERNS
+  );
+  assert.equal(fromTransformationIntegrationFile.temporal_changed, false);
+  assert.equal(fromTransformationIntegrationFile.temporal_transformation_changed, true);
+  assert.equal(fromTransformationIntegrationFile.temporal_postgres_changed, false);
 });

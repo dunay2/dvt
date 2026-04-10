@@ -16,7 +16,7 @@ Generated automatically from repository code on 2026-04-10.
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
 | Total source files           | 750   |
-| Total test files             | 296   |
+| Total test files             | 297   |
 | Workspaces with build script | 23/23 |
 | Workspaces with test script  | 22/23 |
 
@@ -30,7 +30,7 @@ Generated automatically from repository code on 2026-04-10.
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 272       | 57         | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 49        | 29         | yes   | yes  | yes       | 24                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 18         | yes   | yes  | no        | 17                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 19         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |

@@ -211,6 +211,9 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
   `pnpm test:adapter-temporal`,
   and `pnpm test:adapter-temporal:integration`
 - Capability-specific verification command:
+  `pnpm test:adapter-temporal:integration:transformation` when transformation
+  runtime semantics are in scope
+- Capability-specific verification command:
   `pnpm test:adapter-temporal:integration:postgres` when the relational
   Postgres execution path is in scope
 - Evidence:

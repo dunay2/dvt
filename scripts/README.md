@@ -81,8 +81,8 @@ node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self
 
 Behavior:
 
-- reads workspace globs from `pnpm-workspace.yaml`
-- follows only `dependencies` and `optionalDependencies`
+- asks PNPM for the real runtime closure via `pnpm list --filter-prod <pkg>...`
+- follows only `dependencies` and `optionalDependencies` as resolved by PNPM
 - runs `pnpm ... run build` for the selected runtime closure with
   `--workspace-concurrency=4` and `DVT_CI=1`, so dependency package hooks do
   not recurse again inside the explicit orchestrator

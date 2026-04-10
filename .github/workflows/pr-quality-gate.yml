@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      run_temporal_transformation_integration:
+        description: 'Run temporal adapter transformation integration tests'
+        required: false
+        type: boolean
+        default: false
       run_temporal_postgres_integration:
         description: 'Run temporal adapter Postgres capability integration tests'
         required: false
@@ -41,6 +46,9 @@ jobs:
       temporal_changed:
         ${{ steps.detect_changes.outputs.temporal_changed || steps.wd_scope.outputs.temporal_changed
         }}
+      temporal_transformation_changed:
+        ${{ steps.detect_changes.outputs.temporal_transformation_changed ||
+        steps.wd_scope.outputs.temporal_transformation_changed }}
       temporal_postgres_changed:
         ${{ steps.detect_changes.outputs.temporal_postgres_changed ||
         steps.wd_scope.outputs.temporal_postgres_changed }}
@@ -188,10 +196,14 @@ jobs:
         id: wd_scope
         if:
           github.event_name == 'workflow_dispatch' && (github.event.inputs.run_temporal_integration
-          == 'true' || github.event.inputs.run_temporal_postgres_integration == 'true')
+          == 'true' || github.event.inputs.run_temporal_transformation_integration == 'true' ||
+          github.event.inputs.run_temporal_postgres_integration == 'true')
         run: |
           if [[ "${{ github.event.inputs.run_temporal_integration }}" == "true" ]]; then
             echo "temporal_changed=true" >> $GITHUB_OUTPUT
+          fi
+          if [[ "${{ github.event.inputs.run_temporal_transformation_integration }}" == "true" ]]; then
+            echo "temporal_transformation_changed=true" >> $GITHUB_OUTPUT
           fi
           if [[ "${{ github.event.inputs.run_temporal_postgres_integration }}" == "true" ]]; then
             echo "temporal_postgres_changed=true" >> $GITHUB_OUTPUT
@@ -264,11 +276,43 @@ jobs:
       - name: Run Temporal adapter integration (postgres capability)
         run: pnpm --filter @dvt/adapter-temporal run test:integration:postgres
 
+  temporal-transformation-integration:
+    name: Temporal adapter integration (transformation runtime)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [pr-checks]
+    if: >-
+      needs.pr-checks.outputs.temporal_transformation_changed == 'true' && (github.event_name !=
+      'workflow_dispatch' ||
+       github.event.inputs.run_temporal_transformation_integration == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Prepare Temporal adapter transformation runtime
+        run: pnpm --filter @dvt/adapter-temporal run prepare:integration:transformation
+
+      - name: Run Temporal adapter integration (transformation runtime)
+        run: pnpm --filter @dvt/adapter-temporal run test:integration:transformation
+
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pr-checks, temporal-integration, temporal-postgres-integration]
+    needs:
+      [
+        pr-checks,
+        temporal-integration,
+        temporal-transformation-integration,
+        temporal-postgres-integration,
+      ]
     if: always()
     steps:
       - name: Check all jobs

@@ -116,6 +116,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   `pnpm test:adapter-temporal:integration`
 - Capability-specific verification:
+  `pnpm test:adapter-temporal:integration:transformation` when
+  transformation-flow runtime semantics are in scope
+  and
   `pnpm test:adapter-temporal:integration:postgres` when the relational
   Postgres execution path is in scope.
 

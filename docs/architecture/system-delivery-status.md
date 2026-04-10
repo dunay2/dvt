@@ -50,6 +50,13 @@ Minimum tuple for this document:
 - `evidence_or_risk`: use linked evidence docs for closed work and linked risk
   records for residual hardening debt
 
+Scope-specific adapter-temporal verification commands:
+
+- `pnpm test:adapter-temporal:integration:transformation` for transformation
+  runtime semantics
+- `pnpm test:adapter-temporal:integration:postgres` for the relational
+  Postgres capability path
+
 ## Snapshot
 
 - Review date: 2026-04-09

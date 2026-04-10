@@ -12,12 +12,7 @@
  * @date 2026-02-21
  */
 
-import type {
-  EngineRunRef,
-  MaterializationEvidence,
-  PlanRef,
-  ResolvedRunContext,
-} from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -29,11 +24,6 @@ import {
   toTemporalTaskQueue,
 } from '../src/index.js';
 
-import {
-  materializationEvidenceExecutor,
-  permanentErrorExecutor,
-  withErrorExecutors,
-} from './helpers/testExecutors.js';
 import {
   INTEGRATION_TEST_TIMEOUT,
   type RunStatusValue,
@@ -47,8 +37,8 @@ import {
   createActivityDeps,
   createPlanRef,
   createRunContext,
+  mkLinearThreeStepPlan,
   waitForCondition,
-  withTransformationRuntimeBinding,
 } from './integration.time-skipping.shared.js';
 
 assertWorkflowArtifactPresentInCi();
@@ -169,34 +159,6 @@ function mkLinearPlan(stepCount: number): unknown {
   } as const;
 }
 
-function mkLinearThreeStepPlan(): unknown {
-  return {
-    metadata: {
-      planId: 'it-plan-linear-3',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
-    steps: [
-      { stepId: 's-1', kind: 'DBT_MODEL' },
-      { stepId: 's-2', kind: 'DBT_MODEL', dependsOn: ['s-1'] },
-      { stepId: 's-3', kind: 'DBT_MODEL', dependsOn: ['s-2'] },
-    ],
-  } as const;
-}
-
-function mkPermanentFailurePlan(): unknown {
-  return {
-    metadata: {
-      planId: 'it-plan-permanent-failure',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
-    steps: [{ stepId: 's-fail', kind: 'DBT_MODEL' }],
-  } as const;
-}
-
 function mkGatewaySkipPlan(): unknown {
   return {
     metadata: {
@@ -289,7 +251,7 @@ describe('temporal integration (time-skipping)', () => {
   );
 
   it(
-    'executes a planner-backed dvt-plan postgres ref through the Temporal runtime',
+    'executes a planner-backed stored plan ref through the Temporal runtime',
     async () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
@@ -299,7 +261,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-linear-3', planBytes, {
-        uri: 'dvt-plan://postgres/it-plan-linear-3',
+        uri: 'dvt-plan://stored/it-plan-linear-3',
       });
       const ctx = createRunContext(RunId.of('run-it-stored-plan-temporal'));
 
@@ -490,111 +452,6 @@ describe('temporal integration (time-skipping)', () => {
     INTEGRATION_TEST_TIMEOUT
   );
 
-  /**
-   * @verifies ADR-0010 Section 3.2 — Ordering via runSeq
-   * @verifies ADR-0010 Section 3.6 — Atomic append
-   * @verifies ADR-0011 — RunStarted ownership
-   */
-  it(
-    'golden path: linear 3-step plan emits result evidence and completes deterministically',
-    async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
-      const projector = new TestProjector();
-      const resultEvidence: MaterializationEvidence = {
-        executor: 'postgres',
-        environmentId: 't-it',
-        sinkTable: 'analytics.orders_daily',
-        rowsWritten: 42,
-        startedAt: '2026-01-01T00:00:00.000Z',
-        completedAt: '2026-01-01T00:00:05.000Z',
-        durationMs: 5000,
-      };
-      const plan = withTransformationRuntimeBinding(mkLinearThreeStepPlan());
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
-      const planRef = createPlanRef('it-plan-linear-3', planBytes);
-      const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-linear-3')),
-        tenantId: 't-it', // Explicit, non-empty
-      };
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-linear-3',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
-      });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
-        stepExecutors: [
-          materializationEvidenceExecutor('s-3', resultEvidence),
-          ...DEFAULT_STEP_EXECUTORS,
-        ],
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
-
-      try {
-        await adapter.startRun(plan, planRef, ctx);
-
-        await waitForCondition(
-          () => store.listRunEvents(RunId.of(ctx.runId)),
-          (events) => events.some((e) => e.eventType === 'RunCompleted'),
-          { timeoutMs: 30_000 }
-        );
-
-        const events = await store.listRunEvents(RunId.of(ctx.runId));
-        expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
-          'RunStarted:-',
-          'StepStarted:s-1',
-          'StepCompleted:s-1',
-          'StepStarted:s-2',
-          'StepCompleted:s-2',
-          'StepStarted:s-3',
-          'StepCompleted:s-3',
-          'RunCompleted:-',
-        ]);
-
-        // Verify monotonic runSeq (ADR-0010 Section 3.2)
-        expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
-
-        expect(events.find((event) => event.eventType === 'RunStarted')?.payload).toMatchObject({
-          executor: 'postgres',
-        });
-        expect(
-          events.find((event) => event.eventType === 'StepCompleted' && event.stepId === 's-3')
-            ?.payload
-        ).toMatchObject({
-          resultEvidence,
-        });
-        expect(events.find((event) => event.eventType === 'RunCompleted')?.payload).toMatchObject({
-          executor: 'postgres',
-          resultEvidence,
-        });
-
-        const projected = projector.rebuild(ctx.runId, events);
-        expect(projected.status).toBe('COMPLETED');
-      } finally {
-        await worker.shutdown();
-        await env.teardown();
-      }
-    },
-    INTEGRATION_TEST_TIMEOUT
-  );
-
   it(
     'gateway path: evaluates DSL in activity boundary and emits StepSkipped deterministically',
     async () => {
@@ -666,89 +523,6 @@ describe('temporal integration (time-skipping)', () => {
 
         const projected = projector.rebuild(ctx.runId, events);
         expect(projected.status).toBe('COMPLETED');
-      } finally {
-        await worker.shutdown();
-        await env.teardown();
-      }
-    },
-    INTEGRATION_TEST_TIMEOUT
-  );
-
-  /**
-   * @verifies ADR-0012 — Plan integrity validation
-   * @verifies ADR-0010 Section 3.5 — Retry semantics
-   */
-  it(
-    'retry/error path: permanent step failure emits StepFailed + RunFailed deterministically',
-    async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
-      const projector = new TestProjector();
-      const plan = withTransformationRuntimeBinding(mkPermanentFailurePlan());
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
-      const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
-      const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-permanent-failure')),
-        tenantId: 't-it', // Explicit, non-empty
-      };
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-permanent-failure',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
-      });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
-        stepExecutors: withErrorExecutors(permanentErrorExecutor('s-fail')),
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
-
-      try {
-        await adapter.startRun(plan, planRef, ctx);
-
-        await waitForCondition(
-          () => store.listRunEvents(RunId.of(ctx.runId)),
-          (events) => events.some((e) => e.eventType === 'RunFailed'),
-          { timeoutMs: 30_000 }
-        );
-
-        const events = await store.listRunEvents(RunId.of(ctx.runId));
-        expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
-          'RunStarted:-',
-          'StepStarted:s-fail',
-          'StepFailed:s-fail',
-          'RunFailed:-',
-        ]);
-        expect(events.find((e) => e.eventType === 'RunStarted')?.payload).toMatchObject({
-          executor: 'postgres',
-        });
-        expect(events.find((e) => e.eventType === 'StepFailed')?.payload).toMatchObject({
-          reason: 'PermanentStepError',
-          message: 'PERMANENT_STEP_ERROR:s-fail',
-        });
-        expect(events.find((e) => e.eventType === 'RunFailed')?.payload).toMatchObject({
-          reason: 'STEP_FAILURE',
-          executor: 'postgres',
-          message: 'PERMANENT_STEP_ERROR:s-fail',
-        });
-
-        const projected = projector.rebuild(ctx.runId, events);
-        expect(projected.status).toBe('FAILED');
       } finally {
         await worker.shutdown();
         await env.teardown();
