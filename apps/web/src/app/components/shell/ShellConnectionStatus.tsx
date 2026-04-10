@@ -1,22 +1,22 @@
 import { Activity, AlertTriangle, LoaderCircle, WifiOff } from 'lucide-react';
 import type { PlatformConnectionState } from '../../../capabilities/platform-health';
-import { topAppBarClasses } from '../shell/chrome';
-import type { TopAppBarCopy } from './copy';
+import type { TopAppBarCopy } from '../topAppBar/copy';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { topAppBarClasses } from './chrome';
 
-type TopAppBarConnectionStatusProps = {
+type ShellConnectionStatusProps = {
   readonly isConnectionChecking: boolean;
   readonly effectiveConnectionStatus: PlatformConnectionState;
   readonly connectionDetail?: string | null;
   readonly copy: TopAppBarCopy;
 };
 
-export function TopAppBarConnectionStatus({
+export function ShellConnectionStatus({
   isConnectionChecking,
   effectiveConnectionStatus,
   connectionDetail,
   copy,
-}: TopAppBarConnectionStatusProps) {
+}: ShellConnectionStatusProps) {
   if (isConnectionChecking) {
     return (
       <Tooltip>

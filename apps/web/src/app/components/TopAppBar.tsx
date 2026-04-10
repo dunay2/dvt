@@ -3,12 +3,11 @@ import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
-
-import { TopAppBarConnectionStatus } from './topAppBar/TopAppBarConnectionStatus';
+import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
+import { ShellGitRef } from './shell/ShellGitRef';
+import { ShellMenu } from './shell/ShellMenu';
+import { ShellWorkspaceSelectors } from './shell/ShellWorkspaceSelectors';
 import { resolveTopAppBarCopy } from './topAppBar/copy';
-import { TopAppBarGitRef } from './topAppBar/TopAppBarGitRef';
-import { TopAppBarShellMenu } from './topAppBar/TopAppBarShellMenu';
-import { TopAppBarWorkspaceSelectors } from './topAppBar/TopAppBarWorkspaceSelectors';
 import type { TopAppBarProps } from './topAppBar/types';
 import { TooltipProvider } from './ui/tooltip';
 
@@ -47,7 +46,7 @@ export function ShellTopBar({
           <span className={topAppBarClasses.brand}>Raven</span>
         </div>
 
-        <TopAppBarWorkspaceSelectors
+        <ShellWorkspaceSelectors
           workspaceBootstrap={workspaceBootstrap}
           selectedTenant={selectedTenant}
           selectedProject={selectedProject}
@@ -56,7 +55,7 @@ export function ShellTopBar({
           setSelectedProject={setSelectedProject}
           setSelectedEnvironment={setSelectedEnvironment}
         />
-        <TopAppBarGitRef
+        <ShellGitRef
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}
           copy={copy}
@@ -64,13 +63,13 @@ export function ShellTopBar({
 
         <div className="flex-1" />
 
-        <TopAppBarConnectionStatus
+        <ShellConnectionStatus
           isConnectionChecking={isConnectionChecking}
           effectiveConnectionStatus={effectiveConnectionStatus}
           connectionDetail={connectionDetail}
           copy={copy}
         />
-        <TopAppBarShellMenu
+        <ShellMenu
           explorerPanelVisible={explorerPanelVisible}
           inspectorPanelVisible={inspectorPanelVisible}
           consolePanelVisible={consolePanelVisible}

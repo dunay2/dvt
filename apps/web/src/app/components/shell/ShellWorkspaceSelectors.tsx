@@ -1,8 +1,8 @@
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { topAppBarClasses } from '../shell/chrome';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { topAppBarClasses } from './chrome';
 
-type TopAppBarWorkspaceSelectorsProps = {
+type ShellWorkspaceSelectorsProps = {
   readonly workspaceBootstrap: WorkspaceBootstrapConfig;
   readonly selectedTenant: string;
   readonly selectedProject: string;
@@ -12,7 +12,7 @@ type TopAppBarWorkspaceSelectorsProps = {
   readonly setSelectedEnvironment: (environmentId: string) => void;
 };
 
-export function TopAppBarWorkspaceSelectors({
+export function ShellWorkspaceSelectors({
   workspaceBootstrap,
   selectedTenant,
   selectedProject,
@@ -20,9 +20,9 @@ export function TopAppBarWorkspaceSelectors({
   setSelectedTenant,
   setSelectedProject,
   setSelectedEnvironment,
-}: TopAppBarWorkspaceSelectorsProps) {
+}: ShellWorkspaceSelectorsProps) {
   return (
-    <>
+    <div data-slot="shell-workspace-selectors" className="contents">
       <Select value={selectedTenant} onValueChange={setSelectedTenant}>
         <SelectTrigger className={`w-[138px] ${topAppBarClasses.selectTrigger}`}>
           <SelectValue />
@@ -61,6 +61,6 @@ export function TopAppBarWorkspaceSelectors({
           ))}
         </SelectContent>
       </Select>
-    </>
+    </div>
   );
 }

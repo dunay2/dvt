@@ -8,8 +8,7 @@ import {
   TerminalSquare,
   User,
 } from 'lucide-react';
-import { topAppBarClasses } from '../shell/chrome';
-import type { TopAppBarCopy } from './copy';
+import type { TopAppBarCopy } from '../topAppBar/copy';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
@@ -24,6 +23,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import { topAppBarClasses } from './chrome';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -33,7 +33,7 @@ const GRID_OPTIONS = [
   { value: 40, label: '40px (Sparse)' },
 ];
 
-type TopAppBarShellMenuProps = {
+type ShellMenuProps = {
   readonly explorerPanelVisible: boolean;
   readonly inspectorPanelVisible: boolean;
   readonly consolePanelVisible: boolean;
@@ -47,7 +47,7 @@ type TopAppBarShellMenuProps = {
   readonly copy: TopAppBarCopy;
 };
 
-export function TopAppBarShellMenu({
+export function ShellMenu({
   explorerPanelVisible,
   inspectorPanelVisible,
   consolePanelVisible,
@@ -59,11 +59,16 @@ export function TopAppBarShellMenu({
   toggleFocusMode,
   setGridSize,
   copy,
-}: TopAppBarShellMenuProps) {
+}: ShellMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={topAppBarClasses.menuButton}>
+        <Button
+          data-slot="shell-menu-trigger"
+          variant="ghost"
+          size="sm"
+          className={topAppBarClasses.menuButton}
+        >
           <Menu className="size-4" />
           {copy.shell}
         </Button>
@@ -74,28 +79,28 @@ export function TopAppBarShellMenu({
           checked={explorerPanelVisible}
           onCheckedChange={toggleExplorerPanel}
         >
-          <PanelLeftClose className="size-4 mr-2" />
+          <PanelLeftClose className="mr-2 size-4" />
           {copy.explorerPanel}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={inspectorPanelVisible}
           onCheckedChange={toggleInspectorPanel}
         >
-          <PanelRightClose className="size-4 mr-2" />
+          <PanelRightClose className="mr-2 size-4" />
           {copy.inspectorPanel}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={consolePanelVisible}
           onCheckedChange={toggleConsolePanel}
         >
-          <TerminalSquare className="size-4 mr-2" />
+          <TerminalSquare className="mr-2 size-4" />
           {copy.consolePanel}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
           {focusMode ? (
-            <Minimize2 className="size-4 mr-2" />
+            <Minimize2 className="mr-2 size-4" />
           ) : (
-            <Maximize2 className="size-4 mr-2" />
+            <Maximize2 className="mr-2 size-4" />
           )}
           {copy.focusMode}
         </DropdownMenuCheckboxItem>
@@ -115,7 +120,7 @@ export function TopAppBarShellMenu({
         <DropdownMenuSeparator />
         <DropdownMenuLabel>{copy.quickActions}</DropdownMenuLabel>
         <DropdownMenuItem>
-          <Bell className="size-4 mr-2" />
+          <Bell className="mr-2 size-4" />
           {copy.notifications}
           <Badge className="ml-auto flex size-4 items-center justify-center bg-[var(--status-danger)] p-0 text-[10px] text-[var(--text-strong)]">
             3
@@ -125,7 +130,7 @@ export function TopAppBarShellMenu({
         <DropdownMenuSeparator />
         <DropdownMenuLabel>john.doe@company.com</DropdownMenuLabel>
         <DropdownMenuItem>
-          <User className="size-4 mr-2" />
+          <User className="mr-2 size-4" />
           {copy.profileSettings}
         </DropdownMenuItem>
         <DropdownMenuItem>{copy.apiKeys}</DropdownMenuItem>

@@ -217,6 +217,10 @@ describe('RootShell platform health UX', () => {
 
       const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
       const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
+      const shellWorkspaceSelectors = mounted.container.querySelector(
+        '[data-slot="shell-workspace-selectors"]'
+      );
+      const shellMenuTrigger = mounted.container.querySelector('[data-slot="shell-menu-trigger"]');
       const leftNavigationRail = mounted.container.querySelector(
         '[data-slot="left-navigation-rail"]'
       );
@@ -230,8 +234,12 @@ describe('RootShell platform health UX', () => {
       expect(shellTopBar?.textContent).toContain('Shell');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
       expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
+      expect(shellTopBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
+      expect(shellTopBar?.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
       expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
+      expect(shellWorkspaceSelectors).toBeTruthy();
+      expect(shellMenuTrigger?.textContent).toContain('Shell');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
       expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual([
         '/canvas',
