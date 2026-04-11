@@ -17,7 +17,7 @@ export function ArtifactsList({ artifacts, panelClassName }: ArtifactsListProps)
       <h2 className={routeWorkbenchSectionTitleClassName}>{artifactsViewCopy.artifactsTitle}</h2>
       <div className="space-y-3">
         {artifacts.map((artifact) => (
-          <Card key={`${artifact.type}-${artifact.gitSha}`} className={panelClassName}>
+          <Card key={artifact.id} className={panelClassName}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded bg-[var(--surface-elevated)]">
@@ -29,7 +29,7 @@ export function ArtifactsList({ artifacts, panelClassName }: ArtifactsListProps)
                   <div className="flex flex-wrap gap-3 text-xs text-[var(--text-muted)]">
                     <span>Size: {artifact.size}</span>
                     <span>Updated: {new Date(artifact.lastUpdated).toLocaleString()}</span>
-                    <span>SHA: {artifact.gitSha}</span>
+                    <span>Source: {artifact.sourceLabel}</span>
                   </div>
                 </div>
               </div>

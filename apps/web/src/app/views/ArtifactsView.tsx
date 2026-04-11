@@ -1,4 +1,4 @@
-import { FileText, GitBranch } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 import { ViewHeader } from '../components/domain';
 import {
@@ -7,11 +7,17 @@ import {
   routeWorkbenchPanelClassName,
   routeWorkbenchTabTriggerClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
-import { Badge } from '../components/ui/badge';
 import { cn } from '../components/ui/utils';
 import { ArtifactPreviewTabs } from './artifacts/ArtifactPreviewTabs';
+import {
+  ArtifactsEmptyStateView,
+  ArtifactsErrorStateView,
+  ArtifactsInvalidImportStateView,
+  ArtifactsLoadingStateView,
+} from './artifacts/ArtifactsStateViews';
 import { ArtifactsInfoCard } from './artifacts/ArtifactsInfoCard';
 import { ArtifactsList } from './artifacts/ArtifactsList';
+import { getArtifactsWorkbenchState } from './artifacts/artifactsWorkbenchStateModel';
 import { artifactsViewCopy } from './artifacts/copy';
 import { ManifestImportPanel } from './artifacts/ManifestImportPanel';
 import { useArtifactsViewModel } from './artifacts/useArtifactsViewModel';
@@ -21,9 +27,59 @@ export default function ArtifactsView() {
   const panelClassName = cn(routeWorkbenchPanelClassName, 'p-4');
 
   const manifestImport = useLocalManifestImport();
-  const { artifacts, importedStats, previewDocuments } = useArtifactsViewModel(
-    manifestImport.state
-  );
+  const { artifacts, importedStats, previewDocuments, isLoading, errorMessage } =
+    useArtifactsViewModel(manifestImport.state);
+  const workbenchState = getArtifactsWorkbenchState({
+    artifactCount: artifacts.length,
+    importState: manifestImport.state,
+    isLoadingWorkspaceArtifacts: isLoading,
+    workspaceArtifactsErrorMessage: errorMessage,
+  });
+
+  function renderRouteBody() {
+    switch (workbenchState.kind) {
+      case 'loading':
+        return (
+          <>
+            <ArtifactsLoadingStateView />
+            <ArtifactsInfoCard />
+          </>
+        );
+      case 'empty':
+        return (
+          <>
+            <ArtifactsEmptyStateView />
+            <ArtifactsInfoCard />
+          </>
+        );
+      case 'error':
+        return (
+          <>
+            <ArtifactsErrorStateView message={workbenchState.message} />
+            <ArtifactsInfoCard />
+          </>
+        );
+      case 'invalid-import':
+        return (
+          <>
+            <ArtifactsInvalidImportStateView message={workbenchState.message} />
+            <ArtifactsInfoCard />
+          </>
+        );
+      case 'ready':
+        return (
+          <>
+            <ArtifactsList artifacts={artifacts} panelClassName={panelClassName} />
+            <ArtifactPreviewTabs
+              previewDocuments={previewDocuments}
+              panelClassName={panelClassName}
+              tabTriggerClassName={routeWorkbenchTabTriggerClassName}
+            />
+            <ArtifactsInfoCard />
+          </>
+        );
+    }
+  }
 
   return (
     <RouteWorkbenchFrame
@@ -34,12 +90,6 @@ export default function ArtifactsView() {
             title={artifactsViewCopy.title}
             icon={<FileText className="size-6 text-[var(--status-info)]" />}
             subtitle={artifactsViewCopy.subtitle}
-            actions={
-              <Badge variant="outline" className="text-xs">
-                <GitBranch className="mr-1 size-3" />
-                {artifactsViewCopy.focusedGitSha}
-              </Badge>
-            }
           />
         </div>
       }
@@ -55,13 +105,7 @@ export default function ArtifactsView() {
         onClear={manifestImport.clear}
         importedStats={importedStats}
       />
-      <ArtifactsList artifacts={artifacts} panelClassName={panelClassName} />
-      <ArtifactPreviewTabs
-        previewDocuments={previewDocuments}
-        panelClassName={panelClassName}
-        tabTriggerClassName={routeWorkbenchTabTriggerClassName}
-      />
-      <ArtifactsInfoCard />
+      {renderRouteBody()}
     </RouteWorkbenchFrame>
   );
 }
