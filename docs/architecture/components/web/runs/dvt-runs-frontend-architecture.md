@@ -21,6 +21,7 @@ Primary code anchors:
 
 - [RunsView.tsx](../../../../../apps/web/src/app/views/RunsView.tsx)
 - [RunStates.tsx](../../../../../apps/web/src/app/views/runs/RunStates.tsx)
+- [WorkbenchStates.tsx](../../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx)
 - [runWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts)
 - [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - [runsService.ts](../../../../../apps/web/src/app/services/runs/runsService.ts)
@@ -83,6 +84,34 @@ Rationale:
     temporarily unavailable;
 - empty list state must keep guiding the operator back to Canvas instead of
   presenting `/runs` as a dead end.
+
+## Shared Workbench State Primitives
+
+`Runs` no longer owns all of its state chrome directly.
+
+The route now seeds shared workbench state primitives while keeping
+route-specific copy, actions, and state selection local.
+
+```mermaid
+flowchart LR
+  RouteModel["runWorkbenchStateModel"] --> RunAdapters["RunStates route adapters"]
+  RunCopy["runStatesCopy"] --> RunAdapters
+  RunAdapters --> SharedStates["WorkbenchStates shared primitives"]
+  SharedStates --> Frame["WorkbenchStateFrame"]
+  SharedStates --> Empty["WorkbenchEmptyState"]
+  SharedStates --> Error["WorkbenchErrorState"]
+  SharedStates --> Loading["WorkbenchLoadingState"]
+  SharedStates --> Degraded["WorkbenchDegradedState"]
+```
+
+Rules:
+
+1. shared primitives own layout and state chrome only;
+2. `Runs` still owns state selection and route-specific copy;
+3. cross-route reuse should adopt these primitives before inventing more
+   route-local empty or error cards;
+4. `ReadOnlyState` remains a future primitive until there is a real governed
+   consumer.
 
 ## UX Rules
 

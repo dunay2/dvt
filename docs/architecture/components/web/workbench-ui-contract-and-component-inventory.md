@@ -135,10 +135,10 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | `PrimarySurfaceFrame` | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
 | `BottomConsoleDrawer` | Shared shell console surface                                              | Current, content model now explicit |
 | `AppIcon`             | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
-| `LoadingState`        | Standard loading treatment                                                | Needed as reusable primitive        |
-| `EmptyState`          | Standard empty treatment                                                  | Needed as reusable primitive        |
-| `ErrorState`          | Standard error treatment                                                  | Needed as reusable primitive        |
-| `DegradedState`       | Standard stale or partial-data treatment                                  | Needed as reusable primitive        |
+| `LoadingState`        | Standard loading treatment                                                | Current, seeded from `Runs`         |
+| `EmptyState`          | Standard empty treatment                                                  | Current, seeded from `Runs`         |
+| `ErrorState`          | Standard error treatment                                                  | Current, seeded from `Runs`         |
+| `DegradedState`       | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
 | `ReadOnlyState`       | Standard non-mutation treatment                                           | Needed as reusable primitive        |
 | `PermissionGate`      | Explains disabled or unavailable actions                                  | Needed                              |
 | `CommandPalette`      | Global search or command surface                                          | Optional later                      |
@@ -189,14 +189,14 @@ Shell-specific current fit:
   Reuse decision: reuse the layout pattern and explicit state model.
   Current gap: shared event presentation semantics plus headline copy now exist, but typed live-log states and the final structured-versus-terminal decision remain future work while durable run-detail authority stays with the Runs workspace.
 
-| Target primitive                                                             | Current implementation                                                                                                                                                                                            | Reuse decision                                    | Current gap                                                                              |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                                                                | Use as the first extraction source                | other routes still hand-build headers instead of using one toolbar primitive             |
-| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                                                                         | Reuse within the v1 frame contract                | side panels, shared route toolbars, and richer shell extraction remain future primitives |
-| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx)                                               | Reuse panel behavior and content                  | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
-| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                                                                 | Missing shared primitive                          | each route owns its own surface chrome and spacing                                       |
-| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | explicit `Runs` workbench states in [`RunStates.tsx`](../../../../apps/web/src/app/views/runs/RunStates.tsx) and [`runWorkbenchStateModel.ts`](../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts) | Current in `Runs`, shared extraction still needed | route states are now explicit in `Runs`, but cross-route reuse is still missing          |
-| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                                                                             | Missing shared wrapper                            | size, stroke, semantic color, and accessibility are not standardized                     |
+| Target primitive                                                             | Current implementation                                                                                                                                                                                                               | Reuse decision                      | Current gap                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                                                                                   | Use as the first extraction source  | other routes still hand-build headers instead of using one toolbar primitive             |
+| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                                                                                            | Reuse within the v1 frame contract  | side panels, shared route toolbars, and richer shell extraction remain future primitives |
+| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx)                                                                  | Reuse panel behavior and content    | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
+| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                                                                                    | Missing shared primitive            | each route owns its own surface chrome and spacing                                       |
+| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | shared workbench primitives in [`WorkbenchStates.tsx`](../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx) with `Runs` adapters in [`RunStates.tsx`](../../../../apps/web/src/app/views/runs/RunStates.tsx) | Shared primitive seeded from `Runs` | `ReadOnlyState` is still missing and other routes have not adopted the primitives yet    |
+| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                                                                                                | Missing shared wrapper              | size, stroke, semantic color, and accessibility are not standardized                     |
 
 ## Reuse, Extract, Retire
 
@@ -306,23 +306,23 @@ Main screen composition:
 
 ### Runs
 
-| Component            | Responsibility                                       | Status                        |
-| -------------------- | ---------------------------------------------------- | ----------------------------- |
-| `RunsWorkbench`      | Route composition root                               | Current, state model explicit |
-| `RunsToolbar`        | Route-local filters and actions                      | Needed                        |
-| `RunsListTable`      | Dense operational run list                           | Needed                        |
-| `RunsListFilters`    | status, tenant, environment, time filters            | Needed                        |
-| `RunWorkspaceHeader` | run identity and global run actions                  | Current in partial form       |
-| `RunTabs`            | tabs for timeline, steps, events, metrics, artifacts | Current                       |
-| `RunTimelinePanel`   | timeline view                                        | Current in partial form       |
-| `RunStepsTable`      | dense step-level execution view                      | Needed                        |
-| `RunEventsTable`     | event stream view                                    | Needed                        |
-| `RunMetricsPanel`    | metrics and charts                                   | Current in partial form       |
-| `RunArtifactsPanel`  | artifact handoff surface                             | Current in partial form       |
-| `RunsEmptyState`     | guides user back to `Canvas`                         | Current                       |
-| `RunsErrorState`     | governed list-load failure explanation               | Current                       |
-| `RunMissingState`    | run-not-found state                                  | Current                       |
-| `RunDegradedState`   | stale or partial data visibility                     | Current                       |
+| Component            | Responsibility                                       | Status                             |
+| -------------------- | ---------------------------------------------------- | ---------------------------------- |
+| `RunsWorkbench`      | Route composition root                               | Current, state model explicit      |
+| `RunsToolbar`        | Route-local filters and actions                      | Needed                             |
+| `RunsListTable`      | Dense operational run list                           | Needed                             |
+| `RunsListFilters`    | status, tenant, environment, time filters            | Needed                             |
+| `RunWorkspaceHeader` | run identity and global run actions                  | Current in partial form            |
+| `RunTabs`            | tabs for timeline, steps, events, metrics, artifacts | Current                            |
+| `RunTimelinePanel`   | timeline view                                        | Current in partial form            |
+| `RunStepsTable`      | dense step-level execution view                      | Needed                             |
+| `RunEventsTable`     | event stream view                                    | Needed                             |
+| `RunMetricsPanel`    | metrics and charts                                   | Current in partial form            |
+| `RunArtifactsPanel`  | artifact handoff surface                             | Current in partial form            |
+| `RunsEmptyState`     | guides user back to `Canvas`                         | Current, built on shared primitive |
+| `RunsErrorState`     | governed list-load failure explanation               | Current, built on shared primitive |
+| `RunMissingState`    | run-not-found state                                  | Current                            |
+| `RunDegradedState`   | stale or partial data visibility                     | Current, built on shared primitive |
 
 ### Lineage
 

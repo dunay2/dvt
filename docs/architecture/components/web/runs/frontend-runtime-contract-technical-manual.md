@@ -179,8 +179,13 @@ Primary anchors:
 
 - [RunsView.tsx](../../../../../apps/web/src/app/views/RunsView.tsx)
 - [runWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts)
+- [WorkbenchStates.tsx](../../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx)
 - [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)
 - [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
+
+The runtime contract does not change because of this extraction. Shared
+workbench state primitives now own the repeated route-state chrome, while
+`Runs` continues to own route-specific copy and state selection.
 
 ## Shared Run Event Presentation Model
 
