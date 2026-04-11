@@ -166,7 +166,7 @@ tasks:
     status_reason: >-
       Phase 1 and 2 were already delivered, and `S19-F1-C` is now closed with real Docker-backed
       PostgreSQL evidence for EXPLAIN target-load coverage and concurrent claim semantics.
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-11'
   - task_id: S19-F1-A
     parent_task: S19-F1
     priority: P2
@@ -331,15 +331,17 @@ tasks:
       workboard reflects the active tracker instead of an orphan review note.
     complexity: L
     effort_points: 2
-    progress_pct: 25
+    progress_pct: 50
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
+      - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: >-
-      `RC-G1` is now registered in Lane A and the ownership matrix freeze is delivered, but the
-      engine, delivery/traceability/artifacts, and planner cleanup slices remain queued.
+      `RC-G1-A` and `RC-G1-B` are now closed: the ownership matrix is frozen and the engine-owned
+      behavioral ports no longer leak through the active `@dvt/contracts` surface. The remaining
+      execution slices are `RC-G1-C` and `RC-G1-D`.
     last_verified: '2026-04-04'
   - task_id: RC-G1-A
     parent_task: RC-G1
@@ -364,20 +366,121 @@ tasks:
   - task_id: RC-G1-B
     parent_task: RC-G1
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: move non-shared engine ports out of `@dvt/contracts` and into `@dvt/engine`.
     dependency: RC-G1-A
     target: >-
       Engine-owned behavioral ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
-      and any compatibility alias is explicit, temporary, and validated.
+      with a single cutover in the owner package, no shared-kernel compatibility aliases, and zero
+      residual engine-port imports from `@dvt/contracts` at closeout. The scoped port set for this
+      slice is `IProviderAdapter`, `IRunStateStore`, `IStartRunIntentStore`,
+      `IRunSnapshotStalenessQuery`, `IProjector`, and `StartRunIntentPolicy`, plus only those
+      additional engine-owned behavioral ports that match ADR-0018 ownership rules and are
+      discovered during the residual-import inventory. After the cutover, `@dvt/contracts` retains
+      only cross-package serializable DTOs, boundary schemas/parsers, and genuinely shared
+      refs/event shapes.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: >-
+      Engine ownership closure is now complete: the mandatory scope, downstream cutover, legacy root
+      exports, residual equivalent-port imports, and regression guards are all closed in `RC-G1-B4`.
+    last_verified: '2026-04-11'
+  - task_id: RC-G1-B1
+    parent_task: RC-G1-B
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      freeze the exact engine-owned port inventory, target paths, and residual-import baseline
+      before the code cutover starts.
+    dependency: RC-G1-A
+    target: >-
+      A docs/contracts-first manifest exists for the mandatory engine-owned port set, each source
+      path has an owner-package destination, and the residual-import inventory identifies the exact
+      `@dvt/contracts` references that the cutover must drive to zero.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: Engine ownership migration is now tracked and ready for execution.
-    last_verified: '2026-04-02'
+    status_reason: >-
+      The mandatory engine-owned port set, owner-package destination paths, and TypeScript
+      residual-import baseline are now frozen in the active proposal.
+    last_verified: '2026-04-11'
+  - task_id: RC-G1-B2
+    parent_task: RC-G1-B
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective: >-
+      move the engine-owned behavioral ports into `@dvt/engine` and cut the engine package over to
+      owner-local source paths.
+    dependency: RC-G1-B1
+    target: >-
+      The mandatory engine-owned ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
+      and `@dvt/engine` no longer imports the moved ports from `@dvt/contracts`.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: >-
+      The mandatory engine-owned ports already live under owner-local engine paths and `@dvt/engine`
+      no longer imports the moved port set from `@dvt/contracts`.
+    last_verified: '2026-04-11'
+  - task_id: RC-G1-B3
+    parent_task: RC-G1-B
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective: >-
+      cut adapters, state-store, and any other governed consumers over to the owner-local engine
+      ports and close residual imports.
+    dependency: RC-G1-B2
+    target: >-
+      `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, and any additional
+      governed consumers use the owner-local engine ports, and residual imports of the moved ports
+      from `@dvt/contracts` are zero.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: >-
+      Governed downstream consumers already import the moved engine-owned ports from `@dvt/engine`;
+      no direct TypeScript imports of the moved port set from `@dvt/contracts` remain in
+      `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, or `apps/api`.
+    last_verified: '2026-04-11'
+  - task_id: RC-G1-B4
+    parent_task: RC-G1-B
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      harden the cutover with import guards, export-map cleanup, ARC-2 evidence, and final
+      validation.
+    dependency: RC-G1-B3
+    target: >-
+      No legacy exports remain for the moved engine ports or the equivalent engine-owned behavioral
+      ports still published from `@dvt/contracts`, import guards prevent regression, docs/contracts
+      and planning stay in sync, ARC-2 evidence is published, and `pnpm verify:prepush` closes the
+      slice green.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
+      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+    status_reason: >-
+      Legacy root exports were removed from `@dvt/contracts`, the final residual
+      `RunStateCommandPort` consumer moved to `@dvt/engine`, lint guards now block reintroduction in
+      governed packages, and ARC-2 evidence/risk were updated.
+    last_verified: '2026-04-11'
   - task_id: RC-G1-C
     parent_task: RC-G1
     priority: P1

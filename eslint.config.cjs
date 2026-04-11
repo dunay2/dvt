@@ -151,6 +151,29 @@ module.exports = [
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: '@dvt/contracts',
+              importNames: [
+                'IProviderAdapter',
+                'IRunStateStore',
+                'IRunStateStoreWrite',
+                'IRunStateStoreRead',
+                'IRunStateStoreMaintenance',
+                'IStartRunIntentStore',
+                'IRunSnapshotStalenessQuery',
+                'IProjector',
+                'StartRunIntentPolicy',
+                'RunStateCommandPort',
+                'IClock',
+                'IIdempotencyKeyBuilder',
+                'IPlanFetcher',
+                'IPlanIntegrityValidator',
+              ],
+              message:
+                'Engine-owned behavioral ports MUST be imported from @dvt/engine, not @dvt/contracts (ADR-0018).',
+            },
+          ],
           patterns: [
             {
               group: ['@dvt/planner', '@dvt/planner/*'],
@@ -233,6 +256,29 @@ module.exports = [
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: '@dvt/contracts',
+              importNames: [
+                'IProviderAdapter',
+                'IRunStateStore',
+                'IRunStateStoreWrite',
+                'IRunStateStoreRead',
+                'IRunStateStoreMaintenance',
+                'IStartRunIntentStore',
+                'IRunSnapshotStalenessQuery',
+                'IProjector',
+                'StartRunIntentPolicy',
+                'RunStateCommandPort',
+                'IClock',
+                'IIdempotencyKeyBuilder',
+                'IPlanFetcher',
+                'IPlanIntegrityValidator',
+              ],
+              message:
+                'Engine-owned behavioral ports MUST be imported from @dvt/engine, not @dvt/contracts (ADR-0018).',
+            },
+          ],
           patterns: [
             {
               group: ['@dvt/planner', '@dvt/planner/*'],
@@ -426,6 +472,45 @@ module.exports = [
       'no-restricted-syntax': 'off',
       'no-restricted-properties': 'off',
       'no-restricted-imports': 'off',
+    },
+  },
+
+  {
+    files: [
+      'packages/@dvt/adapter-temporal/test/**/*.ts',
+      'packages/@dvt/adapter-postgres/test/**/*.ts',
+      'packages/@dvt/state-store/**/*.ts',
+      'apps/api/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@dvt/contracts',
+              importNames: [
+                'IProviderAdapter',
+                'IRunStateStore',
+                'IRunStateStoreWrite',
+                'IRunStateStoreRead',
+                'IRunStateStoreMaintenance',
+                'IStartRunIntentStore',
+                'IRunSnapshotStalenessQuery',
+                'IProjector',
+                'StartRunIntentPolicy',
+                'RunStateCommandPort',
+                'IClock',
+                'IIdempotencyKeyBuilder',
+                'IPlanFetcher',
+                'IPlanIntegrityValidator',
+              ],
+              message:
+                'Engine-owned behavioral ports MUST be imported from @dvt/engine, not @dvt/contracts (ADR-0018).',
+            },
+          ],
+        },
+      ],
     },
   },
 
