@@ -1,9 +1,10 @@
 export type ArtifactPreview = {
+  id: string;
   type: string;
   description: string;
   size: string;
   lastUpdated: string;
-  gitSha: string;
+  sourceLabel: string;
 };
 
 export type ParsedManifestNodeType =

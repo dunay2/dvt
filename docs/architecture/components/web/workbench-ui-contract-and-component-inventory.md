@@ -369,17 +369,17 @@ Main screen composition:
 
 ### Artifacts
 
-| Component                     | Responsibility                      | Status                   |
-| ----------------------------- | ----------------------------------- | ------------------------ |
-| `ArtifactsWorkbench`          | Route composition root              | Current, needs hardening |
-| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                   |
-| `ArtifactImportZone`          | local manifest import               | Current                  |
-| `ArtifactList`                | artifact inventory                  | Current in basic form    |
-| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                  |
-| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                   |
-| `ArtifactSearch`              | payload navigation                  | Needed                   |
-| `ArtifactsEmptyState`         | no artifact loaded                  | Needed                   |
-| `ArtifactsInvalidImportState` | import rejection explanation        | Needed                   |
+| Component                     | Responsibility                      | Status                        |
+| ----------------------------- | ----------------------------------- | ----------------------------- |
+| `ArtifactsWorkbench`          | Route composition root              | Current, state model explicit |
+| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                        |
+| `ArtifactImportZone`          | local manifest import               | Current                       |
+| `ArtifactList`                | artifact inventory                  | Current in basic form         |
+| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                       |
+| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                        |
+| `ArtifactSearch`              | payload navigation                  | Needed                        |
+| `ArtifactsEmptyState`         | no artifact loaded                  | Current                       |
+| `ArtifactsInvalidImportState` | import rejection explanation        | Current                       |
 
 ### Templates
 

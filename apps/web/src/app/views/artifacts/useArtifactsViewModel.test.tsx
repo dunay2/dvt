@@ -49,10 +49,14 @@ function Probe(): JSX.Element {
 
   return (
     <div>
-      <span data-testid="manifest-path">{viewModel.previewDocuments['manifest.json'].path}</span>
+      <span data-testid="manifest-path">
+        {viewModel.previewDocuments['manifest.json']?.path ?? 'none'}
+      </span>
       <span data-testid="artifacts-count">{viewModel.artifacts.length}</span>
+      <span data-testid="loading-state">{String(viewModel.isLoading)}</span>
+      <span data-testid="error-message">{viewModel.errorMessage ?? 'none'}</span>
       <span data-testid="manifest-content">
-        {JSON.stringify(viewModel.previewDocuments['manifest.json'].content)}
+        {JSON.stringify(viewModel.previewDocuments['manifest.json']?.content ?? null)}
       </span>
     </div>
   );
@@ -119,7 +123,39 @@ describe('useArtifactsViewModel', () => {
     ).toContain('"workspace"');
   });
 
-  it('falls back to default previews when workspace artifact lookup fails', async () => {
+  it('returns an explicit empty result when no workspace artifacts exist', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService(),
+        }}
+      >
+        <Probe />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="loading-state"]')?.textContent === 'false',
+      { description: 'empty artifact resolution' }
+    );
+
+    expect(mounted.container.querySelector('[data-testid="manifest-path"]')?.textContent).toBe(
+      'none'
+    );
+    expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe(
+      '0'
+    );
+    expect(mounted.container.querySelector('[data-testid="error-message"]')?.textContent).toBe(
+      'none'
+    );
+    expect(mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent).toBe(
+      'null'
+    );
+  });
+
+  it('surfaces workspace lookup failure instead of fabricating fallback previews', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
@@ -136,18 +172,20 @@ describe('useArtifactsViewModel', () => {
     );
 
     await waitForReactQuery(
-      () => mounted?.container.textContent?.includes('manifest.json') === true,
-      { description: 'artifact fallback preview' }
+      () =>
+        mounted?.container.querySelector('[data-testid="error-message"]')?.textContent ===
+        'workspace unavailable',
+      { description: 'workspace lookup failure surfaces explicitly' }
     );
 
     expect(mounted.container.querySelector('[data-testid="manifest-path"]')?.textContent).toBe(
-      'manifest.json'
+      'none'
     );
     expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe(
-      '3'
+      '0'
     );
-    expect(
-      mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent
-    ).toContain('dbt_schema_version');
+    expect(mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent).toBe(
+      'null'
+    );
   });
 });
