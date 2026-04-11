@@ -56,6 +56,13 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260411 Project architecture strengths, weaknesses, and priority review](./architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: current module-by-module architectural valuation and priority baseline
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260410 Runtime and shared-kernel risk triage review](./architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
   - domain: `architecture-and-governance`
   - role: current triage reference for shared-kernel and runtime risks
