@@ -2,9 +2,9 @@ import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
 import type { IWorkspacePort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView from './CodeView';
 
 vi.mock('../components/monaco/MonacoCodeViewer', () => ({
@@ -18,13 +18,14 @@ vi.mock('../components/monaco/MonacoCodeViewer', () => ({
     language: string;
   }) => (
     <div data-language={language} data-path={path} data-testid="monaco-code-viewer">
-      {value}
+      {' '}
+      {value}{' '}
     </div>
   ),
 }));
 
-function buildWorkspaceService(): IWorkspacePort {
-  return {
+function buildWorkspaceService(overrides: Partial<IWorkspacePort> = {}): IWorkspacePort {
+  const service: IWorkspacePort = {
     getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
     getDiffChanges: async () => [],
     getPlugins: async () => [],
@@ -66,6 +67,8 @@ function buildWorkspaceService(): IWorkspacePort {
       lastModified: '2026-04-06T00:00:00Z',
     }),
   };
+
+  return { ...service, ...overrides };
 }
 
 describe('CodeView', () => {
@@ -97,35 +100,35 @@ describe('CodeView', () => {
     throw new Error('Timed out waiting for CodeView to settle');
   }
 
+  function createTestQueryClient(): QueryClient {
+    return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  }
+
   it('renders the workspace tree and previews the first file', async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     (
-      globalThis as typeof globalThis & {
-        IS_REACT_ACT_ENVIRONMENT?: boolean;
-      }
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
 
     await act(async () => {
       root?.render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createTestQueryClient()}>
+          {' '}
           <AppServicesProvider
-            overrides={{
-              mode: 'mock',
-              workspaceService: buildWorkspaceService(),
-            }}
+            overrides={{ mode: 'mock', workspaceService: buildWorkspaceService() }}
           >
-            <CodeView />
-          </AppServicesProvider>
+            {' '}
+            <CodeView />{' '}
+          </AppServicesProvider>{' '}
         </QueryClientProvider>
       );
     });
 
     expect(container.textContent).toContain('Code');
-    expect(container.textContent).toContain('Explorer');
-
     await waitFor(() => container?.textContent?.includes('stg_orders.sql') === true);
+    await waitFor(() => container?.textContent?.includes('Explorer') === true);
     await waitFor(() => container?.querySelector('[data-testid="monaco-code-viewer"]') != null);
 
     expect(container.textContent).toContain('stg_orders.sql');
@@ -138,5 +141,129 @@ describe('CodeView', () => {
     expect(viewer).not.toBeNull();
     expect(viewer?.getAttribute('data-path')).toBe('models/staging/stg_orders.sql');
     expect(viewer?.textContent).toContain('select * from orders');
+  });
+
+  it('renders a governed route empty state when no workspace files are available', async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          {' '}
+          <AppServicesProvider
+            overrides={{
+              mode: 'mock',
+              workspaceService: buildWorkspaceService({ listFiles: async () => [] }),
+            }}
+          >
+            {' '}
+            <CodeView />{' '}
+          </AppServicesProvider>{' '}
+        </QueryClientProvider>
+      );
+    });
+
+    await waitFor(
+      () =>
+        container?.querySelector('[data-slot="code-route-empty-state"]') != null &&
+        container.textContent?.includes('No workspace files available') === true
+    );
+
+    expect(container.querySelector('[data-slot="code-route-empty-state"]')?.textContent).toContain(
+      'This workspace does not expose files to browse yet.'
+    );
+    expect(container.textContent).not.toContain('Explorer');
+  });
+
+  it('renders a governed route error state when the workspace tree cannot be loaded', async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          {' '}
+          <AppServicesProvider
+            overrides={{
+              mode: 'api',
+              workspaceService: buildWorkspaceService({
+                listFiles: async () => {
+                  throw new Error('request failed');
+                },
+              }),
+            }}
+          >
+            {' '}
+            <CodeView />{' '}
+          </AppServicesProvider>{' '}
+        </QueryClientProvider>
+      );
+    });
+
+    await waitFor(
+      () =>
+        container?.querySelector('[data-slot="code-route-error-state"]') != null &&
+        container.textContent?.includes('Workspace files unavailable') === true
+    );
+
+    expect(container.querySelector('[data-slot="code-route-error-state"]')?.textContent).toContain(
+      'The file explorer could not be loaded right now.'
+    );
+    expect(container.textContent).not.toContain('Explorer');
+  });
+
+  it('keeps the explorer visible when the selected file preview resolves to file-not-found', async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          {' '}
+          <AppServicesProvider
+            overrides={{
+              mode: 'mock',
+              workspaceService: buildWorkspaceService({
+                getFileContent: async (path) => {
+                  throw new WorkspaceFileLoadError('not_found', path);
+                },
+              }),
+            }}
+          >
+            {' '}
+            <CodeView />{' '}
+          </AppServicesProvider>{' '}
+        </QueryClientProvider>
+      );
+    });
+
+    await waitFor(
+      () =>
+        container?.querySelector('[data-slot="code-preview-error-state"]') != null &&
+        container.textContent?.includes('Selected file unavailable') === true
+    );
+
+    expect(container.textContent).toContain('Explorer');
+    expect(container.textContent).toContain('stg_orders.sql');
+    expect(
+      container.querySelector('[data-slot="code-preview-error-state"]')?.textContent
+    ).toContain('The selected file is no longer available in this workspace:');
+    expect(
+      container.querySelector('[data-slot="code-preview-error-state"]')?.textContent
+    ).toContain('models/staging/stg_orders.sql');
+    expect(container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
   });
 });

@@ -13,6 +13,15 @@ import {
   useWorkspaceFileTreeQuery,
 } from '../queries/workspaceQueries';
 import type { WorkspaceFileEntry } from '../ports/workspace';
+import {
+  CodePreviewEmptyStateView,
+  CodePreviewErrorStateView,
+  CodeRouteEmptyStateView,
+  CodeRouteErrorStateView,
+  CodeRouteLoadingStateView,
+} from './code/CodeStateViews';
+import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
+import { codeViewCopy as copy } from './code/codeViewCopy';
 import FileTreePanel from './code/FileTreePanel';
 
 function flattenFiles(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
@@ -25,30 +34,53 @@ function firstFilePath(entries: WorkspaceFileEntry[]): string | undefined {
   return flattenFiles(entries)[0]?.path;
 }
 
+function hasWorkspaceFiles(entries: WorkspaceFileEntry[]): boolean {
+  return firstFilePath(entries) !== undefined;
+}
+
 export default function CodeView() {
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
+  const workspaceFileTree = fileTreeQuery.data ?? [];
   const resolvedPath = useMemo(
-    () => selectedPath ?? firstFilePath(fileTreeQuery.data ?? []),
-    [fileTreeQuery.data, selectedPath]
+    () => selectedPath ?? firstFilePath(workspaceFileTree),
+    [workspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
-  const previewPane = fileTreeQuery.isPending ? (
+
+  if (fileTreeQuery.isPending) {
+    return <CodeRouteLoadingStateView />;
+  }
+
+  if (fileTreeQuery.isError) {
+    return (
+      <CodeRouteErrorStateView
+        error={resolveCodeWorkbenchErrorPresentation({
+          scope: 'file-tree',
+          error: fileTreeQuery.error,
+        })}
+      />
+    );
+  }
+
+  if (!hasWorkspaceFiles(workspaceFileTree)) {
+    return <CodeRouteEmptyStateView />;
+  }
+
+  const previewPane = fileContentQuery.isPending ? (
     <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-      Loading workspace files...
+      {copy.previewLoadingMessage}
     </div>
-  ) : fileTreeQuery.isError ? (
-    <div className="flex h-full items-center justify-center text-sm text-[var(--status-danger)]">
-      Unable to load workspace files.
-    </div>
-  ) : fileContentQuery.isPending ? (
-    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-      Loading file preview...
-    </div>
-  ) : fileContentQuery.isError || !fileContentQuery.data ? (
-    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-      Select a file to preview its contents.
-    </div>
+  ) : fileContentQuery.isError ? (
+    <CodePreviewErrorStateView
+      error={resolveCodeWorkbenchErrorPresentation({
+        scope: 'file-preview',
+        error: fileContentQuery.error,
+        selectedPath: resolvedPath,
+      })}
+    />
+  ) : !fileContentQuery.data ? (
+    <CodePreviewEmptyStateView />
   ) : (
     <MonacoCodeViewer
       ariaLabel={`Previewing ${fileContentQuery.data.name}`}
@@ -66,16 +98,16 @@ export default function CodeView() {
         <div className={routeWorkbenchHeaderBandClassName}>
           <ViewHeader
             className="border-0 bg-transparent px-0 py-0"
-            title="Code"
+            title={copy.title}
             icon={<FileCode2 className="size-6 text-[var(--status-info)]" />}
-            subtitle="Browse workspace files and preview source content read-only."
+            subtitle={copy.subtitle}
           />
         </div>
       }
     >
       <div className="w-80 shrink-0">
         <FileTreePanel
-          tree={fileTreeQuery.data ?? []}
+          tree={workspaceFileTree}
           selectedPath={resolvedPath}
           onSelect={(entry) => {
             if (entry.kind === 'file') {
@@ -89,9 +121,9 @@ export default function CodeView() {
         <div className="shrink-0 p-4 pb-0">
           <WorkbenchReadOnlyState
             dataSlot="code-readonly-state"
-            title="Read-only preview"
-            message="Browse workspace files here and hand off revision comparison to Diff."
-            note="Editing is not available in the Code route."
+            title={copy.readOnlyTitle}
+            message={copy.readOnlyMessage}
+            note={copy.readOnlyNote}
           />
         </div>
         <div className="min-h-0 flex-1 p-4">{previewPane}</div>

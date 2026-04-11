@@ -347,8 +347,8 @@ Main screen composition:
 | `FileTreePanel`     | workspace file selection                  | Current                  |
 | `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
 | `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
-| `CodeEmptyState`    | no file or no workspace files available   | Needed                   |
-| `CodeErrorState`    | preserve selected-file context on failure | Needed                   |
+| `CodeEmptyState`    | no file or no workspace files available   | Current                  |
+| `CodeErrorState`    | preserve selected-file context on failure | Current                  |
 | `CodeReadOnlyState` | explicit non-editing treatment            | Current via shared state |
 
 ### Diff
