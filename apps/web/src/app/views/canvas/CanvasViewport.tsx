@@ -19,6 +19,7 @@ type CanvasViewportProps = {
   readonly focusMode: boolean;
   readonly explorerPanelVisible: boolean;
   readonly inspectorPanelVisible: boolean;
+  readonly canEditEdges: boolean;
   readonly nodesWithImpact: Node[];
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
@@ -41,6 +42,7 @@ export default function CanvasViewport({
   focusMode,
   explorerPanelVisible,
   inspectorPanelVisible,
+  canEditEdges,
   nodesWithImpact,
   edges,
   nodeTypes,
@@ -99,13 +101,20 @@ export default function CanvasViewport({
       <ReactFlow
         nodes={nodesWithImpact}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onNodesChange={canEditEdges ? onNodesChange : undefined}
+        onEdgesChange={canEditEdges ? onEdgesChange : undefined}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         onNodeDragStop={onNodeDragStop}
         onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
+        nodesDraggable={canEditEdges}
+        nodesConnectable={canEditEdges}
+        nodesFocusable={canEditEdges}
+        edgesFocusable={canEditEdges}
+        elementsSelectable={canEditEdges}
+        deleteKeyCode={canEditEdges ? undefined : null}
+        disableKeyboardA11y={!canEditEdges}
         fitView={viewport == null}
         fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
         minZoom={0.35}

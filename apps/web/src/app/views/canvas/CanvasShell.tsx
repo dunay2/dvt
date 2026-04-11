@@ -92,6 +92,9 @@ export default function CanvasShell({
             onToggleColumns={onToggleColumns}
             onPlan={onPlan}
             onRun={onRun}
+            canPlan={userPermissions.canPlan}
+            canRun={userPermissions.canRun}
+            canEditEdges={userPermissions.canEditEdges}
             canStartRun={canStartRun}
             planStatusSummary={planStatusSummary}
             canvasAuthoringMode={canvasAuthoringMode}
@@ -109,6 +112,7 @@ export default function CanvasShell({
               focusMode={focusMode}
               explorerPanelVisible={explorerPanelVisible}
               inspectorPanelVisible={inspectorPanelVisible}
+              canEditEdges={userPermissions.canEditEdges}
               nodesWithImpact={nodesWithImpact}
               edges={edges}
               nodeTypes={nodeTypes}

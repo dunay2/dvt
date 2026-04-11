@@ -68,6 +68,7 @@ function buildProps(
     focusMode: false,
     explorerPanelVisible: true,
     inspectorPanelVisible: true,
+    canEditEdges: true,
     nodesWithImpact: [],
     edges: [],
     nodeTypes: {},
@@ -170,6 +171,8 @@ describe('CanvasViewport', () => {
       fitView: true,
       fitViewOptions: { padding: 0.2, maxZoom: 0.82 },
       minZoom: 0.35,
+      nodesDraggable: true,
+      nodesConnectable: true,
     });
     const minimap = container.querySelector('[data-testid="minimap"]');
     expect(minimap?.getAttribute('data-pannable')).toBe('true');
@@ -195,5 +198,29 @@ describe('CanvasViewport', () => {
       { x: 120, y: 48, zoom: 0.68 },
       { duration: 0 }
     );
+  });
+
+  it('disables graph mutation, selection, and keyboard shortcuts when graph edits are gated', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasViewport
+          {...buildProps({
+            canEditEdges: false,
+          })}
+        />
+      );
+    });
+
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      nodesDraggable: false,
+      nodesConnectable: false,
+      nodesFocusable: false,
+      edgesFocusable: false,
+      elementsSelectable: false,
+      deleteKeyCode: null,
+      disableKeyboardA11y: true,
+      onNodesChange: undefined,
+      onEdgesChange: undefined,
+    });
   });
 });

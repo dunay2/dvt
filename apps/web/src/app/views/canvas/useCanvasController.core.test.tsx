@@ -82,4 +82,30 @@ describe('useCanvasController core', () => {
     expect(harness.state.store.hideExplorerPanel).toHaveBeenCalledTimes(1);
     expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
   });
+
+  it('stops exposing node removal handlers when graph edits are gated', async () => {
+    const userPermissions = harness.state.store.userPermissions as {
+      canPlan: boolean;
+      canRun: boolean;
+      canEditEdges: boolean;
+      canManagePlugins: boolean;
+      canManageRBAC: boolean;
+    };
+    harness.state.store.userPermissions = {
+      ...userPermissions,
+      canEditEdges: false,
+    };
+    await harness.renderProbe();
+
+    const latestBuildNodesCall = harness.mocks.buildNodesWithImpact.mock.calls.at(-1)?.[0] as
+      | { handlers?: { onRemoveNode?: unknown } }
+      | undefined;
+
+    expect(latestBuildNodesCall?.handlers?.onRemoveNode).toBeUndefined();
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+  });
 });

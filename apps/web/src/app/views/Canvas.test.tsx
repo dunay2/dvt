@@ -206,8 +206,18 @@ describe('Canvas route', () => {
       root.render(<Canvas />);
     });
 
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+
     expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
     expect(container.textContent).toContain('Read-only canvas');
+    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
 });

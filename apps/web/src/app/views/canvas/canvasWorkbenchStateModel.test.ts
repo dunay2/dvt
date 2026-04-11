@@ -81,7 +81,7 @@ describe('canvasWorkbenchStateModel', () => {
       expect.objectContaining({
         title: 'Limited mutation access',
         message:
-          'You can keep inspecting the graph, but run start and edge edits are unavailable in this context.',
+          'You can keep inspecting the graph, but run start and graph edits are unavailable in this context.',
       })
     );
   });

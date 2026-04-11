@@ -79,7 +79,7 @@ export function getCanvasReadOnlyState({
   }
 
   if (!canEditEdges) {
-    disabledCapabilities.push('edge edits');
+    disabledCapabilities.push('graph edits');
   }
 
   if (disabledCapabilities.length === 0) {
