@@ -32,6 +32,22 @@ vi.mock('../components/monaco/MonacoDiffViewer', () => ({
 }));
 
 function buildFileContent(path: string): FileContent {
+  if (path.includes('dim_store')) {
+    return {
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'sql',
+      content: [
+        'SELECT',
+        '  s.store_id,',
+        '  s.store_name,',
+        '  s.store_city',
+        'FROM raw.store_dim s',
+      ].join('\n'),
+      lastModified: '2026-04-06T00:00:00Z',
+    };
+  }
+
   return {
     path,
     name: path.split('/').at(-1) ?? path,
@@ -496,17 +512,91 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () => ({
+              nodes: [
+                {
+                  id: 'dim_store',
+                  name: 'dim_store',
+                  type: 'MODEL',
+                  package: 'analytics',
+                  path: 'models/dimensions/dim_store.sql',
+                  tags: [],
+                  status: 'success',
+                  dependencies: [],
+                  compiledSql: [
+                    'SELECT',
+                    '  s.store_id,',
+                    '  s.store_name',
+                    'FROM raw.store_dim s',
+                  ].join('\n'),
+                  columns: [
+                    { name: 'store_id', type: 'INTEGER', nullable: false },
+                    { name: 'store_name', type: 'TEXT', nullable: false },
+                    { name: 'store_city', type: 'TEXT', nullable: true },
+                  ],
+                },
+                {
+                  id: 'fct_sales',
+                  name: 'fct_sales',
+                  type: 'MODEL',
+                  package: 'analytics',
+                  path: 'models/marts/fct_sales.sql',
+                  tags: [],
+                  status: 'success',
+                  dependencies: ['stg_orders', 'dim_store'],
+                  compiledSql: [
+                    'SELECT',
+                    '  o.order_id,',
+                    '  o.customer_id,',
+                    '  o.order_date,',
+                    '  s.store_id,',
+                    '  o.total_amount',
+                    'FROM {{ ref("stg_orders") }} o',
+                    'LEFT JOIN {{ ref("dim_store") }} s',
+                    '  ON o.store_id = s.store_id',
+                  ].join('\n'),
+                  columns: [
+                    { name: 'order_id', type: 'INTEGER', nullable: false },
+                    { name: 'customer_id', type: 'INTEGER', nullable: false },
+                    { name: 'order_date', type: 'DATE', nullable: false },
+                    { name: 'store_id', type: 'INTEGER', nullable: true },
+                    { name: 'total_amount', type: 'NUMERIC(18,2)', nullable: true },
+                  ],
+                },
+              ],
+              edges: [],
+            }),
+            getDiffChanges: async () => [
+              {
+                id: '1',
+                nodeId: 'dim_store',
+                type: 'added',
+                severity: 'info',
+                description: 'Column added: store_region',
+                oldValue: null,
+                newValue: 'store_region TEXT',
+              },
+              {
+                id: '2',
+                nodeId: 'fct_sales',
+                type: 'changed',
+                severity: 'breaking',
+                description: 'Column removed: discount_amount',
+                oldValue: 'discount_amount DECIMAL',
+                newValue: null,
+              },
+            ],
+          }),
         }}
       >
         <DiffView />
       </AppServicesProvider>
     );
 
-    await waitForReactQuery(
-      () => mounted?.container.textContent?.includes("WHERE o.order_date >= '2020-01-01'") === true,
-      { description: 'initial diff changes render' }
-    );
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('dim_store') === true, {
+      description: 'initial diff changes render for both nodes',
+    });
 
     const breakingButton = Array.from(document.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Breaking Only')
@@ -517,7 +607,52 @@ describe('DiffView', () => {
       breakingButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
+    await waitFor(() => {
+      expect(mounted?.container.textContent).toContain('fct_sales');
+      expect(mounted?.container.textContent).not.toContain('dim_store');
+    });
+
+    const sqlTab = Array.from(document.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('SQL Diff')
+    );
+    expect(sqlTab).toBeTruthy();
+
+    await act(async () => {
+      if (sqlTab) {
+        fireEvent.mouseDown(sqlTab, { button: 0 });
+        fireEvent.click(sqlTab);
+      }
+    });
+
+    await waitFor(() => {
+      expect(sqlTab?.getAttribute('data-state')).toBe('active');
+      expect(mounted?.container.querySelector('[data-testid="monaco-diff-viewer"]')).not.toBeNull();
+    });
+
+    expect(mounted.container.textContent).toContain('Compiled SQL Diff: fct_sales');
+    expect(mounted.container.textContent).toContain('models/marts/fct_sales.sql (current)');
+    expect(mounted.container.textContent).not.toContain('dim_store (current)');
+
+    const catalogTab = Array.from(document.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Catalog Diff')
+    );
+    expect(catalogTab).toBeTruthy();
+
+    await act(async () => {
+      if (catalogTab) {
+        fireEvent.mouseDown(catalogTab, { button: 0 });
+        fireEvent.click(catalogTab);
+      }
+    });
+
+    await waitFor(() => {
+      expect(mounted?.container.querySelector('[data-slot="diff-catalog-summary"]')).not.toBeNull();
+    });
+
     expect(mounted.container.textContent).toContain('fct_sales');
-    expect(mounted.container.textContent).not.toContain('dim_store');
+    expect(mounted.container.textContent).toContain('discount_amount');
+    expect(mounted.container.textContent).toContain('Column Removed');
+    expect(mounted.container.textContent).not.toContain('store_region');
+    expect(mounted.container.textContent).not.toContain('Column Added');
   });
 });
