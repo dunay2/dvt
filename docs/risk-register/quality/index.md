@@ -80,7 +80,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Status-head contract cutover across adapter engine API web surfaces](R-20260407-STATUS-HEAD-CONTRACT-CUTOVER.yaml)
 - [Temporal capability-specific CI lanes can over-trigger on broad engine or contract diffs](R-20260410-TEMPORAL-CAPABILITY-LANE-SCOPE-OVERTRIGGER.yaml)
 - [Temporal live status query could drift away from engine enrichment assumptions](R-20260401-TEMPORAL-LIVE-STATUS-QUERY.yaml)
-- [Temporal native cancellation depends on local-activity terminal cleanup](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
+- [Temporal native cancellation cleanup and provider-status race remain coupled](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [TF-C2-B canonical contract docs can drift from the shipped execution read surface](R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml)
 - [TF-C2-B failed-run materialization semantics remain ambiguous](R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml)

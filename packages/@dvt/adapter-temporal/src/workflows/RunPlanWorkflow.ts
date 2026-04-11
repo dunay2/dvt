@@ -37,6 +37,7 @@ import {
   proxyActivities,
   rootCause,
   setHandler,
+  sleep,
 } from '@temporalio/workflow';
 
 import type {
@@ -330,6 +331,16 @@ async function resolveLayerLoopOutcome(args: {
   if (cancelled) {
     return cancelled;
   }
+  await awaitNativeCancellationCheckpoint();
+  const cancelledAfterCheckpoint = await finalizeCancellationIfRequested({
+    state: args.state,
+    ctx: args.ctx,
+    planRef: args.planRef,
+    continuedAsNewCount: args.continuedAsNewCount,
+  });
+  if (cancelledAfterCheckpoint) {
+    return cancelledAfterCheckpoint;
+  }
   if (args.layerOutcome.kind === 'continue_as_new') {
     return continueAsNew<typeof runPlanWorkflow>(args.layerOutcome.nextInput);
   }
@@ -377,6 +388,14 @@ async function markWorkflowFailedIfNeeded(
     // best-effort; do not mask the original error
   }
   state.status = 'FAILED';
+}
+
+async function awaitNativeCancellationCheckpoint(): Promise<void> {
+  // Provider-native WorkflowHandle.cancel() can arrive after the last activity
+  // result is applied but before the workflow emits its terminal completion
+  // command. Yield one timer tick so a pending native cancel can preempt
+  // RunCompleted / continue-as-new.
+  await sleep(1);
 }
 
 // ---------------------------------------------------------------------------
@@ -674,7 +693,8 @@ async function finalizeCancellationIfRequested(args: {
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
 }): Promise<RunPlanWorkflowResult | null> {
-  if (!args.state.cancelRequested) {
+  const nativeCancellationRequested = CancellationScope.current().consideredCancelled;
+  if (!args.state.cancelRequested && !nativeCancellationRequested) {
     return null;
   }
 

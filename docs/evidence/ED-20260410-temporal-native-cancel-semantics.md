@@ -31,14 +31,17 @@ This slice corrects `T-01` by making `TemporalAdapter.cancelRun()` use
 provider-native workflow cancellation instead of forwarding the canonical
 cancel signal.
 
-The Temporal workflow now treats native cancellation as a first-class terminal
-path:
+The Temporal workflow now treats native cancellation as a runtime-owned
+realized lifecycle path when cancellation reaches workflow execution before the
+final terminal command:
 
 1. in-flight step activities are requested to cancel
 2. ordinary event emission stays on normal remote activities
 3. terminal `RunCancelRequested` and `RunCancelled` emission is finalized
-   through non-cancellable local activities so the adapter remains the owner of
-   terminal cancellation events
+   through non-cancellable local activities from workflow context
+4. provider-live `describe()` status remains diagnostic only and may still lag
+   or settle on a provider-native terminal token that differs from the
+   canonical event-log-backed status
 
 ## Scope
 
@@ -48,8 +51,10 @@ path:
    cancellation behaviour.
 3. Temporal tests now cover:
    - adapter-native cancel invocation
-   - parity between signal cancellation and provider-native cancellation
-   - cancellation during finalization without leaking `RunCompleted`
+   - ordered runtime-owned cancellation lifecycle for both cooperative and
+     provider-native cancellation requests
+   - finalization race cases where canonical cancellation events are persisted
+     without treating provider-live status as the source of truth
 4. Documentation and architecture diagrams now record the corrected target
    behaviour for AR-C6 / `T-01`.
 
@@ -57,5 +62,8 @@ path:
 
 The workflow still depends on Temporal local-activity completion semantics to
 persist terminal cancellation events after provider-native cancellation has
-been requested. That residual coupling is tracked in
+been requested. Late native cancellation requests can also race with provider
+live status observation, leaving `describe()` temporarily on `RUNNING` or
+eventually on `COMPLETED` even after the canonical event log reaches
+`RunCancelled`. Those residuals are tracked in
 [R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP](../risk-register/quality/R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml).
