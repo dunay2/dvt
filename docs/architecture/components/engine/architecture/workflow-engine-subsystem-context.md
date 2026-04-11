@@ -65,12 +65,13 @@ Declared southbound port surface:
 - `IStartRunIntentStore` (`runtime-wired`)
 - `IProviderAdapter` (`runtime-wired`)
 - `IPlanFetcher` (`runtime-wired`)
-- `IRunExecutionContextResolver` (`runtime-wired`)
-- `IProjector` (`target-line exposed`)
-- `IMetricsCollector` (`target-line exposed`)
+- `IRunExecutionContextResolver` (`optional runtime wiring`)
+- `IProjector` (`package-exposed target seam`)
+- `IMetricsCollector` (`source-tree target seam`)
 
 Current runtime telemetry still flows through `IObservability`; that facade is
-not counted inside the seven-port southbound surface.
+not counted inside the seven-port southbound surface, and
+`IMetricsCollector` is not exported from the root `@dvt/engine` package today.
 
 ```mermaid
 flowchart LR
@@ -90,9 +91,9 @@ flowchart LR
   Ports --> PlanStore["IPlanFetcher (runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore (runtime-wired)"]
   Ports --> Provider["IProviderAdapter (runtime-wired)"]
-  Ports --> RunCtx["IRunExecutionContextResolver (runtime-wired)"]
-  Ports -.-> Projector["IProjector (target-line exposed)"]
-  Ports -.-> Metrics["IMetricsCollector (target-line exposed)"]
+  Ports --> RunCtx["IRunExecutionContextResolver (optional runtime wiring)"]
+  Ports -.-> Projector["IProjector (package-exposed target seam)"]
+  Ports -.-> Metrics["IMetricsCollector (source-tree target seam)"]
   StartRun --> Obs["Observability facade"]
   Core --> Obs
 ```
@@ -101,19 +102,23 @@ flowchart LR
 
 Declared southbound ports:
 
-| Port                           | Code anchor                                                                                                                                 | Current posture       |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`                                                                                          | `runtime-wired`       |
-| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`                                                                                    | `runtime-wired`       |
-| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`                                                                                     | `runtime-wired`       |
-| `IPlanFetcher`                 | `packages/@dvt/engine/src/adapters/IPlanFetcher.ts` (`packages/@dvt/engine/src/ports/IRunStateStore.ts` still carries a legacy alias today) | `runtime-wired`       |
-| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts`                                                                            | `runtime-wired`       |
-| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                                                                                              | `target-line exposed` |
-| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`                                                                                     | `target-line exposed` |
+| Port                           | Code anchor                                                      | Current posture               |
+| ------------------------------ | ---------------------------------------------------------------- | ----------------------------- |
+| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`               | `runtime-wired`               |
+| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`         | `runtime-wired`               |
+| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`          | `runtime-wired`               |
+| `IPlanFetcher`                 | `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`              | `runtime-wired`               |
+| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | `optional runtime wiring`     |
+| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                   | `package-exposed target seam` |
+| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`          | `source-tree target seam`     |
 
 Other engine-owned interfaces such as `IRunSnapshotStalenessQuery` and
 `IRunMaintenanceService` remain important local seams, but they are not part of
 the exposed seven-port southbound inventory.
+
+`packages/@dvt/engine/src/ports/IRunStateStore.ts` still carries a legacy
+`IPlanFetcher` alias today, but the canonical anchor is the dedicated adapter
+port file listed above.
 
 Known concrete adapter families:
 
