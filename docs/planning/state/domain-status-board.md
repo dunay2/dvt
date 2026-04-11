@@ -41,15 +41,13 @@ For full task-level tracking use the lane YAML registry linked from
 ### `Planner and Contracts`
 
 - Current objective: freeze `DesignGraphDraft`, `GitArtifactRef`, and compiler
-  mapping while continuing shared-kernel cleanup and reconciling
-  payload-version closure truth.
-- Active task IDs: `S08`, `TF-A1`, `TF-A1-A`, `TF-A1-B`, `RC-G1-B`,
-  `S05-TRUTH-SYNC`
+  mapping while continuing shared-kernel cleanup without reopening closed
+  payload-version work.
+- Active task IDs: `S08`, `TF-A1`, `TF-A1-A`, `TF-A1-B`, `RC-G1-B`
 - Roadmap lane affected:
   [Planner and Contracts lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the contract pack is still queued, engine-owned ports still
-  sit in `@dvt/contracts`, and `S05` closure truth is still drifted in status
-  surfaces.
+- Primary blockers: the contract pack is still queued and engine-owned ports
+  still sit in `@dvt/contracts`.
 
 ### `Event Lifecycle and Retention`
 

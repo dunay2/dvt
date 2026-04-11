@@ -51,7 +51,8 @@ handling. It is no longer just a placeholder around worker apps.
 
 ## Planned Delta
 
-- tighten envelope and lineage seams under `S05`, `S07`, and `S11`;
+- keep `S05` closed as accepted envelope hardening and continue lineage seam
+  work under `S07` and `S11`;
 - keep retention and purge coordination explicit as delivery policy evolves.
 - keep worker runtimes reusable without hiding operational ownership in the
   library surface.

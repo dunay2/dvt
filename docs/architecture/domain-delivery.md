@@ -57,8 +57,8 @@ domain from scratch.
 
 ## Queued Delta
 
-- `S05`: tighten event-envelope and payload-version handling at the delivery
-  boundary.
+- `S05` is closed: event-envelope and payload-version hardening are accepted at
+  the write boundary and should not be treated as queued delivery work.
 - `S07`: fix OpenLineage job naming so downstream lineage is stable and
   diagnosable.
 - `S11`: tighten `ILineageSink.jobFacets` and keep lineage contracts aligned

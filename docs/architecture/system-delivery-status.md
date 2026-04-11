@@ -153,7 +153,7 @@ direction.
 | S10   | Typed Graph-Source Boundary      | Closed 2026-03-20            |
 | S02   | IRunStateStore Split             | Open (unblocked by S01)      |
 | S03   | StartRunCoordinator Extraction   | Open (unblocked by S01)      |
-| S05   | EventEnvelope.payloadVersion     | Open (unblocked by S01)      |
+| S05   | EventEnvelope.payloadVersion     | Closed 2026-04-04            |
 | S07   | OpenLineage Job Naming Fix       | Open                         |
 | S09   | Retry Ownership ADR              | Closed 2026-03-24            |
 | S04   | ProviderRefUpdated Event         | Retired 2026-04-09           |

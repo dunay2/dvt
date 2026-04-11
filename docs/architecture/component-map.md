@@ -185,8 +185,9 @@ flowchart TB
   Code anchors: [OutboxWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts),
   [ProjectorWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts),
   [LineageWorkerRuntime.ts](../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts).
-  Planned delta: tighten remaining contract seams and event-envelope policy;
-  active work includes `S05`, `S07`, and `S11`.
+  Planned delta: keep the remaining lineage and delivery contract seams explicit;
+  `S05` payload-version hardening is closed, and active work includes `S07`
+  and `S11`.
 - `apps/outbox-worker` (`dvt-outbox-worker`): delivery composition root with
   shard ownership, ops endpoints, retention, and purge runtime wiring.
   Code anchors: [server.ts](../../apps/outbox-worker/src/server.ts),
