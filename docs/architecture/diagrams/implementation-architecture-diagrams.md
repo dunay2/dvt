@@ -396,13 +396,13 @@ label carries the current posture (`runtime-wired` or `target-line exposed`).
 
 ### Known Problems
 
-- **`WorkflowEngine` facade is still too wide**: It includes normalization,
-  recovery preflight, and health checks in a single class. The composition-root
-  wiring drift is closed, but the facade still carries more than pure
-  delegation.
 - **`WorkflowEngineCoreService` still mixes cancel, signal, and telemetry**:
   canonical read now lives in `RunStatusQueryService`, but the remaining
   control path is still broader than the target architecture.
+- **`StartRunApplicationService` / `RecoverRunApplicationService` still share
+  admission machinery implicitly**: the facade-width residual is closed, but
+  recover-run and start-run still rely on a common guard/policy cluster that
+  has not yet been decomposed to the target posture.
 - **`IPlanFetcher` declaration is duplicated**: the dedicated port lives in
   `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`, but a legacy declaration
   still exists in `packages/@dvt/engine/src/ports/IRunStateStore.ts`. The

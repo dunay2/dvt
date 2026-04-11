@@ -8,6 +8,8 @@
  *     and an optional constructor override, allowing unit tests to inject fakes.
  */
 import {
+  buildRunHealthService,
+  buildRunRecoveryService,
   buildRunControlService,
   buildRunStatusQueryService,
   IdempotencyKeyBuilder,
@@ -146,21 +148,32 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     observability: config.infrastructure.observability,
     clock: config.infrastructure.clock,
   });
+  const runRecoveryService = buildRunRecoveryService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
+    projector,
+    policy,
+    planFetcher: config.persistence.planFetcher,
+    adapters: config.runtime.adapters,
+    observability: config.infrastructure.observability,
+    startRunApplicationService,
+    ...(config.persistence.runExecutionContextResolver !== undefined
+      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+      : {}),
+  });
+  const runHealthService = buildRunHealthService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    adapters: config.runtime.adapters,
+  });
   return {
     engine: new WorkflowEngine({
       startRunApplicationService,
+      runRecoveryService,
       runControlService,
       runStatusQueryService,
-      policy,
-      stateStoreRead: config.persistence.stateStoreRead,
-      stateStoreWrite: config.persistence.stateStoreWrite,
-      projector,
+      runHealthService,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
-      planFetcher: config.persistence.planFetcher,
-      ...(config.persistence.runExecutionContextResolver !== undefined
-        ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-        : {}),
       ...(config.runtime.requiredProviders !== undefined
         ? { requiredProviders: config.runtime.requiredProviders }
         : {}),

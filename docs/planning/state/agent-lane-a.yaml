@@ -1648,7 +1648,7 @@ tasks:
   - task_id: AR-A12-C3
     parent_task: AR-A12-C
     priority: P1
-    status: queued
+    status: done
     objective: >-
       converge current subsystem docs and diagrams on the narrowed facade and explicit enrichment
       service path.
@@ -1659,27 +1659,50 @@ tasks:
       runtime-internal Temporal state surfaces remain explicitly internal/debug-only.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/architecture/system/subsystems/read/index.md
       - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
     status_reason: >-
-      Current docs must stop narrating enrichment as an engine-facade method once the code cutover
-      lands.
+      Current docs and active diagrams now describe canonical status reads separately from
+      `IRunEnrichmentService`, and no longer narrate enrichment as an engine-facade method.
     last_verified: '2026-04-11'
   - task_id: AR-A12-C4
+    parent_task: AR-A12-C
+    priority: P1
+    status: done
+    objective: >-
+      remove the remaining facade-width residual by delegating recover-run orchestration and health
+      probing out of `WorkflowEngine`.
+    dependency: AR-A12-C3
+    target: >-
+      `WorkflowEngine` is reduced to normalization, trace context, and delegation, while dedicated
+      recovery and health services own the residual orchestration/probing logic.
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
+      - packages/@dvt/engine/src/core/WorkflowEngine.ts
+      - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+    status_reason: >-
+      `WorkflowEngine` now delegates recover-run orchestration to `RecoverRunApplicationService` and
+      health probing to `RunHealthService`, so facade width is reduced to normalization, trace
+      context, and delegation.
+    last_verified: '2026-04-11'
+  - task_id: AR-A12-C5
     parent_task: AR-A12-C
     priority: P1
     status: queued
     objective: >-
       harden and close the read-boundary purity wave with regression guards, ARC-2 evidence, risk
       updates, and final validation.
-    dependency: AR-A12-C3
+    dependency: AR-A12-C4
     target: >-
       The slice ships with evidence, risk updates, touched-package validation, `pnpm
-      verify:prepush`, and guards that prevent enrichment from silently reappearing on
-      `IWorkflowEngine`.
+      verify:prepush`, and guards that prevent enrichment or local facade re-growth from silently
+      reappearing on `IWorkflowEngine`.
     complexity: S
     effort_points: 0
     progress_pct: 0
@@ -1688,8 +1711,8 @@ tasks:
       - docs/evidence/index.md
       - docs/risk-register/index.md
     status_reason: >-
-      This closeout slice turns the architectural cut into an enforced and evidenced boundary
-      change.
+      This closeout slice turns the architectural cut into an enforced and evidenced boundary change
+      after facade-width extraction lands.
     last_verified: '2026-04-11'
   - task_id: DOC-ARCH-01
     priority: P1

@@ -23,16 +23,13 @@ class FakeWorkflowEngine {
 
 function makeDeps(): WorkflowEngineDeps {
   return {
-    stateStoreRead: {} as never,
-    stateStoreWrite: {} as never,
-    projector: {} as never,
-    policy: {} as never,
-    planFetcher: {} as never,
     adapters: new Map(),
     observability: {} as never,
     startRunApplicationService: {} as never,
+    runRecoveryService: {} as never,
     runControlService: {} as never,
     runStatusQueryService: {} as never,
+    runHealthService: {} as never,
   };
 }
 

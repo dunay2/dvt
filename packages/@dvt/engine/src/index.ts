@@ -44,10 +44,14 @@ export * from './ports/IStartRunIntentStore.js';
 export * from './ports/IProjector.js';
 export * from './ports/IRunExecutionContextResolver.js';
 export * from './adapters/IProviderAdapter.js';
+export * from './domain/IRunRecoveryService.js';
+export * from './domain/IRunHealthService.js';
 
 export * from './services/RunMaintenanceService.js';
 export * from './services/RunEnrichmentService.js';
+export { buildRunHealthService } from './services/RunHealthService.js';
 export { buildRunStatusQueryService } from './services/RunStatusQueryService.js';
+export { buildRunRecoveryService } from './application/RecoverRunApplicationService.js';
 export { buildRunControlService } from './core/WorkflowEngineCoreService.js';
 export * from './workers/IntentReconcilerWorker.js';
 export * from './domain/startRunIntentPolicy.js';

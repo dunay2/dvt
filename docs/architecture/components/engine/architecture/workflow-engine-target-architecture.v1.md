@@ -198,7 +198,7 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
   Current: `WorkflowEngine` now exposes commands plus canonical read only.
   Target: facade-only delegation plus separate enrichment/query services with no
   residual mixed responsibility in current docs.
-  Gap signal: current-doc and decomposition convergence.
+  Gap signal: start-run/control decomposition convergence.
 - `startRun` application flow
   Current: coordinator/guard mix concerns.
   Target: split into narrow use cases plus policies.

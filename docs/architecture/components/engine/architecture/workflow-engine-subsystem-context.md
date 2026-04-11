@@ -123,8 +123,10 @@ Main components in the subsystem:
 - `WorkflowEngine` (public facade + explicit service delegation)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
+- `RecoverRunApplicationService` (recover-run orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
 - `RunStatusQueryService` (canonical read path)
+- `RunHealthService` (runtime liveness probe path)
 - `WorkflowEngineCoreService` (cancel/signal runtime path)
 - `RunEnrichmentService` (engine-owned implementation of enrichment)
 - `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
@@ -132,10 +134,13 @@ Main components in the subsystem:
 
 ```mermaid
 flowchart TB
-  WF["WorkflowEngine"] --> Guard["StartRunAdmissionGuard"]
   WF --> Coord["StartRunApplicationService"]
+  WF --> Recover["RecoverRunApplicationService"]
   WF --> Query["RunStatusQueryService"]
+  WF --> Health["RunHealthService"]
   WF --> Core["WorkflowEngineCoreService"]
+  Recover --> Guard["StartRunAdmissionGuard"]
+  Recover --> Coord
   Query --> Projector["SnapshotProjector"]
   Enrich["RunEnrichmentService"] --> Projector["SnapshotProjector"]
   Enrich --> Provider["IProviderAdapter"]
@@ -233,7 +238,6 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + recoverRun preflight + health checks"]
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
   Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Cancel + signal + telemetry"]
   StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]

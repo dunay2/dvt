@@ -12,6 +12,8 @@ import {
 } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
+  buildRunHealthService,
+  buildRunRecoveryService,
   buildRunControlService,
   buildRunStatusQueryService,
   IdempotencyKeyBuilder,
@@ -164,18 +166,29 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     observability: createNoopObservability(),
     clock,
   });
-
-  const engine = new WorkflowEngine({
-    startRunApplicationService,
-    runControlService,
-    runStatusQueryService,
-    policy,
+  const runRecoveryService = buildRunRecoveryService({
     stateStoreRead: store,
     stateStoreWrite: store,
     projector,
+    policy,
+    planFetcher,
+    adapters,
+    observability: createNoopObservability(),
+    startRunApplicationService,
+  });
+  const runHealthService = buildRunHealthService({
+    stateStoreRead: store,
+    adapters,
+  });
+
+  const engine = new WorkflowEngine({
+    startRunApplicationService,
+    runRecoveryService,
+    runControlService,
+    runStatusQueryService,
+    runHealthService,
     observability: createNoopObservability(),
     adapters,
-    planFetcher,
   });
 
   return { engine, store, clock, idempotency };

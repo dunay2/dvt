@@ -76,10 +76,14 @@ Target note:
   [WorkflowEngine.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 - start-run application path:
   [StartRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- recover-run application path:
+  [RecoverRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/RecoverRunApplicationService.ts)
 - lifecycle core:
   [WorkflowEngineCoreService.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts)
 - canonical status query:
   [RunStatusQueryService.ts](../../../../packages/@dvt/engine/src/services/RunStatusQueryService.ts)
+- health service:
+  [RunHealthService.ts](../../../../packages/@dvt/engine/src/services/RunHealthService.ts)
 - enrichment service:
   [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
@@ -92,11 +96,16 @@ flowchart LR
   Api["apps/api"] --> Engine["WorkflowEngine facade"]
   Api --> Enrich["RunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService"]
+  Engine --> Recover["RecoverRunApplicationService"]
   Engine --> Query["RunStatusQueryService"]
+  Engine --> Health["RunHealthService"]
   Engine --> Core["WorkflowEngineCoreService"]
+  Recover --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Ports["Declared southbound ports"]
+  Recover --> Ports
   Query --> Ports
+  Health --> Ports
   Core --> Ports
   Enrich --> Ports
   Ports --> State["IRunStateStore<br/>(runtime-wired)"]

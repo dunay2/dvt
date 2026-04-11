@@ -32,11 +32,13 @@ read boundary.
 `AR-A12-B` made the status-model split explicit. `AR-A12-C1` and `AR-A12-C2`
 have now landed the public-boundary cutover in docs and code.
 
-That leaves two architectural weaknesses active:
+That leaves three architectural weaknesses active:
 
 1. Current subsystem docs and diagrams still need to explain the shipped split
    instead of a mixed facade.
-2. Hardening guards and ARC closeout still need to prevent regression on the
+2. `WorkflowEngine` still carries recover-run preflight and health probing
+   locally instead of delegating them through dedicated services.
+3. Hardening guards and ARC closeout still need to prevent regression on the
    narrowed facade.
 
 `WE-HX-4` closed the structural decomposition wave, but not the remaining
@@ -133,12 +135,34 @@ Deliver:
 - current docs stop using the engine facade to narrate provider-backed
   enrichment
 
-### `AR-A12-C4` Hardening and closeout
+Status:
+
+- delivered on 2026-04-11
+
+### `AR-A12-C4` Facade-width residual extraction
+
+Deliver:
+
+- `WorkflowEngine` delegates recover-run orchestration to a dedicated recovery
+  service
+- `WorkflowEngine` delegates platform health probing to a dedicated health
+  service
+- facade responsibilities reduce to contract normalization, trace context, and
+  delegation
+- current docs and diagrams describe the narrower shipped facade truth
+
+Status:
+
+- delivered on 2026-04-11
+
+### `AR-A12-C5` Hardening and closeout
 
 Deliver:
 
 - regression guards prevent reintroduction of enrichment on
   `IWorkflowEngine`
+- regression guards prevent `WorkflowEngine` from silently re-growing private
+  collaborator construction or local recover/health orchestration
 - ARC-2 evidence and risk updates for engine/api/adapter impact
 - touched-package validation plus `pnpm verify:prepush`
 
@@ -147,6 +171,7 @@ Deliver:
 - `IWorkflowEngine` no longer exposes provider-backed enrichment
 - `IRunEnrichmentService` is the only active enrichment boundary
 - API, engine, and current docs describe the same read boundary
+- `WorkflowEngine` is reduced to normalization, trace context, and delegation
 - `WE-HX` remains the canonical subsystem thread and `AR-A3` stays closed as a
   standalone task
 - no compatibility alias or dual facade survives the cutover
