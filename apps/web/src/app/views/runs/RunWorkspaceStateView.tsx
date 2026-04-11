@@ -1,10 +1,10 @@
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
+import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
 import type { MaterializationEvidence } from '../../ports/runs';
 import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
 import { buildRunEventPresentationModel } from '../../services/runs/runEventPresentationModel';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
-import { RunStateFrame } from './RunStateFrame';
 import { RunDegradedStateView } from './RunDetailStateViews';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
@@ -161,7 +161,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const materializationEvidence = deriveMaterializationEvidence(workspace);
 
   return (
-    <RunStateFrame title={`Run ${snapshot.runId}`}>
+    <WorkbenchStateFrame title={`Run ${snapshot.runId}`} slotPrefix="runs-state">
       <div className="mx-auto max-w-4xl space-y-4">
         <Card className="border-slate-700 bg-slate-900 p-5">
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -391,6 +391,6 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           ) : null}
         </Card>
       </div>
-    </RunStateFrame>
+    </WorkbenchStateFrame>
   );
 }

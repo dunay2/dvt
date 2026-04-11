@@ -315,7 +315,7 @@ tasks:
       migration chain, and system-level improvements.
     complexity: M
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 85
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/index.md
@@ -1113,15 +1113,16 @@ tasks:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/runs/useRunWorkspace.ts
+      - apps/web/src/app/components/workbench/state/WorkbenchStates.tsx
       - apps/web/src/app/queries/runsQueries.ts
       - apps/web/src/app/services/runs/runWorkspaceFacade.ts
     status_reason: >-
       RunsView now consumes real run list and run-detail surfaces via scoped summaries query plus
-      `RunWorkspaceFacade` over governed runtime reads, and the route now chooses explicit workbench
-      states for list-error, empty, loading, missing, focused-run error, and workspace treatment
-      instead of scattering those decisions across inline view branches. Remaining closure is
-      status-refresh policy and final acceptance of polling/SSE behavior rather than missing runtime
-      wiring.
+      `RunWorkspaceFacade` over governed runtime reads, the route chooses explicit workbench states
+      for list-error, empty, loading, missing, focused-run error, and workspace treatment, and those
+      route states now seed shared workbench state primitives instead of remaining fully route-local
+      chrome. Remaining closure is status-refresh policy, broader primitive adoption, and final
+      acceptance of polling/SSE behavior rather than missing runtime wiring.
     last_verified: '2026-04-11'
   - task_id: F-10
     priority: P1

@@ -9,8 +9,8 @@ import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
+import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
 import type { RunSummaryItem } from '../../ports/runs';
-import { RunStateFrame } from './RunStateFrame';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getRunStatusTone, isKnownRunField } from './runStatesModel';
 
@@ -22,7 +22,7 @@ type RunListStateProps = {
 export function RunListStateView({ runs, isLoading }: RunListStateProps) {
   const navigate = useNavigate();
   return (
-    <RunStateFrame title={copy.runsTitle}>
+    <WorkbenchStateFrame title={copy.runsTitle} slotPrefix="runs-state">
       <div className="mx-auto max-w-4xl space-y-4">
         {isLoading ? (
           <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.loadingRuns}</p>
@@ -82,6 +82,6 @@ export function RunListStateView({ runs, isLoading }: RunListStateProps) {
           </Card>
         ))}
       </div>
-    </RunStateFrame>
+    </WorkbenchStateFrame>
   );
 }
