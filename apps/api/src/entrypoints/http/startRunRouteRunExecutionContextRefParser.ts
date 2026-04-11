@@ -20,13 +20,11 @@ export function parseStartRunRunExecutionContextRef(
     schemaVersion: asCanonicalNonEmptyStringOrUndefined(record.schemaVersion),
     planId: asCanonicalNonEmptyStringOrUndefined(record.planId),
     planVersion: asCanonicalNonEmptyStringOrUndefined(record.planVersion),
-    ...(asCanonicalNonEmptyStringOrUndefined(record.pluginCompatibilityFingerprint) === undefined
-      ? {}
-      : {
-          pluginCompatibilityFingerprint: asCanonicalNonEmptyStringOrUndefined(
-            record.pluginCompatibilityFingerprint
-          ),
-        }),
+    ...(Object.prototype.hasOwnProperty.call(record, 'pluginCompatibilityFingerprint')
+      ? {
+          pluginCompatibilityFingerprint: record.pluginCompatibilityFingerprint,
+        }
+      : {}),
   };
 
   try {

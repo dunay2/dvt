@@ -178,6 +178,27 @@ describe('startRunRoute parser helpers', () => {
     });
   });
 
+  it('rejects whitespace-padded pluginCompatibilityFingerprint instead of dropping it', () => {
+    expect(
+      parseStartRunRunExecutionContextRef({
+        uri: 'dvt-runctx://tenant-a/run-1/context.json',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: 'p1',
+        planVersion: '1.0',
+        pluginCompatibilityFingerprint:
+          ' 1111111111111111111111111111111111111111111111111111111111111111 ',
+      })
+    ).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_execution_context_ref',
+        target: 'runExecutionContextRef',
+      },
+    });
+  });
+
   it('maps planner envelope fields and rejects invalid planner source', () => {
     const parsed = parseStartRunPlannerEnvelope({
       graphSource: {
