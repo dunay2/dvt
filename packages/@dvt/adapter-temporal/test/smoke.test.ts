@@ -4,9 +4,9 @@ import {
   ObservedTemporalAdapter,
   TemporalAdapter,
   TemporalClientManager,
+  extractRuntimeStatusFromDescribe,
   loadTemporalAdapterConfig,
   mapTemporalStatusToRunStatus,
-  toProviderRunStatusViewFromWorkflowState,
   toProviderRunStatusView,
   toTemporalRunRef,
   toTemporalTaskQueue,
@@ -128,23 +128,30 @@ describe('adapter-temporal foundation', () => {
       providerStatus: 'RUNNING',
       message: 'ok',
     });
+  });
 
-    expect(
-      toProviderRunStatusViewFromWorkflowState({
-        state: {
-          status: 'CANCELLED',
-          paused: false,
-          cancelRequested: true,
-          cancelReason: 'user request',
-          currentStepIndex: 2,
-          continuedAsNewCount: 0,
-        },
-      })
-    ).toEqual({
-      provider: 'temporal',
-      providerStatus: 'CANCELLED',
-      message: 'user request',
-    });
+  it('maps CONTINUED_AS_NEW to RUNNING in run-status mapping', () => {
+    expect(mapTemporalStatusToRunStatus('CONTINUED_AS_NEW')).toBe('RUNNING');
+  });
+
+  it('extracts Temporal-native runtime status from describe result', () => {
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'RUNNING', code: 1 } })).toBe(
+      'RUNNING'
+    );
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'COMPLETED' } })).toBe('COMPLETED');
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'CONTINUED_AS_NEW' } })).toBe(
+      'CONTINUED_AS_NEW'
+    );
+  });
+
+  it('throws for missing or unknown status in describe result', () => {
+    expect(() => extractRuntimeStatusFromDescribe({})).toThrow('TEMPORAL_DESCRIBE_MISSING_STATUS');
+    expect(() => extractRuntimeStatusFromDescribe(null)).toThrow(
+      'TEMPORAL_DESCRIBE_MISSING_STATUS'
+    );
+    expect(() => extractRuntimeStatusFromDescribe({ status: { name: 'UNKNOWN' } })).toThrow(
+      'TEMPORAL_STATUS_UNKNOWN'
+    );
   });
 
   it('builds temporal run refs and task queue from config', () => {

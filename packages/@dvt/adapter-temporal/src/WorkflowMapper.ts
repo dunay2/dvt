@@ -10,7 +10,6 @@
 import type { EngineRunRef, ProviderRunStatusView, RunStatus } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
-import type { WorkflowState } from './workflows/RunPlanWorkflow.js';
 
 type TemporalRuntimeStatus =
   | 'RUNNING'
@@ -18,7 +17,8 @@ type TemporalRuntimeStatus =
   | 'FAILED'
   | 'CANCELLED'
   | 'TERMINATED'
-  | 'TIMED_OUT';
+  | 'TIMED_OUT'
+  | 'CONTINUED_AS_NEW';
 
 export function toTemporalWorkflowId(runId: string): string {
   if (!runId.trim()) {
@@ -61,6 +61,8 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
     case 'CANCELLED':
     case 'TERMINATED':
       return 'CANCELLED';
+    case 'CONTINUED_AS_NEW':
+      return 'RUNNING';
     default: {
       const _never: never = status;
       throw new Error(`TEMPORAL_STATUS_UNKNOWN: ${String(_never)}`);
@@ -79,24 +81,31 @@ export function toProviderRunStatusView(args: {
   };
 }
 
-export function toProviderRunStatusViewFromWorkflowState(args: {
-  state: WorkflowState;
-}): ProviderRunStatusView {
-  const message =
-    args.state.status === 'CANCELLED' && args.state.cancelReason
-      ? args.state.cancelReason
-      : undefined;
-  const providerSubstatus =
-    args.state.cancelRequested && args.state.status === 'RUNNING'
-      ? 'CANCELLING'
-      : args.state.paused && args.state.status === 'RUNNING'
-        ? 'PAUSED'
-        : undefined;
+const KNOWN_TEMPORAL_STATUSES: ReadonlySet<string> = new Set<TemporalRuntimeStatus>([
+  'RUNNING',
+  'COMPLETED',
+  'FAILED',
+  'CANCELLED',
+  'TERMINATED',
+  'TIMED_OUT',
+  'CONTINUED_AS_NEW',
+]);
 
-  return {
-    provider: 'temporal',
-    providerStatus: args.state.status,
-    ...(providerSubstatus === undefined ? {} : { providerSubstatus }),
-    ...(message === undefined ? {} : { message }),
-  };
+/**
+ * Extracts the Temporal-native runtime status from a `handle.describe()` result.
+ *
+ * The Temporal SDK returns `{ status: { name: string } }` from
+ * `WorkflowHandle.describe()`. This function validates the shape and maps it
+ * to the adapter's `TemporalRuntimeStatus` union.
+ */
+export function extractRuntimeStatusFromDescribe(describeResult: unknown): TemporalRuntimeStatus {
+  const result = describeResult as { status?: { name?: string } } | null | undefined;
+  const statusName = result?.status?.name;
+  if (!statusName) {
+    throw new Error('TEMPORAL_DESCRIBE_MISSING_STATUS: describe() result has no status.name');
+  }
+  if (!KNOWN_TEMPORAL_STATUSES.has(statusName)) {
+    throw new Error(`TEMPORAL_STATUS_UNKNOWN: ${statusName}`);
+  }
+  return statusName as TemporalRuntimeStatus;
 }

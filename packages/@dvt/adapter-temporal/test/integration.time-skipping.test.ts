@@ -243,7 +243,10 @@ describe('temporal integration (time-skipping)', () => {
         );
 
         const status = await adapter.getProviderStatusView(runRef);
-        expect(['RUNNING', 'PAUSED']).toContain(status.providerStatus);
+        // After the provider-native status fix, describe() returns Temporal-native
+        // statuses only. A DVT-paused workflow is still RUNNING from Temporal's
+        // perspective.
+        expect(status.providerStatus).toBe('RUNNING');
 
         await adapter.cancelRun(runRef);
 

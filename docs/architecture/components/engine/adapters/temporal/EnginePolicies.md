@@ -36,15 +36,20 @@ Primary implementation references:
 
 ### 1.2 Status source of truth
 
-- `TemporalAdapter.getRunStatus()` currently queries the workflow `status`
-  query and returns a provider-live `RunStatusSnapshot`.
+- `TemporalAdapter.getProviderStatusView()` now calls
+  `WorkflowHandle.describe()` and returns a provider-native
+  `ProviderRunStatusView`.
 - The engine's canonical caller-visible status still remains the event-log plus
   snapshot read path governed outside the adapter boundary.
 - Provider status should therefore be treated as live runtime enrichment, not
   as the authoritative state-store replacement.
-- In the current implementation, the provider-live query may observe terminal
-  `CANCELLED` before the event log has persisted `RunCancelled`; that gap is
-  exactly why provider status must not be treated as the canonical caller view.
+- Temporal workflow `status` query still exists inside the workflow runtime,
+  but it is no longer the adapter's published provider-status boundary.
+- The provider view is intentionally narrower than the canonical read model:
+  Temporal-native runtime statuses such as `RUNNING`, `FAILED`,
+  `TERMINATED`, `TIMED_OUT`, and `CONTINUED_AS_NEW` come from the Temporal
+  server, while DVT lifecycle concepts such as `PAUSED` and `CANCELLING`
+  remain canonical-engine concepts only.
 
 ---
 

@@ -21,9 +21,9 @@ export type { ObservedTemporalAdapterDeps } from './ObservedTemporalAdapter.js';
 export { ObservedTemporalAdapter } from './ObservedTemporalAdapter.js';
 
 export {
+  extractRuntimeStatusFromDescribe,
   mapTemporalStatusToRunStatus,
   toProviderRunStatusView,
-  toProviderRunStatusViewFromWorkflowState,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,

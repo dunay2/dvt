@@ -36,6 +36,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260409 Ci Rebuild Dedupe And Adapter Postgres Consolidation](ED-20260409-ci-rebuild-dedupe-and-adapter-postgres-consolidation.md)
 - [ED 20260409 Provider Ref Contract Hardening](ED-20260409-provider-ref-contract-hardening.md)
 - [ED 20260409 Provider Ref Empty String Preservation](ED-20260409-provider-ref-empty-string-preservation.md)
+- [ED 20260409 Temporal Provider Native Status View](ED-20260409-temporal-provider-native-status-view.md)
 - [ED 20260409 Tf C2 B Run Read Evidence Attempt Safety](ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md)
 - [ED 20260409 Trace Context Adapter Type Alignment](ED-20260409-trace-context-adapter-type-alignment.md)
 - [ED 20260410 Temporal Baseline And Capability Lane Partition](ED-20260410-temporal-baseline-and-capability-lane-partition.md)

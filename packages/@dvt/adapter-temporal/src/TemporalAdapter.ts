@@ -4,7 +4,7 @@
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log - lookupRunRef for PENDING intent reconciliation
  * @decision Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives
- * @decision Section 5 - Status queries use the workflow statusQuery and return provider-native live status
+ * @decision Section 5 - Provider status uses workflow handle.describe() and returns provider-native live status
  * @decision ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans
  * @consequence Temporal provider operations remain deterministic and aligned with engine lifecycle semantics
  * @version 1.2.0
@@ -34,12 +34,12 @@ import type { TemporalClientManager } from './TemporalClient.js';
 import { isWorkflowNotFound } from './temporalErrorPolicy.js';
 import { withAbortSignalTimeout, withTimeoutMs } from './temporalObservability.js';
 import {
-  toProviderRunStatusViewFromWorkflowState,
+  extractRuntimeStatusFromDescribe,
+  toProviderRunStatusView,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
 } from './WorkflowMapper.js';
-import type { WorkflowState } from './workflows/RunPlanWorkflow.js';
 
 interface WorkflowHandleLike {
   cancel(): Promise<unknown>;
@@ -146,14 +146,10 @@ export class TemporalAdapter implements IProviderAdapter {
   async getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
     const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
-    const workflow = workflowClient.getHandle(validatedRunRef.workflowId);
-
-    if (typeof workflow.query !== 'function') {
-      throw new Error('TEMPORAL_WORKFLOW_QUERY_NOT_SUPPORTED');
-    }
-
-    const state = await workflow.query<WorkflowState>('status');
-    return toProviderRunStatusViewFromWorkflowState({ state });
+    const handle = workflowClient.getHandle(validatedRunRef.workflowId);
+    const describeResult = await handle.describe();
+    const runtimeStatus = extractRuntimeStatusFromDescribe(describeResult);
+    return toProviderRunStatusView({ runtimeStatus });
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
