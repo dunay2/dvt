@@ -9,6 +9,7 @@ import {
   WorkbenchEmptyState,
   WorkbenchErrorState,
   WorkbenchLoadingState,
+  WorkbenchReadOnlyState,
   WorkbenchStateFrame,
 } from './WorkbenchStates';
 
@@ -72,7 +73,7 @@ describe('WorkbenchStates', () => {
     expect(card?.className).toContain('text-center');
   });
 
-  it('renders error, loading, and degraded primitives with governed tones', async () => {
+  it('renders error, loading, degraded, and read-only primitives with governed tones', async () => {
     await act(async () => {
       root.render(
         <>
@@ -93,6 +94,12 @@ describe('WorkbenchStates', () => {
             note="Snapshot truth is still available."
             dataSlot="run-degraded-state"
           />
+          <WorkbenchReadOnlyState
+            title="Read-only preview"
+            message="Browse files here."
+            note="Editing belongs outside this route."
+            dataSlot="code-readonly-state"
+          />
         </>
       );
     });
@@ -100,6 +107,7 @@ describe('WorkbenchStates', () => {
     const errorCard = container.querySelector('[data-slot="runs-error-state"]');
     const loadingCard = container.querySelector('[data-slot="run-detail-loading-state"]');
     const degradedCard = container.querySelector('[data-slot="run-degraded-state"]');
+    const readOnlyCard = container.querySelector('[data-slot="code-readonly-state"]');
 
     expect(errorCard?.textContent).toContain('Run list unavailable');
     expect(errorCard?.className).toContain('status-danger');
@@ -107,5 +115,8 @@ describe('WorkbenchStates', () => {
     expect(degradedCard?.textContent).toContain('Timeline degraded');
     expect(degradedCard?.textContent).toContain('Snapshot truth is still available.');
     expect(degradedCard?.className).toContain('status-warning');
+    expect(readOnlyCard?.textContent).toContain('Read-only preview');
+    expect(readOnlyCard?.textContent).toContain('Editing belongs outside this route.');
+    expect(readOnlyCard?.className).toContain('status-readonly');
   });
 });

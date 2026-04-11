@@ -12,6 +12,14 @@ export type SqlDiffDocument = {
 export type CatalogDiffDocument = {
   currentCatalogJson: string;
   previousCatalogJson: string;
+  summaryRows: CatalogDiffSummaryRow[];
+};
+
+export type CatalogDiffSummaryRow = {
+  id: string;
+  kind: 'added' | 'removed' | 'type-changed';
+  columnName: string;
+  detail: string;
 };
 
 function normalizeSql(sql: string): string {
@@ -80,6 +88,32 @@ function buildCatalogNode(node: DbtNode) {
   };
 }
 
+function parseColumnDefinition(value: unknown): { columnName: string; columnType: string } | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const [columnName, ...columnTypeParts] = value.trim().split(/\s+/);
+  if (!columnName) {
+    return null;
+  }
+
+  return {
+    columnName,
+    columnType: columnTypeParts.join(' ') || 'UNKNOWN',
+  };
+}
+
+function parseTypeChangedColumnName(description: string): string | null {
+  const prefix = 'Column type changed:';
+  if (!description.startsWith(prefix)) {
+    return null;
+  }
+
+  const [columnName] = description.replace(prefix, '').trim().split(/\s+/);
+  return columnName || null;
+}
+
 function revertCatalogNode(node: DbtNode, nodeChanges: DiffChange[]) {
   const previousNode = buildCatalogNode(node);
 
@@ -145,7 +179,7 @@ export function buildSqlDiffDocument(
     };
   }
 
-  const currentSql = normalizeSql(fileContent?.content ?? node.compiledSql ?? '');
+  const currentSql = normalizeSql(fileContent?.content ?? '');
   const previousSql = revertSqlChanges(currentSql, nodeChanges);
 
   return {
@@ -157,6 +191,54 @@ export function buildSqlDiffDocument(
   };
 }
 
+function buildCatalogDiffSummaryRows(nodeChanges: DiffChange[]): CatalogDiffSummaryRow[] {
+  const summaryRows: CatalogDiffSummaryRow[] = [];
+
+  for (const change of nodeChanges) {
+    const typeChangedColumnName = parseTypeChangedColumnName(change.description);
+    if (
+      typeChangedColumnName &&
+      typeof change.oldValue === 'string' &&
+      typeof change.newValue === 'string'
+    ) {
+      summaryRows.push({
+        id: change.id,
+        kind: 'type-changed',
+        columnName: typeChangedColumnName,
+        detail: `${change.oldValue} -> ${change.newValue}`,
+      });
+      continue;
+    }
+
+    if (change.newValue == null) {
+      const removedColumn = parseColumnDefinition(change.oldValue);
+      if (removedColumn) {
+        summaryRows.push({
+          id: change.id,
+          kind: 'removed',
+          columnName: removedColumn.columnName,
+          detail: removedColumn.columnType,
+        });
+      }
+      continue;
+    }
+
+    if (change.oldValue == null) {
+      const addedColumn = parseColumnDefinition(change.newValue);
+      if (addedColumn) {
+        summaryRows.push({
+          id: change.id,
+          kind: 'added',
+          columnName: addedColumn.columnName,
+          detail: addedColumn.columnType,
+        });
+      }
+    }
+  }
+
+  return summaryRows;
+}
+
 export function buildCatalogDiffDocument(
   node: DbtNode | null,
   nodeChanges: DiffChange[]
@@ -165,6 +247,7 @@ export function buildCatalogDiffDocument(
     return {
       currentCatalogJson: '{}',
       previousCatalogJson: '{}',
+      summaryRows: [],
     };
   }
 
@@ -182,5 +265,6 @@ export function buildCatalogDiffDocument(
   return {
     currentCatalogJson: JSON.stringify(currentCatalog, null, 2),
     previousCatalogJson: JSON.stringify(previousCatalog, null, 2),
+    summaryRows: buildCatalogDiffSummaryRows(nodeChanges),
   };
 }

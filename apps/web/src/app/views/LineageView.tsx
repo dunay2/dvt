@@ -4,7 +4,17 @@ import { LineageColumnPanel } from './lineage/LineageColumnPanel';
 import { LineageGraphPanel } from './lineage/LineageGraphPanel';
 import { LineageHeader } from './lineage/LineageHeader';
 import { LineageImpactSummary } from './lineage/LineageImpactSummary';
+import {
+  LineageEmptyStateView,
+  LineageErrorStateView,
+  LineageLoadingStateView,
+  LineageMetadataMissingStateView,
+} from './lineage/LineageStateViews';
 import { lineageViewCopy as copy } from './lineage/copy';
+import {
+  buildLineageColumnState,
+  buildLineageWorkbenchState,
+} from './lineage/lineageWorkbenchStateModel';
 import { useLineageViewData } from './lineage/useLineageViewData';
 
 export default function LineageView() {
@@ -13,7 +23,11 @@ export default function LineageView() {
     columnLevel,
     setSearchQuery,
     setColumnLevel,
-    isLoading,
+    isLoadingSnapshot,
+    snapshotError,
+    focusNodeHasColumnMetadata,
+    hasReachableUpstreamNodes,
+    reachableUpstreamHasColumnMetadata,
     canonicalNodes,
     focusNode,
     nodesByLevel,
@@ -24,27 +38,52 @@ export default function LineageView() {
     exposureCount,
   } = useLineageViewData();
 
-  return (
-    <RouteWorkbenchFrame
-      header={
-        <>
-          <LineageHeader
-            searchQuery={searchQuery}
-            columnLevel={columnLevel}
-            isLoading={isLoading}
-            nodeCount={canonicalNodes.length}
-            onSearchQueryChange={setSearchQuery}
-            onColumnLevelChange={setColumnLevel}
-          />
-          <LineageBreadcrumb nodes={breadcrumbPath} focusNodeId={focusNode?.id} />
-        </>
-      }
-      bodyContainerClassName="mx-auto max-w-4xl space-y-4"
-    >
-      {!focusNode && !isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">{copy.noNodesLoaded}</p>
-      ) : null}
+  const header = (
+    <>
+      <LineageHeader
+        searchQuery={searchQuery}
+        columnLevel={columnLevel}
+        isLoading={isLoadingSnapshot}
+        nodeCount={canonicalNodes.length}
+        onSearchQueryChange={setSearchQuery}
+        onColumnLevelChange={setColumnLevel}
+      />
+      <LineageBreadcrumb nodes={breadcrumbPath} focusNodeId={focusNode?.id} />
+    </>
+  );
 
+  const workbenchState = buildLineageWorkbenchState({
+    canonicalNodes,
+    focusNode,
+    isLoadingSnapshot,
+    snapshotError,
+    snapshotErrorMessage: snapshotError?.message ?? copy.routeErrorFallbackMessage,
+  });
+
+  switch (workbenchState.kind) {
+    case 'loading':
+      return <LineageLoadingStateView header={header} />;
+    case 'error':
+      return <LineageErrorStateView header={header} message={workbenchState.message} />;
+    case 'empty':
+      return <LineageEmptyStateView header={header} />;
+    case 'ready':
+      break;
+  }
+
+  if (!focusNode) {
+    return <LineageEmptyStateView header={header} />;
+  }
+
+  const columnState = buildLineageColumnState({
+    focusNodeHasColumnMetadata,
+    hasReachableUpstreamNodes,
+    reachableUpstreamHasColumnMetadata,
+    columnLineageCount: columnLineage.length,
+  });
+
+  return (
+    <RouteWorkbenchFrame header={header} bodyContainerClassName="mx-auto max-w-4xl space-y-4">
       {!columnLevel ? (
         <>
           <LineageGraphPanel focusNode={focusNode} nodesByLevel={nodesByLevel} />
@@ -54,6 +93,8 @@ export default function LineageView() {
             exposureCount={exposureCount}
           />
         </>
+      ) : columnState.kind === 'metadata-missing' ? (
+        <LineageMetadataMissingStateView focusNodeName={focusNode.name} />
       ) : (
         <LineageColumnPanel focusNode={focusNode} columnLineage={columnLineage} />
       )}

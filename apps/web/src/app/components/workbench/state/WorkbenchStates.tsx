@@ -41,7 +41,7 @@ export function WorkbenchStateFrame({
   );
 }
 
-type WorkbenchStateCardTone = 'default' | 'danger' | 'warning';
+type WorkbenchStateCardTone = 'default' | 'danger' | 'warning' | 'readonly';
 
 type WorkbenchStateCardProps = {
   children: ReactNode;
@@ -56,6 +56,8 @@ function resolveWorkbenchStateToneClassName(tone: WorkbenchStateCardTone): strin
       return 'border-[color:var(--status-danger)] bg-[var(--surface-elevated)]';
     case 'warning':
       return 'border-[color:var(--status-warning)] bg-[var(--surface-elevated)]';
+    case 'readonly':
+      return 'border-[color:var(--status-readonly)] bg-[var(--surface-elevated)]';
     default:
       return '';
   }
@@ -67,6 +69,8 @@ function resolveWorkbenchStateTitleToneClassName(tone: WorkbenchStateCardTone): 
       return 'text-[var(--status-danger)]';
     case 'warning':
       return 'text-[var(--status-warning)]';
+    case 'readonly':
+      return 'text-[var(--status-readonly)]';
     default:
       return '';
   }
@@ -200,6 +204,36 @@ export function WorkbenchDegradedState({
   return (
     <WorkbenchStateCard dataSlot={dataSlot} tone="warning" className="rounded px-3 py-2 text-sm">
       <div className={cn('font-semibold', resolveWorkbenchStateTitleToneClassName('warning'))}>
+        {title}
+      </div>
+      <div className="mt-1 text-[var(--text-default)]">{message}</div>
+      {note ? <div className={cn('mt-1', routeWorkbenchMutedTextClassName)}>{note}</div> : null}
+    </WorkbenchStateCard>
+  );
+}
+
+type WorkbenchReadOnlyStateProps = {
+  title: string;
+  message: ReactNode;
+  note?: ReactNode;
+  dataSlot?: string;
+  className?: string;
+};
+
+export function WorkbenchReadOnlyState({
+  title,
+  message,
+  note,
+  dataSlot = 'workbench-readonly-state',
+  className,
+}: WorkbenchReadOnlyStateProps) {
+  return (
+    <WorkbenchStateCard
+      dataSlot={dataSlot}
+      tone="readonly"
+      className={cn('rounded px-3 py-2 text-sm', className)}
+    >
+      <div className={cn('font-semibold', resolveWorkbenchStateTitleToneClassName('readonly'))}>
         {title}
       </div>
       <div className="mt-1 text-[var(--text-default)]">{message}</div>

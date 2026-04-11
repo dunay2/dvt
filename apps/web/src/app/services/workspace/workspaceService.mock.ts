@@ -17,6 +17,7 @@ import type {
   WorkspaceGraphSnapshot,
   WorkspaceService,
 } from './workspaceService';
+import { WorkspaceFileLoadError } from './workspaceErrors';
 
 const mockConnections: WarehouseConnection[] = [
   { id: 'conn-1', name: 'Production Warehouse', type: 'snowflake', database: 'RAW' },
@@ -600,7 +601,7 @@ export function createMockWorkspaceService(
     getFileContent: async (path) => {
       const file = state.fileContents[path];
       if (!file) {
-        throw new Error(`File not found: ${path}`);
+        throw new WorkspaceFileLoadError('not_found', path);
       }
       return cloneFileContent(file);
     },

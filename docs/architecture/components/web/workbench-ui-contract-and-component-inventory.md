@@ -139,7 +139,7 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | `EmptyState`          | Standard empty treatment                                                  | Current, seeded from `Runs`         |
 | `ErrorState`          | Standard error treatment                                                  | Current, seeded from `Runs`         |
 | `DegradedState`       | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
-| `ReadOnlyState`       | Standard non-mutation treatment                                           | Needed as reusable primitive        |
+| `ReadOnlyState`       | Standard non-mutation treatment                                           | Current, seeded from `Code`         |
 | `PermissionGate`      | Explains disabled or unavailable actions                                  | Needed                              |
 | `CommandPalette`      | Global search or command surface                                          | Optional later                      |
 
@@ -189,14 +189,14 @@ Shell-specific current fit:
   Reuse decision: reuse the layout pattern and explicit state model.
   Current gap: shared event presentation semantics plus headline copy now exist, but typed live-log states and the final structured-versus-terminal decision remain future work while durable run-detail authority stays with the Runs workspace.
 
-| Target primitive                                                             | Current implementation                                                                                                                                                                                                               | Reuse decision                      | Current gap                                                                              |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                                                                                   | Use as the first extraction source  | other routes still hand-build headers instead of using one toolbar primitive             |
-| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                                                                                            | Reuse within the v1 frame contract  | side panels, shared route toolbars, and richer shell extraction remain future primitives |
-| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx)                                                                  | Reuse panel behavior and content    | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
-| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                                                                                    | Missing shared primitive            | each route owns its own surface chrome and spacing                                       |
-| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | shared workbench primitives in [`WorkbenchStates.tsx`](../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx) with `Runs` adapters in [`RunStates.tsx`](../../../../apps/web/src/app/views/runs/RunStates.tsx) | Shared primitive seeded from `Runs` | `ReadOnlyState` is still missing and other routes have not adopted the primitives yet    |
-| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                                                                                                | Missing shared wrapper              | size, stroke, semantic color, and accessibility are not standardized                     |
+| Target primitive                                                             | Current implementation                                                                                                                                              | Reuse decision                                 | Current gap                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                  | Use as the first extraction source             | other routes still hand-build headers instead of using one toolbar primitive             |
+| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                           | Reuse within the v1 frame contract             | side panels, shared route toolbars, and richer shell extraction remain future primitives |
+| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) | Reuse panel behavior and content               | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
+| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                   | Missing shared primitive                       | each route owns its own surface chrome and spacing                                       |
+| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | shared workbench primitives in [`WorkbenchStates.tsx`](../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx) consumed by `Runs` and `Code`   | Shared primitive seeded from `Runs` and `Code` | broader route adoption still needs delivery                                              |
+| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                               | Missing shared wrapper                         | size, stroke, semantic color, and accessibility are not standardized                     |
 
 ## Reuse, Extract, Retire
 
@@ -326,17 +326,17 @@ Main screen composition:
 
 ### Lineage
 
-| Component                     | Responsibility              | Status                   |
-| ----------------------------- | --------------------------- | ------------------------ |
-| `LineageWorkbench`            | Route composition root      | Current, needs hardening |
-| `LineageToolbar`              | search and mode controls    | Needed                   |
-| `LineageSearchBar`            | node lookup                 | Current in basic form    |
-| `LineageBreadcrumb`           | lineage focus path          | Current                  |
-| `LineageImpactSummary`        | upstream/downstream summary | Current in basic form    |
-| `LineageGraphCards`           | layered lineage cards       | Current                  |
-| `LineageColumnsToggle`        | column-lineage mode         | Current                  |
-| `LineageEmptyState`           | no focus available          | Needed                   |
-| `LineageMetadataMissingState` | missing column metadata     | Needed                   |
+| Component                     | Responsibility              | Status                        |
+| ----------------------------- | --------------------------- | ----------------------------- |
+| `LineageWorkbench`            | Route composition root      | Current, state model explicit |
+| `LineageToolbar`              | search and mode controls    | Needed                        |
+| `LineageSearchBar`            | node lookup                 | Current in basic form         |
+| `LineageBreadcrumb`           | lineage focus path          | Current                       |
+| `LineageImpactSummary`        | upstream/downstream summary | Current in basic form         |
+| `LineageGraphCards`           | layered lineage cards       | Current                       |
+| `LineageColumnsToggle`        | column-lineage mode         | Current                       |
+| `LineageEmptyState`           | no focus available          | Current                       |
+| `LineageMetadataMissingState` | missing column metadata     | Current                       |
 
 ### Code
 
@@ -347,39 +347,39 @@ Main screen composition:
 | `FileTreePanel`     | workspace file selection                  | Current                  |
 | `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
 | `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
-| `CodeEmptyState`    | no file or no workspace files available   | Needed                   |
-| `CodeErrorState`    | preserve selected-file context on failure | Needed                   |
-| `CodeReadOnlyState` | explicit non-editing treatment            | Needed                   |
+| `CodeEmptyState`    | no file or no workspace files available   | Current                  |
+| `CodeErrorState`    | preserve selected-file context on failure | Current                  |
+| `CodeReadOnlyState` | explicit non-editing treatment            | Current via shared state |
 
 ### Diff
 
-| Component                 | Responsibility                      | Status                   |
-| ------------------------- | ----------------------------------- | ------------------------ |
-| `DiffWorkbench`           | Route composition root              | Current, needs hardening |
-| `DiffToolbar`             | compare mode and filters            | Needed                   |
-| `DiffCompareModeSelector` | diff mode selection                 | Current in basic form    |
-| `DiffSeverityFilters`     | review prioritization               | Current in basic form    |
-| `DiffSummaryCards`        | summary and deltas                  | Current                  |
-| `DiffTabs`                | graph, SQL, catalog segmentation    | Current                  |
-| `GraphDiffPane`           | structural graph review             | Current in basic form    |
-| `SqlDiffPane`             | Monaco-backed SQL diff              | Needed                   |
-| `CatalogDiffPane`         | structured catalog diff             | Needed                   |
-| `DiffEmptyState`          | no diff available                   | Needed                   |
-| `DiffErrorState`          | preserve compare context on failure | Needed                   |
+| Component                 | Responsibility                      | Status                        |
+| ------------------------- | ----------------------------------- | ----------------------------- |
+| `DiffWorkbench`           | Route composition root              | Current, state model explicit |
+| `DiffToolbar`             | compare mode and filters            | Needed                        |
+| `DiffCompareModeSelector` | diff mode selection                 | Current in basic form         |
+| `DiffSeverityFilters`     | review prioritization               | Current in basic form         |
+| `DiffSummaryCards`        | summary and deltas                  | Current                       |
+| `DiffTabs`                | graph, SQL, catalog segmentation    | Current                       |
+| `GraphDiffPane`           | structural graph review             | Current in basic form         |
+| `SqlDiffPane`             | Monaco-backed SQL diff              | Current                       |
+| `CatalogDiffPane`         | structured catalog diff             | Current                       |
+| `DiffEmptyState`          | no diff available                   | Current                       |
+| `DiffErrorState`          | preserve compare context on failure | Current                       |
 
 ### Artifacts
 
-| Component                     | Responsibility                      | Status                   |
-| ----------------------------- | ----------------------------------- | ------------------------ |
-| `ArtifactsWorkbench`          | Route composition root              | Current, needs hardening |
-| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                   |
-| `ArtifactImportZone`          | local manifest import               | Current                  |
-| `ArtifactList`                | artifact inventory                  | Current in basic form    |
-| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                  |
-| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                   |
-| `ArtifactSearch`              | payload navigation                  | Needed                   |
-| `ArtifactsEmptyState`         | no artifact loaded                  | Needed                   |
-| `ArtifactsInvalidImportState` | import rejection explanation        | Needed                   |
+| Component                     | Responsibility                      | Status                        |
+| ----------------------------- | ----------------------------------- | ----------------------------- |
+| `ArtifactsWorkbench`          | Route composition root              | Current, state model explicit |
+| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                        |
+| `ArtifactImportZone`          | local manifest import               | Current                       |
+| `ArtifactList`                | artifact inventory                  | Current in basic form         |
+| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                       |
+| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                        |
+| `ArtifactSearch`              | payload navigation                  | Needed                        |
+| `ArtifactsEmptyState`         | no artifact loaded                  | Current                       |
+| `ArtifactsInvalidImportState` | import rejection explanation        | Current                       |
 
 ### Templates
 
