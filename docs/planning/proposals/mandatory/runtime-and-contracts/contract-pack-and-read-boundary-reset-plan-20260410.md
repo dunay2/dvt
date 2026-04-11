@@ -198,11 +198,17 @@ Acceptance:
 
 Goal:
 
-- align code, current subsystem docs, and diagrams to the reset boundary
+- finish the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX`
+  convergence by removing enrichment from the engine facade and aligning
+  code, current subsystem docs, and diagrams to the reset boundary
 
 Deliverables:
 
-- engine and API read paths aligned to the new contract pack
+- docs/contracts-first cutover that narrows `IWorkflowEngine` to commands plus
+  canonical read only and moves enrichment behind `IRunEnrichmentService`
+- engine and API read paths aligned to the narrowed facade and explicit
+  enrichment service
+- `WorkflowEngine` no longer exposes `getRunEnrichment()` after cutover
 - adapter naming and return-shape alignment
 - workflow-internal runtime-state query/state surfaces demoted so they no
   longer read like published contractual status APIs
@@ -216,6 +222,8 @@ Deliverables:
 
 Acceptance:
 
+- `IWorkflowEngine` exposes commands plus canonical read only
+- enrichment lives behind `IRunEnrichmentService`, not on the engine facade
 - code and current docs describe the same boundary
 - target architecture docs no longer carry the burden of explaining current
   truth

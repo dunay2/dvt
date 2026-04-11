@@ -1572,16 +1572,18 @@ tasks:
     priority: P1
     status: queued
     objective: >-
-      converge implementation, current subsystem docs, and diagrams on the reset contract pack and
-      read boundary.
+      finish the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX` convergence by removing
+      enrichment from the engine facade and converging implementation, current subsystem docs, and
+      diagrams on the reset contract pack and read boundary.
     dependency: AR-A12-B, RC-G1-B
     target: >-
-      Engine, API, adapter, and active subsystem docs all expose the same read boundary, the read
-      subsystem page describes the real current use-case shape, the Temporal workflow
+      `IWorkflowEngine` exposes commands plus canonical read only, enrichment moves behind a
+      dedicated `IRunEnrichmentService`, Engine/API/adapter consumers all follow that split, the
+      read subsystem page describes the real current use-case shape, the Temporal workflow
       `runtimeStateQuery` is demoted to a runtime-internal or debug-oriented surface instead of
       reading like a contractual status API, `RuntimeWorkflowState` is treated as runtime-internal
       state rather than a published boundary model, adapter barrel exports are pruned to remove
-      illegitimate public exposure of workflow-internal types, and the current diagrams describe
+      illegitimate public exposure of workflow-internal types, and current diagrams describe
       implemented structure rather than target-only decomposition.
     complexity: M
     effort_points: 3
@@ -1589,13 +1591,106 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
-      This closure slice depends on the contract-pack reset and the read-model split landing first;
-      until then, current docs and code cannot converge honestly. The closure work must now make the
-      Temporal runtime query/state surface explicitly internal-facing rather than leaving that
-      encapsulation as an implied consequence of the boundary reset.
-    last_verified: '2026-04-10'
+      `AR-A12-B` made the status-model split explicit, but the engine facade still exposes
+      provider-backed enrichment. After `RC-G1-B`, this is the next highest-leverage architecture
+      cleanup: land the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX` convergence instead of
+      reopening `AR-A3` as a parallel track.
+    last_verified: '2026-04-11'
+  - task_id: AR-A12-C1
+    parent_task: AR-A12-C
+    priority: P1
+    status: queued
+    objective: >-
+      publish the docs/contracts-first facade-purity cutover that removes enrichment from the
+      `IWorkflowEngine` target boundary and routes it to `IRunEnrichmentService`.
+    dependency: AR-A12-B, RC-G1-B
+    target: >-
+      Active planning and target-boundary docs no longer treat `getRunEnrichment()` as an
+      `IWorkflowEngine` method, and `AR-A12-C` is sequenced as the post-`WE-HX-4` closure wave for
+      the remaining `AR-A3` intent.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+    status_reason: >-
+      This sub-slice freezes the target before code changes so the facade narrowing executes against
+      one active architecture story.
+    last_verified: '2026-04-11'
+  - task_id: AR-A12-C2
+    parent_task: AR-A12-C
+    priority: P1
+    status: queued
+    objective: >-
+      cut enrichment off the engine facade in code and move API callers to a dedicated
+      `IRunEnrichmentService`.
+    dependency: AR-A12-C1
+    target: >-
+      `WorkflowEngine` no longer exposes `getRunEnrichment()`, owner-local enrichment service wiring
+      exists, API query flow uses that service directly, and residual active-code references to
+      `IWorkflowEngine['getRunEnrichment']` are zero.
+    complexity: M
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
+      - docs/adr/ADR-0015-getRunStatus-read-model-separation.md
+      - docs/adr/ADR-0003-execution-model.md
+    status_reason: >-
+      This is the actual move-and-cut wave for read-boundary purity: no compatibility alias should
+      survive on the facade.
+    last_verified: '2026-04-11'
+  - task_id: AR-A12-C3
+    parent_task: AR-A12-C
+    priority: P1
+    status: queued
+    objective: >-
+      converge current subsystem docs and diagrams on the narrowed facade and explicit enrichment
+      service path.
+    dependency: AR-A12-C2
+    target: >-
+      Current read-subsystem docs, engine subsystem current docs, and active diagrams describe the
+      shipped split between canonical status reads and enrichment service calls, while
+      runtime-internal Temporal state surfaces remain explicitly internal/debug-only.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
+      - docs/architecture/system/subsystems/read/index.md
+      - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+    status_reason: >-
+      Current docs must stop narrating enrichment as an engine-facade method once the code cutover
+      lands.
+    last_verified: '2026-04-11'
+  - task_id: AR-A12-C4
+    parent_task: AR-A12-C
+    priority: P1
+    status: queued
+    objective: >-
+      harden and close the read-boundary purity wave with regression guards, ARC-2 evidence, risk
+      updates, and final validation.
+    dependency: AR-A12-C3
+    target: >-
+      The slice ships with evidence, risk updates, touched-package validation, `pnpm
+      verify:prepush`, and guards that prevent enrichment from silently reappearing on
+      `IWorkflowEngine`.
+    complexity: S
+    effort_points: 0
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
+      - docs/evidence/index.md
+      - docs/risk-register/index.md
+    status_reason: >-
+      This closeout slice turns the architectural cut into an enforced and evidenced boundary
+      change.
+    last_verified: '2026-04-11'
   - task_id: DOC-ARCH-01
     priority: P1
     status: done
@@ -2014,7 +2109,8 @@ dependency_notes:
     `MW-A2`, `MW-A3`, and `MW-A4` are now closed after `S08-5-C`.
   - >-
     `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
-    folds former `AR-A3` execution intent into `WE-HX-4` as part of the query/enrichment split.
+    folds former `AR-A3` execution intent into `WE-HX-4`; the remaining post-`WE-HX-4` facade-purity
+    closure now executes under `AR-A12-C`.
   - >-
     `WE-HX-4-A..D` are now closed. The engine/runtime signal boundary is governed by runtime-owned
     realized lifecycle facts, canonical run-control signals, explicit provider mapping helpers, and
@@ -2031,7 +2127,8 @@ dependency_notes:
     `AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
     run-status read boundary: `AR-A12-A` resets the active line to one canonical pre-stable `v1`
     pack, `AR-A12-B` separates canonical status from provider-live diagnostics, and `AR-A12-C`
-    converges implementation and current diagrams after the boundary is reset.
+    finishes the remaining `AR-A3` intent by removing enrichment from the engine facade while
+    converging implementation and current diagrams after the boundary is reset.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
