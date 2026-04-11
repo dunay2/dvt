@@ -59,8 +59,4 @@ export {
 } from './activities/stepActivities.js';
 
 // PR-2: Workflow types (workflow function itself is loaded by Worker bundler)
-export type {
-  RunPlanWorkflowInput,
-  RunPlanWorkflowResult,
-  WorkflowState,
-} from './workflows/RunPlanWorkflow.js';
+export type { RunPlanWorkflowInput, RunPlanWorkflowResult } from './workflows/RunPlanWorkflow.js';

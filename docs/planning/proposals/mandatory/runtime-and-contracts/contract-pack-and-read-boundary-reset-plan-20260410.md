@@ -204,6 +204,12 @@ Deliverables:
 
 - engine and API read paths aligned to the new contract pack
 - adapter naming and return-shape alignment
+- workflow-internal runtime-state query/state surfaces demoted so they no
+  longer read like published contractual status APIs
+- `RuntimeWorkflowState` and equivalent runtime-only models treated as internal
+  state, not adapter boundary models
+- adapter barrel exports reviewed and pruned so workflow-internal state types do
+  not remain public without a governed consumer
 - current subsystem diagrams rewritten to the actual implementation
 - active read-subsystem documentation rewritten to the real current use-case
   shape, with target decomposition moved to target architecture material

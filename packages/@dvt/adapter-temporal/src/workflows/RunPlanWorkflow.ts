@@ -139,10 +139,10 @@ export interface RunPlanWorkflowResult {
 }
 
 // ---------------------------------------------------------------------------
-// Workflow state (visible via query)
+// Runtime-internal workflow state (visible only through the internal runtime query)
 // ---------------------------------------------------------------------------
 
-export interface WorkflowState {
+interface RuntimeWorkflowState {
   status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   /** Dedicated pause flag: used by condition() predicate to avoid TypeScript CFA cast. */
   paused: boolean;
@@ -161,7 +161,7 @@ export interface WorkflowState {
 export const pauseSignal = defineSignal<[string]>('pause');
 export const resumeSignal = defineSignal<[string]>('resume');
 export const cancelSignal = defineSignal<[string | undefined]>('cancel');
-export const statusQuery = defineQuery<WorkflowState>('status');
+const runtimeStateQuery = defineQuery<RuntimeWorkflowState>('runtimeState');
 
 // ---------------------------------------------------------------------------
 // Activity proxy (all side-effects delegated to activities)
@@ -320,7 +320,7 @@ async function resolveLayerLoopOutcome(args: {
   layerOutcome: LayerLoopOutcome;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   continuedAsNewCount: number;
   runtimeExecutor?: 'postgres' | 'dbt';
   completedStepResults: Record<string, Record<string, unknown>>;
@@ -364,7 +364,7 @@ async function resolveLayerLoopOutcome(args: {
 }
 
 async function markWorkflowFailedIfNeeded(
-  state: WorkflowState,
+  state: RuntimeWorkflowState,
   ctx: RunPlanWorkflowInput['ctx'],
   planRef: RunPlanWorkflowInput['planRef'],
   runtimeExecutor?: 'postgres' | 'dbt'
@@ -393,7 +393,7 @@ async function markWorkflowFailedIfNeeded(
 function createInitialWorkflowState(
   continuedAsNewCount: number,
   gatewayDecisions: Record<string, boolean> | undefined
-): WorkflowState {
+): RuntimeWorkflowState {
   return {
     status: 'RUNNING',
     paused: false,
@@ -405,7 +405,7 @@ function createInitialWorkflowState(
 }
 
 function registerSignalHandlers(
-  state: WorkflowState,
+  state: RuntimeWorkflowState,
   processedControlSignalIds: Set<string>
 ): void {
   setHandler(pauseSignal, (signalId: string) => {
@@ -432,7 +432,7 @@ function registerSignalHandlers(
     }
   });
 
-  setHandler(statusQuery, () => state);
+  setHandler(runtimeStateQuery, () => state);
 }
 
 // ---------------------------------------------------------------------------
@@ -482,7 +482,7 @@ interface ExecutePlanLayersArgs {
   runtimeExecutor?: 'postgres' | 'dbt';
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
   processedControlSignalIds: ReadonlySet<string>;
 }
@@ -651,7 +651,7 @@ async function emitSkippedStepsInLayer(args: {
 }
 
 async function handlePreLayerLifecycle(args: {
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
@@ -676,7 +676,7 @@ async function handlePreLayerLifecycle(args: {
 }
 
 async function finalizeCancellationIfRequested(args: {
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
@@ -690,7 +690,7 @@ async function finalizeCancellationIfRequested(args: {
 
 async function finalizeNativeCancellationIfNeeded(args: {
   error: unknown;
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
@@ -706,7 +706,7 @@ async function finalizeNativeCancellationIfNeeded(args: {
 
 async function emitTerminalCancellation(
   args: {
-    state: WorkflowState;
+    state: RuntimeWorkflowState;
     ctx: RunPlanWorkflowInput['ctx'];
     planRef: RunPlanWorkflowInput['planRef'];
     continuedAsNewCount: number;
@@ -768,7 +768,7 @@ async function executeLayerSteps(args: {
   layer: ReadonlyArray<WorkflowStep>;
   planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): Promise<LayerStepExecution[]> {
   return Promise.all(args.layer.map((step) => executeLayerStep({ ...args, step })));
@@ -778,7 +778,7 @@ async function executeLayerStep(args: {
   step: WorkflowStep;
   planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): Promise<LayerStepExecution> {
   try {
@@ -832,7 +832,7 @@ function applyGatewayDecisionEffects(args: {
   gatewayDecision: boolean | undefined;
   stepId: string;
   planSteps: ReadonlyArray<WorkflowStep>;
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): void {
   if (typeof args.gatewayDecision !== 'boolean') return;
@@ -934,7 +934,7 @@ async function applyLayerResults(args: {
   layerResults: ReadonlyArray<LayerStepExecution>;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
   continuedAsNewCount: number;
   runtimeExecutor?: 'postgres' | 'dbt';

@@ -43,8 +43,7 @@ Primary implementation references:
   snapshot read path governed outside the adapter boundary.
 - Provider status should therefore be treated as live runtime enrichment, not
   as the authoritative state-store replacement.
-- Temporal workflow `status` query still exists inside the workflow runtime,
-  but it is no longer the adapter's published provider-status boundary.
+- Temporal workflow runtime still exposes an internal `runtimeState` query for workflow-local visibility/debugging, but it is no longer the adapter's published provider-status boundary.
 - The provider view is intentionally narrower than the canonical read model:
   Temporal-native runtime statuses such as `RUNNING`, `FAILED`,
   `TERMINATED`, `TIMED_OUT`, and `CONTINUED_AS_NEW` come from the Temporal
@@ -72,7 +71,7 @@ Workflow defines and handles:
 - `pause` signal
 - `resume` signal
 - `cancel` signal (with optional reason payload)
-- `status` query
+- internal `runtimeState` query
 
 Current adapter policy splits cancellation into two governed paths:
 
@@ -113,14 +112,14 @@ Contract-pack reset tracked under `AR-A12-A`:
 
 ## 3) Pause/Resume/Cancellation Flow (IMPLEMENTED)
 
-- Workflow state tracks: `status`, `paused`, `cancelled`, `cancelReason`, `currentStepIndex`.
+- Workflow state tracks: `status`, `paused`, `cancelRequested`, `cancelReason`, `currentStepIndex`.
 - Before each step, workflow checks cancellation and emits `RunCancelled` when applicable.
 - Native Temporal cancellation is caught in workflow cleanup, which currently
   emits ordered cancellation lifecycle events from workflow context.
 - The workflow currently flips in-memory status before terminal cancellation
   events are persisted, so ordered lifecycle truth still belongs to the
   event-log-backed read path rather than the live workflow query.
-- During pause, workflow blocks with `condition(() => !state.paused || state.cancelled)`.
+- During pause, workflow blocks with `condition(() => !state.paused || state.cancelRequested)`.
 - On pause/resume transitions, lifecycle events are emitted via activities (`RunPaused`, `RunResumed`).
 - Step execution emits `StepStarted` and either `StepCompleted` or (`StepFailed` + `RunFailed`).
 

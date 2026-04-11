@@ -1474,7 +1474,11 @@ tasks:
     dependency: AR-A12-B, RC-G1-B
     target: >-
       Engine, API, adapter, and active subsystem docs all expose the same read boundary, the read
-      subsystem page describes the real current use-case shape, and the current diagrams describe
+      subsystem page describes the real current use-case shape, the Temporal workflow
+      `runtimeStateQuery` is demoted to a runtime-internal or debug-oriented surface instead of
+      reading like a contractual status API, `RuntimeWorkflowState` is treated as runtime-internal
+      state rather than a published boundary model, adapter barrel exports are pruned to remove
+      illegitimate public exposure of workflow-internal types, and the current diagrams describe
       implemented structure rather than target-only decomposition.
     complexity: M
     effort_points: 3
@@ -1485,7 +1489,9 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
       This closure slice depends on the contract-pack reset and the read-model split landing first;
-      until then, current docs and code cannot converge honestly.
+      until then, current docs and code cannot converge honestly. The closure work must now make the
+      Temporal runtime query/state surface explicitly internal-facing rather than leaving that
+      encapsulation as an implied consequence of the boundary reset.
     last_verified: '2026-04-10'
   - task_id: DOC-ARCH-01
     priority: P1
