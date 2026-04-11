@@ -52,6 +52,8 @@ export default function CanvasShell({
   impactOverlayEnabled,
   columnLevelLineageEnabled,
   transformationValidation,
+  centerSurface,
+  readOnlyBanner,
 }: CanvasShellProps) {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
 
@@ -101,27 +103,30 @@ export default function CanvasShell({
             nodeCount={nodesWithImpact.length}
             edgeCount={edges.length}
           />
-          <CanvasViewport
-            focusMode={focusMode}
-            explorerPanelVisible={explorerPanelVisible}
-            inspectorPanelVisible={inspectorPanelVisible}
-            nodesWithImpact={nodesWithImpact}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            gridSize={gridSize}
-            viewport={viewport}
-            onNodesChange={onNodesChange}
-            onNodeDragStop={onNodeDragStop}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onSelectionChange={onSelectionChange}
-            onViewportChange={onViewportChange}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onShowExplorer={onShowExplorer}
-            onShowInspector={onShowInspector}
-          />
+          {readOnlyBanner ? <div className="shrink-0">{readOnlyBanner}</div> : null}
+          {centerSurface ?? (
+            <CanvasViewport
+              focusMode={focusMode}
+              explorerPanelVisible={explorerPanelVisible}
+              inspectorPanelVisible={inspectorPanelVisible}
+              nodesWithImpact={nodesWithImpact}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              gridSize={gridSize}
+              viewport={viewport}
+              onNodesChange={onNodesChange}
+              onNodeDragStop={onNodeDragStop}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onSelectionChange={onSelectionChange}
+              onViewportChange={onViewportChange}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onShowExplorer={onShowExplorer}
+              onShowInspector={onShowInspector}
+            />
+          )}
         </div>
       </ResizablePanel>
 

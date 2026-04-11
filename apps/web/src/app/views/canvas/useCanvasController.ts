@@ -156,6 +156,11 @@ export function useCanvasController() {
   );
 
   return {
+    isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
+    graphErrorMessage:
+      graphModel.graphSnapshotQuery.error instanceof Error
+        ? graphModel.graphSnapshotQuery.error.message
+        : null,
     focusMode: store.focusMode,
     explorerPanelVisible: store.explorerPanelVisible,
     inspectorPanelVisible: store.inspectorPanelVisible,
