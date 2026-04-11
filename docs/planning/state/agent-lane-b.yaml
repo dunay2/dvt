@@ -167,7 +167,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: S05-TRUTH-SYNC
     priority: P1
-    status: queued
+    status: done
     objective: >-
       reconcile active planning and architecture surfaces that still describe `S05
       EventEnvelope.payloadVersion` hardening as open after accepted closure.
@@ -178,16 +178,18 @@ tasks:
       re-opening the umbrella.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
       - docs/architecture/system-delivery-status.md
       - docs/planning/state/agent-lane-b.yaml
+      - docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md
+      - docs/planning/closeouts/20260411-s05-truth-sync-closeout.md
     status_reason: >-
-      Lane B already records `S05` as done, but active status and architecture surfaces still
-      describe payload-version hardening as open, which creates sequencing drift for later contract
-      work.
-    last_verified: '2026-04-10'
+      Active status and architecture surfaces now agree that `S05` closed on the accepted
+      payload-version evidence path; residual delivery and lineage work remains explicitly tracked
+      under narrower follow-up tasks instead of re-opening the umbrella slice.
+    last_verified: '2026-04-11'
   - task_id: RC-B1
     priority: P1
     status: done
