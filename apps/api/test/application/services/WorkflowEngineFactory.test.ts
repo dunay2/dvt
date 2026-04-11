@@ -6,7 +6,6 @@ import {
   type ProviderRunStatusView,
   type ResolvedRunContext,
   type SignalRequest,
-  type WorkflowEngine,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
 import { createNoopObservability } from '@dvt/observability';
@@ -29,7 +28,6 @@ function makeDeps(): WorkflowEngineDeps {
     runRecoveryService: {} as never,
     runControlService: {} as never,
     runStatusQueryService: {} as never,
-    runHealthService: {} as never,
   };
 }
 
@@ -38,7 +36,8 @@ describe('createWorkflowEngine', () => {
     const deps = makeDeps();
     const engine = createWorkflowEngine(
       deps,
-      FakeWorkflowEngine as unknown as new (deps: WorkflowEngineDeps) => WorkflowEngine
+      (receivedDeps) =>
+        new FakeWorkflowEngine(receivedDeps) as unknown as ReturnType<typeof createWorkflowEngine>
     ) as unknown as FakeWorkflowEngine;
 
     expect(engine instanceof FakeWorkflowEngine).toBe(true);
@@ -91,5 +90,6 @@ describe('buildWorkflowEngine', () => {
       .startRunApplicationService;
     expect(startRunService).toBeInstanceOf(StartRunApplicationService);
     expect(runtime.runEnrichmentService).toBeDefined();
+    expect(runtime.runHealthService).toBeDefined();
   });
 });

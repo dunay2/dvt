@@ -55,6 +55,10 @@ Optional enrichment flow:
 
 `caller -> IRunEnrichmentService.getRunEnrichment -> IRunStateStoreRead + IProviderAdapter`
 
+Optional health flow:
+
+`caller/composition root -> IRunHealthService.healthCheck -> IRunStateStoreRead + IProviderAdapter`
+
 Declared southbound port surface:
 
 - `IRunStateStore` (`runtime-wired`)
@@ -71,11 +75,13 @@ not counted inside the seven-port southbound surface.
 ```mermaid
 flowchart LR
   Caller["apps/api or other caller"] --> UseCase["API use case layer"]
-  UseCase --> Engine["WorkflowEngine facade"]
+  UseCase --> Engine["IWorkflowEngine facade"]
+  UseCase --> Health["IRunHealthService"]
   UseCase --> Enrich["IRunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService path"]
   Engine --> Query["RunStatusQueryService path"]
   Engine --> Core["WorkflowEngineCoreService path"]
+  Health --> Ports
   Enrich --> Ports
   StartRun --> Ports["Engine ports"]
   Query --> Ports
@@ -126,7 +132,7 @@ Main components in the subsystem:
 - `RecoverRunApplicationService` (recover-run orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
 - `RunStatusQueryService` (canonical read path)
-- `RunHealthService` (runtime liveness probe path)
+- `IRunHealthService` / `RunHealthService` (runtime liveness probe path)
 - `WorkflowEngineCoreService` (cancel/signal runtime path)
 - `RunEnrichmentService` (engine-owned implementation of enrichment)
 - `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
@@ -137,8 +143,8 @@ flowchart TB
   WF --> Coord["StartRunApplicationService"]
   WF --> Recover["RecoverRunApplicationService"]
   WF --> Query["RunStatusQueryService"]
-  WF --> Health["RunHealthService"]
   WF --> Core["WorkflowEngineCoreService"]
+  HealthApi["IRunHealthService"] --> Health["RunHealthService"]
   Recover --> Guard["StartRunAdmissionGuard"]
   Recover --> Coord
   Query --> Projector["SnapshotProjector"]
@@ -229,7 +235,6 @@ sequenceDiagram
 
 ## Active drifts and architecture debt
 
-- facade width still too broad in `WorkflowEngine`
 - start-run application path and guard still construct and mix collaborator concerns
 - control/runtime behavior is still concentrated in one control service
 - provider-resolution and telemetry policy logic remains repeated

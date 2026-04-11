@@ -9,6 +9,7 @@ import type {
   EngineRunRef,
   IProviderAdapter,
   IRunEnrichmentService,
+  IRunHealthService,
   IWorkflowEngine,
 } from '@dvt/engine';
 
@@ -25,6 +26,7 @@ export interface ProtectedRuntimeModule {
   authorizer: AuthorizeCommandScopeService;
   engine: IWorkflowEngine;
   runEnrichmentService: IRunEnrichmentService;
+  runHealthService: IRunHealthService;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;

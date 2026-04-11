@@ -4,7 +4,7 @@
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
  * @decision WorkflowEngine is an application-facing facade that delegates
- *   startRun, recoverRun, canonical status reads, health checks, and control operations
+ *   startRun, recoverRun, canonical status reads, and control operations
  *   to focused collaborators.
  * @consequence Runtime orchestration responsibilities are split into focused collaborators.
  */
@@ -20,24 +20,15 @@ import type {
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
+import type { IStartRunApplicationService } from '../application/IStartRunApplicationService.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1.js';
 import type { IRunControlService } from '../domain/IRunControlService.js';
-import type { HealthStatus, IRunHealthService } from '../domain/IRunHealthService.js';
 import type { IRunRecoveryService } from '../domain/IRunRecoveryService.js';
 import type { IRunStatusQueryService } from '../domain/IRunStatusQueryService.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { buildTraceContext } from './lifecycle/coreRuntime.js';
-import type { StartRunTraceContext } from './lifecycle/StartRunTraceContext.js';
-
-export interface IStartRunApplicationService {
-  startRun(
-    planRef: PlanRef,
-    resolvedContext: ResolvedRunContext,
-    traceContext: StartRunTraceContext
-  ): Promise<EngineRunRef>;
-}
 
 export interface WorkflowEngineDeps {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
@@ -47,7 +38,6 @@ export interface WorkflowEngineDeps {
   runRecoveryService: IRunRecoveryService;
   runControlService: IRunControlService;
   runStatusQueryService: IRunStatusQueryService;
-  runHealthService: IRunHealthService;
 }
 
 export class WorkflowEngine implements IWorkflowEngine {
@@ -56,7 +46,6 @@ export class WorkflowEngine implements IWorkflowEngine {
   private readonly runRecoveryService: IRunRecoveryService;
   private readonly runControlService: IRunControlService;
   private readonly runStatusQueryService: IRunStatusQueryService;
-  private readonly runHealthService: IRunHealthService;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
@@ -65,7 +54,6 @@ export class WorkflowEngine implements IWorkflowEngine {
     this.runRecoveryService = deps.runRecoveryService;
     this.runControlService = deps.runControlService;
     this.runStatusQueryService = deps.runStatusQueryService;
-    this.runHealthService = deps.runHealthService;
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
@@ -134,10 +122,6 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.runControlService.signal(engineRunRef, request);
   }
 
-  async healthCheck(): Promise<HealthStatus> {
-    return this.runHealthService.healthCheck();
-  }
-
   private validateDependencies(): void {
     const requiredDeps: Array<[name: string, value: unknown]> = [
       ['adapters', this.deps.adapters],
@@ -146,7 +130,6 @@ export class WorkflowEngine implements IWorkflowEngine {
       ['runRecoveryService', this.deps.runRecoveryService],
       ['runControlService', this.deps.runControlService],
       ['runStatusQueryService', this.deps.runStatusQueryService],
-      ['runHealthService', this.deps.runHealthService],
     ];
 
     for (const [name, value] of requiredDeps) {

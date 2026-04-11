@@ -204,7 +204,7 @@ export class TemporalAdapter implements IProviderAdapter {
 
   /**
    * Verifies the Temporal connection is alive.
-   * Called by WorkflowEngine.healthCheck() to report adapter liveness.
+   * Called by IRunHealthService.healthCheck() to report adapter liveness.
    */
   async ping(): Promise<void> {
     const clientManager = this.deps.clientManager;

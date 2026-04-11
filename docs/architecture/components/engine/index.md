@@ -55,17 +55,17 @@ Target note:
 - expose optional provider-backed enrichment through `RunEnrichmentService`
   and `IRunEnrichmentService`;
 - expose operational health and maintenance services around the workflow
-  runtime.
+  runtime through explicit non-facade service boundaries.
 
 ## Public Operations
 
-- `WorkflowEngine.startRun(...)`
-- `WorkflowEngine.recoverRun(...)`
-- `WorkflowEngine.cancelRun(...)`
-- `WorkflowEngine.getRunStatus(...)`
+- `IWorkflowEngine.startRun(...)`
+- `IWorkflowEngine.recoverRun(...)`
+- `IWorkflowEngine.cancelRun(...)`
+- `IWorkflowEngine.getRunStatus(...)`
 - `IRunEnrichmentService.getRunEnrichment(...)`
-- `WorkflowEngine.signal(...)`
-- `WorkflowEngine.healthCheck()`
+- `IWorkflowEngine.signal(...)`
+- `IRunHealthService.healthCheck()`
 - `StartRunApplicationService.startRun(...)`
 
 ## Primary Code Anchors
@@ -93,13 +93,14 @@ Target note:
 
 ```mermaid
 flowchart LR
-  Api["apps/api"] --> Engine["WorkflowEngine facade"]
+  Api["apps/api"] --> Engine["IWorkflowEngine facade"]
+  Api --> HealthApi["IRunHealthService"]
   Api --> Enrich["RunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService"]
   Engine --> Recover["RecoverRunApplicationService"]
   Engine --> Query["RunStatusQueryService"]
-  Engine --> Health["RunHealthService"]
   Engine --> Core["WorkflowEngineCoreService"]
+  HealthApi --> Health["RunHealthService"]
   Recover --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Ports["Declared southbound ports"]

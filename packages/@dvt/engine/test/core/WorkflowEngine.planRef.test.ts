@@ -35,7 +35,6 @@ describe('WorkflowEngine planRef normalization', () => {
           startRunApplicationService: {} as never,
           runRecoveryService: {} as never,
           runControlService: {} as never,
-          runHealthService: {} as never,
         } as never)
     ).toThrow(/runStatusQueryService is required/);
   });
@@ -74,9 +73,6 @@ describe('WorkflowEngine planRef normalization', () => {
       },
       runStatusQueryService: {
         getStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
-      },
-      runHealthService: {
-        healthCheck: async () => ({ status: 'healthy', components: [] }),
       },
     });
 

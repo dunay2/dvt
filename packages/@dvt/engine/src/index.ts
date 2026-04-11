@@ -14,9 +14,11 @@ export * from './contracts/errors.js';
 export * from './contracts/engine/index.js';
 export * from './contracts/PlanVersionPolicy.js';
 
-export * from './core/WorkflowEngine.js';
 export * from './core/SnapshotProjector.js';
 export * from './core/idempotency.js';
+export { buildWorkflowEngineFacade } from './core/buildWorkflowEngineFacade.js';
+export type { WorkflowEngineBuilder } from './core/buildWorkflowEngineFacade.js';
+export type { WorkflowEngineDeps } from './core/WorkflowEngine.js';
 
 export type {
   EventInput,
@@ -68,5 +70,6 @@ export * from './security/planIntegrity.js';
 export * from './security/RunAccessPolicy.js';
 
 export * from './application/providerSelection.js';
+export * from './application/IStartRunApplicationService.js';
 export * from './application/StartRunAdmissionGuard.js';
 export * from './application/StartRunApplicationService.js';

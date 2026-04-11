@@ -208,11 +208,13 @@ Reflects the current merged implementation:
 
 ```mermaid
 classDiagram
-    class WorkflowEngine {
+    class IWorkflowEngine {
         +startRun()
         +cancelRun()
         +getRunStatus() canonical read model
         +signal()
+    }
+    class IRunHealthService {
         +healthCheck()
     }
     class IRunEnrichmentService {
@@ -238,9 +240,10 @@ classDiagram
     class RunDomain {
         +applyRunEvent()
     }
-    WorkflowEngine --> SnapshotProjector
-    WorkflowEngine --> RunAccessPolicy
-    WorkflowEngine --> IProviderAdapter
+    IWorkflowEngine --> SnapshotProjector
+    IWorkflowEngine --> RunAccessPolicy
+    IWorkflowEngine --> IProviderAdapter
+    IRunHealthService --> IProviderAdapter
     IRunEnrichmentService --> IProviderAdapter
     SnapshotProjector --> RunDomain
 ```

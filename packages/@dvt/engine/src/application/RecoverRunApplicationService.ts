@@ -9,10 +9,10 @@ import type {
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
+import type { IStartRunApplicationService } from '../application/IStartRunApplicationService.js';
 import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '../contracts/errors.js';
 import { buildTraceContext } from '../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector, snapshotToStatus } from '../core/SnapshotProjector.js';
-import type { IStartRunApplicationService } from '../core/WorkflowEngine.js';
 import type { IRunRecoveryService } from '../domain/IRunRecoveryService.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type {

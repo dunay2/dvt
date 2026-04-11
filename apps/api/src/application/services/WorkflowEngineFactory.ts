@@ -5,9 +5,10 @@
  *   - buildWorkflowEngine: production path - accepts subsystem-grouped config,
  *     validates adapters.size > 0 at construction time, hides internal dep wiring.
  *   - createWorkflowEngine: test-seam path - accepts a flat WorkflowEngineDeps
- *     and an optional constructor override, allowing unit tests to inject fakes.
+ *     and an optional builder override, allowing unit tests to inject fakes.
  */
 import {
+  buildWorkflowEngineFacade,
   buildRunHealthService,
   buildRunRecoveryService,
   buildRunControlService,
@@ -19,7 +20,6 @@ import {
   StartRunAdmissionGuard,
   StartRunApplicationService,
   SnapshotProjector,
-  WorkflowEngine,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
@@ -27,12 +27,14 @@ import {
   type IPlanFetcher,
   type IProviderAdapter,
   type IRunEnrichmentService,
+  type IRunHealthService,
   type IRunExecutionContextResolver,
   type IRunAccessPolicy,
   type IRunStateStoreRead,
   type IRunStateStoreWrite,
   type IStartRunIntentStore,
   type IWorkflowEngine,
+  type WorkflowEngineBuilder,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -80,6 +82,7 @@ export interface EngineConfig {
 export interface BuiltWorkflowEngineRuntime {
   engine: IWorkflowEngine;
   runEnrichmentService: IRunEnrichmentService;
+  runHealthService: IRunHealthService;
 }
 
 // Production factory ----------------------------------------------------------
@@ -166,12 +169,11 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     adapters: config.runtime.adapters,
   });
   return {
-    engine: new WorkflowEngine({
+    engine: buildWorkflowEngineFacade({
       startRunApplicationService,
       runRecoveryService,
       runControlService,
       runStatusQueryService,
-      runHealthService,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
       ...(config.runtime.requiredProviders !== undefined
@@ -179,6 +181,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
         : {}),
       ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
     }),
+    runHealthService,
     runEnrichmentService: new RunEnrichmentService({
       stateStoreRead: config.persistence.stateStoreRead,
       projector,
@@ -192,15 +195,15 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
 
 // Test seam -----------------------------------------------------------------
 
-export type WorkflowEngineConstructor = new (deps: WorkflowEngineDeps) => WorkflowEngine;
+export type WorkflowEngineConstructor = WorkflowEngineBuilder;
 
 /**
- * Test seam: allows unit tests to inject a fake engine constructor while keeping
+ * Test seam: allows unit tests to inject a fake engine builder while keeping
  * the same dep shape. Do not use in production code - use buildWorkflowEngine.
  */
 export function createWorkflowEngine(
   deps: WorkflowEngineDeps,
-  EngineCtor: WorkflowEngineConstructor = WorkflowEngine
-): WorkflowEngine {
-  return new EngineCtor(deps);
+  buildEngine: WorkflowEngineConstructor = buildWorkflowEngineFacade
+): IWorkflowEngine {
+  return buildEngine(deps);
 }

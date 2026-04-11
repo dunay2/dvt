@@ -14,6 +14,7 @@ import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { buildRunRecoveryService } from '../../src/application/RecoverRunApplicationService.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
 import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import { buildWorkflowEngineFacade } from '../../src/core/buildWorkflowEngineFacade.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -27,7 +28,6 @@ import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
-import { buildRunHealthService } from '../../src/services/RunHealthService.js';
 import {
   buildRunStatusQueryService,
   RunStatusQueryService,
@@ -174,21 +174,15 @@ export function createWorkflowEngineFixture(input?: {
       ? {}
       : { runExecutionContextResolver: input.runExecutionContextResolver }),
   });
-  const runHealthService = buildRunHealthService({
-    stateStoreRead,
-    adapters,
-  });
-
-  const engine = new WorkflowEngine({
+  const engine = buildWorkflowEngineFacade({
     startRunApplicationService,
     runRecoveryService,
     runControlService,
     runStatusQueryService,
-    runHealthService,
     observability,
     adapters,
     requiredProviders: input?.requiredProviders,
-  });
+  }) as WorkflowEngine;
 
   return {
     engine,

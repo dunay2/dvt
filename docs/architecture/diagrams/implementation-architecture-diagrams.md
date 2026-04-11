@@ -357,7 +357,8 @@ flowchart LR
 The engine follows a hexagonal (ports-and-adapters) architecture with four
 internal layers:
 
-1. **Facade** (`WorkflowEngine`): Public API surface. Normalizes inputs,
+1. **Facade** (`IWorkflowEngine` via `WorkflowEngine`): Public API surface.
+   Normalizes inputs,
    resolves initial context (sets `logicalAttemptId=1`, `originRunId=runId`),
    and delegates to specialized services that are now wired explicitly by the
    composition root.

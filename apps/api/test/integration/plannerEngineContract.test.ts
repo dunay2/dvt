@@ -12,7 +12,7 @@ import {
 } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
-  buildRunHealthService,
+  buildWorkflowEngineFacade,
   buildRunRecoveryService,
   buildRunControlService,
   buildRunStatusQueryService,
@@ -23,7 +23,6 @@ import {
   SnapshotProjector,
   StartRunAdmissionGuard,
   StartRunApplicationService,
-  WorkflowEngine,
   type EngineRunRef,
   type ExecutionPlan,
   type IProviderAdapter,
@@ -106,7 +105,7 @@ function makeResolvedRunContext(runId: string): ResolvedRunContext {
 }
 
 interface EngineTestStack {
-  engine: WorkflowEngine;
+  engine: ReturnType<typeof buildWorkflowEngineFacade>;
   store: InMemoryTxStore;
   clock: SequenceClock;
   idempotency: IdempotencyKeyBuilder;
@@ -176,17 +175,11 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     observability: createNoopObservability(),
     startRunApplicationService,
   });
-  const runHealthService = buildRunHealthService({
-    stateStoreRead: store,
-    adapters,
-  });
-
-  const engine = new WorkflowEngine({
+  const engine = buildWorkflowEngineFacade({
     startRunApplicationService,
     runRecoveryService,
     runControlService,
     runStatusQueryService,
-    runHealthService,
     observability: createNoopObservability(),
     adapters,
   });

@@ -15,7 +15,7 @@ Generated automatically from repository code on 2026-04-11.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 759   |
+| Total source files           | 761   |
 | Total test files             | 299   |
 | Workspaces with build script | 23/23 |
 | Workspaces with test script  | 22/23 |
@@ -37,7 +37,7 @@ Generated automatically from repository code on 2026-04-11.
 | @dvt/contracts            | `packages/@dvt/contracts`            | 44        | 13         | yes   | yes  | no        | 38                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 10        | 4          | yes   | yes  | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 101       | 43         | yes   | yes  | no        | 39                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 103       | 43         | yes   | yes  | no        | 42                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |
