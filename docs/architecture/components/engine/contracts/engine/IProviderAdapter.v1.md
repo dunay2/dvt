@@ -6,7 +6,7 @@
 **Version**: 1.0
 **Scope**: Provider adapter boundary between engine core and execution runtimes
 **Consumers**: WorkflowEngine, adapter implementations, maintenance services, health/reporting paths
-**Related contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [RunEvents.v1.md](./RunEvents.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md)
+**Related contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [IRunEnrichmentService.v1.md](./IRunEnrichmentService.v1.md), [RunEvents.v1.md](./RunEvents.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md)
 **Related ADRs**: [ADR-0012](../../../../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0014](../../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0015](../../../../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ADR-0030](../../../../../adr/ADR-0030-pre-dispatch-intent-log.md)
 
 ---

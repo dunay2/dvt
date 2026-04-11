@@ -170,7 +170,7 @@ export async function buildProtectedRuntimeModule(
     app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
   }
 
-  const engine = buildWorkflowEngine({
+  const { engine, runEnrichmentService } = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
       planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
@@ -239,6 +239,7 @@ export async function buildProtectedRuntimeModule(
     authenticator,
     authorizer: commandAuthorizer,
     engine,
+    runEnrichmentService,
     adapters,
     startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,

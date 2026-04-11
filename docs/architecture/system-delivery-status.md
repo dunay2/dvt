@@ -195,7 +195,7 @@ classDiagram
 Current-versus-target note:
 
 - current code now exposes `WorkflowEngine.getRunStatus()` as the canonical
-  read model and `WorkflowEngine.getRunEnrichment()` as the explicit
+  read model, while `IRunEnrichmentService.getRunEnrichment()` is the explicit
   enrichment path
 - `IProviderAdapter.getProviderStatusView()` now returns the provider-live
   diagnostic surface instead of reusing the canonical status DTO
@@ -212,9 +212,11 @@ classDiagram
         +startRun()
         +cancelRun()
         +getRunStatus() canonical read model
-        +getRunEnrichment() canonical + provider diagnostics
         +signal()
         +healthCheck()
+    }
+    class IRunEnrichmentService {
+        +getRunEnrichment() canonical + provider diagnostics
     }
     class SnapshotProjector {
         +applyRunEvent()
@@ -239,6 +241,7 @@ classDiagram
     WorkflowEngine --> SnapshotProjector
     WorkflowEngine --> RunAccessPolicy
     WorkflowEngine --> IProviderAdapter
+    IRunEnrichmentService --> IProviderAdapter
     SnapshotProjector --> RunDomain
 ```
 

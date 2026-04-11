@@ -1570,7 +1570,7 @@ tasks:
   - task_id: AR-A12-C
     parent_task: AR-A12
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
       finish the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX` convergence by removing
       enrichment from the engine facade and converging implementation, current subsystem docs, and
@@ -1587,22 +1587,21 @@ tasks:
       implemented structure rather than target-only decomposition.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 67
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
-      `AR-A12-B` made the status-model split explicit, but the engine facade still exposes
-      provider-backed enrichment. After `RC-G1-B`, this is the next highest-leverage architecture
-      cleanup: land the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX` convergence instead of
-      reopening `AR-A3` as a parallel track.
+      `AR-A12-B` is now converging in real code: `AR-A12-C1` and `AR-A12-C2` landed the docs-first
+      and code cutovers so the public engine facade is narrowed and API enrichment callers use the
+      dedicated service boundary. Remaining work is current-doc convergence and hardening.
     last_verified: '2026-04-11'
   - task_id: AR-A12-C1
     parent_task: AR-A12-C
     priority: P1
-    status: queued
+    status: done
     objective: >-
       publish the docs/contracts-first facade-purity cutover that removes enrichment from the
       `IWorkflowEngine` target boundary and routes it to `IRunEnrichmentService`.
@@ -1613,19 +1612,19 @@ tasks:
       the remaining `AR-A3` intent.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
-      This sub-slice freezes the target before code changes so the facade narrowing executes against
-      one active architecture story.
+      Active planning, contract docs, and target architecture now treat enrichment as a dedicated
+      service boundary rather than an `IWorkflowEngine` method.
     last_verified: '2026-04-11'
   - task_id: AR-A12-C2
     parent_task: AR-A12-C
     priority: P1
-    status: queued
+    status: done
     objective: >-
       cut enrichment off the engine facade in code and move API callers to a dedicated
       `IRunEnrichmentService`.
@@ -1636,14 +1635,15 @@ tasks:
       `IWorkflowEngine['getRunEnrichment']` are zero.
     complexity: M
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/adr/ADR-0015-getRunStatus-read-model-separation.md
       - docs/adr/ADR-0003-execution-model.md
     status_reason: >-
-      This is the actual move-and-cut wave for read-boundary purity: no compatibility alias should
-      survive on the facade.
+      The public engine facade no longer exposes `getRunEnrichment()`, the API runtime injects
+      `IRunEnrichmentService` directly, and residual active-code references to
+      `IWorkflowEngine['getRunEnrichment']` are zero.
     last_verified: '2026-04-11'
   - task_id: AR-A12-C3
     parent_task: AR-A12-C

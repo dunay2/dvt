@@ -366,8 +366,9 @@ internal layers:
    happy path (admission ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ plan integrity ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ intent ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ execution) and the failure
    path (`StartRunFailurePolicy`). `StartRunAdmissionGuard` composes validation
    and capability checks.
-3. **Core Domain**: `WorkflowEngineCoreService` handles cancel, signal, status,
-   and enrichment. `SignalTransitionGuard` validates signal preconditions
+3. **Core Domain**: `WorkflowEngineCoreService` handles cancel, signal, and
+   canonical status. `RunEnrichmentService` composes canonical status plus
+   provider diagnostics. `SignalTransitionGuard` validates signal preconditions
    against the current snapshot. `SnapshotProjector` rebuilds state from events.
 4. **Maintenance**: `RunMaintenanceService` orchestrates stuck-run detection
    and orphaned-intent reconciliation. `IntentReconcilerWorker` is a periodic
@@ -398,10 +399,11 @@ label carries the current posture (`runtime-wired` or `target-line exposed`).
 - **`WorkflowEngine` facade is too wide**: It includes normalization, wiring,
   health checks, and retry-step orchestration in a single class. The subsystem
   context doc already flags this as active drift.
-- **`WorkflowEngineCoreService` mixes command and query**: Cancel (command),
-  signal (command), getRunStatus (query), and enrichRunStatus (query+command)
-  all live in one service. ADR-0015 mandates read/write separation but the
-  code has not yet been split.
+- **`WorkflowEngineCoreService` still mixes command and canonical query**:
+  cancel (command), signal (command), and getRunStatus (query) still live in
+  one service. `RunEnrichmentService` has already moved provider-backed
+  enrichment out of the facade/core path, but the remaining command/query
+  split is still incomplete.
 - **`IPlanFetcher` declaration is duplicated**: the dedicated port lives in
   `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`, but a legacy declaration
   still exists in `packages/@dvt/engine/src/ports/IRunStateStore.ts`. The
@@ -1303,17 +1305,17 @@ flowchart TB
 
 ## Code Anchors
 
-| Diagram               | Primary source files                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------- |
-| Domain model          | `packages/@dvt/*/package.json`, `contracts/src/types/contracts.ts`                          |
-| Package dependencies  | `packages/@dvt/*/package.json` dependency fields                                            |
-| Engine components     | `WorkflowEngine.ts`, `StartRunApplicationService.ts`, `WorkflowEngineCoreService.ts`        |
-| Run state machine     | `@dvt/run-domain/src/transitionPolicy.ts`, `applyRunEvent.ts`                               |
-| Step state machine    | `@dvt/run-domain/src/transitionPolicy.ts`                                                   |
-| startRun sequence     | `StartRunApplicationService.ts`, `StartRunExecutionService.ts`, `PlanIntegrityValidator.ts` |
-| Signal/cancel         | `WorkflowEngineCoreService.ts`, `SignalTransitionGuard.ts`, `coreRuntime.ts`                |
-| Intent reconciliation | `IntentReconcilerWorker.ts`, `RunMaintenanceService.ts`, `*IntentReconciliationPolicy.ts`   |
-| Outbox delivery       | `@dvt/delivery/src/application/OutboxWorker.ts`                                             |
+| Diagram               | Primary source files                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Domain model          | `packages/@dvt/*/package.json`, `contracts/src/types/contracts.ts`                                              |
+| Package dependencies  | `packages/@dvt/*/package.json` dependency fields                                                                |
+| Engine components     | `WorkflowEngine.ts`, `StartRunApplicationService.ts`, `WorkflowEngineCoreService.ts`, `RunEnrichmentService.ts` |
+| Run state machine     | `@dvt/run-domain/src/transitionPolicy.ts`, `applyRunEvent.ts`                                                   |
+| Step state machine    | `@dvt/run-domain/src/transitionPolicy.ts`                                                                       |
+| startRun sequence     | `StartRunApplicationService.ts`, `StartRunExecutionService.ts`, `PlanIntegrityValidator.ts`                     |
+| Signal/cancel         | `WorkflowEngineCoreService.ts`, `SignalTransitionGuard.ts`, `coreRuntime.ts`                                    |
+| Intent reconciliation | `IntentReconcilerWorker.ts`, `RunMaintenanceService.ts`, `*IntentReconciliationPolicy.ts`                       |
+| Outbox delivery       | `@dvt/delivery/src/application/OutboxWorker.ts`                                                                 |
 
 ## Related Pages
 

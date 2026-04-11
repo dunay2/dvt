@@ -5,7 +5,12 @@ import type {
   IPlanner,
   PlanRef,
 } from '@dvt/contracts';
-import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
+import type {
+  EngineRunRef,
+  IProviderAdapter,
+  IRunEnrichmentService,
+  IWorkflowEngine,
+} from '@dvt/engine';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
@@ -19,6 +24,7 @@ export interface ProtectedRuntimeModule {
   authenticator: IAuthenticator;
   authorizer: AuthorizeCommandScopeService;
   engine: IWorkflowEngine;
+  runEnrichmentService: IRunEnrichmentService;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;

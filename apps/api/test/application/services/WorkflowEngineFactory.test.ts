@@ -69,7 +69,7 @@ describe('buildWorkflowEngine', () => {
       signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
-    const engine = buildWorkflowEngine({
+    const runtime = buildWorkflowEngine({
       security: {
         authorizer: new AllowAllAuthorizer(),
         planRefAllowedSchemes: ['https'],
@@ -89,8 +89,9 @@ describe('buildWorkflowEngine', () => {
       },
     });
 
-    const startRunService = (engine as unknown as { startRunApplicationService: unknown })
+    const startRunService = (runtime.engine as unknown as { startRunApplicationService: unknown })
       .startRunApplicationService;
     expect(startRunService).toBeInstanceOf(StartRunApplicationService);
+    expect(runtime.runEnrichmentService).toBeDefined();
   });
 });

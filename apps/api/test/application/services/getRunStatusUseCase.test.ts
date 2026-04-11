@@ -85,6 +85,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       createStateStore() as never,
       stalenessReader as never,
       telemetry as never
@@ -128,6 +129,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       createStateStore() as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(true),
@@ -167,6 +169,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       undefined,
@@ -210,6 +213,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -256,6 +260,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       createStateStore() as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(null),
@@ -298,6 +303,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       createStateStore() as never,
       undefined,
       telemetry as never
@@ -327,6 +333,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -369,6 +376,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -432,6 +440,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       createStateStore() as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -479,6 +488,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -584,6 +594,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       stateStore as never,
       {
@@ -722,6 +733,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       stateStore as never,
       {
@@ -870,6 +882,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -998,6 +1011,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -1050,6 +1064,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -1084,6 +1099,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -1103,4 +1119,5 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 });
+
 

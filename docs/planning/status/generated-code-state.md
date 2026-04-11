@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-11
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-10.
+Generated automatically from repository code on 2026-04-11.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 750   |
-| Total test files             | 297   |
+| Total source files           | 753   |
+| Total test files             | 298   |
 | Workspaces with build script | 23/23 |
 | Workspaces with test script  | 22/23 |
 
@@ -37,7 +37,7 @@ Generated automatically from repository code on 2026-04-10.
 | @dvt/contracts            | `packages/@dvt/contracts`            | 44        | 13         | yes   | yes  | no        | 38                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 10        | 4          | yes   | yes  | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 92        | 41         | yes   | yes  | no        | 34                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 95        | 42         | yes   | yes  | no        | 33                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |

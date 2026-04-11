@@ -77,8 +77,8 @@ The current API shape keeps canonical status and optional enrichment inside one
 use case:
 
 - `GetRunStatusUseCase` calls `engine.getRunStatus(...)` by default;
-- the same use case switches to `engine.getRunEnrichment(...)` when
-  `query.enriched = true`;
+- the same use case switches to
+  `runEnrichmentService.getRunEnrichment(...)` when `query.enriched = true`;
 - the enriched response keeps canonical status at the top level and exposes
   provider diagnostics under `providerView`;
 - there is no separate `EnrichRunStatusUseCase` in the current code.

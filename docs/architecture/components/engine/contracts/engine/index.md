@@ -10,6 +10,7 @@ last_reviewed: 2026-04-10
 ## Active pack
 
 - [IWorkflowEngine.v1](./IWorkflowEngine.v1.md)
+- [IRunEnrichmentService.v1](./IRunEnrichmentService.v1.md)
 - [IProviderAdapter.v1](./IProviderAdapter.v1.md)
 - [RunEvents.v1](./RunEvents.v1.md)
 - [ExecutionSemantics.v1](./ExecutionSemantics.v1.md)

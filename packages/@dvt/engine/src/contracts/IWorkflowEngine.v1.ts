@@ -11,7 +11,6 @@ import type {
   EngineRunRef,
   PlanRef,
   RunContext,
-  RunStatusEnrichment,
   SignalRequest,
 } from './types.js';
 
@@ -25,15 +24,6 @@ export interface IWorkflowEngine {
    * MUST NOT call the provider adapter. Latency is independent of adapter availability.
    */
   getRunStatus(engineRunRef: EngineRunRef): Promise<CanonicalRunStatus>;
-
-  /**
-   * ADR-0015: Calls the provider adapter for real-time diagnostics.
-   * Use for diagnostic / UI polling endpoints where adapter latency is acceptable.
-   * Circuit breaking is the infrastructure layer's responsibility.
-   * If adapter lookup times out or fails, this call MUST reject.
-   * It MUST NOT silently downgrade to getRunStatus() or return a partial response.
-   */
-  getRunEnrichment(engineRunRef: EngineRunRef): Promise<RunStatusEnrichment>;
 
   signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }

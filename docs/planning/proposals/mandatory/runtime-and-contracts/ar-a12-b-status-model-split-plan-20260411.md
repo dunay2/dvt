@@ -95,7 +95,7 @@ Rules:
 ### `RunStatusEnrichment`
 
 Owned by the engine read boundary.
-Returned by `IWorkflowEngine.getRunEnrichment()`.
+Returned by `IRunEnrichmentService.getRunEnrichment()`.
 
 ```ts
 interface RunStatusEnrichment {
@@ -115,7 +115,8 @@ Rules:
 
 `AR-A12-B` rewrites the active engine-runtime contract pack so that:
 
-- `IWorkflowEngine.v1` exposes `getRunStatus()` and `getRunEnrichment()`
+- `IWorkflowEngine.v1` exposes canonical read only via `getRunStatus()`
+- `IRunEnrichmentService.v1` exposes `getRunEnrichment()`
 - `IProviderAdapter.v1` exposes `getProviderStatusView()`
 - `ExecutionSemantics.v1` defines the authority split and the three-model
   semantics explicitly
@@ -123,11 +124,9 @@ Rules:
 
 ## Current implementation note
 
-This slice is contract-first.
-The current code still uses `RunStatusSnapshot` and `enrichRunStatus()` in the
-engine and adapter interfaces.
-That implementation convergence belongs to `AR-A12-C` and must remain explicit
-until code and current subsystem docs are updated together.
+This slice is now materially landed at the public typed boundary.
+`AR-A12-C` remains the governed follow-up for current-doc convergence,
+diagram cleanup, and hardening guards around the split.
 
 ## Deliverables
 

@@ -20,6 +20,7 @@ import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
+import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import type { IClock } from '../../src/utils/clock.js';
@@ -214,6 +215,7 @@ export function createWorkflowEngineCoreFixture(input?: {
   };
 }): {
   core: WorkflowEngineCoreService;
+  runEnrichmentService: RunEnrichmentService;
   store: InMemoryTxStore;
   stateStoreRead: InMemoryTxStore;
   stateStoreWrite: InMemoryTxStore;
@@ -231,24 +233,35 @@ export function createWorkflowEngineCoreFixture(input?: {
   const clock = input?.clock ?? new SequenceClock('2026-03-26T00:00:00.000Z');
   const adapter = input?.adapter ?? makeTemporalAdapter(input?.adapterOverrides);
   const adapters = makeProviderMap(adapter);
+  const policy = new RunAccessPolicy({
+    authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
+    planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
+  });
+  const observability = input?.observability ?? createNoopObservability();
 
   const core = new WorkflowEngineCoreService({
     stateStoreRead,
     stateStoreWrite,
     projector,
     idempotency,
-    policy: new RunAccessPolicy({
-      authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
-    }),
+    policy,
     adapters,
-    observability: input?.observability ?? createNoopObservability(),
+    observability,
     clock,
+    ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+  const runEnrichmentService = new RunEnrichmentService({
+    stateStoreRead,
+    projector,
+    policy,
+    adapters,
+    observability,
     ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
   });
 
   return {
     core,
+    runEnrichmentService,
     store,
     stateStoreRead,
     stateStoreWrite,

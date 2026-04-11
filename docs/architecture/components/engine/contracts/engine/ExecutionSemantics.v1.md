@@ -5,7 +5,7 @@
 **Status**: NORMATIVE - active pre-stable line
 **Version**: 1.0
 **Consumers**: Engine runtime, adapters, append authority, projectors, audit pipelines
-**Related Contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [IProviderAdapter.v1.md](./IProviderAdapter.v1.md), [RunEvents.v1.md](./RunEvents.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md), [State Store Contract](../state-store/README.md)
+**Related Contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [IRunEnrichmentService.v1.md](./IRunEnrichmentService.v1.md), [IProviderAdapter.v1.md](./IProviderAdapter.v1.md), [RunEvents.v1.md](./RunEvents.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md), [State Store Contract](../state-store/README.md)
 **Related ADRs**: [ADR-0004](../../../../../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0014](../../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0015](../../../../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ADR-0047](../../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 
 ---
@@ -114,22 +114,21 @@ Rules:
 ## Read authority
 
 - `IWorkflowEngine.getRunStatus()` is the canonical caller-visible read path
-- `IWorkflowEngine.getRunEnrichment()` composes canonical status plus provider
-  diagnostics
+- `IRunEnrichmentService.getRunEnrichment()` composes canonical status plus
+  provider diagnostics
 - `IProviderAdapter.getProviderStatusView()` is a diagnostic-only provider
   observation path
 
 ## Current implementation note
 
-The shipped engine/runtime boundary now reflects this split:
+The shipped public read boundary now reflects this split:
 
 - engine canonical reads use `CanonicalRunStatus`
-- engine enrichment uses `RunStatusEnrichment`
+- enrichment service uses `RunStatusEnrichment`
 - adapter live diagnostics use `ProviderRunStatusView`
 
-`AR-A12-C` remains the follow-up slice for downstream-consumer convergence,
-legacy-type cleanup, and wider read-surface alignment outside the core
-engine/adapter boundary itself.
+`AR-A12-C3` remains the follow-up slice for current-doc and diagram convergence
+outside the public typed boundary.
 
 ## Append authority responsibilities
 
@@ -143,4 +142,5 @@ Append authority MUST enforce:
 ## Change log
 
 - **1.0 (2026-04-11)**: Split canonical status, enrichment, and provider-live diagnostics in the active execution-semantics contract line.
+- **1.0 (2026-04-11)**: Narrowed read authority so enrichment belongs to `IRunEnrichmentService`, not `IWorkflowEngine`.
 - **1.0 (2026-04-10)**: Reset the active execution-semantics contract to one canonical pre-stable `v1` line and aligned it with the current event-sourcing and read-authority model.

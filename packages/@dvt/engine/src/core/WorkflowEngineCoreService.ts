@@ -1,10 +1,4 @@
-import type {
-  CanonicalRunStatus,
-  EngineRunRef,
-  EventType,
-  RunStatusEnrichment,
-  SignalRequest,
-} from '@dvt/contracts';
+import type { CanonicalRunStatus, EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';
 import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import type { GuardedRunEventType } from '@dvt/run-domain';
@@ -32,10 +26,11 @@ import {
   getAdapterOrThrow,
   normalizeEngineRunRef,
   normalizeSignalRequest,
+  readCanonicalRunStatus,
   resolveMetaOrThrow,
   withTimeout,
 } from './lifecycle/coreRuntime.js';
-import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
+import { SnapshotProjector } from './SnapshotProjector.js';
 
 export interface WorkflowEngineCoreDeps {
   stateStoreRead: IRunStateStoreRead;
@@ -130,69 +125,18 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         },
         async (span) => {
           try {
-            const storedSnap = await this.deps.stateStoreRead.getSnapshot(
-              meta.tenantId,
-              meta.runId
-            );
-            const result = storedSnap
-              ? snapshotToStatus(storedSnap)
-              : this.deps.projector.rebuild(
-                  meta.runId,
-                  await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId)
-                );
+            const result = await readCanonicalRunStatus({
+              stateStoreRead: this.deps.stateStoreRead,
+              projector: this.deps.projector,
+              tenantId: meta.tenantId,
+              runId: meta.runId,
+            });
 
             this.deps.observability.metrics
               .histogram(CORE_METRIC.statusDurationMs, metricTags)
               .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
             span.setStatus('ok');
             return result;
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
-  }
-
-  async getEnrichment(ref: EngineRunRef): Promise<RunStatusEnrichment> {
-    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
-    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
-    const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
-    const traceContext = buildTraceContext(meta, meta.planId);
-
-    return this.deps.observability.withContext(traceContext, () =>
-      this.deps.observability.traces.withSpan(
-        CORE_SPAN.getRunEnrichment,
-        {
-          context: traceContext,
-          attributes: { provider: meta.providerRef.provider },
-        },
-        async (span) => {
-          try {
-            const storedSnap = await this.deps.stateStoreRead.getSnapshot(
-              meta.tenantId,
-              meta.runId
-            );
-            const base = storedSnap
-              ? snapshotToStatus(storedSnap)
-              : this.deps.projector.rebuild(
-                  meta.runId,
-                  await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId)
-                );
-
-            const providerView = await withTimeout(
-              adapter.getProviderStatusView(validatedRunRef),
-              this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
-              CORE_TIMEOUT_OPERATION.adapterGetProviderStatusView
-            );
-            span.setStatus('ok');
-            return {
-              canonical: base,
-              providerView,
-            };
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));

@@ -1,6 +1,7 @@
 import type { EventEnvelope, PlanRecord, WorkflowSnapshot } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
+  type IRunEnrichmentService,
   type IRunStateStoreRead,
   type IWorkflowEngine,
 } from '@dvt/engine';
@@ -32,6 +33,7 @@ interface PlanRecordReader {
 export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
+    private readonly runEnrichmentService: IRunEnrichmentService,
     private readonly stateStore: IRunStateStoreRead,
     private readonly stalenessReader?: IRunSnapshotStalenessReader,
     private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
@@ -57,11 +59,11 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     );
     let snapshot: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>;
     let providerView:
-      | Awaited<ReturnType<IWorkflowEngine['getRunEnrichment']>>['providerView']
+      | Awaited<ReturnType<IRunEnrichmentService['getRunEnrichment']>>['providerView']
       | undefined;
     if (query.enriched) {
       const [enrichment, snapshotStaleness] = await Promise.all([
-        this.engine.getRunEnrichment(runRef),
+        this.runEnrichmentService.getRunEnrichment(runRef),
         snapshotStalenessPromise,
       ]);
       snapshot = enrichment.canonical;

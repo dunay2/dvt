@@ -51,6 +51,10 @@ Outbound flow (primary):
 
 `WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/WorkflowEngineCoreService -> ports/adapters`
 
+Optional enrichment flow:
+
+`caller -> IRunEnrichmentService.getRunEnrichment -> IRunStateStoreRead + IProviderAdapter`
+
 Declared southbound port surface:
 
 - `IRunStateStore` (`runtime-wired`)
@@ -68,8 +72,10 @@ not counted inside the seven-port southbound surface.
 flowchart LR
   Caller["apps/api or other caller"] --> UseCase["API use case layer"]
   UseCase --> Engine["WorkflowEngine facade"]
+  UseCase --> Enrich["IRunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService path"]
   Engine --> Core["WorkflowEngineCoreService path"]
+  Enrich --> Ports
   StartRun --> Ports["Engine ports"]
   Core --> Ports
   Ports --> State["IRunStateStore (runtime-wired)"]
@@ -112,11 +118,13 @@ Known concrete adapter families:
 
 Main components in the subsystem:
 
-- `WorkflowEngine` (public compatibility facade + dependency assembly)
+- `WorkflowEngine` (public facade + dependency assembly)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
-- `WorkflowEngineCoreService` (cancel/status/enrich/signal runtime path)
+- `WorkflowEngineCoreService` (cancel/status/signal runtime path)
+- `RunEnrichmentService` (engine-owned implementation of enrichment)
+- `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
 - `SnapshotProjector` (event-to-status read model projection)
 
 ```mermaid
@@ -124,6 +132,8 @@ flowchart TB
   WF["WorkflowEngine"] --> Guard["StartRunAdmissionGuard"]
   WF --> Coord["StartRunApplicationService"]
   WF --> Core["WorkflowEngineCoreService"]
+  Enrich["RunEnrichmentService"] --> Projector["SnapshotProjector"]
+  Enrich --> Provider["IProviderAdapter"]
   Coord --> Exec["StartRunExecutionService"]
   Coord --> Fail["StartRunFailurePolicy"]
   Core --> Projector["SnapshotProjector"]
@@ -164,7 +174,9 @@ sequenceDiagram
 sequenceDiagram
   participant Client as API Use Case
   participant Engine as WorkflowEngine
+  participant Enrich as IRunEnrichmentService
   participant Core as WorkflowEngineCoreService
+  participant EnrichSvc as RunEnrichmentService
   participant State as IRunStateStoreRead
   participant Adapter as IProviderAdapter
   participant Projector as SnapshotProjector
@@ -180,19 +192,24 @@ sequenceDiagram
   Core-->>Engine: CanonicalRunStatus
   Engine-->>Client: CanonicalRunStatus
 
-  Client->>Engine: getRunEnrichment(runRef)
-  Engine->>Core: getEnrichment(runRef)
-  Core->>State: base snapshot/events
+  Client->>Enrich: getRunEnrichment(runRef)
+  Enrich->>EnrichSvc: getRunEnrichment(runRef)
+  EnrichSvc->>State: base snapshot/events
+  alt snapshot exists
+    EnrichSvc->>EnrichSvc: snapshotToStatus
+  else no snapshot
+    EnrichSvc->>Projector: rebuild(runId, events)
+  end
   Note over State,Adapter: Snapshot/events remain canonical. Provider status is live enrichment only.
-  Core->>Adapter: getProviderStatusView(runRef) [live provider view]
-  Core-->>Engine: RunStatusEnrichment
-  Engine-->>Client: RunStatusEnrichment
+  EnrichSvc->>Adapter: getProviderStatusView(runRef) [live provider view]
+  EnrichSvc-->>Enrich: RunStatusEnrichment
+  Enrich-->>Client: RunStatusEnrichment
 ```
 
 ## What the subsystem already gets right
 
 - event-sourced execution authority and replayable status model
-- explicit CQRS split (`getRunStatus` vs `getRunEnrichment`)
+- explicit CQRS split between canonical reads and enrichment service calls
 - crash-consistency intent-log model around `startRun`
 - single engine-side proof that fetched bytes match `planId` before dispatch
 - provider runtimes remain behind adapter contract
@@ -203,7 +220,7 @@ sequenceDiagram
 
 - facade width still too broad in `WorkflowEngine`
 - start-run application path and guard still construct and mix collaborator concerns
-- query/runtime behavior still concentrated in one core service
+- command/runtime behavior still concentrated in one core service
 - provider-resolution and telemetry policy logic remains repeated
 - ownership seams between engine resolver and artifacts reader need one explicit
   canonical mapping in docs/planning
@@ -212,7 +229,7 @@ sequenceDiagram
 flowchart LR
   WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + wiring + health checks"]
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
-  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Query + enrichment + command + telemetry"]
+  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Canonical query + command + telemetry"]
   StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
 ```
 
@@ -233,6 +250,7 @@ flowchart LR
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
 - `packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
+- `packages/@dvt/engine/src/services/RunEnrichmentService.ts`
 - `packages/@dvt/engine/src/core/SnapshotProjector.ts`
 - `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
 - `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`

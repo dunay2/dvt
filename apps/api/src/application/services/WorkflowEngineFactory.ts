@@ -11,22 +11,24 @@ import {
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
+  RunEnrichmentService,
   StartRunAdmissionGuard,
   StartRunApplicationService,
   SnapshotProjector,
   WorkflowEngine,
-  WorkflowEngineCoreService,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
   type IOutboxRateLimiter,
   type IPlanFetcher,
   type IProviderAdapter,
+  type IRunEnrichmentService,
   type IRunExecutionContextResolver,
   type IRunAccessPolicy,
   type IRunStateStoreRead,
   type IRunStateStoreWrite,
   type IStartRunIntentStore,
+  type IWorkflowEngine,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -71,15 +73,21 @@ export interface EngineConfig {
   infrastructure: EngineInfrastructureConfig;
 }
 
+export interface BuiltWorkflowEngineRuntime {
+  engine: IWorkflowEngine;
+  runEnrichmentService: IRunEnrichmentService;
+}
+
 // Production factory ----------------------------------------------------------
 
 /**
- * Builds a WorkflowEngine from a structured subsystem config.
+ * Builds the runtime read/write engine facade plus the dedicated enrichment service
+ * from a structured subsystem config.
  * Validates that at least one adapter is registered before construction.
  * Constructs SnapshotProjector, IdempotencyKeyBuilder, PlanRefPolicy, and
  * RunAccessPolicy internally - callers only provide infrastructure inputs.
  */
-export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
+export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRuntime {
   if (config.runtime.adapters.size === 0) {
     throw new Error(
       'ENGINE_NO_ADAPTERS: at least one adapter must be registered before building the engine'
@@ -100,54 +108,53 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   });
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
-
-  return new WorkflowEngine({
-    startRunApplicationService: new StartRunApplicationService({
-      policy,
-      guard: new StartRunAdmissionGuard({
+  return {
+    engine: new WorkflowEngine({
+      startRunApplicationService: new StartRunApplicationService({
         policy,
+        guard: new StartRunAdmissionGuard({
+          policy,
+          stateStoreRead: config.persistence.stateStoreRead,
+          adapters: config.runtime.adapters,
+          ...(config.persistence.runExecutionContextResolver !== undefined
+            ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+            : {}),
+        }),
         stateStoreRead: config.persistence.stateStoreRead,
-        adapters: config.runtime.adapters,
-        ...(config.persistence.runExecutionContextResolver !== undefined
-          ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-          : {}),
+        stateStoreWrite: config.persistence.stateStoreWrite,
+        idempotency,
+        clock: config.infrastructure.clock,
+        intentStore: config.persistence.intentStore,
+        planFetcher: config.persistence.planFetcher,
+        observability: config.infrastructure.observability,
+        ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
       }),
-      stateStoreRead: config.persistence.stateStoreRead,
-      stateStoreWrite: config.persistence.stateStoreWrite,
-      idempotency,
-      clock: config.infrastructure.clock,
-      intentStore: config.persistence.intentStore,
-      planFetcher: config.persistence.planFetcher,
-      observability: config.infrastructure.observability,
-      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
-    }),
-    core: new WorkflowEngineCoreService({
+      policy,
       stateStoreRead: config.persistence.stateStoreRead,
       stateStoreWrite: config.persistence.stateStoreWrite,
       projector,
       idempotency,
+      clock: config.infrastructure.clock,
+      adapters: config.runtime.adapters,
+      observability: config.infrastructure.observability,
+      planFetcher: config.persistence.planFetcher,
+      ...(config.persistence.runExecutionContextResolver !== undefined
+        ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+        : {}),
+      ...(config.runtime.requiredProviders !== undefined
+        ? { requiredProviders: config.runtime.requiredProviders }
+        : {}),
+      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    }),
+    runEnrichmentService: new RunEnrichmentService({
+      stateStoreRead: config.persistence.stateStoreRead,
+      projector,
       policy,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
       ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
-      clock: config.infrastructure.clock,
     }),
-    stateStoreRead: config.persistence.stateStoreRead,
-    stateStoreWrite: config.persistence.stateStoreWrite,
-    projector,
-    idempotency,
-    clock: config.infrastructure.clock,
-    adapters: config.runtime.adapters,
-    observability: config.infrastructure.observability,
-    planFetcher: config.persistence.planFetcher,
-    ...(config.persistence.runExecutionContextResolver !== undefined
-      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-      : {}),
-    ...(config.runtime.requiredProviders !== undefined
-      ? { requiredProviders: config.runtime.requiredProviders }
-      : {}),
-    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
-  });
+  };
 }
 
 // Test seam -----------------------------------------------------------------

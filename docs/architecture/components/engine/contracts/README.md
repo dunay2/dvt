@@ -9,10 +9,11 @@ This registry publishes one live engine-runtime contract pack.
 Read these in order:
 
 1. [IWorkflowEngine.v1](./engine/IWorkflowEngine.v1.md)
-2. [IProviderAdapter.v1](./engine/IProviderAdapter.v1.md)
-3. [RunEvents.v1](./engine/RunEvents.v1.md)
-4. [ExecutionSemantics.v1](./engine/ExecutionSemantics.v1.md)
-5. [SignalsAndAuth.v1](./engine/SignalsAndAuth.v1.md)
+2. [IRunEnrichmentService.v1](./engine/IRunEnrichmentService.v1.md)
+3. [IProviderAdapter.v1](./engine/IProviderAdapter.v1.md)
+4. [RunEvents.v1](./engine/RunEvents.v1.md)
+5. [ExecutionSemantics.v1](./engine/ExecutionSemantics.v1.md)
+6. [SignalsAndAuth.v1](./engine/SignalsAndAuth.v1.md)
 
 ## Companion entrypoints
 

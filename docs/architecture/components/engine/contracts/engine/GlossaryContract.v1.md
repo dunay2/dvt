@@ -6,7 +6,7 @@
 **Version**: 1.0
 **Stability**: Pre-stable single live line; rewrite in place until stabilization
 **Consumers**: Engine, adapters, planner, state store, UI, contract authors
-**Related Contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [IProviderAdapter.v1.md](./IProviderAdapter.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [RunEvents.v1.md](./RunEvents.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md)
+**Related Contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [IRunEnrichmentService.v1.md](./IRunEnrichmentService.v1.md), [IProviderAdapter.v1.md](./IProviderAdapter.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [RunEvents.v1.md](./RunEvents.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md)
 
 ---
 
@@ -42,6 +42,9 @@ active engine-runtime contract line.
   enrichment only; not canonical lifecycle truth
 - **RunStatusEnrichment**: engine-owned composition of `CanonicalRunStatus`
   plus `ProviderRunStatusView`
+- **IRunEnrichmentService**: explicit optional service boundary that returns
+  `RunStatusEnrichment` without making enrichment a method on
+  `IWorkflowEngine`
 - **Signal**: external, operator, or system command requesting run mutation
 - **SignalDecisionRecord**: persisted authorization and audit record for a
   signal request

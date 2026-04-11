@@ -29,17 +29,15 @@ read boundary.
 
 ## Problem
 
-`AR-A12-B` made the status-model split explicit, but the public engine facade
-still exposes `getRunEnrichment()`.
+`AR-A12-B` made the status-model split explicit. `AR-A12-C1` and `AR-A12-C2`
+have now landed the public-boundary cutover in docs and code.
 
-That leaves three architectural weaknesses active:
+That leaves two architectural weaknesses active:
 
-1. `IWorkflowEngine` still mixes canonical read authority with provider-backed
-   enrichment.
-2. API query flow still models enrichment as a method on the engine facade
-   instead of a separate service boundary.
-3. Current subsystem docs and diagrams still need to explain a mixed facade
-   instead of a pure engine read surface.
+1. Current subsystem docs and diagrams still need to explain the shipped split
+   instead of a mixed facade.
+2. Hardening guards and ARC closeout still need to prevent regression on the
+   narrowed facade.
 
 `WE-HX-4` closed the structural decomposition wave, but not the remaining
 facade-purity intent previously carried by `AR-A3`.
@@ -106,6 +104,10 @@ Deliver:
 - target architecture docs updated so they stop presenting
   `getRunEnrichment()` as a facade method
 
+Status:
+
+- delivered on 2026-04-11
+
 ### `AR-A12-C2` Code move and imports cutover
 
 Deliver:
@@ -115,6 +117,10 @@ Deliver:
 - API composition and use cases inject `IRunEnrichmentService` directly
 - residual references to `IWorkflowEngine['getRunEnrichment']` in active code
   reduced to `0`
+
+Status:
+
+- delivered on 2026-04-11
 
 ### `AR-A12-C3` Current docs and diagram convergence
 

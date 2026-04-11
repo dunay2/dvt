@@ -186,13 +186,14 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     };
     const getRunStatusUseCase = new GetRunStatusUseCase(
       protectedModule.engine,
+      protectedModule.runEnrichmentService,
       protectedModule.stateStore.read,
       new SafeRunSnapshotStalenessReader(
         protectedModule.stateStore.snapshotStaleness,
         observability
       ),
       new ObservabilityRunStatusStalenessTelemetry({ observability }),
-      protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[4]
+      protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
     );
     const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore.read);
     const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore.read);

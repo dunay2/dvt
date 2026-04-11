@@ -1,4 +1,5 @@
 export type { IWorkflowEngine } from './IWorkflowEngine.v1.js';
+export type { IRunEnrichmentService } from './IRunEnrichmentService.v1.js';
 export type {
   IRunStateStore,
   ListEventsOptions,

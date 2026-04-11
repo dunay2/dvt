@@ -51,7 +51,9 @@ Target note:
 
 - own run lifecycle semantics and provider dispatch;
 - enforce run access policy, plan integrity, and start-run admission;
-- project and enrich run status from state-store reads and emitted events;
+- project canonical run status from state-store reads and emitted events;
+- expose optional provider-backed enrichment through `RunEnrichmentService`
+  and `IRunEnrichmentService`;
 - expose operational health and maintenance services around the workflow
   runtime.
 
@@ -61,7 +63,7 @@ Target note:
 - `WorkflowEngine.recoverRun(...)`
 - `WorkflowEngine.cancelRun(...)`
 - `WorkflowEngine.getRunStatus(...)`
-- `WorkflowEngine.getRunEnrichment(...)`
+- `IRunEnrichmentService.getRunEnrichment(...)`
 - `WorkflowEngine.signal(...)`
 - `WorkflowEngine.healthCheck()`
 - `StartRunApplicationService.startRun(...)`
@@ -76,6 +78,8 @@ Target note:
   [StartRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
 - lifecycle core:
   [WorkflowEngineCoreService.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts)
+- enrichment service:
+  [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
   [IWorkflowEngine.v1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)
 
@@ -84,11 +88,13 @@ Target note:
 ```mermaid
 flowchart LR
   Api["apps/api"] --> Engine["WorkflowEngine facade"]
+  Api --> Enrich["RunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService"]
   Engine --> Core["WorkflowEngineCoreService"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Ports["Declared southbound ports"]
   Core --> Ports
+  Enrich --> Ports
   Ports --> State["IRunStateStore<br/>(runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
   Ports --> Providers["IProviderAdapter<br/>(runtime-wired)"]

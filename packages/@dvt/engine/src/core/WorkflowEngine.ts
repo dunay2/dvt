@@ -14,7 +14,6 @@ import type {
   PlanRef,
   ResolvedRunContext,
   RunContext,
-  RunStatusEnrichment,
   RunStatus,
   SignalRequest,
 } from '@dvt/contracts';
@@ -206,10 +205,6 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<CanonicalRunStatus> {
     return this.core.getStatus(engineRunRef);
-  }
-
-  async getRunEnrichment(engineRunRef: EngineRunRef): Promise<RunStatusEnrichment> {
-    return this.core.getEnrichment(engineRunRef);
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
