@@ -3,7 +3,7 @@ title: Git Mode Architecture
 document_type: architecture_note
 status: Active
 owner: Frontend / Architecture
-last_updated: 2026-04-07
+last_updated: 2026-04-11
 ---
 
 # Git Mode Architecture
@@ -39,6 +39,13 @@ Current surface:
   cannot be loaded;
 - preview-local missing-file treatment now comes from a typed workspace-service
   boundary instead of text-based UI inference;
+- governed route-level `loading`, `empty`, and `error` treatment in `Diff`;
+- SQL review now owns explicit preview loading and error treatment instead of
+  silently falling back to compiled SQL;
+- SQL and catalog panels preserve graph review when compare context is missing
+  by falling back to contextual panel-state treatment instead of a blank pane;
+- catalog summary highlights are derived from the real diff document instead of
+  placeholder rows;
 - compare mode selector;
 - severity filters;
 - summary cards;
@@ -84,6 +91,8 @@ and editor primitives, not to build a bespoke diff engine from scratch.
   has no governed history panel yet;
 - route-root and preview-error states are explicit now, but file-history review
   and handoff controls still belong to the later `F-23` slice;
+- `Diff` now has governed route-root states, but file-history handoff and richer
+  compare presets still belong to `F-23`;
 - there is no staged/unstaged/conflict workbench yet;
 - change review is present, but repository operations are not yet modeled as a
   full frontend subsystem.

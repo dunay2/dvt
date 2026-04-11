@@ -353,19 +353,19 @@ Main screen composition:
 
 ### Diff
 
-| Component                 | Responsibility                      | Status                   |
-| ------------------------- | ----------------------------------- | ------------------------ |
-| `DiffWorkbench`           | Route composition root              | Current, needs hardening |
-| `DiffToolbar`             | compare mode and filters            | Needed                   |
-| `DiffCompareModeSelector` | diff mode selection                 | Current in basic form    |
-| `DiffSeverityFilters`     | review prioritization               | Current in basic form    |
-| `DiffSummaryCards`        | summary and deltas                  | Current                  |
-| `DiffTabs`                | graph, SQL, catalog segmentation    | Current                  |
-| `GraphDiffPane`           | structural graph review             | Current in basic form    |
-| `SqlDiffPane`             | Monaco-backed SQL diff              | Needed                   |
-| `CatalogDiffPane`         | structured catalog diff             | Needed                   |
-| `DiffEmptyState`          | no diff available                   | Needed                   |
-| `DiffErrorState`          | preserve compare context on failure | Needed                   |
+| Component                 | Responsibility                      | Status                        |
+| ------------------------- | ----------------------------------- | ----------------------------- |
+| `DiffWorkbench`           | Route composition root              | Current, state model explicit |
+| `DiffToolbar`             | compare mode and filters            | Needed                        |
+| `DiffCompareModeSelector` | diff mode selection                 | Current in basic form         |
+| `DiffSeverityFilters`     | review prioritization               | Current in basic form         |
+| `DiffSummaryCards`        | summary and deltas                  | Current                       |
+| `DiffTabs`                | graph, SQL, catalog segmentation    | Current                       |
+| `GraphDiffPane`           | structural graph review             | Current in basic form         |
+| `SqlDiffPane`             | Monaco-backed SQL diff              | Current                       |
+| `CatalogDiffPane`         | structured catalog diff             | Current                       |
+| `DiffEmptyState`          | no diff available                   | Current                       |
+| `DiffErrorState`          | preserve compare context on failure | Current                       |
 
 ### Artifacts
 
