@@ -6,13 +6,18 @@ export const lineageViewCopy = {
   columnSwitch: 'Column-level lineage',
   pinToCanvas: 'Pin to Canvas',
   pathLabel: 'Path:',
-  noNodesLoaded: 'No nodes loaded. Check workspace connection.',
   fullGraphTitle: 'Full graph',
   impactSummary: 'Impact Summary',
   upstreamDependencies: 'Upstream Dependencies',
   downstreamConsumers: 'Downstream Consumers',
   exposuresAffected: 'Exposures Affected',
-  noColumnMetadata:
-    'No column metadata available for this node. Add columns to the manifest to enable column-level lineage.',
-  selectNodeForColumns: 'Select a node to see column-level lineage.',
+  routeLoadingTitle: 'Loading lineage',
+  routeLoadingMessage: 'Fetching workspace graph context for lineage analysis.',
+  routeEmptyTitle: 'No lineage focus available',
+  routeEmptyMessage: 'Search for a model or load workspace graph data to inspect lineage.',
+  routeErrorTitle: 'Lineage graph unavailable',
+  routeErrorFallbackMessage: 'The workspace graph could not be loaded for lineage analysis.',
+  metadataMissingTitle: 'Column metadata unavailable',
+  metadataMissingMessage:
+    'Add columns to the manifest to enable column-level lineage for this node.',
 } as const;

@@ -2,7 +2,6 @@ import { ArrowRight, Columns } from 'lucide-react';
 
 import { Card } from '../../components/ui/card';
 import type { CanonicalNode } from '../../types/canonical';
-import { lineageViewCopy as copy } from './copy';
 
 interface LineageColumnPanelProps {
   focusNode: CanonicalNode | null;
@@ -17,24 +16,18 @@ export function LineageColumnPanel({ focusNode, columnLineage }: LineageColumnPa
         {focusNode ? `Column lineage: ${focusNode.name}` : 'Column-level lineage'}
       </h2>
 
-      {columnLineage.length > 0 ? (
-        <div className="space-y-3">
-          {columnLineage.map((entry) => (
-            <div
-              key={`${entry.from}->${entry.to}`}
-              className="flex items-center gap-3 rounded border border-slate-700 bg-slate-950 p-3"
-            >
-              <code className="text-sm text-blue-400">{entry.from}</code>
-              <ArrowRight className="size-4 shrink-0 text-slate-400" />
-              <code className="text-sm text-green-400">{entry.to}</code>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-slate-400">
-          {focusNode ? copy.noColumnMetadata : copy.selectNodeForColumns}
-        </p>
-      )}
+      <div className="space-y-3">
+        {columnLineage.map((entry) => (
+          <div
+            key={`${entry.from}->${entry.to}`}
+            className="flex items-center gap-3 rounded border border-slate-700 bg-slate-950 p-3"
+          >
+            <code className="text-sm text-blue-400">{entry.from}</code>
+            <ArrowRight className="size-4 shrink-0 text-slate-400" />
+            <code className="text-sm text-green-400">{entry.to}</code>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }

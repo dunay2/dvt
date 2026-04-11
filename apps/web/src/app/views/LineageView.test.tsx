@@ -8,42 +8,49 @@ import { AppServicesProvider } from '../services/AppServicesContext';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import LineageView from './LineageView';
 
+function buildGraphSnapshot(overrides?: {
+  nodes?: Awaited<ReturnType<IWorkspacePort['getGraphSnapshot']>>['nodes'];
+  edges?: Awaited<ReturnType<IWorkspacePort['getGraphSnapshot']>>['edges'];
+}): Awaited<ReturnType<IWorkspacePort['getGraphSnapshot']>> {
+  return {
+    nodes: overrides?.nodes ?? [
+      {
+        id: 'model.fct_orders',
+        name: 'fct_orders',
+        type: 'MODEL',
+        package: 'analytics',
+        path: 'models/fct_orders.sql',
+        tags: [],
+        status: 'success',
+        dependencies: ['source.orders'],
+        columns: [{ name: 'order_id', type: 'int', nullable: false }],
+      },
+      {
+        id: 'source.orders',
+        name: 'source_orders',
+        type: 'SOURCE',
+        package: 'analytics',
+        path: 'models/source_orders.yml',
+        tags: [],
+        status: 'success',
+        dependencies: [],
+        columns: [{ name: 'order_id', type: 'int', nullable: false }],
+      },
+    ],
+    edges: overrides?.edges ?? [
+      {
+        id: 'edge-1',
+        source: 'source.orders',
+        target: 'model.fct_orders',
+        type: 'source',
+      },
+    ],
+  };
+}
+
 function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
   return {
-    getGraphSnapshot: async () => ({
-      nodes: [
-        {
-          id: 'model.fct_orders',
-          name: 'fct_orders',
-          type: 'MODEL',
-          package: 'analytics',
-          path: 'models/fct_orders.sql',
-          tags: [],
-          status: 'success',
-          dependencies: ['source.orders'],
-          columns: [{ name: 'order_id', type: 'int', nullable: false }],
-        },
-        {
-          id: 'source.orders',
-          name: 'source_orders',
-          type: 'SOURCE',
-          package: 'analytics',
-          path: 'models/source_orders.yml',
-          tags: [],
-          status: 'success',
-          dependencies: [],
-          columns: [{ name: 'order_id', type: 'int', nullable: false }],
-        },
-      ],
-      edges: [
-        {
-          id: 'edge-1',
-          source: 'source.orders',
-          target: 'model.fct_orders',
-          type: 'source',
-        },
-      ],
-    }),
+    getGraphSnapshot: async () => buildGraphSnapshot(),
     getDiffChanges: async () => [],
     getPlugins: async () => [],
     getRoles: async () => [],
@@ -125,6 +132,85 @@ describe('LineageView', () => {
     expect(mounted.container.textContent).toContain('fct_orders');
   });
 
+  it('preserves the route frame while lineage is loading', async () => {
+    let resolveGraphSnapshot: ((value: ReturnType<typeof buildGraphSnapshot>) => void) | null =
+      null;
+    const graphSnapshotPromise = new Promise<ReturnType<typeof buildGraphSnapshot>>((resolve) => {
+      resolveGraphSnapshot = resolve;
+    });
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () => graphSnapshotPromise,
+          }),
+        }}
+      >
+        <LineageView />
+      </AppServicesProvider>
+    );
+
+    expect(mounted.container.textContent).toContain('Lineage Analysis');
+    expect(mounted.container.textContent).toContain('Loading lineage');
+
+    await act(async () => {
+      resolveGraphSnapshot?.(buildGraphSnapshot());
+      await graphSnapshotPromise;
+    });
+  });
+
+  it('renders a governed empty state when no lineage focus is available', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () => buildGraphSnapshot({ nodes: [], edges: [] }),
+          }),
+        }}
+      >
+        <LineageView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('No lineage focus available') === true,
+      {
+        description: 'lineage empty state render',
+      }
+    );
+
+    expect(mounted.container.textContent).toContain('Search for a model');
+  });
+
+  it('renders a governed error state when the graph snapshot fails', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () => {
+              throw new Error('Graph snapshot unavailable');
+            },
+          }),
+        }}
+      >
+        <LineageView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Lineage graph unavailable') === true,
+      {
+        description: 'lineage error state render',
+      }
+    );
+
+    expect(mounted.container.textContent).toContain('Graph snapshot unavailable');
+  });
+
   it('switches to column-level lineage', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
@@ -160,5 +246,61 @@ describe('LineageView', () => {
     expect(mounted.container.textContent).toContain('Column lineage:');
     expect(mounted.container.textContent).toContain('source_orders.order_id');
     expect(mounted.container.textContent).toContain('fct_orders.order_id');
+  });
+
+  it('renders metadata-missing state in column mode when column metadata is unavailable', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () =>
+              buildGraphSnapshot({
+                nodes: [
+                  {
+                    id: 'model.fct_orders',
+                    name: 'fct_orders',
+                    type: 'MODEL',
+                    package: 'analytics',
+                    path: 'models/fct_orders.sql',
+                    tags: [],
+                    status: 'success',
+                    dependencies: ['source.orders'],
+                    columns: [],
+                  },
+                  {
+                    id: 'source.orders',
+                    name: 'source_orders',
+                    type: 'SOURCE',
+                    package: 'analytics',
+                    path: 'models/source_orders.yml',
+                    tags: [],
+                    status: 'success',
+                    dependencies: [],
+                    columns: [{ name: 'order_id', type: 'int', nullable: false }],
+                  },
+                ],
+              }),
+          }),
+        }}
+      >
+        <LineageView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_orders') === true, {
+      description: 'lineage metadata-missing setup render',
+    });
+
+    const switchInput = document.getElementById('column-level');
+    expect(switchInput).toBeTruthy();
+    await act(async () => {
+      switchInput?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(mounted.container.textContent).toContain('Column metadata unavailable');
+    expect(mounted.container.textContent).toContain(
+      'Add columns to the manifest to enable column-level lineage for this node.'
+    );
   });
 });

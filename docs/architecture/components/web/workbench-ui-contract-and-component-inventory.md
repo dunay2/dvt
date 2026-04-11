@@ -326,17 +326,17 @@ Main screen composition:
 
 ### Lineage
 
-| Component                     | Responsibility              | Status                   |
-| ----------------------------- | --------------------------- | ------------------------ |
-| `LineageWorkbench`            | Route composition root      | Current, needs hardening |
-| `LineageToolbar`              | search and mode controls    | Needed                   |
-| `LineageSearchBar`            | node lookup                 | Current in basic form    |
-| `LineageBreadcrumb`           | lineage focus path          | Current                  |
-| `LineageImpactSummary`        | upstream/downstream summary | Current in basic form    |
-| `LineageGraphCards`           | layered lineage cards       | Current                  |
-| `LineageColumnsToggle`        | column-lineage mode         | Current                  |
-| `LineageEmptyState`           | no focus available          | Needed                   |
-| `LineageMetadataMissingState` | missing column metadata     | Needed                   |
+| Component                     | Responsibility              | Status                        |
+| ----------------------------- | --------------------------- | ----------------------------- |
+| `LineageWorkbench`            | Route composition root      | Current, state model explicit |
+| `LineageToolbar`              | search and mode controls    | Needed                        |
+| `LineageSearchBar`            | node lookup                 | Current in basic form         |
+| `LineageBreadcrumb`           | lineage focus path          | Current                       |
+| `LineageImpactSummary`        | upstream/downstream summary | Current in basic form         |
+| `LineageGraphCards`           | layered lineage cards       | Current                       |
+| `LineageColumnsToggle`        | column-lineage mode         | Current                       |
+| `LineageEmptyState`           | no focus available          | Current                       |
+| `LineageMetadataMissingState` | missing column metadata     | Current                       |
 
 ### Code
 
