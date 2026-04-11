@@ -5,6 +5,10 @@ import { useWorkspaceGraphForViewQuery } from '../../queries/workspaceQueries';
 import type { CanonicalNode } from '../../types/canonical';
 import { assignLevels, bfsReachable, buildColumnLineage, groupNodesByLevel } from './lineageModel';
 
+function getNodeColumns(node: CanonicalNode | null): Array<{ name: string }> {
+  return (node?.metadata?.columns as Array<{ name: string }> | undefined) ?? [];
+}
+
 export function useLineageViewData() {
   const [searchQuery, setSearchQuery] = useState('');
   const [columnLevel, setColumnLevel] = useState(false);
@@ -64,6 +68,7 @@ export function useLineageViewData() {
 
   const upstreamCount = upstream.size;
   const downstreamCount = downstream.size;
+  const upstreamNodes = canonicalNodes.filter((node) => upstream.has(node.id));
   const exposureCount = [...downstream]
     .map((id) => canonicalNodes.find((node) => node.id === id))
     .filter((node) => node?.kind === 'dbt:exposure').length;
@@ -84,7 +89,13 @@ export function useLineageViewData() {
     columnLevel,
     setSearchQuery,
     setColumnLevel,
-    isLoading: snapshotQuery.isLoading,
+    isLoadingSnapshot: snapshotQuery.isLoading,
+    snapshotError: snapshotQuery.error instanceof Error ? snapshotQuery.error : null,
+    focusNodeHasColumnMetadata: getNodeColumns(focusNode).length > 0,
+    hasReachableUpstreamNodes: upstreamNodes.length > 0,
+    reachableUpstreamHasColumnMetadata: upstreamNodes.some(
+      (node) => getNodeColumns(node).length > 0
+    ),
     canonicalNodes,
     focusNode,
     nodesByLevel,
