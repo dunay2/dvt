@@ -1,0 +1,30 @@
+---
+id: R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP
+title: Web workspace file-missing handling depends on a future backend canonical reason
+status: Open
+date: 2026-04-11
+owners:
+  - apps/web
+  - apps/api
+severity: Low
+probability: Medium
+context: >
+  The `Code` route no longer infers missing-file state from legacy strings or generic `404`
+  transport status. The web workspace adapter now requires a canonical `HttpErrorEnvelope.v1`
+  payload with `error.type = not_found` and `error.reason = workspace_file_not_found` before it
+  emits `WorkspaceFileLoadError('not_found')`.
+risk: >
+  The current repository does not yet contain an `apps/api` implementation for `/workspace/files`.
+  If the eventual backend route ships with a different reason token or with a bare `404` response,
+  the web client will correctly refuse to classify it as `file-missing`, but the UX will fall back
+  to the generic file-preview-unavailable state until the backend contract and web adapter are
+  aligned.
+mitigations:
+  - Keep the web adapter strict on `error.type/error.reason` and do not reintroduce status-only or
+    string-message inference.
+  - When `/workspace/files` is implemented in `apps/api`, emit `HttpErrorEnvelope.v1` with the
+    canonical reason `workspace_file_not_found`.
+  - Add backend contract and frontend integration coverage for the canonical missing-file envelope
+    before declaring the route end-to-end closed.
+review_after: 2026-05-15
+---

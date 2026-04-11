@@ -33,6 +33,12 @@ Current route:
 Current surface:
 
 - file tree and read-only source preview in `Code`;
+- shared `WorkbenchReadOnlyState` treatment in `Code` for non-editing posture;
+- governed route-root empty and tree-error states in `Code`;
+- preview-local error treatment that preserves explorer context when one file
+  cannot be loaded;
+- preview-local missing-file treatment now comes from a typed workspace-service
+  boundary instead of text-based UI inference;
 - compare mode selector;
 - severity filters;
 - summary cards;
@@ -74,8 +80,10 @@ and editor primitives, not to build a bespoke diff engine from scratch.
 ## Current Constraints
 
 - the current route is still early and partially mock-backed;
-- `Code` currently stops at read-only browsing and has no governed history panel
-  yet;
+- `Code` now has governed read-only treatment, but still stops at browsing and
+  has no governed history panel yet;
+- route-root and preview-error states are explicit now, but file-history review
+  and handoff controls still belong to the later `F-23` slice;
 - there is no staged/unstaged/conflict workbench yet;
 - change review is present, but repository operations are not yet modeled as a
   full frontend subsystem.

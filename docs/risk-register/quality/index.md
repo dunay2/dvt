@@ -84,6 +84,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [TF-C2-B failed-run materialization semantics remain ambiguous](R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml)
 - [TF-C2-B runtime outcome evidence could drift between events, snapshots, and API reads](R-20260408-TF-C2-B-READ-SURFACE-EVIDENCE-DRIFT.yaml)
 - [Tsconfig baseUrl deprecation migration can regress package alias resolution](R-20260403-TSCONFIG-BASEURL-DEPRECATION-MIGRATION.yaml)
+- [Web workspace file-missing handling depends on a future backend canonical reason](R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
 - [WorkflowSnapshot schema-version drift can reappear if version bumps are skipped](R-20260405-WORKFLOW-SNAPSHOT-SCHEMA-VERSION.yaml)
 - [WS5 engine fixture helpers can drift from engine constructor contract](R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md)
 
