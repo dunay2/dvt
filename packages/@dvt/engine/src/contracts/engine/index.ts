@@ -21,7 +21,7 @@ export type {
   RunMetadata,
   WorkflowSnapshot,
   AppendResult,
-} from './RunEvents.v2.js';
+} from './RunEvents.v1.js';
 
 export type { ExecutionPlan } from './ExecutionPlan.v1.js';
 export type {
@@ -34,4 +34,4 @@ export type {
   RunStatus,
   SignalRequest,
   SignalType,
-} from './ExecutionSemantics.v2.js';
+} from './ExecutionSemantics.v1.js';

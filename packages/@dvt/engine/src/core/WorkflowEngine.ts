@@ -28,7 +28,7 @@ import {
   RecoverySourceNotTerminalError,
   RunMetadataNotFoundError,
 } from '../contracts/errors.js';
-import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
+import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1.js';
 import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type {

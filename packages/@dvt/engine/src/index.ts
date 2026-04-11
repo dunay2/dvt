@@ -6,7 +6,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-export * from './contracts/IWorkflowEngine.v1_1_1.js';
+export * from './contracts/IWorkflowEngine.v1.js';
 export * from './contracts/types.js';
 export * from './contracts/runEvents.js';
 export * from './contracts/executionPlan.js';
