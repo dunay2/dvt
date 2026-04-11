@@ -33,6 +33,7 @@ Current route:
 Current surface:
 
 - file tree and read-only source preview in `Code`;
+- shared `WorkbenchReadOnlyState` treatment in `Code` for non-editing posture;
 - compare mode selector;
 - severity filters;
 - summary cards;
@@ -74,8 +75,8 @@ and editor primitives, not to build a bespoke diff engine from scratch.
 ## Current Constraints
 
 - the current route is still early and partially mock-backed;
-- `Code` currently stops at read-only browsing and has no governed history panel
-  yet;
+- `Code` now has governed read-only treatment, but still stops at browsing and
+  has no governed history panel yet;
 - there is no staged/unstaged/conflict workbench yet;
 - change review is present, but repository operations are not yet modeled as a
   full frontend subsystem.

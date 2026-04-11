@@ -129,6 +129,10 @@ describe('CodeView', () => {
     await waitFor(() => container?.querySelector('[data-testid="monaco-code-viewer"]') != null);
 
     expect(container.textContent).toContain('stg_orders.sql');
+    expect(container.querySelector('[data-slot="code-readonly-state"]')?.textContent).toContain(
+      'Read-only preview'
+    );
+    expect(container.textContent).toContain('Editing is not available in the Code route.');
 
     const viewer = container.querySelector('[data-testid="monaco-code-viewer"]');
     expect(viewer).not.toBeNull();

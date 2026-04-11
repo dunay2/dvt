@@ -102,6 +102,7 @@ flowchart LR
   SharedStates --> Error["WorkbenchErrorState"]
   SharedStates --> Loading["WorkbenchLoadingState"]
   SharedStates --> Degraded["WorkbenchDegradedState"]
+  SharedStates --> ReadOnly["WorkbenchReadOnlyState"]
 ```
 
 Rules:
@@ -110,8 +111,8 @@ Rules:
 2. `Runs` still owns state selection and route-specific copy;
 3. cross-route reuse should adopt these primitives before inventing more
    route-local empty or error cards;
-4. `ReadOnlyState` remains a future primitive until there is a real governed
-   consumer.
+4. `ReadOnlyState` is now a shared primitive with `Code` as the first governed
+   non-`Runs` consumer.
 
 ## UX Rules
 

@@ -2,6 +2,7 @@ import { FileCode2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ViewHeader } from '../components/domain';
+import { WorkbenchReadOnlyState } from '../components/workbench/state/WorkbenchStates';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
@@ -32,6 +33,30 @@ export default function CodeView() {
     [fileTreeQuery.data, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
+  const previewPane = fileTreeQuery.isPending ? (
+    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
+      Loading workspace files...
+    </div>
+  ) : fileTreeQuery.isError ? (
+    <div className="flex h-full items-center justify-center text-sm text-[var(--status-danger)]">
+      Unable to load workspace files.
+    </div>
+  ) : fileContentQuery.isPending ? (
+    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
+      Loading file preview...
+    </div>
+  ) : fileContentQuery.isError || !fileContentQuery.data ? (
+    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
+      Select a file to preview its contents.
+    </div>
+  ) : (
+    <MonacoCodeViewer
+      ariaLabel={`Previewing ${fileContentQuery.data.name}`}
+      language={fileContentQuery.data.language}
+      path={fileContentQuery.data.path}
+      value={fileContentQuery.data.content}
+    />
+  );
 
   return (
     <RouteWorkbenchFrame
@@ -60,31 +85,16 @@ export default function CodeView() {
         />
       </div>
 
-      <div className="min-w-0 flex-1">
-        {fileTreeQuery.isPending ? (
-          <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-            Loading workspace files...
-          </div>
-        ) : fileTreeQuery.isError ? (
-          <div className="flex h-full items-center justify-center text-sm text-[var(--status-danger)]">
-            Unable to load workspace files.
-          </div>
-        ) : fileContentQuery.isPending ? (
-          <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-            Loading file preview...
-          </div>
-        ) : fileContentQuery.isError || !fileContentQuery.data ? (
-          <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-            Select a file to preview its contents.
-          </div>
-        ) : (
-          <MonacoCodeViewer
-            ariaLabel={`Previewing ${fileContentQuery.data.name}`}
-            language={fileContentQuery.data.language}
-            path={fileContentQuery.data.path}
-            value={fileContentQuery.data.content}
+      <div className="min-w-0 flex flex-1 flex-col">
+        <div className="shrink-0 p-4 pb-0">
+          <WorkbenchReadOnlyState
+            dataSlot="code-readonly-state"
+            title="Read-only preview"
+            message="Browse workspace files here and hand off revision comparison to Diff."
+            note="Editing is not available in the Code route."
           />
-        )}
+        </div>
+        <div className="min-h-0 flex-1 p-4">{previewPane}</div>
       </div>
     </RouteWorkbenchFrame>
   );
