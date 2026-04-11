@@ -27,8 +27,6 @@ import {
 import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
-  DbtManifestRefSchema,
-  type DbtManifestRefSchemaT,
   EngineRunRefSchema,
   type EngineRunRefSchemaT,
   ExecutionPlanSchema,
@@ -44,6 +42,8 @@ import {
   PlanRecordSchema,
   PlannerEnvironmentContextSchema,
   type PlannerEnvironmentContextSchemaT,
+  PlannerObservabilitySchema,
+  type PlannerObservabilitySchemaT,
   PlannerInputEnvelopeV1Schema,
   type PlannerInputEnvelopeV1SchemaT,
   PlannerSelectionSchema,
@@ -271,12 +271,12 @@ export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironme
   return parseWithSchema(PlannerEnvironmentContextSchema, input);
 }
 
-export function parseGenericGraphSourceV1(input: unknown): GenericGraphSourceV1SchemaT {
-  return parseWithSchema(GenericGraphSourceV1Schema, input);
+export function parsePlannerObservability(input: unknown): PlannerObservabilitySchemaT {
+  return parseWithSchema(PlannerObservabilitySchema, input);
 }
 
-export function parseDbtManifestRef(input: unknown): DbtManifestRefSchemaT {
-  return parseWithSchema(DbtManifestRefSchema, input);
+export function parseGenericGraphSourceV1(input: unknown): GenericGraphSourceV1SchemaT {
+  return parseWithSchema(GenericGraphSourceV1Schema, input);
 }
 
 export function parseExecutionStepV1(input: unknown): ExecutionStepV1SchemaT {

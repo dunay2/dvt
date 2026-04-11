@@ -144,7 +144,7 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
     valid: true,
   },
   {
-    label: 'manifestRef + selection',
+    label: 'legacy manifestRef + selection',
     input: {
       manifestRef: {
         uri: 's3://bucket/manifest.json',
@@ -152,7 +152,7 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
       },
       selection: BASE_SELECTION,
     },
-    valid: true,
+    valid: false,
   },
   {
     label: 'graphSource + selection + valid policy',

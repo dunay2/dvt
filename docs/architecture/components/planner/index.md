@@ -2,7 +2,7 @@
 title: @dvt/planner
 status: Active
 owner: Planning Domain / Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-10
 ---
 
 # @dvt/planner
@@ -27,17 +27,17 @@ last_reviewed: 2026-04-08
 
 - public boundary: `PlannerFacade`
 - public envelope: `PlannerInputEnvelopeV1`
-- canonical input sources: `manifestRef` or `graphSource`
-- manifest-ref resolution port: `IGraphSourceResolver`
+- canonical input source: `graphSource`
+- source-native adaptation happens before planner admission
 - canonical plan artifact: `ExecutionPlan.v1.ts`
 - plan version source: `CURRENT_EXECUTION_PLAN_VERSION`
-- current manifest normalization helper: `derivePlannerGraphSourceFromManifest`
+- retained manifest normalization utility: `derivePlannerGraphSourceFromManifest`
 
 ## Target truth
 
 - `graphSource` remains the canonical typed planner input boundary
-- `manifestRef` remains the production artifact-ref path
-- resolver composition stays outside the planner domain package
+- source-native refs such as DBT manifest artifacts stay outside the planner
+  package and do not appear in the canonical planner ingress
 - planner component pages stay summary-only and point back to canonical planner docs
 
 ## Component map
@@ -46,7 +46,6 @@ last_reviewed: 2026-04-08
 flowchart LR
   Caller["API or integrator"] --> Facade["PlannerFacade"]
   Facade --> Mapper["PlannerEnvelopeMapper"]
-  Facade --> Resolver["IGraphSourceResolver"]
   Facade --> Planner["Planner domain service"]
   Planner --> Validator["InputEnvelopeValidator"]
   Planner --> Graph["GraphBuilder"]
@@ -60,7 +59,6 @@ flowchart LR
 
 - [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
 - [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
-- [IGraphSourceResolver.ts](../../../../packages/@dvt/planner/src/ports/IGraphSourceResolver.ts)
 - [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
 - [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)
 - [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)

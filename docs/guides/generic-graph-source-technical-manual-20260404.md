@@ -41,10 +41,9 @@ to be the long-term generic source model:
 - the current normalized shape is only:
   - `kind`
   - `nodes[{ nodeId, stepKind, dependsOn, stepTypeConfig? }]`
-- `PlannerFacade` currently accepts dbt and graph-source paths that must be
-  converged into a single canonical graph-source contract
-- `ManifestGraphDeriver` and `ManifestArtifactResolver` are the active dbt
-  source seams
+- `PlannerFacade` now accepts canonical `graphSource` only
+- source-native seams such as dbt manifest parsing must live before planner
+  admission and are not part of the shared planner contract
 
 That is enough for normalized dbt topology, but it is not enough to describe a
 general workflow source with explicit step semantics, stable provenance, and a
@@ -54,10 +53,9 @@ clear source-family adaptation model.
 
 ```mermaid
 flowchart LR
-  Caller["API caller"] --> Facade["PlannerFacade"]
-  Facade --> Deriver["ManifestGraphDeriver (dbt-centered)"]
-  Facade --> Resolver["ManifestArtifactResolver or IArtifactResolver"]
-  Deriver --> Nodes["Current graph nodes(stepKind, dependsOn)"]
+  Caller["API caller"] --> Adapter["source adapter or caller normalization"]
+  Adapter --> Facade["PlannerFacade"]
+  Facade --> Nodes["Current graph nodes(stepKind, dependsOn)"]
   Nodes --> Planner["Planner core"]
   Planner --> Plan["ExecutionPlan"]
 ```
@@ -82,7 +80,6 @@ today. Runtime dispatch still depends on `MW-A1`, `MW-A3`, and `MW-C1`.
 ```mermaid
 flowchart LR
   Caller["API or external integrator"] --> Facade["PlannerFacade"]
-  RefResolver["IGraphSourceResolver"] --> Facade
   DbtAdapter["DbtManifestGraphSourceAdapter"]
   DirectSource["Inline GenericGraphSource"]
   Facade --> Validator["GenericGraphSourceValidator"]
@@ -159,16 +156,42 @@ export interface GenericGraphNodeV1 {
 
 ## Target collaborator map
 
-| Collaborator                    | Owner                                                   | Role                                                                                                        | Current mapping                                                            |
-| ------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `PlannerFacade`                 | `@dvt/planner`                                          | application boundary, one-active-source rule, orchestration                                                 | existing class remains                                                     |
-| `IGraphSourceResolver`          | `@dvt/planner` port                                     | resolve immutable graph-source refs into canonical graph sources                                            | evolves current `IArtifactResolver`                                        |
-| `GenericGraphSourceValidator`   | `@dvt/contracts` + `@dvt/planner`                       | contract parsing plus semantic graph-source checks                                                          | today split across parser + planner                                        |
-| `DbtManifestGraphSourceAdapter` | `apps/api` composition root and infrastructure boundary | normalize dbt manifest payloads into `GenericGraphSourceV1` and adapt external artifact IO to planner ports | evolves current `ManifestGraphDeriver` and `ManifestArtifactResolver` path |
-| `GraphSourceStepTranslator`     | `@dvt/planner`                                          | map normalized graph nodes to planner steps without hard-coding dbt as the universal source                 | new collaborator                                                           |
-| `GraphBuilder`                  | `@dvt/planner`                                          | DAG validation and adjacency build                                                                          | existing class remains                                                     |
-| `NodeSelector`                  | `@dvt/planner`                                          | subgraph selection                                                                                          | existing class remains                                                     |
-| `PlanAssembler`                 | `@dvt/planner`                                          | canonical plan assembly and hashing                                                                         | existing class remains                                                     |
+1. `PlannerFacade`
+   Owner: `@dvt/planner`
+   Role: application boundary, one-active-source rule, orchestration
+   Current mapping: existing class remains
+2. `IGraphSourceResolver`
+   Owner: future optional planner-facing port
+   Role: resolve immutable generic graph-source refs into canonical graph
+   sources
+   Current mapping: not implemented in the active hard-cut planner runtime
+3. `GenericGraphSourceValidator`
+   Owner: `@dvt/contracts` + `@dvt/planner`
+   Role: contract parsing plus semantic graph-source checks
+   Current mapping: today split across parser + planner
+4. `DbtManifestGraphSourceAdapter`
+   Owner: `apps/api` composition root and infrastructure boundary
+   Role: normalize dbt manifest payloads into `GenericGraphSourceV1` and adapt
+   external artifact IO to planner ports
+   Current mapping: evolves current `ManifestGraphDeriver` and
+   `ManifestArtifactResolver` path
+5. `GraphSourceStepTranslator`
+   Owner: `@dvt/planner`
+   Role: map normalized graph nodes to planner steps without hard-coding dbt
+   as the universal source
+   Current mapping: new collaborator
+6. `GraphBuilder`
+   Owner: `@dvt/planner`
+   Role: DAG validation and adjacency build
+   Current mapping: existing class remains
+7. `NodeSelector`
+   Owner: `@dvt/planner`
+   Role: subgraph selection
+   Current mapping: existing class remains
+8. `PlanAssembler`
+   Owner: `@dvt/planner`
+   Role: canonical plan assembly and hashing
+   Current mapping: existing class remains
 
 ## Main procedures
 
@@ -215,8 +238,9 @@ sequenceDiagram
   Planner-->>Caller: ExecutionPlan + canonicalPlanCoreJson
 ```
 
-Status: planned target path. The current implementation still resolves
-`manifestRef` via `IArtifactResolver` in API/planner wiring.
+Status: planned target path. The current implementation does not expose a
+ref-based planner input. Any source-native artifact resolution must happen
+before the canonical planner boundary.
 
 ### Procedure 3: dbt manifest source-adapter path
 

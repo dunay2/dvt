@@ -2,20 +2,13 @@ import type {
   IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
-  GenericGraphSourceV1,
   PlannerInputEnvelopeV1,
   PlanRef,
 } from '@dvt/contracts';
 
-import {
-  formatManifestArtifactResolutionReason,
-  isManifestArtifactResolutionError,
-  mapManifestArtifactResolutionCause,
-} from '../errors/ManifestArtifactResolutionError.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
 import {
-  START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
 } from '../ports/startRunResultContract.js';
 import type {
@@ -23,6 +16,7 @@ import type {
   PlanCompileLatencyOutcome,
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
@@ -53,15 +47,9 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     const compileStartMs = Date.now();
     let compileOutcome: PlanCompileLatencyOutcome = 'error';
     try {
-      buildResult = await this.deps.planner.buildPlan(toPlannerInput(command, context));
+      const plannerInput = toPlannerInput(command, context);
+      buildResult = await this.deps.planner.buildPlan(plannerInput);
       compileOutcome = 'built';
-    } catch (error) {
-      const rejection = mapManifestResolutionFailure(error);
-      if (rejection !== null) {
-        compileOutcome = 'manifest_resolution_error';
-        return rejection;
-      }
-      throw error;
     } finally {
       (
         this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
@@ -94,11 +82,6 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         ...(command.runExecutionContextRef === undefined
           ? {}
           : { runExecutionContextRef: command.runExecutionContextRef }),
-        ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
-        ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
-        ...(command.policies === undefined ? {} : { policies: command.policies }),
-        ...(command.environment === undefined ? {} : { environment: command.environment }),
-        ...(command.observability === undefined ? {} : { observability: command.observability }),
       },
       context
     );
@@ -124,23 +107,28 @@ function toPlannerInput(
   command: StartRunCommand,
   context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV1 {
-  return {
-    ...(command.graphSource === undefined
-      ? {}
-      : { graphSource: toPlannerGraphSource(command.graphSource) }),
-    ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
-    ...(command.policies === undefined ? {} : { policies: command.policies }),
-    ...(command.environment === undefined ? {} : { environment: command.environment }),
-    ...(command.observability === undefined ? {} : { observability: command.observability }),
-    selection: { selectedNodeIds: command.selection },
-    requestedBy: context.principal.principalId,
-    requestId: context.requestId,
-    requestedAtIso: context.authorizedAt.toISOString(),
-  };
+  if (command.graphSource === undefined) {
+    throw new Error('Planner-backed startRun requires graphSource.');
+  }
+
+  return resolveCanonicalPlannerInputEnvelope(
+    {
+      graphSource: toPlannerGraphSource(command.graphSource),
+      ...(command.policies === undefined ? {} : { policies: command.policies }),
+      ...(command.environment === undefined ? {} : { environment: command.environment }),
+      ...(command.observability === undefined ? {} : { observability: command.observability }),
+      selection: { selectedNodeIds: command.selection },
+      requestedBy: context.principal.principalId,
+      requestId: context.requestId,
+      requestedAtIso: context.authorizedAt.toISOString(),
+    }
+  );
 }
 
-function toPlannerGraphSource(graphSource: StartRunCommand['graphSource']): GenericGraphSourceV1 {
-  const source = graphSource!;
+function toPlannerGraphSource(
+  graphSource: NonNullable<StartRunCommand['graphSource']>
+): NonNullable<PlannerInputEnvelopeV1['graphSource']> {
+  const source = graphSource;
   return {
     kind: source.kind,
     sourceFamily: source.sourceFamily,
@@ -171,21 +159,4 @@ function isValidationError(
   validation: PlanValidationResult
 ): validation is Extract<PlanValidationResult, { readonly status: 'ERROR' }> {
   return validation.status === 'ERROR';
-}
-
-function mapManifestResolutionFailure(error: unknown): StartRunUseCaseResult | null {
-  if (!isManifestArtifactResolutionError(error)) {
-    return null;
-  }
-
-  return {
-    ok: true,
-    value: {
-      kind: START_RUN_RESULT_KIND.planRejected,
-      accepted: false,
-      code: START_RUN_PLAN_REJECTION_CODE.rejected,
-      reason: formatManifestArtifactResolutionReason(error.kind, error.detail),
-      cause: mapManifestArtifactResolutionCause(error.kind),
-    },
-  };
 }

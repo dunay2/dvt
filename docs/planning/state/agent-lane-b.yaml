@@ -597,9 +597,9 @@ dependency_notes:
     result-time evidence linkage can move independently while remaining under one Git-first policy.
   - >-
     `S05-TRUTH-SYNC` is the explicit follow-up that keeps payload-version closure truthful in active
-    status and architecture surfaces after `S05` landed with accepted evidence.
-    `AR-B4` is now closed with a governed proposal, implemented narrow Option A hardening, and ARC
-    evidence for the contract-to-mapper-to-projector ownership boundary.
+    status and architecture surfaces after `S05` landed with accepted evidence. `AR-B4` is now
+    closed with a governed proposal, implemented narrow Option A hardening, and ARC evidence for the
+    contract-to-mapper-to-projector ownership boundary.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure

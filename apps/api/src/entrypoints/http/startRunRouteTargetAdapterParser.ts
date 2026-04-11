@@ -4,13 +4,13 @@ import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/ser
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 export function parseStartRunTargetAdapter(
   rawTargetAdapter: unknown,
   registry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
 ): RouteParseResult<StartRunCommand['targetAdapter']> {
-  const normalized = asNonEmptyTrimmedStringOrUndefined(rawTargetAdapter);
+  const normalized = asCanonicalNonEmptyStringOrUndefined(rawTargetAdapter);
   if (normalized === undefined || !registry.isSupported(normalized)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidTargetAdapter, { target: 'targetAdapter' });
   }

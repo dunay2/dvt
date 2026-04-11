@@ -3,12 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath, URL } from 'node:url';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import type { DbtManifestRef, GenericGraphSourceV1 } from '@dvt/contracts';
-import {
-  PlannerErrorCode,
-  derivePlannerGraphSourceFromManifest,
-  type IGraphSourceResolver,
-} from '@dvt/planner';
+import type { GenericGraphSourceV1 } from '@dvt/contracts';
+import { PlannerErrorCode, derivePlannerGraphSourceFromManifest } from '@dvt/planner';
 
 import {
   formatManifestArtifactResolutionReason,
@@ -18,12 +14,17 @@ import {
 
 type S3LikeClient = Pick<S3Client, 'send'>;
 
+export interface ManifestArtifactRef {
+  readonly uri: string;
+  readonly sha256: string;
+}
+
 export interface ManifestArtifactResolverOptions {
   readonly nodeEnv?: string;
   readonly s3Client?: S3LikeClient;
 }
 
-export class ManifestArtifactResolver implements IGraphSourceResolver {
+export class ManifestArtifactResolver {
   private readonly nodeEnv: string;
   private readonly s3Client: S3LikeClient;
 
@@ -32,7 +33,7 @@ export class ManifestArtifactResolver implements IGraphSourceResolver {
     this.s3Client = options?.s3Client ?? new S3Client({});
   }
 
-  public async resolveGraphSource(ref: DbtManifestRef): Promise<GenericGraphSourceV1> {
+  public async resolveManifestRef(ref: ManifestArtifactRef): Promise<GenericGraphSourceV1> {
     const uri = this.parseUri(ref.uri);
     const bytes = await this.readArtifactBytes(uri);
     this.assertSha256(bytes, ref.sha256);
@@ -271,8 +272,3 @@ export class ManifestArtifactResolver implements IGraphSourceResolver {
   }
 }
 
-/**
- * Canonical name for graph-source resolver wiring.
- * Legacy `ManifestArtifactResolver` name is retained for compatibility.
- */
-export class GraphSourceArtifactResolver extends ManifestArtifactResolver {}

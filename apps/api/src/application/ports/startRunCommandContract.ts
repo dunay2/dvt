@@ -1,8 +1,6 @@
 import type {
-  DbtManifestRef,
   ExecutionPlan,
   GenericGraphSourceV1,
-  PlannerEnvironmentContext,
   PlannerPolicyClassSet,
   RunExecutionContextRef,
 } from '@dvt/contracts';
@@ -35,13 +33,17 @@ export interface StartRunPlanRef {
   readonly planVersion: string;
 }
 
+export interface StartRunPlannerEnvironmentInput {
+  readonly environmentId?: string;
+  readonly vars?: Record<string, unknown>;
+}
+
 export interface StartRunCommand {
   readonly planRef?: StartRunPlanRef;
   readonly runExecutionContextRef?: RunExecutionContextRef;
   readonly graphSource?: GenericGraphSourceV1;
-  readonly manifestRef?: DbtManifestRef;
   readonly policies?: PlannerPolicyClassSet;
-  readonly environment?: PlannerEnvironmentContext;
+  readonly environment?: StartRunPlannerEnvironmentInput;
   readonly observability?: ExecutionPlan['observability'];
   readonly runId: string;
   readonly targetAdapter: StartRunTargetAdapter;

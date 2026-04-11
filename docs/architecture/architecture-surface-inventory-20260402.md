@@ -2,7 +2,7 @@
 title: Architecture Surface Inventory 2026-04-02
 status: Active
 owner: Architecture / Docs / Delivery
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # Architecture Surface Inventory 2026-04-02
@@ -60,6 +60,11 @@ history, domain-specific navigation, or a component-level map.
 
 These files talk about architecture, but they live under planning and must not
 compete with the canonical architecture sources above.
+
+When a planning proposal that changes architecture posture is superseded, route
+the active execution direction through the current planning portfolio and lane
+registry, and treat the superseded proposal as historical rationale rather than
+architecture authority.
 
 | Surface                                                                                                                                                                                                     | Classification | Role                                                           | Current handling                                                      |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- | --------------------------------------------------------------------- |
