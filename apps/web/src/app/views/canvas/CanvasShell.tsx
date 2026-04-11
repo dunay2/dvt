@@ -70,7 +70,9 @@ export default function CanvasShell({
               nodes={explorerNodes}
               canEditGraph={userPermissions.canEditEdges}
               onHide={onHideExplorer}
-              onOpenDataRegistry={() => setDataRegistryOpen(true)}
+              onOpenDataRegistry={
+                userPermissions.canEditEdges ? () => setDataRegistryOpen(true) : undefined
+              }
             />
           </ResizablePanel>
           <ResizableHandle />

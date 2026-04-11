@@ -266,7 +266,7 @@ describe('Canvas route', () => {
     expect(canvasRouteState.explorerProps).toMatchObject({
       canEditGraph: false,
     });
-    expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+    expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeUndefined();
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
