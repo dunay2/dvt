@@ -201,4 +201,44 @@ describe('CanvasToolbar', () => {
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
+
+  it('disables mutation buttons when route permissions gate graph edits and run controls', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          onOpenDataRegistry={vi.fn()}
+          onAutoLayout={vi.fn()}
+          onToggleCostOverlay={vi.fn()}
+          onToggleImpact={vi.fn()}
+          onToggleColumns={vi.fn()}
+          onPlan={vi.fn()}
+          onRun={vi.fn()}
+          canPlan={false}
+          canRun={false}
+          canEditEdges={false}
+          canStartRun={true}
+          planStatusSummary="Run start is unavailable in this context."
+          canvasAuthoringMode="transformation"
+          exclusiveOverlayMode="runtime"
+          canUseCostOverlay={false}
+          impactOverlayEnabled={false}
+          columnLevelLineageEnabled={false}
+          transformationValidation={buildValidationResult()}
+          nodeCount={3}
+          edgeCount={2}
+        />
+      );
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+
+    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  });
 });
