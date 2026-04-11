@@ -166,6 +166,35 @@ export const RunStatusSnapshotSchema = z.object({
   execution: RunExecutionEvidenceSchema.optional(),
 });
 
+export const CanonicalRunStatusSchema = z
+  .object({
+    runId: NonBlankStringSchema,
+    status: RunStatusSchema,
+    substatus: RunSubstatusSchema.optional(),
+    message: z.string().optional(),
+    startedAt: z.string().optional(),
+    completedAt: z.string().optional(),
+    execution: RunExecutionEvidenceSchema.optional(),
+  })
+  .strict();
+
+export const ProviderRunStatusViewSchema = z
+  .object({
+    provider: ProviderSchema,
+    providerStatus: NonBlankStringSchema,
+    providerSubstatus: NonBlankStringSchema.optional(),
+    message: z.string().optional(),
+    observedAt: z.string().optional(),
+  })
+  .strict();
+
+export const RunStatusEnrichmentSchema = z
+  .object({
+    canonical: CanonicalRunStatusSchema,
+    providerView: ProviderRunStatusViewSchema,
+  })
+  .strict();
+
 export const MaterializationEvidenceSchema = z
   .object({
     executor: TransformationExecutorSchema,
@@ -899,6 +928,9 @@ export type RunContextSchemaT = z.infer<typeof RunContextSchema>;
 export type ResolvedRunContextSchemaT = z.infer<typeof ResolvedRunContextSchema>;
 export type SignalRequestSchemaT = z.infer<typeof SignalRequestSchema>;
 export type RecoverRunCommandSchemaT = z.infer<typeof RecoverRunCommandSchema>;
+export type CanonicalRunStatusSchemaT = z.infer<typeof CanonicalRunStatusSchema>;
+export type ProviderRunStatusViewSchemaT = z.infer<typeof ProviderRunStatusViewSchema>;
+export type RunStatusEnrichmentSchemaT = z.infer<typeof RunStatusEnrichmentSchema>;
 export type RunStatusSnapshotSchemaT = z.infer<typeof RunStatusSnapshotSchema>;
 export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;
 

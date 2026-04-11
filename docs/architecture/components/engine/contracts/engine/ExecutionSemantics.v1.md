@@ -121,9 +121,15 @@ Rules:
 
 ## Current implementation note
 
-This contract is ahead of the current code during `AR-A12-B`.
-The shipped implementation still reuses `RunStatusSnapshot` across the engine
-and adapter interfaces. Code convergence belongs to `AR-A12-C`.
+The shipped engine/runtime boundary now reflects this split:
+
+- engine canonical reads use `CanonicalRunStatus`
+- engine enrichment uses `RunStatusEnrichment`
+- adapter live diagnostics use `ProviderRunStatusView`
+
+`AR-A12-C` remains the follow-up slice for downstream-consumer convergence,
+legacy-type cleanup, and wider read-surface alignment outside the core
+engine/adapter boundary itself.
 
 ## Append authority responsibilities
 

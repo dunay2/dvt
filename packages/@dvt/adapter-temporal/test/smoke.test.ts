@@ -126,7 +126,6 @@ describe('adapter-temporal foundation', () => {
     expect(providerView).toEqual({
       provider: 'temporal',
       providerStatus: 'RUNNING',
-      providerSubstatus: 'RUNNING',
       message: 'ok',
     });
 

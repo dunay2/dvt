@@ -106,9 +106,14 @@ Dedicated step retry and run recovery remain separate use cases.
 
 ## Current implementation note
 
-This contract is ahead of the current code during `AR-A12-B`.
-The shipped implementation still uses `enrichRunStatus(): Promise<RunStatusSnapshot>`.
-Convergence of method names and return shapes belongs to `AR-A12-C`.
+The shipped engine boundary now matches this split:
+
+- `getRunStatus(): Promise<CanonicalRunStatus>`
+- `getRunEnrichment(): Promise<RunStatusEnrichment>`
+
+`AR-A12-C` remains the follow-up slice for downstream-consumer convergence,
+legacy-type cleanup, and wider read-surface alignment outside the core engine
+boundary itself.
 
 ## Related contracts
 

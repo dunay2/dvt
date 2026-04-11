@@ -75,7 +75,6 @@ export function toProviderRunStatusView(args: {
   return {
     provider: 'temporal',
     providerStatus: args.runtimeStatus,
-    providerSubstatus: mapTemporalStatusToRunStatus(args.runtimeStatus),
     message: args.message,
   };
 }

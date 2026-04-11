@@ -97,9 +97,13 @@ read model.
 
 ## Current implementation note
 
-This contract is ahead of the current code during `AR-A12-B`.
-The shipped adapter interface still exposes `getRunStatus(): Promise<RunStatusSnapshot>`.
-Method-name and return-shape convergence belongs to `AR-A12-C`.
+The shipped adapter boundary now matches this split:
+
+- `getProviderStatusView(): Promise<ProviderRunStatusView>`
+
+`AR-A12-C` remains the follow-up slice for downstream-consumer convergence,
+legacy-type cleanup, and broader runtime/read-surface alignment outside the
+adapter interface itself.
 
 ## Change log
 
