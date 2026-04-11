@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-11
 domain: frontend
 ---
 
@@ -141,6 +141,46 @@ Authority rules:
    semantics for `/runs/:runId`.
 4. Future convergence of logs, timeline, and terminal-grade streaming belongs
    to `F-10` and `F-18`, not to ad hoc shell copy drift.
+
+## Runs Workbench State Ownership
+
+`RunsView` is still the route compositor, but the route now has one governed
+state contract that separates route-root state from workspace-inner state.
+
+```mermaid
+flowchart TD
+  Input["runId + run summaries query + run workspace query"] --> Model["RunsWorkbench state model"]
+  Model --> Index["runs-index state"]
+  Index --> IndexError["runs-error state"]
+  Index --> IndexEmpty["runs-empty state"]
+  Index --> IndexList["runs-list state"]
+  Model --> Loading["run-loading state"]
+  Model --> Missing["run-missing state"]
+  Model --> Error["run-error state"]
+  Model --> Workspace["run-workspace state"]
+  Workspace --> Snapshot["snapshot authority"]
+  Workspace --> Timeline["timeline state: available | empty | degraded"]
+```
+
+Rules:
+
+1. Route-root state chooses between list, loading, missing, error, and focused
+   workspace.
+2. `/runs` must render a governed list-error state when `GET /runs` fails and
+   no authoritative list data is available.
+3. Degraded timeline treatment is not a route-root error state because the run
+   snapshot is still authoritative and renderable.
+4. The focused workspace may carry `snapshot-only` detail truth while still
+   rendering a degraded or empty timeline notice honestly.
+5. The route must never collapse `run-missing` and `run-degraded` into the same
+   user treatment.
+
+Primary anchors:
+
+- [RunsView.tsx](../../../../../apps/web/src/app/views/RunsView.tsx)
+- [runWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts)
+- [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)
+- [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
 
 ## Shared Run Event Presentation Model
 

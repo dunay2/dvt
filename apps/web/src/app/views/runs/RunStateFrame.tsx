@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
 
+import {
+  routeWorkbenchBodyPaddingClassName,
+  routeWorkbenchClassName,
+  routeWorkbenchHeaderBandClassName,
+} from '../../components/workbench/RouteWorkbenchFrame';
+import { cn } from '../../components/ui/utils';
+
 interface RunStateFrameProps {
   title: string;
   children: ReactNode;
@@ -7,11 +14,16 @@ interface RunStateFrameProps {
 
 export function RunStateFrame({ title, children }: RunStateFrameProps) {
   return (
-    <div className="flex h-full flex-col bg-slate-950">
-      <div className="flex h-12 items-center border-b border-slate-700 bg-slate-900 px-4">
+    <div data-slot="runs-state-frame" className={routeWorkbenchClassName}>
+      <div
+        data-slot="runs-state-header"
+        className={cn(routeWorkbenchHeaderBandClassName, 'flex h-12 items-center px-4 py-0')}
+      >
         <h1 className="text-lg font-semibold">{title}</h1>
       </div>
-      <div className="flex-1 p-6">{children}</div>
+      <div data-slot="runs-state-body" className={cn('flex-1', routeWorkbenchBodyPaddingClassName)}>
+        {children}
+      </div>
     </div>
   );
 }
