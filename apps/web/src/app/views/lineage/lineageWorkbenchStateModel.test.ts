@@ -68,14 +68,54 @@ describe('lineageWorkbenchStateModel', () => {
     ).toEqual({ kind: 'ready' });
   });
 
-  it('returns metadata-missing when column lineage entries are absent', () => {
-    expect(buildLineageColumnState({ columnLineageCount: 0 })).toEqual({
+  it('returns metadata-missing when the focus node has no column metadata', () => {
+    expect(
+      buildLineageColumnState({
+        focusNodeHasColumnMetadata: false,
+        hasReachableUpstreamNodes: true,
+        reachableUpstreamHasColumnMetadata: true,
+        columnLineageCount: 0,
+      })
+    ).toEqual({
       kind: 'metadata-missing',
     });
   });
 
+  it('returns metadata-missing when upstream nodes exist but none expose column metadata', () => {
+    expect(
+      buildLineageColumnState({
+        focusNodeHasColumnMetadata: true,
+        hasReachableUpstreamNodes: true,
+        reachableUpstreamHasColumnMetadata: false,
+        columnLineageCount: 0,
+      })
+    ).toEqual({
+      kind: 'metadata-missing',
+    });
+  });
+
+  it('returns ready when metadata exists but there are no lineage matches', () => {
+    expect(
+      buildLineageColumnState({
+        focusNodeHasColumnMetadata: true,
+        hasReachableUpstreamNodes: true,
+        reachableUpstreamHasColumnMetadata: true,
+        columnLineageCount: 0,
+      })
+    ).toEqual({
+      kind: 'ready',
+    });
+  });
+
   it('returns ready when column lineage entries exist', () => {
-    expect(buildLineageColumnState({ columnLineageCount: 1 })).toEqual({
+    expect(
+      buildLineageColumnState({
+        focusNodeHasColumnMetadata: true,
+        hasReachableUpstreamNodes: true,
+        reachableUpstreamHasColumnMetadata: true,
+        columnLineageCount: 1,
+      })
+    ).toEqual({
       kind: 'ready',
     });
   });

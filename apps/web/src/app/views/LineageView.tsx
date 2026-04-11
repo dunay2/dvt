@@ -25,6 +25,9 @@ export default function LineageView() {
     setColumnLevel,
     isLoadingSnapshot,
     snapshotError,
+    focusNodeHasColumnMetadata,
+    hasReachableUpstreamNodes,
+    reachableUpstreamHasColumnMetadata,
     canonicalNodes,
     focusNode,
     nodesByLevel,
@@ -73,6 +76,9 @@ export default function LineageView() {
   }
 
   const columnState = buildLineageColumnState({
+    focusNodeHasColumnMetadata,
+    hasReachableUpstreamNodes,
+    reachableUpstreamHasColumnMetadata,
     columnLineageCount: columnLineage.length,
   });
 

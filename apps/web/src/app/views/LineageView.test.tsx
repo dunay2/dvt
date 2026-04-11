@@ -303,4 +303,60 @@ describe('LineageView', () => {
       'Add columns to the manifest to enable column-level lineage for this node.'
     );
   });
+
+  it('does not render metadata-missing state when metadata exists but no column names match', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            getGraphSnapshot: async () =>
+              buildGraphSnapshot({
+                nodes: [
+                  {
+                    id: 'model.fct_orders',
+                    name: 'fct_orders',
+                    type: 'MODEL',
+                    package: 'analytics',
+                    path: 'models/fct_orders.sql',
+                    tags: [],
+                    status: 'success',
+                    dependencies: ['source.orders'],
+                    columns: [{ name: 'customer_id', type: 'int', nullable: false }],
+                  },
+                  {
+                    id: 'source.orders',
+                    name: 'source_orders',
+                    type: 'SOURCE',
+                    package: 'analytics',
+                    path: 'models/source_orders.yml',
+                    tags: [],
+                    status: 'success',
+                    dependencies: [],
+                    columns: [{ name: 'order_id', type: 'int', nullable: false }],
+                  },
+                ],
+              }),
+          }),
+        }}
+      >
+        <LineageView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_orders') === true, {
+      description: 'lineage no-match setup render',
+    });
+
+    const switchInput = document.getElementById('column-level');
+    expect(switchInput).toBeTruthy();
+    await act(async () => {
+      switchInput?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(mounted.container.textContent).toContain(
+      'No matching upstream columns were found for this lineage focus.'
+    );
+    expect(mounted.container.textContent).not.toContain('Column metadata unavailable');
+  });
 });

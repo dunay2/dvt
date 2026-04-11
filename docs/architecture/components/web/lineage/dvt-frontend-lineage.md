@@ -38,7 +38,9 @@ Current behavior:
 - renders model-level lineage as layered cards;
 - optionally derives lightweight column-level lineage from node metadata;
 - degrades column-level mode through a governed metadata-missing state instead of
-  inline fallback copy.
+  inline fallback copy;
+- treats zero-match column results separately from missing metadata so the route
+  does not misreport available metadata as absent.
 
 ## Relationship To Other Views
 

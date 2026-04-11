@@ -20,4 +20,5 @@ export const lineageViewCopy = {
   metadataMissingTitle: 'Column metadata unavailable',
   metadataMissingMessage:
     'Add columns to the manifest to enable column-level lineage for this node.',
+  noColumnMatchesMessage: 'No matching upstream columns were found for this lineage focus.',
 } as const;

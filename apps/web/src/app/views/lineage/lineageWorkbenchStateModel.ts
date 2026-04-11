@@ -42,13 +42,27 @@ export function buildLineageWorkbenchState({
 export type LineageColumnState = { kind: 'metadata-missing' } | { kind: 'ready' };
 
 type BuildLineageColumnStateInput = {
+  focusNodeHasColumnMetadata: boolean;
+  hasReachableUpstreamNodes: boolean;
+  reachableUpstreamHasColumnMetadata: boolean;
   columnLineageCount: number;
 };
 
 export function buildLineageColumnState({
+  focusNodeHasColumnMetadata,
+  hasReachableUpstreamNodes,
+  reachableUpstreamHasColumnMetadata,
   columnLineageCount,
 }: BuildLineageColumnStateInput): LineageColumnState {
-  if (columnLineageCount === 0) {
+  if (!focusNodeHasColumnMetadata) {
+    return { kind: 'metadata-missing' };
+  }
+
+  if (
+    columnLineageCount === 0 &&
+    hasReachableUpstreamNodes &&
+    !reachableUpstreamHasColumnMetadata
+  ) {
     return { kind: 'metadata-missing' };
   }
 
