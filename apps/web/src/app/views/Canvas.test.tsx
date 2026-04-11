@@ -7,6 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Canvas from './Canvas';
 import { useCanvasController } from './canvas/useCanvasController';
 
+const canvasRouteState = vi.hoisted(() => ({
+  explorerProps: null as null | Record<string, unknown>,
+}));
+
 vi.mock('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -16,7 +20,10 @@ vi.mock('./canvas/useCanvasController', () => ({
 }));
 
 vi.mock('../components/DbtExplorer', () => ({
-  default: () => <div data-slot="canvas-explorer-panel">Explorer</div>,
+  default: (props: Record<string, unknown>) => {
+    canvasRouteState.explorerProps = props;
+    return <div data-slot="canvas-explorer-panel">Explorer</div>;
+  },
 }));
 
 vi.mock('../components/InspectorPanel', () => ({
@@ -128,6 +135,7 @@ describe('Canvas route', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     mockedUseCanvasController.mockReset();
+    canvasRouteState.explorerProps = null;
   });
 
   afterEach(() => {
@@ -215,6 +223,10 @@ describe('Canvas route', () => {
     expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
     expect(container.textContent).toContain('Read-only canvas');
+    expect(canvasRouteState.explorerProps).toMatchObject({
+      canEditGraph: false,
+    });
+    expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeUndefined();
     expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
