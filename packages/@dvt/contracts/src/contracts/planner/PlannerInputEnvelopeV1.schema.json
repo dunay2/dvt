@@ -2,8 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "dvt:contracts:planner:PlannerInputEnvelopeV1:v1.0.0",
   "type": "object",
-  "required": ["selection"],
-  "oneOf": [{ "required": ["graphSource"] }, { "required": ["manifestRef"] }],
+  "required": ["graphSource", "selection"],
   "additionalProperties": false,
   "properties": {
     "graphSource": {
@@ -46,16 +45,6 @@
         }
       }
     },
-    "manifestRef": {
-      "type": "object",
-      "required": ["uri", "sha256"],
-      "additionalProperties": false,
-      "properties": {
-        "uri": { "type": "string" },
-        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-        "artifactId": { "type": "string" }
-      }
-    },
     "selection": {
       "type": "object",
       "required": ["selectedNodeIds"],
@@ -74,7 +63,6 @@
       "additionalProperties": false,
       "properties": {
         "environmentId": { "type": "string" },
-        "targetProfile": { "type": "string" },
         "vars": { "type": "object", "additionalProperties": true }
       }
     },

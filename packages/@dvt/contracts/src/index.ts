@@ -27,7 +27,6 @@ export {
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
 export type {
-  DbtManifestRef,
   ExecutionPlan,
   ExecutionStep,
   ExecutionStepV1,

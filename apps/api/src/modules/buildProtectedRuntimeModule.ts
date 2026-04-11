@@ -31,7 +31,6 @@ import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure
 import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
-import { GraphSourceArtifactResolver } from '../infrastructure/planner/ManifestArtifactResolver.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import type { Env } from '../plugins/env.js';
@@ -206,9 +205,7 @@ export async function buildProtectedRuntimeModule(
     })
   );
   const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
-  const planner = new PlannerFacade({
-    graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: env.NODE_ENV }),
-  });
+  const planner = new PlannerFacade();
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
     adapters,

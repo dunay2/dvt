@@ -13,13 +13,13 @@ export function asStringOrUndefined(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-export function asNonEmptyTrimmedStringOrUndefined(value: unknown): string | undefined {
+export function asCanonicalNonEmptyStringOrUndefined(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
   }
 
   const normalized = value.trim();
-  return normalized.length > 0 ? normalized : undefined;
+  return normalized.length > 0 && normalized === value ? value : undefined;
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {

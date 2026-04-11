@@ -27,7 +27,7 @@ describe('ManifestArtifactResolver', () => {
   it('resolves file:// manifests outside production', async () => {
     const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
 
-    const result = await resolver.resolveGraphSource({
+    const result = await resolver.resolveManifestRef({
       uri: FIXTURE_URL.href,
       sha256: FIXTURE_SHA256,
     });
@@ -60,7 +60,7 @@ describe('ManifestArtifactResolver', () => {
     const resolver = new ManifestArtifactResolver({ nodeEnv: 'production' });
 
     await expect(
-      resolver.resolveGraphSource({ uri: FIXTURE_URL.href, sha256: FIXTURE_SHA256 })
+      resolver.resolveManifestRef({ uri: FIXTURE_URL.href, sha256: FIXTURE_SHA256 })
     ).rejects.toMatchObject({
       name: 'ManifestArtifactResolutionError',
       kind: 'file_scheme_prohibited',
@@ -81,7 +81,7 @@ describe('ManifestArtifactResolver', () => {
       nodeEnv: 'production',
     });
 
-    const result = await resolver.resolveGraphSource({
+    const result = await resolver.resolveManifestRef({
       uri: 's3://planner-bucket/path/to/manifest.json',
       sha256: FIXTURE_SHA256,
     });
@@ -109,7 +109,7 @@ describe('ManifestArtifactResolver', () => {
       nodeEnv: 'production',
     });
 
-    const result = await resolver.resolveGraphSource({
+    const result = await resolver.resolveManifestRef({
       uri: 's3://planner-bucket//manifest.json',
       sha256: FIXTURE_SHA256,
     });
@@ -151,7 +151,7 @@ describe('ManifestArtifactResolver', () => {
     });
 
     await expect(
-      resolver.resolveGraphSource({
+      resolver.resolveManifestRef({
         uri,
         sha256: FIXTURE_SHA256,
       })
@@ -168,7 +168,7 @@ describe('ManifestArtifactResolver', () => {
     const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
 
     await expect(
-      resolver.resolveGraphSource({ uri: FIXTURE_URL.href, sha256: '0'.repeat(64) })
+      resolver.resolveManifestRef({ uri: FIXTURE_URL.href, sha256: '0'.repeat(64) })
     ).rejects.toMatchObject({
       name: 'ManifestArtifactResolutionError',
       kind: 'integrity_mismatch',
@@ -186,7 +186,7 @@ describe('ManifestArtifactResolver', () => {
     });
 
     await expect(
-      resolver.resolveGraphSource({
+      resolver.resolveManifestRef({
         uri: 's3://planner-bucket/path/to/missing.json',
         sha256: FIXTURE_SHA256,
       })
@@ -202,7 +202,7 @@ describe('ManifestArtifactResolver', () => {
     const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
 
     await expect(
-      resolver.resolveGraphSource({ uri: fileUrl, sha256: sha256Hex('{not-json}') })
+      resolver.resolveManifestRef({ uri: fileUrl, sha256: sha256Hex('{not-json}') })
     ).rejects.toMatchObject({
       name: 'ManifestArtifactResolutionError',
       kind: 'invalid_manifest_payload',
@@ -214,7 +214,7 @@ describe('ManifestArtifactResolver', () => {
     const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
 
     await expect(
-      resolver.resolveGraphSource({
+      resolver.resolveManifestRef({
         uri: 'ftp://planner-bucket/manifest.json',
         sha256: FIXTURE_SHA256,
       })

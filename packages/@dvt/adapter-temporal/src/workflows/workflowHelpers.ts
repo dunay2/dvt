@@ -18,7 +18,7 @@ import type {
   TransformationExecutor,
 } from '@dvt/contracts';
 import {
-  DbtStepTypeConfigSchema,
+  CompiledCodeRefSchema,
   KNOWN_STEP_KINDS,
   MaterializationEvidenceSchema,
   TransformationFlowRuntimeBindingSchema,
@@ -216,12 +216,17 @@ export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef
     return undefined;
   }
 
-  const result = DbtStepTypeConfigSchema.safeParse(stepTypeConfig);
+  const compiledCodeRef = stepTypeConfig['compiledCodeRef'];
+  if (compiledCodeRef === undefined) {
+    return undefined;
+  }
+
+  const result = CompiledCodeRefSchema.safeParse(compiledCodeRef);
   if (!result.success) {
     throw new TypeError('INVALID_PLAN_SCHEMA: step_compiledCodeRef_invalid');
   }
 
-  return result.data.compiledCodeRef;
+  return result.data;
 }
 
 // ---------------------------------------------------------------------------

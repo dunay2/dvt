@@ -43,6 +43,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
 - [Plan-store canonical JSON shape may drift from contract schema](R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml)
 - [Planner boundary contract naming drift across V2 and V1 symbols](R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION.yaml)
+- [Planner boundary exposed DBT-native ingress alongside canonical graph admission](R-20260410-PLANNER-KERNEL-DBT-INGRESS-LEAKAGE.yaml)
 - [Planner determinism hash pin silently drifts when plan serialization changes](R-20260331-PLANNER-DETERMINISM-HASH-DRIFT.yaml)
 - [Planner manifestRef cache serves stale graph if sha256 contract is violated upstream](R-20260330-PLANNER-MANIFEST-CACHE-STALENESS.md)
 - [Planner plan identity can drift if manifest node-key iteration order is not normalized](R-20260408-PLANNER-MANIFEST-KEY-ORDER-DRIFT.yaml)

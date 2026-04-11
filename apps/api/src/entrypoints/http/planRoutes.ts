@@ -14,13 +14,9 @@ import {
 } from '@dvt/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import {
-  formatManifestArtifactResolutionReason,
-  isManifestArtifactResolutionError,
-  mapManifestArtifactResolutionCause,
-} from '../../application/errors/ManifestArtifactResolutionError.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import { resolveCanonicalPlannerInputEnvelope } from '../../application/services/resolveCanonicalPlannerInputEnvelope.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
@@ -33,6 +29,7 @@ import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
 import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
+import { evaluateStartRunPlanSource } from './startRunRoutePlanSourcePolicy.js';
 import { parseStartRunScope, type ParsedStartRunScope } from './startRunRouteScopeParser.js';
 import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 
@@ -95,7 +92,23 @@ export async function previewPlanRoute(
     return;
   }
 
-  const plannerEnvelope = parseStartRunPlannerEnvelope(parsedBody.value, selection.value);
+  const sourceDecision = evaluateStartRunPlanSource(parsedBody.value);
+  if (!sourceDecision.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(sourceDecision.issue));
+    return;
+  }
+  if (sourceDecision.value.kind !== 'plannerBacked') {
+    sendHttpResponse(
+      reply,
+      createHttpErrorResponse({
+        type: HTTP_ERROR_TYPE.badRequest,
+        reason: HTTP_ERROR_REASON.invalidPlanSource,
+      })
+    );
+    return;
+  }
+
+  const plannerEnvelope = parseStartRunPlannerEnvelope(parsedBody.value);
   if (!plannerEnvelope.ok) {
     sendHttpResponse(reply, mapRouteParseIssue(plannerEnvelope.issue));
     return;
@@ -117,28 +130,34 @@ export async function previewPlanRoute(
 
   try {
     const requestedAtIso = authz.context.authorizedAt.toISOString();
-    let buildResult: Awaited<ReturnType<IPlanner['buildPlan']>>;
-    try {
-      buildResult = await deps.planner.buildPlan({
-        ...bindScopeToPlannerEnvelope(
-          plannerEnvelope.value,
-          routeContext,
-          provenance.value,
-          previewProfile.value
-        ),
-        selection: { selectedNodeIds: selection.value },
-        requestedBy: authz.context.principal.principalId,
-        requestId: request.id,
-        requestedAtIso,
-      });
-    } catch (error) {
-      const manifestResolutionResponse = mapManifestResolutionFailure(error);
-      if (manifestResolutionResponse !== null) {
-        sendHttpResponse(reply, manifestResolutionResponse);
-        return;
-      }
-      throw error;
+    const boundEnvelope = bindScopeToPlannerEnvelope(
+      plannerEnvelope.value,
+      routeContext,
+      provenance.value,
+      previewProfile.value
+    );
+    if (boundEnvelope.graphSource === undefined) {
+      sendHttpResponse(
+        reply,
+        createHttpErrorResponse({
+          type: HTTP_ERROR_TYPE.badRequest,
+          reason: HTTP_ERROR_REASON.invalidPlanSource,
+        })
+      );
+      return;
     }
+
+    const canonicalEnvelope = resolveCanonicalPlannerInputEnvelope({
+      ...boundEnvelope,
+      graphSource: boundEnvelope.graphSource,
+      selection: { selectedNodeIds: selection.value },
+      requestedBy: authz.context.principal.principalId,
+      requestId: request.id,
+      requestedAtIso,
+    });
+    const buildResult = await deps.planner.buildPlan({
+      ...canonicalEnvelope,
+    });
 
     const planRef = await deps.planStore.storePlan(buildResult);
     const validation = await deps.planValidator.validatePlan(planRef, routeContext.targetAdapter);
@@ -426,27 +445,9 @@ function toContractPlanRef(planRef: {
 
 function validatePreviewProfileContract(
   previewProfile: PreviewProfilePolicy,
-  record: Record<string, unknown>,
+  _record: Record<string, unknown>,
   provenance: PreviewProvenance | undefined
 ): ReturnType<typeof createHttpErrorResponse> | null {
-  const activePlanSource =
-    record.graphSource !== undefined && record.manifestRef === undefined
-      ? 'graphSource'
-      : record.manifestRef !== undefined && record.graphSource === undefined
-        ? 'manifestRef'
-        : null;
-
-  if (activePlanSource !== null && !previewProfile.allowedPlanSources.includes(activePlanSource)) {
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.unprocessable,
-      reason: HTTP_ERROR_REASON.planRejected,
-      details: {
-        cause: 'preview_profile_source_not_allowed',
-        message: `${previewProfile.previewProfile} does not allow ${activePlanSource} plan input.`,
-      },
-    });
-  }
-
   if (previewProfile.provenanceRequired && provenance === undefined) {
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.unprocessable,
@@ -474,21 +475,4 @@ function isPlanOwnedByScope(
     tags['dvt.scope.projectId'] === context.projectId.value &&
     tags['dvt.scope.environmentId'] === context.environmentId.value
   );
-}
-
-function mapManifestResolutionFailure(
-  error: unknown
-): ReturnType<typeof createHttpErrorResponse> | null {
-  if (!isManifestArtifactResolutionError(error)) {
-    return null;
-  }
-
-  return createHttpErrorResponse({
-    type: HTTP_ERROR_TYPE.unprocessable,
-    reason: HTTP_ERROR_REASON.planRejected,
-    details: {
-      message: formatManifestArtifactResolutionReason(error.kind, error.detail),
-      cause: mapManifestArtifactResolutionCause(error.kind),
-    },
-  });
 }

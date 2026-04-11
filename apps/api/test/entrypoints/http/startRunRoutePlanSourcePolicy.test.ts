@@ -58,7 +58,7 @@ describe('evaluateStartRunPlanSource', () => {
     });
   });
 
-  it('rejects multiple planner sources when planRef is absent', () => {
+  it('rejects manifestRef as a forbidden planner source', () => {
     expect(
       evaluateStartRunPlanSource({
         graphSource: {

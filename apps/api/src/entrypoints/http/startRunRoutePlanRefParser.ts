@@ -4,7 +4,7 @@ import type { StartRunPlanRef } from '../../application/ports/startRunCommandCon
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPlanRef> {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
@@ -13,15 +13,15 @@ export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPla
 
   const record = raw as Record<string, unknown>;
   const normalized = {
-    uri: asNonEmptyTrimmedStringOrUndefined(record.uri),
-    sha256: asNonEmptyTrimmedStringOrUndefined(record.sha256),
-    schemaVersion: asNonEmptyTrimmedStringOrUndefined(record.schemaVersion),
-    planId: asNonEmptyTrimmedStringOrUndefined(record.planId),
-    planVersion: asNonEmptyTrimmedStringOrUndefined(record.planVersion),
+    uri: asCanonicalNonEmptyStringOrUndefined(record.uri),
+    sha256: asCanonicalNonEmptyStringOrUndefined(record.sha256),
+    schemaVersion: asCanonicalNonEmptyStringOrUndefined(record.schemaVersion),
+    planId: asCanonicalNonEmptyStringOrUndefined(record.planId),
+    planVersion: asCanonicalNonEmptyStringOrUndefined(record.planVersion),
     ...(typeof record.sizeBytes === 'number' ? { sizeBytes: record.sizeBytes } : {}),
-    ...(asNonEmptyTrimmedStringOrUndefined(record.expiresAt) === undefined
+    ...(asCanonicalNonEmptyStringOrUndefined(record.expiresAt) === undefined
       ? {}
-      : { expiresAt: asNonEmptyTrimmedStringOrUndefined(record.expiresAt) }),
+      : { expiresAt: asCanonicalNonEmptyStringOrUndefined(record.expiresAt) }),
   };
 
   try {
