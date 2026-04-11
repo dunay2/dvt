@@ -167,9 +167,9 @@ event log.
   negative if the snapshot was written before the PAUSE event was committed
   (race window). In the worst case, a duplicate PAUSE signal could be forwarded
   to the adapter.
-- **Truth drift after `T-01` closure**: the provider-native Temporal cancel
-  path is now implemented, but older ADR and contract surfaces still disagree
-  on whether `RunCancelRequested` is engine-owned request intent or
+- **Truth drift across governance surfaces**: the provider-native Temporal
+  cancel path is now implemented, but older ADR and contract surfaces still
+  disagree on whether `RunCancelRequested` is engine-owned request intent or
   runtime-owned cancellation lifecycle.
 
 Current shipped cancel posture:

@@ -59,8 +59,8 @@ outcomes (expired, resolved) reset backoff.
   updates, but in-memory stores could produce race conditions in tests.
 - **`getRunMetadata` failure is swallowed as `null`**: Both reconciliation
   policies catch state-store errors and treat them as "metadata not found"
-  (`.catch(() => null)` at `DispatchedIntentReconciliationPolicy:98`). This
-  means a transient database error will cause the policy to incorrectly
+  via a local `.catch(() => null)` fallback in the reconciliation policies.
+  This means a transient database error will cause the policy to incorrectly
   conclude that the run was never bootstrapped and attempt cancellation or
   expiry on a run that actually exists.
 - **No upper bound on orphaned intent list size**: `listOrphaned(threshold)`
