@@ -58,13 +58,13 @@ class CountingAdapter implements IProviderAdapter {
     this.cancelCalls += 1;
   }
 
-  async getRunStatus(_runRef: {
+  async getProviderStatusView(_runRef: {
     provider: 'mock';
     tenantId: string;
     workflowId: string;
     runId: string;
-  }): Promise<{ runId: string; status: 'PENDING' }> {
-    return { runId: 'r', status: 'PENDING' };
+  }): Promise<{ provider: 'mock'; providerStatus: 'PENDING' }> {
+    return { provider: 'mock', providerStatus: 'PENDING' };
   }
 
   async signal(

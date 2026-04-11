@@ -38,8 +38,8 @@ export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IPro
       } as EngineRunRef;
     },
     async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as const;
+    async getProviderStatusView() {
+      return { provider: 'temporal', providerStatus: 'RUNNING' } as const;
     },
     async signal() {},
     signalSemanticsVersions() {

@@ -22,8 +22,8 @@ export { ObservedTemporalAdapter } from './ObservedTemporalAdapter.js';
 
 export {
   mapTemporalStatusToRunStatus,
-  toRunStatusSnapshot,
-  toRunStatusSnapshotFromWorkflowState,
+  toProviderRunStatusView,
+  toProviderRunStatusViewFromWorkflowState,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,

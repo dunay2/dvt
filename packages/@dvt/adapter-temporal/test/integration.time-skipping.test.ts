@@ -50,12 +50,15 @@ async function waitForTerminalStatus(
   timeoutMs = 10_000
 ): Promise<RunStatusValue> {
   await waitForCondition(
-    () => adapter.getRunStatus(runRef),
-    (s) => s.status === 'COMPLETED' || s.status === 'FAILED' || s.status === 'CANCELLED',
+    () => adapter.getProviderStatusView(runRef),
+    (s) =>
+      s.providerStatus === 'COMPLETED' ||
+      s.providerStatus === 'FAILED' ||
+      s.providerStatus === 'CANCELLED',
     { timeoutMs }
   );
-  const status = await adapter.getRunStatus(runRef);
-  return status.status as RunStatusValue;
+  const status = await adapter.getProviderStatusView(runRef);
+  return status.providerStatus as RunStatusValue;
 }
 
 interface CancelScenarioRequest {
@@ -239,8 +242,8 @@ describe('temporal integration (time-skipping)', () => {
           { timeoutMs: 30_000 }
         );
 
-        const status = await adapter.getRunStatus(runRef);
-        expect(['PENDING', 'RUNNING']).toContain(status.status);
+        const status = await adapter.getProviderStatusView(runRef);
+        expect(['RUNNING', 'PAUSED']).toContain(status.providerStatus);
 
         await adapter.cancelRun(runRef);
 

@@ -27,9 +27,11 @@ export type { ExecutionPlan } from './ExecutionPlan.v1.js';
 export type {
   EngineRunRef,
   PlanRef,
+  CanonicalRunStatus,
+  ProviderRunStatusView,
   RunContext,
+  RunStatusEnrichment,
   RunStatus,
-  RunStatusSnapshot,
   SignalRequest,
   SignalType,
 } from './ExecutionSemantics.v2.js';

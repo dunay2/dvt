@@ -9,12 +9,13 @@
  */
 import { parsePlanRef, parseRecoverRunCommand, parseRunContext } from '@dvt/contracts';
 import type {
+  CanonicalRunStatus,
   EngineRunRef,
   PlanRef,
   ResolvedRunContext,
   RunContext,
+  RunStatusEnrichment,
   RunStatus,
-  RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
@@ -203,12 +204,12 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.core.cancel(engineRunRef);
   }
 
-  async getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
+  async getRunStatus(engineRunRef: EngineRunRef): Promise<CanonicalRunStatus> {
     return this.core.getStatus(engineRunRef);
   }
 
-  async enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
-    return this.core.enrichStatus(engineRunRef);
+  async getRunEnrichment(engineRunRef: EngineRunRef): Promise<RunStatusEnrichment> {
+    return this.core.getEnrichment(engineRunRef);
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
@@ -367,7 +368,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   private async resolveRunStatusSnapshot(
     tenantId: string,
     runId: string
-  ): Promise<RunStatusSnapshot> {
+  ): Promise<CanonicalRunStatus> {
     const snapshot = await this.deps.stateStoreRead.getSnapshot(tenantId, runId);
     if (snapshot !== null) {
       return snapshotToStatus(snapshot);

@@ -1,8 +1,9 @@
 import type {
+  CanonicalRunStatus,
   EventEnvelope,
   MaterializationEvidence,
+  ProviderRunStatusView,
   RunExecutionContextRef,
-  RunStatusSnapshot,
   TransformationExecutor,
 } from '@dvt/contracts';
 
@@ -43,11 +44,12 @@ export interface IRunStatusStalenessTelemetry {
 }
 
 export type GetRunStatusResult = Pick<
-  RunStatusSnapshot,
+  CanonicalRunStatus,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'execution'
 > & {
   readonly tenantId: string;
   readonly enriched: boolean;
+  readonly providerView?: ProviderRunStatusView;
   readonly snapshotStaleness: RunSnapshotStaleness;
   readonly executor?: TransformationExecutor;
   readonly currentStepId?: string;
@@ -77,7 +79,7 @@ export interface RunListItemDto {
   readonly logicalAttemptId: number;
   readonly provider: 'temporal' | 'conductor' | 'mock';
   readonly createdAt?: string;
-  readonly status?: RunStatusSnapshot['status'];
+  readonly status?: CanonicalRunStatus['status'];
 }
 
 export interface ListRunsResult {

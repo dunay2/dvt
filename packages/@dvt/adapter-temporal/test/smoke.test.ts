@@ -6,8 +6,8 @@ import {
   TemporalClientManager,
   loadTemporalAdapterConfig,
   mapTemporalStatusToRunStatus,
-  toRunStatusSnapshotFromWorkflowState,
-  toRunStatusSnapshot,
+  toProviderRunStatusViewFromWorkflowState,
+  toProviderRunStatusView,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
@@ -119,32 +119,31 @@ describe('adapter-temporal foundation', () => {
     const status = mapTemporalStatusToRunStatus('COMPLETED');
     expect(status).toBe('COMPLETED');
 
-    const snapshot = toRunStatusSnapshot({
-      runId: 'run-1',
+    const providerView = toProviderRunStatusView({
       runtimeStatus: 'RUNNING',
       message: 'ok',
     });
-    expect(snapshot).toEqual({
-      runId: 'run-1',
-      status: 'RUNNING',
+    expect(providerView).toEqual({
+      provider: 'temporal',
+      providerStatus: 'RUNNING',
+      providerSubstatus: 'RUNNING',
       message: 'ok',
     });
 
     expect(
-      toRunStatusSnapshotFromWorkflowState({
-        runId: 'run-1',
+      toProviderRunStatusViewFromWorkflowState({
         state: {
           status: 'CANCELLED',
           paused: false,
-          cancelled: true,
+          cancelRequested: true,
           cancelReason: 'user request',
           currentStepIndex: 2,
           continuedAsNewCount: 0,
         },
       })
     ).toEqual({
-      runId: 'run-1',
-      status: 'CANCELLED',
+      provider: 'temporal',
+      providerStatus: 'CANCELLED',
       message: 'user request',
     });
   });

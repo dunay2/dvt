@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { EngineRunRef, RunStatus, RunStatusSnapshot } from '@dvt/contracts';
+import type { EngineRunRef, ProviderRunStatusView, RunStatus } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { WorkflowState } from './workflows/RunPlanWorkflow.js';
@@ -68,30 +68,36 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
   }
 }
 
-export function toRunStatusSnapshot(args: {
-  runId: string;
+export function toProviderRunStatusView(args: {
   runtimeStatus: TemporalRuntimeStatus;
   message?: string;
-}): RunStatusSnapshot {
+}): ProviderRunStatusView {
   return {
-    runId: args.runId,
-    status: mapTemporalStatusToRunStatus(args.runtimeStatus),
+    provider: 'temporal',
+    providerStatus: args.runtimeStatus,
+    providerSubstatus: mapTemporalStatusToRunStatus(args.runtimeStatus),
     message: args.message,
   };
 }
 
-export function toRunStatusSnapshotFromWorkflowState(args: {
-  runId: string;
+export function toProviderRunStatusViewFromWorkflowState(args: {
   state: WorkflowState;
-}): RunStatusSnapshot {
+}): ProviderRunStatusView {
   const message =
     args.state.status === 'CANCELLED' && args.state.cancelReason
       ? args.state.cancelReason
       : undefined;
+  const providerSubstatus =
+    args.state.cancelRequested && args.state.status === 'RUNNING'
+      ? 'CANCELLING'
+      : args.state.paused && args.state.status === 'RUNNING'
+        ? 'PAUSED'
+        : undefined;
 
   return {
-    runId: args.runId,
-    status: args.state.status,
+    provider: 'temporal',
+    providerStatus: args.state.status,
+    ...(providerSubstatus === undefined ? {} : { providerSubstatus }),
     ...(message === undefined ? {} : { message }),
   };
 }

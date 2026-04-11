@@ -13,8 +13,8 @@ import {
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
-  type RunStatusSnapshot,
   type SignalRequest,
   type SignalSemanticsVersion,
 } from '@dvt/contracts';
@@ -51,7 +51,7 @@ export class ConductorAdapterStub implements IProviderAdapter {
   async cancelRun(_runRef: EngineRunRef): Promise<void> {
     throw new Error('NotImplemented: ConductorAdapter (Phase 2+)');
   }
-  async getRunStatus(_runRef: EngineRunRef): Promise<RunStatusSnapshot> {
+  async getProviderStatusView(_runRef: EngineRunRef): Promise<ProviderRunStatusView> {
     throw new Error('NotImplemented: ConductorAdapter (Phase 2+)');
   }
   async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {

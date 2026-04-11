@@ -8,7 +8,7 @@
  * @version 1.1.0
  * @date 2026-02-21
  */
-import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, type RunStatusSnapshot } from '@dvt/contracts';
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, type CanonicalRunStatus } from '@dvt/contracts';
 import { applyRunEvent as applyCanonicalRunEvent } from '@dvt/run-domain';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
@@ -30,12 +30,12 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): Workflo
 }
 
 /**
- * Pure function: converts a materialized WorkflowSnapshot into a RunStatusSnapshot.
+ * Pure function: converts a materialized WorkflowSnapshot into a CanonicalRunStatus.
  *
  * Exported so WorkflowEngine.getRunStatus can produce its response from a
  * stored snapshot without a full event replay.
  */
-export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
+export function snapshotToStatus(snap: WorkflowSnapshot): CanonicalRunStatus {
   const execution = toRunExecutionEvidence(snap);
 
   return {
@@ -49,7 +49,7 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
 }
 
 export class SnapshotProjector {
-  rebuild(runId: string, events: EventEnvelope[]): RunStatusSnapshot {
+  rebuild(runId: string, events: EventEnvelope[]): CanonicalRunStatus {
     const snap: WorkflowSnapshot = {
       schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
       runId,
@@ -68,7 +68,7 @@ export class SnapshotProjector {
   }
 }
 
-function toRunExecutionEvidence(snap: WorkflowSnapshot): RunStatusSnapshot['execution'] {
+function toRunExecutionEvidence(snap: WorkflowSnapshot): CanonicalRunStatus['execution'] {
   const execution = snap.execution;
   if (!execution) {
     return undefined;

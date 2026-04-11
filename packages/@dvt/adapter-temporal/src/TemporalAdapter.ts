@@ -17,8 +17,8 @@ import {
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
-  type RunStatusSnapshot,
   type SignalSemanticsVersion,
   type SignalRequest,
   parseEngineRunRef,
@@ -34,7 +34,7 @@ import type { TemporalClientManager } from './TemporalClient.js';
 import { isWorkflowNotFound } from './temporalErrorPolicy.js';
 import { withAbortSignalTimeout, withTimeoutMs } from './temporalObservability.js';
 import {
-  toRunStatusSnapshotFromWorkflowState,
+  toProviderRunStatusViewFromWorkflowState,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
@@ -143,7 +143,7 @@ export class TemporalAdapter implements IProviderAdapter {
     await workflowClient.getHandle(validatedRunRef.workflowId).cancel();
   }
 
-  async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
+  async getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
     const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
     const workflow = workflowClient.getHandle(validatedRunRef.workflowId);
@@ -153,10 +153,7 @@ export class TemporalAdapter implements IProviderAdapter {
     }
 
     const state = await workflow.query<WorkflowState>('status');
-    return toRunStatusSnapshotFromWorkflowState({
-      runId: validatedRunRef.runId,
-      state,
-    });
+    return toProviderRunStatusViewFromWorkflowState({ state });
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {

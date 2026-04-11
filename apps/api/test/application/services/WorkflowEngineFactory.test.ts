@@ -3,8 +3,8 @@ import {
   AllowAllAuthorizer,
   StartRunApplicationService,
   type IProviderAdapter,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
-  type RunStatusSnapshot,
   type SignalRequest,
   type WorkflowEngine,
   type WorkflowEngineDeps,
@@ -62,7 +62,7 @@ describe('buildWorkflowEngine', () => {
         };
       },
       async cancelRun(_engineRunRef) {},
-      async getRunStatus(_engineRunRef): Promise<RunStatusSnapshot> {
+      async getProviderStatusView(_engineRunRef): Promise<ProviderRunStatusView> {
         throw new Error('not used');
       },
       async signal(_engineRunRef, _request: SignalRequest) {},

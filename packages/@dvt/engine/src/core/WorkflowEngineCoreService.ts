@@ -1,4 +1,10 @@
-import type { EngineRunRef, EventType, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
+import type {
+  CanonicalRunStatus,
+  EngineRunRef,
+  EventType,
+  RunStatusEnrichment,
+  SignalRequest,
+} from '@dvt/contracts';
 import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import type { GuardedRunEventType } from '@dvt/run-domain';
@@ -105,7 +111,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     );
   }
 
-  async getStatus(ref: EngineRunRef): Promise<RunStatusSnapshot> {
+  async getStatus(ref: EngineRunRef): Promise<CanonicalRunStatus> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
@@ -150,7 +156,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
     );
   }
 
-  async enrichStatus(ref: EngineRunRef): Promise<RunStatusSnapshot> {
+  async getEnrichment(ref: EngineRunRef): Promise<RunStatusEnrichment> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
@@ -159,7 +165,7 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
 
     return this.deps.observability.withContext(traceContext, () =>
       this.deps.observability.traces.withSpan(
-        CORE_SPAN.enrichRunStatus,
+        CORE_SPAN.getRunEnrichment,
         {
           context: traceContext,
           attributes: { provider: meta.providerRef.provider },
@@ -178,17 +184,15 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
                 );
 
             const providerView = await withTimeout(
-              adapter.getRunStatus(validatedRunRef),
+              adapter.getProviderStatusView(validatedRunRef),
               this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
-              CORE_TIMEOUT_OPERATION.adapterGetRunStatus
+              CORE_TIMEOUT_OPERATION.adapterGetProviderStatusView
             );
-            const substatus = providerView.substatus ?? base.substatus;
-            const message = providerView.message ?? base.message;
             span.setStatus('ok');
-            const result = { ...base };
-            if (substatus !== undefined) result.substatus = substatus;
-            if (message !== undefined) result.message = message;
-            return result;
+            return {
+              canonical: base,
+              providerView,
+            };
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));

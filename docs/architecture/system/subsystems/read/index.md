@@ -23,11 +23,11 @@ flowchart LR
   Api --> GetRun["GetRunStatusUseCase"]
   Api --> GetEvents["GetRunEventsUseCase"]
   ListRuns --> StateRead["IRunStateStoreRead.listRuns + getSnapshot"]
-  GetRun --> Engine["IWorkflowEngine.getRunStatus / enrichRunStatus"]
+  GetRun --> Engine["IWorkflowEngine.getRunStatus / getRunEnrichment"]
   GetRun --> Metadata["IRunStateStoreRead.getRunMetadataByRunId"]
   GetEvents --> EventStore["IRunStateStoreRead.listEvents"]
   Engine --> StateRead
-  Engine --> Provider["IProviderAdapter.getRunStatus (live provider view) when query.enriched = true"]
+  Engine --> Provider["IProviderAdapter.getProviderStatusView (live provider view) when query.enriched = true"]
   Api --> Web
 ```
 
@@ -77,17 +77,20 @@ The current API shape keeps canonical status and optional enrichment inside one
 use case:
 
 - `GetRunStatusUseCase` calls `engine.getRunStatus(...)` by default;
-- the same use case switches to `engine.enrichRunStatus(...)` when
+- the same use case switches to `engine.getRunEnrichment(...)` when
   `query.enriched = true`;
+- the enriched response keeps canonical status at the top level and exposes
+  provider diagnostics under `providerView`;
 - there is no separate `EnrichRunStatusUseCase` in the current code.
 
 The documentation rule is to explain those two paths as one subsystem while
 keeping the source of truth explicit at each step and avoiding target-state
 interactors on active/current pages.
 
-The contract-reset target under `AR-A12-B` splits `CanonicalRunStatus`,
-`RunStatusEnrichment`, and `ProviderRunStatusView`, but that target does not
-change the current implementation shape until `AR-A12-C` lands.
+The contract reset under `AR-A12-B` is now reflected in the active boundary:
+`CanonicalRunStatus`, `RunStatusEnrichment`, and `ProviderRunStatusView` are
+explicit models. `AR-A12-C` remains the cleanup slice for remaining downstream
+consumers and naming convergence, not the introduction of the split itself.
 
 ## Related Pages
 

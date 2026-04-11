@@ -9,20 +9,20 @@ export const CORE_ERROR_MESSAGE = {
 export const CORE_OPERATION = {
   cancelRun: 'cancelRun',
   getRunStatus: 'getRunStatus',
-  enrichRunStatus: 'enrichRunStatus',
+  getRunEnrichment: 'getRunEnrichment',
   signal: 'signal',
 } as const;
 
 export const CORE_SPAN = {
   cancelRun: 'engine.cancelRun',
   getRunStatus: 'engine.getRunStatus',
-  enrichRunStatus: 'engine.enrichRunStatus',
+  getRunEnrichment: 'engine.getRunEnrichment',
   signal: 'engine.signal',
 } as const;
 
 export const CORE_TIMEOUT_OPERATION = {
   adapterCancelRun: 'adapter.cancelRun',
-  adapterGetRunStatus: 'adapter.getRunStatus',
+  adapterGetProviderStatusView: 'adapter.getProviderStatusView',
   adapterSignal: 'adapter.signal',
 } as const;
 

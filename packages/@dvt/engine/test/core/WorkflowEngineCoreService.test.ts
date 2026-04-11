@@ -1,4 +1,4 @@
-import type { EngineRunRef, RunStatusSnapshot } from '@dvt/contracts';
+import type { EngineRunRef, ProviderRunStatusView } from '@dvt/contracts';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -32,9 +32,9 @@ describe('WorkflowEngineCoreService', () => {
     let adapterCalled = false;
     const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
-        async getRunStatus() {
+        async getProviderStatusView() {
           adapterCalled = true;
-          return { runId: 'x', status: 'RUNNING' } as RunStatusSnapshot;
+          return { provider: 'temporal', providerStatus: 'RUNNING' } as ProviderRunStatusView;
         },
       },
     });
@@ -47,48 +47,50 @@ describe('WorkflowEngineCoreService', () => {
     expect(snapshot.status).toBe('PENDING');
   });
 
-  it('enrichStatus merges adapter substatus and message over projected base', async () => {
+  it('getEnrichment returns canonical status plus provider view', async () => {
     const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
-        async getRunStatus(runRef) {
+        async getProviderStatusView() {
           return {
-            runId: runRef.runId,
-            status: 'RUNNING',
-            substatus: 'DRAINING',
+            provider: 'temporal',
+            providerStatus: 'RUNNING',
+            providerSubstatus: 'DRAINING',
             message: 'graceful shutdown in progress',
-          } as RunStatusSnapshot;
+          } as ProviderRunStatusView;
         },
       },
     });
     await bootstrapQueuedRun(store, 'core-enrich-1');
     const ref: EngineRunRef = makeRunRef('core-enrich-1');
-    const enriched = await core.enrichStatus(ref);
+    const enriched = await core.getEnrichment(ref);
 
-    expect(enriched.runId).toBe('core-enrich-1');
-    expect(enriched.status).toBe('PENDING');
-    expect(enriched.substatus).toBe('DRAINING');
-    expect(enriched.message).toBe('graceful shutdown in progress');
+    expect(enriched.canonical.runId).toBe('core-enrich-1');
+    expect(enriched.canonical.status).toBe('PENDING');
+    expect(enriched.providerView.provider).toBe('temporal');
+    expect(enriched.providerView.providerStatus).toBe('RUNNING');
+    expect(enriched.providerView.providerSubstatus).toBe('DRAINING');
+    expect(enriched.providerView.message).toBe('graceful shutdown in progress');
   });
 
-  it('enrichStatus throws when adapter status fetch fails', async () => {
+  it('getEnrichment throws when adapter status fetch fails', async () => {
     const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
-        async getRunStatus() {
+        async getProviderStatusView() {
           throw new Error('provider unavailable');
         },
       },
     });
     await bootstrapQueuedRun(store, 'core-enrich-err-1');
     const ref: EngineRunRef = makeRunRef('core-enrich-err-1');
-    await expect(core.enrichStatus(ref)).rejects.toThrow(/provider unavailable/);
+    await expect(core.getEnrichment(ref)).rejects.toThrow(/provider unavailable/);
   });
 
-  it('enrichStatus rejects on adapter timeout without downgrading to projected status', async () => {
+  it('getEnrichment rejects on adapter timeout without downgrading to projected status', async () => {
     const { core, store } = createWorkflowEngineCoreFixture({
       adapterOverrides: {
-        async getRunStatus() {
-          return await new Promise<RunStatusSnapshot>((resolve) => {
-            setTimeout(() => resolve({ runId: 'late-run', status: 'RUNNING' }), 25);
+        async getProviderStatusView() {
+          return await new Promise<ProviderRunStatusView>((resolve) => {
+            setTimeout(() => resolve({ provider: 'temporal', providerStatus: 'RUNNING' }), 25);
           });
         },
       },
@@ -99,8 +101,8 @@ describe('WorkflowEngineCoreService', () => {
     await bootstrapQueuedRun(store, 'core-enrich-timeout-1');
     const ref: EngineRunRef = makeRunRef('core-enrich-timeout-1');
 
-    await expect(core.enrichStatus(ref)).rejects.toThrow(
-      /adapter\.getRunStatus timed out after 5ms/
+    await expect(core.getEnrichment(ref)).rejects.toThrow(
+      /adapter\.getProviderStatusView timed out after 5ms/
     );
   });
 

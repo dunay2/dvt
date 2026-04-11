@@ -1,10 +1,10 @@
 import {
   MaterializationEvidenceSchema,
+  type CanonicalRunStatus,
   parseExecutionPlan,
   TransformationExecutorSchema,
   type EventEnvelope,
   type PlanRecord,
-  type RunStatusSnapshot,
   type WorkflowSnapshot,
 } from '@dvt/contracts';
 
@@ -27,7 +27,7 @@ export interface RunReadEvidenceModel {
 }
 
 export function deriveRunReadEvidenceModel(args: {
-  snapshot: Pick<RunStatusSnapshot, 'status' | 'execution'>;
+  snapshot: Pick<CanonicalRunStatus, 'status' | 'execution'>;
   workflowSnapshot: WorkflowSnapshot | null;
   events?: ReadonlyArray<EventEnvelope>;
   planRecord?: PlanRecord;
@@ -62,7 +62,7 @@ export function deriveRunReadEvidenceModel(args: {
 
 function deriveExecutor(
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution'],
+  snapshotExecution: CanonicalRunStatus['execution'],
   planRecord?: PlanRecord
 ): TransformationExecutor | undefined {
   if (snapshotExecution?.materialization) {
@@ -107,7 +107,7 @@ function deriveExecutor(
 }
 
 function deriveCurrentStepId(
-  status: RunStatusSnapshot['status'],
+  status: CanonicalRunStatus['status'],
   workflowSnapshot: WorkflowSnapshot | null,
   events: ReadonlyArray<EventEnvelope>
 ): string | undefined {
@@ -145,10 +145,10 @@ function deriveCurrentStepId(
 }
 
 function deriveFailedStepId(
-  status: RunStatusSnapshot['status'],
+  status: CanonicalRunStatus['status'],
   workflowSnapshot: WorkflowSnapshot | null,
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution']
+  snapshotExecution: CanonicalRunStatus['execution']
 ): string | undefined {
   if (status !== 'FAILED') {
     return undefined;
@@ -176,7 +176,7 @@ function deriveFailedStepId(
 
 function deriveErrorReason(
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution']
+  snapshotExecution: CanonicalRunStatus['execution']
 ): string | undefined {
   const failure = snapshotExecution?.failure;
   if (failure) {
@@ -230,7 +230,7 @@ function deriveErrorReason(
 
 function deriveMaterialization(
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution']
+  snapshotExecution: CanonicalRunStatus['execution']
 ) {
   if (snapshotExecution?.materialization) {
     return snapshotExecution.materialization;

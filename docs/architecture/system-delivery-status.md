@@ -194,12 +194,13 @@ classDiagram
 
 Current-versus-target note:
 
-- current code still exposes `WorkflowEngine.enrichRunStatus()` and
-  `IProviderAdapter.getRunStatus()` over `RunStatusSnapshot`
-- the active contract reset under `AR-A12-B` defines the target split as
-  `CanonicalRunStatus`, `RunStatusEnrichment`, and
-  `ProviderRunStatusView`
-- method-name and return-shape convergence remains pending under `AR-A12-C`
+- current code now exposes `WorkflowEngine.getRunStatus()` as the canonical
+  read model and `WorkflowEngine.getRunEnrichment()` as the explicit
+  enrichment path
+- `IProviderAdapter.getProviderStatusView()` now returns the provider-live
+  diagnostic surface instead of reusing the canonical status DTO
+- the active follow-up under `AR-A12-C` is convergence cleanup around the
+  remaining downstream consumers and doc surfaces, not the core boundary split
 
 ### Engine Domain Structure
 
@@ -211,6 +212,7 @@ classDiagram
         +startRun()
         +cancelRun()
         +getRunStatus() canonical read model
+        +getRunEnrichment() canonical + provider diagnostics
         +signal()
         +healthCheck()
     }
@@ -227,7 +229,7 @@ classDiagram
     class IProviderAdapter {
         +startRun()
         +cancelRun()
-        +getRunStatus() live provider view
+        +getProviderStatusView() live provider view
         +signal()
         +ping()
     }

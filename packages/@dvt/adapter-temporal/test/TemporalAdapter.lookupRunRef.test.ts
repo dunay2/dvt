@@ -38,7 +38,7 @@ function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
     query: vi.fn(async () => ({
       status: 'RUNNING',
       paused: false,
-      cancelled: false,
+      cancelRequested: false,
       currentStepIndex: 0,
       continuedAsNewCount: 0,
     })),
@@ -349,13 +349,13 @@ describe('TemporalAdapter.lookupRunRef', () => {
     handle.query.mockResolvedValueOnce({
       status: 'PAUSED',
       paused: true,
-      cancelled: false,
+      cancelRequested: false,
       currentStepIndex: 4,
       continuedAsNewCount: 1,
     });
     const { adapter, workflowClient } = makeAdapter(() => handle);
 
-    const status = await adapter.getRunStatus({
+    const status = await adapter.getProviderStatusView({
       provider: 'temporal',
       tenantId: 'tenant1',
       namespace: 'dvt-test',
@@ -367,8 +367,8 @@ describe('TemporalAdapter.lookupRunRef', () => {
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
     expect(handle.query).toHaveBeenCalledWith('status');
     expect(status).toEqual({
-      runId: 'run-abc',
-      status: 'PAUSED',
+      provider: 'temporal',
+      providerStatus: 'PAUSED',
     });
   });
 
@@ -381,7 +381,7 @@ describe('TemporalAdapter.lookupRunRef', () => {
     const { adapter } = makeAdapter(() => handle as never);
 
     await expect(
-      adapter.getRunStatus({
+      adapter.getProviderStatusView({
         provider: 'temporal',
         tenantId: 'tenant1',
         namespace: 'dvt-test',

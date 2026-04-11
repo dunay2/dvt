@@ -69,7 +69,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -116,7 +116,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -156,7 +156,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -199,7 +199,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -244,7 +244,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -286,7 +286,7 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('engine unavailable');
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -316,7 +316,7 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('engine unavailable');
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -348,11 +348,17 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('should not be called');
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         return {
-          runId: 'provider-run-1',
-          status: 'RUNNING' as const,
-          substatus: 'mock/QUEUED' as const,
+          canonical: {
+            runId: 'provider-run-1',
+            status: 'RUNNING' as const,
+          },
+          providerView: {
+            provider: 'mock' as const,
+            providerStatus: 'RUNNING',
+            providerSubstatus: 'mock/QUEUED',
+          },
         };
       },
     };
@@ -379,7 +385,11 @@ describe('GetRunStatusUseCase', () => {
       status: 'RUNNING',
       enriched: true,
       snapshotStaleness: 'FRESH',
-      substatus: 'mock/QUEUED',
+      providerView: {
+        provider: 'mock',
+        providerStatus: 'RUNNING',
+        providerSubstatus: 'mock/QUEUED',
+      },
     });
     expect(telemetry.recordSnapshotStalenessResult).toHaveBeenCalledWith(
       'FRESH',
@@ -415,7 +425,7 @@ describe('GetRunStatusUseCase', () => {
           },
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -458,8 +468,8 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('should not be called');
       },
-      async enrichRunStatus() {
-        throw new Error('adapter.getRunStatus timed out after 5ms');
+      async getRunEnrichment() {
+        throw new Error('adapter.getProviderStatusView timed out after 5ms');
       },
     };
 
@@ -479,7 +489,7 @@ describe('GetRunStatusUseCase', () => {
 
     await expect(
       useCase.execute({ runId: 'run-1', enriched: true }, queryContext as never)
-    ).rejects.toThrow(/adapter\.getRunStatus timed out after 5ms/);
+    ).rejects.toThrow(/adapter\.getProviderStatusView timed out after 5ms/);
 
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
     expect(telemetry.recordSnapshotStalenessResult).not.toHaveBeenCalled();
@@ -494,7 +504,7 @@ describe('GetRunStatusUseCase', () => {
           startedAt: '2026-04-08T10:00:00.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -635,7 +645,7 @@ describe('GetRunStatusUseCase', () => {
           completedAt: '2026-04-08T10:00:10.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -738,7 +748,7 @@ describe('GetRunStatusUseCase', () => {
           startedAt: '2026-04-08T10:00:00.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -892,7 +902,7 @@ describe('GetRunStatusUseCase', () => {
           completedAt: '2026-04-08T10:10:00.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -1017,7 +1027,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -1063,7 +1073,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -1093,3 +1103,4 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 });
+

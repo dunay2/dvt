@@ -30,7 +30,8 @@ Key governing boundaries:
 ## Current ownership and communication rules
 
 - `@dvt/contracts` owns shared serialized surfaces (`PlanRef`, `RunContext`,
-  `RunExecutionContextRef`, `RunStatusSnapshot`, etc.).
+  `RunExecutionContextRef`, `CanonicalRunStatus`,
+  `RunStatusEnrichment`, `ProviderRunStatusView`, etc.).
 - `@dvt/engine` owns lifecycle use-case orchestration and execution invariants.
 - `@dvt/artifacts` owns artifact retrieval behavior; engine consumes an
   engine-owned resolver port where needed.
@@ -176,21 +177,22 @@ sequenceDiagram
   else no snapshot
     Core->>Projector: rebuild(runId, events)
   end
-  Core-->>Engine: RunStatusSnapshot
-  Engine-->>Client: RunStatusSnapshot
+  Core-->>Engine: CanonicalRunStatus
+  Engine-->>Client: CanonicalRunStatus
 
-  Client->>Engine: enrichRunStatus(runRef)
-  Engine->>Core: enrichStatus(runRef)
+  Client->>Engine: getRunEnrichment(runRef)
+  Engine->>Core: getEnrichment(runRef)
   Core->>State: base snapshot/events
   Note over State,Adapter: Snapshot/events remain canonical. Provider status is live enrichment only.
-  Core->>Adapter: getRunStatus(runRef) [live provider view]
-  Core-->>Engine: base + provider enrichment
+  Core->>Adapter: getProviderStatusView(runRef) [live provider view]
+  Core-->>Engine: RunStatusEnrichment
+  Engine-->>Client: RunStatusEnrichment
 ```
 
 ## What the subsystem already gets right
 
 - event-sourced execution authority and replayable status model
-- explicit CQRS split (`getRunStatus` vs `enrichRunStatus`)
+- explicit CQRS split (`getRunStatus` vs `getRunEnrichment`)
 - crash-consistency intent-log model around `startRun`
 - single engine-side proof that fetched bytes match `planId` before dispatch
 - provider runtimes remain behind adapter contract

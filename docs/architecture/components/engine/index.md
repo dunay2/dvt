@@ -61,7 +61,7 @@ Target note:
 - `WorkflowEngine.recoverRun(...)`
 - `WorkflowEngine.cancelRun(...)`
 - `WorkflowEngine.getRunStatus(...)`
-- `WorkflowEngine.enrichRunStatus(...)`
+- `WorkflowEngine.getRunEnrichment(...)`
 - `WorkflowEngine.signal(...)`
 - `WorkflowEngine.healthCheck()`
 - `StartRunApplicationService.startRun(...)`
