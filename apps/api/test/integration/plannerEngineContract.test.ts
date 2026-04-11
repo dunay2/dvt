@@ -12,6 +12,8 @@ import {
 } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
+  buildRunControlService,
+  buildRunStatusQueryService,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
@@ -125,42 +127,55 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
   });
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
+  const planFetcher = {
+    fetch: async () => ({
+      bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+      executionPolicy: {},
+    }),
+  };
+  const startRunApplicationService = new StartRunApplicationService({
+    policy,
+    guard: new StartRunAdmissionGuard({
+      policy,
+      stateStoreRead: store,
+      adapters,
+    }),
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    idempotency,
+    clock,
+    intentStore: new InMemoryStartRunIntentStore(),
+    observability: createNoopObservability(),
+    planFetcher,
+  });
+  const runControlService = buildRunControlService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    idempotency,
+    policy,
+    adapters,
+    observability: createNoopObservability(),
+    clock,
+  });
+  const runStatusQueryService = buildRunStatusQueryService({
+    stateStoreRead: store,
+    projector,
+    policy,
+    observability: createNoopObservability(),
+    clock,
+  });
 
   const engine = new WorkflowEngine({
-    startRunApplicationService: new StartRunApplicationService({
-      policy,
-      guard: new StartRunAdmissionGuard({
-        policy,
-        stateStoreRead: store,
-        adapters,
-      }),
-      stateStoreRead: store,
-      stateStoreWrite: store,
-      idempotency,
-      clock,
-      intentStore: new InMemoryStartRunIntentStore(),
-      observability: createNoopObservability(),
-      planFetcher: {
-        fetch: async () => ({
-          bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
-          executionPolicy: {},
-        }),
-      },
-    }),
+    startRunApplicationService,
+    runControlService,
+    runStatusQueryService,
     policy,
     stateStoreRead: store,
     stateStoreWrite: store,
     projector,
-    idempotency,
-    clock,
     observability: createNoopObservability(),
     adapters,
-    planFetcher: {
-      fetch: async () => ({
-        bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
-        executionPolicy: {},
-      }),
-    },
+    planFetcher,
   });
 
   return { engine, store, clock, idempotency };

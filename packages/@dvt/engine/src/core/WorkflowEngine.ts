@@ -22,7 +22,6 @@ import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { StartRunAdmissionGuard } from '../application/StartRunAdmissionGuard.js';
-import { StartRunApplicationService } from '../application/StartRunApplicationService.js';
 import {
   AdapterNotRegisteredError,
   RecoverySourceNotTerminalError,
@@ -37,18 +36,13 @@ import type {
   IRunStateStoreRead,
   IRunStateStoreWrite,
 } from '../ports/IRunStateStore.js';
-import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
-import { RunStatusQueryService } from '../services/RunStatusQueryService.js';
-import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
-import { IdempotencyKeyBuilder } from './idempotency.js';
 import { buildTraceContext } from './lifecycle/coreRuntime.js';
 import type { StartRunTraceContext } from './lifecycle/StartRunTraceContext.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
-import { WorkflowEngineCoreService } from './WorkflowEngineCoreService.js';
 
 export interface IStartRunApplicationService {
   startRun(
@@ -62,23 +56,15 @@ export interface WorkflowEngineDeps {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   projector: SnapshotProjector;
-  idempotency: IdempotencyKeyBuilder;
-  clock: IClock;
-  policy?: IRunAccessPolicy;
-  intentStore?: IStartRunIntentStore;
+  policy: IRunAccessPolicy;
   runExecutionContextResolver?: IRunExecutionContextResolver;
-  planFetcher?: IPlanFetcher;
+  planFetcher: IPlanFetcher;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
   observability: IObservability;
-  startRunApplicationService?: IStartRunApplicationService;
-  runControlService?: IRunControlService;
-  runStatusQueryService?: IRunStatusQueryService;
-  timeouts?: {
-    adapterCallMs?: number;
-    outboxEnqueueMs?: number;
-  };
-  observabilityFallbackThrottleMs?: number;
+  startRunApplicationService: IStartRunApplicationService;
+  runControlService: IRunControlService;
+  runStatusQueryService: IRunStatusQueryService;
 }
 
 export interface HealthStatus {
@@ -103,10 +89,9 @@ export class WorkflowEngine implements IWorkflowEngine {
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
     this.observability = deps.observability;
-    this.startRunApplicationService =
-      deps.startRunApplicationService ?? this.buildStartRunApplicationService();
-    this.runControlService = deps.runControlService ?? this.buildRunControlService();
-    this.runStatusQueryService = deps.runStatusQueryService ?? this.buildRunStatusQueryService();
+    this.startRunApplicationService = deps.startRunApplicationService;
+    this.runControlService = deps.runControlService;
+    this.runStatusQueryService = deps.runStatusQueryService;
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
@@ -253,26 +238,17 @@ export class WorkflowEngine implements IWorkflowEngine {
       ['stateStoreRead', this.deps.stateStoreRead],
       ['stateStoreWrite', this.deps.stateStoreWrite],
       ['projector', this.deps.projector],
-      ['idempotency', this.deps.idempotency],
-      ['clock', this.deps.clock],
+      ['policy', this.deps.policy],
+      ['planFetcher', this.deps.planFetcher],
       ['adapters', this.deps.adapters],
       ['observability', this.deps.observability],
+      ['startRunApplicationService', this.deps.startRunApplicationService],
+      ['runControlService', this.deps.runControlService],
+      ['runStatusQueryService', this.deps.runStatusQueryService],
     ];
 
     for (const [name, value] of requiredDeps) {
       if (!value) throw new Error(`${name} is required`);
-    }
-    if (this.deps.startRunApplicationService === undefined) {
-      if (this.deps.policy === undefined) throw new Error('policy is required');
-      if (this.deps.intentStore === undefined) throw new Error('intentStore is required');
-      if (this.deps.planFetcher === undefined) throw new Error('planFetcher is required');
-    }
-    if (
-      (this.deps.runControlService === undefined ||
-        this.deps.runStatusQueryService === undefined) &&
-      this.deps.policy === undefined
-    ) {
-      throw new Error('policy is required');
     }
     this.assertRequiredProvidersRegistered(this.deps.requiredProviders ?? []);
   }
@@ -281,75 +257,6 @@ export class WorkflowEngine implements IWorkflowEngine {
     for (const provider of requiredProviders) {
       if (this.deps.adapters.has(provider) === false) throw new AdapterNotRegisteredError(provider);
     }
-  }
-
-  private buildStartRunApplicationService(): IStartRunApplicationService {
-    const policy = this.requirePolicy();
-    const intentStore = this.requireIntentStore();
-    const startRunAdmissionGuard = new StartRunAdmissionGuard({
-      policy,
-      stateStoreRead: this.deps.stateStoreRead,
-      adapters: this.deps.adapters,
-      ...(this.deps.runExecutionContextResolver === undefined
-        ? {}
-        : { runExecutionContextResolver: this.deps.runExecutionContextResolver }),
-    });
-    return new StartRunApplicationService({
-      policy,
-      guard: startRunAdmissionGuard,
-      stateStoreRead: this.deps.stateStoreRead,
-      stateStoreWrite: this.deps.stateStoreWrite,
-      idempotency: this.deps.idempotency,
-      clock: this.deps.clock,
-      intentStore,
-      planFetcher: this.requirePlanFetcher(),
-      observability: this.deps.observability,
-      ...(this.deps.timeouts ? { timeouts: this.deps.timeouts } : {}),
-      ...(this.deps.observabilityFallbackThrottleMs === undefined
-        ? {}
-        : { observabilityFallbackThrottleMs: this.deps.observabilityFallbackThrottleMs }),
-    });
-  }
-
-  private buildRunControlService(): IRunControlService {
-    return new WorkflowEngineCoreService({
-      stateStoreRead: this.deps.stateStoreRead,
-      stateStoreWrite: this.deps.stateStoreWrite,
-      idempotency: this.deps.idempotency,
-      policy: this.requirePolicy(),
-      adapters: this.deps.adapters,
-      observability: this.deps.observability,
-      ...(this.deps.timeouts ? { timeouts: this.deps.timeouts } : {}),
-      clock: this.deps.clock,
-    });
-  }
-
-  private buildRunStatusQueryService(): IRunStatusQueryService {
-    return new RunStatusQueryService({
-      stateStoreRead: this.deps.stateStoreRead,
-      projector: this.deps.projector,
-      policy: this.requirePolicy(),
-      observability: this.deps.observability,
-      clock: this.deps.clock,
-    });
-  }
-
-  private requirePolicy(): IRunAccessPolicy {
-    const policy = this.deps.policy;
-    if (policy === undefined) throw new Error('policy is required');
-    return policy;
-  }
-
-  private requireIntentStore(): IStartRunIntentStore {
-    const intentStore = this.deps.intentStore;
-    if (intentStore === undefined) throw new Error('intentStore is required');
-    return intentStore;
-  }
-
-  private requirePlanFetcher(): IPlanFetcher {
-    const planFetcher = this.deps.planFetcher;
-    if (planFetcher === undefined) throw new Error('planFetcher is required');
-    return planFetcher;
   }
 
   private async resolveRecoverySourceMetadata(
@@ -402,7 +309,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     }
   ): Promise<void> {
     const guard = new StartRunAdmissionGuard({
-      policy: this.requirePolicy(),
+      policy: this.deps.policy,
       stateStoreRead: this.deps.stateStoreRead,
       adapters: this.deps.adapters,
       ...(this.deps.runExecutionContextResolver === undefined
@@ -420,7 +327,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const adapter = guard.resolveAdapter(preflightContext);
     const verifiedArtifact = await new PlanIntegrityValidator().fetchAndValidate(
       planRef,
-      this.requirePlanFetcher()
+      this.deps.planFetcher
     );
     await guard.assertExecutionPolicyAllowed(
       planRef,

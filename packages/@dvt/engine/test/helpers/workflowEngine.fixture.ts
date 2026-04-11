@@ -11,17 +11,25 @@ import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
+import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
+import {
+  buildRunControlService,
+  WorkflowEngineCoreService,
+} from '../../src/core/WorkflowEngineCoreService.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
-import { RunStatusQueryService } from '../../src/services/RunStatusQueryService.js';
+import {
+  buildRunStatusQueryService,
+  RunStatusQueryService,
+} from '../../src/services/RunStatusQueryService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import type { IClock } from '../../src/utils/clock.js';
@@ -93,6 +101,7 @@ export function createWorkflowEngineFixture(input?: {
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
   const clock = input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z');
+  const observability = input?.observability ?? createNoopObservability();
   const adapters =
     input?.adapters ??
     (input?.adapter
@@ -109,23 +118,60 @@ export function createWorkflowEngineFixture(input?: {
         };
       },
     } as const);
+  const policy = new RunAccessPolicy({
+    authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
+    planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
+  });
+  const startRunApplicationService = new StartRunApplicationService({
+    policy,
+    guard: new StartRunAdmissionGuard({
+      policy,
+      stateStoreRead,
+      adapters,
+      ...(input?.runExecutionContextResolver === undefined
+        ? {}
+        : { runExecutionContextResolver: input.runExecutionContextResolver }),
+    }),
+    stateStoreRead,
+    stateStoreWrite,
+    idempotency,
+    clock,
+    intentStore,
+    planFetcher,
+    observability,
+    ...(input?.observabilityFallbackThrottleMs === undefined
+      ? {}
+      : { observabilityFallbackThrottleMs: input.observabilityFallbackThrottleMs }),
+  });
+  const runControlService = buildRunControlService({
+    stateStoreRead,
+    stateStoreWrite,
+    idempotency,
+    policy,
+    adapters,
+    observability,
+    clock,
+  });
+  const runStatusQueryService = buildRunStatusQueryService({
+    stateStoreRead,
+    projector,
+    policy,
+    observability,
+    clock,
+  });
 
   const engine = new WorkflowEngine({
     stateStoreRead,
     stateStoreWrite,
     projector,
-    idempotency,
-    clock,
-    policy: new RunAccessPolicy({
-      authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
-    }),
-    intentStore,
+    policy,
     planFetcher,
-    observability: input?.observability ?? createNoopObservability(),
+    startRunApplicationService,
+    runControlService,
+    runStatusQueryService,
+    observability,
     adapters,
     requiredProviders: input?.requiredProviders,
-    observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
     runExecutionContextResolver: input?.runExecutionContextResolver,
   });
 

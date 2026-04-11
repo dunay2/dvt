@@ -2,7 +2,6 @@ import type { EngineRunRef, PlanRef, ResolvedRunContext, RunContext } from '@dvt
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -28,6 +27,23 @@ function makeContext(): RunContext {
 }
 
 describe('WorkflowEngine planRef normalization', () => {
+  it('requires explicit service collaborators at construction time', () => {
+    expect(
+      () =>
+        new WorkflowEngine({
+          stateStoreRead: {} as never,
+          stateStoreWrite: {} as never,
+          projector: new SnapshotProjector(),
+          policy: {} as never,
+          planFetcher: {} as never,
+          adapters: new Map(),
+          observability: createNoopObservability(),
+          startRunApplicationService: {} as never,
+          runControlService: {} as never,
+        } as never)
+    ).toThrow(/runStatusQueryService is required/);
+  });
+
   it('does not reintroduce execution policy fields onto PlanRef', async () => {
     const startRun = vi.fn<
       (
@@ -47,8 +63,8 @@ describe('WorkflowEngine planRef normalization', () => {
       stateStoreRead: {} as never,
       stateStoreWrite: {} as never,
       projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: { nowIsoUtc: () => '2026-04-07T00:00:00.000Z' },
+      policy: {} as never,
+      planFetcher: {} as never,
       adapters: new Map(),
       observability: createNoopObservability(),
       startRunApplicationService: { startRun },

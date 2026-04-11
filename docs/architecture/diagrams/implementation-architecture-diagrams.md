@@ -359,9 +359,8 @@ internal layers:
 
 1. **Facade** (`WorkflowEngine`): Public API surface. Normalizes inputs,
    resolves initial context (sets `logicalAttemptId=1`, `originRunId=runId`),
-   and delegates to specialized services. Also owns dependency assembly via
-   private builder methods (`buildStartRunApplicationService`,
-   `buildRunControlService`, `buildRunStatusQueryService`).
+   and delegates to specialized services that are now wired explicitly by the
+   composition root.
 2. **Application Services**: `StartRunApplicationService` orchestrates the
    happy path (admission ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ plan integrity ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ intent ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ execution) and the failure
    path (`StartRunFailurePolicy`). `StartRunAdmissionGuard` composes validation
@@ -397,9 +396,10 @@ label carries the current posture (`runtime-wired` or `target-line exposed`).
 
 ### Known Problems
 
-- **`WorkflowEngine` facade is too wide**: It includes normalization, wiring,
-  health checks, and retry-step orchestration in a single class. The subsystem
-  context doc already flags this as active drift.
+- **`WorkflowEngine` facade is still too wide**: It includes normalization,
+  recovery preflight, and health checks in a single class. The composition-root
+  wiring drift is closed, but the facade still carries more than pure
+  delegation.
 - **`WorkflowEngineCoreService` still mixes cancel, signal, and telemetry**:
   canonical read now lives in `RunStatusQueryService`, but the remaining
   control path is still broader than the target architecture.

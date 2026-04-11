@@ -184,3 +184,7 @@ export class WorkflowEngineCoreService implements IRunControlService {
     }
   }
 }
+
+export function buildRunControlService(deps: WorkflowEngineCoreDeps): IRunControlService {
+  return new WorkflowEngineCoreService(deps);
+}

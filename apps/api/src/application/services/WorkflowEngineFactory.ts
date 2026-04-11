@@ -8,6 +8,8 @@
  *     and an optional constructor override, allowing unit tests to inject fakes.
  */
 import {
+  buildRunControlService,
+  buildRunStatusQueryService,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
@@ -108,33 +110,51 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   });
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
+  const startRunApplicationService = new StartRunApplicationService({
+    policy,
+    guard: new StartRunAdmissionGuard({
+      policy,
+      stateStoreRead: config.persistence.stateStoreRead,
+      adapters: config.runtime.adapters,
+      ...(config.persistence.runExecutionContextResolver !== undefined
+        ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+        : {}),
+    }),
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
+    idempotency,
+    clock: config.infrastructure.clock,
+    intentStore: config.persistence.intentStore,
+    planFetcher: config.persistence.planFetcher,
+    observability: config.infrastructure.observability,
+    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+  });
+  const runControlService = buildRunControlService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
+    idempotency,
+    policy,
+    adapters: config.runtime.adapters,
+    observability: config.infrastructure.observability,
+    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    clock: config.infrastructure.clock,
+  });
+  const runStatusQueryService = buildRunStatusQueryService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    projector,
+    policy,
+    observability: config.infrastructure.observability,
+    clock: config.infrastructure.clock,
+  });
   return {
     engine: new WorkflowEngine({
-      startRunApplicationService: new StartRunApplicationService({
-        policy,
-        guard: new StartRunAdmissionGuard({
-          policy,
-          stateStoreRead: config.persistence.stateStoreRead,
-          adapters: config.runtime.adapters,
-          ...(config.persistence.runExecutionContextResolver !== undefined
-            ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-            : {}),
-        }),
-        stateStoreRead: config.persistence.stateStoreRead,
-        stateStoreWrite: config.persistence.stateStoreWrite,
-        idempotency,
-        clock: config.infrastructure.clock,
-        intentStore: config.persistence.intentStore,
-        planFetcher: config.persistence.planFetcher,
-        observability: config.infrastructure.observability,
-        ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
-      }),
+      startRunApplicationService,
+      runControlService,
+      runStatusQueryService,
       policy,
       stateStoreRead: config.persistence.stateStoreRead,
       stateStoreWrite: config.persistence.stateStoreWrite,
       projector,
-      idempotency,
-      clock: config.infrastructure.clock,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
       planFetcher: config.persistence.planFetcher,

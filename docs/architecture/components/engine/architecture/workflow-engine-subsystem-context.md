@@ -120,7 +120,7 @@ Known concrete adapter families:
 
 Main components in the subsystem:
 
-- `WorkflowEngine` (public facade + dependency assembly)
+- `WorkflowEngine` (public facade + explicit service delegation)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
@@ -233,7 +233,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + wiring + health checks"]
+  WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + recoverRun preflight + health checks"]
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
   Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Cancel + signal + telemetry"]
   StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]

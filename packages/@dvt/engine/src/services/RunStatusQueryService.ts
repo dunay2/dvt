@@ -68,3 +68,9 @@ export class RunStatusQueryService implements IRunStatusQueryService {
     );
   }
 }
+
+export function buildRunStatusQueryService(
+  deps: RunStatusQueryServiceDeps
+): IRunStatusQueryService {
+  return new RunStatusQueryService(deps);
+}

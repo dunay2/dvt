@@ -26,12 +26,13 @@ function makeDeps(): WorkflowEngineDeps {
     stateStoreRead: {} as never,
     stateStoreWrite: {} as never,
     projector: {} as never,
-    idempotency: {} as never,
-    clock: {} as never,
     policy: {} as never,
-    intentStore: {} as never,
+    planFetcher: {} as never,
     adapters: new Map(),
     observability: {} as never,
+    startRunApplicationService: {} as never,
+    runControlService: {} as never,
+    runStatusQueryService: {} as never,
   };
 }
 

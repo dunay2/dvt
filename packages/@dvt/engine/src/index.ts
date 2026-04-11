@@ -47,6 +47,8 @@ export * from './adapters/IProviderAdapter.js';
 
 export * from './services/RunMaintenanceService.js';
 export * from './services/RunEnrichmentService.js';
+export { buildRunStatusQueryService } from './services/RunStatusQueryService.js';
+export { buildRunControlService } from './core/WorkflowEngineCoreService.js';
 export * from './workers/IntentReconcilerWorker.js';
 export * from './domain/startRunIntentPolicy.js';
 
