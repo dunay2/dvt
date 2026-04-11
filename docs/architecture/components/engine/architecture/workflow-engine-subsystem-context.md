@@ -49,7 +49,7 @@ Inbound flow (primary):
 
 Outbound flow (primary):
 
-`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/WorkflowEngineCoreService -> ports/adapters`
+`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/RunStatusQueryService/WorkflowEngineCoreService -> ports/adapters`
 
 Optional enrichment flow:
 
@@ -74,9 +74,11 @@ flowchart LR
   UseCase --> Engine["WorkflowEngine facade"]
   UseCase --> Enrich["IRunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService path"]
+  Engine --> Query["RunStatusQueryService path"]
   Engine --> Core["WorkflowEngineCoreService path"]
   Enrich --> Ports
   StartRun --> Ports["Engine ports"]
+  Query --> Ports
   Core --> Ports
   Ports --> State["IRunStateStore (runtime-wired)"]
   Ports --> PlanStore["IPlanFetcher (runtime-wired)"]
@@ -122,7 +124,8 @@ Main components in the subsystem:
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
-- `WorkflowEngineCoreService` (cancel/status/signal runtime path)
+- `RunStatusQueryService` (canonical read path)
+- `WorkflowEngineCoreService` (cancel/signal runtime path)
 - `RunEnrichmentService` (engine-owned implementation of enrichment)
 - `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
 - `SnapshotProjector` (event-to-status read model projection)
@@ -131,12 +134,14 @@ Main components in the subsystem:
 flowchart TB
   WF["WorkflowEngine"] --> Guard["StartRunAdmissionGuard"]
   WF --> Coord["StartRunApplicationService"]
+  WF --> Query["RunStatusQueryService"]
   WF --> Core["WorkflowEngineCoreService"]
+  Query --> Projector["SnapshotProjector"]
   Enrich["RunEnrichmentService"] --> Projector["SnapshotProjector"]
   Enrich --> Provider["IProviderAdapter"]
   Coord --> Exec["StartRunExecutionService"]
   Coord --> Fail["StartRunFailurePolicy"]
-  Core --> Projector["SnapshotProjector"]
+  Core --> Provider
   Guard --> Validation["StartRunValidationPolicy"]
   Guard --> RunCtxPolicy["RunExecutionContextAdmissionPolicy"]
 ```
@@ -175,6 +180,7 @@ sequenceDiagram
   participant Client as API Use Case
   participant Engine as WorkflowEngine
   participant Enrich as IRunEnrichmentService
+  participant Query as RunStatusQueryService
   participant Core as WorkflowEngineCoreService
   participant EnrichSvc as RunEnrichmentService
   participant State as IRunStateStoreRead
@@ -182,14 +188,14 @@ sequenceDiagram
   participant Projector as SnapshotProjector
 
   Client->>Engine: getRunStatus(runRef)
-  Engine->>Core: getStatus(runRef)
-  Core->>State: getSnapshot/listEvents
+  Engine->>Query: getStatus(runRef)
+  Query->>State: getSnapshot/listEvents
   alt snapshot exists
-    Core->>Core: snapshotToStatus
+    Query->>Query: snapshotToStatus
   else no snapshot
-    Core->>Projector: rebuild(runId, events)
+    Query->>Projector: rebuild(runId, events)
   end
-  Core-->>Engine: CanonicalRunStatus
+  Query-->>Engine: CanonicalRunStatus
   Engine-->>Client: CanonicalRunStatus
 
   Client->>Enrich: getRunEnrichment(runRef)
@@ -220,7 +226,7 @@ sequenceDiagram
 
 - facade width still too broad in `WorkflowEngine`
 - start-run application path and guard still construct and mix collaborator concerns
-- command/runtime behavior still concentrated in one core service
+- control/runtime behavior is still concentrated in one control service
 - provider-resolution and telemetry policy logic remains repeated
 - ownership seams between engine resolver and artifacts reader need one explicit
   canonical mapping in docs/planning
@@ -229,7 +235,7 @@ sequenceDiagram
 flowchart LR
   WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + wiring + health checks"]
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
-  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Canonical query + command + telemetry"]
+  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Cancel + signal + telemetry"]
   StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
 ```
 
@@ -249,6 +255,7 @@ flowchart LR
 - `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
 - `packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts`
+- `packages/@dvt/engine/src/services/RunStatusQueryService.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
 - `packages/@dvt/engine/src/services/RunEnrichmentService.ts`
 - `packages/@dvt/engine/src/core/SnapshotProjector.ts`

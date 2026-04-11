@@ -1,4 +1,4 @@
-import type { EngineRunRef, ProviderRunStatusView } from '@dvt/contracts';
+import type { EngineRunRef } from '@dvt/contracts';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -26,25 +26,6 @@ describe('WorkflowEngineCoreService', () => {
         runId: 'missing',
       })
     ).rejects.toThrow(/engine\.error\.run_metadata_not_found/);
-  });
-
-  it('getStatus returns projected state without calling adapter', async () => {
-    let adapterCalled = false;
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        async getProviderStatusView() {
-          adapterCalled = true;
-          return { provider: 'temporal', providerStatus: 'RUNNING' } as ProviderRunStatusView;
-        },
-      },
-    });
-    await bootstrapQueuedRun(store, 'core-status-1');
-    const ref: EngineRunRef = makeRunRef('core-status-1');
-    const snapshot = await core.getStatus(ref);
-
-    expect(adapterCalled).toBe(false);
-    expect(snapshot.runId).toBe('core-status-1');
-    expect(snapshot.status).toBe('PENDING');
   });
 
   it('cancel delegates to adapter without appending RunCancelRequested', async () => {

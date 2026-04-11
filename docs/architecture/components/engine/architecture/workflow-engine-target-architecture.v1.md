@@ -204,9 +204,11 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
   Target: split into narrow use cases plus policies.
   Gap signal: SRP drift.
 - status/read path
-  Current: core service mixes query plus enrichment.
-  Target: dedicated query vs enrichment services.
-  Gap signal: `ADR-0015` clarity gap.
+  Current: dedicated canonical query and enrichment services are now shipped,
+  but control operations still share one runtime-control service.
+  Target: dedicated query vs enrichment services plus narrower control and
+  telemetry seams.
+  Gap signal: residual control-service breadth.
 - provider resolution
   Current: repeated in multiple paths.
   Target: single resolver seam.

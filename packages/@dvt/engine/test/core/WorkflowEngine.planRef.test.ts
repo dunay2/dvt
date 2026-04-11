@@ -52,11 +52,12 @@ describe('WorkflowEngine planRef normalization', () => {
       adapters: new Map(),
       observability: createNoopObservability(),
       startRunApplicationService: { startRun },
-      core: {
+      runControlService: {
         cancel: async () => {},
-        getStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
-        enrichStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
         signal: async () => {},
+      },
+      runStatusQueryService: {
+        getStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
       },
     });
 

@@ -1,10 +1,10 @@
-import type { CanonicalRunStatus, EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';
+import type { EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';
 import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import type { GuardedRunEventType } from '@dvt/run-domain';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
-import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
+import type { IRunControlService } from '../domain/IRunControlService.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { SignalTransitionGuard } from '../services/signal/SignalTransitionGuard.js';
@@ -26,16 +26,13 @@ import {
   getAdapterOrThrow,
   normalizeEngineRunRef,
   normalizeSignalRequest,
-  readCanonicalRunStatus,
   resolveMetaOrThrow,
   withTimeout,
 } from './lifecycle/coreRuntime.js';
-import { SnapshotProjector } from './SnapshotProjector.js';
 
 export interface WorkflowEngineCoreDeps {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
-  projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   policy: IRunAccessPolicy;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
@@ -47,7 +44,7 @@ export interface WorkflowEngineCoreDeps {
   clock: { nowIsoUtc(): string };
 }
 
-export class WorkflowEngineCoreService implements IWorkflowEngineCore {
+export class WorkflowEngineCoreService implements IRunControlService {
   private readonly signalTransitionGuard: SignalTransitionGuard;
 
   constructor(private readonly deps: WorkflowEngineCoreDeps) {
@@ -96,47 +93,6 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
               .histogram(CORE_METRIC.cancelDurationMs, metricTags)
               .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
             span.setStatus('ok');
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
-  }
-
-  async getStatus(ref: EngineRunRef): Promise<CanonicalRunStatus> {
-    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
-    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
-    const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
-      operation: CORE_OPERATION.getRunStatus,
-    });
-    const traceContext = buildTraceContext(meta, meta.planId);
-
-    return this.deps.observability.withContext(traceContext, () =>
-      this.deps.observability.traces.withSpan(
-        CORE_SPAN.getRunStatus,
-        {
-          context: traceContext,
-          attributes: { provider: meta.providerRef.provider },
-        },
-        async (span) => {
-          try {
-            const result = await readCanonicalRunStatus({
-              stateStoreRead: this.deps.stateStoreRead,
-              projector: this.deps.projector,
-              tenantId: meta.tenantId,
-              runId: meta.runId,
-            });
-
-            this.deps.observability.metrics
-              .histogram(CORE_METRIC.statusDurationMs, metricTags)
-              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
-            span.setStatus('ok');
-            return result;
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));

@@ -21,6 +21,7 @@ import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
+import { RunStatusQueryService } from '../../src/services/RunStatusQueryService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import type { IClock } from '../../src/utils/clock.js';
@@ -215,6 +216,7 @@ export function createWorkflowEngineCoreFixture(input?: {
   };
 }): {
   core: WorkflowEngineCoreService;
+  runStatusQueryService: RunStatusQueryService;
   runEnrichmentService: RunEnrichmentService;
   store: InMemoryTxStore;
   stateStoreRead: InMemoryTxStore;
@@ -242,13 +244,19 @@ export function createWorkflowEngineCoreFixture(input?: {
   const core = new WorkflowEngineCoreService({
     stateStoreRead,
     stateStoreWrite,
-    projector,
     idempotency,
     policy,
     adapters,
     observability,
     clock,
     ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+  const runStatusQueryService = new RunStatusQueryService({
+    stateStoreRead,
+    projector,
+    policy,
+    observability,
+    clock,
   });
   const runEnrichmentService = new RunEnrichmentService({
     stateStoreRead,
@@ -261,6 +269,7 @@ export function createWorkflowEngineCoreFixture(input?: {
 
   return {
     core,
+    runStatusQueryService,
     runEnrichmentService,
     store,
     stateStoreRead,

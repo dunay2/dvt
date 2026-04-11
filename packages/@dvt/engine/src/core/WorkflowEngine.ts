@@ -4,7 +4,8 @@
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
  * @decision WorkflowEngine is an application-facing facade that delegates
- *   startRun to StartRunApplicationService and lifecycle operations to WorkflowEngineCoreService.
+ *   startRun to StartRunApplicationService, canonical status reads to RunStatusQueryService,
+ *   and control operations to WorkflowEngineCoreService.
  * @consequence Runtime orchestration responsibilities are split into focused collaborators.
  */
 import { parsePlanRef, parseRecoverRunCommand, parseRunContext } from '@dvt/contracts';
@@ -28,7 +29,8 @@ import {
   RunMetadataNotFoundError,
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1.js';
-import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
+import type { IRunControlService } from '../domain/IRunControlService.js';
+import type { IRunStatusQueryService } from '../domain/IRunStatusQueryService.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type {
   IPlanFetcher,
@@ -38,6 +40,7 @@ import type {
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { RunStatusQueryService } from '../services/RunStatusQueryService.js';
 import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
@@ -69,7 +72,8 @@ export interface WorkflowEngineDeps {
   requiredProviders?: EngineRunRef['provider'][];
   observability: IObservability;
   startRunApplicationService?: IStartRunApplicationService;
-  core?: IWorkflowEngineCore;
+  runControlService?: IRunControlService;
+  runStatusQueryService?: IRunStatusQueryService;
   timeouts?: {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
@@ -93,14 +97,16 @@ interface HealthCheckable {
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
   private readonly startRunApplicationService: IStartRunApplicationService;
-  private readonly core: IWorkflowEngineCore;
+  private readonly runControlService: IRunControlService;
+  private readonly runStatusQueryService: IRunStatusQueryService;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
     this.observability = deps.observability;
     this.startRunApplicationService =
       deps.startRunApplicationService ?? this.buildStartRunApplicationService();
-    this.core = deps.core ?? this.buildCoreService();
+    this.runControlService = deps.runControlService ?? this.buildRunControlService();
+    this.runStatusQueryService = deps.runStatusQueryService ?? this.buildRunStatusQueryService();
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
@@ -200,15 +206,15 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
-    await this.core.cancel(engineRunRef);
+    await this.runControlService.cancel(engineRunRef);
   }
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<CanonicalRunStatus> {
-    return this.core.getStatus(engineRunRef);
+    return this.runStatusQueryService.getStatus(engineRunRef);
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    await this.core.signal(engineRunRef, request);
+    await this.runControlService.signal(engineRunRef, request);
   }
 
   async healthCheck(): Promise<HealthStatus> {
@@ -261,7 +267,11 @@ export class WorkflowEngine implements IWorkflowEngine {
       if (this.deps.intentStore === undefined) throw new Error('intentStore is required');
       if (this.deps.planFetcher === undefined) throw new Error('planFetcher is required');
     }
-    if (this.deps.core === undefined && this.deps.policy === undefined) {
+    if (
+      (this.deps.runControlService === undefined ||
+        this.deps.runStatusQueryService === undefined) &&
+      this.deps.policy === undefined
+    ) {
       throw new Error('policy is required');
     }
     this.assertRequiredProvidersRegistered(this.deps.requiredProviders ?? []);
@@ -301,16 +311,25 @@ export class WorkflowEngine implements IWorkflowEngine {
     });
   }
 
-  private buildCoreService(): IWorkflowEngineCore {
+  private buildRunControlService(): IRunControlService {
     return new WorkflowEngineCoreService({
       stateStoreRead: this.deps.stateStoreRead,
       stateStoreWrite: this.deps.stateStoreWrite,
-      projector: this.deps.projector,
       idempotency: this.deps.idempotency,
       policy: this.requirePolicy(),
       adapters: this.deps.adapters,
       observability: this.deps.observability,
       ...(this.deps.timeouts ? { timeouts: this.deps.timeouts } : {}),
+      clock: this.deps.clock,
+    });
+  }
+
+  private buildRunStatusQueryService(): IRunStatusQueryService {
+    return new RunStatusQueryService({
+      stateStoreRead: this.deps.stateStoreRead,
+      projector: this.deps.projector,
+      policy: this.requirePolicy(),
+      observability: this.deps.observability,
       clock: this.deps.clock,
     });
   }

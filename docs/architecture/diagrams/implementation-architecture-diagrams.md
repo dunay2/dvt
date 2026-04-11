@@ -361,15 +361,16 @@ internal layers:
    resolves initial context (sets `logicalAttemptId=1`, `originRunId=runId`),
    and delegates to specialized services. Also owns dependency assembly via
    private builder methods (`buildStartRunApplicationService`,
-   `buildCoreService`).
+   `buildRunControlService`, `buildRunStatusQueryService`).
 2. **Application Services**: `StartRunApplicationService` orchestrates the
    happy path (admission ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ plan integrity ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ intent ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ execution) and the failure
    path (`StartRunFailurePolicy`). `StartRunAdmissionGuard` composes validation
    and capability checks.
-3. **Core Domain**: `WorkflowEngineCoreService` handles cancel, signal, and
-   canonical status. `RunEnrichmentService` composes canonical status plus
-   provider diagnostics. `SignalTransitionGuard` validates signal preconditions
-   against the current snapshot. `SnapshotProjector` rebuilds state from events.
+3. **Core Domain**: `WorkflowEngineCoreService` handles cancel and signal.
+   `RunStatusQueryService` owns canonical status reads. `RunEnrichmentService`
+   composes canonical status plus provider diagnostics.
+   `SignalTransitionGuard` validates signal preconditions against the current
+   snapshot. `SnapshotProjector` rebuilds state from events.
 4. **Maintenance**: `RunMaintenanceService` orchestrates stuck-run detection
    and orphaned-intent reconciliation. `IntentReconcilerWorker` is a periodic
    scheduler with exponential backoff and jitter.
@@ -399,11 +400,9 @@ label carries the current posture (`runtime-wired` or `target-line exposed`).
 - **`WorkflowEngine` facade is too wide**: It includes normalization, wiring,
   health checks, and retry-step orchestration in a single class. The subsystem
   context doc already flags this as active drift.
-- **`WorkflowEngineCoreService` still mixes command and canonical query**:
-  cancel (command), signal (command), and getRunStatus (query) still live in
-  one service. `RunEnrichmentService` has already moved provider-backed
-  enrichment out of the facade/core path, but the remaining command/query
-  split is still incomplete.
+- **`WorkflowEngineCoreService` still mixes cancel, signal, and telemetry**:
+  canonical read now lives in `RunStatusQueryService`, but the remaining
+  control path is still broader than the target architecture.
 - **`IPlanFetcher` declaration is duplicated**: the dedicated port lives in
   `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`, but a legacy declaration
   still exists in `packages/@dvt/engine/src/ports/IRunStateStore.ts`. The
@@ -468,7 +467,8 @@ flowchart TB
   end
 
   subgraph Core["Core Domain"]
-    WECS["WorkflowEngineCoreService<br/>(cancel, signal, status)"]:::impl
+    RSQS["RunStatusQueryService<br/>(canonical status)"]:::impl
+    WECS["WorkflowEngineCoreService<br/>(cancel, signal)"]:::impl
     SP["SnapshotProjector"]:::impl
     IKB["IdempotencyKeyBuilder"]:::impl
     STG["SignalTransitionGuard"]:::impl
@@ -511,6 +511,7 @@ flowchart TB
   end
 
   WE --> SRAS
+  WE --> RSQS
   WE --> WECS
   WE --> RMS
   SRAS --> SRAG
@@ -524,7 +525,7 @@ flowchart TB
   SREP --> IRSS
   SREP --> ISRIS
   SREP --> IKB
-  WECS --> SP
+  RSQS --> SP
   WECS --> STG
   WECS --> CR
   WECS --> IPA

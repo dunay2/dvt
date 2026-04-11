@@ -51,7 +51,7 @@ Target note:
 
 - own run lifecycle semantics and provider dispatch;
 - enforce run access policy, plan integrity, and start-run admission;
-- project canonical run status from state-store reads and emitted events;
+- project canonical run status through `RunStatusQueryService`;
 - expose optional provider-backed enrichment through `RunEnrichmentService`
   and `IRunEnrichmentService`;
 - expose operational health and maintenance services around the workflow
@@ -78,6 +78,8 @@ Target note:
   [StartRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
 - lifecycle core:
   [WorkflowEngineCoreService.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts)
+- canonical status query:
+  [RunStatusQueryService.ts](../../../../packages/@dvt/engine/src/services/RunStatusQueryService.ts)
 - enrichment service:
   [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
@@ -90,9 +92,11 @@ flowchart LR
   Api["apps/api"] --> Engine["WorkflowEngine facade"]
   Api --> Enrich["RunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService"]
+  Engine --> Query["RunStatusQueryService"]
   Engine --> Core["WorkflowEngineCoreService"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Ports["Declared southbound ports"]
+  Query --> Ports
   Core --> Ports
   Enrich --> Ports
   Ports --> State["IRunStateStore<br/>(runtime-wired)"]
