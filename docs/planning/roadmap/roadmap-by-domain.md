@@ -46,13 +46,16 @@ flowchart LR
   [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md),
   [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md),
   [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
-  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+  [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: close the remaining `WE-HX` hardening waves, keep the
   provider-native `AR-C6` runtime follow-through narrow, and keep `TF-C2`
   moving for the PostgreSQL executor path and caller-visible runtime evidence,
-  while the broader contract-pack reset continues under the Planner and
-  Contracts lane and Conductor cleanup stays scoped as truthfulness debt
-  (`AR-A8`) rather than a second-provider phase.
+  while the broader contract-pack reset and shared-kernel ownership cleanup
+  continue under the Planner and Contracts lane, the delivery runtime harness
+  extraction (`AR-A7`) stays sequenced behind that boundary work, and
+  Conductor cleanup stays scoped as truthfulness debt (`AR-A8`) rather than a
+  second-provider phase.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
@@ -68,13 +71,15 @@ flowchart LR
   [20260410 Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md),
   [20260411 AR-A12-B status model split Fowler review](../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md),
   [Contract pack and read boundary reset plan 2026-04-10](../proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md),
-  [AR-A12-B status model split plan 2026-04-11](../proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md)
+  [AR-A12-B status model split plan 2026-04-11](../proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md),
+  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: reset the active engine-runtime contract pack to one
   canonical `v1` line, execute the explicit split between canonical run
   status, provider-live diagnostics, and engine-owned enrichment, and then
   freeze the first `DesignGraphDraft`, `GitArtifactRef`, and compiler mapping
   so downstream API, runtime, and UI work stop depending on local
-  assumptions.
+  assumptions, while `S05-TRUTH-SYNC` keeps payload-version closure truth
+  aligned across planning and status surfaces.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),

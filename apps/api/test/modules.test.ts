@@ -1,3 +1,4 @@
+import { asIsoUtcString } from '@dvt/contracts';
 import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
@@ -112,7 +113,7 @@ describe('modules', () => {
             };
           },
         },
-        clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
+        clock: { nowIsoUtc: () => asIsoUtcString('2026-02-12T00:00:00.000Z') },
         projector: {
           rebuild() {
             return {};

@@ -45,6 +45,14 @@ import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/StepTypeRegistry.js';
+import {
+  isIsoUtcString,
+  isNonBlankString,
+  isSha256HexString,
+  NON_BLANK_STRING_MESSAGE,
+  SHA256_HEX_STRING_MESSAGE,
+  STRICT_ISO_UTC_STRING_MESSAGE,
+} from './utils/contractPrimitives.js';
 import { jcsCanonicalize } from './utils/jcsCanonicalize.js';
 import { sha256HexUtf8 } from './utils/sha256HexUtf8.js';
 
@@ -77,30 +85,41 @@ export const StepStatusSchema = z.enum(['PENDING', 'RUNNING', 'SUCCESS', 'FAILED
 export const SignalTypeSchema = z.enum(['PAUSE', 'RESUME', 'CANCEL']);
 
 export const StepOutputStatusSchema = z.enum(['SUCCESS', 'FAILED', 'SKIPPED']);
-const NonBlankStringSchema = z
+export const NonBlankStringSchema = z
   .string()
   .min(1)
-  .refine((value) => value.trim().length > 0, {
-    message: 'String must contain at least one non-whitespace character',
-  });
+  .refine((value) => isNonBlankString(value), {
+    message: NON_BLANK_STRING_MESSAGE,
+  })
+  .brand<'NonBlankString'>();
+export const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString(value), {
+  message: STRICT_ISO_UTC_STRING_MESSAGE,
+}).brand<'IsoUtcString'>();
+export const Sha256HexStringSchema = NonBlankStringSchema.refine(
+  (value) => isSha256HexString(value),
+  {
+    message: SHA256_HEX_STRING_MESSAGE,
+  }
+).brand<'Sha256HexString'>();
+export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 
 // ─── Core contract schemas ───────────────────────────────────────────────────
 
 export const PlanRefSchema = z.object({
-  uri: z.string().min(1),
-  sha256: z.string().min(1),
-  schemaVersion: z.string().min(1),
-  planId: z.string().min(1),
-  planVersion: z.string().min(1),
+  uri: NonBlankStringSchema,
+  sha256: NonBlankStringSchema,
+  schemaVersion: NonBlankStringSchema,
+  planId: NonBlankStringSchema,
+  planVersion: NonBlankStringSchema,
   sizeBytes: z.number().int().nonnegative().optional(),
-  expiresAt: z.string().optional(),
+  expiresAt: IsoUtcStringSchema.optional(),
 });
 
 export const RunContextSchema = z
   .object({
-    tenantId: z.string().min(1),
-    projectId: z.string().min(1),
-    environmentId: z.string().min(1),
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
     runId: NonBlankStringSchema,
     targetAdapter: ProviderSchema,
     runExecutionContextRef: RunExecutionContextRefSchema.optional(),
@@ -114,10 +133,10 @@ export const ResolvedRunContextSchema = RunContextSchema.extend({
 }).strict();
 
 export const SignalRequestSchema = z.object({
-  signalId: z.string().min(1),
+  signalId: NonBlankStringSchema,
   type: SignalTypeSchema,
   reason: z.string().optional(),
-  requestedAt: z.string().optional(),
+  requestedAt: IsoUtcStringSchema.optional(),
 });
 
 export const RecoverRunCommandSchema = z
@@ -139,16 +158,16 @@ export const RecoverRunCommandSchema = z
 
 export const RunFailureEvidenceSchema = z
   .object({
-    stepId: NonBlankStringSchema,
+    stepId: StepIdSchema,
     reason: NonBlankStringSchema.optional(),
     message: NonBlankStringSchema.optional(),
-    failedAt: z.string().min(1),
+    failedAt: IsoUtcStringSchema,
   })
   .strict();
 
 export const RunExecutionEvidenceSchema = z
   .object({
-    activeStepId: NonBlankStringSchema.optional(),
+    activeStepId: StepIdSchema.optional(),
     failure: RunFailureEvidenceSchema.optional(),
     materialization: z.lazy(() => MaterializationEvidenceSchema).optional(),
   })
@@ -161,8 +180,8 @@ export const RunStatusSnapshotSchema = z.object({
     .union([RunSubstatusSchema, z.string().regex(/^(temporal|conductor|mock)\/.+$/)])
     .optional(),
   message: z.string().optional(),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
+  startedAt: IsoUtcStringSchema.optional(),
+  completedAt: IsoUtcStringSchema.optional(),
   execution: RunExecutionEvidenceSchema.optional(),
 });
 
@@ -201,8 +220,8 @@ export const MaterializationEvidenceSchema = z
     environmentId: NonBlankStringSchema,
     sinkTable: NonBlankStringSchema,
     rowsWritten: z.number().int().nonnegative(),
-    startedAt: z.string().min(1),
-    completedAt: z.string().min(1),
+    startedAt: IsoUtcStringSchema,
+    completedAt: IsoUtcStringSchema,
     durationMs: z.number().int().nonnegative(),
   })
   .strict();
@@ -218,25 +237,25 @@ export const TransformationFlowRuntimeBindingSchema = z
 
 const TemporalRunRefSchema = z.object({
   provider: z.literal('temporal'),
-  tenantId: z.string().min(1),
-  namespace: z.string().min(1),
-  workflowId: z.string().min(1),
+  tenantId: NonBlankStringSchema,
+  namespace: NonBlankStringSchema,
+  workflowId: NonBlankStringSchema,
   runId: NonBlankStringSchema,
-  taskQueue: z.string().optional(),
+  taskQueue: NonBlankStringSchema.optional(),
 });
 
 const ConductorRunRefSchema = z.object({
   provider: z.literal('conductor'),
-  tenantId: z.string().min(1),
-  workflowId: z.string().min(1),
+  tenantId: NonBlankStringSchema,
+  workflowId: NonBlankStringSchema,
   runId: NonBlankStringSchema,
-  conductorUrl: z.string().min(1),
+  conductorUrl: NonBlankStringSchema,
 });
 
 const MockRunRefSchema = z.object({
   provider: z.literal('mock'),
-  tenantId: z.string().min(1),
-  workflowId: z.string().min(1),
+  tenantId: NonBlankStringSchema,
+  workflowId: NonBlankStringSchema,
   runId: NonBlankStringSchema,
 });
 
@@ -350,7 +369,7 @@ const RunCompletedPayloadSchema = z
 const RunEventCommonSchema = z.object({
   eventId: z.string().min(1),
   eventType: z.string().min(1),
-  emittedAt: z.string().min(1),
+  emittedAt: IsoUtcStringSchema,
   runId: NonBlankStringSchema,
   tenantId: z.string().min(1),
   projectId: z.string().min(1),
@@ -405,25 +424,25 @@ const RunFailedEventWriteSchema = RunEventCommonSchema.extend({
 
 const StepStartedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepStarted'),
-  stepId: z.string().min(1),
+  stepId: StepIdSchema,
   payload: StepStartedPayloadSchema.optional(),
 }).strict();
 
 const StepCompletedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepCompleted'),
-  stepId: z.string().min(1),
+  stepId: StepIdSchema,
   payload: StepCompletedPayloadSchema.optional(),
 }).strict();
 
 const StepFailedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepFailed'),
-  stepId: z.string().min(1),
+  stepId: StepIdSchema,
   payload: z.union([EmptyEventPayloadSchema, StepFailedPayloadSchema]).optional(),
 }).strict();
 
 const StepSkippedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('StepSkipped'),
-  stepId: z.string().min(1),
+  stepId: StepIdSchema,
   payload: EmptyEventPayloadSchema.optional(),
 }).strict();
 
@@ -447,61 +466,61 @@ export const RunEventWriteSchema = z.discriminatedUnion('eventType', [
 export const RunEventRecordSchema = z.discriminatedUnion('eventType', [
   RunQueuedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunStartedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunPausedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunResumedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunCancelRequestedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunCancelledEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunCompletedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   RunFailedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   StepStartedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   StepCompletedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   StepFailedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
   StepSkippedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
-    persistedAt: z.string().min(1),
+    persistedAt: IsoUtcStringSchema,
   }),
 ]);
 
 export const StepSnapshotSchema = z.object({
-  stepId: z.string().min(1),
+  stepId: StepIdSchema,
   status: StepStatusSchema,
   logicalAttemptId: z.number().int().positive(),
   engineAttemptId: z.number().int().positive().optional(),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
+  startedAt: IsoUtcStringSchema.optional(),
+  completedAt: IsoUtcStringSchema.optional(),
   artifacts: z.array(z.unknown()),
   error: z
     .object({
@@ -518,8 +537,8 @@ export const RunSnapshotSchema = z.object({
   lastEventSeq: z.number().int().nonnegative(),
   steps: z.array(StepSnapshotSchema),
   artifacts: z.array(z.unknown()),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
+  startedAt: IsoUtcStringSchema.optional(),
+  completedAt: IsoUtcStringSchema.optional(),
   totalDurationMs: z.number().nonnegative().optional(),
 });
 
@@ -542,7 +561,6 @@ export const PlannerSelectionSchema = z
 export const PlannerEnvironmentContextSchema = z
   .object({
     environmentId: z.string().min(1).optional(),
-    targetProfile: z.string().min(1).optional(),
     vars: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
@@ -598,17 +616,6 @@ export const GenericGraphSourceV1Schema = z
   })
   .strict();
 
-export const DbtManifestRefSchema = z
-  .object({
-    uri: z
-      .string()
-      .min(1)
-      .regex(/^[a-z][a-z0-9+.-]*:\/\//i, 'uri must be an absolute URI'),
-    sha256: HexSha256Schema,
-    artifactId: z.string().min(1).optional(),
-  })
-  .strict();
-
 /**
  * Generic structural schema for an execution step.
  * stepTypeConfig is intentionally untyped here — per-kind validation is
@@ -632,7 +639,7 @@ export const ExecutionStepV1Schema = z
   })
   .strict();
 
-const ExecutionPlanObservabilitySchema = z
+export const PlannerObservabilitySchema = z
   .object({
     tags: z.record(z.string(), z.string()).optional(),
     extra: z.record(z.string(), z.unknown()).optional(),
@@ -664,7 +671,7 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
       plannerGitSha: z.string().length(40).optional(),
     })
     .strict(),
-  observability: ExecutionPlanObservabilitySchema,
+  observability: PlannerObservabilitySchema,
 }).strict();
 
 export const PLAN_CORE_VERSIONED_SCHEMAS = {
@@ -681,28 +688,14 @@ export const ExecutionPlanSchema = CurrentExecutionPlanV1Schema as z.ZodType<Exe
 
 export const PlannerInputEnvelopeV1Schema = z
   .object({
-    graphSource: GenericGraphSourceV1Schema.optional(),
-    manifestRef: DbtManifestRefSchema.optional(),
+    graphSource: GenericGraphSourceV1Schema,
     selection: PlannerSelectionSchema,
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
-    observability: ExecutionPlanObservabilitySchema,
+    observability: PlannerObservabilitySchema,
     requestedBy: z.string().min(1).optional(),
     requestId: z.string().min(1).optional(),
     requestedAtIso: z.string().min(1).optional(),
-  })
-  .superRefine((input, ctx) => {
-    const activeSources = [input.graphSource, input.manifestRef].filter(
-      (value) => value !== undefined
-    ).length;
-
-    if (activeSources !== 1) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'PlannerInputEnvelopeV1 requires exactly one active source: graphSource or manifestRef.',
-      });
-    }
   })
   .strict();
 
@@ -945,9 +938,9 @@ export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
 export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
+export type PlannerObservabilitySchemaT = z.infer<typeof PlannerObservabilitySchema>;
 export type GenericGraphNodeV1SchemaT = z.infer<typeof GenericGraphNodeV1Schema>;
 export type GenericGraphSourceV1SchemaT = z.infer<typeof GenericGraphSourceV1Schema>;
-export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
 export type ExecutionStepV1SchemaT = z.infer<typeof ExecutionStepV1Schema>;
 export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;
 export type ExecutionPlanSchemaT = z.infer<typeof ExecutionPlanSchema>;

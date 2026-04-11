@@ -2,7 +2,7 @@
 title: planner Build Sequence
 status: Active
 owner: Planning Domain / Architecture
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-10
 ---
 
 # planner Build Sequence
@@ -13,7 +13,6 @@ last_reviewed: 2026-04-08
 sequenceDiagram
   participant Caller as API or integrator
   participant Facade as PlannerFacade
-  participant Resolver as IGraphSourceResolver
   participant Mapper as PlannerEnvelopeMapper
   participant Planner
   participant Validator as InputEnvelopeValidator
@@ -23,10 +22,6 @@ sequenceDiagram
   participant Assembler as PlanAssembler
 
   Caller->>Facade: buildPlan(contract input)
-  opt manifestRef path
-    Facade->>Resolver: resolveGraphSource(manifestRef)
-    Resolver-->>Facade: graphSource
-  end
   Facade->>Mapper: map contract input
   Facade->>Planner: buildPlan(domain input)
   Planner->>Validator: validate(input)
@@ -46,13 +41,13 @@ sequenceDiagram
 
 Planner stops at canonical plan construction. Runtime compatibility validation,
 stored-plan lifecycle, and execution dispatch belong to API, verifier, and
-engine surfaces, not to the planner package itself.
+engine surfaces, not to the planner package itself. Source-native adaptation
+must happen before `buildPlan(...)` reaches the planner boundary.
 
 ## Current code anchors
 
 - [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
 - [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
-- [IGraphSourceResolver.ts](../../../../packages/@dvt/planner/src/ports/IGraphSourceResolver.ts)
 - [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
 - [GraphBuilder.ts](../../../../packages/@dvt/planner/src/domain/graph/GraphBuilder.ts)
 - [NodeSelector.ts](../../../../packages/@dvt/planner/src/domain/NodeSelector.ts)

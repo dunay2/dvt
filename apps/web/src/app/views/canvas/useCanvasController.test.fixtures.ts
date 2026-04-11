@@ -4,6 +4,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
+import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ExecutionPlan } from '../../types/dbt';
 
@@ -150,13 +151,13 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       targetAdapter: 'mock',
     }),
     subscribeWorkspaceScope: () => () => undefined,
-    buildRunContext: (runId: string) => ({
-      tenantId: 'tenant-a',
-      projectId: 'project-a',
-      environmentId: 'dev',
-      targetAdapter: 'mock',
-      runId,
-    }),
+    buildRunContext: (runId: string) =>
+      makeRunContext(runId, {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock',
+      }),
   };
   const shellFeedback: ShellFeedbackPort = {
     success: vi.fn(),
@@ -169,12 +170,13 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
   const runsService: IRunsPort = {
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
-    startRun: vi.fn(async () => ({
-      provider: 'mock' as const,
-      tenantId: 'tenant-a',
-      workflowId: 'workflow_ui_1',
-      runId: 'run_ui_1',
-    })),
+    startRun: vi.fn(async () =>
+      makeMockRunRef({
+        tenantId: 'tenant-a',
+        workflowId: 'workflow_ui_1',
+        runId: 'run_ui_1',
+      })
+    ),
     listRunEvents: vi.fn(async () => ({ events: [] })),
   };
 

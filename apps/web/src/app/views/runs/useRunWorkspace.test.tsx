@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { IRunsPort, RunSummaryItem, RunSnapshot } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { AppServicesProvider } from '../../services/AppServicesContext';
+import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import { useRunWorkspace } from './useRunWorkspace';
 
 function HookHost({ runId }: Readonly<{ runId?: string }>): React.JSX.Element {
@@ -42,10 +43,13 @@ function createReactiveSessionContext(initialScope: WorkspaceScope): {
           listeners.delete(onStoreChange);
         };
       },
-      buildRunContext: (runId) => ({
-        ...workspaceScope,
-        runId,
-      }),
+      buildRunContext: (runId) =>
+        makeRunContext(runId, {
+          tenantId: workspaceScope.tenantId,
+          projectId: workspaceScope.projectId,
+          environmentId: workspaceScope.environmentId,
+          targetAdapter: workspaceScope.targetAdapter,
+        }),
     },
     setWorkspaceScope: (update) => {
       workspaceScope = {
@@ -85,12 +89,13 @@ function buildRunsService(sessionContext: SessionContextPort): IRunsPort {
       const { environmentId } = sessionContext.getWorkspaceScope();
       return buildRunSnapshot(runId, environmentId);
     }),
-    startRun: vi.fn(async (input) => ({
-      provider: 'mock' as const,
-      runId: input.context.runId,
-      tenantId: input.context.tenantId,
-      workflowId: `wf_${input.context.runId}`,
-    })),
+    startRun: vi.fn(async (input) =>
+      makeMockRunRef({
+        runId: input.context.runId,
+        tenantId: input.context.tenantId,
+        workflowId: `wf_${input.context.runId}`,
+      })
+    ),
     listRunEvents: vi.fn(async () => ({
       events: [],
     })),

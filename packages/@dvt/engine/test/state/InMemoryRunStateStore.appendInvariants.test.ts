@@ -99,6 +99,134 @@ describe('InMemoryRunStateStore append invariants', () => {
     expect(events[0]?.eventType).toBe('RunQueued');
   });
 
+  it('rejects append when stepId is only whitespace', async () => {
+    const store = new InMemoryRunStateStore();
+    const runId = 'blank-step-id-run';
+
+    await store.bootstrapRunTx({
+      metadata: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'dev',
+        runId,
+        planId: 'plan-minimal',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        providerRef: {
+          provider: 'mock',
+          tenantId: 't1',
+          workflowId: `wf-${runId}`,
+          runId: `pr-${runId}`,
+        },
+      },
+      firstEvents: [
+        {
+          eventId: `${runId}:queued`,
+          eventType: 'RunQueued',
+          runId,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'dev',
+          planId: 'plan-minimal',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          engineAttemptId: 1,
+          emittedAt: '2026-03-26T00:00:00.000Z',
+          idempotencyKey: `${runId}:queued`,
+          payloadVersion: 1,
+        },
+      ],
+    });
+
+    await expect(
+      store.appendAndEnqueueTx(runId, [
+        {
+          eventId: `${runId}:step-failed`,
+          eventType: 'StepFailed',
+          stepId: '   ',
+          runId,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'dev',
+          planId: 'plan-minimal',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          engineAttemptId: 1,
+          emittedAt: '2026-03-26T00:00:01.000Z',
+          idempotencyKey: `${runId}:step-failed`,
+          payloadVersion: 1,
+          payload: { reason: 'STEP_FAILURE' },
+        },
+      ])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+  });
+
+  it('rejects append when emittedAt is only whitespace', async () => {
+    const store = new InMemoryRunStateStore();
+    const runId = 'blank-emitted-at-run';
+
+    await store.bootstrapRunTx({
+      metadata: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'dev',
+        runId,
+        planId: 'plan-minimal',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        providerRef: {
+          provider: 'mock',
+          tenantId: 't1',
+          workflowId: `wf-${runId}`,
+          runId: `pr-${runId}`,
+        },
+      },
+      firstEvents: [
+        {
+          eventId: `${runId}:queued`,
+          eventType: 'RunQueued',
+          runId,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'dev',
+          planId: 'plan-minimal',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          engineAttemptId: 1,
+          emittedAt: '2026-03-26T00:00:00.000Z',
+          idempotencyKey: `${runId}:queued`,
+          payloadVersion: 1,
+        },
+      ],
+    });
+
+    await expect(
+      store.appendAndEnqueueTx(runId, [
+        {
+          eventId: `${runId}:started`,
+          eventType: 'RunStarted',
+          runId,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'dev',
+          planId: 'plan-minimal',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          engineAttemptId: 1,
+          emittedAt: '   ',
+          idempotencyKey: `${runId}:started`,
+          payloadVersion: 1,
+        },
+      ])
+    ).rejects.toMatchObject({
+      name: 'InvalidRunEventInputError',
+      code: ENGINE_ERROR_CODE.INVALID_RUN_EVENT_INPUT,
+    });
+  });
+
   it('rejects StepCompleted before StepStarted and keeps stream unchanged', async () => {
     const store = new InMemoryRunStateStore();
     const runId = 'run-invalid-step-order';

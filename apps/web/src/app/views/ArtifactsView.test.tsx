@@ -7,6 +7,18 @@ import type { IWorkspacePort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import ArtifactsView from './ArtifactsView';
+import { useLocalManifestImport } from './artifacts/useLocalManifestImport';
+
+vi.mock('./artifacts/useLocalManifestImport', async () => {
+  const actual = await vi.importActual<typeof import('./artifacts/useLocalManifestImport')>(
+    './artifacts/useLocalManifestImport'
+  );
+
+  return {
+    ...actual,
+    useLocalManifestImport: vi.fn(actual.useLocalManifestImport),
+  };
+});
 
 vi.mock('../components/monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({ path, value }: { path?: string; value: string }) => (
@@ -18,6 +30,7 @@ vi.mock('../components/monaco/MonacoCodeViewer', () => ({
 
 describe('ArtifactsView', () => {
   let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
+  const mockedUseLocalManifestImport = vi.mocked(useLocalManifestImport);
 
   function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
     return {
@@ -68,6 +81,16 @@ describe('ArtifactsView', () => {
 
   beforeEach(() => {
     mounted = null;
+    mockedUseLocalManifestImport.mockReset();
+    mockedUseLocalManifestImport.mockImplementation(() => ({
+      state: { status: 'idle' },
+      fileInputRef: { current: null },
+      openFilePicker: vi.fn(),
+      handleInputChange: vi.fn(),
+      handleDrop: vi.fn(),
+      handleDragOver: vi.fn(),
+      clear: vi.fn(),
+    }));
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -109,7 +132,7 @@ describe('ArtifactsView', () => {
     expect(mounted.container.textContent).toContain('dbt Artifacts');
     expect(mounted.container.textContent).toContain('Import Manifest');
     expect(mounted.container.textContent).toContain('Drop manifest.json here');
-    expect(mounted.container.textContent).toContain('Server Artifacts');
+    expect(mounted.container.textContent).toContain('Loaded Artifacts');
     expect(mounted.container.textContent).toContain('manifest.json');
     expect(mounted.container.textContent).toContain('run_results.json');
     expect(mounted.container.textContent).toContain('catalog.json');
@@ -142,16 +165,102 @@ describe('ArtifactsView', () => {
       heading.textContent?.includes('Import Manifest')
     );
     const artifactsHeading = Array.from(mounted.container.querySelectorAll('h2')).find((heading) =>
-      heading.textContent?.includes('Server Artifacts')
+      heading.textContent?.includes('Loaded Artifacts')
     );
 
     expect(routeTitle?.textContent).toContain('dbt Artifacts');
-    expect(header?.textContent).toContain('a3f2b91');
     expect(body?.textContent).toContain('Import Manifest');
-    expect(body?.textContent).toContain('Server Artifacts');
+    expect(body?.textContent).toContain('Loaded Artifacts');
     expect(body?.querySelector('h1')).toBeNull();
-    expect(body?.textContent).not.toContain('a3f2b91');
     expect(importHeading?.className).toContain('mb-3');
     expect(artifactsHeading?.className).toContain('mb-3');
+  });
+
+  it('renders an explicit empty state when no workspace artifacts are loaded', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            listFiles: async () => [],
+          }),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[data-slot="artifacts-empty-state"]') !== null,
+      { description: 'artifacts empty state renders' }
+    );
+
+    expect(mounted.container.textContent).toContain('No artifacts loaded');
+    expect(mounted.container.textContent).toContain('Import Manifest');
+    expect(mounted.container.textContent).not.toContain('Loaded Artifacts');
+    expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
+  });
+
+  it('renders an explicit route error when workspace artifact loading fails', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'api',
+          workspaceService: buildWorkspaceService({
+            listFiles: async () => {
+              throw new Error('workspace unavailable');
+            },
+          }),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[data-slot="artifacts-error-state"]') !== null,
+      { description: 'artifacts error state renders' }
+    );
+
+    expect(mounted.container.textContent).toContain('Artifacts unavailable');
+    expect(mounted.container.textContent).toContain('workspace unavailable');
+    expect(mounted.container.textContent).toContain('Import Manifest');
+    expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
+  });
+
+  it('renders an invalid import state when a rejected manifest is the only available source', async () => {
+    mockedUseLocalManifestImport.mockImplementation(() => ({
+      state: { status: 'error', message: 'Object does not look like a dbt manifest.' },
+      fileInputRef: { current: null },
+      openFilePicker: vi.fn(),
+      handleInputChange: vi.fn(),
+      handleDrop: vi.fn(),
+      handleDragOver: vi.fn(),
+      clear: vi.fn(),
+    }));
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          workspaceService: buildWorkspaceService({
+            listFiles: async () => [],
+          }),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-slot="artifacts-invalid-import-state"]') !== null,
+      { description: 'invalid import state renders' }
+    );
+
+    expect(mounted.container.textContent).toContain('Manifest import rejected');
+    expect(mounted.container.textContent).toContain('Object does not look like a dbt manifest.');
+    expect(mounted.container.textContent).toContain('Import Manifest');
+    expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
   });
 });

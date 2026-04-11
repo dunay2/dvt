@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { PlannerFacade } from '../../src/application/PlannerFacade.js';
 import { PlannerErrorCode } from '../../src/domain/errors.js';
-import type { IGraphSourceResolver } from '../../src/ports/IGraphSourceResolver.js';
 
 const BASE_SELECTION = { selectedNodeIds: ['model.project.a'] };
 
@@ -12,12 +11,6 @@ const BASE_GRAPH_SOURCE = {
   sourceVersion: '1.0',
   nodes: [{ nodeId: 'model.project.a', stepKind: 'DBT_MODEL', dependsOn: [] }],
 };
-
-const BASE_MANIFEST_REF = { uri: 's3://bucket/manifest.json', sha256: 'a'.repeat(64) };
-
-function makeResolver(graphSource: unknown = BASE_GRAPH_SOURCE): IGraphSourceResolver {
-  return { resolveGraphSource: vi.fn().mockResolvedValue(graphSource) };
-}
 
 async function expectInvalidInput(
   promise: Promise<unknown>,
@@ -35,7 +28,7 @@ async function expectInvalidInput(
   );
 }
 
-describe('PlannerFacade - graph source routing', () => {
+describe('PlannerFacade - canonical graph source boundary', () => {
   it('propagates GRAPH_CYCLE for cyclic selected nodes at public boundary', async () => {
     const facade = new PlannerFacade();
     await expect(
@@ -69,7 +62,7 @@ describe('PlannerFacade - graph source routing', () => {
     expect(result.plan.steps.map((step) => step.stepId)).toEqual(['x', 'y']);
   });
 
-  it('accepts graphSource as sole graph source', async () => {
+  it('accepts graphSource as canonical planner ingress', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({
       graphSource: BASE_GRAPH_SOURCE,
@@ -94,23 +87,12 @@ describe('PlannerFacade - graph source routing', () => {
     );
   });
 
-  it('resolves manifestRef via graph-source resolver and builds plan', async () => {
-    const resolver = makeResolver(BASE_GRAPH_SOURCE);
-    const facade = new PlannerFacade({ graphSourceResolver: resolver });
-    const result = await facade.buildPlan({
-      manifestRef: BASE_MANIFEST_REF,
-      selection: BASE_SELECTION,
-    });
-    expect(resolver.resolveGraphSource).toHaveBeenCalledWith(BASE_MANIFEST_REF);
-    expect(result.plan).toBeDefined();
-  });
-
-  it('strips environment context before delegating', async () => {
+  it('strips compatibility-only environment fields before delegating', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({
       graphSource: BASE_GRAPH_SOURCE,
       selection: BASE_SELECTION,
-      environment: { environmentId: 'prod', targetProfile: 'prod-profile' },
+      environment: { environmentId: 'prod', vars: { full_refresh: false } },
     });
     expect(result.plan).toBeDefined();
   });
@@ -155,7 +137,7 @@ describe('PlannerFacade - graph source routing', () => {
       graphSource: {
         ...BASE_GRAPH_SOURCE,
         sourceFamily: 'custom-import',
-        sourceVersion: '2026-04-06',
+        sourceVersion: '2026-04-10',
       },
       selection: BASE_SELECTION,
     });
@@ -165,117 +147,23 @@ describe('PlannerFacade - graph source routing', () => {
   });
 });
 
-describe('PlannerFacade - one-active-source rule', () => {
+describe('PlannerFacade - fail closed on non-canonical ingress', () => {
   it('rejects when no graph source is provided', async () => {
     const facade = new PlannerFacade();
     await expectInvalidInput(
       facade.buildPlan({ selection: BASE_SELECTION } as never),
-      'Planner input failed contract validation'
-    );
-  });
-
-  it('rejects manifestRef + graphSource', async () => {
-    const facade = new PlannerFacade({ graphSourceResolver: makeResolver() });
-    await expectInvalidInput(
-      facade.buildPlan({
-        manifestRef: BASE_MANIFEST_REF,
-        graphSource: BASE_GRAPH_SOURCE,
-        selection: BASE_SELECTION,
-      }),
-      'Planner input failed contract validation'
-    );
-  });
-});
-
-describe('PlannerFacade - resolver requirements', () => {
-  it('validates graphSourceRefCacheSize even when resolver is not configured', () => {
-    expect(() => new PlannerFacade({ graphSourceRefCacheSize: -1 })).toThrow(
-      'graphSourceRefCacheSize must be a non-negative integer.'
-    );
-  });
-
-  it('rejects manifestRef when no resolver is configured', async () => {
-    const facade = new PlannerFacade();
-    await expect(
-      facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION })
-    ).rejects.toMatchObject({
-      code: PlannerErrorCode.INVALID_INPUT,
-      message: expect.stringContaining('no graph-source resolver is configured'),
-    });
-  });
-
-  it('propagates resolver rejection', async () => {
-    const resolver: IGraphSourceResolver = {
-      resolveGraphSource: vi.fn().mockRejectedValue(new Error('fetch failed')),
-    };
-    const facade = new PlannerFacade({ graphSourceResolver: resolver });
-    await expect(
-      facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION })
-    ).rejects.toThrow('fetch failed');
-  });
-
-  it('rejects malformed graphSource returned by resolver', async () => {
-    const resolver = makeResolver({
-      kind: 'generic-graph-v1',
-      sourceFamily: 'dbt',
-      sourceVersion: '1.0',
-      nodes: [{ nodeId: 'x', dependsOn: [] }],
-    });
-    const facade = new PlannerFacade({ graphSourceResolver: resolver });
-    await expectInvalidInput(
-      facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION }),
       'graphSource failed contract validation'
     );
   });
 
-  it('caches repeated manifestRef resolution by default', async () => {
-    const resolver = makeResolver(BASE_GRAPH_SOURCE);
-    const facade = new PlannerFacade({ graphSourceResolver: resolver });
-
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-
-    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(1);
-  });
-
-  it('disables ref cache when graphSourceRefCacheSize is zero', async () => {
-    const resolver = makeResolver(BASE_GRAPH_SOURCE);
-    const facade = new PlannerFacade({ graphSourceResolver: resolver, graphSourceRefCacheSize: 0 });
-
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-
-    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(2);
-  });
-
-  it('evicts least-recently-used manifestRef entries when cache is full', async () => {
-    const resolver = makeResolver(BASE_GRAPH_SOURCE);
-    const facade = new PlannerFacade({ graphSourceResolver: resolver, graphSourceRefCacheSize: 1 });
-    const altManifestRef = { uri: 's3://bucket/manifest-alt.json', sha256: 'b'.repeat(64) };
-
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-    await facade.buildPlan({ manifestRef: altManifestRef, selection: BASE_SELECTION });
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-
-    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(3);
-  });
-
-  it('accepts legacy resolver option as compatibility alias', async () => {
-    const resolver = makeResolver(BASE_GRAPH_SOURCE);
-    const facade = new PlannerFacade({ resolver });
-
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-
-    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(1);
-  });
-
-  it('accepts legacy cache option as compatibility alias', async () => {
-    const resolver = makeResolver(BASE_GRAPH_SOURCE);
-    const facade = new PlannerFacade({ resolver, manifestRefCacheSize: 0 });
-
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-    await facade.buildPlan({ manifestRef: BASE_MANIFEST_REF, selection: BASE_SELECTION });
-
-    expect(resolver.resolveGraphSource).toHaveBeenCalledTimes(2);
+  it('rejects manifestRef at the canonical planner boundary', async () => {
+    const facade = new PlannerFacade();
+    await expectInvalidInput(
+      facade.buildPlan({
+        manifestRef: { uri: 's3://bucket/manifest.json', sha256: 'a'.repeat(64) },
+        selection: BASE_SELECTION,
+      } as never),
+      'Planner input failed contract validation'
+    );
   });
 });

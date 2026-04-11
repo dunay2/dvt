@@ -33,6 +33,7 @@ interface UiLayoutState {
   toggleExplorerPanel: () => void;
   toggleInspectorPanel: () => void;
   toggleConsolePanel: () => void;
+  hideConsolePanel: () => void;
   showExplorerPanel: () => void;
   hideExplorerPanel: () => void;
   showInspectorPanel: () => void;
@@ -76,6 +77,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           const next = !state.consolePanelVisible;
           return { consolePanelVisible: next, consolePanelHeight: next ? 160 : 0 };
         }),
+      hideConsolePanel: () => set({ consolePanelVisible: false, consolePanelHeight: 0 }),
       showExplorerPanel: () => set({ explorerPanelVisible: true }),
       hideExplorerPanel: () => set({ explorerPanelVisible: false }),
       showInspectorPanel: () => set({ inspectorPanelVisible: true }),

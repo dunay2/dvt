@@ -317,16 +317,18 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Status:
-  `R2` closed `2026-03-20`; `graphSource` / `PlannerGraphSourceV1` is now the
-  canonical typed inline planner boundary, while `manifestRef` remains the
-  canonical production artifact path and raw `manifest` / direct `nodes`
-  remain compatibility inputs. `MW-A2` now documents the target evolution from
-  that minimal boundary to a first-class `GenericGraphSource` model.
+  `R2` closed `2026-03-20`; follow-up hard-cut remediation landed
+  `2026-04-10`. `graphSource` / `GenericGraphSourceV1` is now the only
+  canonical planner ingress. `manifestRef`, raw `manifest`, and direct `nodes`
+  are rejected at the planner-backed runtime boundary and at the canonical
+  planner contract boundary. `MW-A2` remains the design lineage for the
+  generic graph-source model, not a live compatibility posture.
 - Primary code:
   [packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts),
   [packages/@dvt/contracts/src/schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts),
   [packages/@dvt/planner/src/application/PlannerFacade.ts](../../../packages/@dvt/planner/src/application/PlannerFacade.ts),
-  [packages/@dvt/planner/src/ports/IArtifactResolver.ts](../../../packages/@dvt/planner/src/ports/IArtifactResolver.ts),
+  [apps/api/src/application/services/resolveCanonicalPlannerInputEnvelope.ts](../../../apps/api/src/application/services/resolveCanonicalPlannerInputEnvelope.ts),
+  [apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts](../../../apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts),
   [packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts](../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts),
   [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts),
   [apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts](../../../apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts)
@@ -335,10 +337,11 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/contracts/test/schema-sync.test.ts](../../../packages/@dvt/contracts/test/schema-sync.test.ts),
   [packages/@dvt/planner/test/unit/planner-facade.test.ts](../../../packages/@dvt/planner/test/unit/planner-facade.test.ts),
   [packages/@dvt/contracts/test/validation.test.ts](../../../packages/@dvt/contracts/test/validation.test.ts),
-  [packages/@dvt/planner/test/unit/manifest-graph-source.test.ts](../../../packages/@dvt/planner/test/unit/manifest-graph-source.test.ts),
+  [apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts),
+  [apps/api/test/entrypoints/http/planRoutes.test.ts](../../../apps/api/test/entrypoints/http/planRoutes.test.ts),
   [apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts](../../../apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts)
 - Evidence:
-  [ED-20260320 - Planner R2 typed graph-source boundary](../../evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md)
+  [ED-20260410 - Hard-cut planner-backed runtime ingress to canonical graphSource](../../evidence/ED-20260410-planner-hard-cut-boundary-remediation.md)
 - Verification:
   `pnpm --filter @dvt/contracts build`
   and
@@ -347,6 +350,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `pnpm --filter @dvt/planner build`
   and
   `pnpm --filter @dvt/planner test`
+  and
+  `pnpm --filter dvt-api typecheck`
+  and
+  `pnpm --filter dvt-api test`
   and
   `pnpm validate:contracts`
 

@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-11
 domain: frontend
 ---
 
@@ -107,6 +107,118 @@ flowchart LR
 | list runs               | `GET /runs`               | API / Entry | list/read route                      |
 | fetch run snapshot      | `GET /runs/:runId`        | API / Entry | status truth and detail truth        |
 | list run events         | `GET /runs/:runId/events` | API / Entry | ordered timeline feed for monitoring |
+
+## Runs Versus Bottom Console Drawer
+
+`GET /runs/:runId/events` now has two governed frontend consumers, but they do
+not own the same product responsibility:
+
+- `RunWorkspaceFacade` composes snapshot plus timeline into the durable
+  run-detail workbench;
+- `useConsoleLogStream()` mirrors the active run as a shell-level live stream
+  companion;
+- only the Runs workspace combines timeline with snapshot authority;
+- the shell drawer must not present itself as the authoritative run-detail
+  surface.
+
+Current consumer split:
+
+```mermaid
+flowchart LR
+  Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
+  Events --> Facade["RunWorkspaceFacade.loadRunWorkspace(runId)"]
+  Snapshot["GET /runs/:runId"] --> Facade
+  DrawerHook --> Drawer["BottomConsoleDrawer"]
+  Facade --> Runs["RunWorkspaceStateView"]
+```
+
+Authority rules:
+
+1. `BottomConsoleDrawer` may show ordered live lines for the active run.
+2. `BottomConsoleDrawer` must not derive snapshot truth, failure diagnostics,
+   or result evidence on its own.
+3. `RunWorkspaceStateView` owns snapshot truth and timeline degradation
+   semantics for `/runs/:runId`.
+4. Future convergence of logs, timeline, and terminal-grade streaming belongs
+   to `F-10` and `F-18`, not to ad hoc shell copy drift.
+
+## Runs Workbench State Ownership
+
+`RunsView` is still the route compositor, but the route now has one governed
+state contract that separates route-root state from workspace-inner state.
+
+```mermaid
+flowchart TD
+  Input["runId + run summaries query + run workspace query"] --> Model["RunsWorkbench state model"]
+  Model --> Index["runs-index state"]
+  Index --> IndexError["runs-error state"]
+  Index --> IndexEmpty["runs-empty state"]
+  Index --> IndexList["runs-list state"]
+  Model --> Loading["run-loading state"]
+  Model --> Missing["run-missing state"]
+  Model --> Error["run-error state"]
+  Model --> Workspace["run-workspace state"]
+  Workspace --> Snapshot["snapshot authority"]
+  Workspace --> Timeline["timeline state: available | empty | degraded"]
+```
+
+Rules:
+
+1. Route-root state chooses between list, loading, missing, error, and focused
+   workspace.
+2. `/runs` must render a governed list-error state when `GET /runs` fails and
+   no authoritative list data is available.
+3. Degraded timeline treatment is not a route-root error state because the run
+   snapshot is still authoritative and renderable.
+4. The focused workspace may carry `snapshot-only` detail truth while still
+   rendering a degraded or empty timeline notice honestly.
+5. The route must never collapse `run-missing` and `run-degraded` into the same
+   user treatment.
+
+Primary anchors:
+
+- [RunsView.tsx](../../../../../apps/web/src/app/views/RunsView.tsx)
+- [runWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts)
+- [WorkbenchStates.tsx](../../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx)
+- [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)
+- [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
+
+The runtime contract does not change because of this extraction. Shared
+workbench state primitives now own the repeated route-state chrome, while
+`Runs` continues to own route-specific copy and state selection.
+
+## Shared Run Event Presentation Model
+
+The shell drawer and the Runs route now share one event-presentation seam
+before they render their different surfaces:
+
+```mermaid
+flowchart LR
+  Event["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
+  SharedCopy --> Drawer["formatRunEventAsLogLine(...)"]
+  SharedCopy --> Timeline["RunWorkspaceStateView timeline event card"]
+```
+
+The shared model owns:
+
+- event level (`INFO`, `WARN`, `ERROR`, `SUCCESS`);
+- headline key;
+- optional detail copied from runtime event payload message when present;
+- step identity when the event belongs to one step.
+
+The shared copy resolver owns:
+
+- the governed human-readable headline text used by both drawer and timeline
+  surfaces.
+
+It does not change authority:
+
+- `BottomConsoleDrawer` still renders a shell-level companion stream;
+- `BottomConsoleDrawer` still owns terminal-style log-line composition;
+- `RunWorkspaceStateView` still owns durable timeline interpretation;
+- snapshot truth, failure diagnostics, and result evidence remain outside the
+  shared event-presentation seam.
 
 ## PlanRef handoff prerequisite
 

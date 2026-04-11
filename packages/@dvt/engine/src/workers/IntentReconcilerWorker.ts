@@ -31,7 +31,7 @@ export interface IntentReconcilerWorkerOptions {
 }
 
 export interface IntentReconcilerWorkerDeps {
-  clock?: Pick<IClock, 'nowIsoUtc'>;
+  clock: Pick<IClock, 'nowIsoUtc'>;
   random?: () => number;
 }
 
@@ -59,11 +59,10 @@ export class IntentReconcilerWorker {
     private readonly logger: IntentReconcilerWorkerLogger,
     private readonly metrics: IntentReconcilerWorkerMetrics,
     options: IntentReconcilerWorkerOptions = {},
-    deps: IntentReconcilerWorkerDeps = {}
+    deps: IntentReconcilerWorkerDeps
   ) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
-    // eslint-disable-next-line no-restricted-syntax -- Production fallback for non-test usage.
-    this.clock = deps.clock ?? { nowIsoUtc: () => new Date().toISOString() };
+    this.clock = deps.clock;
     // eslint-disable-next-line no-restricted-properties -- Production fallback jitter source.
     this.random = deps.random ?? Math.random;
   }

@@ -7,6 +7,7 @@
  * @version 1.0.0
  * @date 2026-04-09
  */
+import { asIsoUtcString, asNonBlankString } from '@dvt/contracts';
 import type { ExecutionPlan, MaterializationEvidence } from '@dvt/contracts';
 import type { Pool } from 'pg';
 import { Pool as PostgresPool } from 'pg';
@@ -228,11 +229,11 @@ export class PostgresRelationalExecutionCapability {
         status: 'COMPLETED',
         resultEvidence: {
           executor: 'postgres',
-          environmentId: context.executionIdentity.environmentId,
-          sinkTable: formatSinkRef(parsed.value.sink),
+          environmentId: asNonBlankString(context.executionIdentity.environmentId),
+          sinkTable: asNonBlankString(formatSinkRef(parsed.value.sink)),
           rowsWritten,
-          startedAt,
-          completedAt,
+          startedAt: asIsoUtcString(startedAt),
+          completedAt: asIsoUtcString(completedAt),
           durationMs: computeDurationMs(startedAt, completedAt),
         },
       };

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { asIsoUtcString, asNonBlankString } from '@dvt/contracts';
 
 import { buildNodeDecorations, buildOverlayContext } from './canvasOverlayContext';
 import {
@@ -39,10 +40,12 @@ function toRunStatusSnapshot(canonicalRun: CanonicalRun | null): RunStatusSnapsh
   };
 
   return {
-    runId: canonicalRun.runId,
+    runId: asNonBlankString(canonicalRun.runId),
     status: statusMap[canonicalRun.status],
-    startedAt: canonicalRun.startedAt,
-    completedAt: canonicalRun.finishedAt,
+    startedAt: asIsoUtcString(canonicalRun.startedAt),
+    ...(canonicalRun.finishedAt === undefined
+      ? {}
+      : { completedAt: asIsoUtcString(canonicalRun.finishedAt) }),
   };
 }
 

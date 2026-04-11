@@ -31,17 +31,17 @@ export function useDiffData() {
   );
   const graphNodes = graphSnapshotQuery.data?.nodes ?? [];
   const primaryNode = useMemo(
-    () => selectPrimaryDiffNode(diffChanges, graphNodes),
-    [diffChanges, graphNodes]
+    () => selectPrimaryDiffNode(filteredChanges, graphNodes),
+    [filteredChanges, graphNodes]
   );
   const primaryNodeChanges = useMemo(
     () =>
       primaryNode
-        ? diffChanges.filter(
+        ? filteredChanges.filter(
             (change) => change.nodeId === primaryNode.id || change.nodeId === primaryNode.name
           )
         : [],
-    [diffChanges, primaryNode]
+    [filteredChanges, primaryNode]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(primaryNode?.path);
   const summary: DiffSummary = useMemo(() => buildDiffSummary(diffChanges), [diffChanges]);

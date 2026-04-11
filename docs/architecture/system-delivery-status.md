@@ -24,7 +24,7 @@ Use this page together with:
 - [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
   for the curated topic -> doc -> code -> test -> command mapping
 - [Planner Current State Assessment](../planning/status/planner-current-state-assessment.md)
-  for the quantified planner-specific baseline and component scorecard
+  for the planner-specific current-state baseline and component map
 - [Planning Control Tower](../planning/state/planning-control-tower.md) for the
   active task registry and lane posture
 - [Strategic Product Roadmap](../planning/roadmap/strategic-product-roadmap.md)
@@ -82,12 +82,18 @@ Scope-specific adapter-temporal verification commands:
 
 ## Area Status
 
+Active planning posture note:
+planner-backed runtime ingress cleanup is now routed through a hard-cut,
+no-retrocompatibility slice. The superseded compatibility-first proposal
+remains historical rationale only and does not define the active execution
+direction.
+
 ### Entry Layer
 
-| Area       | Packages   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------- | ---------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API server | `apps/api` | Closed for Phase 1 | The protected runtime query slice remains merged: OIDC auth, tenant policy, dependency-cruiser arch rules, `EngineStartRunUseCase`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, and `POST /runs/:runId/signal` are delivered; `startRun` admission still uses the resilient backpressure acquisition chain (cache + breaker + persisted fallback); and `POST /plans/preview` now validates explicit preview profiles plus preview-time provenance at the request boundary before returning the persisted preview response and runtime-safe `PlanRef` |
-| Web UI     | `apps/web` | Partial            | Client shell and routing exist; the Canvas now exposes explicit transformation authoring mode, preview gating is tied to persisted `PlanRef` proof, and run detail only renders result evidence from the governed snapshot surface; workspace-level frontend tests are wired (`pnpm --filter @dvt/web test`), typecheck coverage exists (`pnpm --filter @dvt/web typecheck`), and a Cypress E2E runtime-contract lane remains available (`pnpm --filter @dvt/web test:e2e`) while broader backend-backed coverage is still incomplete                                |
+| Area       | Packages   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API server | `apps/api` | Closed for Phase 1 | Protected runtime routes are live with OIDC auth, tenant policy, backpressure admission, and query/signal endpoints; `POST /plans/preview` validates preview profile plus provenance before returning a persisted `PlanRef`; planner-backed protected runtime ingress is now hard-cut to canonical `graphSource`, and `start-run` plus `preview` share one fail-closed source policy                                                                                                                                                  |
+| Web UI     | `apps/web` | Partial            | Client shell and routing exist; the Canvas now exposes explicit transformation authoring mode, preview gating is tied to persisted `PlanRef` proof, and run detail only renders result evidence from the governed snapshot surface; workspace-level frontend tests are wired (`pnpm --filter @dvt/web test`), typecheck coverage exists (`pnpm --filter @dvt/web typecheck`), and a Cypress E2E runtime-contract lane remains available (`pnpm --filter @dvt/web test:e2e`) while broader backend-backed coverage is still incomplete |
 
 ### Planning And Interpretation
 
@@ -147,7 +153,7 @@ Scope-specific adapter-temporal verification commands:
 | S10   | Typed Graph-Source Boundary      | Closed 2026-03-20            |
 | S02   | IRunStateStore Split             | Open (unblocked by S01)      |
 | S03   | StartRunCoordinator Extraction   | Open (unblocked by S01)      |
-| S05   | EventEnvelope.payloadVersion     | Open (unblocked by S01)      |
+| S05   | EventEnvelope.payloadVersion     | Closed 2026-04-04            |
 | S07   | OpenLineage Job Naming Fix       | Open                         |
 | S09   | Retry Ownership ADR              | Closed 2026-03-24            |
 | S04   | ProviderRefUpdated Event         | Retired 2026-04-09           |

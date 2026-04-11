@@ -1,4 +1,4 @@
-import { parseRunEventWrite } from '@dvt/contracts';
+import { parseRunEventRecord, parseRunEventWrite } from '@dvt/contracts';
 import type { RunEventWriteSchemaT } from '@dvt/contracts';
 
 import {
@@ -24,7 +24,7 @@ export function validateAndEnrichEnvelope(
   context: EnrichContext
 ): EventEnvelope {
   const validated = parseAndValidateEnvelope(envelope, context);
-  return enrichEnvelopeWithSeq(validated, context.runSeq, context.persistedAt);
+  return enrichEnvelopeWithSeq(validated, context);
 }
 
 function parseAndValidateEnvelope(
@@ -47,7 +47,7 @@ function assertEnvelopeRunIdMatchesBatchRunId(
   runId: RunId,
   index: number
 ): void {
-  if (envelope.runId !== runId) {
+  if (envelope.runId !== String(runId)) {
     throw new InvalidRunEventEnvelopeError(runId, index, envelope.runId);
   }
 }
@@ -65,43 +65,15 @@ function assertEnvelopeTenantIdMatchesRunTenant(
 
 function enrichEnvelopeWithSeq(
   envelope: RunEventWriteSchemaT,
-  runSeq: number,
-  persistedAt: string
+  context: EnrichContext
 ): EventEnvelope {
-  const normalizedInput = toNormalizedEventInput(envelope);
-
-  return {
-    ...normalizedInput,
-    runSeq,
-    persistedAt,
-  };
-}
-
-function toNormalizedEventInput(envelope: RunEventWriteSchemaT): EventInput {
-  const base = {
-    eventId: envelope.eventId,
-    eventType: envelope.eventType,
-    runId: envelope.runId,
-    emittedAt: envelope.emittedAt,
-    tenantId: envelope.tenantId,
-    projectId: envelope.projectId,
-    environmentId: envelope.environmentId,
-    planId: envelope.planId,
-    planVersion: envelope.planVersion,
-    engineAttemptId: envelope.engineAttemptId,
-    logicalAttemptId: envelope.logicalAttemptId,
-    idempotencyKey: envelope.idempotencyKey,
-    payloadVersion: envelope.payloadVersion,
-  };
-  const withPayload =
-    envelope.payload === undefined ? base : { ...base, payload: envelope.payload };
-
-  if ('stepId' in envelope) {
-    return {
-      ...withPayload,
-      stepId: envelope.stepId,
-    };
+  try {
+    return parseRunEventRecord({
+      ...envelope,
+      runSeq: context.runSeq,
+      persistedAt: context.persistedAt,
+    }) as EventEnvelope;
+  } catch (cause) {
+    throw new InvalidRunEventSchemaError(context.runId, context.index, cause);
   }
-
-  return withPayload;
 }

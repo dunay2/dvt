@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
 import type { PlansService } from './plans/plansService';
 import type { RunsService } from './runs/runsService';
 import type { WorkspaceService } from './workspace/workspaceService';
@@ -159,12 +160,12 @@ describe('AppServicesProvider', () => {
     const runsService = {
       listRunSummaries: async () => [],
       getRunSnapshot: async () => null,
-      startRun: async () => ({
-        provider: 'mock' as const,
-        tenantId: 'tenant-a',
-        workflowId: 'workflow_1',
-        runId: 'run_1',
-      }),
+      startRun: async () =>
+        makeMockRunRef({
+          tenantId: 'tenant-a',
+          workflowId: 'workflow_1',
+          runId: 'run_1',
+        }),
       listRunEvents: async () => ({ events: [] }),
     };
     const sessionContext = {
@@ -181,13 +182,13 @@ describe('AppServicesProvider', () => {
         targetAdapter: 'mock' as const,
       }),
       subscribeWorkspaceScope: () => () => undefined,
-      buildRunContext: (runId: string) => ({
-        tenantId: 'tenant-a',
-        projectId: 'project-a',
-        environmentId: 'dev',
-        targetAdapter: 'mock' as const,
-        runId,
-      }),
+      buildRunContext: (runId: string) =>
+        makeRunContext(runId, {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+          targetAdapter: 'mock',
+        }),
     };
     const shellFeedback = {
       success: () => undefined,

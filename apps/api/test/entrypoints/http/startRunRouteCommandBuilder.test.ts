@@ -114,4 +114,31 @@ describe('startRun command builders', () => {
       },
     });
   });
+
+  it('rejects padded pluginCompatibilityFingerprint instead of omitting it', () => {
+    expect(
+      buildPlanRefStartRunCommand({
+        rawPlanRef: VALID_PLAN_REF,
+        rawRunExecutionContextRef: {
+          uri: 'dvt-runctx://tenant-a/run-1/context.json',
+          sha256: 'abc123',
+          schemaVersion: 'v1.0',
+          planId: 'p1',
+          planVersion: '1.0',
+          pluginCompatibilityFingerprint:
+            ' 1111111111111111111111111111111111111111111111111111111111111111 ',
+        },
+        runId: 'run-1',
+        targetAdapter: 'mock',
+        selection: ['model_a'],
+      })
+    ).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: 'invalid_run_execution_context_ref',
+        target: 'runExecutionContextRef',
+      },
+    });
+  });
 });

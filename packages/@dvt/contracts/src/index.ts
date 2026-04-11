@@ -27,7 +27,6 @@ export {
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
 export type {
-  DbtManifestRef,
   ExecutionPlan,
   ExecutionStep,
   ExecutionStepV1,
@@ -120,6 +119,7 @@ export * from './schemas.js';
 export * from './step-registry/StepTypeRegistry.js';
 export * from './utils/jcsCanonicalize.js';
 export * from './utils/sha256HexUtf8.js';
+export * from './utils/contractPrimitives.js';
 export * from './validation.js';
 export type {
   AppendResult,

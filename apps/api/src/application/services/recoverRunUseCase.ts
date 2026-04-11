@@ -5,6 +5,7 @@ import {
   type PlanRef,
   type RunContext,
 } from '@dvt/engine';
+import { asNonBlankString } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { IRecoverRunUseCase, RecoverRunCommand, RecoverRunResult } from '../ports/runtime.js';
@@ -49,11 +50,11 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
 
 function toEnginePlanRef(input: RecoverRunCommand['planRef']): PlanRef {
   return {
-    uri: input.uri,
-    sha256: input.sha256,
-    schemaVersion: input.schemaVersion,
-    planId: input.planId,
-    planVersion: input.planVersion,
+    uri: asNonBlankString(input.uri),
+    sha256: asNonBlankString(input.sha256),
+    schemaVersion: asNonBlankString(input.schemaVersion),
+    planId: asNonBlankString(input.planId),
+    planVersion: asNonBlankString(input.planVersion),
   };
 }
 
@@ -66,10 +67,10 @@ function toEngineRunContext(
 ): RunContext {
   const targetAdapter = command.targetAdapter ?? sourceProvider;
   return {
-    tenantId,
-    projectId,
-    environmentId,
-    runId: command.recoveryRunId,
+    tenantId: asNonBlankString(tenantId),
+    projectId: asNonBlankString(projectId),
+    environmentId: asNonBlankString(environmentId),
+    runId: asNonBlankString(command.recoveryRunId),
     targetAdapter,
     ...(command.runExecutionContextRef !== undefined
       ? { runExecutionContextRef: command.runExecutionContextRef }

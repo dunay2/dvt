@@ -2,22 +2,22 @@ import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceCon
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import AppBrandMark from './AppBrandMark';
-
-import { TopAppBarConnectionStatus } from './topAppBar/TopAppBarConnectionStatus';
-import { resolveTopAppBarCopy } from './topAppBar/copy';
-import { TopAppBarGitRef } from './topAppBar/TopAppBarGitRef';
-import { TopAppBarShellMenu } from './topAppBar/TopAppBarShellMenu';
-import { TopAppBarWorkspaceSelectors } from './topAppBar/TopAppBarWorkspaceSelectors';
-import type { TopAppBarProps } from './topAppBar/types';
+import { topAppBarClasses } from './shell/chrome';
+import { resolveShellTopBarCopy } from './shell/copy';
+import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
+import { ShellGitRef } from './shell/ShellGitRef';
+import { ShellMenu } from './shell/ShellMenu';
+import type { ShellTopBarProps } from './shell/types';
+import { ShellWorkspaceSelectors } from './shell/ShellWorkspaceSelectors';
 import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
-export default function TopAppBar({
+export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
-}: TopAppBarProps) {
+}: ShellTopBarProps) {
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
@@ -36,17 +36,17 @@ export default function TopAppBar({
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
-  const copy = resolveTopAppBarCopy();
+  const copy = resolveShellTopBarCopy();
 
   return (
     <TooltipProvider>
-      <div className="flex h-10 flex-shrink-0 items-center gap-2 border-b border-slate-700 bg-slate-900 px-3">
+      <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
         <div className="mr-1 flex shrink-0 items-center gap-2">
           <AppBrandMark className="size-6 shrink-0" />
-          <span className="text-base leading-none font-semibold text-slate-50">Raven</span>
+          <span className={topAppBarClasses.brand}>Raven</span>
         </div>
 
-        <TopAppBarWorkspaceSelectors
+        <ShellWorkspaceSelectors
           workspaceBootstrap={workspaceBootstrap}
           selectedTenant={selectedTenant}
           selectedProject={selectedProject}
@@ -55,7 +55,7 @@ export default function TopAppBar({
           setSelectedProject={setSelectedProject}
           setSelectedEnvironment={setSelectedEnvironment}
         />
-        <TopAppBarGitRef
+        <ShellGitRef
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}
           copy={copy}
@@ -63,13 +63,13 @@ export default function TopAppBar({
 
         <div className="flex-1" />
 
-        <TopAppBarConnectionStatus
+        <ShellConnectionStatus
           isConnectionChecking={isConnectionChecking}
           effectiveConnectionStatus={effectiveConnectionStatus}
           connectionDetail={connectionDetail}
           copy={copy}
         />
-        <TopAppBarShellMenu
+        <ShellMenu
           explorerPanelVisible={explorerPanelVisible}
           inspectorPanelVisible={inspectorPanelVisible}
           consolePanelVisible={consolePanelVisible}
@@ -86,3 +86,5 @@ export default function TopAppBar({
     </TooltipProvider>
   );
 }
+
+export default ShellTopBar;

@@ -1,10 +1,11 @@
-import type {
-  CanonicalRunStatus,
-  EngineRunRef,
-  PlanRef,
-  ResolvedRunContext,
-  RunContext,
-  RunStatus,
+import {
+  asNonBlankString,
+  type CanonicalRunStatus,
+  type EngineRunRef,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunContext,
+  type RunStatus,
 } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
@@ -59,8 +60,8 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     const resolvedContext: ResolvedRunContext = {
       ...context,
       logicalAttemptId: reservedAttempt.logicalAttemptId,
-      parentRunId: reservedAttempt.parentRunId,
-      originRunId: reservedAttempt.originRunId,
+      parentRunId: asNonBlankString(reservedAttempt.parentRunId),
+      originRunId: asNonBlankString(reservedAttempt.originRunId),
     };
     const traceContext = buildTraceContext(resolvedContext, planRef.planId);
 
@@ -155,8 +156,8 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     const preflightContext: ResolvedRunContext = {
       ...context,
       logicalAttemptId: sourceMetadata.logicalAttemptId + 1,
-      parentRunId: sourceMetadata.runId,
-      originRunId: sourceMetadata.originRunId ?? sourceMetadata.runId,
+      parentRunId: asNonBlankString(sourceMetadata.runId),
+      originRunId: asNonBlankString(sourceMetadata.originRunId ?? sourceMetadata.runId),
     };
 
     await guard.assertStartRunAllowed(planRef, preflightContext);

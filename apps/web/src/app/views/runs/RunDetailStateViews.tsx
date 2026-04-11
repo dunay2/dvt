@@ -1,21 +1,68 @@
-import { Card } from '../../components/ui/card';
-import { RunStateFrame } from './RunStateFrame';
+import { Link } from 'react-router';
+
+import {
+  WorkbenchDegradedState,
+  WorkbenchEmptyState,
+  WorkbenchErrorState,
+  WorkbenchLoadingState,
+} from '../../components/workbench/state/WorkbenchStates';
 import { runStatesCopy as copy } from './runStatesCopy';
 
-type RunNotFoundStateProps = {
+type RunsEmptyStateProps = {
+  title?: string;
+};
+
+export function RunsEmptyStateView({ title = copy.runsTitle }: RunsEmptyStateProps) {
+  return (
+    <WorkbenchEmptyState
+      frameTitle={title}
+      slotPrefix="runs-state"
+      dataSlot="runs-empty-state"
+      title={copy.emptyRunsTitle}
+      message={copy.emptyRuns}
+      centered
+      action={
+        <Link to="/canvas" className="text-sm text-blue-400 underline underline-offset-2">
+          {copy.emptyRunsLink}
+        </Link>
+      }
+    />
+  );
+}
+
+type RunMissingStateProps = {
   runId: string;
 };
 
-export function RunNotFoundStateView({ runId }: RunNotFoundStateProps) {
+export function RunMissingStateView({ runId }: RunMissingStateProps) {
   return (
-    <RunStateFrame title={copy.runsTitle}>
-      <Card className="mx-auto max-w-xl border-slate-700 bg-slate-900 p-5">
-        <h2 className="mb-2 text-base font-semibold">{copy.runNotFoundTitle}</h2>
-        <p className="text-sm text-slate-300">
-          {copy.runNotFoundMessagePrefix} <span className="font-mono">{runId}</span>.
-        </p>
-      </Card>
-    </RunStateFrame>
+    <WorkbenchEmptyState
+      frameTitle={copy.runsTitle}
+      slotPrefix="runs-state"
+      dataSlot="run-missing-state"
+      title={copy.runMissingTitle}
+      message={
+        <>
+          {copy.runMissingMessagePrefix} <span className="font-mono">{runId}</span>.
+        </>
+      }
+    />
+  );
+}
+
+type RunsErrorStateProps = {
+  message: string;
+};
+
+export function RunsErrorStateView({ message }: RunsErrorStateProps) {
+  return (
+    <WorkbenchErrorState
+      frameTitle={copy.runsTitle}
+      slotPrefix="runs-state"
+      dataSlot="runs-error-state"
+      title={copy.runsUnavailableTitle}
+      message={message}
+    />
   );
 }
 
@@ -25,11 +72,12 @@ type RunDetailLoadingStateProps = {
 
 export function RunDetailLoadingStateView({ runId }: RunDetailLoadingStateProps) {
   return (
-    <RunStateFrame title={`Run ${runId}`}>
-      <Card className="mx-auto max-w-xl border-slate-700 bg-slate-900 p-5 text-sm text-slate-300">
-        {copy.runWorkspaceLoading}
-      </Card>
-    </RunStateFrame>
+    <WorkbenchLoadingState
+      frameTitle={`Run ${runId}`}
+      slotPrefix="runs-state"
+      dataSlot="run-detail-loading-state"
+      message={copy.runWorkspaceLoading}
+    />
   );
 }
 
@@ -40,13 +88,27 @@ type RunDetailErrorStateProps = {
 
 export function RunDetailErrorStateView({ runId, message }: RunDetailErrorStateProps) {
   return (
-    <RunStateFrame title={`Run ${runId}`}>
-      <Card className="mx-auto max-w-xl border-red-900 bg-red-950/30 p-5">
-        <h2 className="mb-2 text-base font-semibold text-red-200">
-          {copy.runWorkspaceUnavailable}
-        </h2>
-        <p className="text-sm text-red-100">{message}</p>
-      </Card>
-    </RunStateFrame>
+    <WorkbenchErrorState
+      frameTitle={`Run ${runId}`}
+      slotPrefix="runs-state"
+      dataSlot="run-detail-error-state"
+      title={copy.runWorkspaceUnavailable}
+      message={message}
+    />
+  );
+}
+
+type RunDegradedStateProps = {
+  message: string;
+};
+
+export function RunDegradedStateView({ message }: RunDegradedStateProps) {
+  return (
+    <WorkbenchDegradedState
+      dataSlot="run-degraded-state"
+      title={copy.runDegradedTitle}
+      message={message}
+      note={copy.runDegradedNote}
+    />
   );
 }

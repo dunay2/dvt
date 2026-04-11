@@ -4,6 +4,7 @@ import {
   parseExecutionPlan,
   TransformationExecutorSchema,
   type EventEnvelope,
+  type MaterializationEvidence,
   type PlanRecord,
   type WorkflowSnapshot,
 } from '@dvt/contracts';
@@ -16,12 +17,12 @@ export interface RunReadEvidenceModel {
   readonly failedStepId?: string;
   readonly errorReason?: string;
   readonly materialization?: {
-    executor: TransformationExecutor;
-    environmentId: string;
-    sinkTable: string;
+    executor: MaterializationEvidence['executor'];
+    environmentId: MaterializationEvidence['environmentId'];
+    sinkTable: MaterializationEvidence['sinkTable'];
     rowsWritten: number;
-    startedAt: string;
-    completedAt: string;
+    startedAt: MaterializationEvidence['startedAt'];
+    completedAt: MaterializationEvidence['completedAt'];
     durationMs: number;
   };
 }

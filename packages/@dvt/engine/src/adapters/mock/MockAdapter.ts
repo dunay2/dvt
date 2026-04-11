@@ -8,6 +8,7 @@
  * @date 2026-02-21
  */
 import {
+  asNonBlankString,
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -62,7 +63,7 @@ export class MockAdapter implements IProviderAdapter {
     return {
       provider: 'mock',
       tenantId: ctx.tenantId,
-      workflowId: `mock_${ctx.runId}`,
+      workflowId: asNonBlankString(`mock_${ctx.runId}`),
       runId: ctx.runId,
     };
   }
@@ -89,7 +90,7 @@ export class MockAdapter implements IProviderAdapter {
     const runRef: EngineRunRef = {
       provider: 'mock',
       tenantId: ctx.tenantId,
-      workflowId: `mock_${ctx.runId}`,
+      workflowId: asNonBlankString(`mock_${ctx.runId}`),
       runId: ctx.runId,
     };
 

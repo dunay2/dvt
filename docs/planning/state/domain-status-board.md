@@ -24,7 +24,8 @@ For full task-level tracking use the lane YAML registry linked from
   `TF-C2-B`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: downstream provider-live versus persisted-terminal-status
-  convergence plus provenance and evidence follow-through remain open.
+  convergence, the delivery runtime harness extraction that still sits behind
+  boundary work, and provenance/evidence follow-through all remain open.
 
 ### `API and Admission`
 
@@ -47,9 +48,10 @@ For full task-level tracking use the lane YAML registry linked from
   `S08`, `TF-A1`, `TF-A1-A`, `TF-A1-B`
 - Roadmap lane affected: [Planner and Contracts lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the engine-runtime contract pack still mixes active
-  implementation still reuses `RunStatusSnapshot`, current code and current
-  subsystem docs have not yet converged on the new status-model split, and the
-  transformation contract freeze remains queued behind that boundary reset.
+  implementation and still reuses `RunStatusSnapshot` in residual seams,
+  current code and subsystem docs have not fully converged on the new
+  status-model split, and the transformation contract freeze remains queued
+  behind that boundary reset.
 
 ### `Event Lifecycle and Retention`
 
@@ -59,7 +61,8 @@ For full task-level tracking use the lane YAML registry linked from
 - Roadmap lane affected:
   [Event Lifecycle and Retention lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the canonical proof wrapper is landed, but reset
-  discipline and default-retention alerts still need end-to-end closure.
+  discipline and default-retention health alerts still need end-to-end
+  closure.
 
 ### `UI / Frontend`
 

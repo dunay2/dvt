@@ -1,3 +1,5 @@
+import { asIsoUtcString } from '@dvt/contracts';
+
 import type {
   AppendResultLike,
   RunBootstrapCommand,
@@ -9,7 +11,7 @@ import type {
  * In-memory implementation of RunStateCommandPort for tests and local development.
  */
 export class InMemoryRunStateCommandPort implements RunStateCommandPort {
-  private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
+  private static readonly EPOCH_ISO = asIsoUtcString('1970-01-01T00:00:00.000Z');
 
   private readonly eventsByRun = new Map<string, AppendResultLike['appended']>();
   private readonly metadataByRun = new Map<string, RunBootstrapCommand['metadata']>();

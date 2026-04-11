@@ -11,8 +11,11 @@ import {
   parsePlanRecord,
   parsePlannerInputEnvelopeV1,
   parsePlanRef,
+  parseRunExecutionPolicy,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
+  parseEngineRunRef,
+  parseRunEventWrite,
   parseRunStatusSnapshot,
   parseRecoverRunCommand,
   parseResolvedRunContext,
@@ -56,6 +59,15 @@ describe('contracts: validation helpers', () => {
       parseSignalRequest({
         signalId: 'sig-1',
         type: 'INVALID_SIGNAL',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects SignalRequest when signalId is only whitespace', () => {
+    expect(() =>
+      parseSignalRequest({
+        signalId: '   ',
+        type: 'PAUSE',
       })
     ).toThrow(ContractValidationError);
   });
@@ -135,6 +147,22 @@ describe('contracts: validation helpers', () => {
     expect(ctx.targetAdapter).toBe('temporal');
   });
 
+  it('rejects RunExecutionPolicy when pluginCompatibilityFingerprint is not canonical sha256', () => {
+    expect(() =>
+      parseRunExecutionPolicy({
+        pluginCompatibilityFingerprint: 'not-a-sha',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionPolicy when requiresCapabilities contains whitespace-only entries', () => {
+    expect(() =>
+      parseRunExecutionPolicy({
+        requiresCapabilities: ['basic-execution', '   '],
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunStatusSnapshot with TF-C2-B result evidence fields', () => {
     const snapshot = parseRunStatusSnapshot({
       runId: 'run-1',
@@ -165,6 +193,58 @@ describe('contracts: validation helpers', () => {
     expect(snapshot.execution?.materialization?.rowsWritten).toBe(42);
   });
 
+  it('rejects RunStatusSnapshot when failure.failedAt is only whitespace', () => {
+    expect(() =>
+      parseRunStatusSnapshot({
+        runId: 'run-1',
+        status: 'FAILED',
+        execution: {
+          failure: {
+            stepId: 'step-transform',
+            reason: 'SINK_WRITE_FAILED',
+            failedAt: '   ',
+          },
+        },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunStatusSnapshot when failure.failedAt is not strict ISO UTC', () => {
+    expect(() =>
+      parseRunStatusSnapshot({
+        runId: 'run-1',
+        status: 'FAILED',
+        execution: {
+          failure: {
+            stepId: 'step-transform',
+            reason: 'SINK_WRITE_FAILED',
+            failedAt: '2026-02-30T10:00:00.000Z',
+          },
+        },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunEventWrite when emittedAt is not strict ISO UTC', () => {
+    expect(() =>
+      parseRunEventWrite({
+        eventId: 'evt-run-started-invalid-time',
+        eventType: 'RunStarted',
+        payloadVersion: 1,
+        emittedAt: '2026-04-08 10:00:00Z',
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'run-started-invalid-time',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
   it('parses RunContext with optional runExecutionContextRef', () => {
     const ctx = parseRunContext({
       tenantId: 'tenant-a',
@@ -182,6 +262,31 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(ctx.runExecutionContextRef?.uri).toContain('dvt-runctx://');
+  });
+
+  it('rejects EngineRunRef when provider identifiers are only whitespace', () => {
+    expect(() =>
+      parseEngineRunRef({
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'temporal-main',
+        workflowId: '   ',
+        runId: 'run-1',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects EngineRunRef when temporal taskQueue is empty', () => {
+    expect(() =>
+      parseEngineRunRef({
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'temporal-main',
+        workflowId: 'workflow-1',
+        runId: 'run-1',
+        taskQueue: '',
+      })
+    ).toThrow(ContractValidationError);
   });
 
   it('parses RunExecutionContextRef with valid input', () => {
@@ -207,6 +312,41 @@ describe('contracts: validation helpers', () => {
         schemaVersion: 'v1.0',
         planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
         planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionContextRef when pluginCompatibilityFingerprint is not canonical sha256', () => {
+    expect(() =>
+      parseRunExecutionContextRef({
+        uri: 'dvt-runctx://tenant-a/run-1/context.json',
+        sha256: 'abc123',
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        pluginCompatibilityFingerprint: 'invalid-fingerprint',
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects RunExecutionContext when createdAtIso is not strict ISO UTC', () => {
+    expect(() =>
+      parseRunExecutionContext({
+        schemaVersion: 'v1.0',
+        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        planSha256: 'a'.repeat(64),
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        targetAdapter: 'temporal',
+        createdAtIso: '2026-13-01T00:00:00.000Z',
+        createdBy: 'system',
+        pluginContexts: {
+          temporal: {
+            namespace: 'default',
+          },
+        },
       })
     ).toThrow(ContractValidationError);
   });
@@ -352,15 +492,9 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
-  it('throws ContractValidationError when planner input has more than one active source', () => {
+  it('throws ContractValidationError when planner input uses legacy manifestRef source', () => {
     expect(() =>
       parsePlannerInputEnvelopeV1({
-        graphSource: {
-          kind: 'generic-graph-v1',
-          sourceFamily: 'dbt',
-          sourceVersion: '1.0',
-          nodes: [{ nodeId: 'model.analytics.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
-        },
         manifestRef: {
           uri: 's3://bucket/manifest.json',
           sha256: 'a'.repeat(64),

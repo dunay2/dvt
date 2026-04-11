@@ -315,7 +315,7 @@ tasks:
       migration chain, and system-level improvements.
     complexity: M
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 85
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/index.md
@@ -1099,7 +1099,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-09
     priority: P1
-    status: blocked
+    status: review
     objective:
       wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
     dependency: F-06, F-07
@@ -1108,16 +1108,25 @@ tasks:
       when available. Empty states, loading, and error states are implemented.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/runs/useRunWorkspace.ts
+      - apps/web/src/app/components/workbench/state/WorkbenchStates.tsx
+      - apps/web/src/app/queries/runsQueries.ts
+      - apps/web/src/app/services/runs/runWorkspaceFacade.ts
     status_reason: >-
-      Real runs list and detail wiring depends on the governed DTO baseline and consistent query
-      patterns before it can become an operational surface.
-    last_verified: '2026-04-03'
+      RunsView now consumes real run list and run-detail surfaces via scoped summaries query plus
+      `RunWorkspaceFacade` over governed runtime reads, the route chooses explicit workbench states
+      for list-error, empty, loading, missing, focused-run error, and workspace treatment, and those
+      route states now seed shared workbench state primitives instead of remaining fully route-local
+      chrome. Remaining closure is status-refresh policy, broader primitive adoption, and final
+      acceptance of polling/SSE behavior rather than missing runtime wiring.
+    last_verified: '2026-04-11'
   - task_id: F-10
     priority: P1
-    status: blocked
+    status: review
     objective: >-
       implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
       Console with real log output.
@@ -1127,13 +1136,20 @@ tasks:
       across reconnects. Log entries have timestamp, step, and severity.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 60
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - apps/web/src/app/components/console/useConsoleLogStream.ts
+      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+      - apps/web/src/app/services/runs/runEventPresentationModel.ts
     status_reason: >-
-      Event timeline and console convergence remain blocked until the real runs surface is governed
-      and the runtime events contract is available to the UI.
-    last_verified: '2026-04-03'
+      Console and Runs timeline now consume real `GET /runs/:runId/events` surfaces, and log lines
+      already carry timestamp, severity, and step identity for the active run. Remaining closure is
+      durable reconnect or live-refresh guarantees across both surfaces, typed live-log behavior,
+      and final convergence UX rather than runtime contract availability.
+    last_verified: '2026-04-10'
   - task_id: F-11
     priority: P2
     status: blocked
@@ -1467,16 +1483,21 @@ tasks:
       and implementation choice between structured log panels and xterm.js-backed streaming view.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 40
     evidence_refs:
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - apps/web/src/app/services/runs/runEventPresentationModel.ts
     status_reason: >-
       The shell already has a console drawer and the current frontend includes an xterm-backed
-      implementation, but there is still no accepted governed slice for typed live-log behavior,
-      run-log UX states, or the authority boundary between structured logs and terminal-grade
-      streaming.
-    last_verified: '2026-04-03'
+      implementation. The authority split between shell live-stream companionship and Runs workspace
+      snapshot-plus-timeline monitoring is now documented, and shared event presentation semantics
+      now align level, headline key, shared headline copy, detail, and step identity across drawer
+      and timeline surfaces. Typed live-log behavior, richer run-log UX states, and the final
+      structured-versus-terminal presentation choice remain open in the F-10/F-18 convergence chain.
+    last_verified: '2026-04-10'
   - task_id: F-19
     priority: P2
     status: in_progress
@@ -1624,7 +1645,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 70
+    progress_pct: 75
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
@@ -1646,12 +1667,20 @@ tasks:
       The bundle is normalized in English and now governs an explicit `RouteWorkbenchFrame` v1
       contract instead of an over-broad future shape: header and summary bands stay outside the
       scroll-owned body, `scroll={false}` remains available for split-pane routes, and contextual
-      side panels remain future primitives. The implementation now restores `Diff` summary ownership
-      to the header stack, fixes the shared field token so it works on neutral elements like compare
-      pills, and applies shared tab and Monaco tokens across the first `Diff` and `Artifacts`
-      cleanup slice. Tests now cover frame header or body ownership and the `Diff`
-      header-versus-body contract. Remaining work is broader panel, table, shell, Canvas, and deeper
-      Monaco convergence across the rest of the operator path.
+      side panels remain future primitives. The implementation restores `Diff` summary ownership to
+      the header stack, fixes the shared field token so it works on neutral elements like compare
+      pills, applies shared tab and Monaco tokens across the first `Diff` and `Artifacts` cleanup
+      slice, now moves the shell top bar plus left navigation rail away from route-level `slate-*`
+      chrome into governed shell tokens, extracts the shared shell controls under
+      `components/shell/*`, and routes left-rail navigation through an explicit shell navigation
+      model so the rail no longer knows plugin view internals or fixed footer item ownership. The
+      shell layout itself now lives in an explicit `AppShellFrame` instead of remaining embedded in
+      `Root.tsx`, while preserving focus-mode rail hiding and bottom-console drawer ownership.
+      Root-shell characterization now covers top-bar presence, navigation order, focus-mode rail
+      hiding, stable shell-control seams, frame-owned console rendering, and a shell-owned bottom
+      drawer state model for `idle`, `loading`, and `streaming` console states. Remaining work is
+      broader panel, table, Canvas, and deeper Monaco convergence across the rest of the operator
+      path.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components

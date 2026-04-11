@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-04-11.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 761   |
-| Total test files             | 299   |
+| Total source files           | 777   |
+| Total test files             | 311   |
 | Workspaces with build script | 23/23 |
 | Workspaces with test script  | 22/23 |
 
@@ -24,17 +24,17 @@ Generated automatically from repository code on 2026-04-11.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 138       | 63         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 139       | 63         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 20         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 272       | 57         | yes   | yes  | yes       | -                       |
+| @dvt/web                  | `apps/web`                           | 289       | 69         | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 49        | 29         | yes   | yes  | yes       | 24                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 19         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 44        | 13         | yes   | yes  | no        | 38                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 45        | 13         | yes   | yes  | no        | 39                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 10        | 4          | yes   | yes  | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/engine               | `packages/@dvt/engine`               | 103       | 43         | yes   | yes  | no        | 42                      |
@@ -42,7 +42,7 @@ Generated automatically from repository code on 2026-04-11.
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/plan-verifier        | `packages/@dvt/plan-verifier`        | 6         | 2          | yes   | yes  | no        | 5                       |
-| @dvt/planner              | `packages/@dvt/planner`              | 26        | 18         | yes   | yes  | no        | 16                      |
+| @dvt/planner              | `packages/@dvt/planner`              | 23        | 18         | yes   | yes  | no        | 14                      |
 | @dvt/planner-contracts    | `packages/@dvt/planner-contracts`    | 0         | 0          | yes   | no   | no        | -                       |
 | @dvt/run-domain           | `packages/@dvt/run-domain`           | 5         | 1          | yes   | yes  | no        | 6                       |
 | @dvt/state-store          | `packages/@dvt/state-store`          | 15        | 12         | yes   | yes  | no        | 19                      |

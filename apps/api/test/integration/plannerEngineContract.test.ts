@@ -5,6 +5,9 @@ import { URL } from 'node:url';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
+  asIsoUtcString,
+  asNonBlankString,
+  asStepId,
   parseExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
@@ -33,7 +36,7 @@ import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
 
-import { GraphSourceArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
+import { ManifestArtifactResolver } from '../../src/infrastructure/planner/ManifestArtifactResolver.js';
 
 const PLANNER_MANIFEST_FIXTURE_URL = new URL(
   '../fixtures/planner/basic-manifest.json',
@@ -77,21 +80,21 @@ function sha256Hex(bytes: Uint8Array): string {
 function makePlanRefFromEnginePlan(uri: string, plan: ExecutionPlan): PlanRef {
   const bytes = utf8(JSON.stringify(plan));
   return {
-    uri,
-    sha256: sha256Hex(bytes),
-    schemaVersion: plan.metadata.schemaVersion,
-    planId: plan.metadata.planId,
-    planVersion: plan.metadata.planVersion,
+    uri: asNonBlankString(uri),
+    sha256: asNonBlankString(sha256Hex(bytes)),
+    schemaVersion: asNonBlankString(plan.metadata.schemaVersion),
+    planId: asNonBlankString(plan.metadata.planId),
+    planVersion: asNonBlankString(plan.metadata.planVersion),
     sizeBytes: bytes.byteLength,
   };
 }
 
 function makeRunContext(runId: string): RunContext {
   return {
-    tenantId: 'test-tenant',
-    projectId: 'test-project',
-    environmentId: 'dev',
-    runId,
+    tenantId: asNonBlankString('test-tenant'),
+    projectId: asNonBlankString('test-project'),
+    environmentId: asNonBlankString('dev'),
+    runId: asNonBlankString(runId),
     targetAdapter: 'mock',
   };
 }
@@ -100,7 +103,7 @@ function makeResolvedRunContext(runId: string): ResolvedRunContext {
   return {
     ...makeRunContext(runId),
     logicalAttemptId: 1,
-    originRunId: runId,
+    originRunId: asNonBlankString(runId),
   };
 }
 
@@ -115,7 +118,7 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
-  const clock = new SequenceClock('2026-03-01T00:00:00.000Z');
+  const clock = new SequenceClock(asIsoUtcString('2026-03-01T00:00:00.000Z'));
 
   const mockAdapter = new MockAdapter({
     stateStore: store,
@@ -197,12 +200,12 @@ function makeRunEvent(
     eventId: idempotency.eventId(),
     eventType,
     emittedAt: clock.nowIsoUtc(),
-    tenantId: 'test-tenant',
-    projectId: 'test-project',
-    environmentId: 'dev',
-    runId: meta.runId,
-    planId: meta.planId,
-    planVersion: meta.planVersion,
+    tenantId: asNonBlankString('test-tenant'),
+    projectId: asNonBlankString('test-project'),
+    environmentId: asNonBlankString('dev'),
+    runId: asNonBlankString(meta.runId),
+    planId: asNonBlankString(meta.planId),
+    planVersion: asNonBlankString(meta.planVersion),
     engineAttemptId: 1,
     logicalAttemptId: 1,
     idempotencyKey: idempotency.runEventKey({
@@ -227,15 +230,15 @@ function makeStepEvent(
     eventId: idempotency.eventId(),
     eventType,
     emittedAt: clock.nowIsoUtc(),
-    tenantId: 'test-tenant',
-    projectId: 'test-project',
-    environmentId: 'dev',
-    runId: meta.runId,
-    planId: meta.planId,
-    planVersion: meta.planVersion,
+    tenantId: asNonBlankString('test-tenant'),
+    projectId: asNonBlankString('test-project'),
+    environmentId: asNonBlankString('dev'),
+    runId: asNonBlankString(meta.runId),
+    planId: asNonBlankString(meta.planId),
+    planVersion: asNonBlankString(meta.planVersion),
     engineAttemptId: 1,
     logicalAttemptId: 1,
-    stepId,
+    stepId: asStepId(stepId),
     idempotencyKey: idempotency.runEventKey({
       eventType,
       runId: meta.runId,
@@ -249,17 +252,17 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
-  it('PlannerFacade resolves manifestRef through the real API artifact resolver', async () => {
-    const planner = new PlannerFacade({
-      graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: 'test' }),
-    });
+  it('manifest artifact utility translates a manifest into graphSource before PlannerFacade runs', async () => {
+    const planner = new PlannerFacade();
+    const resolver = new ManifestArtifactResolver({ nodeEnv: 'test' });
     const bytes = readFileSync(PLANNER_MANIFEST_FIXTURE_URL);
+    const graphSource = await resolver.resolveManifestRef({
+      uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+      sha256: sha256Hex(bytes),
+    });
 
     const { plan } = await planner.buildPlan({
-      manifestRef: {
-        uri: PLANNER_MANIFEST_FIXTURE_URL.href,
-        sha256: sha256Hex(bytes),
-      },
+      graphSource,
       selection: {
         selectedNodeIds: ['model.analytics.order_items'],
         includeUpstream: true,
@@ -453,7 +456,7 @@ describe('planner -> engine contract', () => {
     const enginePlan = plannerOutputToEnginePlan(plan);
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const clock = new SequenceClock('2026-03-01T00:00:00.000Z');
+    const clock = new SequenceClock(asIsoUtcString('2026-03-01T00:00:00.000Z'));
     const mock = new MockAdapter({
       stateStore: store,
       stateStoreWrite: store,

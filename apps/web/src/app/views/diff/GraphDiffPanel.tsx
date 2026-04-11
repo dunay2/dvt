@@ -6,12 +6,23 @@ import { cn } from '../../components/ui/utils';
 import { routeWorkbenchPanelClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import type { DiffChange } from '../../types/dbt';
 import { diffViewCopy as copy } from './copy';
+import { DiffPanelStateView } from './DiffStateViews';
 
 interface GraphDiffPanelProps {
   changes: DiffChange[];
 }
 
 export function GraphDiffPanel({ changes }: GraphDiffPanelProps) {
+  if (changes.length === 0) {
+    return (
+      <DiffPanelStateView
+        dataSlot="diff-graph-empty-state"
+        title={copy.states.graphEmptyTitle}
+        message={copy.states.graphEmptyMessage}
+      />
+    );
+  }
+
   return (
     <div className="space-y-3">
       {changes.map((change) => (

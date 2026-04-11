@@ -12,10 +12,10 @@ export function parseStartRunSelection(
     return badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' });
   }
 
-  const normalized = (selection as ReadonlyArray<string>).map((item) => item.trim());
-  if (!normalized.every((item) => item.length > 0)) {
+  const values = selection as ReadonlyArray<string>;
+  if (!values.every((item) => item.trim().length > 0 && item.trim() === item)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' });
   }
 
-  return { ok: true, value: normalized };
+  return { ok: true, value: [...values] };
 }

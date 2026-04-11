@@ -8,6 +8,7 @@ import type { IRunControlService } from '../domain/IRunControlService.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { SignalTransitionGuard } from '../services/signal/SignalTransitionGuard.js';
+import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import type { IdempotencyKeyBuilder } from './idempotency.js';
@@ -41,7 +42,7 @@ export interface WorkflowEngineCoreDeps {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
   };
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
 }
 
 export class WorkflowEngineCoreService implements IRunControlService {

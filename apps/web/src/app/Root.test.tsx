@@ -16,6 +16,7 @@ import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHar
 import Root, { RootShell } from './Root';
 import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
+import { useUiLayoutStore } from './stores/uiLayoutStore';
 
 function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
   const capabilitiesPort: CapabilitiesPort = {
@@ -48,6 +49,23 @@ function resetAppStore(): void {
   });
 }
 
+function resetUiLayoutStore(): void {
+  useUiLayoutStore.setState({
+    leftNavCollapsed: false,
+    explorerPanelWidth: 280,
+    explorerPanelVisible: false,
+    inspectorPanelWidth: 380,
+    inspectorPanelVisible: false,
+    consolePanelHeight: 0,
+    consolePanelVisible: false,
+    focusMode: false,
+    gridSize: 20,
+    activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
+    activeTabId: 'main-canvas',
+    connectionStatus: { rest: 'ok', liveEvents: 'connected' },
+  });
+}
+
 function RootServicesProbe(): JSX.Element {
   const mode = useAppDataSourceMode();
   return <div data-testid="root-services-probe">mode:{mode}</div>;
@@ -57,6 +75,7 @@ describe('RootShell platform health UX', () => {
   beforeEach(() => {
     localStorage.clear();
     resetAppStore();
+    resetUiLayoutStore();
   });
 
   afterEach(() => {
@@ -175,6 +194,134 @@ describe('RootShell platform health UX', () => {
       );
 
       expect(mounted.container.querySelector('[data-testid="shell-health-banner"]')).toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('renders shell top bar and left navigation with governed shell chrome', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(createRootShellNode(capability));
+
+    try {
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query',
+        }
+      );
+
+      const appShellFrame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
+      const appShellBody = mounted.container.querySelector('[data-slot="app-shell-body"]');
+      const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
+      const appShellLeftNavigation = mounted.container.querySelector(
+        '[data-slot="app-shell-left-navigation"]'
+      );
+      const appShellOutlet = mounted.container.querySelector('[data-slot="app-shell-outlet"]');
+      const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
+      const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
+      const shellWorkspaceSelectors = mounted.container.querySelector(
+        '[data-slot="shell-workspace-selectors"]'
+      );
+      const shellMenuTrigger = mounted.container.querySelector('[data-slot="shell-menu-trigger"]');
+      const leftNavigationRail = mounted.container.querySelector(
+        '[data-slot="left-navigation-rail"]'
+      );
+      const leftNavigationLinks = [
+        ...mounted.container.querySelectorAll<HTMLAnchorElement>(
+          '[data-slot="left-navigation-link"]'
+        ),
+      ];
+
+      expect(appShellFrame).not.toBeNull();
+      expect(appShellBody).not.toBeNull();
+      expect(appShellLeftNavigation?.parentElement).toBe(appShellBody);
+      expect(appShellMain?.parentElement).toBe(appShellBody);
+      expect(appShellOutlet?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+      expect(appShellOutlet?.textContent).toContain('Workspace route');
+      expect(shellTopBar?.textContent).toContain('Raven');
+      expect(shellTopBar?.textContent).toContain('Shell');
+      expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
+      expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
+      expect(shellTopBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
+      expect(shellTopBar?.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
+      expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
+      expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
+      expect(shellWorkspaceSelectors).toBeTruthy();
+      expect(shellMenuTrigger?.textContent).toContain('Shell');
+      expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
+      expect(leftNavigationRail?.className).toContain('h-full');
+      expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual([
+        '/canvas',
+        '/lineage',
+        '/code',
+        '/diff',
+        '/artifacts',
+        '/runs',
+        '/cost',
+        '/plugins',
+        '/admin',
+      ]);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('preserves focus-mode behavior by hiding the left rail while keeping the shell top bar', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    useUiLayoutStore.setState({ focusMode: true });
+    const mounted = await withTestQueryClient(createRootShellNode(capability));
+
+    try {
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query',
+        }
+      );
+
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="shell-top-bar"]')).toBeTruthy();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('renders the bottom console drawer inside the app shell frame when enabled', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    useUiLayoutStore.setState({ consolePanelVisible: true, consolePanelHeight: 160 });
+    const mounted = await withTestQueryClient(createRootShellNode(capability));
+
+    try {
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query',
+        }
+      );
+
+      const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
+      const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
+      const consoleDrawer = mounted.container.querySelector('[data-slot="bottom-console-drawer"]');
+
+      expect(bottomDrawer).not.toBeNull();
+      expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+      expect(consoleDrawer).not.toBeNull();
+      expect(bottomDrawer?.textContent).toContain('Console');
+      expect(bottomDrawer?.textContent).toContain('Start a run to see execution output here.');
     } finally {
       await mounted.cleanup();
     }

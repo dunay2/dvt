@@ -1,4 +1,8 @@
-import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  asIsoUtcString,
+  asNonBlankString,
+} from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
   StartRunApplicationService,
@@ -53,8 +57,8 @@ describe('buildWorkflowEngine', () => {
         return {
           provider: 'temporal',
           tenantId: context.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${context.runId}`,
+          namespace: asNonBlankString('default'),
+          workflowId: asNonBlankString(`wf-${context.runId}`),
           runId: context.runId,
         };
       },
@@ -81,7 +85,7 @@ describe('buildWorkflowEngine', () => {
         adapters: new Map([['temporal', adapter]]),
       },
       infrastructure: {
-        clock: { nowIsoUtc: () => '2026-04-05T00:00:00.000Z' },
+        clock: { nowIsoUtc: () => asIsoUtcString('2026-04-05T00:00:00.000Z') },
         observability: createNoopObservability(),
       },
     });
