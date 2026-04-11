@@ -191,8 +191,8 @@ export const CanonicalRunStatusSchema = z
     status: RunStatusSchema,
     substatus: RunSubstatusSchema.optional(),
     message: z.string().optional(),
-    startedAt: z.string().optional(),
-    completedAt: z.string().optional(),
+    startedAt: IsoUtcStringSchema.optional(),
+    completedAt: IsoUtcStringSchema.optional(),
     execution: RunExecutionEvidenceSchema.optional(),
   })
   .strict();

@@ -14,6 +14,7 @@ import type { TemporalAdapterConfig } from './config.js';
 
 type TemporalRuntimeStatus =
   | 'RUNNING'
+  | 'PAUSED'
   | 'COMPLETED'
   | 'FAILED'
   | 'CANCELLED'
@@ -54,6 +55,8 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
   switch (status) {
     case 'RUNNING':
       return 'RUNNING';
+    case 'PAUSED':
+      return 'PAUSED';
     case 'COMPLETED':
       return 'COMPLETED';
     case 'FAILED':
@@ -84,6 +87,7 @@ export function toProviderRunStatusView(args: {
 
 const KNOWN_TEMPORAL_STATUSES: ReadonlySet<string> = new Set<TemporalRuntimeStatus>([
   'RUNNING',
+  'PAUSED',
   'COMPLETED',
   'FAILED',
   'CANCELLED',

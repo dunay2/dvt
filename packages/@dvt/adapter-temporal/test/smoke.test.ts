@@ -134,11 +134,16 @@ describe('adapter-temporal foundation', () => {
     expect(mapTemporalStatusToRunStatus('CONTINUED_AS_NEW')).toBe('RUNNING');
   });
 
+  it('maps PAUSED to PAUSED in run-status mapping', () => {
+    expect(mapTemporalStatusToRunStatus('PAUSED')).toBe('PAUSED');
+  });
+
   it('extracts Temporal-native runtime status from describe result', () => {
     expect(extractRuntimeStatusFromDescribe({ status: { name: 'RUNNING', code: 1 } })).toBe(
       'RUNNING'
     );
     expect(extractRuntimeStatusFromDescribe({ status: { name: 'COMPLETED' } })).toBe('COMPLETED');
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'PAUSED' } })).toBe('PAUSED');
     expect(extractRuntimeStatusFromDescribe({ status: { name: 'CONTINUED_AS_NEW' } })).toBe(
       'CONTINUED_AS_NEW'
     );
