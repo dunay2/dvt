@@ -45,7 +45,10 @@ import type {
   PlanExecutabilityRejectionReport,
 } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 import { EXECUTABILITY_REJECTION_CODES } from './contracts/planner/PlanExecutabilityValidation.v1.js';
-import { PlannerPolicyClassSetSchema } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+import {
+  MAX_RETRY_POLICY_ATTEMPTS,
+  PlannerPolicyClassSetSchema,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 import type { PlanRecord } from './contracts/planner/PlanRecord.v1.js';
 import {
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -637,6 +640,26 @@ export const ExecutionStepV1Schema = z
     stepId: z.string().min(1),
     kind: z.string().min(1),
     dependsOn: z.array(z.string().min(1)),
+    retryPolicy: z
+      .object({
+        maxAttempts: z.number().int().min(1).max(MAX_RETRY_POLICY_ATTEMPTS),
+        initialInterval: z.string().regex(/^[1-9]\d*s$/u),
+        maximumInterval: z.string().regex(/^[1-9]\d*s$/u),
+        backoffCoefficient: z.number().finite().min(1),
+      })
+      .strict()
+      .superRefine((policy, ctx) => {
+        const initialSeconds = Number.parseInt(policy.initialInterval.slice(0, -1), 10);
+        const maximumSeconds = Number.parseInt(policy.maximumInterval.slice(0, -1), 10);
+        if (maximumSeconds < initialSeconds) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['maximumInterval'],
+            message: 'maximumInterval must be greater than or equal to initialInterval.',
+          });
+        }
+      })
+      .optional(),
     stepTypeConfig: z.record(z.string(), z.unknown()).optional(),
     type: z.enum(['task', 'gateway']).optional(),
     gateway: z

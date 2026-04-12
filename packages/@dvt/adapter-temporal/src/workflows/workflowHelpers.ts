@@ -192,6 +192,38 @@ export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload
   };
 }
 
+export type StepActivityRetryPolicy = {
+  initialInterval: `${number}s`;
+  maximumInterval: `${number}s`;
+  backoffCoefficient: number;
+  maximumAttempts: number;
+  nonRetryableErrorTypes: string[];
+};
+
+const DEFAULT_STEP_ACTIVITY_RETRY_POLICY: StepActivityRetryPolicy = Object.freeze({
+  initialInterval: '1s',
+  maximumInterval: '60s',
+  backoffCoefficient: 2,
+  maximumAttempts: 3,
+  nonRetryableErrorTypes: ['PermanentStepError'],
+});
+
+export function resolveStepActivityRetryPolicy(
+  step: Pick<ExecutionStep, 'retryPolicy' | 'stepTypeConfig'>
+): StepActivityRetryPolicy {
+  if (step.retryPolicy !== undefined) {
+    return {
+      ...DEFAULT_STEP_ACTIVITY_RETRY_POLICY,
+      maximumAttempts: step.retryPolicy.maxAttempts,
+      initialInterval: step.retryPolicy.initialInterval,
+      maximumInterval: step.retryPolicy.maximumInterval,
+      backoffCoefficient: step.retryPolicy.backoffCoefficient,
+    };
+  }
+
+  return DEFAULT_STEP_ACTIVITY_RETRY_POLICY;
+}
+
 export function resolveMaterializationEvidence(
   value: unknown
 ): MaterializationEvidence | undefined {

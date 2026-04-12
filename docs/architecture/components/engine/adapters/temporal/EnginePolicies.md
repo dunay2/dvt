@@ -138,39 +138,43 @@ Contract-pack reset tracked under `AR-A12-A`:
 
 ## 4) Activity Policy (IMPLEMENTED)
 
-Workflow activity proxy defaults:
+The workflow now resolves step-activity retry policy per executed step:
 
 ```typescript
-const activities = proxyActivities<Activities>({
-  startToCloseTimeout: '30m',
-  retry: {
-    initialInterval: '1s',
-    maximumInterval: '10s',
-    backoffCoefficient: 2,
-    maximumAttempts: 3,
-  },
-});
+function createStepActivities(step: WorkflowStep) {
+  return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
+    startToCloseTimeout: '30m',
+    cancellationType: ActivityCancellationType.TRY_CANCEL,
+    retry: resolveStepActivityRetryPolicy(step),
+  });
+}
+```
+
+Resolved policy order:
+
+1. `step.retryPolicy` from the canonical `ExecutionPlan`
+2. governed default:
+
+```typescript
+{
+  initialInterval: '1s',
+  maximumInterval: '60s',
+  backoffCoefficient: 2,
+  maximumAttempts: 3,
+  nonRetryableErrorTypes: ['PermanentStepError'],
+}
 ```
 
 Notes:
 
-- `scheduleToStartTimeout`, `scheduleToCloseTimeout`, and `heartbeatTimeout` are **not currently configured**.
-- No per-step activity timeout overrides are implemented in current adapter.
-
-Rationale and roadmap note:
-
-- In v1.1, only `startToCloseTimeout` + retry policy are intentionally configured to keep policy surface minimal while interpreter semantics stabilize.
-- `scheduleToStartTimeout`/`scheduleToCloseTimeout`/`heartbeatTimeout` and per-step timeout matrix are deferred to v1.2.
-
-Safe-default recommendation for v1.2 rollout:
-
-- Add a bounded `scheduleToCloseTimeout` (e.g., `'35m'`) to cap total elapsed time across retries and avoid unbounded retry extension.
-- `scheduleToCloseTimeout` is currently unset (defaults to unlimited), so total wall-clock time is bounded only by retry settings plus worker/service behavior.
+- `scheduleToStartTimeout`, `scheduleToCloseTimeout`, and `heartbeatTimeout` are still **not currently configured**.
+- No per-step timeout override matrix is implemented yet; only retry/backoff ownership moved into the plan contract.
+- Retry metadata under `stepTypeConfig.retries` is no longer consumed for runtime activity retry policy. Only top-level `step.retryPolicy` affects Temporal retry mapping.
 
 Timeout interaction note:
 
-- Current defaults (`startToCloseTimeout='30m'`, `maximumAttempts=3`) permit up to ~90 minutes of attempt runtime budget in the worst case, plus queue/backoff overhead.
-- v1.2 timeout matrix should explicitly confirm whether this ceiling aligns with product expectations for maximum step duration.
+- Current defaults (`startToCloseTimeout='30m'`, governed default `maximumAttempts=3`) permit up to ~90 minutes of attempt runtime budget in the worst case, plus queue/backoff overhead.
+- A future timeout-matrix slice should still decide whether `scheduleToCloseTimeout` needs a bounded cap across retries.
 
 ---
 

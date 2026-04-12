@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { CONTRACTS_ERROR_CODE, DvtContractError } from '../../errorContract.js';
 
+import type { ExecutionStepRetryPolicyV1 } from './ExecutionPlan.v1.js';
 import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 
 // ── Migration compatibility note ──────────────────────────────────────────────
@@ -23,8 +24,10 @@ import type { ExecutabilityValidationResult } from './PlanExecutabilityValidatio
 //  - `stepTimeoutMs` maps to `timeout.kind='budget', maxSeconds = stepTimeoutMs / 1000`.
 //  - `maxRetries` maps to `retry.kind='at-most-N', maxAttempts = maxRetries + 1`
 //    (canonical maxAttempts counts total attempts including the first execution).
-//  - `backoffMs` has no direct mapping — the adapter owns backoff strategy.
-//    `at-most-N` uses the adapter's default backoff (exponential for Temporal).
+//  - `backoffMs` has no direct mapping on the public planner input vocabulary.
+//    The planner now materializes the governed canonical retry/backoff profile
+//    onto `ExecutionStep.retryPolicy` using repository defaults for interval
+//    and coefficient values.
 //  - `maxInFlight` / numeric concurrency maps to `concurrency.kind='bounded',
 //    maxParallel = maxInFlight`.
 //  - Omitting a class means no constraint is applied for that dimension.
@@ -176,15 +179,13 @@ export interface AdapterPolicyMapper<TRetry, TTimeout, TConcurrency> {
  * mapping `PlannerPolicyClassSet` to runtime-neutral execution parameters.
  *
  * This is the type consumed by `StepFactory` implementers. It represents
- * what the planner has decided — not what the adapter will enforce. The
- * adapter owns backoff strategy; `backoffMs` is always 0 at this boundary.
+ * what the planner has decided before adapter-specific translation. Retry
+ * semantics are now materialized as a canonical per-step retry/backoff
+ * profile on `ExecutionStep.retryPolicy`.
  */
 export interface ResolvedPolicies {
   stepTimeoutMs?: number;
-  retries?: {
-    maxAttempts: number;
-    backoffMs: number;
-  };
+  retryPolicy?: ExecutionStepRetryPolicyV1;
   concurrency?: {
     maxInFlight: number;
   };

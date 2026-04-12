@@ -6,7 +6,7 @@ describe('policies', () => {
   it('applies defaults when undefined', () => {
     const p = resolvePolicies(undefined);
     expect(p.stepTimeoutMs).toBeGreaterThan(0);
-    expect(p.retries?.maxAttempts).toBeGreaterThan(0);
+    expect(p.retryPolicy?.maxAttempts).toBeGreaterThan(0);
     expect(p.concurrency?.maxInFlight).toBeGreaterThan(0);
   });
 
@@ -26,25 +26,29 @@ describe('policies', () => {
     expect(resolved.stepTimeoutMs).toBeUndefined();
   });
 
-  it('maps at-most-once retry to one attempt with zero planner backoff', () => {
+  it('maps at-most-once retry to a materialized step retry profile', () => {
     const resolved = resolvePolicies({
       retry: { kind: 'at-most-once' },
     });
 
-    expect(resolved.retries).toEqual({
+    expect(resolved.retryPolicy).toEqual({
       maxAttempts: 1,
-      backoffMs: 0,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
     });
   });
 
-  it('maps bounded retry to internal maxAttempts with zero planner backoff', () => {
+  it('maps bounded retry to a materialized step retry profile', () => {
     const resolved = resolvePolicies({
       retry: { kind: 'at-most-N', maxAttempts: 4 },
     });
 
-    expect(resolved.retries).toEqual({
+    expect(resolved.retryPolicy).toEqual({
       maxAttempts: 4,
-      backoffMs: 0,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
     });
   });
 

@@ -56,6 +56,7 @@ import {
   normalizeDependsOn,
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
+  resolveStepActivityRetryPolicy,
   resolveMaterializationEvidence,
   resolveTransformationExecutor,
   shouldTriggerContinueAsNew,
@@ -161,18 +162,13 @@ const runtimeStateQuery = defineQuery<RuntimeWorkflowState>('runtimeState');
 // Activity proxy (all side-effects delegated to activities)
 // ---------------------------------------------------------------------------
 
-const stepActivities = proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
-  startToCloseTimeout: '30m',
-  cancellationType: ActivityCancellationType.TRY_CANCEL,
-  retry: {
-    initialInterval: '1s',
-    maximumInterval: '60s',
-    backoffCoefficient: 2,
-    // Technical retries only. These must not create new logical attempts.
-    maximumAttempts: 3,
-    nonRetryableErrorTypes: ['PermanentStepError'],
-  },
-});
+function createStepActivities(step: WorkflowStep): Pick<WorkflowActivitiesPort, 'executeStep'> {
+  return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
+    startToCloseTimeout: '30m',
+    cancellationType: ActivityCancellationType.TRY_CANCEL,
+    retry: resolveStepActivityRetryPolicy(step),
+  });
+}
 
 const eventActivities = proxyActivities<Pick<WorkflowActivitiesPort, 'emitEvent'>>({
   startToCloseTimeout: '30m',
@@ -800,7 +796,7 @@ async function executeLayerStep(args: {
       args.runtime.completedStepResults
     );
 
-    const result = await stepActivities.executeStep({
+    const result = await createStepActivities(args.step).executeStep({
       step: args.step,
       ctx: args.ctx,
       ...(gatewayContext ? { gatewayContext } : {}),

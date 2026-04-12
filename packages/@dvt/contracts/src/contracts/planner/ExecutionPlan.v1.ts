@@ -58,10 +58,30 @@ export interface PlannerSelection {
   includeDownstream?: boolean;
 }
 
+/**
+ * Explicit per-step activity retry profile materialized into the executable
+ * plan.
+ *
+ * `maxAttempts` counts total attempts, including the first execution.
+ * Interval fields intentionally use Temporal-compatible duration strings
+ * because the current adapter is the only production runtime and the review
+ * task for AR-A11 requires the plan to own the realized retry/backoff shape.
+ */
+export interface ExecutionStepRetryPolicyV1 {
+  maxAttempts: number;
+  initialInterval: `${number}s`;
+  maximumInterval: `${number}s`;
+  backoffCoefficient: number;
+}
+
 export interface ExecutionStepV1 {
   stepId: string;
   kind: StepKind;
   dependsOn: readonly string[];
+  /**
+   * Canonical per-step retry policy consumed by the runtime adapter.
+   */
+  retryPolicy?: ExecutionStepRetryPolicyV1;
   /**
    * Kind-specific configuration blob.
    *

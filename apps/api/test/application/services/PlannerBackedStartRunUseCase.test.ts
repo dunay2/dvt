@@ -93,7 +93,6 @@ describe('PlannerBackedStartRunUseCase', () => {
               stepKind: 'DBT_MODEL',
               dependsOn: [],
               stepTypeConfig: {
-                retries: 99,
                 stepTimeoutMs: 900000,
                 concurrency: 128,
               },
@@ -107,10 +106,13 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(capturedBuildResult).toBeDefined();
     expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
       kind: 'DBT_MODEL',
+      retryPolicy: {
+        maxAttempts: 2,
+        initialInterval: '1s',
+        maximumInterval: '60s',
+        backoffCoefficient: 2,
+      },
       stepTypeConfig: {
-        retries: {
-          maxAttempts: 2,
-        },
         stepTimeoutMs: 30000,
         concurrency: {
           maxInFlight: 4,
@@ -177,11 +179,11 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(capturedBuildResult).toBeDefined();
     expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
       kind: 'DBT_MODEL',
-      stepTypeConfig: {
-        retries: {
-          maxAttempts: 1,
-          backoffMs: 0,
-        },
+      retryPolicy: {
+        maxAttempts: 1,
+        initialInterval: '1s',
+        maximumInterval: '60s',
+        backoffCoefficient: 2,
       },
     });
     expect(capturedBuildResult?.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');

@@ -8,6 +8,7 @@ import {
   parseGenericGraphSourceV1,
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
+  parseExecutionPlan,
   parsePlanRecord,
   parseCanonicalRunStatus,
   parsePlannerInputEnvelopeV1,
@@ -236,6 +237,75 @@ describe('contracts: validation helpers', () => {
 
     expect(status.startedAt).toBe('2026-04-08T10:00:00.000Z');
     expect(status.completedAt).toBe('2026-04-08T10:05:00.000Z');
+  });
+
+  it('parses ExecutionPlan when steps carry explicit retryPolicy metadata', () => {
+    const plan = parseExecutionPlan({
+      ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+      steps: [
+        {
+          stepId: 'model.analytics.customers',
+          kind: 'DBT_MODEL',
+          dependsOn: [],
+          retryPolicy: {
+            maxAttempts: 4,
+            initialInterval: '2s',
+            maximumInterval: '30s',
+            backoffCoefficient: 2,
+          },
+        },
+      ],
+    });
+
+    expect(plan.steps[0]?.retryPolicy).toEqual({
+      maxAttempts: 4,
+      initialInterval: '2s',
+      maximumInterval: '30s',
+      backoffCoefficient: 2,
+    });
+  });
+
+  it('rejects ExecutionPlan when retryPolicy maximumInterval is lower than initialInterval', () => {
+    expect(() =>
+      parseExecutionPlan({
+        ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+        steps: [
+          {
+            stepId: 'model.analytics.customers',
+            kind: 'DBT_MODEL',
+            dependsOn: [],
+            retryPolicy: {
+              maxAttempts: 3,
+              initialInterval: '30s',
+              maximumInterval: '2s',
+              backoffCoefficient: 2,
+            },
+          },
+        ],
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects ExecutionPlan when retryPolicy uses unsupported shape or invalid bounds', () => {
+    expect(() =>
+      parseExecutionPlan({
+        ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+        steps: [
+          {
+            stepId: 'model.analytics.customers',
+            kind: 'DBT_MODEL',
+            dependsOn: [],
+            retryPolicy: {
+              maxAttempts: 0,
+              initialInterval: '1s',
+              maximumInterval: '60s',
+              backoffCoefficient: 0,
+              jitter: 'full',
+            },
+          },
+        ],
+      })
+    ).toThrow(ContractValidationError);
   });
 
   it('rejects CanonicalRunStatus when timestamps are not strict ISO UTC strings', () => {

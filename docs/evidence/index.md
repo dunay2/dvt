@@ -44,6 +44,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260410 Temporal Baseline And Capability Lane Partition](ED-20260410-temporal-baseline-and-capability-lane-partition.md)
 - [ED 20260410 Temporal Native Cancel Semantics](ED-20260410-temporal-native-cancel-semantics.md)
 - [ED 20260412 Ar A10 Start Run Boundary Contract](ED-20260412-ar-a10-start-run-boundary-contract.md)
+- [ED 20260412 Ar A11 Step Retry Policy Governance](ED-20260412-ar-a11-step-retry-policy-governance.md)
 - [ED 20260412 Ar A12 C5 Read Boundary Purity Closeout](ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md)
 - [ED 20260412 Tf C2 B Success Only Materialization Reads](ED-20260412-tf-c2-b-success-only-materialization-reads.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)

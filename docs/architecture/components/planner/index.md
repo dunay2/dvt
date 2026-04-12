@@ -30,6 +30,7 @@ last_reviewed: 2026-04-10
 - canonical input source: `graphSource`
 - source-native adaptation happens before planner admission
 - canonical plan artifact: `ExecutionPlan.v1.ts`
+- canonical per-step retry ownership: `ExecutionStep.retryPolicy`
 - plan version source: `CURRENT_EXECUTION_PLAN_VERSION`
 - retained manifest normalization utility: `derivePlannerGraphSourceFromManifest`
 

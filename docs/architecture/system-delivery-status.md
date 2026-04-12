@@ -97,21 +97,42 @@ direction.
 
 ### Planning And Interpretation
 
-| Area                | Packages                | Status      | Notes                                                                                                                                                                                                                                                                           |
-| ------------------- | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Planning core       | `@dvt/planner`          | Partial     | The planner package is real and exercised, but the live planning work is no longer governed by an old scorecard. The active contract work is the Lane A transformation pack (`DesignGraphDraft`, compiler mapping, preview-persist rules, and executable provenance alignment). |
-| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer                                                                                                                                                                          |
-| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                                                                                                                                                                                       |
-| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                                                                                                                                                                                              |
+| Area                | Packages                | Status      | Notes                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------- | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning core       | `@dvt/planner`          | Partial     | The planner package is real and exercised, but the live planning work is no longer governed by an old scorecard. The active contract work is the Lane A transformation pack (`DesignGraphDraft`, compiler mapping, preview-persist rules, and executable provenance alignment), and planner output now materializes governed per-step `retryPolicy` metadata. |
+| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer.                                                                                                                                                                                                                                                       |
+| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page.                                                                                                                                                                                                                                                                    |
+| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs.                                                                                                                                                                                                                                                                           |
 
 ### Execution And Adapters
 
-| Area              | Packages                   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------- | -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow engine   | `@dvt/engine`              | Closed for Phase 1 | Core engine, in-process projector, and the pre-bootstrap `estimateRunRef` path are delivered; `RunMetadata` now persists a single discriminated `providerRef`, provider-ref reconciliation is constrained to a typed validated `saveProviderRef(...)` seam, and current hardening work is focused on the `WE-HX` boundary split plus recent signal-transition and stale-snapshot guard tightening |
-| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; the runtime now ships split baseline/transformation/Postgres capability lanes plus a canonical local Docker proof wrapper for the Postgres path; residual hardening is tracked separately                                                                                                             |
-| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and operating as shipped foundations                                                                                                                                                                                                                                                                                                |
-| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                                                                                                                                                                                                                                                                                     |
+- `Workflow engine` — packages: `@dvt/engine` — status: `Closed for Phase 1`
+  Core engine, in-process projector, and the pre-bootstrap `estimateRunRef`
+  path are delivered; `RunMetadata` now persists a single discriminated
+  `providerRef`, provider-ref reconciliation is constrained to a typed
+  validated `saveProviderRef(...)` seam, and current hardening work is focused
+  on the `WE-HX` boundary split plus recent signal-transition and
+  stale-snapshot guard tightening.
+
+- `Temporal adapter` — packages: `@dvt/adapter-temporal` — status:
+  `Closed for Phase 1`
+  Real adapter primitives, worker host, lookup, and time-skipping integration
+  coverage exist; step activities now resolve retry/backoff from canonical
+  `ExecutionStep.retryPolicy` only and no longer interpret
+  `stepTypeConfig.retries` as runtime retry policy; built-in DBT step configs
+  no longer admit that field in the typed planner boundary; the runtime ships split
+  baseline/transformation/Postgres capability lanes plus a canonical local
+  Docker proof wrapper for the Postgres path; residual hardening is tracked
+  separately.
+
+- `Postgres adapter` — packages: `@dvt/adapter-postgres` — status:
+  `Closed for Phase 1`
+  State-store and outbox persistence implementation are present and operating
+  as shipped foundations.
+
+- `Mock/test adapter` — packages: `@dvt/engine` test surface — status:
+  `Implemented`
+  Exists as test-only support surface, not as a product runtime.
 
 ### Persistence, Read Models, And Delivery
 

@@ -24,10 +24,12 @@ last_reviewed: 2026-04-10
    selection rules before assembly.
 5. `Step materialization`:
    Planner step creation stays `stepKind`-driven and validates per-kind config
-   through `IStepTypeRegistry`.
+   through `IStepTypeRegistry`, while canonical retry ownership is materialized
+   on top-level `ExecutionStep.retryPolicy`. Built-in DBT step configs no
+   longer carry retry metadata inside `stepTypeConfig`.
 6. `Plan assembly`:
    `PlanAssembler` produces the canonical `ExecutionPlanV1` artifact and
-   `canonicalPlanCoreJson`.
+   `canonicalPlanCoreJson`, including governed per-step retry/backoff metadata.
 7. `Deterministic output`:
    Identical semantic input must produce the same canonical plan core and the
    same `planId`.

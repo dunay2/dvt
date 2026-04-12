@@ -18,10 +18,9 @@ describe('DbtStepTypeConfigSchema', () => {
     expect(DbtStepTypeConfigSchema.safeParse({}).success).toBe(true);
   });
 
-  it('accepts full policy config', () => {
+  it('accepts full built-in DBT config without retry metadata', () => {
     const config = {
       stepTimeoutMs: 30_000,
-      retries: { maxAttempts: 3, backoffMs: 1000 },
       concurrency: { maxInFlight: 4 },
       custom: { warehouse: 'xs' },
     };
@@ -55,6 +54,14 @@ describe('DbtStepTypeConfigSchema', () => {
 
   it('rejects unknown fields', () => {
     expect(DbtStepTypeConfigSchema.safeParse({ unknownField: true }).success).toBe(false);
+  });
+
+  it('rejects retries under built-in DBT stepTypeConfig', () => {
+    expect(
+      DbtStepTypeConfigSchema.safeParse({
+        retries: { maxAttempts: 3, backoffMs: 1000 },
+      }).success
+    ).toBe(false);
   });
 });
 

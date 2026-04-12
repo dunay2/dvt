@@ -11,9 +11,9 @@ describe('dbtStepFactory', () => {
       stepKind: 'DBT_MODEL',
       dependsOn: [],
       stepTypeConfig: {
-        retries: 99,
         stepTimeoutMs: 900000,
         concurrency: 128,
+        retries: { maxAttempts: 9, backoffMs: 9000 },
         callerOwned: 'kept',
       },
     };
@@ -27,17 +27,20 @@ describe('dbtStepFactory', () => {
     const step = dbtStepFactory(node, resolvedPolicies);
 
     expect(step.kind).toBe('DBT_MODEL');
+    expect(step.retryPolicy).toEqual({
+      maxAttempts: 2,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
     expect(step.stepTypeConfig).toMatchObject({
-      retries: {
-        maxAttempts: 2,
-        backoffMs: 0,
-      },
       stepTimeoutMs: 30000,
       concurrency: {
         maxInFlight: 4,
       },
       callerOwned: 'kept',
     });
+    expect((step.stepTypeConfig as Record<string, unknown>)['retries']).toBeUndefined();
   });
 
   it('clears node timeout and concurrency when resolved policy is unbounded', () => {
@@ -61,14 +64,42 @@ describe('dbtStepFactory', () => {
     const step = dbtStepFactory(node, resolvedPolicies);
     const stepTypeConfig = step.stepTypeConfig as Record<string, unknown>;
 
+    expect(step.retryPolicy).toEqual({
+      maxAttempts: 1,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
     expect(stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
     expect(stepTypeConfig).not.toHaveProperty('concurrency');
     expect(stepTypeConfig).toMatchObject({
-      retries: {
-        maxAttempts: 1,
-        backoffMs: 0,
-      },
       callerOwned: 'kept',
     });
+  });
+
+  it('strips dead retry metadata from built-in DBT stepTypeConfig', () => {
+    const node: GraphNode = {
+      nodeId: 'model.analytics.customers',
+      stepKind: 'DBT_MODEL',
+      dependsOn: [],
+      stepTypeConfig: {
+        retries: { maxAttempts: 4, backoffMs: 2500 },
+        callerOwned: 'kept',
+      },
+    };
+
+    const step = dbtStepFactory(node, resolvePolicies());
+    const stepTypeConfig = step.stepTypeConfig as Record<string, unknown>;
+
+    expect(step.retryPolicy).toEqual({
+      maxAttempts: 1,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
+    expect(stepTypeConfig).toMatchObject({
+      callerOwned: 'kept',
+    });
+    expect(stepTypeConfig).not.toHaveProperty('retries');
   });
 });
