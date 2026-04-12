@@ -130,6 +130,14 @@ describe('adapter-temporal foundation', () => {
     });
   });
 
+  it('rejects blank provider status tokens when building provider views', () => {
+    expect(() =>
+      toProviderRunStatusView({
+        runtimeStatus: '   ',
+      })
+    ).toThrow('String must contain at least one non-whitespace character');
+  });
+
   it('maps CONTINUED_AS_NEW to RUNNING in run-status mapping', () => {
     expect(mapTemporalStatusToRunStatus('CONTINUED_AS_NEW')).toBe('RUNNING');
   });

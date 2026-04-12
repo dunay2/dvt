@@ -80,7 +80,7 @@ export function toProviderRunStatusView(args: {
 }): ProviderRunStatusView {
   return {
     provider: 'temporal',
-    providerStatus: args.runtimeStatus,
+    providerStatus: asNonBlankString(args.runtimeStatus),
     message: args.message,
   };
 }
