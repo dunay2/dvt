@@ -25,7 +25,8 @@ last_reviewed: 2026-04-10
 5. `Step materialization`:
    Planner step creation stays `stepKind`-driven and validates per-kind config
    through `IStepTypeRegistry`, while canonical retry ownership is materialized
-   on top-level `ExecutionStep.retryPolicy`.
+   on top-level `ExecutionStep.retryPolicy`. Built-in DBT step configs no
+   longer carry retry metadata inside `stepTypeConfig`.
 6. `Plan assembly`:
    `PlanAssembler` produces the canonical `ExecutionPlanV1` artifact and
    `canonicalPlanCoreJson`, including governed per-step retry/backoff metadata.

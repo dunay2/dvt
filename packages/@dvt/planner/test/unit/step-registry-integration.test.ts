@@ -69,6 +69,14 @@ describe('Planner â†’ IStepTypeRegistry: known-kind rejection', () => {
     ).rejects.toMatchObject(invalidStepConfigExpectation('DBT_TEST'));
   });
 
+  it('rejects DBT_MODEL step with retries in built-in stepTypeConfig', async () => {
+    await expect(
+      buildPlanWithSingleStep('DBT_MODEL', {
+        retries: { maxAttempts: 3, backoffMs: 1000 },
+      })
+    ).rejects.toMatchObject(invalidStepConfigExpectation('DBT_MODEL'));
+  });
+
   it('error message includes kind name', async () => {
     await expect(buildPlanWithSingleStep('DBT_SNAPSHOT', { rogueField: 42 })).rejects.toMatchObject(
       invalidStepConfigExpectation('DBT_SNAPSHOT')

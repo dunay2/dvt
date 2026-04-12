@@ -25,10 +25,6 @@ export const StepArtifactRefSchema = z
 
 export interface DbtStepTypeConfig extends Record<string, unknown> {
   stepTimeoutMs?: number;
-  retries?: {
-    maxAttempts: number;
-    backoffMs: number;
-  };
   concurrency?: {
     maxInFlight: number;
   };
@@ -44,13 +40,6 @@ export interface DbtStepTypeConfig extends Record<string, unknown> {
 export const DbtStepTypeConfigSchema = z
   .object({
     stepTimeoutMs: z.number().positive().optional(),
-    retries: z
-      .object({
-        maxAttempts: z.number().int().positive(),
-        backoffMs: z.number().nonnegative(),
-      })
-      .strict()
-      .optional(),
     concurrency: z
       .object({
         maxInFlight: z.number().int().positive(),

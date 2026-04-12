@@ -59,6 +59,9 @@ execution time.
    being treated as adapter-owned policy.
 5. Aligned API integration tests and web preview mapping with the new
    canonical step-level retry ownership.
+6. Removed `retries` from the typed built-in DBT `stepTypeConfig` contract and
+   stripped it in `dbtStepFactory`, so canonical DBT plans no longer carry dead
+   retry metadata that can perturb `canonicalPlanCoreJson` / `planId`.
 
 ## Residual risk posture
 
@@ -66,6 +69,8 @@ The primary retry-governance drift is now materially reduced because:
 
 - the canonical `ExecutionPlan` contract owns the per-step retry/backoff shape
 - shared schemas reject invalid canonical retry metadata before adapter execution
+- built-in DBT step config no longer admits `retries`, so canonical DBT plans
+  do not hash dead retry metadata into `canonicalPlanCoreJson` / `planId`
 - planner tests pin deterministic plan identity after retry metadata enters the
   canonical plan core
 - Temporal adapter tests cover explicit plan-owned retry policy, governed

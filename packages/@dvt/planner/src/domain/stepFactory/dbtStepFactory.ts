@@ -28,6 +28,7 @@ export const dbtStepFactory: StepFactory = (
   const mergedStepTypeConfig: Record<string, unknown> = {
     ...(node.stepTypeConfig ?? {}),
   };
+  delete mergedStepTypeConfig['retries'];
   const resolvedConfig = policyConfig(resolvedPolicies);
 
   if ('stepTimeoutMs' in resolvedConfig) {

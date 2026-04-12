@@ -119,7 +119,8 @@ direction.
   Real adapter primitives, worker host, lookup, and time-skipping integration
   coverage exist; step activities now resolve retry/backoff from canonical
   `ExecutionStep.retryPolicy` only and no longer interpret
-  `stepTypeConfig.retries` as runtime retry policy; the runtime ships split
+  `stepTypeConfig.retries` as runtime retry policy; built-in DBT step configs
+  no longer admit that field in the typed planner boundary; the runtime ships split
   baseline/transformation/Postgres capability lanes plus a canonical local
   Docker proof wrapper for the Postgres path; residual hardening is tracked
   separately.
