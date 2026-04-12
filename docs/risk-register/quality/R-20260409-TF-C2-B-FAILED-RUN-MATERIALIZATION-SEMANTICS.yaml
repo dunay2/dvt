@@ -1,7 +1,7 @@
 ---
 id: R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS
-title: TF-C2-B failed-run materialization semantics remain ambiguous
-status: Open
+title: TF-C2-B failed-run materialization semantics drift
+status: Closed
 date: 2026-04-09
 owners:
   - packages/@dvt/run-domain
@@ -11,20 +11,17 @@ owners:
 severity: Medium
 probability: Medium
 summary: >
-  The governing proposal says `execution.materialization` is exposed on success, but the current
-  projector and UI tests allow materialization evidence to coexist with `execution.failure` on
-  failed runs.
+  Caller-visible materialization semantics are now governed and implemented as success-only.
+  Projector, API, and UI paths omit `execution.materialization` from failed and cancelled run
+  states, while regression coverage locks the rule at the projection and consumer layers.
 
 mitigations:
-  - Track the contradiction in the TF-C2-B hard-QA review until one semantic rule is chosen.
-  - In the follow-up slice, either clear `execution.materialization` on failure paths or document
-    coexistence as an intentional "last successful sink evidence" model.
-  - Add regression coverage that locks the chosen failed-run behavior at projector and UI levels.
+  - Shared run-domain projection clears materialization evidence on failure and cancel paths.
+  - API read-surface serialization omits materialization outside `COMPLETED`.
+  - UI rendering and regression tests lock materialization visibility to successful snapshots.
 
 signals:
-  - product/architecture docs say materialization is success-only while UI still renders it on
-    failed runs.
-  - operators report confusion about whether sink write succeeded when the overall run failed.
-  - future fixes change the projector or UI independently because there is no governed meaning for
-    the field combination.
+  - failed snapshots no longer expose mixed `failure + materialization` caller-visible state.
+  - operator-facing UI now renders failure diagnostics without sink-success claims on failed runs.
+  - projector, API, and UI tests assert the same success-only materialization rule.
 ---

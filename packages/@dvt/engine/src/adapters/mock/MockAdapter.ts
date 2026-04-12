@@ -13,11 +13,12 @@ import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
+  type CanonicalRunStatus,
+  type ProviderRunStatusView,
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
-  type RunStatusSnapshot,
   type SignalSemanticsVersion,
   type SignalRequest,
 } from '@dvt/contracts';
@@ -104,9 +105,10 @@ export class MockAdapter implements IProviderAdapter {
     await this.appendCancelLifecycle(runRef);
   }
 
-  async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
+  async getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
     const events = await this.deps.stateStore.listEvents(runRef.tenantId, runRef.runId);
-    return this.deps.projector.rebuild(runRef.runId, events);
+    const canonical = this.deps.projector.rebuild(runRef.runId, events);
+    return toMockProviderStatusView(canonical);
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
@@ -249,4 +251,13 @@ function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
     throw new Error('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
+}
+
+function toMockProviderStatusView(canonical: CanonicalRunStatus): ProviderRunStatusView {
+  return {
+    provider: 'mock',
+    providerStatus: canonical.status,
+    ...(canonical.substatus === undefined ? {} : { providerSubstatus: canonical.substatus }),
+    ...(canonical.message === undefined ? {} : { message: canonical.message }),
+  };
 }

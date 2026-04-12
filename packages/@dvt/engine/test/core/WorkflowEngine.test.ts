@@ -24,6 +24,7 @@ import {
 } from '../../src/contracts/errors.js';
 import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { RunHealthService } from '../../src/services/RunHealthService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
@@ -705,15 +706,19 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(orphaned[0]?.status).toBe('PENDING');
   });
 
-  it('healthCheck reports degraded when an adapter ping fails', async () => {
+  it('RunHealthService reports degraded when an adapter ping fails', async () => {
     const adapters = makeAdapters({
       async ping() {
         throw new Error('ping failed');
       },
     });
 
-    const { engine } = createEngine({ adapters });
-    const health = await engine.healthCheck();
+    const { store } = createEngine({ adapters });
+    const healthService = new RunHealthService({
+      stateStoreRead: store,
+      adapters,
+    });
+    const health = await healthService.healthCheck();
 
     expect(health.status).toBe('degraded');
     expect(health.components).toEqual(

@@ -1,5 +1,6 @@
 import { parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type {
+  CanonicalRunStatus,
   EngineRunRef,
   EventType,
   RunEventInput,
@@ -11,6 +12,7 @@ import { AdapterNotRegisteredError, RunMetadataNotFoundError } from '../../contr
 import type { IClock } from '../../utils/clock.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 import type { IdempotencyKeyBuilder } from '../idempotency.js';
+import { SnapshotProjector, snapshotToStatus } from '../SnapshotProjector.js';
 
 import {
   CORE_ERROR_MESSAGE,
@@ -39,6 +41,23 @@ export async function resolveMetaOrThrow(
   const m = await stateStoreRead.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
   if (!m) throw new RunMetadataNotFoundError(runRef.runId);
   return m;
+}
+
+export async function readCanonicalRunStatus(input: {
+  stateStoreRead: IRunStateStoreRead;
+  projector: SnapshotProjector;
+  tenantId: string;
+  runId: string;
+}): Promise<CanonicalRunStatus> {
+  const storedSnap = await input.stateStoreRead.getSnapshot(input.tenantId, input.runId);
+  if (storedSnap) {
+    return snapshotToStatus(storedSnap);
+  }
+
+  return input.projector.rebuild(
+    input.runId,
+    await input.stateStoreRead.listEvents(input.tenantId, input.runId)
+  );
 }
 
 export async function withTimeout<T>(

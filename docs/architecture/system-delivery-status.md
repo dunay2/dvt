@@ -1,4 +1,4 @@
-﻿---
+---
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
@@ -198,17 +198,33 @@ classDiagram
     SnapshotProjector --> RunDomain
 ```
 
+Current-versus-target note:
+
+- current code now exposes `WorkflowEngine.getRunStatus()` as the canonical
+  read model, while `IRunEnrichmentService.getRunEnrichment()` is the explicit
+  enrichment path
+- `IProviderAdapter.getProviderStatusView()` now returns the provider-live
+  diagnostic surface instead of reusing the canonical status DTO
+- the active follow-up under `AR-A12-C` is convergence cleanup around the
+  remaining downstream consumers and doc surfaces, not the core boundary split
+
 ### Engine Domain Structure
 
 Reflects the current merged implementation:
 
 ```mermaid
 classDiagram
-    class WorkflowEngine {
+    class IWorkflowEngine {
         +startRun()
-        +getRunStatus()
+        +cancelRun()
+        +getRunStatus() canonical read model
         +signal()
+    }
+    class IRunHealthService {
         +healthCheck()
+    }
+    class IRunEnrichmentService {
+        +getRunEnrichment() canonical + provider diagnostics
     }
     class SnapshotProjector {
         +applyRunEvent()
@@ -222,16 +238,19 @@ classDiagram
     }
     class IProviderAdapter {
         +startRun()
-        +getRunStatus()
+        +cancelRun()
+        +getProviderStatusView() live provider view
         +signal()
         +ping()
     }
     class RunDomain {
         +applyRunEvent()
     }
-    WorkflowEngine --> SnapshotProjector
-    WorkflowEngine --> RunAccessPolicy
-    WorkflowEngine --> IProviderAdapter
+    IWorkflowEngine --> SnapshotProjector
+    IWorkflowEngine --> RunAccessPolicy
+    IWorkflowEngine --> IProviderAdapter
+    IRunHealthService --> IProviderAdapter
+    IRunEnrichmentService --> IProviderAdapter
     SnapshotProjector --> RunDomain
 ```
 

@@ -12,7 +12,7 @@ planning_type: proposal
 
 This proposal defines the canonical replacement plan for mapping and deriving
 the full `WorkflowEngine` subsystem to a narrower hexagonal model without a
-flag-day API break.
+parallel or unmanaged API break.
 
 This is a **reconcile-and-replace** plan, not an additive docs layer.
 
@@ -96,6 +96,8 @@ No-go constraints:
 - split `WorkflowEngineCoreService` into dedicated query, command, signal, and
   enrichment paths
 - fold `AR-A3` into this wave
+- once that structural split lands, finish the remaining `AR-A3` facade-purity
+  intent through `AR-A12-C` by removing enrichment from `IWorkflowEngine`
 
 ### `WE-HX-5` Provider and telemetry standardization
 
@@ -117,6 +119,8 @@ Lane A execution mapping:
   - `docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md`
   - `docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md`
 - update dependency notes so `AR-A3` is explicitly merged into `WE-HX-4`
+- route the remaining post-`WE-HX-4` facade-purity convergence through
+  `AR-A12-C` instead of reopening `AR-A3`
 
 ## Risks and tradeoffs
 
@@ -141,7 +145,8 @@ Mitigation:
 
 ## Non-goals
 
-- changing public `IWorkflowEngine` contract in this proposal
+- changing public `IWorkflowEngine` contract outside the governed pre-stable
+  `AR-A12-C` / contract-reset slice
 - implementing runtime service extraction in this documentation slice
 - replacing event-sourcing model or provider adapter model
 

@@ -67,6 +67,29 @@ export interface RunExecutionEvidence {
   materialization?: MaterializationEvidence;
 }
 
+export interface CanonicalRunStatus {
+  runId: string;
+  status: RunStatus;
+  substatus?: RunSubstatus;
+  message?: string;
+  startedAt?: IsoUtcString;
+  completedAt?: IsoUtcString;
+  execution?: RunExecutionEvidence;
+}
+
+export interface ProviderRunStatusView {
+  provider: Provider;
+  providerStatus: string;
+  providerSubstatus?: string;
+  message?: string;
+  observedAt?: IsoUtcString;
+}
+
+export interface RunStatusEnrichment {
+  canonical: CanonicalRunStatus;
+  providerView: ProviderRunStatusView;
+}
+
 export interface RunStatusSnapshot {
   runId: NonBlankString;
   status: RunStatus;

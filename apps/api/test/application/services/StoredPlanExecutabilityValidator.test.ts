@@ -83,7 +83,7 @@ describe('StoredPlanExecutabilityValidator', () => {
             async cancelRun() {
               throw new Error('not used');
             },
-            async getRunStatus() {
+            async getProviderStatusView() {
               throw new Error('not used');
             },
             async signal() {
@@ -352,7 +352,7 @@ function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
     async cancelRun() {
       throw new Error('not used');
     },
-    async getRunStatus() {
+    async getProviderStatusView() {
       throw new Error('not used');
     },
     async signal() {
@@ -392,3 +392,4 @@ function makeRegistryForKind(
     },
   };
 }
+

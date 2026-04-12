@@ -129,8 +129,6 @@ export type {
   EventIdempotencyInput,
   EventInput,
   EventType,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   ListEventsOptions,
   ListRunsOptions,
   ProviderRefUpdate,

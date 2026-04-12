@@ -22,15 +22,6 @@ function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
               message: 'duplicate key value violates unique constraint',
               failedAt: '2026-04-08T00:00:20.000Z',
             },
-            materialization: {
-              executor: 'postgres',
-              environmentId: 'e2e-env',
-              sinkTable: 'analytics.orders_daily',
-              rowsWritten: 42,
-              startedAt: '2026-04-08T00:00:05.000Z',
-              completedAt: '2026-04-08T00:00:25.000Z',
-              durationMs: 20000,
-            },
           },
         },
       ],
@@ -54,15 +45,6 @@ function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
           reason: 'STEP_FAILURE',
           message: 'duplicate key value violates unique constraint',
           failedAt: '2026-04-08T00:00:20.000Z',
-        },
-        materialization: {
-          executor: 'postgres',
-          environmentId: 'e2e-env',
-          sinkTable: 'analytics.orders_daily',
-          rowsWritten: 42,
-          startedAt: '2026-04-08T00:00:05.000Z',
-          completedAt: '2026-04-08T00:00:25.000Z',
-          durationMs: 20000,
         },
       },
     },
@@ -328,13 +310,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.location('pathname').should('eq', '/runs/run_e2e_1');
 
     cy.contains('Run run_e2e_1').should('exist');
-    cy.contains('Materialization evidence').should('exist');
-    cy.contains('Executor').should('exist');
-    cy.contains('postgres').should('exist');
-    cy.contains('Sink table').should('exist');
-    cy.contains('analytics.orders_daily').should('exist');
-    cy.contains('Rows written').should('exist');
-    cy.contains('42').should('exist');
+    cy.contains('Materialization evidence').should('not.exist');
     cy.contains('Failure diagnostics').should('exist');
     cy.contains('STEP_FAILURE').should('exist');
   });

@@ -2,7 +2,7 @@
 title: WorkflowEngine subsystem context
 status: Review
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # WorkflowEngine subsystem context
@@ -30,7 +30,8 @@ Key governing boundaries:
 ## Current ownership and communication rules
 
 - `@dvt/contracts` owns shared serialized surfaces (`PlanRef`, `RunContext`,
-  `RunExecutionContextRef`, `RunStatusSnapshot`, etc.).
+  `RunExecutionContextRef`, `CanonicalRunStatus`,
+  `RunStatusEnrichment`, `ProviderRunStatusView`, etc.).
 - `@dvt/engine` owns lifecycle use-case orchestration and execution invariants.
 - `@dvt/artifacts` owns artifact retrieval behavior; engine consumes an
   engine-owned resolver port where needed.
@@ -48,7 +49,15 @@ Inbound flow (primary):
 
 Outbound flow (primary):
 
-`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/WorkflowEngineCoreService -> ports/adapters`
+`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/RunStatusQueryService/WorkflowEngineCoreService -> ports/adapters`
+
+Optional enrichment flow:
+
+`caller -> IRunEnrichmentService.getRunEnrichment -> IRunStateStoreRead + IProviderAdapter`
+
+Optional health flow:
+
+`caller/composition root -> IRunHealthService.healthCheck -> IRunStateStoreRead + IProviderAdapter`
 
 Declared southbound port surface:
 
@@ -56,28 +65,35 @@ Declared southbound port surface:
 - `IStartRunIntentStore` (`runtime-wired`)
 - `IProviderAdapter` (`runtime-wired`)
 - `IPlanFetcher` (`runtime-wired`)
-- `IRunExecutionContextResolver` (`runtime-wired`)
-- `IProjector` (`target-line exposed`)
-- `IMetricsCollector` (`target-line exposed`)
+- `IRunExecutionContextResolver` (`optional runtime wiring`)
+- `IProjector` (`package-exposed target seam`)
+- `IMetricsCollector` (`source-tree target seam`)
 
 Current runtime telemetry still flows through `IObservability`; that facade is
-not counted inside the seven-port southbound surface.
+not counted inside the seven-port southbound surface, and
+`IMetricsCollector` is not exported from the root `@dvt/engine` package today.
 
 ```mermaid
 flowchart LR
   Caller["apps/api or other caller"] --> UseCase["API use case layer"]
-  UseCase --> Engine["WorkflowEngine facade"]
+  UseCase --> Engine["IWorkflowEngine facade"]
+  UseCase --> Health["IRunHealthService"]
+  UseCase --> Enrich["IRunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService path"]
+  Engine --> Query["RunStatusQueryService path"]
   Engine --> Core["WorkflowEngineCoreService path"]
+  Health --> Ports
+  Enrich --> Ports
   StartRun --> Ports["Engine ports"]
+  Query --> Ports
   Core --> Ports
   Ports --> State["IRunStateStore (runtime-wired)"]
   Ports --> PlanStore["IPlanFetcher (runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore (runtime-wired)"]
   Ports --> Provider["IProviderAdapter (runtime-wired)"]
-  Ports --> RunCtx["IRunExecutionContextResolver (runtime-wired)"]
-  Ports -.-> Projector["IProjector (target-line exposed)"]
-  Ports -.-> Metrics["IMetricsCollector (target-line exposed)"]
+  Ports --> RunCtx["IRunExecutionContextResolver (optional runtime wiring)"]
+  Ports -.-> Projector["IProjector (package-exposed target seam)"]
+  Ports -.-> Metrics["IMetricsCollector (source-tree target seam)"]
   StartRun --> Obs["Observability facade"]
   Core --> Obs
 ```
@@ -86,19 +102,23 @@ flowchart LR
 
 Declared southbound ports:
 
-| Port                           | Code anchor                                                                                                                                 | Current posture       |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`                                                                                          | `runtime-wired`       |
-| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`                                                                                    | `runtime-wired`       |
-| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`                                                                                     | `runtime-wired`       |
-| `IPlanFetcher`                 | `packages/@dvt/engine/src/adapters/IPlanFetcher.ts` (`packages/@dvt/engine/src/ports/IRunStateStore.ts` still carries a legacy alias today) | `runtime-wired`       |
-| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts`                                                                            | `runtime-wired`       |
-| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                                                                                              | `target-line exposed` |
-| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`                                                                                     | `target-line exposed` |
+| Port                           | Code anchor                                                      | Current posture               |
+| ------------------------------ | ---------------------------------------------------------------- | ----------------------------- |
+| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`               | `runtime-wired`               |
+| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`         | `runtime-wired`               |
+| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`          | `runtime-wired`               |
+| `IPlanFetcher`                 | `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`              | `runtime-wired`               |
+| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | `optional runtime wiring`     |
+| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                   | `package-exposed target seam` |
+| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`          | `source-tree target seam`     |
 
 Other engine-owned interfaces such as `IRunSnapshotStalenessQuery` and
 `IRunMaintenanceService` remain important local seams, but they are not part of
 the exposed seven-port southbound inventory.
+
+`packages/@dvt/engine/src/ports/IRunStateStore.ts` still carries a legacy
+`IPlanFetcher` alias today, but the canonical anchor is the dedicated adapter
+port file listed above.
 
 Known concrete adapter families:
 
@@ -111,21 +131,33 @@ Known concrete adapter families:
 
 Main components in the subsystem:
 
-- `WorkflowEngine` (public compatibility facade + dependency assembly)
+- `WorkflowEngine` (public facade + explicit service delegation)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
+- `RecoverRunApplicationService` (recover-run orchestration)
 - `StartRunExecutionService` and `StartRunFailurePolicy`
-- `WorkflowEngineCoreService` (cancel/status/enrich/signal runtime path)
+- `RunStatusQueryService` (canonical read path)
+- `IRunHealthService` / `RunHealthService` (runtime liveness probe path)
+- `WorkflowEngineCoreService` (cancel/signal runtime path)
+- `RunEnrichmentService` (engine-owned implementation of enrichment)
+- `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
 - `SnapshotProjector` (event-to-status read model projection)
 
 ```mermaid
 flowchart TB
-  WF["WorkflowEngine"] --> Guard["StartRunAdmissionGuard"]
   WF --> Coord["StartRunApplicationService"]
+  WF --> Recover["RecoverRunApplicationService"]
+  WF --> Query["RunStatusQueryService"]
   WF --> Core["WorkflowEngineCoreService"]
+  HealthApi["IRunHealthService"] --> Health["RunHealthService"]
+  Recover --> Guard["StartRunAdmissionGuard"]
+  Recover --> Coord
+  Query --> Projector["SnapshotProjector"]
+  Enrich["RunEnrichmentService"] --> Projector["SnapshotProjector"]
+  Enrich --> Provider["IProviderAdapter"]
   Coord --> Exec["StartRunExecutionService"]
   Coord --> Fail["StartRunFailurePolicy"]
-  Core --> Projector["SnapshotProjector"]
+  Core --> Provider
   Guard --> Validation["StartRunValidationPolicy"]
   Guard --> RunCtxPolicy["RunExecutionContextAdmissionPolicy"]
 ```
@@ -163,33 +195,43 @@ sequenceDiagram
 sequenceDiagram
   participant Client as API Use Case
   participant Engine as WorkflowEngine
+  participant Enrich as IRunEnrichmentService
+  participant Query as RunStatusQueryService
   participant Core as WorkflowEngineCoreService
+  participant EnrichSvc as RunEnrichmentService
   participant State as IRunStateStoreRead
   participant Adapter as IProviderAdapter
   participant Projector as SnapshotProjector
 
   Client->>Engine: getRunStatus(runRef)
-  Engine->>Core: getStatus(runRef)
-  Core->>State: getSnapshot/listEvents
+  Engine->>Query: getStatus(runRef)
+  Query->>State: getSnapshot/listEvents
   alt snapshot exists
-    Core->>Core: snapshotToStatus
+    Query->>Query: snapshotToStatus
   else no snapshot
-    Core->>Projector: rebuild(runId, events)
+    Query->>Projector: rebuild(runId, events)
   end
-  Core-->>Engine: RunStatusSnapshot
-  Engine-->>Client: RunStatusSnapshot
+  Query-->>Engine: CanonicalRunStatus
+  Engine-->>Client: CanonicalRunStatus
 
-  Client->>Engine: enrichRunStatus(runRef)
-  Engine->>Core: enrichStatus(runRef)
-  Core->>State: base snapshot/events
-  Core->>Adapter: getRunStatus(runRef)
-  Core-->>Engine: base + provider enrichment
+  Client->>Enrich: getRunEnrichment(runRef)
+  Enrich->>EnrichSvc: getRunEnrichment(runRef)
+  EnrichSvc->>State: base snapshot/events
+  alt snapshot exists
+    EnrichSvc->>EnrichSvc: snapshotToStatus
+  else no snapshot
+    EnrichSvc->>Projector: rebuild(runId, events)
+  end
+  Note over State,Adapter: Snapshot/events remain canonical. Provider status is live enrichment only.
+  EnrichSvc->>Adapter: getProviderStatusView(runRef) [live provider view]
+  EnrichSvc-->>Enrich: RunStatusEnrichment
+  Enrich-->>Client: RunStatusEnrichment
 ```
 
 ## What the subsystem already gets right
 
 - event-sourced execution authority and replayable status model
-- explicit CQRS split (`getRunStatus` vs `enrichRunStatus`)
+- explicit CQRS split between canonical reads and enrichment service calls
 - crash-consistency intent-log model around `startRun`
 - single engine-side proof that fetched bytes match `planId` before dispatch
 - provider runtimes remain behind adapter contract
@@ -198,18 +240,16 @@ sequenceDiagram
 
 ## Active drifts and architecture debt
 
-- facade width still too broad in `WorkflowEngine`
 - start-run application path and guard still construct and mix collaborator concerns
-- query/runtime behavior still concentrated in one core service
+- control/runtime behavior is still concentrated in one control service
 - provider-resolution and telemetry policy logic remains repeated
 - ownership seams between engine resolver and artifacts reader need one explicit
   canonical mapping in docs/planning
 
 ```mermaid
 flowchart LR
-  WF["WorkflowEngine"] -->|width| W1["Facade includes normalization + wiring + health checks"]
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
-  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Query + enrichment + command + telemetry"]
+  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Cancel + signal + telemetry"]
   StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
 ```
 
@@ -229,7 +269,9 @@ flowchart LR
 - `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
 - `packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts`
+- `packages/@dvt/engine/src/services/RunStatusQueryService.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
+- `packages/@dvt/engine/src/services/RunEnrichmentService.ts`
 - `packages/@dvt/engine/src/core/SnapshotProjector.ts`
 - `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
 - `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`

@@ -40,10 +40,10 @@ describe('MockAdapter cancellation lifecycle', () => {
       'RunCancelled',
     ]);
 
-    const firstStatus = await adapter.getRunStatus(runRef);
-    const secondStatus = await adapter.getRunStatus(runRef);
-    expect(firstStatus.status).toBe('CANCELLED');
-    expect(secondStatus.status).toBe(firstStatus.status);
+    const firstStatus = await adapter.getProviderStatusView(runRef);
+    const secondStatus = await adapter.getProviderStatusView(runRef);
+    expect(firstStatus.providerStatus).toBe('CANCELLED');
+    expect(secondStatus.providerStatus).toBe(firstStatus.providerStatus);
   });
 
   it('signal(CANCEL) follows the same lifecycle ordering as cancelRun', async () => {

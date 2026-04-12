@@ -9,6 +9,7 @@ import {
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
   parsePlanRecord,
+  parseCanonicalRunStatus,
   parsePlannerInputEnvelopeV1,
   parsePlanRef,
   parseRunExecutionPolicy,
@@ -221,6 +222,36 @@ describe('contracts: validation helpers', () => {
             failedAt: '2026-02-30T10:00:00.000Z',
           },
         },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('parses CanonicalRunStatus when timestamps are strict ISO UTC strings', () => {
+    const status = parseCanonicalRunStatus({
+      runId: 'run-1',
+      status: 'RUNNING',
+      startedAt: '2026-04-08T10:00:00.000Z',
+      completedAt: '2026-04-08T10:05:00.000Z',
+    });
+
+    expect(status.startedAt).toBe('2026-04-08T10:00:00.000Z');
+    expect(status.completedAt).toBe('2026-04-08T10:05:00.000Z');
+  });
+
+  it('rejects CanonicalRunStatus when timestamps are not strict ISO UTC strings', () => {
+    expect(() =>
+      parseCanonicalRunStatus({
+        runId: 'run-1',
+        status: 'RUNNING',
+        startedAt: '2026-04-08 10:00:00Z',
+      })
+    ).toThrow(ContractValidationError);
+
+    expect(() =>
+      parseCanonicalRunStatus({
+        runId: 'run-1',
+        status: 'COMPLETED',
+        completedAt: 'not-a-date',
       })
     ).toThrow(ContractValidationError);
   });

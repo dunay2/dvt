@@ -5,28 +5,36 @@
  *   - buildWorkflowEngine: production path - accepts subsystem-grouped config,
  *     validates adapters.size > 0 at construction time, hides internal dep wiring.
  *   - createWorkflowEngine: test-seam path - accepts a flat WorkflowEngineDeps
- *     and an optional constructor override, allowing unit tests to inject fakes.
+ *     and an optional builder override, allowing unit tests to inject fakes.
  */
 import {
+  buildWorkflowEngineFacade,
+  buildRunHealthService,
+  buildRunRecoveryService,
+  buildRunControlService,
+  buildRunStatusQueryService,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
+  RunEnrichmentService,
   StartRunAdmissionGuard,
   StartRunApplicationService,
   SnapshotProjector,
-  WorkflowEngine,
-  WorkflowEngineCoreService,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
   type IOutboxRateLimiter,
   type IPlanFetcher,
   type IProviderAdapter,
+  type IRunEnrichmentService,
+  type IRunHealthService,
   type IRunExecutionContextResolver,
   type IRunAccessPolicy,
   type IRunStateStoreRead,
   type IRunStateStoreWrite,
   type IStartRunIntentStore,
+  type IWorkflowEngine,
+  type WorkflowEngineBuilder,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -71,15 +79,22 @@ export interface EngineConfig {
   infrastructure: EngineInfrastructureConfig;
 }
 
+export interface BuiltWorkflowEngineRuntime {
+  engine: IWorkflowEngine;
+  runEnrichmentService: IRunEnrichmentService;
+  runHealthService: IRunHealthService;
+}
+
 // Production factory ----------------------------------------------------------
 
 /**
- * Builds a WorkflowEngine from a structured subsystem config.
+ * Builds the runtime read/write engine facade plus the dedicated enrichment service
+ * from a structured subsystem config.
  * Validates that at least one adapter is registered before construction.
  * Constructs SnapshotProjector, IdempotencyKeyBuilder, PlanRefPolicy, and
  * RunAccessPolicy internally - callers only provide infrastructure inputs.
  */
-export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
+export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRuntime {
   if (config.runtime.adapters.size === 0) {
     throw new Error(
       'ENGINE_NO_ADAPTERS: at least one adapter must be registered before building the engine'
@@ -100,67 +115,95 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   });
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
-
-  return new WorkflowEngine({
-    startRunApplicationService: new StartRunApplicationService({
+  const startRunApplicationService = new StartRunApplicationService({
+    policy,
+    guard: new StartRunAdmissionGuard({
       policy,
-      guard: new StartRunAdmissionGuard({
-        policy,
-        stateStoreRead: config.persistence.stateStoreRead,
-        adapters: config.runtime.adapters,
-        ...(config.persistence.runExecutionContextResolver !== undefined
-          ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-          : {}),
-      }),
       stateStoreRead: config.persistence.stateStoreRead,
-      stateStoreWrite: config.persistence.stateStoreWrite,
-      idempotency,
-      clock: config.infrastructure.clock,
-      intentStore: config.persistence.intentStore,
-      planFetcher: config.persistence.planFetcher,
+      adapters: config.runtime.adapters,
+      ...(config.persistence.runExecutionContextResolver !== undefined
+        ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+        : {}),
+    }),
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
+    idempotency,
+    clock: config.infrastructure.clock,
+    intentStore: config.persistence.intentStore,
+    planFetcher: config.persistence.planFetcher,
+    observability: config.infrastructure.observability,
+    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+  });
+  const runControlService = buildRunControlService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
+    idempotency,
+    policy,
+    adapters: config.runtime.adapters,
+    observability: config.infrastructure.observability,
+    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    clock: config.infrastructure.clock,
+  });
+  const runStatusQueryService = buildRunStatusQueryService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    projector,
+    policy,
+    observability: config.infrastructure.observability,
+    clock: config.infrastructure.clock,
+  });
+  const runRecoveryService = buildRunRecoveryService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
+    projector,
+    policy,
+    planFetcher: config.persistence.planFetcher,
+    adapters: config.runtime.adapters,
+    observability: config.infrastructure.observability,
+    startRunApplicationService,
+    ...(config.persistence.runExecutionContextResolver !== undefined
+      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+      : {}),
+  });
+  const runHealthService = buildRunHealthService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    adapters: config.runtime.adapters,
+  });
+  return {
+    engine: buildWorkflowEngineFacade({
+      startRunApplicationService,
+      runRecoveryService,
+      runControlService,
+      runStatusQueryService,
+      adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
+      ...(config.runtime.requiredProviders !== undefined
+        ? { requiredProviders: config.runtime.requiredProviders }
+        : {}),
       ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
     }),
-    core: new WorkflowEngineCoreService({
+    runHealthService,
+    runEnrichmentService: new RunEnrichmentService({
       stateStoreRead: config.persistence.stateStoreRead,
-      stateStoreWrite: config.persistence.stateStoreWrite,
       projector,
-      idempotency,
       policy,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
       ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
-      clock: config.infrastructure.clock,
     }),
-    stateStoreRead: config.persistence.stateStoreRead,
-    stateStoreWrite: config.persistence.stateStoreWrite,
-    projector,
-    idempotency,
-    clock: config.infrastructure.clock,
-    adapters: config.runtime.adapters,
-    observability: config.infrastructure.observability,
-    planFetcher: config.persistence.planFetcher,
-    ...(config.persistence.runExecutionContextResolver !== undefined
-      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-      : {}),
-    ...(config.runtime.requiredProviders !== undefined
-      ? { requiredProviders: config.runtime.requiredProviders }
-      : {}),
-    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
-  });
+  };
 }
 
 // Test seam -----------------------------------------------------------------
 
-export type WorkflowEngineConstructor = new (deps: WorkflowEngineDeps) => WorkflowEngine;
+export type WorkflowEngineConstructor = WorkflowEngineBuilder;
 
 /**
- * Test seam: allows unit tests to inject a fake engine constructor while keeping
+ * Test seam: allows unit tests to inject a fake engine builder while keeping
  * the same dep shape. Do not use in production code - use buildWorkflowEngine.
  */
 export function createWorkflowEngine(
   deps: WorkflowEngineDeps,
-  EngineCtor: WorkflowEngineConstructor = WorkflowEngine
-): WorkflowEngine {
-  return new EngineCtor(deps);
+  buildEngine: WorkflowEngineConstructor = buildWorkflowEngineFacade
+): IWorkflowEngine {
+  return buildEngine(deps);
 }

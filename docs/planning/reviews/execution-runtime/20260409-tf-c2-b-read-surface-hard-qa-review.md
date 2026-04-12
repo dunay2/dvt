@@ -2,7 +2,7 @@
 title: TF-C2-B runtime read-surface hard QA review
 status: Review
 owner: Runtime / Architecture / QA
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-12
 planning_type: review
 ---
 
@@ -43,9 +43,10 @@ baseline for closing `TF-C2-B` credibly.
 
 Debt handling for this review:
 
-- the canonical contract/doc drift finding is accepted as open debt in
-  `R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT`
-- the failed-run materialization semantics finding is accepted as open debt in
+- the canonical contract/doc drift finding was closed in the follow-up TF-C2-B
+  hardening slices that updated the engine/frontend contract entrypoints and
+  current-state diagram pack
+- the failed-run materialization semantics finding is now closed in
   `R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS`
 - the previous snapshot schema-version blocker is closed in development by
   keeping `schemaVersion = 1` on the disposable local Docker baseline instead
@@ -76,7 +77,7 @@ Debt handling for this review:
   Why it matters: the development branch explicitly wants one internal snapshot
   schema line. In the current disposable local Docker posture, that means
   staying on `schemaVersion = 1` instead of introducing a second schema number.
-  Evidence:
+  Closure evidence:
   - `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts:142-148` now
     states the development baseline remains on `schemaVersion = 1`.
   - `packages/@dvt/engine/src/ports/IRunStateStore.ts:142-148` mirrors the same
@@ -89,71 +90,63 @@ Debt handling for this review:
     Recommendation: keep the single-line development policy explicit and avoid
     inventing snapshot-schema branches until a real migration problem exists.
 
-- Title: Canonical contract docs still describe the old run-status shape.
+- Title: Canonical contract docs now describe the shipped run-status shape.
   Why it matters: this slice changes caller-visible runtime read semantics. If
   canonical docs still describe the old shape, the branch is green only in code,
   not in repository truth.
-  Evidence:
+  Closure evidence:
   - `docs/architecture/engine/VERSIONING.md:39-45`, `:82-85`, and `:98-103`
     require canonical contract docs and dependent docs to be updated when
     contract behavior changes.
-  - `docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md:101-119`
-    still defines `RunStatusSnapshot` without `substatus` or `execution`.
-  - `docs/architecture/engine/contracts/engine/IWorkflowEngine.reference.v1.md:94-113`
-    still shows the pre-TF-C2-B snapshot shape.
-  - `docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md:56-109`
-    describes the route baseline but does not document the shipped `execution`
-    evidence fields consumed by the frontend.
-    Risk: reviewers and future slices will read stale contract truth and make
-    incompatible changes, while the PR claims the read surface is already closed.
-    Recommendation: update the canonical engine contract docs and the frontend
-    runtime manual so the `execution` object, its optionality, and its operator
-    semantics are governed outside the closeout/evidence docs.
+  - `docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md`
+    now exposes the nested `execution` object on the active read boundary.
+  - `docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md`
+    now documents the shipped `execution` evidence fields and their
+    operator-facing semantics.
+    Residual risk: future contract changes still need the same canonical-doc
+    discipline; this fix only closes the TF-C2-B drift.
+    Recommendation: keep treating contract entrypoints, not closeout notes, as
+    the source of truth for caller-visible read surfaces.
 
-- Title: The implementation and tests allow `execution.materialization` on failed runs, but the governing proposal says it is success-only.
+- Title: Caller-visible `execution.materialization` is now success-only in code, tests, and docs.
   Why it matters: a read model that simultaneously communicates failure and
   materialization success needs explicit semantics. Right now the product docs
-  say one thing and the implementation proves another.
-  Evidence:
+  and the implementation now converge on one rule.
+  Closure evidence:
   - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md:439-445`
     requires `execution.materialization` "on success" and `execution.failure.*`
     on failure.
-  - `packages/@dvt/run-domain/src/applyRunEvent.ts:96-108` persists
-    `execution.materialization` on `StepCompleted`.
-  - `packages/@dvt/run-domain/src/applyRunEvent.ts:82-87` and `:110-116` do not
-    clear `execution.materialization` when a step or run fails.
-  - `apps/web/src/app/views/runs/RunStates.test.tsx:177-221` explicitly asserts
-    a failed snapshot that renders both materialization evidence and failure
-    diagnostics.
-    Risk: operators can read a failed run as if sink-write success is part of the
-    final outcome, or stale materialization from an earlier step can leak into the
-    terminal failed state without a governed meaning.
-    Recommendation: either clear `execution.materialization` on failure paths or
-    update the canonical contract/docs to define it as "last successful sink
-    evidence, even when the overall run fails" and add regression tests for that
-    decision.
+  - `packages/@dvt/run-domain/src/applyRunEvent.ts` now clears
+    `execution.materialization` on failure and cancel paths.
+  - `packages/@dvt/engine/src/core/SnapshotProjector.ts` now omits
+    materialization outside `COMPLETED` so engine canonical reads match the
+    normative contract at source.
+  - `apps/web/src/app/views/runs/RunStates.test.tsx` and
+    `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` now assert
+    failed snapshots render failure diagnostics without materialization
+    evidence.
+    Residual risk: future UI fixtures or non-API read consumers could drift if
+    they bypass the canonical projector rule.
+    Recommendation: keep projector-level regression coverage as the primary
+    guardrail for this semantic.
 
 ### Medium
 
-- Title: Canonical architecture diagrams were not updated to show the mapper-first projection seam.
+- Title: Canonical architecture diagrams now show the mapper-first projection seam.
   Why it matters: this slice was sold as a structural remediation, not just a
   DTO rename. The canonical architecture surfaces should show the new
   decomposition instead of leaving it trapped in the closeout note.
-  Evidence:
-  - `docs/architecture/engine/c4-engine.md:111-128` still models the read path
-    as `WorkflowEngine -> SnapshotProjector` with no mapper component or
-    normalization seam.
-  - `docs/architecture/engine/workflow-engine-subsystem-context.md:154-179`
-    still shows the projector rebuild sequence without the event-to-projectable
-    mapper stage.
-  - `docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md:80-102`
-    is currently the only place where the current-state and target-state mapper
-    diagrams exist.
-    Risk: the code has moved, but the architecture entrypoints still teach the old
-    decomposition, inviting future drift back into projector-centric parsing.
-    Recommendation: update `c4-engine.md` and the workflow-engine subsystem
-    context doc, or add a canonical runtime-projection architecture doc that is
-    linked from the engine index.
+  Closure evidence:
+  - `docs/architecture/diagrams/implementation-architecture-diagrams.md` now
+    routes readers into the extracted current-state diagram pack.
+  - `docs/architecture/diagrams/engine-internal-components.md` and
+    `docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md`
+    now show the mapper-first read seam instead of the old projector-only
+    narrative.
+    Residual risk: diagram truth can still drift if future refactors update
+    code/tests without touching the extracted diagram pack.
+    Recommendation: keep the smaller diagram docs current instead of letting
+    truth accumulate in closeout notes.
 
 ### Low
 
@@ -162,45 +155,44 @@ Debt handling for this review:
 ## Alignment
 
 - Doc vs code:
-  Not aligned. Closeout/evidence docs describe the new `execution` shape, but
-  canonical contract and architecture entrypoints still describe the old or
-  incomplete model.
+  Aligned for the TF-C2-B read surface. Canonical engine/frontend docs and the
+  extracted current-state diagram pack now describe the shipped `execution`
+  shape and mapper-first projection posture.
 - Promise vs implementation:
-  Not aligned. The proposal says `execution.materialization` is success-only,
-  while the implementation and tests allow it to coexist with failure.
+  Aligned. Caller-visible `execution.materialization` is now success-only in
+  projector, API, UI, and regression coverage.
 - Tests vs claims:
-  Partial alignment. The branch now reflects the chosen single-line snapshot
-  posture, but it still does not settle the failed-run materialization
-  semantics explicitly.
+  Aligned for the closed findings in this review. Regression coverage now
+  protects the success-only materialization rule and the updated contract/docs.
 - Current truth vs planned truth:
-  The branch now matches the chosen development posture for snapshots, but
-  canonical-doc drift and failed-run materialization semantics still remain
-  before TF-C2-B can be treated as closure-ready.
+  The branch matches the chosen development posture for snapshots and the
+  caller-visible materialization rule. Remaining TF-C2-B closeout work is now
+  limited to any still-open follow-up tasks outside this review artifact.
 - Documentation update status:
-  Updated in closeout/evidence/proposal surfaces, stale in canonical engine,
-  frontend, and architecture entrypoints.
+  Updated in canonical engine/frontend docs, current-state diagrams, planning,
+  evidence, and risk surfaces touched by the slice.
 - Evidence and risk-doc status when applicable:
-  ARC evidence and risk docs exist for the slice, but this QA pass identifies
-  additional closure blockers that are not yet reflected in lane status.
+  ARC evidence and risk docs exist for the slice; the failed-run
+  materialization risk entry is now closed to match the shipped behavior.
 
 ## Architecture Assessment
 
 - SRP:
   Improved in code. Mapper-first normalization reduces the projector blob.
 - DDD:
-  Improved in code, but weakened in documentation because the read-model
-  contract is not yet canonically described.
+  Improved in code and documentation. The read-model contract is now
+  canonically described.
 - Hexagonal:
-  Improved. Normalization moved out of the projector, but the architecture docs
-  still depict the old seam.
+  Improved. Normalization moved out of the projector and the architecture docs
+  now depict that seam.
 - CQRS if relevant:
   Improved. The branch keeps one development snapshot schema line and avoids a
   premature migration story in a disposable local environment.
 - Complexity:
-  Reasonable in the implementation, but documentary complexity is high because
-  current-state truth is split across code, closeout, and stale contract docs.
+  Reasonable in the implementation. Documentary complexity is lower now that
+  current-state truth is in canonical contracts and the extracted diagram pack.
 - Modularity:
-  Improved in code, incomplete in canonical diagrams and manuals.
+  Improved in code, canonical diagrams, and manuals.
 
 ## Test Assessment
 
@@ -210,21 +202,20 @@ Debt handling for this review:
   - run-state transition guards are covered in
     `packages/@dvt/run-domain/test/applyRunEvent.test.ts`
   - frontend snapshot rendering covers absence of evidence and presence of
-    failure/materialization fields in
+    failure and success-only materialization fields in
     `apps/web/src/app/views/runs/RunStates.test.tsx`
 - Negative paths missing:
-  - no semantic regression test that fixes the contract meaning of
-    materialization on failed runs
   - no documentary fitness test guarding canonical contract docs against stale
     `RunStatusSnapshot` examples
 - Regression status:
-  Repo gate is green, but documentary and semantic blockers remain.
+  Semantic and documentary blockers from this review are now closed on the
+  current branch; repo gates still need to be rerun after each follow-up edit.
 - Determinism:
   The mapper-first projection remains deterministic. Snapshot-version posture is
   no longer the hard-QA blocker for this branch.
 - Local suite vs meaningful global confidence:
-  Good code confidence for touched packages; insufficient closure confidence for
-  persisted snapshot migration and canonical-doc truth.
+  Good code confidence for touched packages. The remaining confidence gap is
+  mostly around broader system behavior that sits outside this review scope.
 - Global system view applied:
   Yes. This review checked contracts, persisted snapshots, API/web consumers,
   architecture docs, and planning surfaces together.
@@ -233,26 +224,39 @@ Debt handling for this review:
 - Test grouping by type (`unit` / `integration` / `contract` / `e2e` / regression) and rationale:
   - `contract`: `packages/@dvt/contracts/test/validation.test.ts`
   - `unit/regression`: `packages/@dvt/run-domain/test/applyRunEvent.test.ts`
+  - `engine regression`: `packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts`
   - `integration`: `apps/api/test/...getRunStatus...`, `apps/api/test/...getRunEvents...`
   - `ui regression`: `apps/web/src/app/views/runs/RunStates.test.tsx`
-  - missing `semantic regression`: failed-run materialization rule
+  - `e2e fixture regression`: `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
 
 ## Quality Gates
 
 - Commands executed:
-  - `git status -sb`
-  - `git diff --stat origin/main...HEAD`
-  - `rg -n "currentStepId|failedStepId|errorReason|materialization|execution\\.activeStepId|RunStatusSnapshot|WorkflowSnapshot" docs packages apps -g '!dist'`
-  - `rg -n "CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION|schemaVersion.*CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION|rebuildSnapshot\\(" packages apps -g '!dist'`
+  - `pnpm --filter @dvt/run-domain test`
+  - `pnpm --filter @dvt/engine test`
+  - `pnpm --filter dvt-api typecheck`
+  - `pnpm --filter dvt-api test`
+  - `pnpm --filter dvt-api test:arch`
+  - `pnpm --filter @dvt/web typecheck`
+  - `pnpm --filter @dvt/web test`
+  - `pnpm docs:workboard:generate`
+  - `pnpm docs:planning:generated:check`
+  - `pnpm exec markdownlint-cli2 "docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md" "docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md" "docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md"`
   - `pnpm verify:prepush`
 - What passed:
+  - touched package tests and type-checks for run-domain, engine, API, and web
+  - docs/planning regeneration checks
+  - targeted markdown lint on the governed docs touched by the slice
   - repo pre-push validation gate
-  - changed-file lint and formatting checks
-  - touched-package type-check baseline included in `verify:prepush`
 - What failed:
-  - no command failed in the final QA baseline
-  - documentary truth and semantic closure did fail this hard-QA review
+  - no command failed in the final closeout baseline
+  - this review originally identified documentary truth and semantic-closure
+    blockers; those findings are now closed on the current branch
 - What could not be verified:
+  - targeted Cypress execution of
+    `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` was
+    blocked locally by the Cypress launcher environment, not by a spec
+    assertion failure
   - real executor emission from `TF-C2-A` remains out of scope for this review
   - GitHub-hosted CI status was not used as the documentary source of truth for
     this artifact
@@ -264,10 +268,10 @@ flowchart LR
   A[Persisted snapshot contract changed] --> B[Branch keeps schemaVersion at 1]
   B --> C[Disposable local Docker baseline avoids a second schema line]
 
-  D[Proposal says materialization on success] --> E[Projector preserves materialization on failure]
-  E --> F[UI test renders both failure and materialization]
+  D[Proposal says materialization on success] --> E[Projector now omits materialization outside COMPLETED]
+  E --> F[UI and Cypress coverage reject failed plus materialization mixes]
 
-  G[Closeout shows mapper-first design] --> H[Canonical architecture docs still show projector-only seam]
+  G[Closeout shows mapper-first design] --> H[Canonical architecture docs now reflect the mapper-first seam]
 ```
 
 ## Unblock Roadmap
@@ -281,6 +285,8 @@ Target:
 - canonical engine and frontend contracts describe the shipped `execution`
   object and its compatibility posture.
 
+Status: closed on current branch.
+
 ### Wave 1 - Semantic ownership closure
 
 Tasks: `TF-C2-B-QA-03`
@@ -289,6 +295,8 @@ Target:
 
 - the system has one governed meaning for `execution.materialization` on failed
   runs, with code, docs, and tests all aligned.
+
+Status: closed on current branch.
 
 ### Wave 2 - Architecture and closure evidence
 
@@ -300,15 +308,17 @@ Target:
 - lane and review surfaces state the real blocker posture before the PR is
   considered closure-ready.
 
+Status: closed on current branch for `TF-C2-B-QA-04` and `TF-C2-B-QA-05`.
+
 ## Action Artifact
 
 ### Task Checklist
 
 - [x] `TF-C2-B-QA-01` Keep `WorkflowSnapshot` schemaVersion at `1` for the disposable development baseline
-- [ ] `TF-C2-B-QA-02` Update canonical engine and frontend contract docs for `RunStatusSnapshot.execution`
-- [ ] `TF-C2-B-QA-03` Reconcile failed-run materialization semantics in code, tests, and contract docs
-- [ ] `TF-C2-B-QA-04` Update canonical architecture diagrams to show mapper-first projection
-- [ ] `TF-C2-B-QA-05` Re-run validation, update lane truth, and close the slice with consistent evidence
+- [x] `TF-C2-B-QA-02` Update canonical engine and frontend contract docs for `RunStatusSnapshot.execution`
+- [x] `TF-C2-B-QA-03` Reconcile failed-run materialization semantics in code, tests, and contract docs
+- [x] `TF-C2-B-QA-04` Update canonical architecture diagrams to show mapper-first projection
+- [x] `TF-C2-B-QA-05` Re-run validation, update lane truth, and close the slice with consistent evidence
 
 ### Task Details
 
@@ -367,6 +377,10 @@ Target:
   - the system either clears materialization on failure or documents and tests
     coexistence as intentional;
   - one regression test protects the chosen rule.
+- Current branch closure:
+  - projector now clears caller-visible materialization on failure and cancel
+    paths;
+  - API and UI now expose materialization only for successful snapshots.
 
 #### `TF-C2-B-QA-04` Update canonical architecture diagrams to show mapper-first projection
 
@@ -388,6 +402,11 @@ Target:
 
 - Objective: make planning status match hard-QA reality after the blockers are
   resolved.
+- Current branch closure:
+  - lane truth and risk status now reflect the resolved failed-run
+    materialization rule;
+  - package tests, docs/planning checks, and `verify:prepush` were rerun on the
+    slice.
 - Scope: lane state, review board, closeout/evidence updates, and final
   validation.
 - Recommended owner: Lane C owner.

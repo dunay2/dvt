@@ -95,7 +95,7 @@ CI MUST fail if glossary validation reports errors.
   - Vectors MUST be versioned alongside RunEvents contract versions.
   - Example naming:
     - `RunEvents.v1.idempotency_vectors.json`
-    - `RunEvents.v2.0.1.idempotency_vectors.json` (when/if that version exists)
+    - `RunEvents.v1.idempotency_vectors.json` (when/if that version exists)
 
 CI MUST fail on vector mismatch.
 
@@ -178,7 +178,7 @@ Editor tooling should accelerate authoring, not replace enforcement.
 
 ## 7) Proposed Implementation (Phased)
 
-## Phase 1 — Foundation (Week 1)
+## Phase 1 â€” Foundation (Week 1)
 
 1. Add workspace recommendations:
    - `.vscode/extensions.json`
@@ -191,7 +191,7 @@ Editor tooling should accelerate authoring, not replace enforcement.
 
 Deliverable: consistent local authoring defaults.
 
-## Phase 2 — Validation Expansion (Week 2)
+## Phase 2 â€” Validation Expansion (Week 2)
 
 1. Implement `scripts/validate-glossary-usage.cjs` and wire into `validate:contracts`.
 2. Implement `scripts/validate-idempotency-vectors.cjs` and wire into CI.
@@ -202,7 +202,7 @@ Deliverable: consistent local authoring defaults.
 
 Deliverable: stronger automated consistency validation.
 
-## Phase 3 — CI Hardening (Week 3)
+## Phase 3 â€” CI Hardening (Week 3)
 
 1. Integrate new contract checks into `.github/workflows/contracts.yml`.
 2. Keep scope-based execution to avoid unnecessary full runs.
@@ -212,7 +212,7 @@ Deliverable: stronger automated consistency validation.
 
 Deliverable: enforceable, readable CI contract gates.
 
-## Phase 4 — Operationalization (Week 4)
+## Phase 4 â€” Operationalization (Week 4)
 
 1. Document maintenance runbook for contract contributors.
 2. Add KPI tracking (see section 9).
@@ -277,8 +277,8 @@ MUST include an ADR (enforced in hardened phase).
 
 Target after 30 days from rollout:
 
-- ≥50% reduction in terminology-related review findings
-- ≥90% contract PRs passing validation on first CI run
+- â‰¥50% reduction in terminology-related review findings
+- â‰¥90% contract PRs passing validation on first CI run
 
 ### 9.1 Performance Metrics
 

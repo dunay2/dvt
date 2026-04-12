@@ -12,7 +12,8 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { PlanRef, ResolvedRunContext, RunStateCommandPort } from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { RunStateCommandPort } from '@dvt/engine';
 
 import type { ActivityDeps } from '../src/activities/stepActivities.js';
 import type {

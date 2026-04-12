@@ -12,8 +12,8 @@ import type {
   EngineRunRef,
   ExecutionPlan,
   PlanRef,
+  ProviderRunStatusView,
   ResolvedRunContext,
-  RunStatusSnapshot,
   SignalSemanticsVersion,
   SignalRequest,
 } from '@dvt/contracts';
@@ -29,7 +29,7 @@ export interface IProviderAdapter {
    */
   startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
-  getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
+  getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
   signalSemanticsVersions(): readonly SignalSemanticsVersion[];
   ping?(): Promise<void>;

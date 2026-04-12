@@ -2,7 +2,7 @@
 title: '@dvt/engine'
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-12
 ---
 
 # @dvt/engine
@@ -16,23 +16,23 @@ this component is wired today.
 ## Southbound Port Surface
 
 `@dvt/engine` exposes seven southbound ports as its declared architecture
-surface. Five are wired on the current runtime path; two remain intentionally
-exposed as target-line seams that the architecture keeps visible while their
+surface. Four are wired on the default runtime path, one is optional runtime
+wiring, and two remain intentionally visible as target seams while their
 dedicated runtime adoption is still in progress.
 
 This table is the canonical doc-level inventory for engine port membership and
 posture. Deeper architecture pages refine usage and ownership, but they should
 not redefine which ports belong to the seven-port surface.
 
-| Port                           | Current posture       | Notes                                                                                         |
-| ------------------------------ | --------------------- | --------------------------------------------------------------------------------------------- |
-| `IRunStateStore`               | `runtime-wired`       | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
-| `IStartRunIntentStore`         | `runtime-wired`       | Crash-consistency seam for pre-dispatch start-run intents                                     |
-| `IProviderAdapter`             | `runtime-wired`       | Provider runtime seam                                                                         |
-| `IPlanFetcher`                 | `runtime-wired`       | Plan/artifact fetch seam on the start-run path                                                |
-| `IRunExecutionContextResolver` | `runtime-wired`       | Conditional seam when `runExecutionContextRef` is supplied                                    |
-| `IProjector`                   | `target-line exposed` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
-| `IMetricsCollector`            | `target-line exposed` | Kept visible as a telemetry seam even though mainline injects `IObservability` today          |
+| Port                           | Current posture               | Notes                                                                                         |
+| ------------------------------ | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `IRunStateStore`               | `runtime-wired`               | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
+| `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam for pre-dispatch start-run intents                                     |
+| `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                         |
+| `IPlanFetcher`                 | `runtime-wired`               | Plan/artifact fetch seam on the start-run path                                                |
+| `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional seam when `runExecutionContextRef` is supplied                                    |
+| `IProjector`                   | `package-exposed target seam` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
+| `IMetricsCollector`            | `source-tree target seam`     | Declared in source; current runtime still injects `IObservability` instead                    |
 
 `IObservability` remains the current telemetry facade in the shipped runtime.
 It is not counted inside the seven-port southbound surface.
@@ -51,19 +51,21 @@ Target note:
 
 - own run lifecycle semantics and provider dispatch;
 - enforce run access policy, plan integrity, and start-run admission;
-- project and enrich run status from state-store reads and emitted events;
+- project canonical run status through `RunStatusQueryService`;
+- expose optional provider-backed enrichment through `RunEnrichmentService`
+  and `IRunEnrichmentService`;
 - expose operational health and maintenance services around the workflow
-  runtime.
+  runtime through explicit non-facade service boundaries.
 
 ## Public Operations
 
-- `WorkflowEngine.startRun(...)`
-- `WorkflowEngine.recoverRun(...)`
-- `WorkflowEngine.cancelRun(...)`
-- `WorkflowEngine.getRunStatus(...)`
-- `WorkflowEngine.enrichRunStatus(...)`
-- `WorkflowEngine.signal(...)`
-- `WorkflowEngine.healthCheck()`
+- `IWorkflowEngine.startRun(...)`
+- `IWorkflowEngine.recoverRun(...)`
+- `IWorkflowEngine.cancelRun(...)`
+- `IWorkflowEngine.getRunStatus(...)`
+- `IRunEnrichmentService.getRunEnrichment(...)`
+- `IWorkflowEngine.signal(...)`
+- `IRunHealthService.healthCheck()`
 - `StartRunApplicationService.startRun(...)`
 
 ## Primary Code Anchors
@@ -74,28 +76,46 @@ Target note:
   [WorkflowEngine.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 - start-run application path:
   [StartRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- recover-run application path:
+  [RecoverRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/RecoverRunApplicationService.ts)
 - lifecycle core:
   [WorkflowEngineCoreService.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts)
+- canonical status query:
+  [RunStatusQueryService.ts](../../../../packages/@dvt/engine/src/services/RunStatusQueryService.ts)
+- health service:
+  [RunHealthService.ts](../../../../packages/@dvt/engine/src/services/RunHealthService.ts)
+- enrichment service:
+  [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
-  [IWorkflowEngine.v1_1_1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1_1_1.ts)
+  [IWorkflowEngine.v1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)
 
 ## Component Topology
 
 ```mermaid
 flowchart LR
-  Api["apps/api"] --> Engine["WorkflowEngine facade"]
+  Api["apps/api"] --> Engine["IWorkflowEngine facade"]
+  Api --> HealthApi["IRunHealthService"]
+  Api --> Enrich["RunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService"]
+  Engine --> Recover["RecoverRunApplicationService"]
+  Engine --> Query["RunStatusQueryService"]
   Engine --> Core["WorkflowEngineCoreService"]
+  HealthApi --> Health["RunHealthService"]
+  Recover --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Ports["Declared southbound ports"]
+  Recover --> Ports
+  Query --> Ports
+  Health --> Ports
   Core --> Ports
+  Enrich --> Ports
   Ports --> State["IRunStateStore<br/>(runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
   Ports --> Providers["IProviderAdapter<br/>(runtime-wired)"]
   Ports --> Plan["IPlanFetcher<br/>(runtime-wired)"]
-  Ports --> RunCtx["IRunExecutionContextResolver<br/>(runtime-wired)"]
-  Ports -.-> Projector["IProjector<br/>(target-line exposed)"]
-  Ports -.-> Metrics["IMetricsCollector<br/>(target-line exposed)"]
+  Ports --> RunCtx["IRunExecutionContextResolver<br/>(optional runtime wiring)"]
+  Ports -.-> Projector["IProjector<br/>(package-exposed target seam)"]
+  Ports -.-> Metrics["IMetricsCollector<br/>(source-tree target seam)"]
   Engine --> Obs["IObservability<br/>(current telemetry facade)"]
 ```
 

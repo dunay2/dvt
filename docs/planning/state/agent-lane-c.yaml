@@ -215,7 +215,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
-      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.yaml
+      - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.md
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
     status_reason: >-
       The freshness SLO contract is documented with measurable telemetry outcomes and backed by API
@@ -607,28 +607,6 @@ tasks:
       The principal deep review identified timeout-only adapter failure handling as a cascade risk
       when Temporal is degraded.
     last_verified: '2026-04-04'
-  - task_id: AR-C6
-    priority: P0
-    status: queued
-    objective: >-
-      fix Temporal cancellation semantics so `cancelRun()` no longer relies only on `signal(CANCEL)`
-      and can use provider-native cancellation when cooperative cancel does not take effect.
-    dependency: WE-HX-4-B
-    target: >-
-      `@dvt/adapter-temporal` documents and implements the governed cancel path, integration tests
-      prove the runtime behavior, and Temporal cancellation no longer depends on a signal-only path
-      for terminal cancel semantics.
-    complexity: M
-    effort_points: 3
-    progress_pct: 0
-    evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
-      - docs/architecture/diagrams/implementation-architecture-diagrams.md
-      - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
-    status_reason: >-
-      `TemporalAdapter.cancelRun()` still forwards `WorkflowSignals.CANCEL` instead of using a
-      provider-native cancellation path, leaving the known `T-01` runtime bug unresolved.
-    last_verified: '2026-04-10'
   - task_id: MW-C1
     priority: P0
     status: done
@@ -867,7 +845,7 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 90
+    progress_pct: 95
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
@@ -880,11 +858,59 @@ tasks:
     status_reason: >-
       Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
       development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
-      not maintain a second snapshot-schema line. Two follow-up items remain explicitly accepted as
-      debt and logged in the quality risk register: canonical contract/architecture doc drift and
-      failed-run materialization semantics. Real executor payload emission now exists on the
-      Postgres capability path; remaining closure is deeper provenance convergence with `TF-B1-B`
-      and cleanup of the accepted residual risks.
+      not maintain a second snapshot-schema line. The failed-run materialization contradiction is
+      now closed with projector, API, and UI regression coverage. Remaining accepted residual is
+      canonical contract/architecture doc drift plus deeper provenance convergence with `TF-B1-B`.
+      Real executor payload emission now exists on the Postgres capability path; final closure is
+      cleanup of the remaining residual risk and current-doc alignment.
+    last_verified: '2026-04-12'
+  - task_id: AR-C6
+    priority: P0
+    status: in_progress
+    objective: >-
+      normalize Temporal cancellation semantics so provider-native cancel, runtime-owned lifecycle
+      facts, and caller-visible status authority follow one governed model.
+    dependency: none
+    target: >-
+      Temporal cancellation no longer relies on signal aliasing, and the component-level ownership
+      model for `RunCancelRequested`, `RunCancelled`, and provider status authority is explicit
+      across planning and architecture surfaces.
+    complexity: M
+    effort_points: 3
+    progress_pct: 85
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
+    status_reason: >-
+      The provider-native Temporal cancel boundary is implemented and the repository-wide
+      cancellation ownership truth is now synchronized across planning, ADR, and contract surfaces.
+      Remaining work is runtime convergence on the provider-live versus persisted terminal-status
+      gap.
+    last_verified: '2026-04-10'
+  - task_id: AR-C6-A
+    parent_task: AR-C6
+    priority: P0
+    status: done
+    objective: >-
+      capture the cancel-lifecycle ownership lesson and hand it off to the broader engine-runtime
+      contract-pack reset without leaving a second active contract direction in planning.
+    dependency: none
+    target: >-
+      A governed proposal records the target ownership model across `WorkflowEngineCoreService`,
+      `IProviderAdapter`, runtime workflow, projector/read model, and caller-visible status
+      consumption, while the contract-pack reset and active registry cleanup continue only under
+      `AR-A12-A`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+    status_reason: >-
+      The cancel-lifecycle ownership lesson is captured and accepted as local rationale. Further
+      contract-pack normalization is now explicitly absorbed by `AR-A12-A`, so Lane C no longer
+      carries a parallel active direction.
     last_verified: '2026-04-10'
   - task_id: TF-C3
     priority: P1
@@ -965,13 +991,13 @@ dependency_notes:
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
   - >-
-    The 2026-04-10 runtime/shared-kernel triage review adds `AR-C6` as the explicit owner for the
-    Temporal `cancelRun()` semantics bug (`T-01`) so the cancellation defect is no longer tracked
-    only as a diagram-side finding.
-  - >-
     `MW-C1` is now code-grounded by the accepted step-kind dispatcher evidence; the active runtime
     blocker moved to finishing `TF-C2-A` local proof closure and the remaining evidence/provenance
     convergence under `TF-C2-B` and `TF-B1-B`.
+  - >-
+    `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
+    follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
+    stale ADR and contract surfaces.
   - >-
     `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
     subtasks so runtime closure can progress in smaller slices without losing the same outer
@@ -980,11 +1006,13 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-10'
-  total_tasks: 36
-  total_effort_points: 135
-  completed_weighted_points: 69.8
-  lane_progress_pct: 52
+  total_tasks: 37
+  total_effort_points: 137
+  completed_weighted_points: 74.4
+  lane_progress_pct: 54
   notes: >-
     Weighted progress uses effort_points. `MW-C1` now contributes full accepted closure, while
     `TF-C2`, `TF-C2-A`, and `TF-C2-B` now reflect the shipped dispatch seam, canonical proof
-    surface, and runtime-evidence progress rather than the older queued-only posture.
+    surface, and runtime-evidence progress rather than the older queued-only posture. `AR-C6` now
+    also records the short truth-sync slice that must normalize cancel-lifecycle ownership before
+    additional runtime cancellation work expands.

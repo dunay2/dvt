@@ -1,0 +1,28 @@
+---
+id: R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT
+title: Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView
+status: Open
+date: 2026-04-09
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Low
+context: >
+  TemporalAdapter.getProviderStatusView() previously returned DVT-owned lifecycle statuses (PAUSED,
+  CANCELLING) via the workflow query model. After the fix, it returns Temporal-native execution
+  statuses from handle.describe(). Any consumer that matched on providerStatus === 'PAUSED' or
+  providerSubstatus === 'CANCELLING' will no longer see those values.
+risk: >
+  If API consumers or UI code conditionally branch on DVT lifecycle statuses within
+  ProviderRunStatusView, they will stop matching after this change and may lose visibility into
+  paused or cancelling state. The canonical status (CanonicalRunStatus) is the correct source for
+  those lifecycle concepts.
+mitigations:
+  - 'CanonicalRunStatus (event-sourced projection) still reports PAUSED and substatus correctly.'
+  - 'RunStatusEnrichment returns both canonical and providerView, so callers can use the canonical
+    plane for DVT lifecycle state.'
+  - 'Integration tests updated to expect Temporal-native statuses only.'
+  - 'Unknown future Temporal describe() status tokens now pass through as provider diagnostics
+    instead of failing enriched reads closed.'
+review_after: 2026-04-16
+---

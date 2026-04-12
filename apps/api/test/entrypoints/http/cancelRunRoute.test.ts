@@ -80,14 +80,14 @@ describe('cancelRunRoute', () => {
         id: 'req-1',
         headers: {},
         params: { runId: 'run-1' },
-        body: { tenantId: 'tenant-a', reason: 'operator cancel' },
+        body: { tenantId: 'tenant-a' },
       } as never,
       reply as never,
       deps as never
     );
 
     expect(deps.useCase.execute).toHaveBeenCalledWith(
-      { runId: 'run-1', signalType: 'CANCEL', reason: 'operator cancel' },
+      { runId: 'run-1', signalType: 'CANCEL' },
       expect.anything()
     );
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
@@ -96,6 +96,51 @@ describe('cancelRunRoute', () => {
         action: { kind: 'command', name: SIGNAL_COMMAND_ACTION.CANCEL },
       }),
       'req-1'
+    );
+    expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
+  });
+
+  it('returns 400 when a non-empty reason is provided on the native cancel route', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await cancelRunRoute(
+      {
+        id: 'req-1b',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', reason: 'operator cancel' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', 'cancel_reason_not_supported', 'reason')
+    );
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('ignores empty reason noise on the native cancel route', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await cancelRunRoute(
+      {
+        id: 'req-1c',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', reason: '   ' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(deps.useCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', signalType: 'CANCEL' },
+      expect.anything()
     );
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
   });

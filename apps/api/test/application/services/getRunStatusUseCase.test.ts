@@ -69,7 +69,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -84,6 +84,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       stalenessReader as never,
@@ -116,7 +117,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -127,6 +128,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -156,7 +158,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -167,6 +169,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       undefined,
@@ -199,7 +202,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -210,6 +213,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -244,7 +248,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -255,6 +259,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -286,7 +291,7 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('engine unavailable');
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -297,6 +302,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       undefined,
@@ -316,7 +322,7 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('engine unavailable');
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -327,6 +333,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -348,11 +355,17 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('should not be called');
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         return {
-          runId: 'provider-run-1',
-          status: 'RUNNING' as const,
-          substatus: 'mock/QUEUED' as const,
+          canonical: {
+            runId: 'provider-run-1',
+            status: 'RUNNING' as const,
+          },
+          providerView: {
+            provider: 'mock' as const,
+            providerStatus: 'RUNNING',
+            providerSubstatus: 'mock/QUEUED',
+          },
         };
       },
     };
@@ -363,6 +376,7 @@ describe('GetRunStatusUseCase', () => {
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -379,7 +393,11 @@ describe('GetRunStatusUseCase', () => {
       status: 'RUNNING',
       enriched: true,
       snapshotStaleness: 'FRESH',
-      substatus: 'mock/QUEUED',
+      providerView: {
+        provider: 'mock',
+        providerStatus: 'RUNNING',
+        providerSubstatus: 'mock/QUEUED',
+      },
     });
     expect(telemetry.recordSnapshotStalenessResult).toHaveBeenCalledWith(
       'FRESH',
@@ -389,7 +407,7 @@ describe('GetRunStatusUseCase', () => {
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
   });
 
-  it('returns TF-C2-B snapshot outcome fields when projected state carries them', async () => {
+  it('omits materialization evidence from failed caller-visible status snapshots', async () => {
     const engine = {
       async getRunStatus() {
         return {
@@ -415,12 +433,68 @@ describe('GetRunStatusUseCase', () => {
           },
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      {
+        recordSnapshotStalenessResult: vi.fn(),
+        recordSnapshotStalenessFallback: vi.fn(),
+      } as never
+    );
+
+    const result = await useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never);
+
+    expect(result).toMatchObject({
+      runId: 'provider-run-1',
+      status: 'FAILED',
+      snapshotStaleness: 'FRESH',
+      execution: {
+        activeStepId: 'step-evidence',
+        failure: {
+          stepId: 'step-transform',
+          reason: 'SINK_WRITE_FAILED',
+        },
+      },
+    });
+    expect(result.execution?.materialization).toBeUndefined();
+    expect(result.materialization).toBeUndefined();
+  });
+
+  it('returns materialization evidence on completed caller-visible status snapshots', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'COMPLETED' as const,
+          execution: {
+            materialization: {
+              executor: 'postgres' as const,
+              environmentId: 'env-1',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T10:00:00.000Z',
+              completedAt: '2026-04-08T10:00:04.000Z',
+              durationMs: 4000,
+            },
+          },
+        };
+      },
+      async getRunEnrichment() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       createStateStore() as never,
       {
@@ -436,19 +510,19 @@ describe('GetRunStatusUseCase', () => {
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
       runId: 'provider-run-1',
-      status: 'FAILED',
+      status: 'COMPLETED',
       snapshotStaleness: 'FRESH',
       execution: {
-        activeStepId: 'step-evidence',
-        failure: {
-          stepId: 'step-transform',
-          reason: 'SINK_WRITE_FAILED',
-        },
         materialization: {
           executor: 'postgres',
           sinkTable: 'analytics.orders_daily',
           rowsWritten: 42,
         },
+      },
+      materialization: {
+        executor: 'postgres',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
       },
     });
   });
@@ -458,8 +532,8 @@ describe('GetRunStatusUseCase', () => {
       async getRunStatus() {
         throw new Error('should not be called');
       },
-      async enrichRunStatus() {
-        throw new Error('adapter.getRunStatus timed out after 5ms');
+      async getRunEnrichment() {
+        throw new Error('adapter.getProviderStatusView timed out after 5ms');
       },
     };
 
@@ -470,6 +544,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       createStateStore() as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -479,7 +554,7 @@ describe('GetRunStatusUseCase', () => {
 
     await expect(
       useCase.execute({ runId: 'run-1', enriched: true }, queryContext as never)
-    ).rejects.toThrow(/adapter\.getRunStatus timed out after 5ms/);
+    ).rejects.toThrow(/adapter\.getProviderStatusView timed out after 5ms/);
 
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
     expect(telemetry.recordSnapshotStalenessResult).not.toHaveBeenCalled();
@@ -494,7 +569,7 @@ describe('GetRunStatusUseCase', () => {
           startedAt: '2026-04-08T10:00:00.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -575,6 +650,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -635,7 +711,7 @@ describe('GetRunStatusUseCase', () => {
           completedAt: '2026-04-08T10:00:10.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -713,6 +789,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -738,7 +815,7 @@ describe('GetRunStatusUseCase', () => {
           startedAt: '2026-04-08T10:00:00.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -860,6 +937,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -892,7 +970,7 @@ describe('GetRunStatusUseCase', () => {
           completedAt: '2026-04-08T10:10:00.000Z',
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -988,6 +1066,7 @@ describe('GetRunStatusUseCase', () => {
 
     const useCase = new GetRunStatusUseCase(
       engine as never,
+      engine as never,
       stateStore as never,
       {
         isSnapshotStale: vi.fn().mockResolvedValue(false),
@@ -1017,7 +1096,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -1039,6 +1118,7 @@ describe('GetRunStatusUseCase', () => {
     });
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       stateStore as never,
       {
@@ -1063,7 +1143,7 @@ describe('GetRunStatusUseCase', () => {
           status: 'RUNNING' as const,
         };
       },
-      async enrichRunStatus() {
+      async getRunEnrichment() {
         throw new Error('should not be called');
       },
     };
@@ -1073,6 +1153,7 @@ describe('GetRunStatusUseCase', () => {
     stateStore.listEvents.mockRejectedValue(new Error('events backend unavailable'));
 
     const useCase = new GetRunStatusUseCase(
+      engine as never,
       engine as never,
       stateStore as never,
       {
@@ -1093,3 +1174,5 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 });
+
+

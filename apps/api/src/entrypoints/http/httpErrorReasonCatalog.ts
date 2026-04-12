@@ -1,5 +1,6 @@
 export const HTTP_ERROR_REASON = Object.freeze({
   adapterNotConfigured: 'adapter_not_configured',
+  cancelReasonNotSupported: 'cancel_reason_not_supported',
   conflictingRunIds: 'conflicting_run_ids',
   conflictingPlanInputs: 'conflicting_plan_inputs',
   internalError: 'internal_error',

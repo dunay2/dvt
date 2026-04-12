@@ -7,7 +7,7 @@
   - ADR-0007: Run Cancellation Semantics (cross-references this ADR for signal-based cancel)
   - ADR-0004: Event Sourcing Strategy
   - ADR-0049: Retry-run as separate recovery use case
-  - RunEvents.v2.0.1.md (envelope split - tenantId excluded from derivation)
+  - RunEvents.v1.md (envelope split - tenantId excluded from derivation)
 
 ---
 

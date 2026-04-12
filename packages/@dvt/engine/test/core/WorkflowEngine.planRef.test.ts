@@ -2,9 +2,7 @@ import type { EngineRunRef, PlanRef, ResolvedRunContext, RunContext } from '@dvt
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 
 function makePlanRef(): PlanRef {
@@ -28,6 +26,19 @@ function makeContext(): RunContext {
 }
 
 describe('WorkflowEngine planRef normalization', () => {
+  it('requires explicit service collaborators at construction time', () => {
+    expect(
+      () =>
+        new WorkflowEngine({
+          adapters: new Map(),
+          observability: createNoopObservability(),
+          startRunApplicationService: {} as never,
+          runRecoveryService: {} as never,
+          runControlService: {} as never,
+        } as never)
+    ).toThrow(/runStatusQueryService is required/);
+  });
+
   it('does not reintroduce execution policy fields onto PlanRef', async () => {
     const startRun = vi.fn<
       (
@@ -44,19 +55,24 @@ describe('WorkflowEngine planRef normalization', () => {
     }));
 
     const engine = new WorkflowEngine({
-      stateStoreRead: {} as never,
-      stateStoreWrite: {} as never,
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: { nowIsoUtc: () => '2026-04-07T00:00:00.000Z' },
       adapters: new Map(),
       observability: createNoopObservability(),
       startRunApplicationService: { startRun },
-      core: {
+      runRecoveryService: {
+        recoverRun: async () => ({
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-run-1',
+          runId: 'run-1',
+        }),
+      },
+      runControlService: {
         cancel: async () => {},
-        getStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
-        enrichStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
         signal: async () => {},
+      },
+      runStatusQueryService: {
+        getStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
       },
     });
 

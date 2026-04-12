@@ -2,7 +2,7 @@
 title: Architecture Diagrams
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-11
 ---
 
 # Architecture Diagrams
@@ -13,10 +13,19 @@ planned (orange) elements.
 
 ## Catalog
 
-- [Implementation Architecture Diagrams](./implementation-architecture-diagrams.md) —
-  domain model, package dependencies, engine components, state machines,
-  and sequence diagrams for all major flows (startRun, signal, cancel,
-  intent reconciliation, outbox delivery).
+- [Implementation Architecture Diagrams](./implementation-architecture-diagrams.md) -
+  overview, domain model, package dependency graph, extracted-diagram navigation,
+  and consolidated desired-architecture delta
+- [Engine Internal Components](./engine-internal-components.md) -
+  engine-layer topology, southbound ports, and runtime capability dispatch
+- [Run State Machines](./run-state-machines.md) -
+  run and step lifecycle diagrams plus active state-machine concerns
+- [Start-run Sequences](./start-run-sequences.md) -
+  `startRun`, `signal`, and `cancel` sequence diagrams
+- [Maintenance And Reconciliation](./maintenance-and-reconciliation.md) -
+  orphaned-intent and stuck-run reconciliation flows
+- [Outbox Delivery Architecture](./outbox-delivery-architecture.md) -
+  outbox worker flow, risks, and delivery architecture
 
 ## Related Pages
 

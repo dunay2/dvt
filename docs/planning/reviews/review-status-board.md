@@ -105,6 +105,20 @@ Additional active rationale:
   - status: `done`
   - progress: `100%`
 
+- [20260410 Contract pack and read boundary reset Fowler review](./architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: current review of record for resetting the engine-runtime contract pack and the run-status read boundary
+  - linkage: `AR-A12`, `AR-A12-A`, `AR-A12-B`, `AR-A12-C`
+  - status: `in_progress`
+  - progress: `35%`
+
+- [20260411 AR-A12-B status model split Fowler review](./architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: slice-specific architecture review for splitting canonical status, enrichment, and provider-live diagnostics
+  - linkage: `AR-A12-B`
+  - status: `in_progress`
+  - progress: `20%`
+
 Additional active QA:
 
 - [20260407 Execution plan and policy hard QA review](./architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)

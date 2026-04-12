@@ -31,6 +31,8 @@ describe('modules', () => {
       authenticator: {} as never,
       authorizer: {} as never,
       engine: {} as never,
+      runEnrichmentService: {} as never,
+      runHealthService: {} as never,
       adapters: new Map(),
       startRunTargetAdapterRegistry: {
         isSupported(_value: string): _value is 'mock' | 'temporal' {

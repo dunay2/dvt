@@ -5,7 +5,7 @@
 - **Owners**: Engine Domain / Infrastructure
 - **Related**:
   - ADR-0004: Event Sourcing Strategy
-  - RunEvents.v2.0.1 (runSeq as ordering attribute)
+  - RunEvents.v1 (runSeq as ordering attribute)
   - W3-3: Outbox pagination (large runs may require paginated replay to rebuild order)
 
 ---
@@ -43,14 +43,14 @@ Cross-run ordering is NOT required.
 INV-OUTBOX-002 (concurrent workers cannot reorder same runId) MUST be
 enforced by one of the following mechanisms:
 
-**Option A — Partition-based routing (normative for Phase 1):**
+**Option A â€” Partition-based routing (normative for Phase 1):**
 
 - Outbox workers are assigned non-overlapping `runId` partitions using
   consistent hashing: `workerShard = hash(runId) % N`.
 - A given runId is always processed by a single worker shard.
 - No cross-shard coordination needed.
 
-**Option B — Row-level locking (single-table PostgreSQL):**
+**Option B â€” Row-level locking (single-table PostgreSQL):**
 
 - Worker queries: `SELECT ... WHERE processed = false ORDER BY runSeq
 FOR UPDATE SKIP LOCKED`.
@@ -91,7 +91,7 @@ Policy chosen: **Strict stream integrity (no gaps).**
 
 ### Negative / Trade-offs
 
-- DLQ strict mode blocks all subsequent events for a runId until resolved —
+- DLQ strict mode blocks all subsequent events for a runId until resolved â€”
   requires operational process for DLQ triage.
 - Partition-based routing requires N to be stable (resharding pauses publication).
 - "N retries = 5 (default)" is implementation-configured; this ADR does not
@@ -103,17 +103,17 @@ Policy chosen: **Strict stream integrity (no gaps).**
 ## Invariants
 
 - INV-OUTBOX-001: Per-run stream ordered by runSeq
-- INV-OUTBOX-002: Concurrent workers cannot reorder same runId (enforced by §2 mechanism)
+- INV-OUTBOX-002: Concurrent workers cannot reorder same runId (enforced by Â§2 mechanism)
 - INV-OUTBOX-003: Publish failure does not advance runSeq
 - INV-OUTBOX-004: DLQ preserves original runSeq and idempotencyKey
 - INV-OUTBOX-005: No gaps allowed in per-run stream (strict stream integrity policy)
 
 ## Required Tests (mandatory CI)
 
-- `test/outbox/ordering-per-runid.test.ts` — events arrive in runSeq order per runId
-- `test/outbox/concurrent-workers-no-reorder.test.ts` — simulate two workers, assert no reorder
-- `test/outbox/dlq-preserves-run-seq.test.ts` — DLQ entry retains original runSeq and idempotencyKey
-- `test/outbox/failed-publish-blocks-subsequent.test.ts` — subsequent events for same runId are not published before failed one resolves
+- `test/outbox/ordering-per-runid.test.ts` â€” events arrive in runSeq order per runId
+- `test/outbox/concurrent-workers-no-reorder.test.ts` â€” simulate two workers, assert no reorder
+- `test/outbox/dlq-preserves-run-seq.test.ts` â€” DLQ entry retains original runSeq and idempotencyKey
+- `test/outbox/failed-publish-blocks-subsequent.test.ts` â€” subsequent events for same runId are not published before failed one resolves
 
 ---
 

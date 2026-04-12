@@ -22,7 +22,7 @@ requested:
    principle is only reachable indirectly through the source mapping recorded in
    [docs/archive/DVT+\_Architectural_Review_20260226_AI.en.md](../../archive/DVT+_Architectural_Review_20260226_AI.en.md),
    plus explicit product-principle references in
-   [docs/architecture/engine/contracts/engine/RunEvents.v2.0.md](../../architecture/engine/contracts/engine/RunEvents.v2.0.md),
+   [docs/architecture/engine/contracts/engine/RunEvents.v1.md](../../architecture/engine/contracts/engine/RunEvents.v1.md),
    [docs/architecture/engine/security/SECURITY_INVARIANTS.v1.md](../../architecture/engine/security/SECURITY_INVARIANTS.v1.md),
    and
    [docs/architecture/engine/roadmap/engine-phases.md](../../architecture/engine/roadmap/engine-phases.md).
