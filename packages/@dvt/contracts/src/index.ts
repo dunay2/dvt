@@ -4,6 +4,7 @@ export * from './workflows.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
+export * from './contracts/engine/StartRunBoundary.v1.js';
 export {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   getSignalDerivedEventType,

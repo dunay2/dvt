@@ -6,7 +6,7 @@
 **Version**: 1.0
 **Scope**: Engine command and canonical-read boundary
 **Consumers**: API, planner-facing application services, adapters, UI-facing read paths
-**Sub-contracts**: [RunEvents.v1.md](./RunEvents.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md), [IRunEnrichmentService.v1.md](./IRunEnrichmentService.v1.md)
+**Sub-contracts**: [RunEvents.v1.md](./RunEvents.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md), [GlossaryContract.v1.md](./GlossaryContract.v1.md), [IRunEnrichmentService.v1.md](./IRunEnrichmentService.v1.md), [StartRunBoundary.v1.md](./StartRunBoundary.v1.md)
 **Related ADRs**: [ADR-0003](../../../../../adr/ADR-0003-execution-model.md), [ADR-0014](../../../../../adr/ADR-0014-run-driven-adapter-model.md), [ADR-0015](../../../../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ADR-0047](../../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md), [ADR-0048](../../../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md), [ADR-0049](../../../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 
 ---
@@ -15,6 +15,11 @@
 
 Define the single active engine boundary for run execution, control, and
 canonical status reads.
+
+The wider API start-run orchestration boundary is documented separately in
+[StartRunBoundary.v1.md](./StartRunBoundary.v1.md). `IWorkflowEngine` remains
+the narrower verified-execution facade, not the planner-backed public command
+transport.
 
 ## Boundary rules
 
@@ -110,6 +115,7 @@ Optional provider-backed enrichment now lives behind
 - [IRunEnrichmentService.v1.md](./IRunEnrichmentService.v1.md)
 - [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md)
 - [GlossaryContract.v1.md](./GlossaryContract.v1.md)
+- [StartRunBoundary.v1.md](./StartRunBoundary.v1.md)
 - [StartRunProtocol.v1.md](./StartRunProtocol.v1.md)
 
 ## Change log

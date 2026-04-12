@@ -1,4 +1,4 @@
-import { parsePlanRef, type PlanRef } from '@dvt/contracts';
+import { parsePlanRef } from '@dvt/contracts';
 
 import type { StartRunPlanRef } from '../../application/ports/startRunCommandContract.js';
 
@@ -25,23 +25,20 @@ export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPla
   };
 
   try {
+    const parsedPlanRef = parsePlanRef(normalized);
     return {
       ok: true,
-      value: toRoutePlanRef(parsePlanRef(normalized)),
+      value: {
+        uri: parsedPlanRef.uri,
+        sha256: parsedPlanRef.sha256,
+        schemaVersion: parsedPlanRef.schemaVersion,
+        planId: parsedPlanRef.planId,
+        planVersion: parsedPlanRef.planVersion,
+        ...(parsedPlanRef.sizeBytes === undefined ? {} : { sizeBytes: parsedPlanRef.sizeBytes }),
+        ...(parsedPlanRef.expiresAt === undefined ? {} : { expiresAt: parsedPlanRef.expiresAt }),
+      },
     };
   } catch {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanRef, { target: 'planRef' });
   }
-}
-
-function toRoutePlanRef(
-  planRef: Pick<PlanRef, 'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion'>
-): StartRunPlanRef {
-  return {
-    uri: planRef.uri,
-    sha256: planRef.sha256,
-    schemaVersion: planRef.schemaVersion,
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
-  };
 }

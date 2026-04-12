@@ -1456,7 +1456,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: AR-A10
     priority: P1
-    status: queued
+    status: done
     objective: >-
       formalize the API-to-engine start-run boundary in `@dvt/contracts` so API command/result
       shapes cannot drift from engine expectations outside contract CI.
@@ -1466,13 +1466,15 @@ tasks:
       tests, and API composition uses the shared versions instead of app-local shadow types.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/evidence/ED-20260412-ar-a10-start-run-boundary-contract.md
+      - docs/risk-register/quality/R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml
     status_reason: >-
-      The review found an impedance mismatch between app-local API contracts and engine runtime
-      contract expectations.
-    last_verified: '2026-04-04'
+      Shared start-run command/result contracts now live in `@dvt/contracts` with schema fixtures,
+      contract tests, API re-export cutover, active contract docs, and ARC-2 evidence/risk updates.
+    last_verified: '2026-04-12'
   - task_id: AR-A11
     priority: P1
     status: queued

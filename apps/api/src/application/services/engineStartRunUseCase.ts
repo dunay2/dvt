@@ -8,7 +8,7 @@ import {
   type RunContext,
   type IWorkflowEngine,
 } from '@dvt/engine';
-import { asNonBlankString } from '@dvt/contracts';
+import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
@@ -158,12 +158,24 @@ function validateAndExtractPlanRef(
 }
 
 function toEnginePlanRef(planRef: StartRunPlanRef): PlanRef {
-  return {
+  const parsedPlanRef = parsePlanRef({
     uri: asNonBlankString(planRef.uri),
     sha256: asNonBlankString(planRef.sha256),
     schemaVersion: asNonBlankString(planRef.schemaVersion),
     planId: asNonBlankString(planRef.planId),
     planVersion: asNonBlankString(planRef.planVersion),
+    ...(planRef.sizeBytes === undefined ? {} : { sizeBytes: planRef.sizeBytes }),
+    ...(planRef.expiresAt === undefined ? {} : { expiresAt: planRef.expiresAt }),
+  });
+
+  return {
+    uri: parsedPlanRef.uri,
+    sha256: parsedPlanRef.sha256,
+    schemaVersion: parsedPlanRef.schemaVersion,
+    planId: parsedPlanRef.planId,
+    planVersion: parsedPlanRef.planVersion,
+    ...(parsedPlanRef.sizeBytes === undefined ? {} : { sizeBytes: parsedPlanRef.sizeBytes }),
+    ...(parsedPlanRef.expiresAt === undefined ? {} : { expiresAt: parsedPlanRef.expiresAt }),
   };
 }
 

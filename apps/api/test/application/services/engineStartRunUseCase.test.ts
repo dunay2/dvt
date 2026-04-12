@@ -5,7 +5,7 @@ import {
   RunAlreadyExistsError,
   UnsupportedPlanVersionError,
 } from '@dvt/engine';
-import { asNonBlankString } from '@dvt/contracts';
+import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';
@@ -18,13 +18,15 @@ import {
 import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 
-const PLAN_REF = {
+const PLAN_REF = parsePlanRef({
   uri: 'https://plans.example.com/my-plan.json',
   sha256: 'deadbeef',
   schemaVersion: '1.0.0',
   planId: 'plan-123',
   planVersion: '3.0',
-};
+  sizeBytes: 512,
+  expiresAt: '2026-04-13T10:00:00.000Z',
+});
 
 function mkContext(tenantId = 'tenant-1'): AuthorizedCommandExecutionContext {
   return {
@@ -132,7 +134,13 @@ describe('EngineStartRunUseCase', () => {
       pluginCompatibilityFingerprint: string;
       requiresCapabilities: string[];
     } = {
-      ...PLAN_REF,
+      uri: PLAN_REF.uri,
+      sha256: PLAN_REF.sha256,
+      schemaVersion: PLAN_REF.schemaVersion,
+      planId: PLAN_REF.planId,
+      planVersion: PLAN_REF.planVersion,
+      ...(PLAN_REF.sizeBytes !== undefined ? { sizeBytes: PLAN_REF.sizeBytes } : {}),
+      ...(PLAN_REF.expiresAt !== undefined ? { expiresAt: PLAN_REF.expiresAt } : {}),
       pluginCompatibilityFingerprint:
         '1111111111111111111111111111111111111111111111111111111111111111',
       requiresCapabilities: ['basic-execution'],

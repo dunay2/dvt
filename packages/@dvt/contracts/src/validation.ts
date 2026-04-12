@@ -42,6 +42,10 @@ import {
   PlanAdmissionLinkSchema,
   PlanExecutabilityRecordSchema,
   PlanRecordSchema,
+  StartRunCommandSchema,
+  type StartRunCommandSchemaT,
+  StartRunResultSchema,
+  type StartRunResultSchemaT,
   PlannerEnvironmentContextSchema,
   type PlannerEnvironmentContextSchemaT,
   PlannerObservabilitySchema,
@@ -181,6 +185,14 @@ function mapZodIssues(error: ZodError): ValidationIssue[] {
 
 export function parsePlanRef(input: unknown): PlanRefSchemaT {
   return parseWithSchema(PlanRefSchema, input);
+}
+
+export function parseStartRunCommand(input: unknown): StartRunCommandSchemaT {
+  return parseWithSchema(StartRunCommandSchema, input);
+}
+
+export function parseStartRunResult(input: unknown): StartRunResultSchemaT {
+  return parseWithSchema(StartRunResultSchema, input);
 }
 
 export function parseRunExecutionPolicy(input: unknown): RunExecutionPolicySchemaT {

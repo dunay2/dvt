@@ -21,6 +21,13 @@ import {
   RunExecutionContextSchema,
 } from './contracts/engine/RunExecutionContext.v1.js';
 import { RunExecutionPolicySchema } from './contracts/engine/RunExecutionPolicy.v1.js';
+import {
+  START_RUN_BACKPRESSURE_CODE,
+  START_RUN_DUPLICATE_OF,
+  START_RUN_TARGET_ADAPTER,
+  START_RUN_RESULT_KIND,
+  START_RUN_RATE_LIMIT_CODE,
+} from './contracts/engine/StartRunBoundary.v1.js';
 import type { ExecutionPlan, PlanCore } from './contracts/planner/ExecutionPlan.v1.js';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
@@ -45,6 +52,7 @@ import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 import { CompiledCodeRefSchema, StepArtifactRefSchema } from './step-registry/StepTypeRegistry.js';
+import type { PlanRef } from './types/contracts.js';
 import {
   isIsoUtcString,
   isNonBlankString,
@@ -105,15 +113,17 @@ export const StepIdSchema = NonBlankStringSchema.brand<'StepId'>();
 
 // ─── Core contract schemas ───────────────────────────────────────────────────
 
-export const PlanRefSchema = z.object({
-  uri: NonBlankStringSchema,
-  sha256: NonBlankStringSchema,
-  schemaVersion: NonBlankStringSchema,
-  planId: NonBlankStringSchema,
-  planVersion: NonBlankStringSchema,
-  sizeBytes: z.number().int().nonnegative().optional(),
-  expiresAt: IsoUtcStringSchema.optional(),
-});
+export const PlanRefSchema = z
+  .object({
+    uri: NonBlankStringSchema,
+    sha256: NonBlankStringSchema,
+    schemaVersion: NonBlankStringSchema,
+    planId: NonBlankStringSchema,
+    planVersion: NonBlankStringSchema,
+    sizeBytes: z.number().int().nonnegative().optional(),
+    expiresAt: IsoUtcStringSchema.optional(),
+  })
+  .strict() satisfies z.ZodType<PlanRef>;
 
 export const RunContextSchema = z
   .object({
@@ -646,6 +656,153 @@ export const PlannerObservabilitySchema = z
   })
   .catchall(z.unknown())
   .optional();
+
+export const StartRunTargetAdapterSchema = z.enum([
+  START_RUN_TARGET_ADAPTER.temporal,
+  START_RUN_TARGET_ADAPTER.mock,
+]);
+
+export const StartRunPlanRefSchema = PlanRefSchema;
+
+export const StartRunPlannerEnvironmentInputSchema = PlannerEnvironmentContextSchema;
+
+function addStartRunCommandIssue(
+  ctx: z.RefinementCtx,
+  path: (string | number)[],
+  message: string
+): void {
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path,
+    message,
+  });
+}
+
+export const StartRunCommandSchema = z
+  .object({
+    planRef: StartRunPlanRefSchema.optional(),
+    runExecutionContextRef: RunExecutionContextRefSchema.optional(),
+    graphSource: GenericGraphSourceV1Schema.optional(),
+    policies: PlannerPolicyClassSetSchema.optional(),
+    environment: StartRunPlannerEnvironmentInputSchema.optional(),
+    observability: PlannerObservabilitySchema,
+    runId: NonBlankStringSchema,
+    targetAdapter: StartRunTargetAdapterSchema,
+    selection: z.array(NonBlankStringSchema),
+  })
+  .strict()
+  .superRefine((command, ctx) => {
+    const hasPlanRef = command.planRef !== undefined;
+    const hasGraphSource = command.graphSource !== undefined;
+
+    if (hasPlanRef) {
+      if (hasGraphSource) {
+        addStartRunCommandIssue(
+          ctx,
+          ['graphSource'],
+          'planRef startRun commands cannot include graphSource.'
+        );
+      }
+      if (command.policies !== undefined) {
+        addStartRunCommandIssue(
+          ctx,
+          ['policies'],
+          'planRef startRun commands cannot include planner policies.'
+        );
+      }
+      if (command.environment !== undefined) {
+        addStartRunCommandIssue(
+          ctx,
+          ['environment'],
+          'planRef startRun commands cannot include planner environment.'
+        );
+      }
+      if (command.observability !== undefined) {
+        addStartRunCommandIssue(
+          ctx,
+          ['observability'],
+          'planRef startRun commands cannot include planner observability.'
+        );
+      }
+      return;
+    }
+
+    if (!hasGraphSource) {
+      addStartRunCommandIssue(
+        ctx,
+        ['graphSource'],
+        'startRun commands require either planRef or graphSource.'
+      );
+    }
+  });
+
+const StartRunAcceptedResultSchema = z
+  .object({
+    kind: z.literal(START_RUN_RESULT_KIND.accepted),
+    runId: NonBlankStringSchema,
+    accepted: z.literal(true),
+  })
+  .strict();
+
+const StartRunDuplicateResultSchema = z
+  .object({
+    kind: z.literal(START_RUN_RESULT_KIND.duplicate),
+    runId: NonBlankStringSchema,
+    accepted: z.literal(true),
+    duplicateOf: z.enum([START_RUN_DUPLICATE_OF.run, START_RUN_DUPLICATE_OF.intent]),
+  })
+  .strict();
+
+const StartRunTenantBackpressureResultSchema = z
+  .object({
+    kind: z.literal(START_RUN_RESULT_KIND.tenantBackpressure),
+    accepted: z.literal(false),
+    code: z.literal(START_RUN_BACKPRESSURE_CODE.tenant),
+    retryAfterSeconds: z.number().int().positive(),
+  })
+  .strict();
+
+const StartRunSystemBackpressureResultSchema = z
+  .object({
+    kind: z.literal(START_RUN_RESULT_KIND.systemBackpressure),
+    accepted: z.literal(false),
+    code: z.enum([
+      START_RUN_BACKPRESSURE_CODE.system,
+      START_RUN_BACKPRESSURE_CODE.snapshotUnavailable,
+    ]),
+    retryAfterSeconds: z.number().int().positive(),
+  })
+  .strict();
+
+const StartRunRateLimitedResultSchema = z
+  .object({
+    kind: z.literal(START_RUN_RESULT_KIND.rateLimited),
+    accepted: z.literal(false),
+    code: z.literal(START_RUN_RATE_LIMIT_CODE.outboxExceeded),
+    retryAfterSeconds: z.number().int().positive().optional(),
+  })
+  .strict();
+
+const StartRunPlanRejectedResultSchema = z
+  .object({
+    kind: z.literal(START_RUN_RESULT_KIND.planRejected),
+    accepted: z.literal(false),
+    code: z.enum(EXECUTABILITY_REJECTION_CODES),
+    reason: NonBlankStringSchema,
+    cause: NonBlankStringSchema.optional(),
+    supportedVersions: z.array(NonBlankStringSchema).optional(),
+  })
+  .strict();
+
+export const StartRunResultSchema = z.discriminatedUnion('kind', [
+  StartRunAcceptedResultSchema,
+  StartRunDuplicateResultSchema,
+  StartRunTenantBackpressureResultSchema,
+  StartRunSystemBackpressureResultSchema,
+  StartRunRateLimitedResultSchema,
+  StartRunPlanRejectedResultSchema,
+]);
+
 const CurrentPlanCoreSchema = z
   .object({
     metadata: z
@@ -913,7 +1070,14 @@ export const PlanAdmissionLinkSchema: z.ZodType<PlanAdmissionLink> = z
 
 // ─── Inferred types from schemas (B1) ────────────────────────────────────────
 
-export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
+export type PlanRefSchemaT = PlanRef;
+export type StartRunTargetAdapterSchemaT = z.infer<typeof StartRunTargetAdapterSchema>;
+export type StartRunPlanRefSchemaT = z.infer<typeof StartRunPlanRefSchema>;
+export type StartRunPlannerEnvironmentInputSchemaT = z.infer<
+  typeof StartRunPlannerEnvironmentInputSchema
+>;
+export type StartRunCommandSchemaT = z.infer<typeof StartRunCommandSchema>;
+export type StartRunResultSchemaT = z.infer<typeof StartRunResultSchema>;
 export type RunExecutionPolicySchemaT = z.infer<typeof RunExecutionPolicySchema>;
 export type RunExecutionContextRefSchemaT = z.infer<typeof RunExecutionContextRefSchema>;
 export type RunExecutionContextSchemaT = z.infer<typeof RunExecutionContextSchema>;

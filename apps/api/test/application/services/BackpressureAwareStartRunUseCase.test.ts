@@ -3,19 +3,20 @@ import {
   SystemBackpressureError,
   TenantBackpressureError,
 } from '@dvt/delivery';
+import { parsePlanRef } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BackpressureAwareStartRunUseCase } from '../../../src/application/services/BackpressureAwareStartRunUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 const COMMAND = {
-  planRef: {
+  planRef: parsePlanRef({
     uri: 'https://plans.example.com/plan.json',
     sha256: 'deadbeef',
     schemaVersion: '1.0.0',
     planId: 'plan-1',
     planVersion: '2.0',
-  },
+  }),
   runId: 'run-1',
   targetAdapter: 'mock' as const,
   selection: ['step_a'],

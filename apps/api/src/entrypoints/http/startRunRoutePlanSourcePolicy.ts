@@ -11,14 +11,15 @@ export function evaluateStartRunPlanSource(
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
-  const plannerSourceCount = countPlannerSources(record);
   const hasPlanRef = record.planRef !== undefined;
+  const hasGraphSource = record.graphSource !== undefined;
+  const hasPlannerBackedFields = hasGraphSource || hasPlannerBackedMetadata(record);
 
-  if (hasPlanRef && plannerSourceCount > 0) {
+  if (hasPlanRef && hasPlannerBackedFields) {
     return badRequestResult(HTTP_ERROR_REASON.conflictingPlanInputs);
   }
 
-  if (!hasPlanRef && plannerSourceCount !== 1) {
+  if (!hasPlanRef && !hasGraphSource) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
@@ -27,8 +28,8 @@ export function evaluateStartRunPlanSource(
     : { ok: true, value: { kind: 'plannerBacked' } };
 }
 
-function countPlannerSources(record: Record<string, unknown>): number {
-  return ['graphSource'].filter((key) => record[key] !== undefined).length;
+function hasPlannerBackedMetadata(record: Record<string, unknown>): boolean {
+  return ['policies', 'environment', 'observability'].some((key) => record[key] !== undefined);
 }
 
 function hasForbiddenPlannerSource(record: Record<string, unknown>): boolean {

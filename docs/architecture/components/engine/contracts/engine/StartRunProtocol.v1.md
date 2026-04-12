@@ -21,6 +21,12 @@ repository.
 
 It does not introduce a new execution path.
 
+The shared API orchestration boundary that feeds this protocol is now governed
+separately in [StartRunBoundary.v1.md](./StartRunBoundary.v1.md). This document
+starts at the narrower engine-facing `IWorkflowEngine.startRun(planRef,
+context)` handoff after API orchestration has already classified planner-backed
+or persisted-plan ingress.
+
 Its job is to make the existing protocol reviewable without forcing readers to
 reconstruct it from `WorkflowEngine`, `StartRunApplicationService`,
 `StartRunAdmissionGuard`, `StartRunExecutionService`, and

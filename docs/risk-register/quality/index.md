@@ -17,6 +17,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Adapter-postgres integration tests can drift from artifact fetch and lineage validation contracts](R-20260408-PR807-ADAPTER-POSTGRES-TEST-CONTRACT-DRIFT.yaml)
 - [Adapter-postgres integration tests can drift from deterministic manifest node ordering rules](R-20260408-PR850-ADAPTER-POSTGRES-TEST-ORDER-DRIFT.yaml)
 - [Admission telemetry contract drift and partial shutdown leaks](R-20260401-ADMISSION-TELEMETRY-TEARDOWN-RESILIENCE.yaml)
+- [API start-run transport could drift back into app-local shadow contracts](R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml)
 - [AR-C2 can be overstated as complete without dashboard and alert evidence](R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP.yaml)
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)

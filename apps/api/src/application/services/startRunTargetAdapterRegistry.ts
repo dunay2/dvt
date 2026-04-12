@@ -1,18 +1,13 @@
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import {
-  START_RUN_TARGET_ADAPTER,
+  SUPPORTED_START_RUN_TARGET_ADAPTERS,
   type StartRunTargetAdapter,
 } from '../ports/startRunCommandContract.js';
-
-const START_RUN_TARGET_ADAPTER_VALUES: readonly StartRunTargetAdapter[] = [
-  START_RUN_TARGET_ADAPTER.temporal,
-  START_RUN_TARGET_ADAPTER.mock,
-] as const;
 
 export function createStartRunTargetAdapterRegistryFromValues(
   values: Iterable<string>
 ): IStartRunTargetAdapterRegistry {
-  const allowedSet = new Set(START_RUN_TARGET_ADAPTER_VALUES);
+  const allowedSet = new Set(SUPPORTED_START_RUN_TARGET_ADAPTERS);
   const supported = [...new Set(values)].filter((value): value is StartRunTargetAdapter =>
     allowedSet.has(value as StartRunTargetAdapter)
   );
@@ -29,4 +24,4 @@ export function createStartRunTargetAdapterRegistryFromValues(
 }
 
 export const DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY: IStartRunTargetAdapterRegistry =
-  createStartRunTargetAdapterRegistryFromValues(START_RUN_TARGET_ADAPTER_VALUES);
+  createStartRunTargetAdapterRegistryFromValues(SUPPORTED_START_RUN_TARGET_ADAPTERS);

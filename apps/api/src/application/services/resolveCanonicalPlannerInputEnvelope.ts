@@ -10,12 +10,12 @@ import type { StartRunPlannerEnvironmentInput } from '../ports/startRunCommandCo
 export interface CanonicalPlannerInputEnvelopeInput {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerInputEnvelopeV1['selection'];
-  readonly policies?: PlannerPolicyClassSet;
-  readonly environment?: StartRunPlannerEnvironmentInput;
-  readonly observability?: ExecutionPlan['observability'];
-  readonly requestedBy?: string;
-  readonly requestId?: string;
-  readonly requestedAtIso?: string;
+  readonly policies?: PlannerPolicyClassSet | undefined;
+  readonly environment?: StartRunPlannerEnvironmentInput | undefined;
+  readonly observability?: ExecutionPlan['observability'] | undefined;
+  readonly requestedBy?: string | undefined;
+  readonly requestId?: string | undefined;
+  readonly requestedAtIso?: string | undefined;
 }
 
 export function resolveCanonicalPlannerInputEnvelope(
