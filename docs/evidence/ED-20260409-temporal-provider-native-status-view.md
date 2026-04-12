@@ -26,24 +26,26 @@ evidence:
 an adapter-local workflow-state mapper. This returned DVT lifecycle concepts
 (`PAUSED`, `CANCELLING`) as if they were Temporal-native runtime statuses.
 
-After this change, the method calls `handle.describe()` — the same Temporal SDK
-primitive already used by `lookupRunRef` — and extracts the Temporal-native
+After this change, the method calls `handle.describe()` - the same Temporal SDK
+primitive already used by `lookupRunRef` - and extracts the Temporal-native
 execution status (`status.name`). The result is mapped through the existing
-`toProviderRunStatusView` function which already accepted
-`TemporalRuntimeStatus`.
+`toProviderRunStatusView` function as a provider-diagnostic string.
 
 ## What changed
 
-1. **WorkflowMapper.ts** — Added `CONTINUED_AS_NEW` to `TemporalRuntimeStatus`.
-   Added `extractRuntimeStatusFromDescribe()` to safely extract and validate
-   the runtime status from the untyped `describe()` result.
-2. **TemporalAdapter.ts** — `getProviderStatusView()` now uses
+1. **WorkflowMapper.ts** - Added `CONTINUED_AS_NEW` to `TemporalRuntimeStatus`.
+   Added `extractRuntimeStatusFromDescribe()` to safely extract the runtime
+   status token from the untyped `describe()` result. Missing `status.name`
+   still fails closed; unknown future Temporal tokens are preserved as
+   provider diagnostics instead of throwing.
+2. **TemporalAdapter.ts** - `getProviderStatusView()` now uses
    `handle.describe()` + `extractRuntimeStatusFromDescribe()` +
    `toProviderRunStatusView()` instead of `workflow.query('status')` +
    the old workflow-state mapper.
-3. **Tests** — Updated to verify `describe()` is called, Temporal-native
-   statuses are returned, and missing/unknown statuses are rejected.
-4. **Public surface** — Removed the old workflow-state mapper from the adapter
+3. **Tests** - Updated to verify `describe()` is called, Temporal-native
+   statuses are returned, missing status shape is rejected, and unknown
+   provider tokens survive as diagnostics.
+4. **Public surface** - Removed the old workflow-state mapper from the adapter
    barrel so the published API no longer offers a second DVT-owned
    pseudo-provider status path.
 

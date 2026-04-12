@@ -149,13 +149,14 @@ describe('adapter-temporal foundation', () => {
     );
   });
 
-  it('throws for missing or unknown status in describe result', () => {
+  it('throws for missing status in describe result and preserves unknown provider tokens', () => {
     expect(() => extractRuntimeStatusFromDescribe({})).toThrow('TEMPORAL_DESCRIBE_MISSING_STATUS');
     expect(() => extractRuntimeStatusFromDescribe(null)).toThrow(
       'TEMPORAL_DESCRIBE_MISSING_STATUS'
     );
-    expect(() => extractRuntimeStatusFromDescribe({ status: { name: 'UNKNOWN' } })).toThrow(
-      'TEMPORAL_STATUS_UNKNOWN'
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'UNKNOWN' } })).toBe('UNKNOWN');
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'PAUSE_REQUESTED' } })).toBe(
+      'PAUSE_REQUESTED'
     );
   });
 

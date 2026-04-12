@@ -43,6 +43,9 @@ Primary implementation references:
   snapshot read path governed outside the adapter boundary.
 - Provider status should therefore be treated as live runtime enrichment, not
   as the authoritative state-store replacement.
+- Missing `describe().status.name` still fails closed as an invalid provider
+  response shape, but unknown future Temporal status tokens are preserved as
+  provider diagnostics instead of breaking enriched reads.
 - In native-cancel cleanup races, `describe()` may still report `RUNNING` while
   workflow-local terminal cancellation events are being persisted, and may
   later settle on `COMPLETED` because the Temporal workflow returns normally

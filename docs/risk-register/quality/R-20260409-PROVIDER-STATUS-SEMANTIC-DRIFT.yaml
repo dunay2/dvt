@@ -22,5 +22,7 @@ mitigations:
   - 'RunStatusEnrichment returns both canonical and providerView, so callers can use the canonical
     plane for DVT lifecycle state.'
   - 'Integration tests updated to expect Temporal-native statuses only.'
+  - 'Unknown future Temporal describe() status tokens now pass through as provider diagnostics
+    instead of failing enriched reads closed.'
 review_after: 2026-04-16
 ---

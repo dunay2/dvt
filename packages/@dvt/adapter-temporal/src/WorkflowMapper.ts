@@ -75,7 +75,7 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
 }
 
 export function toProviderRunStatusView(args: {
-  runtimeStatus: TemporalRuntimeStatus;
+  runtimeStatus: string;
   message?: string;
 }): ProviderRunStatusView {
   return {
@@ -85,32 +85,22 @@ export function toProviderRunStatusView(args: {
   };
 }
 
-const KNOWN_TEMPORAL_STATUSES: ReadonlySet<string> = new Set<TemporalRuntimeStatus>([
-  'RUNNING',
-  'PAUSED',
-  'COMPLETED',
-  'FAILED',
-  'CANCELLED',
-  'TERMINATED',
-  'TIMED_OUT',
-  'CONTINUED_AS_NEW',
-]);
-
 /**
  * Extracts the Temporal-native runtime status from a `handle.describe()` result.
  *
  * The Temporal SDK returns `{ status: { name: string } }` from
  * `WorkflowHandle.describe()`. This function validates the shape and maps it
- * to the adapter's `TemporalRuntimeStatus` union.
+ * to the adapter's provider-diagnostic status token.
+ *
+ * Known Temporal statuses remain covered by `TemporalRuntimeStatus` for
+ * canonical mapping code paths. Unknown future provider tokens are preserved
+ * verbatim here so enrichment stays diagnostic instead of failing closed.
  */
-export function extractRuntimeStatusFromDescribe(describeResult: unknown): TemporalRuntimeStatus {
+export function extractRuntimeStatusFromDescribe(describeResult: unknown): string {
   const result = describeResult as { status?: { name?: string } } | null | undefined;
   const statusName = result?.status?.name;
-  if (!statusName) {
+  if (typeof statusName !== 'string' || !statusName.trim()) {
     throw new Error('TEMPORAL_DESCRIBE_MISSING_STATUS: describe() result has no status.name');
   }
-  if (!KNOWN_TEMPORAL_STATUSES.has(statusName)) {
-    throw new Error(`TEMPORAL_STATUS_UNKNOWN: ${statusName}`);
-  }
-  return statusName as TemporalRuntimeStatus;
+  return statusName;
 }

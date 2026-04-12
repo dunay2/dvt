@@ -386,6 +386,27 @@ describe('TemporalAdapter.lookupRunRef', () => {
     });
   });
 
+  it('preserves unknown Temporal describe statuses as provider diagnostics', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'PAUSE_REQUESTED', code: 17 },
+    }));
+    const { adapter } = makeAdapter(() => handle);
+
+    const status = await adapter.getProviderStatusView({
+      provider: 'temporal',
+      tenantId: 'tenant1',
+      namespace: 'dvt-test',
+      workflowId: 'run-abc',
+      runId: 'run-abc',
+      taskQueue: 'q-main-tenant1',
+    });
+
+    expect(status).toEqual({
+      provider: 'temporal',
+      providerStatus: 'PAUSE_REQUESTED',
+    });
+  });
+
   it('throws when describe() returns no status', async () => {
     const handle = makeWorkflowHandleMock(async () => ({}));
     const { adapter } = makeAdapter(() => handle);
