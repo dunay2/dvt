@@ -229,6 +229,11 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     return null;
   }
 
+  const currentStepId = asString(candidate.currentStepId);
+  const failedStepId = asString(candidate.failedStepId);
+  const errorReason = asString(candidate.errorReason);
+  const materialization = parseMaterializationEvidence(candidate.materialization);
+
   return {
     runId,
     planId: asString(candidate.planId),
@@ -249,6 +254,10 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
       | 'STALE'
       | 'UNKNOWN'
       | undefined,
+    ...(currentStepId ? { currentStepId } : {}),
+    ...(failedStepId ? { failedStepId } : {}),
+    ...(errorReason ? { errorReason } : {}),
+    ...(materialization ? { materialization } : {}),
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
   };
