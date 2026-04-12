@@ -20,6 +20,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts`
+- `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/StartRunIntentPolicy.v1.ts`
 
 ## Reference Documentation

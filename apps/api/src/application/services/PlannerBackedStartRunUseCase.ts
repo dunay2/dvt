@@ -100,6 +100,8 @@ function toRoutePlanRef(
     schemaVersion: planRef.schemaVersion,
     planId: planRef.planId,
     planVersion: planRef.planVersion,
+    ...(planRef.sizeBytes === undefined ? {} : { sizeBytes: planRef.sizeBytes }),
+    ...(planRef.expiresAt === undefined ? {} : { expiresAt: planRef.expiresAt }),
   };
 }
 

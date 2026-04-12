@@ -121,8 +121,8 @@ export interface PlanRef {
   schemaVersion: NonBlankString;
   planId: NonBlankString;
   planVersion: NonBlankString;
-  sizeBytes?: number;
-  expiresAt?: IsoUtcString;
+  sizeBytes?: number | undefined;
+  expiresAt?: IsoUtcString | undefined;
 }
 
 export interface RunExecutionPolicy {

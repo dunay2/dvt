@@ -1,0 +1,33 @@
+---
+id: R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT
+title: API start-run transport could drift back into app-local shadow contracts
+status: Closed
+date: 2026-04-12
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  The principal architecture review identified that `apps/api` owned local `StartRunCommand` and
+  `StartRunResult` contracts instead of consuming a versioned shared boundary from `@dvt/contracts`.
+  That left the API-to-engine orchestration boundary outside contract CI and made drift possible
+  between route parsing, planner-backed orchestration, and engine expectations.
+risk: >
+  If the start-run command/result transport returned to app-local ownership, the API could evolve
+  request or result shapes independently of the shared contract package. That would recreate the
+  impedance mismatch between API orchestration and engine/runtime boundaries and weaken contract CI
+  as the repository source of truth.
+mitigations:
+  - 'StartRunCommand and StartRunResult now live in
+    packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts.'
+  - 'Shared schemas and parse helpers now define the canonical reusable validation line for the
+    start-run boundary, while API runtime parsing remains route-local and aligned.'
+  - 'packages/@dvt/contracts test now includes shared fixtures and contract tests for both start-run
+    command branches and all result kinds.'
+  - 'apps/api startRunCommandContract.ts and startRunResultContract.ts are now thin re-exports
+    instead of semantic owners.'
+  - 'Active engine and API contract docs now route readers to the shared start-run boundary as the
+    canonical source.'
+review_after: 2026-06-30
+---

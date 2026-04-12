@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-12
 ---
 
 # API Current To Target Architecture
@@ -111,6 +111,8 @@ flowchart TB
 - **Application command path**
   Start-run still drives authorization, duplicate probing, admission, optional
   planner execution, plan validation, and engine dispatch.
+  The API-to-engine `StartRunCommand` / `StartRunResult` boundary now lives in
+  `@dvt/contracts` rather than app-local shadow types.
   `/runs/:runId/cancel` dispatches `engine.cancelRun(...)` and rejects
   non-empty `reason` payloads.
   `/runs/:runId/signal` remains the cooperative path, including

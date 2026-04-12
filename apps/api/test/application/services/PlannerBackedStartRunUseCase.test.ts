@@ -1,4 +1,4 @@
-import type { PlannerBuildResultV1 } from '@dvt/contracts';
+import { parsePlanRef, type PlannerBuildResultV1 } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -39,13 +39,13 @@ const PLANNER_COMMAND = {
   selection: ['model.orders'],
 };
 
-const STORED_PLAN_REF = {
+const STORED_PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://postgres/plan-1',
   sha256: 'abc123',
   schemaVersion: 'v1.2',
   planId: 'plan-1',
   planVersion: '1.0',
-};
+});
 
 describe('PlannerBackedStartRunUseCase', () => {
   it('keeps policy-first precedence through planner-backed flow', async () => {
