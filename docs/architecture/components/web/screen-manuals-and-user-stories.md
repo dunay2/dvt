@@ -123,7 +123,8 @@ flowchart LR
   state resolves.
 - Error: keep shell and route context visible, with safe canvas state and retry
   if meaningful.
-- Read-only: overlays and inspection remain available while mutation is gated.
+- Read-only: overlays and inspection remain available while mutation is gated by
+  an explicit route-local banner.
 
 ### Hardening direction
 

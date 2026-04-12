@@ -24,6 +24,8 @@ function HookHost({
   canonicalEdges,
   selectedNodeIds = [],
   workspaceNodeIds = canonicalNodes.map((node) => node.id),
+  canPlan = true,
+  canRun = true,
 }: Readonly<{
   plansService: IPlansPort;
   runsService: IRunsPort;
@@ -35,6 +37,8 @@ function HookHost({
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
+  canPlan?: boolean;
+  canRun?: boolean;
 }>): React.JSX.Element {
   const hook = useCanvasExecutionActions({
     plansService,
@@ -43,8 +47,8 @@ function HookHost({
     canonicalEdges,
     selectedNodeIds,
     workspaceNodeIds,
-    canPlan: true,
-    canRun: true,
+    canPlan,
+    canRun,
     sessionContext,
     shellFeedback,
     consolePanelVisible: false,
@@ -100,18 +104,14 @@ function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
   };
 }
 
-function createPlansServiceMock(
-  plan: typeof mockExecutionPlan = mockExecutionPlan
-): IPlansPort {
+function createPlansServiceMock(plan: typeof mockExecutionPlan = mockExecutionPlan): IPlansPort {
   return {
     previewPlan: vi.fn(async () => plan),
     importPlan: vi.fn(async () => plan),
   };
 }
 
-function createRunsServiceMock(
-  overrides: Partial<IRunsPort> = {}
-): IRunsPort {
+function createRunsServiceMock(overrides: Partial<IRunsPort> = {}): IRunsPort {
   return {
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
@@ -138,6 +138,8 @@ function StatefulHookHost({
   canonicalEdges,
   selectedNodeIds = [],
   workspaceNodeIds = canonicalNodes.map((node) => node.id),
+  canPlan = true,
+  canRun = true,
 }: Readonly<{
   plansService: IPlansPort;
   runsService: IRunsPort;
@@ -149,6 +151,8 @@ function StatefulHookHost({
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
+  canPlan?: boolean;
+  canRun?: boolean;
 }>): React.JSX.Element {
   const [currentPlan, setCurrentPlan] = React.useState<typeof mockExecutionPlan | null>(
     initialPlan
@@ -160,8 +164,8 @@ function StatefulHookHost({
     canonicalEdges,
     selectedNodeIds,
     workspaceNodeIds,
-    canPlan: true,
-    canRun: true,
+    canPlan,
+    canRun,
     sessionContext,
     shellFeedback,
     consolePanelVisible: false,
@@ -369,6 +373,47 @@ describe('resolvePlanRefForStartRun', () => {
     expect(shellFeedback.error).toHaveBeenCalledWith(
       'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.'
     );
+  });
+
+  it('keeps startRun unavailable when route permissions block run execution', async () => {
+    const runsService = createRunsServiceMock();
+    const plansService = createPlansServiceMock();
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={{
+            ...mockExecutionPlan,
+            planRef: {
+              ...mockExecutionPlan.planRef!,
+              sha256: nb('c'.repeat(64)),
+            },
+          }}
+          canRun={false}
+          onRunStarted={vi.fn()}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={canonicalNodes}
+          canonicalEdges={canonicalEdges}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
+    expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
+      'Run start is unavailable in this context.'
+    );
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[1]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(runsService.startRun).not.toHaveBeenCalled();
+    expect(shellFeedback.error).toHaveBeenCalledWith('You do not have permission to start runs');
   });
 
   it('blocks startRun when persisted proof hash does not match planRef hash', async () => {

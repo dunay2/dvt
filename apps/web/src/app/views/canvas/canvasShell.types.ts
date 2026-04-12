@@ -51,4 +51,6 @@ export type CanvasShellProps = {
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   transformationValidation: TransformationGraphValidationResult;
+  centerSurface?: React.ReactNode;
+  readOnlyBanner?: React.ReactNode;
 };

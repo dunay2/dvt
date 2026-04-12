@@ -13,6 +13,9 @@ type CanvasToolbarProps = {
   readonly onToggleColumns: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
+  readonly canPlan: boolean;
+  readonly canRun: boolean;
+  readonly canEditEdges: boolean;
   readonly canStartRun: boolean;
   readonly planStatusSummary: string;
   readonly canvasAuthoringMode: 'transformation' | 'dbt';
@@ -33,6 +36,9 @@ export default function CanvasToolbar({
   onToggleColumns,
   onPlan,
   onRun,
+  canPlan,
+  canRun,
+  canEditEdges,
   canStartRun,
   planStatusSummary,
   canvasAuthoringMode,
@@ -62,6 +68,7 @@ export default function CanvasToolbar({
           variant="outline"
           size="sm"
           onClick={onOpenDataRegistry}
+          disabled={!canEditEdges}
           className="h-8 gap-1.5 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
         >
           <Upload className="size-3.5" />
@@ -73,6 +80,7 @@ export default function CanvasToolbar({
           variant="ghost"
           size="sm"
           onClick={onAutoLayout}
+          disabled={!canEditEdges}
           className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
         >
           <LayoutGrid className="size-4" />
@@ -150,7 +158,7 @@ export default function CanvasToolbar({
           variant="outline"
           size="sm"
           onClick={onPlan}
-          disabled={!canPlanTransformation}
+          disabled={!canPlan || !canPlanTransformation}
           className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
         >
           <FileCheck className="mr-1.5 size-4" />
@@ -161,7 +169,7 @@ export default function CanvasToolbar({
           variant="default"
           size="sm"
           onClick={onRun}
-          disabled={!canStartRun}
+          disabled={!canRun || !canStartRun}
           className="h-8 px-3 text-xs"
         >
           <Play className="mr-1.5 size-4" />

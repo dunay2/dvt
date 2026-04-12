@@ -52,6 +52,8 @@ export default function CanvasShell({
   impactOverlayEnabled,
   columnLevelLineageEnabled,
   transformationValidation,
+  centerSurface,
+  readOnlyBanner,
 }: CanvasShellProps) {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
 
@@ -62,8 +64,11 @@ export default function CanvasShell({
           <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
             <DbtExplorer
               nodes={explorerNodes}
+              canEditGraph={userPermissions.canEditEdges}
               onHide={onHideExplorer}
-              onOpenDataRegistry={() => setDataRegistryOpen(true)}
+              onOpenDataRegistry={
+                userPermissions.canEditEdges ? () => setDataRegistryOpen(true) : undefined
+              }
             />
           </ResizablePanel>
           <ResizableHandle />
@@ -90,6 +95,9 @@ export default function CanvasShell({
             onToggleColumns={onToggleColumns}
             onPlan={onPlan}
             onRun={onRun}
+            canPlan={userPermissions.canPlan}
+            canRun={userPermissions.canRun}
+            canEditEdges={userPermissions.canEditEdges}
             canStartRun={canStartRun}
             planStatusSummary={planStatusSummary}
             canvasAuthoringMode={canvasAuthoringMode}
@@ -101,27 +109,31 @@ export default function CanvasShell({
             nodeCount={nodesWithImpact.length}
             edgeCount={edges.length}
           />
-          <CanvasViewport
-            focusMode={focusMode}
-            explorerPanelVisible={explorerPanelVisible}
-            inspectorPanelVisible={inspectorPanelVisible}
-            nodesWithImpact={nodesWithImpact}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            gridSize={gridSize}
-            viewport={viewport}
-            onNodesChange={onNodesChange}
-            onNodeDragStop={onNodeDragStop}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onSelectionChange={onSelectionChange}
-            onViewportChange={onViewportChange}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onShowExplorer={onShowExplorer}
-            onShowInspector={onShowInspector}
-          />
+          {readOnlyBanner ? <div className="shrink-0">{readOnlyBanner}</div> : null}
+          {centerSurface ?? (
+            <CanvasViewport
+              focusMode={focusMode}
+              explorerPanelVisible={explorerPanelVisible}
+              inspectorPanelVisible={inspectorPanelVisible}
+              canEditEdges={userPermissions.canEditEdges}
+              nodesWithImpact={nodesWithImpact}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              gridSize={gridSize}
+              viewport={viewport}
+              onNodesChange={onNodesChange}
+              onNodeDragStop={onNodeDragStop}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onSelectionChange={onSelectionChange}
+              onViewportChange={onViewportChange}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onShowExplorer={onShowExplorer}
+              onShowInspector={onShowInspector}
+            />
+          )}
         </div>
       </ResizablePanel>
 

@@ -73,6 +73,7 @@ export function useCanvasController() {
     nodes: graphModel.nodes,
     selectedNodeIds: store.selectedNodeIds,
     inspectorNodeId: store.inspectorNodeId,
+    canEditEdges: store.userPermissions.canEditEdges,
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -128,7 +129,9 @@ export function useCanvasController() {
         columnLevelLineageEnabled: store.columnLevelLineageEnabled,
         handlers: {
           onInspectNode: graphHandlers.handleInspectNode,
-          onRemoveNode: graphHandlers.handleRemoveNode,
+          onRemoveNode: store.userPermissions.canEditEdges
+            ? graphHandlers.handleRemoveNode
+            : undefined,
           onToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
         },
       }).map((node) => ({
@@ -148,6 +151,7 @@ export function useCanvasController() {
       graphModel.edges,
       graphModel.nodes,
       store.impactOverlayEnabled,
+      store.userPermissions.canEditEdges,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,
@@ -156,6 +160,11 @@ export function useCanvasController() {
   );
 
   return {
+    isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
+    graphErrorMessage:
+      graphModel.graphSnapshotQuery.error instanceof Error
+        ? graphModel.graphSnapshotQuery.error.message
+        : null,
     focusMode: store.focusMode,
     explorerPanelVisible: store.explorerPanelVisible,
     inspectorPanelVisible: store.inspectorPanelVisible,

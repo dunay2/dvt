@@ -110,12 +110,14 @@ export function useCanvasExecutionActions({
     lastPlannedDraftSignature != null &&
     lastPlannedDraftSignature !== transformationValidation.draftSignature;
   const canStartRun =
+    canRun &&
     currentPlan != null &&
     hasPersistedPlanForRun &&
     transformationValidation.valid &&
     !isCurrentPlanStale;
-  const planStatusSummary =
-    currentPlan == null
+  const planStatusSummary = !canRun
+    ? 'Run start is unavailable in this context.'
+    : currentPlan == null
       ? 'Preview required before running.'
       : isCurrentPlanStale
         ? 'Preview is stale. Re-run Plan before starting.'
