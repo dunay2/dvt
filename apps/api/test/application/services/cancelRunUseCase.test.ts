@@ -1,3 +1,4 @@
+import { RunMetadataNotFoundError } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
@@ -25,27 +26,77 @@ const commandContext: AuthorizedCommandExecutionContext = {
 };
 
 describe('CancelRunUseCase', () => {
-  it('delegates cancel commands to the signal run use-case', async () => {
-    const signalRunUseCase = {
-      execute: vi.fn().mockResolvedValue({
-        runId: 'run-1',
-        signalType: 'CANCEL',
-        accepted: true,
-      }),
+  it('maps cancel commands to engine.cancelRun', async () => {
+    const engine = {
+      cancelRun: vi.fn().mockResolvedValue(undefined),
+    };
+    const stateStore = {
+      async getRunMetadataByRunId() {
+        return {
+          tenantId: 'tenant-a',
+          projectId: 'proj-1',
+          environmentId: 'env-1',
+          runId: 'run-1',
+          planId: 'plan-1',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          providerRef: {
+            provider: 'mock' as const,
+            tenantId: 'tenant-a',
+            workflowId: 'wf-1',
+            runId: 'provider-run-1',
+          },
+        };
+      },
     };
 
-    const useCase = new CancelRunUseCase(signalRunUseCase as never);
-    const command = {
-      runId: 'run-1',
-      signalType: 'CANCEL' as const,
-      reason: 'operator-request',
-    };
+    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
 
-    await expect(useCase.execute(command, commandContext)).resolves.toEqual({
+    await expect(
+      useCase.execute(
+        {
+          runId: 'run-1',
+          signalType: 'CANCEL',
+          reason: 'operator-request',
+        },
+        commandContext
+      )
+    ).resolves.toEqual({
       runId: 'run-1',
       signalType: 'CANCEL',
       accepted: true,
     });
-    expect(signalRunUseCase.execute).toHaveBeenCalledWith(command, commandContext);
+
+    expect(engine.cancelRun).toHaveBeenCalledWith({
+      provider: 'mock',
+      tenantId: 'tenant-a',
+      workflowId: 'wf-1',
+      runId: 'provider-run-1',
+    });
+  });
+
+  it('throws when the run metadata is missing', async () => {
+    const engine = {
+      cancelRun: vi.fn().mockResolvedValue(undefined),
+    };
+    const stateStore = {
+      async getRunMetadataByRunId() {
+        return null;
+      },
+    };
+
+    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+
+    await expect(
+      useCase.execute(
+        {
+          runId: 'missing-run',
+          signalType: 'CANCEL',
+        },
+        commandContext
+      )
+    ).rejects.toBeInstanceOf(RunMetadataNotFoundError);
+
+    expect(engine.cancelRun).not.toHaveBeenCalled();
   });
 });

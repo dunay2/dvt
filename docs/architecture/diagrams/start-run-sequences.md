@@ -174,8 +174,11 @@ event log.
 
 Current shipped cancel posture:
 
+- the dedicated `POST /runs/:runId/cancel` route dispatches
+  `IWorkflowEngine.cancelRun(...)`
 - `cancelRun()` uses the provider-native cancellation boundary
-- `signal(CANCEL)` remains the cooperative reason-carrying path
+- `POST /runs/:runId/signal` with `signalType=CANCEL` remains the explicit
+  cooperative reason-carrying compatibility path
 - the runtime workflow emits the ordered `RunCancelRequested` ->
   `RunCancelled` lifecycle from workflow context instead of treating
   `cancelRun()` as a signal alias

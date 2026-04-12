@@ -201,7 +201,10 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.engine,
       protectedModule.stateStore.read
     );
-    const cancelRunUseCase = new CancelRunUseCase(signalRunUseCase);
+    const cancelRunUseCase = new CancelRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore.read
+    );
     const recoverRunUseCase = new RecoverRunUseCase(
       protectedModule.engine,
       protectedModule.stateStore.read
