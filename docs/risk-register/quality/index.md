@@ -83,7 +83,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Temporal native cancellation cleanup and provider-status race remain coupled](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [TF-C2-B canonical contract docs can drift from the shipped execution read surface](R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml)
-- [TF-C2-B failed-run materialization semantics remain ambiguous](R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml)
+- [TF-C2-B failed-run materialization semantics drift](R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml)
 - [TF-C2-B runtime outcome evidence could drift between events, snapshots, and API reads](R-20260408-TF-C2-B-READ-SURFACE-EVIDENCE-DRIFT.yaml)
 - [Tsconfig baseUrl deprecation migration can regress package alias resolution](R-20260403-TSCONFIG-BASEURL-DEPRECATION-MIGRATION.yaml)
 - [Web workspace file-missing handling depends on a future backend canonical reason](R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)

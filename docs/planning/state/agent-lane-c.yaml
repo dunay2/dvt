@@ -845,7 +845,7 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 90
+    progress_pct: 95
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
@@ -858,12 +858,12 @@ tasks:
     status_reason: >-
       Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
       development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
-      not maintain a second snapshot-schema line. Two follow-up items remain explicitly accepted as
-      debt and logged in the quality risk register: canonical contract/architecture doc drift and
-      failed-run materialization semantics. Real executor payload emission now exists on the
-      Postgres capability path; remaining closure is deeper provenance convergence with `TF-B1-B`
-      and cleanup of the accepted residual risks.
-    last_verified: '2026-04-10'
+      not maintain a second snapshot-schema line. The failed-run materialization contradiction is
+      now closed with projector, API, and UI regression coverage. Remaining accepted residual is
+      canonical contract/architecture doc drift plus deeper provenance convergence with `TF-B1-B`.
+      Real executor payload emission now exists on the Postgres capability path; final closure is
+      cleanup of the remaining residual risk and current-doc alignment.
+    last_verified: '2026-04-12'
   - task_id: AR-C6
     priority: P0
     status: in_progress

@@ -66,7 +66,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         this.runEnrichmentService.getRunEnrichment(runRef),
         snapshotStalenessPromise,
       ]);
-      snapshot = enrichment.canonical;
+      snapshot = this.sanitizeCanonicalStatus(enrichment.canonical);
       providerView = enrichment.providerView;
       this.recordSnapshotStalenessTelemetry(snapshotStaleness, metadata.tenantId, metadata.runId);
       const workflowSnapshot = await this.readWorkflowSnapshot(metadata.tenantId, metadata.runId);
@@ -117,7 +117,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       this.engine.getRunStatus(runRef),
       snapshotStalenessPromise,
     ]);
-    snapshot = statusResult;
+      snapshot = this.sanitizeCanonicalStatus(statusResult);
     providerView = undefined;
     this.recordSnapshotStalenessTelemetry(snapshotStaleness, metadata.tenantId, metadata.runId);
     const workflowSnapshot = await this.readWorkflowSnapshot(metadata.tenantId, metadata.runId);
@@ -217,6 +217,21 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     }
 
     return false;
+  }
+
+  private sanitizeCanonicalStatus(
+    snapshot: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
+  ): Awaited<ReturnType<IWorkflowEngine['getRunStatus']>> {
+    if (snapshot.status === 'COMPLETED' || snapshot.execution?.materialization === undefined) {
+      return snapshot;
+    }
+
+    const { execution: _previousExecution, ...rest } = snapshot;
+    const { materialization: _materialization, ...execution } = snapshot.execution;
+    return {
+      ...rest,
+      ...(Object.keys(execution).length === 0 ? {} : { execution }),
+    };
   }
 
   private async resolveSnapshotStaleness(

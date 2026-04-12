@@ -226,7 +226,44 @@ describe('RunStates', () => {
     );
   });
 
-  it('renders materialization evidence and failure diagnostics when available', async () => {
+  it('renders materialization evidence for completed snapshots', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        status: 'completed',
+        startedAt: '2026-03-28T10:00:00.000Z',
+        completedAt: '2026-03-28T10:00:30.000Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        execution: {
+          materialization: {
+            executor: 'postgres',
+            environmentId: 'env-1',
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 42,
+            startedAt: '2026-03-28T10:00:05.000Z',
+            completedAt: '2026-03-28T10:00:25.000Z',
+            durationMs: 20000,
+          },
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Materialization evidence');
+    expect(container.textContent).toContain('postgres');
+    expect(container.textContent).toContain('analytics.orders_daily');
+    expect(container.textContent).toContain('42');
+  });
+
+  it('renders failure diagnostics without materialization evidence on failed snapshots', async () => {
     const workspace = buildWorkspace({
       snapshot: {
         runId: 'run_123',
@@ -264,9 +301,10 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Materialization evidence');
-    expect(container.textContent).toContain('postgres');
-    expect(container.textContent).toContain('analytics.orders_daily');
-    expect(container.textContent).toContain('42');
+    expect(container.textContent).toContain(
+      'Result evidence is not available yet for this run snapshot.'
+    );
+    expect(container.textContent).not.toContain('analytics.orders_daily');
     expect(container.textContent).toContain('Failure diagnostics');
     expect(container.textContent).toContain('step-transform');
     expect(container.textContent).toContain('STEP_FAILURE');

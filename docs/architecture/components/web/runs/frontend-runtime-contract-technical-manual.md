@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-12
 domain: frontend
 ---
 
@@ -247,6 +247,21 @@ The route baseline is now correct. Current limitation is explicit and truthful:
   step, timeline, artifact, or node-history detail;
 - that richer operational detail remains a follow-on convergence slice for
   `F-09` through `F-11`.
+
+## Result Evidence Rendering Rule
+
+Caller-visible materialization evidence is success-only in the active runtime
+contract line.
+
+Rules:
+
+1. `RunWorkspaceStateView` may render materialization evidence only when
+   `snapshot.status = completed`.
+2. Failed snapshots render failure diagnostics without materialization
+   evidence, even if an older internal projector or payload still carries stale
+   sink metadata.
+3. Running, paused, and cancelled snapshots render snapshot truth without
+   result-evidence claims.
 
 ## Vertical Impact Map
 

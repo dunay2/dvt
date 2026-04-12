@@ -71,6 +71,7 @@ const PROJECTION_HANDLERS: ProjectionHandlerMap = {
     snap.status = 'CANCELLED';
     snap.cancelling = false;
     clearActiveStep(snap);
+    clearMaterializationEvidence(snap);
     snap.completedAt = event.emittedAt;
   },
   RunCompleted: (snap, event) => {
@@ -83,6 +84,7 @@ const PROJECTION_HANDLERS: ProjectionHandlerMap = {
     assertRunNotTerminal(snap, event.kind);
     snap.status = 'FAILED';
     clearActiveStep(snap);
+    clearMaterializationEvidence(snap);
     snap.completedAt = event.emittedAt;
   },
   StepStarted: (snap, event) => {
@@ -198,6 +200,7 @@ function setFailureEvidence(
 ): void {
   const execution = ensureExecutionEvidence(snap);
   delete execution.activeStepId;
+  delete execution.materialization;
   execution.failure = failure;
 }
 
@@ -207,6 +210,13 @@ function setMaterializationEvidence(
 ): void {
   const execution = ensureExecutionEvidence(snap);
   execution.materialization = materialization;
+}
+
+function clearMaterializationEvidence(snap: WorkflowSnapshot): void {
+  if (snap.execution?.materialization !== undefined) {
+    delete snap.execution.materialization;
+    trimExecutionEvidence(snap);
+  }
 }
 
 function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {

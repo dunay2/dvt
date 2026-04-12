@@ -50,7 +50,11 @@ export function deriveRunReadEvidenceModel(args: {
     args.snapshot.status === 'FAILED'
       ? deriveErrorReason(currentAttemptEvents, args.snapshot.execution)
       : undefined;
-  const materialization = deriveMaterialization(currentAttemptEvents, args.snapshot.execution);
+  const materialization = deriveMaterialization(
+    args.snapshot.status,
+    currentAttemptEvents,
+    args.snapshot.execution
+  );
 
   return {
     ...(executor === undefined ? {} : { executor }),
@@ -230,9 +234,14 @@ function deriveErrorReason(
 }
 
 function deriveMaterialization(
+  status: CanonicalRunStatus['status'],
   events: ReadonlyArray<EventEnvelope>,
   snapshotExecution: CanonicalRunStatus['execution']
 ) {
+  if (status !== 'COMPLETED') {
+    return undefined;
+  }
+
   if (snapshotExecution?.materialization) {
     return snapshotExecution.materialization;
   }

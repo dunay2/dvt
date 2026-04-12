@@ -79,6 +79,10 @@ function readArtifactFields(
 function deriveMaterializationEvidence(
   workspace: RunWorkspaceViewModel
 ): MaterializationEvidence | undefined {
+  if (workspace.snapshot.status !== 'completed') {
+    return undefined;
+  }
+
   return workspace.snapshot.materialization ?? workspace.snapshot.execution?.materialization;
 }
 

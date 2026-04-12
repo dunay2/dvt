@@ -407,7 +407,7 @@ describe('GetRunStatusUseCase', () => {
     expect(telemetry.recordSnapshotStalenessFallback).not.toHaveBeenCalled();
   });
 
-  it('returns TF-C2-B snapshot outcome fields when projected state carries them', async () => {
+  it('omits materialization evidence from failed caller-visible status snapshots', async () => {
     const engine = {
       async getRunStatus() {
         return {
@@ -451,9 +451,9 @@ describe('GetRunStatusUseCase', () => {
       } as never
     );
 
-    await expect(
-      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
-    ).resolves.toMatchObject({
+    const result = await useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never);
+
+    expect(result).toMatchObject({
       runId: 'provider-run-1',
       status: 'FAILED',
       snapshotStaleness: 'FRESH',
@@ -463,11 +463,66 @@ describe('GetRunStatusUseCase', () => {
           stepId: 'step-transform',
           reason: 'SINK_WRITE_FAILED',
         },
+      },
+    });
+    expect(result.execution?.materialization).toBeUndefined();
+    expect(result.materialization).toBeUndefined();
+  });
+
+  it('returns materialization evidence on completed caller-visible status snapshots', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'COMPLETED' as const,
+          execution: {
+            materialization: {
+              executor: 'postgres' as const,
+              environmentId: 'env-1',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T10:00:00.000Z',
+              completedAt: '2026-04-08T10:00:04.000Z',
+              durationMs: 4000,
+            },
+          },
+        };
+      },
+      async getRunEnrichment() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      {
+        recordSnapshotStalenessResult: vi.fn(),
+        recordSnapshotStalenessFallback: vi.fn(),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      runId: 'provider-run-1',
+      status: 'COMPLETED',
+      snapshotStaleness: 'FRESH',
+      execution: {
         materialization: {
           executor: 'postgres',
           sinkTable: 'analytics.orders_daily',
           rowsWritten: 42,
         },
+      },
+      materialization: {
+        executor: 'postgres',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
       },
     });
   });

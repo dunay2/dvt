@@ -369,4 +369,63 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
       durationMs: 3000,
     });
   });
+
+  it('clears materialization evidence when a later step failure occurs', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-evidence'));
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepCompleted', 'step-evidence'),
+      payload: {
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-01-01T00:00:05.000Z',
+          completedAt: '2026-01-01T00:00:08.000Z',
+          durationMs: 3000,
+        },
+      },
+    } as unknown as EventEnvelope);
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-validate'));
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepFailed', 'step-validate'),
+      payload: {
+        reason: 'VALIDATION_FAILED',
+        message: 'sink validation failed after materialization',
+      },
+    } as unknown as EventEnvelope);
+
+    expect(snap.execution?.materialization).toBeUndefined();
+    expect(snap.execution?.failure).toMatchObject({
+      stepId: 'step-validate',
+      reason: 'VALIDATION_FAILED',
+    });
+  });
+
+  it('clears materialization evidence when a run is cancelled after prior evidence', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-evidence'));
+    applyRunEvent(snap, {
+      ...makeStepEvent('StepCompleted', 'step-evidence'),
+      payload: {
+        materialization: {
+          executor: 'postgres',
+          environmentId: 'env-1',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-01-01T00:00:05.000Z',
+          completedAt: '2026-01-01T00:00:08.000Z',
+          durationMs: 3000,
+        },
+      },
+    } as unknown as EventEnvelope);
+    applyRunEvent(snap, makeRunEvent('RunCancelRequested'));
+    applyRunEvent(snap, makeRunEvent('RunCancelled'));
+
+    expect(snap.status).toBe('CANCELLED');
+    expect(snap.execution?.materialization).toBeUndefined();
+  });
 });
