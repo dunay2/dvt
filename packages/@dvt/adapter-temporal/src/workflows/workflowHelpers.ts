@@ -208,11 +208,6 @@ const DEFAULT_STEP_ACTIVITY_RETRY_POLICY: StepActivityRetryPolicy = Object.freez
   nonRetryableErrorTypes: ['PermanentStepError'],
 });
 
-type LegacyStepRetryConfig = {
-  maxAttempts: number;
-  backoffMs: number;
-};
-
 export function resolveStepActivityRetryPolicy(
   step: Pick<ExecutionStep, 'retryPolicy' | 'stepTypeConfig'>
 ): StepActivityRetryPolicy {
@@ -226,19 +221,8 @@ export function resolveStepActivityRetryPolicy(
     };
   }
 
-  const legacyRetryConfig = extractLegacyStepRetryConfig(step.stepTypeConfig);
-  if (legacyRetryConfig !== undefined) {
-    const initialSeconds =
-      legacyRetryConfig.backoffMs <= 0
-        ? 1
-        : Math.max(1, Math.ceil(legacyRetryConfig.backoffMs / 1000));
-    const maximumSeconds = Math.max(initialSeconds, 60);
-    return {
-      ...DEFAULT_STEP_ACTIVITY_RETRY_POLICY,
-      maximumAttempts: legacyRetryConfig.maxAttempts,
-      initialInterval: `${initialSeconds}s`,
-      maximumInterval: `${maximumSeconds}s`,
-    };
+  if (hasLegacyStepRetryConfig(step.stepTypeConfig)) {
+    throw new TypeError('INVALID_PLAN_SCHEMA: step_retryPolicy_must_be_top_level');
   }
 
   return DEFAULT_STEP_ACTIVITY_RETRY_POLICY;
@@ -281,33 +265,12 @@ export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef
   return result.data;
 }
 
-function extractLegacyStepRetryConfig(stepTypeConfig: unknown): LegacyStepRetryConfig | undefined {
+function hasLegacyStepRetryConfig(stepTypeConfig: unknown): boolean {
   if (!isPlainObject(stepTypeConfig)) {
-    return undefined;
+    return false;
   }
 
-  const retries = stepTypeConfig['retries'];
-  if (retries === undefined) {
-    return undefined;
-  }
-  if (!isPlainObject(retries)) {
-    throw new TypeError('INVALID_PLAN_SCHEMA: step_legacyRetryPolicy_invalid');
-  }
-
-  const maxAttempts = retries['maxAttempts'];
-  const backoffMs = retries['backoffMs'];
-  if (
-    !Number.isInteger(maxAttempts) ||
-    typeof maxAttempts !== 'number' ||
-    maxAttempts < 1 ||
-    !Number.isFinite(backoffMs) ||
-    typeof backoffMs !== 'number' ||
-    backoffMs < 0
-  ) {
-    throw new TypeError('INVALID_PLAN_SCHEMA: step_legacyRetryPolicy_invalid');
-  }
-
-  return { maxAttempts, backoffMs };
+  return Object.hasOwn(stepTypeConfig, 'retries');
 }
 
 // ---------------------------------------------------------------------------

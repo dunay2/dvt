@@ -26,8 +26,8 @@ mitigations:
     execution.'
   - 'Planner policy resolution materializes retry/backoff onto top-level execution steps instead of
     hiding it in stepTypeConfig.'
-  - 'Temporal workflow retry settings are resolved from canonical step.retryPolicy with a guarded
-    legacy fallback for older persisted plans.'
+  - 'Temporal workflow retry settings are resolved from canonical step.retryPolicy only, and
+    stepTypeConfig.retries is rejected as invalid plan shape.'
   - 'Active planner and Temporal policy docs now describe the canonical retry ownership split.'
 review_after: 2026-06-30
 ---

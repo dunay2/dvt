@@ -54,6 +54,24 @@ function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
   } as const;
 }
 
+function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unknown>> {
+  return {
+    ...buildValidContractPlan(),
+    steps: [
+      {
+        stepId: 'step_1',
+        kind: 'DBT_MODEL',
+        dependsOn: [],
+        stepTypeConfig: {
+          name: 'customers',
+          nodeIds: ['model.analytics.customers'],
+          retries: 9,
+        },
+      },
+    ],
+  } as const;
+}
+
 function buildValidPlanRef() {
   return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
@@ -236,7 +254,7 @@ describe('createPlansService', () => {
     });
   });
 
-  it('maps step retryPolicy into UI retry counts with canonical precedence', async () => {
+  it('maps step retryPolicy into UI retry counts from the canonical field only', async () => {
     const postJsonMock = vi.fn(async () => ({
       plan: buildContractPlanWithRetryPolicy(),
       planRef: buildValidPlanRef(),
@@ -269,6 +287,38 @@ describe('createPlansService', () => {
         retries: 3,
       },
     });
+  });
+
+  it('does not read legacy retry counts from stepTypeConfig', async () => {
+    const postJsonMock = vi.fn(async () => ({
+      plan: buildContractPlanWithLegacyRetryConfig(),
+      planRef: buildValidPlanRef(),
+    }));
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_GRAPH_SOURCE,
+      selectedNodeIds: ['node_1'],
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.steps[0]).toMatchObject({
+      id: 'step_1',
+      policies: {},
+    });
+    expect(plan.steps[0]?.policies.retries).toBeUndefined();
   });
 
   it('rejects import payloads that do not include planRef', async () => {

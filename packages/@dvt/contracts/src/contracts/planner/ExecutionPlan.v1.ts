@@ -80,9 +80,6 @@ export interface ExecutionStepV1 {
   dependsOn: readonly string[];
   /**
    * Canonical per-step retry policy consumed by the runtime adapter.
-   *
-   * When omitted, the adapter may apply its compatibility fallback for older
-   * persisted plans that predate this field.
    */
   retryPolicy?: ExecutionStepRetryPolicyV1;
   /**

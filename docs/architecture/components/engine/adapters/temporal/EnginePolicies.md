@@ -153,8 +153,7 @@ function createStepActivities(step: WorkflowStep) {
 Resolved policy order:
 
 1. `step.retryPolicy` from the canonical `ExecutionPlan`
-2. legacy `step.stepTypeConfig.retries` compatibility seam for older persisted plans
-3. governed default:
+2. governed default:
 
 ```typescript
 {
@@ -170,7 +169,7 @@ Notes:
 
 - `scheduleToStartTimeout`, `scheduleToCloseTimeout`, and `heartbeatTimeout` are still **not currently configured**.
 - No per-step timeout override matrix is implemented yet; only retry/backoff ownership moved into the plan contract.
-- Malformed legacy `stepTypeConfig.retries` now fails closed as `INVALID_PLAN_SCHEMA: step_legacyRetryPolicy_invalid`.
+- Retry metadata under `stepTypeConfig.retries` is no longer consumed; that non-canonical location now fails closed as `INVALID_PLAN_SCHEMA: step_retryPolicy_must_be_top_level`.
 
 Timeout interaction note:
 
