@@ -428,7 +428,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: AR-C2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
@@ -802,9 +802,10 @@ tasks:
     status_reason: >-
       The provider-owned relational execution path, split Temporal capability lanes, caller-visible
       runtime evidence, and the canonical local Docker PostgreSQL proof surface are now
-      code-grounded in mainline. Remaining closure is downstream provenance/evidence convergence and
-      the repeatability/retention follow-through tracked outside this slice.
-    last_verified: '2026-04-10'
+      code-grounded in mainline. Remaining closure is the final runtime-vertical acceptance and the
+      repeatability/retention follow-through tracked outside the landed executor and read-surface
+      seams.
+    last_verified: '2026-04-13'
   - task_id: TF-C2-A
     priority: P0
     status: review
@@ -830,12 +831,12 @@ tasks:
       The capability-led PostgreSQL execution seam now exists in `adapter-postgres`, CI runs a
       dedicated Temporal Postgres integration lane, and the local Docker proof environment now has a
       canonical operator-facing wrapper and runbook. Remaining downstream follow-through belongs to
-      Lane D repeatability discipline and TF-B1-B provenance convergence, not to the executor path
-      itself.
-    last_verified: '2026-04-10'
+      Lane D repeatability discipline and final runtime-vertical acceptance, not to the executor
+      path itself.
+    last_verified: '2026-04-13'
   - task_id: TF-C2-B
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       expose caller-visible materialization evidence and step-attributed failure diagnostics on the
       runtime read surfaces.
@@ -845,7 +846,7 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 95
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
@@ -856,14 +857,13 @@ tasks:
       - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
       - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
     status_reason: >-
-      Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
-      development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
-      not maintain a second snapshot-schema line. The failed-run materialization contradiction is
-      now closed with projector, API, and UI regression coverage. Remaining accepted residual is
-      canonical contract/architecture doc drift plus deeper provenance convergence with `TF-B1-B`.
-      Real executor payload emission now exists on the Postgres capability path; final closure is
-      cleanup of the remaining residual risk and current-doc alignment.
-    last_verified: '2026-04-12'
+      `GET /runs/:runId` and `GET /runs/:runId/events` now expose executor identity, rows written,
+      sink target, failure step attribution, and timestamps on the governed runtime read surfaces.
+      The hard-QA follow-up work is closed: snapshot posture remains on one development schema line,
+      failed-run materialization semantics are locked to success-only reads, canonical docs and
+      diagrams are aligned, and the former `TF-B1-B` provenance dependency is now accepted closure
+      rather than an open blocker.
+    last_verified: '2026-04-13'
   - task_id: AR-C6
     priority: P0
     status: in_progress
@@ -991,9 +991,9 @@ dependency_notes:
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
   - >-
-    `MW-C1` is now code-grounded by the accepted step-kind dispatcher evidence; the active runtime
-    blocker moved to finishing `TF-C2-A` local proof closure and the remaining evidence/provenance
-    convergence under `TF-C2-B` and `TF-B1-B`.
+    `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted dispatcher, Postgres proof, and
+    caller-visible runtime-evidence closure; downstream work has shifted to provider-live versus
+    persisted-terminal-status convergence plus frontend result-UX completion.
   - >-
     `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
     follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
@@ -1011,8 +1011,7 @@ verification_summary:
   completed_weighted_points: 74.4
   lane_progress_pct: 54
   notes: >-
-    Weighted progress uses effort_points. `MW-C1` now contributes full accepted closure, while
-    `TF-C2`, `TF-C2-A`, and `TF-C2-B` now reflect the shipped dispatch seam, canonical proof
-    surface, and runtime-evidence progress rather than the older queued-only posture. `AR-C6` now
-    also records the short truth-sync slice that must normalize cancel-lifecycle ownership before
-    additional runtime cancellation work expands.
+    Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
+    dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
+    queued-only posture. `AR-C6` now also records the short truth-sync slice that must normalize
+    cancel-lifecycle ownership before additional runtime cancellation work expands.

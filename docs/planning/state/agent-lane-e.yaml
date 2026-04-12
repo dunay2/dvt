@@ -1848,9 +1848,10 @@ tasks:
     status_reason: >-
       Run detail now consumes result evidence and failure diagnostics only from the governed
       snapshot read model, leaving timeline events for chronology and artifact refs instead of
-      frontend-side outcome inference. Full closure still depends on TF-C2-B publishing
-      materialization payloads and failure timestamps on the runtime read surfaces.
-    last_verified: '2026-04-08'
+      frontend-side outcome inference. TF-C2-B now provides the runtime evidence payloads on the
+      read surface; remaining closure is the final preview/result UX proof under `TF-E1-B` and
+      `TF-E1-C`.
+    last_verified: '2026-04-13'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in

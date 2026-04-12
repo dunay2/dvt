@@ -1,7 +1,7 @@
 ---
 id: R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT
 title: TF-C2-B canonical contract docs can drift from the shipped execution read surface
-status: Open
+status: Closed
 date: 2026-04-09
 owners:
   - packages/@dvt/contracts
@@ -11,21 +11,22 @@ owners:
 severity: Medium
 probability: Medium
 summary: >
-  TF-C2-B shipped a breaking development change from flat runtime outcome fields to a nested
-  `execution` object, but the canonical engine contract docs and the frontend runtime manual still
-  describe the old `RunStatusSnapshot` shape.
+  Canonical engine/frontend runtime docs and the current-state diagram pack now describe the shipped
+  nested `execution` read-surface shape used by `TF-C2-B`, so the former flat-field documentation
+  drift is no longer an active risk on the current line.
 
 mitigations:
-  - Keep the hard-QA artifact `20260409-tf-c2-b-read-surface-hard-qa-review.md` linked from Lane C
-    until canonical docs are updated.
-  - Update `IWorkflowEngine.v1.md`, `IWorkflowEngine.v1.md`, and the frontend runtime contract
-    manual to describe `RunStatusSnapshot.execution` explicitly.
-  - Re-run `pnpm docs:sync`, `pnpm docs:workboard:generate`, and `pnpm verify:prepush` in the debt
-    payoff slice.
+  - Canonical engine contract docs and the frontend runtime manual now describe
+    `RunStatusSnapshot.execution` explicitly.
+  - The hard-QA review artifact remains linked from Lane C as closure evidence instead of as an
+    active stopgap for stale canonical docs.
+  - Planning and current-state surfaces were rerun so task routing no longer treats TF-C2-B doc
+    drift as an open blocker.
 
 signals:
-  - reviewers cite closeout/evidence docs for current truth because canonical contract docs are
-    stale.
-  - new runtime slices modify code against the wrong `RunStatusSnapshot` example.
-  - frontend/manual docs omit `execution` fields that the web client consumes in production code.
+  - canonical engine/frontend docs now show the nested `execution` example instead of the former
+    flat runtime outcome fields.
+  - current planning/status surfaces no longer cite TF-C2-B contract-doc drift as an open blocker.
+  - reviewers can use canonical contract entrypoints rather than closeout notes for current
+    read-surface truth.
 ---

@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-13
 planning_type: status
 ---
 
@@ -20,12 +20,11 @@ For full task-level tracking use the lane YAML registry linked from
 - Current objective: keep the provider-native Temporal cancellation slice
   narrow while finishing the PostgreSQL-backed transformation runtime vertical
   without regressing runtime semantics.
-- Active task IDs: `AR-C6`, `WE-HX`, `WE-HX-5`, `WE-HX-6`, `TF-C2`, `TF-C2-A`,
-  `TF-C2-B`
+- Active task IDs: `AR-C6`, `WE-HX`, `WE-HX-5`, `WE-HX-6`, `TF-C2`, `TF-C2-A`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: downstream provider-live versus persisted-terminal-status
-  convergence, the delivery runtime harness extraction that still sits behind
-  boundary work, and provenance/evidence follow-through all remain open.
+  convergence and the delivery runtime harness extraction still sit ahead of
+  full runtime closure; TF-C2-B read-surface evidence is now accepted.
 
 ### `API and Admission`
 
@@ -69,8 +68,9 @@ For full task-level tracking use the lane YAML registry linked from
   backend-owned evidence.
 - Active task IDs: `TF-E1`, `TF-E1-A`, `TF-E1-B`, `TF-E1-C`, `F-23`
 - Roadmap lane affected: [UI and Frontend lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: Lane A contract freeze and Lane C runtime evidence are
-  still missing; `F-23` also waits on `F-06` and `F-17-B`.
+- Primary blockers: Lane A contract freeze and the remaining preview/result UX
+  completion under `TF-E1-B` and `TF-E1-C` are still open; `F-23` also waits
+  on `F-06` and `F-17-B`.
 
 ### `Traceability`
 
