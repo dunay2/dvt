@@ -57,7 +57,6 @@ describe('CancelRunUseCase', () => {
         {
           runId: 'run-1',
           signalType: 'CANCEL',
-          reason: 'operator-request',
         },
         commandContext
       )

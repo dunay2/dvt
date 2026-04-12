@@ -2,7 +2,7 @@
 title: Read subsystem
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-12
 ---
 
 # Read subsystem
@@ -23,11 +23,12 @@ flowchart LR
   Api --> GetRun["GetRunStatusUseCase"]
   Api --> GetEvents["GetRunEventsUseCase"]
   ListRuns --> StateRead["IRunStateStoreRead.listRuns + getSnapshot"]
-  GetRun --> Engine["IWorkflowEngine.getRunStatus / getRunEnrichment"]
+  GetRun --> Engine["IWorkflowEngine.getRunStatus"]
+  GetRun --> Enrich["IRunEnrichmentService.getRunEnrichment when query.enriched = true"]
   GetRun --> Metadata["IRunStateStoreRead.getRunMetadataByRunId"]
   GetEvents --> EventStore["IRunStateStoreRead.listEvents"]
   Engine --> StateRead
-  Engine --> Provider["IProviderAdapter.getProviderStatusView (live provider view) when query.enriched = true"]
+  Enrich --> Provider["IProviderAdapter.getProviderStatusView (live provider view)"]
   Api --> Web
 ```
 
@@ -63,7 +64,8 @@ flowchart LR
   [listRunsUseCase.ts](../../../../../apps/api/src/application/services/listRunsUseCase.ts),
   [getRunStatusUseCase.ts](../../../../../apps/api/src/application/services/getRunStatusUseCase.ts)
 - engine read surface:
-  [WorkflowEngine.ts](../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+  [WorkflowEngine.ts](../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts),
+  [RunEnrichmentService.ts](../../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 
 ## Current Posture
 

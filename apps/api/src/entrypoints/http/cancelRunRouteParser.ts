@@ -16,7 +16,6 @@ export interface ParsedCancelRunRequest {
   readonly command: {
     readonly runId: string;
     readonly signalType: typeof CANCEL_SIGNAL_TYPE;
-    readonly reason?: string;
   };
   readonly authorization: {
     readonly tenantId: TenantId;
@@ -45,6 +44,11 @@ export function parseCancelRunRequest(input: {
   }
 
   const reason = parseOptionalReason(input.body.reason);
+  if (reason !== undefined) {
+    return badRequestResult(HTTP_ERROR_REASON.cancelReasonNotSupported, {
+      target: 'reason',
+    });
+  }
 
   return {
     ok: true,
@@ -52,7 +56,6 @@ export function parseCancelRunRequest(input: {
       command: {
         runId,
         signalType: CANCEL_SIGNAL_TYPE,
-        ...(reason ? { reason } : {}),
       },
       authorization: {
         tenantId: tenantIdResult.value,

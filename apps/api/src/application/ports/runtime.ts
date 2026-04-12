@@ -115,9 +115,10 @@ export interface SignalRunCommand {
   readonly reason?: string;
 }
 
-export type CancelRunCommand = SignalRunCommand & {
+export interface CancelRunCommand {
+  readonly runId: string;
   readonly signalType: 'CANCEL';
-};
+}
 
 export interface SignalRunResult {
   readonly runId: string;

@@ -102,13 +102,57 @@ flowchart TB
 
 ### Current Layer Responsibilities
 
-| Layer                      | Current truth                                                                                                                                                                                                                                                                                                                                      | Main anchors                                                                                                                                                                                                                                                                                                                                                                      |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Transport and composition  | `buildApp()` bootstraps Fastify, public ops routes, request tracing, operational hooks, and OIDC-gated protected runtime registration.                                                                                                                                                                                                             | `apps/api/src/app.ts`, `apps/api/src/routes/health.ts`, `apps/api/src/modules/registerOperationalHooks.ts`                                                                                                                                                                                                                                                                        |
-| Application command path   | `POST /runs/start` drives authorization, duplicate probing, admission, optional planner execution, plan validation, and engine dispatch. `POST /runs/:runId/cancel` now dispatches `engine.cancelRun(...)`, while `POST /runs/:runId/signal` remains the cooperative signal path, including the governed `signalType=CANCEL` compatibility switch. | `apps/api/src/entrypoints/http/startRunRoute.ts`, `apps/api/src/application/services/startRunAuthorizedFacade.ts`, `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`, `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`, `apps/api/src/application/services/cancelRunUseCase.ts`, `apps/api/src/application/services/signalRunUseCase.ts` |
-| Application query path     | `GET /runs`, `GET /runs/:runId`, and `GET /runs/:runId/events` authorize first and then read through the state-store read boundary. `GET /runs/:runId` optionally uses enriched engine status.                                                                                                                                                     | `apps/api/src/application/services/listRunsUseCase.ts`, `apps/api/src/application/services/getRunStatusUseCase.ts`, `apps/api/src/application/services/getRunEventsUseCase.ts`                                                                                                                                                                                                    |
-| Auth and RBAC              | Authentication is handled through OIDC/JWKS. Authorization is tenant-scoped and action-scoped through `AuthorizeCommandScopeService` and domain policy.                                                                                                                                                                                            | `apps/api/src/infrastructure/auth/oidcAuthenticator.ts`, `apps/api/src/infrastructure/auth/jwksJwtVerifier.ts`, `apps/api/src/application/services/authorizeCommandScopeService.ts`, `apps/api/src/domain/auth/policy.ts`                                                                                                                                                         |
-| Infrastructure composition | The protected runtime module wires Postgres state access, plan storage, admission telemetry, backpressure fallback, provider adapters, and engine construction.                                                                                                                                                                                    | `apps/api/src/modules/buildProtectedRuntimeModule.ts`, `apps/api/src/modules/buildProviderAdapters.ts`, `apps/api/src/modules/stateStoreRoles.ts`, `apps/api/src/application/services/WorkflowEngineFactory.ts`                                                                                                                                                                   |
+- **Transport and composition**
+  `buildApp()` bootstraps Fastify, public ops routes, request tracing,
+  operational hooks, and OIDC-gated protected runtime registration.
+  Anchors:
+  `apps/api/src/app.ts`, `apps/api/src/routes/health.ts`,
+  `apps/api/src/modules/registerOperationalHooks.ts`
+- **Application command path**
+  Start-run still drives authorization, duplicate probing, admission, optional
+  planner execution, plan validation, and engine dispatch.
+  `/runs/:runId/cancel` dispatches `engine.cancelRun(...)` and rejects
+  non-empty `reason` payloads.
+  `/runs/:runId/signal` remains the cooperative path, including
+  `signalType=CANCEL` for reason-carrying requests.
+  Anchors:
+  `apps/api/src/entrypoints/http/startRunRoute.ts`,
+  `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`,
+  `apps/api/src/application/services/cancelRunUseCase.ts`,
+  `apps/api/src/application/services/signalRunUseCase.ts`
+- **Application query path**
+  `GET /runs`, `GET /runs/:runId`, and `GET /runs/:runId/events` authorize
+  first and then read through the state-store read boundary.
+  `GET /runs/:runId` optionally uses enriched engine status.
+  Anchors:
+  `apps/api/src/application/services/listRunsUseCase.ts`,
+  `apps/api/src/application/services/getRunStatusUseCase.ts`,
+  `apps/api/src/application/services/getRunEventsUseCase.ts`
+- **Auth and RBAC**
+  Authentication is handled through OIDC/JWKS.
+  Authorization is tenant-scoped and action-scoped through
+  `AuthorizeCommandScopeService` and domain policy.
+  Anchors:
+  `apps/api/src/infrastructure/auth/oidcAuthenticator.ts`,
+  `apps/api/src/infrastructure/auth/jwksJwtVerifier.ts`,
+  `apps/api/src/application/services/authorizeCommandScopeService.ts`,
+  `apps/api/src/domain/auth/policy.ts`
+- **Infrastructure composition**
+  The protected runtime module wires Postgres state access, plan storage,
+  admission telemetry, backpressure fallback, provider adapters, and engine
+  construction.
+  Anchors:
+  `apps/api/src/modules/buildProtectedRuntimeModule.ts`,
+  `apps/api/src/modules/buildProviderAdapters.ts`,
+  `apps/api/src/modules/stateStoreRoles.ts`,
+  `apps/api/src/application/services/WorkflowEngineFactory.ts`
+
+Native cancel and cooperative cancel are now intentionally split:
+
+- `POST /runs/:runId/cancel` is the provider-native cancel route and rejects a
+  non-empty structured `reason`.
+- `POST /runs/:runId/signal` with `signalType=CANCEL` remains the explicit
+  cooperative, reason-carrying path.
 
 ### Current Strengths
 
