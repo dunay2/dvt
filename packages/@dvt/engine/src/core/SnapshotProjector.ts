@@ -74,12 +74,12 @@ function toRunExecutionEvidence(snap: WorkflowSnapshot): CanonicalRunStatus['exe
     return undefined;
   }
 
+  const materialization = snap.status === 'COMPLETED' ? execution.materialization : undefined;
+
   const normalized = {
     ...(execution.activeStepId !== undefined ? { activeStepId: execution.activeStepId } : {}),
     ...(execution.failure !== undefined ? { failure: execution.failure } : {}),
-    ...(execution.materialization !== undefined
-      ? { materialization: execution.materialization }
-      : {}),
+    ...(materialization !== undefined ? { materialization } : {}),
   };
 
   return Object.keys(normalized).length > 0 ? normalized : undefined;

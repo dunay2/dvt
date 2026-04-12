@@ -67,6 +67,10 @@ Rules:
 
 - canonical status and substatus are owned by the event-log-backed read model
 - provider-scoped status tokens MUST NOT appear inside `CanonicalRunStatus`
+- caller-visible `execution.materialization` is success-only and MUST be
+  omitted unless `status = COMPLETED`
+- caller-visible failed-run truth uses `execution.failure.*`, not a mixed
+  `failure + materialization` read shape
 
 Cancellation projection rules:
 
@@ -141,6 +145,7 @@ Append authority MUST enforce:
 
 ## Change log
 
+- **1.0 (2026-04-12)**: Clarified that caller-visible `execution.materialization` is success-only and omitted outside `COMPLETED`.
 - **1.0 (2026-04-11)**: Split canonical status, enrichment, and provider-live diagnostics in the active execution-semantics contract line.
 - **1.0 (2026-04-11)**: Narrowed read authority so enrichment belongs to `IRunEnrichmentService`, not `IWorkflowEngine`.
 - **1.0 (2026-04-10)**: Reset the active execution-semantics contract to one canonical pre-stable `v1` line and aligned it with the current event-sourcing and read-authority model.
