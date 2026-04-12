@@ -130,9 +130,8 @@ The shipped public read boundary now reflects this split:
 - engine canonical reads use `CanonicalRunStatus`
 - enrichment service uses `RunStatusEnrichment`
 - adapter live diagnostics use `ProviderRunStatusView`
-
-`AR-A12-C3` remains the follow-up slice for current-doc and diagram convergence
-outside the public typed boundary.
+- current docs and regression guards now keep that split explicit across
+  engine, API, and active subsystem/status pages
 
 ## Append authority responsibilities
 

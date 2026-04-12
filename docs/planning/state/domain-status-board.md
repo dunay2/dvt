@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-12
 planning_type: status
 ---
 
@@ -39,19 +39,17 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `Planner and Contracts`
 
-- Current objective: reset the active engine-runtime contract pack to one
-  canonical `v1` line, execute the explicit split between canonical status,
-  provider-live diagnostics, and engine-owned enrichment, and freeze
+- Current objective: finish the remaining contract-pack and shared-kernel
+  formalization work after the engine read-boundary reset, then freeze
   `DesignGraphDraft`, `GitArtifactRef`, and compiler mapping so the
   transformation vertical stops depending on UI-local assumptions.
-- Active task IDs: `AR-A12`, `AR-A12-A`, `AR-A12-B`, `AR-A12-C`, `RC-G1-B`,
-  `S08`, `TF-A1`, `TF-A1-A`, `TF-A1-B`
+- Active task IDs: `AR-A12`, `AR-A12-A`, `AR-A12-B`, `RC-G1-B`, `S08`,
+  `TF-A1`, `TF-A1-A`, `TF-A1-B`
 - Roadmap lane affected: [Planner and Contracts lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the engine-runtime contract pack still mixes active
-  implementation and still reuses `RunStatusSnapshot` in residual seams,
-  current code and subsystem docs have not fully converged on the new
-  status-model split, and the transformation contract freeze remains queued
-  behind that boundary reset.
+- Primary blockers: the engine facade read-boundary split is now closed, but
+  the broader contract-pack reset and shared-kernel ownership work are still
+  open under `AR-A12-A`, `AR-A12-B`, and `RC-G1-B`, while the transformation
+  contract freeze remains queued behind that formalization work.
 
 ### `Event Lifecycle and Retention`
 

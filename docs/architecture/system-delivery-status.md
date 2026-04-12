@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-12
 ---
 
 # Current Status
@@ -190,11 +190,13 @@ Reflects the current merged implementation:
 
 ```mermaid
 classDiagram
-    WorkflowEngine --> IProviderAdapter
-    WorkflowEngine --> IRunStateStore
-    WorkflowEngine --> IStartRunIntentStore
-    WorkflowEngine --> RunAccessPolicy
-    WorkflowEngine --> SnapshotProjector
+    WorkflowEngine --> StartRunApplicationService
+    WorkflowEngine --> RecoverRunApplicationService
+    WorkflowEngine --> RunStatusQueryService
+    WorkflowEngine --> WorkflowEngineCoreService
+    RunStatusQueryService --> SnapshotProjector
+    RunEnrichmentService --> IProviderAdapter
+    RunHealthService --> IProviderAdapter
     SnapshotProjector --> RunDomain
 ```
 
@@ -203,10 +205,12 @@ Current-versus-target note:
 - current code now exposes `WorkflowEngine.getRunStatus()` as the canonical
   read model, while `IRunEnrichmentService.getRunEnrichment()` is the explicit
   enrichment path
+- `IRunHealthService.healthCheck()` is now an explicit non-facade operational
+  boundary
 - `IProviderAdapter.getProviderStatusView()` now returns the provider-live
   diagnostic surface instead of reusing the canonical status DTO
-- the active follow-up under `AR-A12-C` is convergence cleanup around the
-  remaining downstream consumers and doc surfaces, not the core boundary split
+- `AR-A12-C` closeout added regression guards so enrichment and health do not
+  silently reappear on `IWorkflowEngine`
 
 ### Engine Domain Structure
 
@@ -216,6 +220,7 @@ Reflects the current merged implementation:
 classDiagram
     class IWorkflowEngine {
         +startRun()
+        +recoverRun()
         +cancelRun()
         +getRunStatus() canonical read model
         +signal()
@@ -231,10 +236,18 @@ classDiagram
         +snapshotToStatus()
         +rebuild()
     }
-    class RunAccessPolicy {
-        +assertTenantAccess()
-        +validatePlanRef()
-        +checkRateLimit()
+    class StartRunApplicationService {
+        +startRun()
+    }
+    class RecoverRunApplicationService {
+        +recoverRun()
+    }
+    class RunStatusQueryService {
+        +getStatus()
+    }
+    class WorkflowEngineCoreService {
+        +cancel()
+        +signal()
     }
     class IProviderAdapter {
         +startRun()
@@ -246,9 +259,11 @@ classDiagram
     class RunDomain {
         +applyRunEvent()
     }
-    IWorkflowEngine --> SnapshotProjector
-    IWorkflowEngine --> RunAccessPolicy
-    IWorkflowEngine --> IProviderAdapter
+    IWorkflowEngine --> StartRunApplicationService
+    IWorkflowEngine --> RecoverRunApplicationService
+    IWorkflowEngine --> RunStatusQueryService
+    IWorkflowEngine --> WorkflowEngineCoreService
+    RunStatusQueryService --> SnapshotProjector
     IRunHealthService --> IProviderAdapter
     IRunEnrichmentService --> IProviderAdapter
     SnapshotProjector --> RunDomain
@@ -270,8 +285,8 @@ classDiagram
         <<union>>
     }
     RunMetadata --> EngineRunRef : providerRef
-    WorkflowEngine --> RunMetadata
-    WorkflowEngine --> IProviderAdapter
+    StartRunApplicationService --> RunMetadata
+    StartRunApplicationService --> IProviderAdapter
 ```
 
 ### Estimated ProviderRef Protocol
