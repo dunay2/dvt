@@ -34,6 +34,31 @@ export type RunExecutionEvidence = {
   materialization?: MaterializationEvidence;
 };
 
+export type RunGitArtifactRef = {
+  repo: string;
+  path: string;
+  ref?: string;
+  commitSha?: string;
+  contentSha256?: string;
+};
+
+export type RunPersistedPlanProvenance = {
+  planRecordId: string;
+  planVersion: string;
+  sourceRef: string;
+  canonicalPlanSha256: string;
+};
+
+export type RunAuthoringProvenance = {
+  graphArtifact?: RunGitArtifactRef;
+  sqlArtifact?: RunGitArtifactRef;
+};
+
+export type RunProvenanceChain = {
+  persistedPlan: RunPersistedPlanProvenance;
+  authoring?: RunAuthoringProvenance;
+};
+
 export type RunSummaryItem = {
   runId: string;
   planId?: string;
@@ -65,6 +90,7 @@ export type RunSnapshot = {
   failedStepId?: string;
   errorReason?: string;
   materialization?: MaterializationEvidence;
+  provenance?: RunProvenanceChain;
   execution?: RunExecutionEvidence;
 };
 

@@ -23,6 +23,15 @@ type ProvenanceArtifact = {
   encoding?: string;
 };
 
+type AuthoringArtifact = {
+  title: string;
+  repo: string;
+  path: string;
+  ref?: string;
+  commitSha?: string;
+  contentSha256?: string;
+};
+
 function formatDuration(durationMs: number): string {
   if (durationMs < 1000) {
     return `${durationMs} ms`;
@@ -136,6 +145,27 @@ function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): Provenance
   return provenance;
 }
 
+function deriveAuthoringArtifacts(workspace: RunWorkspaceViewModel): AuthoringArtifact[] {
+  const authoring = workspace.snapshot.provenance?.authoring;
+  const artifacts: AuthoringArtifact[] = [];
+
+  if (authoring?.graphArtifact) {
+    artifacts.push({
+      title: copy.graphArtifactTitle,
+      ...authoring.graphArtifact,
+    });
+  }
+
+  if (authoring?.sqlArtifact) {
+    artifacts.push({
+      title: copy.sqlArtifactTitle,
+      ...authoring.sqlArtifact,
+    });
+  }
+
+  return artifacts;
+}
+
 function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
   if (workspace.snapshot.status !== 'failed') {
     return {
@@ -161,6 +191,8 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
+  const planProvenance = snapshot.provenance;
+  const authoringArtifacts = deriveAuthoringArtifacts(workspace);
   const executionProvenance = deriveExecutionProvenance(workspace);
   const materializationEvidence = deriveMaterializationEvidence(workspace);
   const showMaterializationSection = snapshot.status === 'completed';
@@ -228,6 +260,85 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
               </div>
             ) : null}
           </div>
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-900 p-5">
+          <h3 className="mb-3 text-sm font-semibold">{copy.planProvenanceTitle}</h3>
+          {planProvenance ? (
+            <div className="space-y-4 text-sm text-slate-300">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <span className="text-slate-400">{copy.planRecordLabel}</span>
+                  <div className="font-mono text-xs">
+                    {planProvenance.persistedPlan.planRecordId}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.planVersionLabel}</span>
+                  <div>{planProvenance.persistedPlan.planVersion}</div>
+                </div>
+                <div className="md:col-span-2">
+                  <span className="text-slate-400">{copy.planSourceRefLabel}</span>
+                  <div className="break-all font-mono text-xs">
+                    {planProvenance.persistedPlan.sourceRef}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <span className="text-slate-400">{copy.canonicalPlanShaLabel}</span>
+                  <div className="break-all font-mono text-xs">
+                    {planProvenance.persistedPlan.canonicalPlanSha256}
+                  </div>
+                </div>
+              </div>
+
+              {authoringArtifacts.length > 0 ? (
+                <div className="space-y-3">
+                  {authoringArtifacts.map((artifact) => (
+                    <div
+                      key={`${artifact.title}-${artifact.repo}-${artifact.path}`}
+                      className="rounded border border-slate-700 bg-slate-950 p-3"
+                    >
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <Badge variant="outline">{artifact.title}</Badge>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="md:col-span-2">
+                          <span className="text-slate-400">{copy.artifactRepoPathLabel}</span>
+                          <div className="break-all font-mono text-xs">
+                            {artifact.repo}:{artifact.path}
+                          </div>
+                        </div>
+                        {artifact.ref ? (
+                          <div>
+                            <span className="text-slate-400">{copy.artifactGitRefLabel}</span>
+                            <div className="break-all font-mono text-xs">{artifact.ref}</div>
+                          </div>
+                        ) : null}
+                        {artifact.commitSha ? (
+                          <div>
+                            <span className="text-slate-400">{copy.artifactCommitShaLabel}</span>
+                            <div className="break-all font-mono text-xs">
+                              {artifact.commitSha}
+                            </div>
+                          </div>
+                        ) : null}
+                        {artifact.contentSha256 ? (
+                          <div className="md:col-span-2">
+                            <span className="text-slate-400">{copy.artifactContentShaLabel}</span>
+                            <div className="break-all font-mono text-xs">
+                              {artifact.contentSha256}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">{copy.noPlanProvenance}</p>
+          )}
         </Card>
 
         {showMaterializationSection ? (

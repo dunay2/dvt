@@ -107,6 +107,9 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         ...(evidenceModel.errorReason === undefined
           ? {}
           : { errorReason: evidenceModel.errorReason }),
+        ...(evidenceModel.provenance === undefined
+          ? {}
+          : { provenance: evidenceModel.provenance }),
         ...(evidenceModel.materialization === undefined
           ? {}
           : { materialization: evidenceModel.materialization }),
@@ -158,6 +161,9 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(evidenceModel.errorReason === undefined
         ? {}
         : { errorReason: evidenceModel.errorReason }),
+      ...(evidenceModel.provenance === undefined
+        ? {}
+        : { provenance: evidenceModel.provenance }),
       ...(evidenceModel.materialization === undefined
         ? {}
         : { materialization: evidenceModel.materialization }),

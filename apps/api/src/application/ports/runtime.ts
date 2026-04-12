@@ -43,6 +43,31 @@ export interface IRunStatusStalenessTelemetry {
   ): void;
 }
 
+export interface RunGitArtifactRef {
+  readonly repo: string;
+  readonly path: string;
+  readonly ref?: string;
+  readonly commitSha?: string;
+  readonly contentSha256?: string;
+}
+
+export interface RunPersistedPlanProvenance {
+  readonly planRecordId: string;
+  readonly planVersion: string;
+  readonly sourceRef: string;
+  readonly canonicalPlanSha256: string;
+}
+
+export interface RunAuthoringProvenance {
+  readonly graphArtifact?: RunGitArtifactRef;
+  readonly sqlArtifact?: RunGitArtifactRef;
+}
+
+export interface RunProvenanceChain {
+  readonly persistedPlan: RunPersistedPlanProvenance;
+  readonly authoring?: RunAuthoringProvenance;
+}
+
 export type GetRunStatusResult = Pick<
   CanonicalRunStatus,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'execution'
@@ -56,6 +81,7 @@ export type GetRunStatusResult = Pick<
   readonly failedStepId?: string;
   readonly errorReason?: string;
   readonly materialization?: MaterializationEvidence;
+  readonly provenance?: RunProvenanceChain;
 };
 
 export interface IGetRunStatusUseCase {

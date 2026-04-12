@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract User Manual
 status: Review
 owner: Frontend / Product
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-12
 domain: frontend
 ---
 
@@ -51,6 +51,8 @@ flowchart LR
 ### Run Detail (`/runs/:runId`)
 
 - single snapshot authority is `GET /runs/:runId`
+- the same snapshot may carry persisted plan identity and authoring provenance
+  for the run
 - when only snapshot data is available, the UI shows a runtime snapshot state;
 - when events are available, timeline appears in the same run workspace context;
 - the route never invents step, artifact, or metrics detail from empty
@@ -97,9 +99,10 @@ flowchart LR
 
 1. predictable run-start behavior
 2. one consistent run detail authority
-3. explicit separation between run snapshot and event timeline
-4. fewer ambiguous error messages during execution monitoring
-5. no fake detail panels that imply data the backend has not provided
+3. caller-visible linkage from authoring artifacts to persisted plan to outcome
+4. explicit separation between run snapshot and event timeline
+5. fewer ambiguous error messages during execution monitoring
+6. no fake detail panels that imply data the backend has not provided
 
 ## Related Pages
 

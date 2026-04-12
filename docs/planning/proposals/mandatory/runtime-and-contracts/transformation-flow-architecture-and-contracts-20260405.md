@@ -2,7 +2,7 @@
 title: Transformation Flow Architecture And Contracts 2026-04-05
 status: Proposed
 owner: Architecture / API / Web / Planner
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-12
 planning_type: proposal
 lane: E
 task_id: F-22
@@ -440,6 +440,18 @@ type MaterializationEvidence = {
 type RunOutcome = {
   runId: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
+  provenance?: {
+    persistedPlan: {
+      planRecordId: string;
+      planVersion: string;
+      sourceRef: string;
+      canonicalPlanSha256: string;
+    };
+    authoring?: {
+      graphArtifact?: GitArtifactRef;
+      sqlArtifact?: GitArtifactRef;
+    };
+  };
   execution?: {
     activeStepId?: string;
     failure?: {
@@ -458,6 +470,10 @@ type RunOutcome = {
 `GET /runs/:runId` must expose at least:
 
 - current and final run status
+- persisted plan identity (`planRecordId`, `planVersion`, `sourceRef`,
+  `canonicalPlanSha256`)
+- preview-time authoring provenance (`graphArtifact`, `sqlArtifact`) when the
+  persisted plan carries it
 - executor identity
 - `execution.activeStepId` or `execution.failure.stepId` when applicable
 - `execution.materialization` on success

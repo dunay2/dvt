@@ -659,14 +659,14 @@ describe('GetRunStatusUseCase', () => {
       {
         async getPlanRecord() {
           return {
-            planId: 'plan-1',
+            planId: '9'.repeat(64),
             planVersion: '1.0',
             schemaVersion: 'v1.2',
             contractVersion: '1.0.0',
             canonicalHash: 'a'.repeat(64),
             canonicalPlanJson: JSON.stringify({
               metadata: {
-                planId: 'plan-1',
+                planId: '9'.repeat(64),
                 planVersion: '1.0',
                 schemaVersion: 'v1.2',
                 contractVersion: '1.0.0',
@@ -679,6 +679,22 @@ describe('GetRunStatusUseCase', () => {
                   transformationFlowRuntime: {
                     previewProfile: 'transformation-sql-first-v1',
                     executor: 'postgres',
+                  },
+                  transformationFlowProvenance: {
+                    graphArtifact: {
+                      repo: 'acme/warehouse',
+                      path: 'graphs/orders.flow.yaml',
+                      ref: 'refs/heads/main',
+                      commitSha: '1'.repeat(40),
+                      contentSha256: '2'.repeat(64),
+                    },
+                    sqlArtifact: {
+                      repo: 'acme/warehouse',
+                      path: 'models/orders_daily.sql',
+                      ref: 'refs/heads/main',
+                      commitSha: '3'.repeat(40),
+                      contentSha256: '4'.repeat(64),
+                    },
                   },
                 },
               },
@@ -698,6 +714,24 @@ describe('GetRunStatusUseCase', () => {
       runId: 'provider-run-1',
       status: 'RUNNING',
       currentStepId: 'step-transform',
+      provenance: {
+        persistedPlan: {
+          planRecordId: '9'.repeat(64),
+          planVersion: '1.0',
+          sourceRef: 'plan://persisted/plan-1',
+          canonicalPlanSha256: 'a'.repeat(64),
+        },
+        authoring: {
+          graphArtifact: {
+            repo: 'acme/warehouse',
+            path: 'graphs/orders.flow.yaml',
+          },
+          sqlArtifact: {
+            repo: 'acme/warehouse',
+            path: 'models/orders_daily.sql',
+          },
+        },
+      },
     });
   });
 
