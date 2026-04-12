@@ -55,7 +55,8 @@ execution time.
    top-level execution steps instead of hiding it inside `stepTypeConfig`.
 4. Updated the Temporal workflow to resolve per-step activity retry settings
    from the canonical plan only; retry metadata under
-   `stepTypeConfig.retries` is now rejected as invalid plan shape.
+   `stepTypeConfig.retries` is ignored by the runtime retry mapper instead of
+   being treated as adapter-owned policy.
 5. Aligned API integration tests and web preview mapping with the new
    canonical step-level retry ownership.
 
@@ -64,11 +65,11 @@ execution time.
 The primary retry-governance drift is now materially reduced because:
 
 - the canonical `ExecutionPlan` contract owns the per-step retry/backoff shape
-- shared schemas reject invalid retry metadata before adapter execution
+- shared schemas reject invalid canonical retry metadata before adapter execution
 - planner tests pin deterministic plan identity after retry metadata enters the
   canonical plan core
 - Temporal adapter tests cover explicit plan-owned retry policy, governed
-  defaults, and rejection of retry metadata in non-canonical locations
+  defaults, and non-interpretation of retry metadata in non-canonical locations
 - active docs now describe the canonical ownership split instead of claiming
   static adapter-only retry behavior
 

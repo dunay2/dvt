@@ -313,8 +313,9 @@ async function executeStepActivity(step: Step, ctx: ActivityContext): Promise<St
   - `maximumInterval: '60s'`
   - `backoffCoefficient: 2`
   - `maximumAttempts: 3`
-- Retry metadata carried under `stepTypeConfig.retries` is rejected as invalid
-  plan shape; per-step retry ownership is top-level only.
+- Retry metadata carried under `stepTypeConfig.retries` is not interpreted as
+  Temporal activity retry policy; per-step runtime retry ownership is top-level
+  only.
 - Each retry increments `engineAttemptId`.
 - If Activity succeeds on retry, only ONE `StepCompleted` event emitted (same `logicalAttemptId`).
 

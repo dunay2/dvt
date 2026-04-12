@@ -221,10 +221,6 @@ export function resolveStepActivityRetryPolicy(
     };
   }
 
-  if (hasLegacyStepRetryConfig(step.stepTypeConfig)) {
-    throw new TypeError('INVALID_PLAN_SCHEMA: step_retryPolicy_must_be_top_level');
-  }
-
   return DEFAULT_STEP_ACTIVITY_RETRY_POLICY;
 }
 
@@ -263,14 +259,6 @@ export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef
   }
 
   return result.data;
-}
-
-function hasLegacyStepRetryConfig(stepTypeConfig: unknown): boolean {
-  if (!isPlainObject(stepTypeConfig)) {
-    return false;
-  }
-
-  return Object.hasOwn(stepTypeConfig, 'retries');
 }
 
 // ---------------------------------------------------------------------------

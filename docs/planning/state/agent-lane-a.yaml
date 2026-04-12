@@ -1494,7 +1494,7 @@ tasks:
     status_reason: >-
       `ExecutionStep.retryPolicy` now owns canonical per-step retry/backoff metadata, the planner
       materializes that policy into executable plans, and the Temporal adapter consumes it directly
-      while rejecting retry metadata in non-canonical `stepTypeConfig` locations.
+      without interpreting retry metadata from non-canonical `stepTypeConfig` locations.
     last_verified: '2026-04-12'
   - task_id: AR-A12
     priority: P0

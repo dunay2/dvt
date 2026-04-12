@@ -34,16 +34,22 @@ describe('resolveStepActivityRetryPolicy', () => {
     });
   });
 
-  it('rejects legacy retry metadata when it is placed inside stepTypeConfig', () => {
-    expect(() =>
-      resolveStepActivityRetryPolicy({
-        stepTypeConfig: {
-          retries: {
-            maxAttempts: 2,
-            backoffMs: 4000,
-          },
+  it('ignores stepTypeConfig.retries and keeps runtime retry ownership on retryPolicy', () => {
+    const retryPolicy = resolveStepActivityRetryPolicy({
+      stepTypeConfig: {
+        retries: {
+          maxAttempts: 2,
+          backoffMs: 4000,
         },
-      })
-    ).toThrowError(new TypeError('INVALID_PLAN_SCHEMA: step_retryPolicy_must_be_top_level'));
+      },
+    });
+
+    expect(retryPolicy).toEqual({
+      maximumAttempts: 3,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+      nonRetryableErrorTypes: ['PermanentStepError'],
+    });
   });
 });

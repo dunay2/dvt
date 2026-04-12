@@ -169,7 +169,7 @@ Notes:
 
 - `scheduleToStartTimeout`, `scheduleToCloseTimeout`, and `heartbeatTimeout` are still **not currently configured**.
 - No per-step timeout override matrix is implemented yet; only retry/backoff ownership moved into the plan contract.
-- Retry metadata under `stepTypeConfig.retries` is no longer consumed; that non-canonical location now fails closed as `INVALID_PLAN_SCHEMA: step_retryPolicy_must_be_top_level`.
+- Retry metadata under `stepTypeConfig.retries` is no longer consumed for runtime activity retry policy. Only top-level `step.retryPolicy` affects Temporal retry mapping.
 
 Timeout interaction note:
 

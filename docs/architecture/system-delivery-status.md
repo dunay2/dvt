@@ -106,12 +106,32 @@ direction.
 
 ### Execution And Adapters
 
-| Area              | Packages                   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ----------------- | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow engine   | `@dvt/engine`              | Closed for Phase 1 | Core engine, in-process projector, and the pre-bootstrap `estimateRunRef` path are delivered; `RunMetadata` now persists a single discriminated `providerRef`, provider-ref reconciliation is constrained to a typed validated `saveProviderRef(...)` seam, and current hardening work is focused on the `WE-HX` boundary split plus recent signal-transition and stale-snapshot guard tightening.                         |
-| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; step activities now resolve retry/backoff from canonical `ExecutionStep.retryPolicy` only and fail closed on non-canonical retry blobs; the runtime ships split baseline/transformation/Postgres capability lanes plus a canonical local Docker proof wrapper for the Postgres path; residual hardening is tracked separately. |
-| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and operating as shipped foundations.                                                                                                                                                                                                                                                                                                                        |
-| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime.                                                                                                                                                                                                                                                                                                                                                             |
+- `Workflow engine` — packages: `@dvt/engine` — status: `Closed for Phase 1`
+  Core engine, in-process projector, and the pre-bootstrap `estimateRunRef`
+  path are delivered; `RunMetadata` now persists a single discriminated
+  `providerRef`, provider-ref reconciliation is constrained to a typed
+  validated `saveProviderRef(...)` seam, and current hardening work is focused
+  on the `WE-HX` boundary split plus recent signal-transition and
+  stale-snapshot guard tightening.
+
+- `Temporal adapter` — packages: `@dvt/adapter-temporal` — status:
+  `Closed for Phase 1`
+  Real adapter primitives, worker host, lookup, and time-skipping integration
+  coverage exist; step activities now resolve retry/backoff from canonical
+  `ExecutionStep.retryPolicy` only and no longer interpret
+  `stepTypeConfig.retries` as runtime retry policy; the runtime ships split
+  baseline/transformation/Postgres capability lanes plus a canonical local
+  Docker proof wrapper for the Postgres path; residual hardening is tracked
+  separately.
+
+- `Postgres adapter` — packages: `@dvt/adapter-postgres` — status:
+  `Closed for Phase 1`
+  State-store and outbox persistence implementation are present and operating
+  as shipped foundations.
+
+- `Mock/test adapter` — packages: `@dvt/engine` test surface — status:
+  `Implemented`
+  Exists as test-only support surface, not as a product runtime.
 
 ### Persistence, Read Models, And Delivery
 
