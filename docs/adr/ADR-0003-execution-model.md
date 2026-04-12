@@ -4,9 +4,9 @@
 - **Date**: 2026-02-16
 - **Owners**: Architecture / Engine Domain
 - **Related files**:
-  - [`IWorkflowEngine.v2.0.md`](../architecture/components/engine/contracts/engine/IWorkflowEngine.v2.0.md)
-  - [`RunEvents.v2.0.md`](../architecture/components/engine/contracts/engine/RunEvents.v2.0.md)
-  - [`ExecutionSemantics.v2.0.md`](../architecture/components/engine/contracts/engine/ExecutionSemantics.v2.0.md)
+  - [`IWorkflowEngine.v1.md`](../architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md)
+  - [`RunEvents.v1.md`](../architecture/components/engine/contracts/engine/RunEvents.v1.md)
+  - [`ExecutionSemantics.v1.md`](../architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md)
 
 ---
 
@@ -77,7 +77,7 @@ graph TD
     subgraph "Domain Layer (DVT+ Sovereignty)"
         A[ADR-0003: Execution Model Sovereignty]
         A --> B[Defines lifecycle states<br/>PENDING, RUNNING, COMPLETED]
-        A --> C[Defines valid transitions<br/>RunQueued → RunStarted → RunCompleted]
+        A --> C[Defines valid transitions<br/>RunQueued â†’ RunStarted â†’ RunCompleted]
         A --> D[Defines execution semantics<br/>Meaning of lifecycle events]
         A --> E[Defines invariants<br/>Retry, ordering, idempotency rules]
     end
@@ -148,7 +148,7 @@ graph LR
 ## Code Ownership Example
 
 ```typescript
-// ❌ Anti-pattern: Engine defines behavior by I/O side effects
+// âŒ Anti-pattern: Engine defines behavior by I/O side effects
 class Engine_OLD {
   async startRun(planRef: PlanRef, ctx: RunContext) {
     const bytes = await this.planFetcher.fetch(planRef.uri);
@@ -156,7 +156,7 @@ class Engine_OLD {
   }
 }
 
-// ✅ Correct pattern: Domain defines semantics, adapter handles infrastructure
+// âœ… Correct pattern: Domain defines semantics, adapter handles infrastructure
 class Engine {
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<RunRef> {
     this.validateMetadata(planRef); // domain rule

@@ -7,10 +7,9 @@ import {
   AllowAllAuthorizer,
   StartRunApplicationService,
   type IProviderAdapter,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
-  type RunStatusSnapshot,
   type SignalRequest,
-  type WorkflowEngine,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
 import { createNoopObservability } from '@dvt/observability';
@@ -27,15 +26,12 @@ class FakeWorkflowEngine {
 
 function makeDeps(): WorkflowEngineDeps {
   return {
-    stateStoreRead: {} as never,
-    stateStoreWrite: {} as never,
-    projector: {} as never,
-    idempotency: {} as never,
-    clock: {} as never,
-    policy: {} as never,
-    intentStore: {} as never,
     adapters: new Map(),
     observability: {} as never,
+    startRunApplicationService: {} as never,
+    runRecoveryService: {} as never,
+    runControlService: {} as never,
+    runStatusQueryService: {} as never,
   };
 }
 
@@ -44,7 +40,8 @@ describe('createWorkflowEngine', () => {
     const deps = makeDeps();
     const engine = createWorkflowEngine(
       deps,
-      FakeWorkflowEngine as unknown as new (deps: WorkflowEngineDeps) => WorkflowEngine
+      (receivedDeps) =>
+        new FakeWorkflowEngine(receivedDeps) as unknown as ReturnType<typeof createWorkflowEngine>
     ) as unknown as FakeWorkflowEngine;
 
     expect(engine instanceof FakeWorkflowEngine).toBe(true);
@@ -66,14 +63,14 @@ describe('buildWorkflowEngine', () => {
         };
       },
       async cancelRun(_engineRunRef) {},
-      async getRunStatus(_engineRunRef): Promise<RunStatusSnapshot> {
+      async getProviderStatusView(_engineRunRef): Promise<ProviderRunStatusView> {
         throw new Error('not used');
       },
       async signal(_engineRunRef, _request: SignalRequest) {},
       signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
-    const engine = buildWorkflowEngine({
+    const runtime = buildWorkflowEngine({
       security: {
         authorizer: new AllowAllAuthorizer(),
         planRefAllowedSchemes: ['https'],
@@ -93,8 +90,10 @@ describe('buildWorkflowEngine', () => {
       },
     });
 
-    const startRunService = (engine as unknown as { startRunApplicationService: unknown })
+    const startRunService = (runtime.engine as unknown as { startRunApplicationService: unknown })
       .startRunApplicationService;
     expect(startRunService).toBeInstanceOf(StartRunApplicationService);
+    expect(runtime.runEnrichmentService).toBeDefined();
+    expect(runtime.runHealthService).toBeDefined();
   });
 });

@@ -56,8 +56,8 @@ function makeTemporalAdapter(): IProviderAdapter {
       } as EngineRunRef;
     },
     async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' };
+    async getProviderStatusView() {
+      return { provider: 'temporal', providerStatus: 'RUNNING' };
     },
     async signal() {},
   };

@@ -22,6 +22,9 @@ planning_type: proposal
 - [Doc-Driven Framework And Tooling Plan](./mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [MW-A2 GenericGraphSource plan](./mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+- [AR-C6 Temporal cancel semantics plan](./mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md)
+- [Contract pack and read boundary reset plan](./mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md)
+- [AR-A12-B status model split plan](./mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md)
 - [Planner kernel DBT boundary extraction follow-up 2026-04-10](./mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
 - [Planner hard-cut boundary remediation 2026-04-10](./mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md)
 - [Temporal workflow helper artifact facts narrowing slice 2026-04-10](./mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md)
@@ -49,7 +52,6 @@ planning_type: proposal
 - [Runtime And Delivery](./superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md)
 - [AR-A9 Planner cycle fail-closed plan](./superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
 - [MVP-A1 Backend Contractual Inventory](./superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
-- [Planner generic ingress compatibility slice 2026-04-10](./mandatory/runtime-and-contracts/planner-generic-ingress-compatibility-slice-20260410.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](./superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
 - [G4-PR4 Admission Control Operability Plan](./superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md)
 

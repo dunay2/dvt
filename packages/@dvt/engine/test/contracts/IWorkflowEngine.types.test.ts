@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
 import type {
+  CanonicalRunStatus,
   RunContext,
   EngineRunRef,
   PlanRef,
-  RunStatusSnapshot,
+  ProviderRunStatusView,
+  RunStatusEnrichment,
   SignalRequest,
 } from '../../src/contracts/types.js';
 
@@ -61,11 +63,35 @@ describe('IWorkflowEngine contract types', () => {
     expect(req.type).toBe('PAUSE');
   });
 
-  it('RunStatusSnapshot accepts status values', () => {
-    const snapshot: RunStatusSnapshot = {
+  it('CanonicalRunStatus accepts status values', () => {
+    const snapshot: CanonicalRunStatus = {
       runId: 'r',
       status: 'RUNNING',
     };
     expect(snapshot.status).toBe('RUNNING');
+  });
+
+  it('ProviderRunStatusView accepts provider-native diagnostic fields', () => {
+    const providerView: ProviderRunStatusView = {
+      provider: 'temporal',
+      providerStatus: 'RUNNING',
+      providerSubstatus: 'WORKFLOW_TASK_RUNNING',
+    };
+    expect(providerView.providerStatus).toBe('RUNNING');
+  });
+
+  it('RunStatusEnrichment composes canonical status and provider view', () => {
+    const enrichment: RunStatusEnrichment = {
+      canonical: {
+        runId: 'r',
+        status: 'RUNNING',
+      },
+      providerView: {
+        provider: 'temporal',
+        providerStatus: 'RUNNING',
+      },
+    };
+    expect(enrichment.canonical.status).toBe('RUNNING');
+    expect(enrichment.providerView.provider).toBe('temporal');
   });
 });

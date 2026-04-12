@@ -213,7 +213,6 @@ describeIfPg('protected runtime integration', () => {
       headers: { authorization: `Bearer ${token}` },
       payload: {
         tenantId: TENANT_ID,
-        reason: 'integration-test',
       },
     });
     expect(signalResponse.statusCode).toBe(202);
@@ -379,7 +378,6 @@ describeIfPg('protected runtime integration', () => {
         headers: { authorization: `Bearer ${token}` },
         payload: {
           tenantId: TENANT_ID,
-          reason: 'permission-check',
         },
       });
 
@@ -489,6 +487,88 @@ describeIfPg('protected runtime integration', () => {
         tenantActions: TENANT_ACTIONS_FULL,
       });
     }
+  });
+
+  it('rejects /runs/:runId/cancel when a non-empty reason is provided on the native cancel path', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/runs/native-cancel-reason/cancel',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        reason: 'operator cancel',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual(
+      httpError('bad_request', 'cancel_reason_not_supported', {
+        target: 'reason',
+      })
+    );
+  });
+
+  it('ignores empty /runs/:runId/cancel reason noise on the native cancel path', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+    const runId = 'api-integration-native-cancel-empty-reason';
+
+    const startResponse = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.orders.cancel.empty_reason'],
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [
+            {
+              nodeId: 'model.orders.cancel.empty_reason',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+            },
+          ],
+        },
+        runId,
+        targetAdapter: 'mock',
+      },
+    });
+    expect(startResponse.statusCode).toBe(202);
+
+    const cancelResponse = await app!.inject({
+      method: 'POST',
+      url: `/runs/${runId}/cancel`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        reason: '   ',
+      },
+    });
+
+    expect(cancelResponse.statusCode).toBe(202);
+    expect(cancelResponse.json()).toEqual({
+      runId,
+      signalType: 'CANCEL',
+      accepted: true,
+    });
   });
 
   it('rejects /runs/:runId/recover when principal lacks run:retry permission', async () => {

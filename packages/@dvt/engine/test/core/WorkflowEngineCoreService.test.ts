@@ -1,4 +1,4 @@
-import type { EngineRunRef, RunStatusSnapshot } from '@dvt/contracts';
+import type { EngineRunRef } from '@dvt/contracts';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -26,82 +26,6 @@ describe('WorkflowEngineCoreService', () => {
         runId: 'missing',
       })
     ).rejects.toThrow(/engine\.error\.run_metadata_not_found/);
-  });
-
-  it('getStatus returns projected state without calling adapter', async () => {
-    let adapterCalled = false;
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        async getRunStatus() {
-          adapterCalled = true;
-          return { runId: 'x', status: 'RUNNING' } as RunStatusSnapshot;
-        },
-      },
-    });
-    await bootstrapQueuedRun(store, 'core-status-1');
-    const ref: EngineRunRef = makeRunRef('core-status-1');
-    const snapshot = await core.getStatus(ref);
-
-    expect(adapterCalled).toBe(false);
-    expect(snapshot.runId).toBe('core-status-1');
-    expect(snapshot.status).toBe('PENDING');
-  });
-
-  it('enrichStatus merges adapter substatus and message over projected base', async () => {
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        async getRunStatus(runRef) {
-          return {
-            runId: runRef.runId,
-            status: 'RUNNING',
-            substatus: 'DRAINING',
-            message: 'graceful shutdown in progress',
-          } as RunStatusSnapshot;
-        },
-      },
-    });
-    await bootstrapQueuedRun(store, 'core-enrich-1');
-    const ref: EngineRunRef = makeRunRef('core-enrich-1');
-    const enriched = await core.enrichStatus(ref);
-
-    expect(enriched.runId).toBe('core-enrich-1');
-    expect(enriched.status).toBe('PENDING');
-    expect(enriched.substatus).toBe('DRAINING');
-    expect(enriched.message).toBe('graceful shutdown in progress');
-  });
-
-  it('enrichStatus throws when adapter status fetch fails', async () => {
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        async getRunStatus() {
-          throw new Error('provider unavailable');
-        },
-      },
-    });
-    await bootstrapQueuedRun(store, 'core-enrich-err-1');
-    const ref: EngineRunRef = makeRunRef('core-enrich-err-1');
-    await expect(core.enrichStatus(ref)).rejects.toThrow(/provider unavailable/);
-  });
-
-  it('enrichStatus rejects on adapter timeout without downgrading to projected status', async () => {
-    const { core, store } = createWorkflowEngineCoreFixture({
-      adapterOverrides: {
-        async getRunStatus() {
-          return await new Promise<RunStatusSnapshot>((resolve) => {
-            setTimeout(() => resolve({ runId: 'late-run', status: 'RUNNING' }), 25);
-          });
-        },
-      },
-      timeouts: {
-        adapterCallMs: 5,
-      },
-    });
-    await bootstrapQueuedRun(store, 'core-enrich-timeout-1');
-    const ref: EngineRunRef = makeRunRef('core-enrich-timeout-1');
-
-    await expect(core.enrichStatus(ref)).rejects.toThrow(
-      /adapter\.getRunStatus timed out after 5ms/
-    );
   });
 
   it('cancel delegates to adapter without appending RunCancelRequested', async () => {

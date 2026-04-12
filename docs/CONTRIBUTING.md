@@ -1,4 +1,4 @@
-﻿# Contributing to DVT Engine Documentation
+# Contributing to DVT Engine Documentation
 
 This guide explains how to contribute to the DVT Workflow Engine documentation,
 including normative contracts, runbooks, and architectural decisions.
@@ -26,21 +26,26 @@ canonical docs tree instead.
 
 ```text
 docs/
-â”œâ”€â”€ architecture/engine/
-â”‚   â”œâ”€â”€ INDEX.md                    # Navigation hub
-â”‚   â”œâ”€â”€ VERSIONING.md               # Contract evolution policy (MUST READ)
-â”‚   â”œâ”€â”€ contracts/                  # Normative contracts
-â”‚   â”‚   â”œâ”€â”€ engine/
-â”‚   â”‚   â”‚   â”œâ”€â”€ IWorkflowEngine.v1.1.md
-â”‚   â”‚   â”‚   â””â”€â”€ ExecutionSemantics.v1.md
-â”‚   â”‚   â”œâ”€â”€ adapters/
-â”‚   â”‚   â””â”€â”€ capabilities/
-â”‚   â”œâ”€â”€ adapters/                   # Platform integrations
-â”‚   â”œâ”€â”€ ops/                        # Operations & observability
-â”‚   â”œâ”€â”€ dev/                        # Developer tooling
-â”‚   â””â”€â”€ roadmap/                    # Phases & milestones
-â”œâ”€â”€ runbooks/                       # SRE procedures
-â””â”€â”€ decisions/                      # ADRs (Architecture Decision Records)
++-- architecture/
+Ã‚Â¦   +-- components/engine/
+Ã‚Â¦   Ã‚Â¦   +-- index.md                  # Engine navigation hub
+Ã‚Â¦   Ã‚Â¦   +-- contracts/
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- VERSIONING.md         # Active engine-runtime versioning policy
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- index.md              # Contract-family landing page
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- README.md             # Engine-runtime contract pack registry
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- engine/
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- IWorkflowEngine.v1.md
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- IProviderAdapter.v1.md
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- RunEvents.v1.md
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- ExecutionSemantics.v1.md
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- SignalsAndAuth.v1.md
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- capabilities/
+Ã‚Â¦   Ã‚Â¦   Ã‚Â¦   +-- state-store/
+Ã‚Â¦   Ã‚Â¦   +-- adapters/
+Ã‚Â¦   Ã‚Â¦   +-- ops/
+Ã‚Â¦   Ã‚Â¦   +-- roadmap/
++-- runbooks/
++-- adr/
 ```
 
 ---
@@ -51,16 +56,24 @@ docs/
 
 Changes to different documentation areas require specific team approvals:
 
-| Path                                                                 | Required Reviewers                                                 | Rationale                    |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------- |
-| `docs/architecture/engine/contracts/`                                | `@your-org/architecture-team`                                      | Normative contracts          |
-| `docs/VERSIONING.md`                                                 | `@your-org/architecture-team`                                      | Contract evolution policy    |
-| `docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md` | `@your-org/architecture-team`<br>`@your-org/engine-leads`          | Core execution semantics     |
-| `docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md`    | `@your-org/architecture-team`<br>`@your-org/sdk-team`              | SDK interface                |
-| `docs/architecture/engine/contracts/adapters/`                       | `@your-org/architecture-team`<br>`@your-org/platform-integrations` | Multi-platform compatibility |
-| `docs/runbooks/`                                                     | `@your-org/sre-team`<br>`@your-org/architecture-team`              | Operational procedures       |
-| `docs/roadmap/`                                                      | `@your-org/product-leads`<br>`@your-org/engineering-leads`         | Strategic planning           |
-| `.github/workflows/`                                                 | `@your-org/devops-team`                                            | CI/CD pipeline changes       |
+- `docs/architecture/components/engine/contracts/`: `@your-org/architecture-team`
+  for normative contracts
+- `docs/architecture/components/engine/contracts/VERSIONING.md`:
+  `@your-org/architecture-team` for contract evolution policy
+- `docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v*.md`:
+  `@your-org/architecture-team` and `@your-org/engine-leads` for core
+  execution semantics
+- `docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v*.md`:
+  `@your-org/architecture-team` and `@your-org/sdk-team` for the SDK
+  interface
+- `docs/architecture/components/engine/contracts/adapters/`:
+  `@your-org/architecture-team` and `@your-org/platform-integrations` for
+  multi-platform compatibility
+- `docs/runbooks/`: `@your-org/sre-team` and `@your-org/architecture-team`
+  for operational procedures
+- `docs/roadmap/`: `@your-org/product-leads` and `@your-org/engineering-leads`
+  for strategic planning
+- `.github/workflows/`: `@your-org/devops-team` for CI/CD pipeline changes
 
 ### Setting Up Code Owners
 
@@ -70,14 +83,14 @@ Changes to different documentation areas require specific team approvals:
 2. Replace `@your-org/architecture-team` with individual GitHub handles:
 
    ```text
-   /docs/architecture/engine/contracts/   @alice @bob @charlie
+   /docs/architecture/components/engine/contracts/   @alice @bob @charlie
    ```
 
 3. Commit and push
 
 **For established orgs**:
 
-1. Go to **Settings â†’ Teams** in your GitHub org
+1. Go to **Settings ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Teams** in your GitHub org
 2. Create teams: `architecture-team`, `engine-leads`, `sre-team`, etc.
 3. Add members to each team
 4. CODEOWNERS will automatically route reviews
@@ -141,7 +154,7 @@ npm install -g markdownlint-cli2
 markdownlint-cli2 "docs/**/*.md"
 ```
 
-### 2ï¸âƒ£ TypeScript Code Block Validation
+### 2ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ TypeScript Code Block Validation
 
 **Tool**: `tsc` (TypeScript compiler)  
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-typescript-blocks`)  
@@ -155,13 +168,13 @@ markdownlint-cli2 "docs/**/*.md"
 
 ````bash
 # Extract TypeScript blocks manually
-sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md | sed '1d;$d' > /tmp/test.ts
+sed -n '/```ts/,/```/p' docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md | sed '1d;$d' > /tmp/test.ts
 
 # Validate with tsc
 npx tsc --noEmit --skipLibCheck /tmp/test.ts
 ````
 
-### 3ï¸âƒ£ Internal Link Validation
+### 3ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Internal Link Validation
 
 **Tool**: `markdown-link-check`  
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-internal-links`)  
@@ -175,26 +188,26 @@ npx tsc --noEmit --skipLibCheck /tmp/test.ts
 ```bash
 # Check links locally
 npm install -g markdown-link-check
-markdown-link-check docs/architecture/engine/index.md
+markdown-link-check docs/architecture/components/engine/index.md
 ```
 
 **Common causes**:
 
-- Typo in filename: `IWorkflowEngine.v1.1.md` vs `IWorkflowEngine.v1.0.md`
+- Typo in filename: `IWorkflowEngine.v1.md` vs `IProviderAdapter.v1.md`
 - Incorrect relative path: `../contracts/` vs `../../contracts/`
 - Broken anchor: `#section-1` but heading is actually `## Section 1.0`
 
-### 4ï¸âƒ£ Normative Contract Structure Validation
+### 4ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Normative Contract Structure Validation
 
 **Tool**: Custom Bash script  
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-normative-contracts`)  
 **Checks** (for files matching `*.v[0-9]*.md`):
 
-- âœ… Has `**Status**:` field
-- âœ… Has `**Version**:` field
-- âœ… Has `## Change Log` section
-- âœ… Has reference to `VERSIONING.md`
-- âœ… Uses normative language (`MUST`, `MUST NOT`)
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Has `**Status**:` field
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Has `**Version**:` field
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Has `## Change Log` section
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Has reference to `VERSIONING.md`
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Uses normative language (`MUST`, `MUST NOT`)
 
 **Fix failures**:
 
@@ -215,9 +228,9 @@ A **normative contract** is a binding specification that:
 
 **Examples**:
 
-- âœ… `IWorkflowEngine.v1.1.md` â€” defines SDK interface
-- âœ… `ExecutionSemantics.v1.md` â€” defines StateStore model
-- âŒ `observability.md` â€” operational guide (informative, not normative)
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ `IWorkflowEngine.v1.md` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â defines SDK interface
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ `ExecutionSemantics.v1.md` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â defines StateStore model
+- ÃƒÂ¢Ã‚ÂÃ…â€™ `observability.md` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â operational guide (informative, not normative)
 
 ### Normative Contract Template
 
@@ -255,19 +268,13 @@ What problem does this contract solve?
 
 ## Schema Evolution (Versioning)
 
-Changes to this contract follow **Semantic Versioning** (see `../../VERSIONING.md`):
+Changes to the active engine-runtime contract pack follow the current
+pre-stable reset policy (see `../../VERSIONING.md`):
 
-**MINOR Bump (v1.0 â†’ v1.1)**: Backward-compatible additions
-
-- ...
-
-**MAJOR Bump (v1.0 â†’ v2.0)**: Breaking changes
-
-- ...
-
-**Patch Update (v1.0.1, v1.0.2, etc.)**: Clarifications only
-
-- ...
+- one live `v1` file per active engine-runtime topic
+- semantic changes rewrite that `v1` file in place
+- sibling `v1.1`, `v2`, `reference`, and migration companions are removed in
+  the same slice
 
 ---
 
@@ -280,20 +287,16 @@ Changes to this contract follow **Semantic Versioning** (see `../../VERSIONING.m
 
 ### When to Create a New Version
 
-See **[VERSIONING.md](./architecture/components/engine/contracts/VERSIONING.md)** for the complete policy. Quick reference:
+For the active engine-runtime pack, do not create a second file generation
+while the repository remains pre-stable.
 
-| Change Type                          | Version Bump | Example         | File Action                               |
-| ------------------------------------ | ------------ | --------------- | ----------------------------------------- |
-| Add optional field/method            | MINOR        | v1.0 â†’ v1.1   | Create `MyContract.v1.1.md` (keep v1.0)   |
-| Clarify wording (no semantic change) | PATCH        | v1.0 â†’ v1.0.1 | Edit in place, update changelog, git tag  |
-| Remove required field                | MAJOR        | v1.0 â†’ v2.0   | Create `MyContract.v2.md`, deprecate v1.0 |
-| Rename method                        | MAJOR        | v1.0 â†’ v2.0   | Create `MyContract.v2.md`, deprecate v1.0 |
+Quick reference:
 
-**Deprecation policy**:
-
-- 90-day grace period (clock starts at release tag, not merge to main)
-- Add deprecation notice to old version file
-- Update `INDEX.md` to point to new version
+| Change Type                        | File Action                                                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Clarify wording                    | Edit `MyContract.v1.md` in place and update the changelog                                                        |
+| Add or remove behavior             | Rewrite `MyContract.v1.md` in place and update registries, ADR links, and diagrams in the same slice             |
+| Remove or rename methods or events | Rewrite `MyContract.v1.md` in place and remove any sibling file that would preserve a second active reading path |
 
 ---
 
@@ -303,27 +306,15 @@ See **[VERSIONING.md](./architecture/components/engine/contracts/VERSIONING.md)*
 
 ### File Naming Convention
 
-| Filename                        | Meaning                                    |
-| ------------------------------- | ------------------------------------------ |
-| `IWorkflowEngine.v1.1.md`       | MAJOR.MINOR series (v1 = v1.x)             |
-| `IWorkflowEngine.v1.1.md`       | MINOR bump (backward-compatible additions) |
-| `IWorkflowEngine.v2.md`         | MAJOR bump (breaking changes)              |
-| `IWorkflowEngine.v2.0-DRAFT.md` | Draft (targets v2.0 release)               |
+| Filename                 | Meaning                                          |
+| ------------------------ | ------------------------------------------------ |
+| `IWorkflowEngine.v1.md`  | Single active pre-stable contract for that topic |
+| `IProviderAdapter.v1.md` | Single active pre-stable contract for that topic |
 
-### Git Tagging for Patches
+### Git history
 
-**Patch updates** (v1.0 â†’ v1.0.1) do NOT get new files. Instead:
-
-1. Edit `MyContract.v1.md` in place
-2. Update `## Change Log` section
-3. Increment `**Version**: 1.0.1`
-4. Commit with message: `docs: patch ExecutionSemantics.v1 to v1.0.1 (clarify non-contiguous semantics)`
-5. Create git tag: `git tag engine/ExecutionSemantics@v1.0.1`
-6. Push: `git push origin engine/ExecutionSemantics@v1.0.1`
-
-This keeps file proliferation low while preserving patch history via git tags.
-
----
+Pre-stable contract history is preserved by git commits. Do not create parallel
+contract generations or deprecation banners inside the active tree.
 
 ## Local Development Workflow
 
@@ -336,16 +327,16 @@ Before pushing your branch:
 markdownlint-cli2 "docs/**/*.md"
 
 # 2. Check internal links
-markdown-link-check docs/architecture/engine/INDEX.md
+markdown-link-check docs/architecture/components/engine/index.md
 
 # 3. Validate TypeScript snippets (if you added code blocks)
 # (Extract block manually and run tsc --noEmit)
 
 # 4. Preview rendering (VS Code)
-# Open .md file â†’ Press Ctrl+Shift+V (Windows) or Cmd+Shift+V (Mac)
+# Open .md file ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Press Ctrl+Shift+V (Windows) or Cmd+Shift+V (Mac)
 ```
 
-### Troubleshooting: ESLint / TypeScript parser errors âš ï¸
+### Troubleshooting: ESLint / TypeScript parser errors ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â
 
 If CI shows errors like `@typescript-eslint/parser` complaining that files listed in `parserOptions.project` cannot be found (for example `packages/engine/legacy-top-level-engine/...`), clean up stale references using the steps below.
 
@@ -365,7 +356,7 @@ Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.confi
 1. Inspect the failing ESLint/TypeScript config referenced in the error log (`parserOptions.project` / `tsconfig.json`).
 2. Remove or update any `include` / `files` entries that point to deleted or moved folders (e.g. `legacy-*`).
 
-   Example â€” remove stale legacy entry from `tsconfig.json`:
+   Example ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â remove stale legacy entry from `tsconfig.json`:
 
    ```json
    {
@@ -399,9 +390,9 @@ This prevents `@typescript-eslint/parser` from failing when it resolves `tsconfi
 
 Install these for real-time validation:
 
-- **markdownlint** (`DavidAnson.vscode-markdownlint`) â€” highlights Markdown errors
-- **Markdown All in One** (`yzhang.markdown-all-in-one`) â€” TOC generation, link completion
-- **Code Spell Checker** (`streetsidesoftware.code-spell-checker`) â€” catches typos
+- **markdownlint** (`DavidAnson.vscode-markdownlint`) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â highlights Markdown errors
+- **Markdown All in One** (`yzhang.markdown-all-in-one`) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â TOC generation, link completion
+- **Code Spell Checker** (`streetsidesoftware.code-spell-checker`) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â catches typos
 
 ---
 
@@ -411,7 +402,7 @@ Contract quality is enforced by repository automation first, editor tooling seco
 
 ### Mandatory checks for contract changes
 
-For changes under `docs/architecture/engine/contracts/**`, contributors MUST run:
+For changes under `docs/architecture/components/engine/contracts/**`, contributors MUST run:
 
 ```bash
 pnpm validate:contracts
@@ -445,38 +436,25 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./adr/ADR-0006-con
 
 ### Q: I need to fix a typo in a normative contract. Do I create a new file?
 
-**A**: No. Typos are **patch updates**:
+**A**: No.
 
-1. Edit in place
-2. Update `**Version**:` field (e.g., `1.0` â†’ `1.0.1`)
-3. Add entry to `## Change Log`
-4. Git tag: `engine/MyContract@v1.0.1`
+1. Edit the active `v1` file in place
+2. Update the changelog if the contract uses one
+3. Keep registries and links aligned in the same slice
 
 ### Q: I want to add a new optional method to `IWorkflowEngine.v1.md`. Is that a patch or MINOR?
 
-**A**: **MINOR update on the active major line** (backward-compatible addition).
+**A**: Edit the active `IWorkflowEngine.v1.md` in place.
 
-1. Edit `IWorkflowEngine.v1.md` in place
-2. Add the new optional method
-3. Update `**Version**:` to `1.1`
-4. Add a changelog entry
-5. Update `index.md` and any affected reference docs
+1. Add the method
+2. Update the changelog if needed
+3. Update registries, ADR references, and affected diagrams in the same slice
 
 ### Q: How do I deprecate an old contract version?
 
-**A**: See [VERSIONING.md Â§ Deprecation Process](./architecture/components/engine/contracts/VERSIONING.md#deprecation-process):
-
-1. Add deprecation banner to old file:
-
-   ```markdown
-   > **âš ï¸ DEPRECATED**: This contract is deprecated as of 2026-02-01.
-   > Use `MyContract.v2.md` instead.
-   > Support ends: 2026-05-01 (90 days after release tag).
-   ```
-
-2. Create git tag: `engine/MyContract@v2.0`
-3. Grace period: 90 days from tag date
-4. After grace period: Remove old file, keep migration guide
+**A**: In the current pre-stable engine-runtime pack you do not keep old active
+versions. Rewrite the canonical `v1` file in place and remove sibling active
+files in the same slice.
 
 ### Q: CI failed with "Missing **Version** field". How do I fix?
 
@@ -485,7 +463,7 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./adr/ADR-0006-con
 ```markdown
 **Status**: Normative (MUST / MUST NOT)  
 **Version**: 1.0  
-**Stability**: Core semantics â€” breaking changes require version bump  
+**Stability**: Active pre-stable line - rewrite in place  
 **Consumers**: Engine, StateStore, Projector
 ```
 
@@ -493,10 +471,10 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./adr/ADR-0006-con
 
 **A**: Use a different code block type:
 
-- âŒ `\`\`\`ts`or`\`\`\`typescript` â€” will be validated by tsc
-- âœ… `\`\`\`text` â€” skipped by validator
-- âœ… `\`\`\`pseudo` â€” skipped by validator
-- âœ… Add comment at top: `// @ts-nocheck pseudocode`
+- ÃƒÂ¢Ã‚ÂÃ…â€™ `\`\`\`ts`or`\`\`\`typescript` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â will be validated by tsc
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ `\`\`\`text` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â skipped by validator
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ `\`\`\`pseudo` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â skipped by validator
+- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Add comment at top: `// @ts-nocheck pseudocode`
 
 ---
 
@@ -510,7 +488,7 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./adr/ADR-0006-con
 
 ## Additional Resources
 
-- [VERSIONING.md](./architecture/components/engine/contracts/VERSIONING.md) â€” Complete contract evolution policy
-- [index.md](./architecture/components/engine/index.md) â€” Navigation hub for all engine docs
+- [VERSIONING.md](./architecture/components/engine/contracts/VERSIONING.md) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Complete contract evolution policy
+- [index.md](./architecture/components/engine/index.md) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Navigation hub for all engine docs
 - [GitHub CODEOWNERS docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
 - [RFC 2119 (Normative keywords)](https://www.ietf.org/rfc/rfc2119.txt)

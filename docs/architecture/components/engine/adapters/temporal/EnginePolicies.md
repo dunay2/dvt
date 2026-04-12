@@ -36,8 +36,26 @@ Primary implementation references:
 
 ### 1.2 Status source of truth
 
-- `getRunStatus()` reads events from state store and projects snapshot (`stateStore.listEvents()` + `projector.rebuild()`).
-- The adapter **does not** use workflow query state as operational authority.
+- `TemporalAdapter.getProviderStatusView()` now calls
+  `WorkflowHandle.describe()` and returns a provider-native
+  `ProviderRunStatusView`.
+- The engine's canonical caller-visible status still remains the event-log plus
+  snapshot read path governed outside the adapter boundary.
+- Provider status should therefore be treated as live runtime enrichment, not
+  as the authoritative state-store replacement.
+- Missing `describe().status.name` still fails closed as an invalid provider
+  response shape, but unknown future Temporal status tokens are preserved as
+  provider diagnostics instead of breaking enriched reads.
+- In native-cancel cleanup races, `describe()` may still report `RUNNING` while
+  workflow-local terminal cancellation events are being persisted, and may
+  later settle on `COMPLETED` because the Temporal workflow returns normally
+  after recording canonical `RunCancelRequested` / `RunCancelled`.
+- Temporal workflow runtime still exposes an internal `runtimeState` query for workflow-local visibility/debugging, but it is no longer the adapter's published provider-status boundary.
+- The provider view is intentionally narrower than the canonical read model:
+  Temporal-native runtime statuses such as `RUNNING`, `FAILED`,
+  `TERMINATED`, `TIMED_OUT`, and `CONTINUED_AS_NEW` come from the Temporal
+  server, while DVT lifecycle concepts such as `PAUSED` and `CANCELLING`
+  remain canonical-engine concepts only.
 
 ---
 
@@ -60,23 +78,29 @@ Workflow defines and handles:
 - `pause` signal
 - `resume` signal
 - `cancel` signal (with optional reason payload)
-- `status` query
+- internal `runtimeState` query
 
-Current adapter policy canonicalizes cancellation on the workflow signal path so
-both `cancelRun()` and `signal(CANCEL)` share the same runtime-owned lifecycle
-behavior.
+Current adapter policy splits cancellation into two governed paths:
+
+- `cancelRun()` uses Temporal-native `WorkflowHandle.cancel()`
+- `signal(CANCEL)` remains the cooperative reason-carrying path
+
+The remaining open work is no longer the provider boundary itself; it is the
+architecture and contract truth sync around who owns
+`RunCancelRequested` / `RunCancelled` and how provider live status relates to
+the canonical read model.
 
 ### 2.3 Cancellation reason semantics (CURRENT)
 
 - Workflow defines a `cancel` signal with `reason` payload.
-- Current adapter cancellation path sends the workflow `cancel` signal.
-- `signal(CANCEL)` can forward a reason payload; `cancelRun()` uses the same
-  workflow signal path without a reason payload.
+- `signal(CANCEL)` forwards that reason payload through the cooperative signal
+  path.
+- `cancelRun()` uses Temporal-native cancellation and therefore does not carry
+  a structured reason payload.
 - Therefore, `cancelReason` should be treated as **best-effort** and may be
   empty in runs cancelled through `cancelRun()`.
-- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter. The
-  current adapter avoids that path so cancellation stays aligned with the
-  workflow-owned signal semantics.
+- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter, so
+  the native cancel path necessarily leaves `cancelReason` optional.
 
 Consumer guidance for v1.1:
 
@@ -84,18 +108,29 @@ Consumer guidance for v1.1:
 - Apply fallback messaging when absent (for example: `Cancelled by system`).
 - Emit diagnostic logs/metrics when a reason is expected by product flow but arrives empty.
 
-Planned clarification for a future version:
+Contract-pack reset tracked under `AR-A12-A`:
 
-- Either keep best-effort semantics explicitly, or
-- Send `cancel(reason)` signal before native cancel when product requirements need deterministic reason persistence.
+- normalize whether `RunCancelRequested` is governed as a runtime-owned
+  lifecycle fact across ADR and contract surfaces
+- clarify that provider live status is enrichment and not the authoritative
+  caller-visible read model
 
 ---
 
 ## 3) Pause/Resume/Cancellation Flow (IMPLEMENTED)
 
-- Workflow state tracks: `status`, `paused`, `cancelled`, `cancelReason`, `currentStepIndex`.
+- Workflow state tracks: `status`, `paused`, `cancelRequested`, `cancelReason`, `currentStepIndex`.
 - Before each step, workflow checks cancellation and emits `RunCancelled` when applicable.
-- During pause, workflow blocks with `condition(() => !state.paused || state.cancelled)`.
+- Native Temporal cancellation is caught in workflow cleanup, which currently
+  emits ordered cancellation lifecycle events from workflow context.
+- The workflow currently flips in-memory status before terminal cancellation
+  events are persisted, so ordered lifecycle truth still belongs to the
+  event-log-backed read path rather than the live workflow query.
+- Late native cancellation can therefore produce a temporary or final mismatch
+  between provider-live status and canonical event-log-backed status; that is a
+  current implementation reality, not a contract violation, because provider
+  status remains enrichment only.
+- During pause, workflow blocks with `condition(() => !state.paused || state.cancelRequested)`.
 - On pause/resume transitions, lifecycle events are emitted via activities (`RunPaused`, `RunResumed`).
 - Step execution emits `StepStarted` and either `StepCompleted` or (`StepFailed` + `RunFailed`).
 
@@ -151,7 +186,7 @@ Timeout interaction note:
 - `engineAttemptId` starts at `1` and increments on activity retries.
 - Multiple attempt-level event pairs for the same `stepId` are expected in failure/retry paths (diagnostic value), e.g. repeated `StepStarted`/`StepFailed` across attempts.
 - Idempotency still must dedupe duplicate delivery within the **same** attempt boundary (e.g., crash after persistence and before ack).
-- Activities are designed under Temporal’s at-least-once execution assumption; side effects must remain idempotent.
+- Activities are designed under Temporalâ€™s at-least-once execution assumption; side effects must remain idempotent.
 - This follows Temporal guidance that activities should be idempotent in durable execution systems.
 
 Concrete key-shape example (illustrative):

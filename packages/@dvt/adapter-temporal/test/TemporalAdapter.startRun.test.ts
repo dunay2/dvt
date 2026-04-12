@@ -220,3 +220,26 @@ describe('TemporalAdapter.signal', () => {
     expect(signal).toHaveBeenCalledWith(WorkflowSignals.CANCEL, 'operator-request');
   });
 });
+
+describe('TemporalAdapter.cancelRun', () => {
+  it('uses the provider-native Temporal cancel handle instead of signal(CANCEL)', async () => {
+    const cancel = vi.fn(async () => undefined);
+    const signal = vi.fn(async () => undefined);
+    const { adapter, workflowClient } = makeAdapter();
+    workflowClient.getHandle.mockReturnValue({
+      cancel,
+      signal,
+    });
+
+    await adapter.cancelRun({
+      provider: 'temporal',
+      tenantId: 'tenant-1',
+      namespace: 'dvt-test',
+      workflowId: 'run-1',
+      runId: 'run-1',
+    });
+
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(signal).not.toHaveBeenCalled();
+  });
+});

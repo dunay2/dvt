@@ -2,8 +2,8 @@ import type {
   EngineRunRef,
   ExecutionPlan,
   PlanRef,
+  ProviderRunStatusView,
   ResolvedRunContext,
-  RunStatusSnapshot,
   SignalSemanticsVersion,
   SignalRequest,
 } from '@dvt/contracts';
@@ -49,8 +49,8 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     return this.deps.adapter.cancelRun(runRef);
   }
 
-  getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
-    return this.deps.adapter.getRunStatus(runRef);
+  getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
+    return this.deps.adapter.getProviderStatusView(runRef);
   }
 
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {

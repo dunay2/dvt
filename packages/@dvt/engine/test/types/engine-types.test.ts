@@ -1,10 +1,16 @@
 import { describe, it, expect } from 'vitest';
 
-import { RunStatusSnapshot, RunStatus, AdapterScopedSubstatus } from '../../src/contracts/types.js';
+import {
+  AdapterScopedSubstatus,
+  CanonicalRunStatus,
+  ProviderRunStatusView,
+  RunStatus,
+  RunStatusEnrichment,
+} from '../../src/contracts/types.js';
 
 describe('engine-types', () => {
-  it('RunStatusSnapshot accepts substatus and message', () => {
-    const snap: RunStatusSnapshot = {
+  it('CanonicalRunStatus accepts substatus and message', () => {
+    const snap: CanonicalRunStatus = {
       runId: 'r',
       status: 'FAILED',
       substatus: 'RETRYING',
@@ -15,8 +21,8 @@ describe('engine-types', () => {
     expect(snap.message).toBe('error');
   });
 
-  it('RunStatusSnapshot accepts TF-C2-B outcome fields', () => {
-    const snap: RunStatusSnapshot = {
+  it('CanonicalRunStatus accepts TF-C2-B outcome fields', () => {
+    const snap: CanonicalRunStatus = {
       runId: 'r',
       status: 'COMPLETED',
       execution: {
@@ -41,6 +47,32 @@ describe('engine-types', () => {
     expect(snap.execution?.failure?.stepId).toBe('step-transform');
     expect(snap.execution?.materialization?.executor).toBe('postgres');
     expect(snap.execution?.materialization?.rowsWritten).toBe(42);
+  });
+
+  it('ProviderRunStatusView accepts diagnostic provider fields', () => {
+    const providerView: ProviderRunStatusView = {
+      provider: 'mock',
+      providerStatus: 'RUNNING',
+      providerSubstatus: 'RETRYING',
+      message: 'simulated runtime state',
+    };
+    expect(providerView.provider).toBe('mock');
+    expect(providerView.providerSubstatus).toBe('RETRYING');
+  });
+
+  it('RunStatusEnrichment composes canonical and provider views', () => {
+    const enrichment: RunStatusEnrichment = {
+      canonical: {
+        runId: 'r',
+        status: 'RUNNING',
+      },
+      providerView: {
+        provider: 'mock',
+        providerStatus: 'RUNNING',
+      },
+    };
+    expect(enrichment.canonical.status).toBe('RUNNING');
+    expect(enrichment.providerView.providerStatus).toBe('RUNNING');
   });
 
   it('AdapterScopedSubstatus accepts adapter/value format', () => {

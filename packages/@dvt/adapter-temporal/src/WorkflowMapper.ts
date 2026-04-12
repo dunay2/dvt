@@ -8,18 +8,19 @@
  * @date 2026-02-21
  */
 import { asNonBlankString } from '@dvt/contracts';
-import type { EngineRunRef, RunStatus, RunStatusSnapshot } from '@dvt/contracts';
+import type { EngineRunRef, ProviderRunStatusView, RunStatus } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
-import type { WorkflowState } from './workflows/RunPlanWorkflow.js';
 
 type TemporalRuntimeStatus =
   | 'RUNNING'
+  | 'PAUSED'
   | 'COMPLETED'
   | 'FAILED'
   | 'CANCELLED'
   | 'TERMINATED'
-  | 'TIMED_OUT';
+  | 'TIMED_OUT'
+  | 'CONTINUED_AS_NEW';
 
 export function toTemporalWorkflowId(runId: string): string {
   if (!runId.trim()) {
@@ -54,6 +55,8 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
   switch (status) {
     case 'RUNNING':
       return 'RUNNING';
+    case 'PAUSED':
+      return 'PAUSED';
     case 'COMPLETED':
       return 'COMPLETED';
     case 'FAILED':
@@ -62,6 +65,8 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
     case 'CANCELLED':
     case 'TERMINATED':
       return 'CANCELLED';
+    case 'CONTINUED_AS_NEW':
+      return 'RUNNING';
     default: {
       const _never: never = status;
       throw new Error(`TEMPORAL_STATUS_UNKNOWN: ${String(_never)}`);
@@ -69,30 +74,33 @@ export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): Run
   }
 }
 
-export function toRunStatusSnapshot(args: {
-  runId: string;
-  runtimeStatus: TemporalRuntimeStatus;
+export function toProviderRunStatusView(args: {
+  runtimeStatus: string;
   message?: string;
-}): RunStatusSnapshot {
+}): ProviderRunStatusView {
   return {
-    runId: asNonBlankString(args.runId),
-    status: mapTemporalStatusToRunStatus(args.runtimeStatus),
+    provider: 'temporal',
+    providerStatus: asNonBlankString(args.runtimeStatus),
     message: args.message,
   };
 }
 
-export function toRunStatusSnapshotFromWorkflowState(args: {
-  runId: string;
-  state: WorkflowState;
-}): RunStatusSnapshot {
-  const message =
-    args.state.status === 'CANCELLED' && args.state.cancelReason
-      ? args.state.cancelReason
-      : undefined;
-
-  return {
-    runId: asNonBlankString(args.runId),
-    status: args.state.status,
-    ...(message === undefined ? {} : { message }),
-  };
+/**
+ * Extracts the Temporal-native runtime status from a `handle.describe()` result.
+ *
+ * The Temporal SDK returns `{ status: { name: string } }` from
+ * `WorkflowHandle.describe()`. This function validates the shape and maps it
+ * to the adapter's provider-diagnostic status token.
+ *
+ * Known Temporal statuses remain covered by `TemporalRuntimeStatus` for
+ * canonical mapping code paths. Unknown future provider tokens are preserved
+ * verbatim here so enrichment stays diagnostic instead of failing closed.
+ */
+export function extractRuntimeStatusFromDescribe(describeResult: unknown): string {
+  const result = describeResult as { status?: { name?: string } } | null | undefined;
+  const statusName = result?.status?.name;
+  if (typeof statusName !== 'string' || !statusName.trim()) {
+    throw new Error('TEMPORAL_DESCRIBE_MISSING_STATUS: describe() result has no status.name');
+  }
+  return statusName;
 }

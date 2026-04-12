@@ -144,7 +144,7 @@ async function submitPlanAndGetSnapshot(
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'],
   planRef: PlanRef,
   runId: string
-): Promise<import('../../src/contracts/engine/index.js').RunStatusSnapshot> {
+): Promise<import('../../src/contracts/engine/index.js').CanonicalRunStatus> {
   const runRef = await engine.startRun(planRef, makeCtx(runId));
   return await engine.getRunStatus(runRef);
 }
@@ -285,7 +285,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       provider: 'conductor',
       startRun: startRunMock,
       cancelRun: async () => {},
-      getRunStatus: async () => {
+      getProviderStatusView: async () => {
         throw new Error('noop');
       },
       signal: async () => {},

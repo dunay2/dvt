@@ -25,7 +25,7 @@ Frozen historical documentation retained for reference.
 - [DVT Architecture Handbook (Archived)](DVT_ARCHITECTURE_HANDBOOK_20260307.md)
 - [DVT System Map God Status (Archived)](DVT_SYSTEM_MAP_GOD_STATUS_20260307.md)
 - [DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)](DVT_ENGINE_REMEDIATION_AI_PLAN_20260304.md)
-- [DVT+ — Technical Architectural Review (AI) — 2026-02-26](DVT+_Architectural_Review_20260226_AI.en.md)
+- [DVT+ â€” Technical Architectural Review (AI) â€” 2026-02-26](DVT+_Architectural_Review_20260226_AI.en.md)
 - [DVT+ Architectural Review — February 2026](DVT+_Architectural_Review_20260225.md)
 - [Executable Remediation and Completion Plan for DVT+ (Archived)](DVT_REMEDIATION_PLAN.md)
 - [Golden Path Coverage Debt Assessment](GOLDEN_PATH_COVERAGE_DEBT_ASSESSMENT_20260307.md)

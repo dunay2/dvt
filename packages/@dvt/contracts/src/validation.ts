@@ -27,6 +27,8 @@ import {
 import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
+  CanonicalRunStatusSchema,
+  type CanonicalRunStatusSchemaT,
   EngineRunRefSchema,
   type EngineRunRefSchemaT,
   ExecutionPlanSchema,
@@ -52,6 +54,8 @@ import {
   type PlanCoreSchemaT,
   PlanRefSchema,
   type PlanRefSchemaT,
+  ProviderRunStatusViewSchema,
+  type ProviderRunStatusViewSchemaT,
   RunExecutionPolicySchema,
   type RunExecutionPolicySchemaT,
   RunExecutionContextRefSchema,
@@ -70,6 +74,8 @@ import {
   type RunEventRecordSchemaT,
   RunSnapshotSchema,
   type RunSnapshotSchemaT,
+  RunStatusEnrichmentSchema,
+  type RunStatusEnrichmentSchemaT,
   RunStatusSnapshotSchema,
   type RunStatusSnapshotSchemaT,
   SignalRequestSchema,
@@ -207,6 +213,18 @@ export function parseRecoverRunCommand(input: unknown): RecoverRunCommandSchemaT
 
 export function parseEngineRunRef(input: unknown): EngineRunRefSchemaT {
   return parseWithSchema(EngineRunRefSchema, input);
+}
+
+export function parseCanonicalRunStatus(input: unknown): CanonicalRunStatusSchemaT {
+  return parseWithSchema(CanonicalRunStatusSchema, input);
+}
+
+export function parseProviderRunStatusView(input: unknown): ProviderRunStatusViewSchemaT {
+  return parseWithSchema(ProviderRunStatusViewSchema, input);
+}
+
+export function parseRunStatusEnrichment(input: unknown): RunStatusEnrichmentSchemaT {
+  return parseWithSchema(RunStatusEnrichmentSchema, input);
 }
 
 export function parseRunStatusSnapshot(input: unknown): RunStatusSnapshotSchemaT {

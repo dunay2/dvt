@@ -5,10 +5,10 @@
 - **Owners**: Planner / Engine Domain / Adapter Layer
 - **Related**:
   - ADR-0012 (Plan bytes boundary)
-  - IWorkflowEngine.v2.0.md _(update required)_
-  - ExecutionSemantics.v2.0.md _(update required)_
+  - IWorkflowEngine.v1.md _(update required)_
+  - ExecutionSemantics.v1.md _(update required)_
   - AdapterDevelopmentGuide.md _(update required)_
-  - RunEvents.v2.0.1.md _(idempotency context)_
+  - RunEvents.v1.md _(idempotency context)_
 
 ---
 
@@ -61,15 +61,15 @@ These rules apply to **schemaVersion only**.
 - A change in `major` indicates a breaking schema change.
 - Adapters MUST reject any plan whose schema major is unsupported.
 - Phase 1 policy: adapters MUST accept **only the same major** they support.
-  - If `planMajor != adapterMajor` → reject (including older majors).
+  - If `planMajor != adapterMajor` â†’ reject (including older majors).
 
 #### Minor version (Phase 1 strict mode with operational prerequisites)
 
 - Phase 1 comparison is strict but bounded:
-  - If `planMinor > adapterSupportedMinor` → reject.
-  - If `planMinor <= adapterSupportedMinor` → accept.
+  - If `planMinor > adapterSupportedMinor` â†’ reject.
+  - If `planMinor <= adapterSupportedMinor` â†’ accept.
 
-Strict mode is only allowed in production if the operational prerequisites in §6 are met.
+Strict mode is only allowed in production if the operational prerequisites in Â§6 are met.
 
 ---
 
@@ -93,7 +93,7 @@ class PlanRejectedError extends Error {
 }
 ```
 
-If a version mismatch is detected **after** run creation (should not happen if §3 timing is followed), the Engine MUST:
+If a version mismatch is detected **after** run creation (should not happen if Â§3 timing is followed), the Engine MUST:
 
 - emit `RunFailed` with reason `UNSUPPORTED_PLAN_VERSION`
 - close the run deterministically
@@ -102,7 +102,7 @@ But the normative design is to reject **pre-bootstrap**.
 
 ---
 
-### 4) Shared Compatibility Utility (`@dvt/plan-verifier`) — Safe Parsing
+### 4) Shared Compatibility Utility (`@dvt/plan-verifier`) â€” Safe Parsing
 
 A canonical compatibility helper MUST exist in `@dvt/plan-verifier`.
 
@@ -153,7 +153,7 @@ It MUST be validated by a JSON Schema:
 
 - `contracts/compat/plan-compat.schema.json`
 
-Additionally, CI MUST validate that adapter-declared support matches the matrix (see §7).
+Additionally, CI MUST validate that adapter-declared support matches the matrix (see Â§7).
 
 ---
 
@@ -186,7 +186,7 @@ The simplest required mechanism:
   - asserts that the JSON declares support for all versions up to `v{major}.{minor}` for that adapter (Phase 1)
   - asserts `plan-compat.json` conforms to `plan-compat.schema.json`
 
-This test is not a JSON Schema validation alone; it is a contract test that binds code ↔ governance artifact.
+This test is not a JSON Schema validation alone; it is a contract test that binds code â†” governance artifact.
 
 ---
 
@@ -194,11 +194,11 @@ This test is not a JSON Schema validation alone; it is a contract test that bind
 
 To avoid runs-in-flight reading a different schema/bytes mid-execution:
 
-**Note:** Hash validation and the “plan bytes” trust boundary are governed by ADR-0012. This section adds the immutability-by-URI requirement to make ADR-0012 enforceable operationally.
+**Note:** Hash validation and the â€œplan bytesâ€ trust boundary are governed by ADR-0012. This section adds the immutability-by-URI requirement to make ADR-0012 enforceable operationally.
 
 - Plan references MUST be immutable by construction.
 - A `PlanRef` MUST include a cryptographic hash (e.g. SHA256) and the system MUST validate it.
-- Plan URIs MUST NOT be mutable “latest” endpoints.
+- Plan URIs MUST NOT be mutable â€œlatestâ€ endpoints.
 
 Preferred patterns:
 
@@ -245,10 +245,10 @@ Mitigations (required to operate strict mode safely):
 
 This ADR requires updates to:
 
-1. **IWorkflowEngine.v2.0.md**
+1. **IWorkflowEngine.v1.md**
    - require `schemaVersion` format `v<major>.<minor>`
    - specify pre-bootstrap validation timing
-2. **ExecutionSemantics.v2.0.md**
+2. **ExecutionSemantics.v1.md**
    - add Plan Compatibility section (schema vs plan revision)
    - add immutability requirements for PlanRef URI + hash
 3. **AdapterDevelopmentGuide.md**
@@ -268,8 +268,8 @@ This ADR requires updates to:
 - **INV-PLAN-003**: Schema compatibility uses schemaVersion (never planVersion)
 - **INV-PLAN-004**: Invalid schemaVersion format throws (no silent false/NaN paths)
 - **INV-PLAN-005**: plan-compat.json validates against plan-compat.schema.json
-- **INV-PLAN-006**: Matrix alignment test fails on drift (code ↔ JSON mismatch)
-- **INV-PLAN-007**: PlanRef URIs are immutable (no “latest”); hash validation enforced
+- **INV-PLAN-006**: Matrix alignment test fails on drift (code â†” JSON mismatch)
+- **INV-PLAN-007**: PlanRef URIs are immutable (no â€œlatestâ€); hash validation enforced
 
 ### Required Tests (mandatory CI)
 
@@ -288,8 +288,8 @@ This ADR requires updates to:
 
 - Semantic Versioning: https://semver.org/
 - Temporal workflows (general semantics; rollout awareness): https://docs.temporal.io/workflows
-- Martin Fowler — Idempotent Receiver: https://martinfowler.com/articles/patterns-of-distributed-systems/idempotent-receiver.html
-- Microservices.io — Transactional Outbox (governance pattern reference): https://microservices.io/patterns/data/transactional-outbox.html
+- Martin Fowler â€” Idempotent Receiver: https://martinfowler.com/articles/patterns-of-distributed-systems/idempotent-receiver.html
+- Microservices.io â€” Transactional Outbox (governance pattern reference): https://microservices.io/patterns/data/transactional-outbox.html
 
 ---
 

@@ -10,13 +10,14 @@ last_reviewed: 2026-04-10
 ## Purpose
 
 Define the target architecture for the full `WorkflowEngine` subsystem as a
-hexagonal, compatibility-first derivation path that keeps the public contract
-stable while narrowing responsibilities internally.
+hexagonal derivation path that narrows the engine facade to commands plus
+canonical read while moving optional enrichment behind a separate service
+boundary.
 
 ## Target shape
 
-The target keeps `IWorkflowEngine` as a transitional compatibility facade, and
-moves actual behavior into narrow application services.
+The target keeps `IWorkflowEngine` as the command plus canonical-read facade
+and moves actual behavior into narrow application services.
 
 Target inbound use-case services:
 
@@ -39,11 +40,11 @@ Target outbound engine-owned ports:
 
 ```mermaid
 flowchart LR
-  Facade["IWorkflowEngine compatibility facade"] --> U1["IStartRunUseCase"]
+  Facade["IWorkflowEngine public facade"] --> U1["IStartRunUseCase"]
   Facade --> U2["ICancelRunUseCase"]
   Facade --> U3["IRunStatusQueryService"]
   Facade --> U4["IRunSignalUseCase"]
-  Facade --> U5["IRunEnrichmentService"]
+  Caller["Enrichment callers"] --> U5["IRunEnrichmentService"]
 
   U1 --> P1["IRunStateReadPort + IRunStateWritePort"]
   U1 --> P2["IStartRunIntentPort"]
@@ -141,12 +142,14 @@ repo-wide adapter policy, that change should be captured in an ADR. At this
 stage, the architecture document is enough because it is refining target shape
 under already accepted principles from `ADR-0003` and `ADR-0014`.
 
-## Compatibility strategy
+## Cutover strategy
 
-1. Keep `IWorkflowEngine` method surface stable.
-2. Move method internals to dedicated use-case services.
-3. Keep current tests green with facade delegation checks.
-4. Deprecate internal wide services only after functional parity and
+1. Narrow `IWorkflowEngine` to commands plus canonical read.
+2. Move enrichment to `IRunEnrichmentService`.
+3. Move method internals to dedicated use-case services.
+4. Keep current tests green with facade delegation checks and service-level
+   query coverage.
+5. Deprecate internal wide services only after functional parity and
    architecture fitness checks pass.
 
 ## Class responsibility rules (target)
@@ -173,7 +176,8 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 
 ## Patterns used and why
 
-- Compatibility Facade: preserve public API while refactoring internals.
+- Narrow Facade: keep the public engine surface small while behavior moves into
+  dedicated services.
 - Use Case Interactor: keep orchestration explicit and testable per behavior.
 - Policy Objects: isolate rules and keep logic composable.
 - Adapter + Port: enforce hexagonal boundary and replaceability.
@@ -188,16 +192,35 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 - infrastructure selection inside domain policies
 - hidden collaborator construction inside orchestration classes
 
-## Current vs target gap table
+## Current vs target gaps
 
-| Area                      | Current                                    | Target                                      | Gap signal           |
-| ------------------------- | ------------------------------------------ | ------------------------------------------- | -------------------- |
-| Public boundary           | `WorkflowEngine` does more than delegation | facade-only delegation                      | width still high     |
-| startRun application flow | coordinator/guard mix concerns             | split into narrow use cases + policies      | SRP drift            |
-| status/read path          | core service mixes query + enrichment      | dedicated query vs enrichment services      | ADR-0015 clarity gap |
-| provider resolution       | repeated in multiple paths                 | single resolver seam                        | duplication          |
-| telemetry handling        | spread across core services                | decorator/policy boundary                   | cross-cutting noise  |
-| artifacts/engine seam     | partially explicit                         | documented adapter seam in composition root | ownership ambiguity  |
+- Public boundary
+  Current: `WorkflowEngine` now exposes commands plus canonical read only.
+  Target: facade-only delegation plus separate enrichment/query services with no
+  residual mixed responsibility in current docs.
+  Gap signal: start-run/control decomposition convergence.
+- `startRun` application flow
+  Current: coordinator/guard mix concerns.
+  Target: split into narrow use cases plus policies.
+  Gap signal: SRP drift.
+- status/read path
+  Current: dedicated canonical query and enrichment services are now shipped,
+  but control operations still share one runtime-control service.
+  Target: dedicated query vs enrichment services plus narrower control and
+  telemetry seams.
+  Gap signal: residual control-service breadth.
+- provider resolution
+  Current: repeated in multiple paths.
+  Target: single resolver seam.
+  Gap signal: duplication.
+- telemetry handling
+  Current: spread across core services.
+  Target: decorator/policy boundary.
+  Gap signal: cross-cutting noise.
+- artifacts/engine seam
+  Current: partially explicit.
+  Target: documented adapter seam in composition root.
+  Gap signal: ownership ambiguity.
 
 ## Retain vs improve
 
@@ -250,23 +273,37 @@ sequenceDiagram
   participant Client as Caller
   participant Facade as IWorkflowEngine facade
   participant Query as IRunStatusQueryService
-  participant Enrich as IRunEnrichmentService
   participant State as RunStateReadPort
-  participant Provider as ProviderAdapter
 
   Client->>Facade: getRunStatus(runRef)
   Facade->>Query: execute(runRef)
   Query->>State: snapshot/events only
-  Query-->>Facade: deterministic status
-  Facade-->>Client: deterministic status
-
-  Client->>Facade: enrichRunStatus(runRef)
-  Facade->>Enrich: execute(runRef)
-  Enrich->>State: deterministic base
-  Enrich->>Provider: provider substatus/message
-  Enrich-->>Facade: enriched status
-  Facade-->>Client: enriched status
+  Query-->>Facade: CanonicalRunStatus
+  Facade-->>Client: CanonicalRunStatus
 ```
+
+```mermaid
+sequenceDiagram
+  participant Client as Caller
+  participant Enrich as IRunEnrichmentService
+  participant State as RunStateReadPort
+  participant Provider as ProviderAdapter
+
+  Client->>Enrich: getRunEnrichment(runRef)
+  Enrich->>State: CanonicalRunStatus
+  Enrich->>Provider: getProviderStatusView(runRef)
+  Provider-->>Enrich: ProviderRunStatusView
+  Enrich-->>Client: RunStatusEnrichment
+```
+
+Target model note:
+
+- `CanonicalRunStatus` is the only canonical caller-visible lifecycle object
+- `ProviderRunStatusView` remains diagnostic-only
+- `RunStatusEnrichment` is engine-owned composition, not a second canonical
+  status source
+- `IRunEnrichmentService` is the only target boundary that may return
+  `RunStatusEnrichment`
 
 ## Derivation roadmap
 

@@ -2,9 +2,9 @@
 
 **Status**: Normative (MUST / MUST NOT)  
 **Version**: 2.0.0  
-**Stability**: Contracts — breaking changes require major version bump  
+**Stability**: Contracts â€” breaking changes require major version bump  
 **Consumers**: Engine, adapters, planner, state store, UI, contract authors  
-**Related Contracts**: [IWorkflowEngine.v2.0.md](./IWorkflowEngine.v2.0.md), [ExecutionSemantics.v2.0.md](./ExecutionSemantics.v2.0.md), [RunEvents.v2.0.md](./RunEvents.v2.0.md)
+**Related Contracts**: [IWorkflowEngine.v1.md](./IWorkflowEngine.v1.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [RunEvents.v1.md](./RunEvents.v1.md)
 
 ---
 
@@ -83,4 +83,4 @@ Canonical persisted event envelopes MUST include:
 
 ## 7) Change Log
 
-- **2.0.0 (2026-02-16)**: **MAJOR** — canonicalized `eventId` as required envelope field; fixed timestamp vocabulary (`emittedAt` producer / `persistedAt` append authority); removed envelope `occurredAt` from canonical terminology; aligned idempotency formula with `planId + planVersion`; formalized non-reject duplicate handling semantics.
+- **2.0.0 (2026-02-16)**: **MAJOR** â€” canonicalized `eventId` as required envelope field; fixed timestamp vocabulary (`emittedAt` producer / `persistedAt` append authority); removed envelope `occurredAt` from canonical terminology; aligned idempotency formula with `planId + planVersion`; formalized non-reject duplicate handling semantics.
