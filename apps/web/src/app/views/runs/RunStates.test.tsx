@@ -221,7 +221,8 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('Step started');
     expect(container.textContent).toContain('Step: step-1');
     expect(container.textContent).not.toContain('Console');
-    expect(container.textContent).toContain(
+    expect(container.textContent).not.toContain('Materialization evidence');
+    expect(container.textContent).not.toContain(
       'Result evidence is not available yet for this run snapshot.'
     );
   });
@@ -300,8 +301,8 @@ describe('RunStates', () => {
       );
     });
 
-    expect(container.textContent).toContain('Materialization evidence');
-    expect(container.textContent).toContain(
+    expect(container.textContent).not.toContain('Materialization evidence');
+    expect(container.textContent).not.toContain(
       'Result evidence is not available yet for this run snapshot.'
     );
     expect(container.textContent).not.toContain('analytics.orders_daily');

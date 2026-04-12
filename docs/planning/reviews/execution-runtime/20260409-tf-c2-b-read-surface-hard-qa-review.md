@@ -232,20 +232,31 @@ Debt handling for this review:
 ## Quality Gates
 
 - Commands executed:
-  - `git status -sb`
-  - `git diff --stat origin/main...HEAD`
-  - `rg -n "currentStepId|failedStepId|errorReason|materialization|execution\\.activeStepId|RunStatusSnapshot|WorkflowSnapshot" docs packages apps -g '!dist'`
-  - `rg -n "CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION|schemaVersion.*CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION|rebuildSnapshot\\(" packages apps -g '!dist'`
+  - `pnpm --filter @dvt/run-domain test`
+  - `pnpm --filter @dvt/engine test`
+  - `pnpm --filter dvt-api typecheck`
+  - `pnpm --filter dvt-api test`
+  - `pnpm --filter dvt-api test:arch`
+  - `pnpm --filter @dvt/web typecheck`
+  - `pnpm --filter @dvt/web test`
+  - `pnpm docs:workboard:generate`
+  - `pnpm docs:planning:generated:check`
+  - `pnpm exec markdownlint-cli2 "docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md" "docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md" "docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md"`
   - `pnpm verify:prepush`
 - What passed:
+  - touched package tests and type-checks for run-domain, engine, API, and web
+  - docs/planning regeneration checks
+  - targeted markdown lint on the governed docs touched by the slice
   - repo pre-push validation gate
-  - changed-file lint and formatting checks
-  - touched-package type-check baseline included in `verify:prepush`
 - What failed:
-  - no command failed in the final QA baseline
+  - no command failed in the final closeout baseline
   - this review originally identified documentary truth and semantic-closure
     blockers; those findings are now closed on the current branch
 - What could not be verified:
+  - targeted Cypress execution of
+    `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` was
+    blocked locally by the Cypress launcher environment, not by a spec
+    assertion failure
   - real executor emission from `TF-C2-A` remains out of scope for this review
   - GitHub-hosted CI status was not used as the documentary source of truth for
     this artifact
