@@ -126,7 +126,8 @@ planning context, not an active phase.
 - If the question is `what engine slice should we execute next?`, read this page
   and then Lane A or Lane C.
 - If the question is `what unblocks the first governed runtime vertical now?`,
-  trace `TF-C2-A/B` on top of landed `MW-C1` in Lane C.
+  trace the remaining `TF-C2` acceptance on top of landed `MW-C1`, `TF-C2-A`,
+  and `TF-C2-B` in Lane C.
 
 ## Historical snapshot
 
