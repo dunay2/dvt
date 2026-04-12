@@ -8,6 +8,9 @@
  * @version 1.0.0
  * @date 2026-03-03
  */
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+
 import {
   CONTRACTS_ERROR_CODE,
   CONTRACTS_ERROR_MESSAGE_KEY,
@@ -38,6 +41,10 @@ import {
 
 type StoreEventInput = Parameters<InMemoryTxStore['appendAndEnqueueTx']>[1][number];
 const TEST_PLAN_REF = makePlanRef();
+const WORKFLOW_ENGINE_SOURCE = readFileSync(
+  new URL('../../src/core/WorkflowEngine.ts', import.meta.url),
+  'utf8'
+);
 
 async function expectContractValidationFailure(
   promise: Promise<unknown>
@@ -115,6 +122,47 @@ async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promis
 }
 
 describe('WorkflowEngine (basic failure modes)', () => {
+  it('exposes only the narrowed workflow facade at runtime', () => {
+    const { engine } = createEngine({ adapters: makeAdapters() });
+
+    expect(Reflect.has(engine as object, 'startRun')).toBe(true);
+    expect(Reflect.has(engine as object, 'recoverRun')).toBe(true);
+    expect(Reflect.has(engine as object, 'cancelRun')).toBe(true);
+    expect(Reflect.has(engine as object, 'getRunStatus')).toBe(true);
+    expect(Reflect.has(engine as object, 'signal')).toBe(true);
+    expect(Reflect.has(engine as object, 'getRunEnrichment')).toBe(false);
+    expect(Reflect.has(engine as object, 'healthCheck')).toBe(false);
+  });
+
+  it('keeps WorkflowEngine wired to delegated services instead of low-level collaborator regrowth', () => {
+    expect(WORKFLOW_ENGINE_SOURCE).toContain(
+      'startRunApplicationService: IStartRunApplicationService;'
+    );
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runRecoveryService: IRunRecoveryService;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runControlService: IRunControlService;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runStatusQueryService: IRunStatusQueryService;');
+
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('return this.runRecoveryService.recoverRun(');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain(
+      'return this.runStatusQueryService.getStatus(engineRunRef);'
+    );
+
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('getRunEnrichment(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('healthCheck(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('stateStoreRead');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('stateStoreWrite');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('intentStore');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('planFetcher');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('runExecutionContextResolver');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('new StartRunApplicationService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('new RunHealthService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('new RunEnrichmentService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunControlService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunRecoveryService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunStatusQueryService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunHealthService(');
+  });
+
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
 

@@ -1570,7 +1570,7 @@ tasks:
   - task_id: AR-A12-C
     parent_task: AR-A12
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       finish the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX` convergence by removing
       enrichment from the engine facade and converging implementation, current subsystem docs, and
@@ -1587,17 +1587,18 @@ tasks:
       implemented structure rather than target-only decomposition.
     complexity: M
     effort_points: 3
-    progress_pct: 67
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     status_reason: >-
-      `AR-A12-B` is now converging in real code: `AR-A12-C1` and `AR-A12-C2` landed the docs-first
-      and code cutovers so the public engine facade is narrowed and API enrichment callers use the
-      dedicated service boundary. Remaining work is current-doc convergence and hardening.
-    last_verified: '2026-04-11'
+      `AR-A12-C1` through `AR-A12-C5` are now delivered: the public engine facade is narrowed to
+      commands plus canonical read, current docs and diagrams match that split, dedicated enrichment
+      and health boundaries stay explicit, and regression guards plus ARC evidence/risk closeout now
+      protect the shipped boundary.
+    last_verified: '2026-04-12'
   - task_id: AR-A12-C1
     parent_task: AR-A12-C
     priority: P1
@@ -1694,7 +1695,7 @@ tasks:
   - task_id: AR-A12-C5
     parent_task: AR-A12-C
     priority: P1
-    status: queued
+    status: done
     objective: >-
       harden and close the read-boundary purity wave with regression guards, ARC-2 evidence, risk
       updates, and final validation.
@@ -1704,16 +1705,17 @@ tasks:
       verify:prepush`, and guards that prevent enrichment or local facade re-growth from silently
       reappearing on `IWorkflowEngine`.
     complexity: S
-    effort_points: 0
-    progress_pct: 0
+    effort_points: 1
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/evidence/index.md
       - docs/risk-register/index.md
     status_reason: >-
-      This closeout slice turns the architectural cut into an enforced and evidenced boundary change
-      after facade-width extraction lands.
-    last_verified: '2026-04-11'
+      Engine and API tests now guard the narrowed facade against enrichment/health regrowth, active
+      status and contract docs are aligned with the shipped split, and ARC-2 evidence plus risk
+      updates close the wave with touched-scope validation and `pnpm verify:prepush`.
+    last_verified: '2026-04-12'
   - task_id: DOC-ARCH-01
     priority: P1
     status: done

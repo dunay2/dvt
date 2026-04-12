@@ -41,6 +41,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
 - [manifestRef runtime composition could regress back to documented-but-unwired behavior](R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml)
+- [Narrowed engine read boundary could regress through facade re-growth](R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
 - [Plan-store canonical JSON shape may drift from contract schema](R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml)
 - [Planner boundary contract naming drift across V2 and V1 symbols](R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION.yaml)

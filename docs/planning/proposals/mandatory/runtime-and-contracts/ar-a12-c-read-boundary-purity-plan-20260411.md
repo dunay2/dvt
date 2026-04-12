@@ -3,7 +3,7 @@ title: AR-A12-C read-boundary purity plan
 author: Codex
 status: Active
 owner: Architecture / Engine / API / Docs
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-12
 planning_type: proposal
 ---
 
@@ -165,6 +165,10 @@ Deliver:
   collaborator construction or local recover/health orchestration
 - ARC-2 evidence and risk updates for engine/api/adapter impact
 - touched-package validation plus `pnpm verify:prepush`
+
+Status:
+
+- delivered on 2026-04-12
 
 ## Acceptance
 

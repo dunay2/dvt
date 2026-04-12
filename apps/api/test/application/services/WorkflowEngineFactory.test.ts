@@ -93,7 +93,11 @@ describe('buildWorkflowEngine', () => {
     const startRunService = (runtime.engine as unknown as { startRunApplicationService: unknown })
       .startRunApplicationService;
     expect(startRunService).toBeInstanceOf(StartRunApplicationService);
+    expect(Reflect.has(runtime.engine as object, 'getRunEnrichment')).toBe(false);
+    expect(Reflect.has(runtime.engine as object, 'healthCheck')).toBe(false);
     expect(runtime.runEnrichmentService).toBeDefined();
+    expect(Reflect.has(runtime.runEnrichmentService as object, 'getRunEnrichment')).toBe(true);
     expect(runtime.runHealthService).toBeDefined();
+    expect(Reflect.has(runtime.runHealthService as object, 'healthCheck')).toBe(true);
   });
 });

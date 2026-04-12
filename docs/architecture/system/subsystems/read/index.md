@@ -91,8 +91,10 @@ interactors on active/current pages.
 
 The contract reset under `AR-A12-B` is now reflected in the active boundary:
 `CanonicalRunStatus`, `RunStatusEnrichment`, and `ProviderRunStatusView` are
-explicit models. `AR-A12-C` remains the cleanup slice for remaining downstream
-consumers and naming convergence, not the introduction of the split itself.
+explicit models. `AR-A12-C` is now closed with regression guards that keep
+enrichment on `IRunEnrichmentService` and keep the narrowed
+`IWorkflowEngine` facade from silently regrowing provider-backed read
+responsibilities.
 
 ## Related Pages
 
