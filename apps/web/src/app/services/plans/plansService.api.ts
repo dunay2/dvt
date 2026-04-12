@@ -185,7 +185,12 @@ function mapContractPlanToUi(
         name: asString(config.name) ?? step.kind,
         nodes,
         policies: {
-          retries: asNumber(policyBag.retries) ?? asNumber(config.retries),
+          retries:
+            (typeof step.retryPolicy?.maxAttempts === 'number'
+              ? Math.max(step.retryPolicy.maxAttempts - 1, 0)
+              : undefined) ??
+            asNumber(policyBag.retries) ??
+            asNumber(config.retries),
           timeout:
             asNumber(policyBag.timeoutSec) ??
             asNumber(policyBag.timeout) ??

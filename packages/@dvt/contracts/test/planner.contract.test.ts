@@ -128,6 +128,12 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(plan.metadata.schemaVersion).toBe('v1.2');
     expect(plan.metadata.contractVersion).toBe('1.0.0');
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
+    expect(plan.steps[0]?.retryPolicy).toEqual({
+      maxAttempts: 3,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
     expect(plan.steps.map((s) => s.stepId)).toEqual([
       'model.analytics.customers',
       'model.analytics.orders',

@@ -306,7 +306,15 @@ async function executeStepActivity(step: Step, ctx: ActivityContext): Promise<St
 
 **Retry strategy** (Temporal SDK):
 
-- Temporal retries up to `maxAttempts` (default 3).
+- Temporal activity retries are resolved from the engine-verified
+  `ExecutionStep.retryPolicy` when present.
+- Older persisted plans may still flow through a compatibility seam that reads
+  legacy `stepTypeConfig.retries`.
+- If neither shape is present, the adapter uses the governed default:
+  - `initialInterval: '1s'`
+  - `maximumInterval: '60s'`
+  - `backoffCoefficient: 2`
+  - `maximumAttempts: 3`
 - Each retry increments `engineAttemptId`.
 - If Activity succeeds on retry, only ONE `StepCompleted` event emitted (same `logicalAttemptId`).
 

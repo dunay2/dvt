@@ -237,7 +237,15 @@ function validateMockPlanMetadata(metadata: ExecutionPlan['metadata']): void {
 function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   // Adapter narrowing rule: reject unrecognized fields.
   // For mock we allow the governed canonical step fields only.
-  const allowed = new Set(['stepId', 'kind', 'dependsOn', 'stepTypeConfig', 'type', 'gateway']);
+  const allowed = new Set([
+    'stepId',
+    'kind',
+    'dependsOn',
+    'retryPolicy',
+    'stepTypeConfig',
+    'type',
+    'gateway',
+  ]);
   for (const k of Object.keys(step)) {
     if (!allowed.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);

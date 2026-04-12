@@ -30,6 +30,7 @@ export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js
 export type {
   ExecutionPlan,
   ExecutionStep,
+  ExecutionStepRetryPolicyV1,
   ExecutionStepV1,
   GenericGraphNodeV1,
   GenericGraphSourceV1,

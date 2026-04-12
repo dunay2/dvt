@@ -14,9 +14,6 @@ function policyConfig(resolved: ResolvedPolicies): DbtStepTypeConfig {
   if (resolved.stepTimeoutMs !== undefined) {
     config.stepTimeoutMs = resolved.stepTimeoutMs;
   }
-  if (resolved.retries !== undefined) {
-    config.retries = resolved.retries;
-  }
   if (resolved.concurrency !== undefined) {
     config.concurrency = resolved.concurrency;
   }
@@ -39,12 +36,6 @@ export const dbtStepFactory: StepFactory = (
     delete mergedStepTypeConfig['stepTimeoutMs'];
   }
 
-  if ('retries' in resolvedConfig) {
-    mergedStepTypeConfig['retries'] = resolvedConfig['retries'];
-  } else {
-    delete mergedStepTypeConfig['retries'];
-  }
-
   if ('concurrency' in resolvedConfig) {
     mergedStepTypeConfig['concurrency'] = resolvedConfig['concurrency'];
   } else {
@@ -55,6 +46,9 @@ export const dbtStepFactory: StepFactory = (
     stepId: node.nodeId,
     kind: node.stepKind,
     dependsOn: node.dependsOn,
+    ...(resolvedPolicies.retryPolicy === undefined
+      ? {}
+      : { retryPolicy: resolvedPolicies.retryPolicy }),
     stepTypeConfig: mergedStepTypeConfig,
   };
 };

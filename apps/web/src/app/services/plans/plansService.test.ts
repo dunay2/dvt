@@ -31,6 +31,29 @@ function buildValidContractPlan(): Readonly<Record<string, unknown>> {
   } as const;
 }
 
+function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
+  return {
+    ...buildValidContractPlan(),
+    steps: [
+      {
+        stepId: 'step_1',
+        kind: 'DBT_MODEL',
+        dependsOn: [],
+        retryPolicy: {
+          maxAttempts: 4,
+          initialInterval: '2s',
+          maximumInterval: '30s',
+          backoffCoefficient: 2,
+        },
+        stepTypeConfig: {
+          name: 'customers',
+          nodeIds: ['model.analytics.customers'],
+        },
+      },
+    ],
+  } as const;
+}
+
 function buildValidPlanRef() {
   return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
@@ -210,6 +233,41 @@ describe('createPlansService', () => {
     expect(postJsonMock).toHaveBeenCalledWith('/plans/import', {
       planRef: buildValidPlanRef(),
       context,
+    });
+  });
+
+  it('maps step retryPolicy into UI retry counts with canonical precedence', async () => {
+    const postJsonMock = vi.fn(async () => ({
+      plan: buildContractPlanWithRetryPolicy(),
+      planRef: buildValidPlanRef(),
+    }));
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_GRAPH_SOURCE,
+      selectedNodeIds: ['node_1'],
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.steps[0]).toMatchObject({
+      id: 'step_1',
+      name: 'customers',
+      nodes: ['model.analytics.customers'],
+      policies: {
+        retries: 3,
+      },
     });
   });
 

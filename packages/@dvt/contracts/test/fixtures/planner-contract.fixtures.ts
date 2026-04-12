@@ -92,6 +92,12 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
       stepId: 'model.analytics.customers',
       kind: 'DBT_MODEL',
       dependsOn: [],
+      retryPolicy: {
+        maxAttempts: 3,
+        initialInterval: '1s',
+        maximumInterval: '60s',
+        backoffCoefficient: 2,
+      },
       stepTypeConfig: {
         modelName: 'customers',
       },
@@ -100,6 +106,12 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
       stepId: 'model.analytics.orders',
       kind: 'DBT_MODEL',
       dependsOn: ['model.analytics.customers'],
+      retryPolicy: {
+        maxAttempts: 3,
+        initialInterval: '1s',
+        maximumInterval: '60s',
+        backoffCoefficient: 2,
+      },
       stepTypeConfig: {
         modelName: 'orders',
       },

@@ -11,7 +11,6 @@ describe('dbtStepFactory', () => {
       stepKind: 'DBT_MODEL',
       dependsOn: [],
       stepTypeConfig: {
-        retries: 99,
         stepTimeoutMs: 900000,
         concurrency: 128,
         callerOwned: 'kept',
@@ -27,11 +26,13 @@ describe('dbtStepFactory', () => {
     const step = dbtStepFactory(node, resolvedPolicies);
 
     expect(step.kind).toBe('DBT_MODEL');
+    expect(step.retryPolicy).toEqual({
+      maxAttempts: 2,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
     expect(step.stepTypeConfig).toMatchObject({
-      retries: {
-        maxAttempts: 2,
-        backoffMs: 0,
-      },
       stepTimeoutMs: 30000,
       concurrency: {
         maxInFlight: 4,
@@ -61,13 +62,15 @@ describe('dbtStepFactory', () => {
     const step = dbtStepFactory(node, resolvedPolicies);
     const stepTypeConfig = step.stepTypeConfig as Record<string, unknown>;
 
+    expect(step.retryPolicy).toEqual({
+      maxAttempts: 1,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
     expect(stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
     expect(stepTypeConfig).not.toHaveProperty('concurrency');
     expect(stepTypeConfig).toMatchObject({
-      retries: {
-        maxAttempts: 1,
-        backoffMs: 0,
-      },
       callerOwned: 'kept',
     });
   });

@@ -1,25 +1,68 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
-const WORKFLOW_SRC = resolve(__dirname, '../src/workflows/RunPlanWorkflow.ts');
-const src = readFileSync(WORKFLOW_SRC, 'utf8');
+import { resolveStepActivityRetryPolicy } from '../src/workflows/workflowHelpers.js';
 
-describe('workflow retry policy literals', () => {
-  it('pins maximumAttempts to 3 for activity retry policy', () => {
-    expect(src).toContain('maximumAttempts: 3');
+describe('resolveStepActivityRetryPolicy', () => {
+  it('uses the explicit ExecutionStep retryPolicy when present', () => {
+    const retryPolicy = resolveStepActivityRetryPolicy({
+      retryPolicy: {
+        maxAttempts: 5,
+        initialInterval: '3s',
+        maximumInterval: '45s',
+        backoffCoefficient: 3,
+      },
+    });
+
+    expect(retryPolicy).toEqual({
+      maximumAttempts: 5,
+      initialInterval: '3s',
+      maximumInterval: '45s',
+      backoffCoefficient: 3,
+      nonRetryableErrorTypes: ['PermanentStepError'],
+    });
   });
 
-  it('pins maximumInterval to 60 seconds for activity retry policy', () => {
-    expect(src).toContain("maximumInterval: '60s'");
+  it('falls back to the legacy stepTypeConfig.retries compatibility seam', () => {
+    const retryPolicy = resolveStepActivityRetryPolicy({
+      stepTypeConfig: {
+        retries: {
+          maxAttempts: 2,
+          backoffMs: 4000,
+        },
+      },
+    });
+
+    expect(retryPolicy).toEqual({
+      maximumAttempts: 2,
+      initialInterval: '4s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+      nonRetryableErrorTypes: ['PermanentStepError'],
+    });
   });
 
-  it('marks PermanentStepError as non-retryable', () => {
-    expect(src).toContain("nonRetryableErrorTypes: ['PermanentStepError']");
+  it('uses the governed default when no per-step retry metadata exists', () => {
+    const retryPolicy = resolveStepActivityRetryPolicy({});
+
+    expect(retryPolicy).toEqual({
+      maximumAttempts: 3,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+      nonRetryableErrorTypes: ['PermanentStepError'],
+    });
   });
 
-  it('documents that Temporal maximumAttempts is technical retry only', () => {
-    expect(src).toContain('Technical retries only. These must not create new logical attempts.');
+  it('rejects malformed legacy retry shapes', () => {
+    expect(() =>
+      resolveStepActivityRetryPolicy({
+        stepTypeConfig: {
+          retries: {
+            maxAttempts: 0,
+            backoffMs: -1,
+          },
+        },
+      })
+    ).toThrowError(new TypeError('INVALID_PLAN_SCHEMA: step_legacyRetryPolicy_invalid'));
   });
 });

@@ -192,6 +192,58 @@ export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload
   };
 }
 
+export type StepActivityRetryPolicy = {
+  initialInterval: `${number}s`;
+  maximumInterval: `${number}s`;
+  backoffCoefficient: number;
+  maximumAttempts: number;
+  nonRetryableErrorTypes: string[];
+};
+
+const DEFAULT_STEP_ACTIVITY_RETRY_POLICY: StepActivityRetryPolicy = Object.freeze({
+  initialInterval: '1s',
+  maximumInterval: '60s',
+  backoffCoefficient: 2,
+  maximumAttempts: 3,
+  nonRetryableErrorTypes: ['PermanentStepError'],
+});
+
+type LegacyStepRetryConfig = {
+  maxAttempts: number;
+  backoffMs: number;
+};
+
+export function resolveStepActivityRetryPolicy(
+  step: Pick<ExecutionStep, 'retryPolicy' | 'stepTypeConfig'>
+): StepActivityRetryPolicy {
+  if (step.retryPolicy !== undefined) {
+    return {
+      ...DEFAULT_STEP_ACTIVITY_RETRY_POLICY,
+      maximumAttempts: step.retryPolicy.maxAttempts,
+      initialInterval: step.retryPolicy.initialInterval,
+      maximumInterval: step.retryPolicy.maximumInterval,
+      backoffCoefficient: step.retryPolicy.backoffCoefficient,
+    };
+  }
+
+  const legacyRetryConfig = extractLegacyStepRetryConfig(step.stepTypeConfig);
+  if (legacyRetryConfig !== undefined) {
+    const initialSeconds =
+      legacyRetryConfig.backoffMs <= 0
+        ? 1
+        : Math.max(1, Math.ceil(legacyRetryConfig.backoffMs / 1000));
+    const maximumSeconds = Math.max(initialSeconds, 60);
+    return {
+      ...DEFAULT_STEP_ACTIVITY_RETRY_POLICY,
+      maximumAttempts: legacyRetryConfig.maxAttempts,
+      initialInterval: `${initialSeconds}s`,
+      maximumInterval: `${maximumSeconds}s`,
+    };
+  }
+
+  return DEFAULT_STEP_ACTIVITY_RETRY_POLICY;
+}
+
 export function resolveMaterializationEvidence(
   value: unknown
 ): MaterializationEvidence | undefined {
@@ -227,6 +279,35 @@ export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef
   }
 
   return result.data;
+}
+
+function extractLegacyStepRetryConfig(stepTypeConfig: unknown): LegacyStepRetryConfig | undefined {
+  if (!isPlainObject(stepTypeConfig)) {
+    return undefined;
+  }
+
+  const retries = stepTypeConfig['retries'];
+  if (retries === undefined) {
+    return undefined;
+  }
+  if (!isPlainObject(retries)) {
+    throw new TypeError('INVALID_PLAN_SCHEMA: step_legacyRetryPolicy_invalid');
+  }
+
+  const maxAttempts = retries['maxAttempts'];
+  const backoffMs = retries['backoffMs'];
+  if (
+    !Number.isInteger(maxAttempts) ||
+    typeof maxAttempts !== 'number' ||
+    maxAttempts < 1 ||
+    !Number.isFinite(backoffMs) ||
+    typeof backoffMs !== 'number' ||
+    backoffMs < 0
+  ) {
+    throw new TypeError('INVALID_PLAN_SCHEMA: step_legacyRetryPolicy_invalid');
+  }
+
+  return { maxAttempts, backoffMs };
 }
 
 // ---------------------------------------------------------------------------
