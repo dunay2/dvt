@@ -2,7 +2,7 @@
 title: Frontend-Facing Backend MVP Contract (MVP-E1)
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-12
 domain: frontend
 lane: E
 task_id: MVP-E1
@@ -94,6 +94,26 @@ In `api` mode, `ExecutionPlan.planRef` is backend-owned.
   if the envelope omits it.
 - `POST /runs/start` remains the only start authority and consumes that same
   immutable `PlanRef`.
+
+## Run provenance linkage contract
+
+`GET /runs/:runId` may expose one caller-visible provenance object in addition
+to snapshot outcome fields:
+
+- `provenance.persistedPlan.planRecordId`
+- `provenance.persistedPlan.planVersion`
+- `provenance.persistedPlan.sourceRef`
+- `provenance.persistedPlan.canonicalPlanSha256`
+- `provenance.authoring.graphArtifact`
+- `provenance.authoring.sqlArtifact`
+
+Rules:
+
+- persisted-plan provenance comes from the stored immutable plan record
+- authoring provenance is optional and only present when preview-time SQL-first
+  capture wrote it into the persisted canonical plan
+- timeline artifact refs from `GET /runs/:runId/events` remain execution-time
+  evidence, not authoring truth
 
 ## Canonical Envelope Examples
 

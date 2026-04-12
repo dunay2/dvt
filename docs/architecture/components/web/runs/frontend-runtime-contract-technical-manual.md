@@ -263,6 +263,24 @@ Rules:
 3. Running, paused, and cancelled snapshots render snapshot truth without
    result-evidence claims.
 
+## Provenance Linkage Rendering Rule
+
+Caller-visible plan provenance now belongs to the snapshot authority, not to
+timeline heuristics.
+
+Rules:
+
+1. `GET /runs/:runId` may carry `provenance.persistedPlan` with the persisted
+   plan record id, plan version, plan source ref, and canonical plan hash.
+2. When the persisted plan carries preview-time authoring provenance,
+   `GET /runs/:runId` may also carry `provenance.authoring.graphArtifact` and
+   `provenance.authoring.sqlArtifact`.
+3. `RunWorkspaceStateView` renders that plan-and-authoring provenance only from
+   snapshot fields.
+4. `GET /runs/:runId/events` remains supplemental for execution-time artifact
+   refs emitted by runtime steps and must not become the source of authoring
+   truth.
+
 ## Vertical Impact Map
 
 ```mermaid

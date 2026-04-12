@@ -480,7 +480,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: TF-B1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       define Git-first provenance and execution evidence linkage for the transformation flow so the
       design graph, SQL artifact, persisted plan, and runtime outcome remain traceable end to end.
@@ -491,19 +491,22 @@ tasks:
       versus what remains Git-owned authoring truth.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - docs/evidence/index.md
     status_reason: >-
-      Git-first is now a locked product decision in the roadmap, but no Lane B provenance contract
-      or evidence chain has yet been formalized for implementation.
-    last_verified: '2026-04-05'
+      Preview-time provenance capture and run-detail linkage are now both code-grounded: SQL-first
+      preview persists graph and SQL artifact provenance into the canonical plan, and `GET
+      /runs/:runId` now projects the caller-visible chain from authoring artifacts through persisted
+      plan identity to runtime outcome evidence.
+    last_verified: '2026-04-12'
   - task_id: TF-B1-A
     priority: P0
-    status: queued
+    status: done
     objective: >-
       formalize the Git artifact reference and preview-time provenance rules for graph and SQL
       inputs.
@@ -513,18 +516,20 @@ tasks:
       authoring artifacts must travel through preview and into the persisted plan record.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - docs/evidence/index.md
     status_reason: >-
-      Git-first is now frozen as a product rule, but the concrete artifact-ref contract and capture
-      rules are not yet isolated as a Lane B slice.
-    last_verified: '2026-04-05'
+      SQL-first preview now enforces graph and SQL Git artifact provenance at the request boundary,
+      writes that provenance into the persisted canonical plan, and returns the same authoring
+      linkage in preview responses consumed by the frontend.
+    last_verified: '2026-04-12'
   - task_id: TF-B1-B
     priority: P0
-    status: queued
+    status: done
     objective: >-
       define the evidence model that links runtime outcome, sink materialization, and failure events
       back to the persisted plan and Git-tracked authoring inputs.
@@ -534,15 +539,17 @@ tasks:
       record to run outcome, including sink evidence and failure-event attribution.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - docs/evidence/index.md
     status_reason: >-
-      The roadmap now requires caller-visible provenance and evidence, but the result-side linkage
-      is not yet broken into a concrete Lane B execution slice.
-    last_verified: '2026-04-05'
+      `GET /runs/:runId` now projects persisted plan identity plus preview-time authoring provenance
+      from the canonical plan and links that caller-visible chain to the existing runtime outcome
+      evidence used by run detail.
+    last_verified: '2026-04-12'
   - task_id: AR-B4
     priority: P1
     status: done

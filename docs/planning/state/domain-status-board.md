@@ -74,12 +74,13 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `Traceability`
 
-- Current objective: define the Git-first provenance chain from graph and SQL
-  artifacts to persisted plan and runtime outcome for the new vertical.
-- Active task IDs: `TF-B1`, `TF-B1-A`, `TF-B1-B`
+- Current objective: keep the first transformation vertical caller-visible and
+  shift the remaining Lane B attention back to append-boundary, consistency,
+  and determinism hardening.
+- Active task IDs: `AR-B1`, `AR-B1-E`, `AR-B2`, `AR-B3`
 - Roadmap lane affected: [Planner and Contracts lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: no executable provenance contract exists yet for the
-  transformation flow.
+- Primary blockers: the first SQL-first provenance chain is now caller-visible,
+  but broader Lane B work still has open consistency and determinism closure.
 
 ### `CI / Infrastructure`
 

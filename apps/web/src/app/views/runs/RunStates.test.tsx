@@ -227,6 +227,60 @@ describe('RunStates', () => {
     );
   });
 
+  it('renders persisted-plan and authoring provenance from snapshot fields', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        status: 'completed',
+        startedAt: '2026-03-28T10:00:00.000Z',
+        completedAt: '2026-03-28T10:00:30.000Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        provenance: {
+          persistedPlan: {
+            planRecordId: 'plan-record-1',
+            planVersion: '1.0',
+            sourceRef: 'plan://persisted/plan-record-1',
+            canonicalPlanSha256: 'a'.repeat(64),
+          },
+          authoring: {
+            graphArtifact: {
+              repo: 'acme/warehouse',
+              path: 'graphs/orders.flow.yaml',
+              ref: 'refs/heads/main',
+              commitSha: '1'.repeat(40),
+              contentSha256: '2'.repeat(64),
+            },
+            sqlArtifact: {
+              repo: 'acme/warehouse',
+              path: 'models/orders_daily.sql',
+              commitSha: '3'.repeat(40),
+            },
+          },
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Plan and authoring provenance');
+    expect(container.textContent).toContain('plan-record-1');
+    expect(container.textContent).toContain('plan://persisted/plan-record-1');
+    expect(container.textContent).toContain(
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    );
+    expect(container.textContent).toContain('Graph artifact');
+    expect(container.textContent).toContain('acme/warehouse:graphs/orders.flow.yaml');
+    expect(container.textContent).toContain('SQL artifact');
+    expect(container.textContent).toContain('acme/warehouse:models/orders_daily.sql');
+  });
+
   it('renders materialization evidence for completed snapshots', async () => {
     const workspace = buildWorkspace({
       snapshot: {

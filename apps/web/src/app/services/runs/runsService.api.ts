@@ -9,9 +9,12 @@ import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import type {
+  RunAuthoringProvenance,
   MaterializationEvidence,
   RunExecutionEvidence,
   RunFailureEvidence,
+  RunGitArtifactRef,
+  RunProvenanceChain,
   RunEventTimelinePage,
   RunSnapshot,
   RunSummaryItem,
@@ -117,6 +120,85 @@ function parseExecutionEvidence(value: unknown): RunExecutionEvidence | undefine
   };
 }
 
+function parseGitArtifactRef(value: unknown): RunGitArtifactRef | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const repo = asString(candidate.repo);
+  const path = asString(candidate.path);
+  const ref = asString(candidate.ref);
+  const commitSha = asString(candidate.commitSha);
+  const contentSha256 = asString(candidate.contentSha256);
+
+  if (!repo || !path) {
+    return undefined;
+  }
+
+  return {
+    repo,
+    path,
+    ...(ref ? { ref } : {}),
+    ...(commitSha ? { commitSha } : {}),
+    ...(contentSha256 ? { contentSha256 } : {}),
+  };
+}
+
+function parseAuthoringProvenance(value: unknown): RunAuthoringProvenance | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const graphArtifact = parseGitArtifactRef(candidate.graphArtifact);
+  const sqlArtifact = parseGitArtifactRef(candidate.sqlArtifact);
+
+  if (!graphArtifact && !sqlArtifact) {
+    return undefined;
+  }
+
+  return {
+    ...(graphArtifact ? { graphArtifact } : {}),
+    ...(sqlArtifact ? { sqlArtifact } : {}),
+  };
+}
+
+function parseRunProvenance(value: unknown): RunProvenanceChain | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const persistedPlan =
+    candidate.persistedPlan && typeof candidate.persistedPlan === 'object'
+      ? (candidate.persistedPlan as Record<string, unknown>)
+      : null;
+
+  const planRecordId = persistedPlan ? asString(persistedPlan.planRecordId) : undefined;
+  const planVersion = persistedPlan ? asString(persistedPlan.planVersion) : undefined;
+  const sourceRef = persistedPlan ? asString(persistedPlan.sourceRef) : undefined;
+  const canonicalPlanSha256 = persistedPlan
+    ? asString(persistedPlan.canonicalPlanSha256)
+    : undefined;
+
+  if (!planRecordId || !planVersion || !sourceRef || !canonicalPlanSha256) {
+    return undefined;
+  }
+
+  const authoring = parseAuthoringProvenance(candidate.authoring);
+
+  return {
+    persistedPlan: {
+      planRecordId,
+      planVersion,
+      sourceRef,
+      canonicalPlanSha256,
+    },
+    ...(authoring ? { authoring } : {}),
+  };
+}
+
 function mapContractStatusToUi(status: ContractRunStatus | string | undefined): UiRunStatus {
   switch ((status ?? '').toUpperCase()) {
     case 'APPROVED':
@@ -147,6 +229,11 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     return null;
   }
 
+  const currentStepId = asString(candidate.currentStepId);
+  const failedStepId = asString(candidate.failedStepId);
+  const errorReason = asString(candidate.errorReason);
+  const materialization = parseMaterializationEvidence(candidate.materialization);
+
   return {
     runId,
     planId: asString(candidate.planId),
@@ -167,6 +254,11 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
       | 'STALE'
       | 'UNKNOWN'
       | undefined,
+    ...(currentStepId ? { currentStepId } : {}),
+    ...(failedStepId ? { failedStepId } : {}),
+    ...(errorReason ? { errorReason } : {}),
+    ...(materialization ? { materialization } : {}),
+    provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
   };
 }

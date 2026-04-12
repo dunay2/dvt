@@ -199,6 +199,100 @@ describe('runsService runtime contract', () => {
     });
   });
 
+  it('maps persisted-plan and authoring provenance from GET /runs/:runId', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_with_provenance',
+      status: 'COMPLETED',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: '2026-04-04T00:00:10.000Z',
+      provenance: {
+        persistedPlan: {
+          planRecordId: 'plan-record-1',
+          planVersion: '1.0',
+          sourceRef: 'plan://persisted/plan-record-1',
+          canonicalPlanSha256: 'a'.repeat(64),
+        },
+        authoring: {
+          graphArtifact: {
+            repo: 'acme/warehouse',
+            path: 'graphs/orders.flow.yaml',
+            ref: 'refs/heads/main',
+            commitSha: '1'.repeat(40),
+            contentSha256: '2'.repeat(64),
+          },
+          sqlArtifact: {
+            repo: 'acme/warehouse',
+            path: 'models/orders_daily.sql',
+            commitSha: '3'.repeat(40),
+          },
+        },
+      },
+    });
+
+    const service = createRunsService('api', apiClient);
+    const snapshot = await service.getRunSnapshot('run_with_provenance');
+
+    expect(snapshot).toMatchObject({
+      runId: 'run_with_provenance',
+      provenance: {
+        persistedPlan: {
+          planRecordId: 'plan-record-1',
+          planVersion: '1.0',
+          sourceRef: 'plan://persisted/plan-record-1',
+          canonicalPlanSha256: 'a'.repeat(64),
+        },
+        authoring: {
+          graphArtifact: {
+            repo: 'acme/warehouse',
+            path: 'graphs/orders.flow.yaml',
+          },
+          sqlArtifact: {
+            repo: 'acme/warehouse',
+            path: 'models/orders_daily.sql',
+          },
+        },
+      },
+    });
+  });
+
+  it('maps top-level derived run evidence from GET /runs/:runId', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_with_read_model_fields',
+      status: 'COMPLETED',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: '2026-04-04T00:00:10.000Z',
+      currentStepId: 'step-transform',
+      failedStepId: 'step-load',
+      errorReason: 'SINK_WRITE_FAILED',
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'env-prod',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-04T00:00:02.000Z',
+        completedAt: '2026-04-04T00:00:10.000Z',
+        durationMs: 8000,
+      },
+    });
+
+    const service = createRunsService('api', apiClient);
+    const snapshot = await service.getRunSnapshot('run_with_read_model_fields');
+
+    expect(snapshot).toMatchObject({
+      runId: 'run_with_read_model_fields',
+      currentStepId: 'step-transform',
+      failedStepId: 'step-load',
+      errorReason: 'SINK_WRITE_FAILED',
+      materialization: {
+        executor: 'postgres',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+      },
+    });
+  });
+
   it('maps listRunEvents from runtime events result items and nextCursor', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.getJson).mockResolvedValue({

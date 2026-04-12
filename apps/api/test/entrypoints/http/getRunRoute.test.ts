@@ -32,6 +32,30 @@ const DEFAULT_RESULT: {
       durationMs: number;
     };
   };
+  provenance?: {
+    persistedPlan: {
+      planRecordId: string;
+      planVersion: string;
+      sourceRef: string;
+      canonicalPlanSha256: string;
+    };
+    authoring?: {
+      graphArtifact?: {
+        repo: string;
+        path: string;
+        ref?: string;
+        commitSha?: string;
+        contentSha256?: string;
+      };
+      sqlArtifact?: {
+        repo: string;
+        path: string;
+        ref?: string;
+        commitSha?: string;
+        contentSha256?: string;
+      };
+    };
+  };
 } = {
   runId: 'run-1',
   tenantId: 'tenant-a',
@@ -174,6 +198,47 @@ describe('getRunRoute', () => {
     await getRunRoute(
       {
         id: 'req-2b',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: 'tenant-a' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.send).toHaveBeenCalledWith(result);
+  });
+
+  it('returns provenance linkage fields unchanged from the use case result', async () => {
+    const result = {
+      ...DEFAULT_RESULT,
+      provenance: {
+        persistedPlan: {
+          planRecordId: 'plan-1',
+          planVersion: '1.0',
+          sourceRef: 'plan://persisted/plan-1',
+          canonicalPlanSha256: 'a'.repeat(64),
+        },
+        authoring: {
+          graphArtifact: {
+            repo: 'acme/warehouse',
+            path: 'graphs/orders.flow.yaml',
+            commitSha: '1'.repeat(40),
+          },
+          sqlArtifact: {
+            repo: 'acme/warehouse',
+            path: 'models/orders_daily.sql',
+            commitSha: '2'.repeat(40),
+          },
+        },
+      },
+    };
+    const deps = createDeps(result);
+    const reply = createReply();
+
+    await getRunRoute(
+      {
+        id: 'req-2c',
         headers: {},
         params: { runId: 'run-1' },
         query: { tenantId: 'tenant-a' },
