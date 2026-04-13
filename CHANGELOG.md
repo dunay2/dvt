@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.15.0](https://github.com/dunay2/dvt/compare/v5.14.0...v5.15.0) (2026-04-13)
+
+
+### Features
+
+* **api:** Expose run provenance linkage on status reads ([#918](https://github.com/dunay2/dvt/issues/918)) ([990d954](https://github.com/dunay2/dvt/commit/990d954b7aa968d2ac4a59f33076760107c6fab7))
+* **contracts:** Formalize shared start-run boundary ([#916](https://github.com/dunay2/dvt/issues/916)) ([83070c1](https://github.com/dunay2/dvt/commit/83070c16f61d5ccdd00a79360ae7f904987c14c0))
+* **contracts:** Govern step retry policy in execution plans ([#917](https://github.com/dunay2/dvt/issues/917)) ([db5e213](https://github.com/dunay2/dvt/commit/db5e213af05dacafb3dad73fa514ec5390b5e3a3))
+* **web:** Finalize TF-E1-C result UX ([#928](https://github.com/dunay2/dvt/issues/928)) ([d2b5551](https://github.com/dunay2/dvt/commit/d2b5551c2c119ef32c930e0c97b0f98d836fa540))
+* **web:** Persist transformation preview provenance before start-run ([#920](https://github.com/dunay2/dvt/issues/920)) ([f01f22e](https://github.com/dunay2/dvt/commit/f01f22ea96c2acd96fed01fc16983b2d22a20fff))
+
+
+### Bug Fixes
+
+* **contracts:** Close boundary hardening and canonicalize risk records ([#892](https://github.com/dunay2/dvt/issues/892)) ([94ca7ff](https://github.com/dunay2/dvt/commit/94ca7ff835ea62bf416ecc0d1161b5e907b94272))
+* **engine:** Enforce success-only materialization reads ([#914](https://github.com/dunay2/dvt/issues/914)) ([98418ea](https://github.com/dunay2/dvt/commit/98418ea8e633b4c99ae09833f16bdcc4cdebefe3))
+* **web:** Align diff review context with severity filter ([#908](https://github.com/dunay2/dvt/issues/908)) ([99e1ca2](https://github.com/dunay2/dvt/commit/99e1ca23e3940b98967f5d2070cfe6dd9379df70))
+* **web:** Harden canvas read-only state handling ([#913](https://github.com/dunay2/dvt/issues/913)) ([6c5c7e2](https://github.com/dunay2/dvt/commit/6c5c7e285c0860539f68ccb1bdb456c0c6b930c1))
+
 ## [5.14.0](https://github.com/dunay2/dvt/compare/v5.13.0...v5.14.0) (2026-04-09)
 
 
