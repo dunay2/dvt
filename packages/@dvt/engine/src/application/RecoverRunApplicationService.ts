@@ -115,15 +115,15 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
   }
 
   private async assertRecoverySourceTerminal(tenantId: string, sourceRunId: string): Promise<void> {
-    const snapshot = await this.resolveRunStatusSnapshot(tenantId, sourceRunId);
-    if (TERMINAL_RUN_STATUSES.has(snapshot.status)) {
+    const canonicalStatus = await this.resolveCanonicalRunStatus(tenantId, sourceRunId);
+    if (TERMINAL_RUN_STATUSES.has(canonicalStatus.status)) {
       return;
     }
 
-    throw new RecoverySourceNotTerminalError(sourceRunId, snapshot.status);
+    throw new RecoverySourceNotTerminalError(sourceRunId, canonicalStatus.status);
   }
 
-  private async resolveRunStatusSnapshot(
+  private async resolveCanonicalRunStatus(
     tenantId: string,
     runId: string
   ): Promise<CanonicalRunStatus> {

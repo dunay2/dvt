@@ -80,8 +80,6 @@ import {
   type RunSnapshotSchemaT,
   RunStatusEnrichmentSchema,
   type RunStatusEnrichmentSchemaT,
-  RunStatusSnapshotSchema,
-  type RunStatusSnapshotSchemaT,
   SignalRequestSchema,
   type SignalRequestSchemaT,
   StepOutputSchema,
@@ -237,10 +235,6 @@ export function parseProviderRunStatusView(input: unknown): ProviderRunStatusVie
 
 export function parseRunStatusEnrichment(input: unknown): RunStatusEnrichmentSchemaT {
   return parseWithSchema(RunStatusEnrichmentSchema, input);
-}
-
-export function parseRunStatusSnapshot(input: unknown): RunStatusSnapshotSchemaT {
-  return parseWithSchema(RunStatusSnapshotSchema, input);
 }
 
 export function parseArtifactRef(input: unknown): ArtifactRefSchemaT {

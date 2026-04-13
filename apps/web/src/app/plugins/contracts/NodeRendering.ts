@@ -3,7 +3,7 @@ import type React from 'react';
 import type { LucideIcon } from 'lucide-react';
 
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
-import type { RunStatusSnapshot } from '../../types/engine';
+import type { CanonicalRunStatus } from '../../types/engine';
 import type { NodeCostData } from './PluginServices';
 
 // ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ export type MergedNodeDecoration = NodeDecoration; // same shape, already merged
 // ---------------------------------------------------------------------------
 
 export type OverlayContext = {
-  activeRun: RunStatusSnapshot | null;
+  activeRun: CanonicalRunStatus | null;
   /** nodeId → step execution status string */
   runStatusByNodeId: ReadonlyMap<string, string>;
   costByNodeId: ReadonlyMap<string, NodeCostData>;
