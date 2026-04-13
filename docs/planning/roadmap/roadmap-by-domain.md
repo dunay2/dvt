@@ -83,9 +83,10 @@ flowchart LR
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: keep the shipped retention baseline explicit while adding a
-  repeatable Docker PostgreSQL reset/cleanup lifecycle for transformation proof
-  runs.
+  Near-term target: keep the shipped retention baseline explicit now that the
+  repeatable Docker PostgreSQL reset/cleanup lifecycle is canonical, and shift
+  the remaining operational follow-through to default-retention enforcement and
+  health alerts under `AR-D8`.
 - `UI and Frontend`
   Current sources: [web component](../../architecture/components/web/index.md),
   [Read subsystem](../../architecture/system/subsystems/read/index.md),
