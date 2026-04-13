@@ -1,8 +1,13 @@
-import { jcsCanonicalize, type GenericGraphSourceV1 } from '@dvt/contracts';
+import {
+  type DesignNodeType,
+  jcsCanonicalize,
+  type DesignGraphDraft,
+  type GenericGraphSourceV1,
+  type GitArtifactRef,
+} from '@dvt/contracts';
 
 import { resolvePreviewStepKind } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { GitArtifactRef } from '../../ports/plans';
 
 export function buildPreviewGraphSource(
   nodes: readonly CanonicalNode[],
@@ -55,54 +60,6 @@ export function buildPreviewGraphSignature(
 ): string {
   return jcsCanonicalize(buildPreviewGraphSource(nodes, edges, scopedNodeIds));
 }
-
-type TransformationExecutionTarget = 'postgres';
-type DesignNodeType = 'source' | 'sql_transform' | 'sink';
-
-type DesignGraphDraft = {
-  context: {
-    tenantId: string;
-    projectId: string;
-    environmentId: string;
-    executionTarget: TransformationExecutionTarget;
-  };
-  nodes: Array<
-    | {
-        id: string;
-        type: 'source';
-        payload: {
-          kind: 'postgres_table';
-          schema: string;
-          table: string;
-          alias: string;
-        };
-      }
-    | {
-        id: string;
-        type: 'sql_transform';
-        payload: {
-          dialect: 'postgres';
-          sqlArtifact: GitArtifactRef;
-          entrypoint: string;
-        };
-      }
-    | {
-        id: string;
-        type: 'sink';
-        payload: {
-          kind: 'postgres_table';
-          schema: string;
-          table: string;
-          materialization: 'table' | 'view';
-          writeMode: 'replace' | 'append';
-        };
-      }
-  >;
-  edges: Array<{
-    fromNodeId: string;
-    toNodeId: string;
-  }>;
-};
 
 type PreviewArtifactContext = {
   tenantId: string;

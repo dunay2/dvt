@@ -1,0 +1,38 @@
+---
+id: R-20260413-TF-A1-A-PREVIEW-CONTRACT-ADOPTION-DRIFT
+title: >
+  Downstream planner and consumer surfaces may drift while adopting the frozen SQL-first preview
+  contract
+status: Open
+date: 2026-04-13
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+  - packages/@dvt/planner
+severity: Medium
+probability: Low
+context: >
+  `TF-A1-A` freezes the first shared SQL-first design-graph and preview-persist boundary, including
+  explicit Git-first provenance and the persisted preview response envelope. `api` and `web` consume
+  the new contract line, but the deterministic compiler mapping and remaining preview route adoption
+  work continue under `TF-A1-B` and `TF-C1`.
+risk: >
+  Additional planner, API, or UI surfaces can continue constructing older route-local DTO shapes,
+  can omit required provenance for the SQL-first preview profile, or can diverge from the governed
+  `source -> sql_transform -> sink` assumptions before the remaining follow-up slices finish.
+mitigations:
+  - >
+    Shared contract exports and parse helpers now own `DesignGraphDraft`, `GitArtifactRef`, and
+    preview request and response validation.
+  - >
+    `apps/api` and `apps/web` now consume the shared surface instead of maintaining private preview
+    DTO copies for the touched paths.
+  - >
+    Negative-path contract tests now reject missing preview provenance and invalid graph shape for
+    the SQL-first profile.
+  - >
+    Lane A keeps compiler mapping and remaining adoption work explicit under `TF-A1-B` and `TF-C1`
+    instead of hiding it inside `TF-A1-A`.
+review_after: 2026-06-30
+---

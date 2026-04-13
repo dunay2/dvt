@@ -1,12 +1,7 @@
+import { PREVIEW_PROFILE, type PreviewProfile } from '@dvt/contracts';
+
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-
-export const PREVIEW_PROFILE = {
-  plannerGenericV1: 'planner-generic-v1',
-  transformationSqlFirstV1: 'transformation-sql-first-v1',
-} as const;
-
-export type PreviewProfile = (typeof PREVIEW_PROFILE)[keyof typeof PREVIEW_PROFILE];
 
 export type PreviewProfilePolicy = {
   readonly previewProfile: PreviewProfile;

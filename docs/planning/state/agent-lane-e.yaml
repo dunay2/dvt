@@ -1572,7 +1572,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-22
     priority: P1
-    status: review
+    status: done
     objective: >-
       publish the governed document set for the SQL-first execution-first transformation product,
       including the decision register, architecture and contract model, renderable diagrams,
@@ -1586,13 +1586,14 @@ tasks:
       suitable for downstream implementation slicing.
     complexity: S
     effort_points: 3
-    progress_pct: 99
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - docs/planning/closeouts/20260413-f22-sql-first-transformation-handoff-closeout.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/ux-implementation-guide.md
     status_reason: >-
@@ -1600,9 +1601,9 @@ tasks:
       SQL-first execution, design-graph planning input, explicit `previewProfile` routing,
       one-provider-per-plan semantics for v1, PostgreSQL as the first data target, Docker PostgreSQL
       as the first proof environment, Git-first artifacts, phase-2 dbt as a later provider profile,
-      and cross-lane execution ownership. Remaining work is implementation review and acceptance,
-      not roadmap ambiguity.
-    last_verified: '2026-04-08'
+      and cross-lane execution ownership. The handoff package is now explicitly accepted as the
+      governing baseline for downstream `TF-A1`, `TF-C1`, and `TF-E1` implementation slices.
+    last_verified: '2026-04-13'
   - task_id: F-23
     priority: P1
     status: in_progress
@@ -1909,10 +1910,10 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-09'
+  verified_on: '2026-04-13'
   total_tasks: 60
   total_effort_points: 213
-  completed_weighted_points: 74.97
+  completed_weighted_points: 75
   lane_progress_pct: 35
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the

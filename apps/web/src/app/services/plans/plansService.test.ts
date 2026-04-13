@@ -82,6 +82,46 @@ function buildValidPlanRef() {
   });
 }
 
+function buildValidPreviewPayload(overrides: Readonly<Record<string, unknown>> = {}) {
+  return {
+    previewProfile: 'transformation-sql-first-v1',
+    plan: buildValidContractPlan(),
+    planRef: buildValidPlanRef(),
+    planSummary: {
+      executor: 'postgres',
+      nodeCount: 3,
+      stepCount: 2,
+      sourceTables: ['raw.orders'],
+      sinkTables: ['analytics.orders_daily'],
+    },
+    persisted: {
+      planRecordId: 'plan-record-1',
+      canonicalPlanSha256: 'c'.repeat(64),
+    },
+    validation: {
+      valid: true,
+      warnings: [],
+    },
+    provenance: {
+      graphArtifact: {
+        repo: 'dunay2/dvt',
+        path: 'graphs/orders.json',
+        ref: 'refs/heads/main',
+        commitSha: 'commit-graph-1',
+        contentSha256: 'd'.repeat(64),
+      },
+      sqlArtifact: {
+        repo: 'dunay2/dvt',
+        path: 'sql/orders.sql',
+        ref: 'refs/heads/main',
+        commitSha: 'commit-sql-1',
+        contentSha256: 'e'.repeat(64),
+      },
+    },
+    ...overrides,
+  } as const;
+}
+
 function buildApiClientStub(overrides: Partial<ApiClient> = {}): ApiClient {
   const base: ApiClient = {
     baseUrl: 'http://localhost:3000',
@@ -118,31 +158,7 @@ describe('createPlansService', () => {
   });
 
   it('routes to api implementation in api mode', async () => {
-    const postJsonMock = vi.fn(async () => ({
-      plan: buildValidContractPlan(),
-      planRef: buildValidPlanRef(),
-      planSummary: {
-        executor: 'postgres',
-        nodeCount: 3,
-        stepCount: 2,
-        sourceTables: ['raw.orders'],
-        sinkTables: ['analytics.orders_daily'],
-      },
-      persisted: {
-        planRecordId: 'plan-record-1',
-        canonicalPlanSha256: 'c'.repeat(64),
-      },
-      provenance: {
-        graphArtifact: {
-          repo: 'dunay2/dvt',
-          path: 'graphs/orders.json',
-        },
-        sqlArtifact: {
-          repo: 'dunay2/dvt',
-          path: 'sql/orders.sql',
-        },
-      },
-    }));
+    const postJsonMock = vi.fn(async () => buildValidPreviewPayload());
     const service = createPlansService(
       'api',
       buildApiClientStub({
@@ -195,9 +211,11 @@ describe('createPlansService', () => {
   });
 
   it('rejects api payloads that do not include planRef', async () => {
-    const postJsonMock = vi.fn(async () => ({
-      plan: buildValidContractPlan(),
-    }));
+    const postJsonMock = vi.fn(async () => {
+      const payload = { ...buildValidPreviewPayload() } as Record<string, unknown>;
+      delete payload.planRef;
+      return payload;
+    });
     const service = createPlansService(
       'api',
       buildApiClientStub({
@@ -218,7 +236,7 @@ describe('createPlansService', () => {
           targetAdapter: 'temporal',
         }),
       })
-    ).rejects.toThrow('Invalid plans payload: expected { plan, planRef }');
+    ).rejects.toThrow('Validation failed');
   });
 
   it('maps importPlan responses from backend-owned planRef payloads', async () => {
@@ -255,10 +273,11 @@ describe('createPlansService', () => {
   });
 
   it('maps step retryPolicy into UI retry counts from the canonical field only', async () => {
-    const postJsonMock = vi.fn(async () => ({
-      plan: buildContractPlanWithRetryPolicy(),
-      planRef: buildValidPlanRef(),
-    }));
+    const postJsonMock = vi.fn(async () =>
+      buildValidPreviewPayload({
+        plan: buildContractPlanWithRetryPolicy(),
+      })
+    );
     const service = createPlansService(
       'api',
       buildApiClientStub({
@@ -290,10 +309,11 @@ describe('createPlansService', () => {
   });
 
   it('does not read legacy retry counts from stepTypeConfig', async () => {
-    const postJsonMock = vi.fn(async () => ({
-      plan: buildContractPlanWithLegacyRetryConfig(),
-      planRef: buildValidPlanRef(),
-    }));
+    const postJsonMock = vi.fn(async () =>
+      buildValidPreviewPayload({
+        plan: buildContractPlanWithLegacyRetryConfig(),
+      })
+    );
     const service = createPlansService(
       'api',
       buildApiClientStub({

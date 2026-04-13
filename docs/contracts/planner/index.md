@@ -29,10 +29,13 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
 
 ## Repository-local documents
 
 - [Plan store records v1](PlanStoreRecords.v1.md)
+- [Transformation flow preview and design graph v1](TransformationFlowPreview.v1.md)
 
 ## Related
 

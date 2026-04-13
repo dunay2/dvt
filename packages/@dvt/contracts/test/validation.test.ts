@@ -5,10 +5,13 @@ import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
 import { sha256HexUtf8 } from '../src/utils/sha256HexUtf8.js';
 import {
   ContractValidationError,
+  parseDesignGraphDraft,
   parseGenericGraphSourceV1,
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
   parseExecutionPlan,
+  parsePlanPreviewPersistResponse,
+  parsePlanPreviewRequest,
   parsePlanRecord,
   parseCanonicalRunStatus,
   parsePlannerInputEnvelopeV1,
@@ -823,5 +826,226 @@ describe('contracts: validation helpers', () => {
 
     expect(link.runId).toBe('run-1');
     expect(link.adapterId).toBe('temporal');
+  });
+
+  it('parses DesignGraphDraft for the governed source -> sql_transform -> sink shape', () => {
+    const draft = parseDesignGraphDraft({
+      context: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        executionTarget: 'postgres',
+      },
+      nodes: [
+        {
+          id: 'source-1',
+          type: 'source',
+          payload: {
+            kind: 'postgres_table',
+            schema: 'raw',
+            table: 'orders',
+            alias: 'orders_src',
+          },
+        },
+        {
+          id: 'transform-1',
+          type: 'sql_transform',
+          payload: {
+            dialect: 'postgres',
+            entrypoint: 'models/orders.sql',
+            sqlArtifact: {
+              repo: 'org/repo',
+              path: 'models/orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'commit-sql-1',
+              contentSha256: 'a'.repeat(64),
+            },
+          },
+        },
+        {
+          id: 'sink-1',
+          type: 'sink',
+          payload: {
+            kind: 'postgres_table',
+            schema: 'analytics',
+            table: 'orders_daily',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      ],
+      edges: [
+        { fromNodeId: 'source-1', toNodeId: 'transform-1' },
+        { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
+      ],
+    });
+
+    expect(draft.nodes).toHaveLength(3);
+    expect(draft.edges).toHaveLength(2);
+  });
+
+  it('rejects DesignGraphDraft when edges break the governed chain', () => {
+    expect(() =>
+      parseDesignGraphDraft({
+        context: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+          executionTarget: 'postgres',
+        },
+        nodes: [
+          {
+            id: 'source-1',
+            type: 'source',
+            payload: {
+              kind: 'postgres_table',
+              schema: 'raw',
+              table: 'orders',
+              alias: 'orders_src',
+            },
+          },
+          {
+            id: 'transform-1',
+            type: 'sql_transform',
+            payload: {
+              dialect: 'postgres',
+              entrypoint: 'models/orders.sql',
+              sqlArtifact: {
+                repo: 'org/repo',
+                path: 'models/orders.sql',
+                ref: 'refs/heads/main',
+                commitSha: 'commit-sql-1',
+                contentSha256: 'a'.repeat(64),
+              },
+            },
+          },
+          {
+            id: 'sink-1',
+            type: 'sink',
+            payload: {
+              kind: 'postgres_table',
+              schema: 'analytics',
+              table: 'orders_daily',
+              materialization: 'table',
+              writeMode: 'replace',
+            },
+          },
+        ],
+        edges: [
+          { fromNodeId: 'source-1', toNodeId: 'sink-1' },
+          { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
+        ],
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('parses transformation preview request when provenance and graph identity are explicit', () => {
+    const request = parsePlanPreviewRequest({
+      previewProfile: 'transformation-sql-first-v1',
+      context: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        runId: 'run-1',
+        targetAdapter: 'temporal',
+      },
+      selectedNodeIds: ['source-1', 'transform-1', 'sink-1'],
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'transformation-design-graph',
+        sourceVersion: 'transformation-sql-first-v1',
+        nodes: [
+          { nodeId: 'source-1', stepKind: 'SOURCE', dependsOn: [] },
+          {
+            nodeId: 'transform-1',
+            stepKind: 'POSTGRES_SQL_TRANSFORM',
+            dependsOn: ['source-1'],
+          },
+          { nodeId: 'sink-1', stepKind: 'SINK', dependsOn: ['transform-1'] },
+        ],
+      },
+      provenance: {
+        graphArtifact: {
+          repo: 'org/repo',
+          path: 'graphs/orders.yml',
+          ref: 'refs/heads/main',
+          commitSha: 'commit-graph-1',
+          contentSha256: 'b'.repeat(64),
+        },
+        sqlArtifact: {
+          repo: 'org/repo',
+          path: 'models/orders.sql',
+          ref: 'refs/heads/main',
+          commitSha: 'commit-sql-1',
+          contentSha256: 'c'.repeat(64),
+        },
+      },
+      persist: true,
+    });
+
+    expect(request.previewProfile).toBe('transformation-sql-first-v1');
+    expect(request.provenance?.graphArtifact.path).toBe('graphs/orders.yml');
+  });
+
+  it('rejects transformation preview request when provenance is missing', () => {
+    expect(() =>
+      parsePlanPreviewRequest({
+        previewProfile: 'transformation-sql-first-v1',
+        context: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+          runId: 'run-1',
+          targetAdapter: 'temporal',
+        },
+        selectedNodeIds: ['source-1', 'transform-1', 'sink-1'],
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'transformation-design-graph',
+          sourceVersion: 'transformation-sql-first-v1',
+          nodes: [
+            { nodeId: 'source-1', stepKind: 'SOURCE', dependsOn: [] },
+            {
+              nodeId: 'transform-1',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
+              dependsOn: ['source-1'],
+            },
+            { nodeId: 'sink-1', stepKind: 'SINK', dependsOn: ['transform-1'] },
+          ],
+        },
+        persist: true,
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects transformation preview response when required provenance is missing', () => {
+    expect(() =>
+      parsePlanPreviewPersistResponse({
+        previewProfile: 'transformation-sql-first-v1',
+        plan: VALID_EXECUTION_PLAN_V2_FIXTURE,
+        planRef: {
+          uri: 'dvt-plan://plans/plan-1',
+          sha256: 'd'.repeat(64),
+          schemaVersion: 'v1.2',
+          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        },
+        planSummary: {
+          executor: 'postgres',
+          nodeCount: 3,
+          stepCount: VALID_EXECUTION_PLAN_V2_FIXTURE.steps.length,
+          sourceTables: ['raw.orders'],
+          sinkTables: ['analytics.orders_daily'],
+        },
+        persisted: {
+          planRecordId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+          canonicalPlanSha256: 'e'.repeat(64),
+        },
+        validation: {
+          valid: true,
+          warnings: [],
+        },
+      })
+    ).toThrow(ContractValidationError);
   });
 });

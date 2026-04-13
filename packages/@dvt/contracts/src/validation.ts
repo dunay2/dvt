@@ -25,6 +25,8 @@ import {
   defaultContractsErrorMessage,
 } from './errorContract.js';
 import {
+  DesignGraphDraftSchema,
+  type DesignGraphDraftSchemaT,
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
   CanonicalRunStatusSchema,
@@ -56,6 +58,12 @@ import {
   type PlannerSelectionSchemaT,
   PlanCoreSchema,
   type PlanCoreSchemaT,
+  PlanPreviewPersistResponseSchema,
+  type PlanPreviewPersistResponseSchemaT,
+  PlanPreviewProvenanceSchema,
+  type PlanPreviewProvenanceSchemaT,
+  PlanPreviewRequestSchema,
+  type PlanPreviewRequestSchemaT,
   PlanRefSchema,
   type PlanRefSchemaT,
   ProviderRunStatusViewSchema,
@@ -239,6 +247,22 @@ export function parseRunStatusEnrichment(input: unknown): RunStatusEnrichmentSch
 
 export function parseArtifactRef(input: unknown): ArtifactRefSchemaT {
   return parseWithSchema(ArtifactRefSchema, input);
+}
+
+export function parseDesignGraphDraft(input: unknown): DesignGraphDraftSchemaT {
+  return parseWithSchema(DesignGraphDraftSchema, input);
+}
+
+export function parsePlanPreviewProvenance(input: unknown): PlanPreviewProvenanceSchemaT {
+  return parseWithSchema(PlanPreviewProvenanceSchema, input);
+}
+
+export function parsePlanPreviewRequest(input: unknown): PlanPreviewRequestSchemaT {
+  return parseWithSchema(PlanPreviewRequestSchema, input);
+}
+
+export function parsePlanPreviewPersistResponse(input: unknown): PlanPreviewPersistResponseSchemaT {
+  return parseWithSchema(PlanPreviewPersistResponseSchema, input);
 }
 
 export function parseStepOutput(input: unknown): StepOutputSchemaT {
