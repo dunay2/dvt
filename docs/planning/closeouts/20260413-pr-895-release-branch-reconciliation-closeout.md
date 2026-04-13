@@ -26,10 +26,12 @@ author: AI (Codex)
   - merge `main` into the stale branch and hand-resolve conflicts: viable
   - rebuild the branch from current `main` and reapply only the release intent:
     selected
-- Selected option and rationale: update the release branch on top of current
-  `main`, keeping only the real release delta (`version` bump plus changelog
-  entry) so the PR stops conflicting and no longer carries accidental dependency
-  downgrades.
+- Selected option and rationale: reconcile the release branch by merging current
+  `main`, then hand-resolve the stale release delta so the PR stops conflicting,
+  keeps only the intended `5.15.0` release metadata, and does not carry
+  accidental dependency downgrades. After the first reconciliation, `main`
+  advanced again to `2f867ee9`, so a second merge was required to bring in the
+  latest generated evidence surfaces expected by CI.
 - Rejected alternatives: leaving the stale branch as-is, accepting package
   version drift, or reverting current `main` dependency updates.
 
@@ -51,26 +53,32 @@ author: AI (Codex)
   - mitigation: run `pnpm docs:sync`
 - Out-of-scope items: changing release contents, bumping to a different version,
   or editing unrelated packages
-- Validation plan: `pnpm docs:sync`, `pnpm verify:prepush`, `gh pr checks 895`
+- Validation plan: `pnpm docs:sync`, `pnpm docs:workboard:generate`,
+  `pnpm verify:prepush`, `gh pr checks 895`
 - Test coverage plan: rely on repo-wide pre-push gate because the runtime code
   does not change; the slice is release metadata plus documentation governance
 - Libraries evaluated: none
 
 ## Changes Made
 
-| File                                                                                | Change                                                                                                         | Why                                                            |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `package.json`                                                                      | resolved merge conflict using current `main` dependency versions while preserving `"version": "5.15.0"`        | remove stale dependency drift from the release branch          |
-| `CHANGELOG.md`                                                                      | preserved the generated `5.15.0` release section on top of current `main` and normalized blank-line formatting | keep the release notes while satisfying markdown quality gates |
-| `docs/planning/closeouts/20260413-pr-895-release-branch-reconciliation-closeout.md` | added governed task closeout                                                                                   | record the root cause and reconciliation path                  |
+- `package.json`: resolved the merge conflict using current `main` dependency
+  versions while preserving `"version": "5.15.0"` to remove stale dependency
+  drift from the release branch.
+- `CHANGELOG.md`: preserved the generated `5.15.0` release section on top of
+  current `main` and normalized blank-line formatting to satisfy markdown
+  quality gates.
+- `docs/evidence/index.md`: regenerated after a second reconciliation with
+  newer `origin/main` so `docs:sync:check` matches the CI baseline.
+- `docs/planning/closeouts/20260413-pr-895-release-branch-reconciliation-closeout.md`:
+  added and updated this governed closeout to record the root cause and both
+  reconciliation passes.
 
 ## Validation Evidence
 
-| Command                | Result |
-| ---------------------- | ------ |
-| `pnpm docs:sync`       | PASS   |
-| `pnpm lint:md:changed` | PASS   |
-| `pnpm verify:prepush`  | PASS   |
+- `pnpm docs:sync`: PASS
+- `pnpm docs:workboard:generate`: PASS
+- `pnpm lint:md:changed`: PASS
+- `pnpm verify:prepush`: PASS
 
 ## Debt Introduced
 
@@ -81,3 +89,6 @@ None planned.
 - If release-please regenerates this branch again independently, it could
   overwrite the manual reconciliation. That is external automation behavior, not
   a repository defect in the repaired PR branch.
+- If `main` advances again before merge, the release branch may need another
+  fast reconciliation so generated docs surfaces stay aligned with CI's
+  `docs:sync:check` baseline.
