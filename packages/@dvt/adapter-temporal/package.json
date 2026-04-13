@@ -14,10 +14,10 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@temporalio/activity": "1.15.0",
-    "@temporalio/client": "1.15.0",
-    "@temporalio/worker": "1.15.0",
-    "@temporalio/workflow": "1.15.0",
+    "@temporalio/activity": "1.16.0",
+    "@temporalio/client": "1.16.0",
+    "@temporalio/worker": "1.16.0",
+    "@temporalio/workflow": "1.16.0",
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/dsl": "workspace:*",
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@dvt/adapter-postgres": "workspace:*",
-    "@temporalio/testing": "1.15.0",
+    "@temporalio/testing": "1.16.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   }
