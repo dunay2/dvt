@@ -1548,7 +1548,7 @@ tasks:
   - task_id: AR-A12-B
     parent_task: AR-A12
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       split canonical run status from provider-live diagnostics in the contract model, read
       boundary, and target diagrams.
@@ -1559,18 +1559,20 @@ tasks:
       planes.
     complexity: L
     effort_points: 5
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
       - docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md
       - docs/adr/ADR-0015-getRunStatus-read-model-separation.md
+      - docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
     status_reason: >-
-      This slice is now executing as a contract-first reset wave: the active engine-runtime pack is
-      being rewritten around explicit canonical status, provider-live status view, and enrichment
-      models before code and current diagrams converge under AR-A12-C.
-    last_verified: '2026-04-11'
+      Completed. The active shared contract line no longer exports `RunStatusSnapshot`; live
+      consumers now use `CanonicalRunStatus`, current docs name canonical status, provider-live
+      diagnostics, and enrichment as separate authority planes, and the closeout captures the
+      converged implementation plus validation baseline.
+    last_verified: '2026-04-13'
   - task_id: AR-A12-C
     parent_task: AR-A12
     priority: P1

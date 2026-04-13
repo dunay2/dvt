@@ -125,7 +125,7 @@ overlays: [
 
 | Campo                  | Tipo                                | Descripción             |
 | ---------------------- | ----------------------------------- | ----------------------- |
-| `activeRun`            | `RunStatusSnapshot \| null`         | Run activo              |
+| `activeRun`            | `CanonicalRunStatus \| null`        | Run activo              |
 | `runStatusByNodeId`    | `ReadonlyMap<string, string>`       | Estado por nodo         |
 | `costByNodeId`         | `ReadonlyMap<string, NodeCostData>` | Costo por nodo          |
 | `selectedNodeIds`      | `ReadonlySet<string>`               | Nodos seleccionados     |

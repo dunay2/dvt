@@ -116,8 +116,8 @@ Additional active rationale:
   - domain: `architecture-and-governance`
   - role: slice-specific architecture review for splitting canonical status, enrichment, and provider-live diagnostics
   - linkage: `AR-A12-B`
-  - status: `in_progress`
-  - progress: `20%`
+  - status: `done`
+  - progress: `100%`
 
 Additional active QA:
 

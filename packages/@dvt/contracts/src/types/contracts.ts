@@ -52,8 +52,6 @@ export type RunSubstatus =
   | 'RECOVERING'
   | 'CANCELLING';
 
-export type AdapterScopedSubstatus = `${Provider}/${string}`;
-
 export interface RunFailureEvidence {
   stepId: StepId;
   reason?: NonBlankString;
@@ -88,16 +86,6 @@ export interface ProviderRunStatusView {
 export interface RunStatusEnrichment {
   canonical: CanonicalRunStatus;
   providerView: ProviderRunStatusView;
-}
-
-export interface RunStatusSnapshot {
-  runId: NonBlankString;
-  status: RunStatus;
-  substatus?: RunSubstatus | AdapterScopedSubstatus;
-  message?: string;
-  startedAt?: IsoUtcString;
-  completedAt?: IsoUtcString;
-  execution?: RunExecutionEvidence;
 }
 
 export interface MaterializationEvidence {
