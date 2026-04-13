@@ -259,7 +259,7 @@ describe('temporal integration (time-skipping)', () => {
         await adapter.cancelRun(runRef);
 
         const afterCancel = await waitForTerminalStatus(adapter, runRef, waitForCondition);
-        expect(['CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel);
+        expect(afterCancel).toBe('CANCELLED');
       } finally {
         // Teardown (ADR-0001 Section 3: single teardown owner)
         await worker.shutdown();
@@ -332,7 +332,7 @@ describe('temporal integration (time-skipping)', () => {
    * @verifies ADR-0011 — RunCancelled event semantics
    */
   it(
-    'signal(CANCEL) and cancelRun() produce identical terminal behaviour with a single RunCancelled event',
+    'signal(CANCEL) and cancelRun() preserve ordered canonical cancellation while keeping distinct provider terminal semantics',
     async () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
@@ -374,7 +374,7 @@ describe('temporal integration (time-skipping)', () => {
           store,
           waitForCondition,
         });
-        expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
+        expect(signalResult.status).toBe('COMPLETED');
         expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(signalResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
         expect(signalResult.eventTypes.indexOf('RunCancelled')).toBeGreaterThan(
@@ -390,7 +390,7 @@ describe('temporal integration (time-skipping)', () => {
           store,
           waitForCondition,
         });
-        expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
+        expect(cancelResult.status).toBe('CANCELLED');
         expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
         expect(cancelResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
         expect(cancelResult.eventTypes.indexOf('RunCancelled')).toBeGreaterThan(
@@ -458,6 +458,9 @@ describe('temporal integration (time-skipping)', () => {
           { timeoutMs: 30_000 }
         );
 
+        const providerStatus = await waitForTerminalStatus(adapter, runRef, waitForCondition);
+        expect(providerStatus).toBe('CANCELLED');
+
         const eventTypes = (await store.listRunEvents(RunId.of(runRef.runId))).map(
           (event) => event.eventType
         );
@@ -520,6 +523,9 @@ describe('temporal integration (time-skipping)', () => {
           (events) => events.some((event) => event.eventType === 'RunCancelled'),
           { timeoutMs: 30_000 }
         );
+
+        const providerStatus = await waitForTerminalStatus(adapter, runRef, waitForCondition);
+        expect(providerStatus).toBe('CANCELLED');
 
         const eventTypes = (await store.listRunEvents(RunId.of(runRef.runId))).map(
           (event) => event.eventType

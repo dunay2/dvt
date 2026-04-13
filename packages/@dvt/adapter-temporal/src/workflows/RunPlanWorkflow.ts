@@ -253,15 +253,18 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       completedStepResults,
     });
   } catch (err) {
-    const cancelled = await finalizeNativeCancellationIfNeeded({
+    const nativeCancellationFinalized = await finalizeNativeCancellationIfNeeded({
       error: err,
       state,
       ctx,
       planRef,
       continuedAsNewCount: ctrl.continuedAsNewCount,
     });
-    if (cancelled) {
-      return cancelled;
+    if (nativeCancellationFinalized) {
+      // Re-throw the original cancellation after persisting the canonical
+      // lifecycle so Temporal records the workflow execution as provider-native
+      // cancelled instead of normal completion.
+      throw err;
     }
     await markWorkflowFailedIfNeeded(state, ctx, planRef, runtimeExecutor);
     throw err;
@@ -703,14 +706,15 @@ async function finalizeNativeCancellationIfNeeded(args: {
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
-}): Promise<RunPlanWorkflowResult | null> {
+}): Promise<boolean> {
   if (!isCancellation(args.error)) {
-    return null;
+    return false;
   }
 
-  return CancellationScope.nonCancellable(async () =>
-    emitTerminalCancellation(args, { includeRequestEvent: !args.state.cancelRequested })
-  );
+  await CancellationScope.nonCancellable(async () => {
+    await emitTerminalCancellation(args, { includeRequestEvent: !args.state.cancelRequested });
+  });
+  return true;
 }
 
 async function emitTerminalCancellation(

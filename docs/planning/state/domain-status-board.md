@@ -17,14 +17,14 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `Execution Runtime`
 
-- Current objective: keep the provider-native Temporal cancellation slice
-  narrow while finishing the PostgreSQL-backed transformation runtime vertical
-  without regressing runtime semantics.
-- Active task IDs: `AR-C6`, `WE-HX`, `WE-HX-5`, `WE-HX-6`, `TF-C2`, `TF-C2-A`
+- Current objective: finish the PostgreSQL-backed transformation runtime
+  vertical and remaining `WE-HX` hardening without regressing runtime
+  semantics.
+- Active task IDs: `WE-HX`, `WE-HX-5`, `WE-HX-6`, `TF-C2`, `TF-C2-A`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: downstream provider-live versus persisted-terminal-status
-  convergence and the delivery runtime harness extraction still sit ahead of
-  full runtime closure; TF-C2-B read-surface evidence is now accepted.
+- Primary blockers: the delivery runtime harness extraction and final
+  runtime-vertical acceptance still sit ahead of full closure; `TF-C2-B` and
+  `AR-C6` are now accepted.
 
 ### `API and Admission`
 

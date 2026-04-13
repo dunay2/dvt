@@ -866,7 +866,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: AR-C6
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       normalize Temporal cancellation semantics so provider-native cancel, runtime-owned lifecycle
       facts, and caller-visible status authority follow one governed model.
@@ -877,17 +877,19 @@ tasks:
       across planning and architecture surfaces.
     complexity: M
     effort_points: 3
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
       - docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
+      - docs/evidence/ED-20260413-temporal-native-cancel-provider-status-convergence.md
+      - docs/planning/closeouts/20260413-ar-c6-provider-status-convergence-closeout.md
     status_reason: >-
-      The provider-native Temporal cancel boundary is implemented and the repository-wide
-      cancellation ownership truth is now synchronized across planning, ADR, and contract surfaces.
-      Remaining work is runtime convergence on the provider-live versus persisted terminal-status
-      gap.
-    last_verified: '2026-04-10'
+      Native Temporal cancellation now preserves runtime-owned canonical cancel ordering and
+      converges provider-live terminal status on `CANCELLED` after workflow-local cleanup. The
+      provider-native boundary, ownership truth, and provider-status semantics are now aligned
+      across code, tests, and active docs.
+    last_verified: '2026-04-13'
   - task_id: AR-C6-A
     parent_task: AR-C6
     priority: P0
@@ -991,9 +993,9 @@ dependency_notes:
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
   - >-
-    `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted dispatcher, Postgres proof, and
-    caller-visible runtime-evidence closure; downstream work has shifted to provider-live versus
-    persisted-terminal-status convergence plus frontend result-UX completion.
+    `MW-C1`, `TF-C2-A`, `TF-C2-B`, and `AR-C6` now contribute accepted dispatcher, Postgres proof,
+    caller-visible runtime evidence, and converged native-cancel provider semantics; downstream work
+    has shifted to final runtime-vertical acceptance plus frontend result-UX completion.
   - >-
     `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
     follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
@@ -1005,13 +1007,13 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-10'
+  verified_on: '2026-04-13'
   total_tasks: 37
   total_effort_points: 137
-  completed_weighted_points: 74.4
-  lane_progress_pct: 54
+  completed_weighted_points: 74.85
+  lane_progress_pct: 55
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
     dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
-    queued-only posture. `AR-C6` now also records the short truth-sync slice that must normalize
-    cancel-lifecycle ownership before additional runtime cancellation work expands.
+    queued-only posture. `AR-C6` is now closed with native provider-status convergence, so the
+    remaining runtime closure is the broader `TF-C2` acceptance path rather than cancel semantics.

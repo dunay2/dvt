@@ -84,7 +84,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Step retry policy could drift back into adapter-local ownership](R-20260412-AR-A11-STEP-RETRY-POLICY-DRIFT.yaml)
 - [Temporal capability-specific CI lanes can over-trigger on broad engine or contract diffs](R-20260410-TEMPORAL-CAPABILITY-LANE-SCOPE-OVERTRIGGER.yaml)
 - [Temporal live status query could drift away from engine enrichment assumptions](R-20260401-TEMPORAL-LIVE-STATUS-QUERY.yaml)
-- [Temporal native cancellation cleanup and provider-status race remain coupled](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
+- [Temporal native cancellation cleanup can regress provider-status convergence](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift](R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY.yaml)
 - [TF-C2-B canonical contract docs can drift from the shipped execution read surface](R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml)
