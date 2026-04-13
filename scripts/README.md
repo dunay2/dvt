@@ -112,6 +112,8 @@ node scripts/run-temporal-postgres-proof.cjs down
 Behavior:
 
 - manages `infra/docker/postgres/docker-compose.yml`
+- prefers `docker compose` and falls back to `docker-compose` when only the
+  standalone Compose binary is available
 - waits for the `dvt-postgres` container healthcheck
 - exports `DVT_PG_INTEGRATION=1`
 - exports the canonical local DSN as `DVT_PG_URL` and `DATABASE_URL` unless
