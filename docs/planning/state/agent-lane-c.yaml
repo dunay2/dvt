@@ -633,7 +633,7 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: RC-C2
     priority: P2
-    status: review
+    status: in_progress
     objective: >-
       institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
       efficiency measurement for Lane C before scaling the workflow repo-wide.
@@ -657,7 +657,7 @@ tasks:
       Shared tooling, guide, structured measurement, and a canonical friction review are shipped;
       final closure still depends on three qualifying Lane C PR cycles logged against the new
       workflow.
-    last_verified: '2026-04-01'
+    last_verified: '2026-04-13'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -729,7 +729,7 @@ tasks:
     last_verified: '2026-04-08'
   - task_id: TF-C1-A
     priority: P0
-    status: review
+    status: done
     objective: >-
       implement the protected preview route, typed validation failures, and authorization behavior
       for SQL-first design-graph requests.
@@ -752,10 +752,10 @@ tasks:
       The protected route, auth flow, and typed error envelope are now exercised against explicit
       `previewProfile` parsing and request-boundary validation. Remaining follow-up belongs to the
       parent TF-C1 convergence chain, not to the route behavior itself.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: TF-C1-B
     priority: P0
-    status: review
+    status: done
     objective: >-
       persist canonical plan bytes plus provenance and issue the real `PlanRef` consumed by runtime
       start.
@@ -777,7 +777,7 @@ tasks:
       explicit preview-profile contract instead of step-kind heuristics. Remaining work is
       downstream caller adoption of the transformation profile and provenance path, not persistence
       correctness on the API boundary.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: TF-C2
     priority: P0
     status: in_progress
@@ -808,7 +808,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: TF-C2-A
     priority: P0
-    status: review
+    status: done
     objective: >-
       add the PostgreSQL executor path and the first repeatable Docker PostgreSQL proof baseline for
       SQL-first persisted plans.

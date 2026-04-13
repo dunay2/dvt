@@ -209,7 +209,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: review
+    status: in_progress
     objective: wire real backend health state into the top bar and a global degraded/offline banner.
     dependency: F-02
     target: >-
@@ -233,8 +233,9 @@ tasks:
     status_reason: >-
       F-03-A, F-03-B, and F-03-C are now explicit: canonical state machine, deterministic
       retry/backoff policy, and one presenter seam driving both top bar and banner from the same
-      health model. Negative-path coverage and final closure checks remain in review.
-    last_verified: '2026-04-04'
+      health model. Negative-path coverage and final closure checks remain open before final
+      closure.
+    last_verified: '2026-04-13'
   - task_id: F-04
     priority: P0
     status: in_progress
@@ -268,7 +269,8 @@ tasks:
       `F-04-RISK-B` now isolates mutable mock workspace state per service instance with an explicit
       shared-state seam plus instance-local file-tree discoverability with unique workspace paths
       for newly saved files. Documentary hard QA found no blocking issues. The remaining open work
-      is final residual cleanup under `F-04-RESIDUAL`.
+      is parent-level acceptance and closure consolidation across the `F-04` chain rather than
+      residual implementation.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
@@ -430,7 +432,7 @@ tasks:
   - task_id: F-04-F
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       remove direct resolveDataSource, createRunsService, createWorkspaceService,
       createPlansService, and raw fetch usage from route-level view and query surfaces.
@@ -457,19 +459,19 @@ tasks:
     status_reason: >-
       TDD-first guard tests now exist and pass, `useCapabilitiesQuery` consumes a composition-owned
       `CapabilitiesPort`, and route/query surfaces no longer rely on raw capability transport or
-      direct mode/service-factory ownership. Documentary hard QA found no blocking issues; the slice
-      remains in `review` pending normal commit/PR publication rather than further implementation.
+      direct mode/service-factory ownership. Documentary hard QA found no blocking issues, and the
+      slice is implementation-complete with closure recorded in its closeout and hard-QA surfaces.
     definition_of_done:
       - no route-level view or controller imports resolveDataSource
       - no route-level view imports createRunsService/createWorkspaceService/createPlansService
       - capabilities query uses governed client boundary instead of raw fetch
       - failing guard tests are defined before code rewiring (TDD red phase)
       - route/query tests and typecheck pass after implementation (green + refactor phases)
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK
     parent_task: F-04
     priority: P1
-    status: review
+    status: done
     objective: >-
       close the active risk findings from the hard QA pass of the data-source service boundary
       implementation.
@@ -494,13 +496,13 @@ tasks:
       branch (`F-04-RISK-A`) is closed in code and review, and `F-04-RISK-B` now hardens the mock
       workspace adapter so mutable state is isolated by default and shared only through an explicit,
       tested seam, including unique file-tree paths and discoverability for newly saved paths.
-      Documentary hard QA found no blocking issues. The parent risk chain is ready for normal
-      review/PR flow.
-    last_verified: '2026-04-07'
+      Documentary hard QA found no blocking issues, and the parent risk chain is now closure-backed
+      in planning.
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK-A
     parent_task: F-04-RISK
     priority: P1
-    status: review
+    status: done
     objective: >-
       remove mock-only PlanRef semantics from the shared start-run flow so API mode no longer
       depends on placeholder plan identity fields.
@@ -521,11 +523,11 @@ tasks:
       QA-01 through QA-04 are now closed. The shared start-run path no longer depends on mock-only
       `PlanRef` construction, preview/import payloads carry backend-owned canonical `planRef`, and
       the web adapter path is regression-tested for both preview and import envelopes.
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK-A-QA-03
     parent_task: F-04-RISK-A
     priority: P1
-    status: review
+    status: done
     objective: >-
       move planRef ownership to backend plan preview/import payload and remove frontend PlanRef
       synthesis from the API plans adapter.
@@ -554,11 +556,11 @@ tasks:
       - frontend API adapter does not synthesize PlanRef
       - start-run path remains fail-closed when planRef is absent
       - '`@dvt/web` tests and typecheck pass and `pnpm verify:prepush` is green'
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK-B
     parent_task: F-04-RISK
     priority: P1
-    status: review
+    status: done
     objective: >-
       isolate mock workspace graph state per service or per test seam to prevent cross-instance
       mutation bleed.
@@ -582,11 +584,11 @@ tasks:
       provides an explicit opt-in shared-state seam for tests that require it. Newly saved file
       paths now enter the instance-local file tree, and the default mock tree no longer duplicates
       nested workspace paths. Documentary hard QA found no blocking issues.
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2
-    status: review
+    status: done
     objective: >-
       close residual quality drifts after the boundary refactor, focused on test seam policy and
       shell UX contract consistency.
@@ -606,16 +608,16 @@ tasks:
       - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
       - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Residual cleanup is now functionally complete and pending final acceptance review:
+      Residual cleanup is now functionally complete and accepted at the planning layer:
       `F-04-RESIDUAL-A` moved Root-level provider ownership to the real shell entrypoint and added a
       direct integration guard, `F-04-RESIDUAL-B` rewired `useCanvasController` consumer tests to
       provider overrides, and `F-04-RESIDUAL-C` normalized API-mode console empty-state copy to
       product language without internal planning terminology.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: review
+    status: done
     objective: >-
       add a Root-level shell integration guard so provider wiring regressions fail fast.
     dependency: F-04-RESIDUAL
@@ -634,11 +636,11 @@ tasks:
       `Root` now owns `AppServicesProvider` in runtime code, `App` no longer shadows that ownership,
       and the dedicated integration guard mounts `Root` directly so provider regression fails fast
       at the real shell boundary. Documentary hard QA found no blocking residual-A defects.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL-B
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: review
+    status: done
     objective: >-
       refit canvas controller tests to provider overrides so test seams match the documented
       boundary contract.
@@ -659,11 +661,11 @@ tasks:
       overrides, the controller tests assert those provider-owned identities reach execution seams,
       and `AppServicesContext` override coverage now includes session and feedback ports. Hard QA
       follow-up remains separate.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL-C
     parent_task: F-04-RESIDUAL
     priority: P3
-    status: review
+    status: done
     objective: >-
       normalize API-mode console copy to product language and remove process-internal roadmap
       wording.
@@ -681,7 +683,7 @@ tasks:
       API-mode console empty-state copy now uses product-facing wording about run events and
       explicitly states that live log streaming is not yet available in API mode, without exposing
       internal roadmap or implementation-slice language.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-05
     priority: P0
     status: in_progress
@@ -949,7 +951,7 @@ tasks:
   - task_id: F-07-B
     parent_task: F-07
     priority: P0
-    status: review
+    status: done
     objective: >-
       create failing service tests that codify the runtime route and error expectations before
       implementation changes.
@@ -972,11 +974,11 @@ tasks:
       - listRunEvents test validates GET /runs/:runId/events
       - legacy /runs/:runId/status behavior is rejected or absent from accepted API tests
       - error tests cover 401, 403, 404, 409, 422, and 5xx categories
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-07-C
     parent_task: F-07
     priority: P0
-    status: review
+    status: done
     objective: >-
       align runsService runtime endpoints to the protected route map and update consumers to the new
       contract behavior.
@@ -1000,7 +1002,7 @@ tasks:
       - no active consumer depends on /runs/:runId/status
       - runs route composes snapshot plus timeline via facade without fake detail fields
       - route ownership and shell topology remain unchanged
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-07-D
     parent_task: F-07
     priority: P1
@@ -1028,7 +1030,7 @@ tasks:
   - task_id: F-07-E
     parent_task: F-07
     priority: P1
-    status: review
+    status: done
     objective: >-
       validate docs and planning outputs for the F-07 docs-first baseline and keep generated views
       in sync.
@@ -1049,11 +1051,11 @@ tasks:
       - pnpm docs:workboard:generate passes
       - pnpm docs:workboard:check passes
       - pnpm docs:sync:check passes
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-07-F
     parent_task: F-07
     priority: P1
-    status: review
+    status: done
     objective: >-
       complete the TDD implementation verification baseline and hand off to F-08 through F-11.
     dependency: F-07-C, F-07-D, F-07-E
@@ -1075,7 +1077,7 @@ tasks:
       - pnpm --filter @dvt/web typecheck passes
       - pnpm verify:prepush passes
       - F-08 through F-11 dependencies reference the updated F-07 baseline
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-08
     priority: P1
     status: blocked
@@ -1099,7 +1101,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-09
     priority: P1
-    status: review
+    status: in_progress
     objective:
       wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
     dependency: F-06, F-07
@@ -1123,10 +1125,10 @@ tasks:
       route states now seed shared workbench state primitives instead of remaining fully route-local
       chrome. Remaining closure is status-refresh policy, broader primitive adoption, and final
       acceptance of polling/SSE behavior rather than missing runtime wiring.
-    last_verified: '2026-04-11'
+    last_verified: '2026-04-13'
   - task_id: F-10
     priority: P1
-    status: review
+    status: in_progress
     objective: >-
       implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
       Console with real log output.
@@ -1149,7 +1151,7 @@ tasks:
       already carry timestamp, severity, and step identity for the active run. Remaining closure is
       durable reconnect or live-refresh guarantees across both surfaces, typed live-log behavior,
       and final convergence UX rather than runtime contract availability.
-    last_verified: '2026-04-10'
+    last_verified: '2026-04-13'
   - task_id: F-11
     priority: P2
     status: blocked
@@ -1768,7 +1770,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: TF-E1-A
     priority: P0
-    status: review
+    status: done
     objective: >-
       implement basic Canvas authoring for one source, one SQL transform, and one sink with inline
       graph validation.
