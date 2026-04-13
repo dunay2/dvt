@@ -1,0 +1,29 @@
+---
+id: R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY
+title: Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift
+status: Closed
+date: 2026-04-13
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Low
+context: >
+  PR 925 upgrades the Temporal TypeScript SDK packages used by packages/@dvt/adapter-temporal from
+  1.15.0 to 1.16.0. The upstream release notes include breaking changes in the Nexus API family,
+  which could have introduced adapter-runtime incompatibilities if this repository depended on those
+  surfaces.
+risk: >
+  If adapter-temporal code depended on Temporal Nexus APIs or interceptor shapes that changed in
+  1.16.0, the dependency bump could compile or install cleanly while still leaving runtime behavior
+  inconsistent with the intended adapter contract.
+mitigations:
+  - 'Repository search found no active Nexus usage under packages/@dvt/adapter-temporal,
+    packages/@dvt/engine, or apps/.'
+  - 'The adapter-temporal package build remains green after the upgrade.'
+  - 'The adapter-temporal package test suite remains green after the upgrade.'
+  - 'The PR already passed workspace and Temporal-related CI suites before the governance-only ARC
+    failure.'
+  - 'Future introduction of Nexus-specific Temporal usage should trigger a fresh compatibility
+    review before another SDK line upgrade.'
+review_after: 2026-06-30
+---
