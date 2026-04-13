@@ -66,14 +66,20 @@ function toEngineRunContext(
   sourceProvider: 'temporal' | 'conductor' | 'mock'
 ): RunContext {
   const targetAdapter = command.targetAdapter ?? sourceProvider;
-  return {
+  const runContext: RunContext = {
     tenantId: asNonBlankString(tenantId),
     projectId: asNonBlankString(projectId),
     environmentId: asNonBlankString(environmentId),
     runId: asNonBlankString(command.recoveryRunId),
     targetAdapter,
-    ...(command.runExecutionContextRef !== undefined
-      ? { runExecutionContextRef: command.runExecutionContextRef }
-      : {}),
+  };
+
+  if (command.runExecutionContextRef === undefined) {
+    return runContext;
+  }
+
+  return {
+    ...runContext,
+    runExecutionContextRef: command.runExecutionContextRef,
   };
 }

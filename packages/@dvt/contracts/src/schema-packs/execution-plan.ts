@@ -27,7 +27,10 @@ export const ExecutionStepV1Schema = z
         maxAttempts: z.number().int().min(1).max(MAX_RETRY_POLICY_ATTEMPTS),
         initialInterval: z.string().regex(/^[1-9]\d*s$/u),
         maximumInterval: z.string().regex(/^[1-9]\d*s$/u),
-        backoffCoefficient: z.number().finite().min(1),
+        backoffCoefficient: z
+          .number()
+          .refine(Number.isFinite, { message: 'backoffCoefficient must be finite.' })
+          .min(1),
       })
       .strict()
       .superRefine((policy, ctx) => {

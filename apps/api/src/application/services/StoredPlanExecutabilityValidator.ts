@@ -8,9 +8,9 @@ import type {
 import {
   collectRequiredCapabilitiesForSteps,
   createDefaultStepTypeRegistry,
+  isStepKindSupportedByAdapter,
   parsePlanRef,
 } from '@dvt/contracts';
-import { isStepKindSupportedByAdapter } from '@dvt/contracts';
 import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
 
 import type { IStoredPlanValidationReader } from '../ports/storedPlan.js';
@@ -32,7 +32,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
   ): Promise<ExecutabilityValidationResult> {
     const validatedRef = parsePlanRef(planRef);
     const adapter = this.deps.adapters.get(adapterId as EngineRunRef['provider']);
-    if (!adapter) {
+    if (adapter === undefined) {
       return {
         status: 'ERROR',
         planId: validatedRef.planId,
@@ -80,7 +80,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     }
 
     const unsupportedStep = plan.steps.find(
-      (step) => !isStepKindSupportedByAdapter(stepTypeRegistry, step.kind, adapterId)
+      (step) => isStepKindSupportedByAdapter(stepTypeRegistry, step.kind, adapterId) === false
     );
     if (unsupportedStep !== undefined) {
       return {
@@ -112,8 +112,10 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     }
     if (declaredCapabilities !== undefined) {
       const supported = new Set(declaredCapabilities);
-      const missing = requiredCapabilities.find((capability) => !supported.has(capability));
-      if (missing) {
+      const missing = requiredCapabilities.find(
+        (capability) => supported.has(capability) === false
+      );
+      if (missing !== undefined) {
         return {
           status: 'ERROR',
           planId: validatedRef.planId,

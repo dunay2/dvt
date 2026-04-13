@@ -26,8 +26,13 @@ code_refs:
   - eslint.config.cjs
   - package.json
   - pnpm-lock.yaml
+  - packages/@dvt/contracts/src/schema-packs/execution-plan.ts
   - apps/api/src/application/services/storedExecutablePlan.ts
+  - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+  - apps/api/src/application/services/recoverRunUseCase.ts
+  - apps/api/test/application/services/engineStartRunUseCase.test.ts
   - packages/@dvt/engine/src/security/planIntegrity.ts
+  - packages/@dvt/adapter-postgres/test/PostgresTransformationStepActivities.test.ts
 evidence:
   tests:
     - pnpm docs:status:generate
@@ -67,6 +72,9 @@ fixes the repo-wide lint findings that surfaced once the crash was removed.
    ESLint 10 toolchain.
 5. The repo-wide lint cleanup touched API, engine, adapter-postgres, and web
    files only where the stricter or now-functional lint stack required it.
+6. Follow-up SonarLint cleanup removed deprecated Zod usage and simplified
+   conditional logic in API and adapter test files without changing runtime
+   behavior or public contracts.
 
 ## Residual risk posture
 
