@@ -164,7 +164,6 @@ function inferArea(relPath) {
 function inferType(relPath, ext) {
   if (relPath.startsWith('extensions/')) return 'Extension';
   if (relPath.includes('.reference.')) return 'Reference';
-  if (relPath.endsWith('RunEventCatalog.v1.md')) return 'Alias';
   if (relPath === 'state-store/README.md') return 'Core';
   return TYPE_BY_EXT[ext] || 'Core';
 }
@@ -201,7 +200,6 @@ function shouldIncludeFile(relPath, ext) {
   if (relPath === 'CONTRACT_TEMPLATE.v1.md') return false;
   if (relPath.startsWith('capabilities/README')) return false;
   if (relPath.startsWith('MIGRATION_')) return false;
-  if (relPath.startsWith('DECISION_AND_RISK_LOG_')) return false;
   if (relPath.includes('.reference.')) return false;
 
   if (ext === '.md') {

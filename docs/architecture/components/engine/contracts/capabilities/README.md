@@ -4,6 +4,9 @@
 
 This directory contains **executable, schema-validated** capability declarations. These are NOT prose; they drive validation logic.
 
+These assets are companions to the active engine-runtime `v1` pack. They do
+not publish a second contract line for engine-runtime behavior.
+
 ## Files
 
 ### `capabilities.schema.json`
@@ -145,7 +148,7 @@ When adding a new capability:
 4. Version changes: If a capability change alters the active engine-runtime
    boundary, rewrite the active `v1` contract surfaces and companion
    registries in the same slice. Do not preserve a second active engine-runtime
-   reading path.
+   reading path or add an alias page that competes with the canonical pack.
 
 ## References
 

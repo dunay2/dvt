@@ -299,8 +299,8 @@ export const StepOutputSchema = z.object({
   error: StepErrorSchema.optional(),
 });
 
-// ─── Event schemas (aligned to RunEvents v2.0.2) ─────────────────────────────
-// @see specs/contracts/engine/RunEvents.v2.0.md — Normative event contract
+// ─── Event schemas (aligned to the active RunEvents v1 contract) ─────────────
+// @see docs/architecture/components/engine/contracts/engine/RunEvents.v1.md
 
 export const RUN_EVENT_PAYLOAD_VERSION = 1 as const;
 

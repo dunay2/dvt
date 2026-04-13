@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://dvt.local/contracts/engine/events/RunEventRecord.v2.0.schema.json",
-  "title": "RunEventRecord v2.0.0",
+  "$id": "https://dvt.local/contracts/engine/events/RunEventRecord.v1.schema.json",
+  "title": "RunEventRecord v1.0",
   "$defs": {
     "runEventWrite": {
       "type": "object",

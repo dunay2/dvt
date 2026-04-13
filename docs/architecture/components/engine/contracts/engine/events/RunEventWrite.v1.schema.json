@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://dvt.local/contracts/engine/events/RunEventWrite.v2.0.schema.json",
-  "title": "RunEventWrite v2.0.0",
+  "$id": "https://dvt.local/contracts/engine/events/RunEventWrite.v1.schema.json",
+  "title": "RunEventWrite v1.0",
   "type": "object",
   "required": [
     "eventId",
