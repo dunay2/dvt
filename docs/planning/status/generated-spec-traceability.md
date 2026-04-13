@@ -14,7 +14,7 @@ Generated automatically from repository documentation and source-code signals on
 
 | Metric                            | Value     |
 | --------------------------------- | --------- |
-| Canonical docs scanned            | 910       |
+| Canonical docs scanned            | 911       |
 | Canonical docs with code links    | 86 (9%)   |
 | Canonical docs with ADR links     | 85 (9%)   |
 | Code files scanned                | 1126      |
@@ -28,7 +28,7 @@ Generated automatically from repository documentation and source-code signals on
 | adr           | 51   | 6 (12%)              | 27 (53%)            |
 | architecture  | 184  | 46 (25%)             | 17 (9%)             |
 | contracts     | 10   | 0 (0%)               | 1 (10%)             |
-| evidence      | 100  | 2 (2%)               | 5 (5%)              |
+| evidence      | 101  | 2 (2%)               | 5 (5%)              |
 | guides        | 31   | 3 (10%)              | 5 (16%)             |
 | planning      | 490  | 28 (6%)              | 30 (6%)             |
 | risk-register | 31   | 0 (0%)               | 0 (0%)              |

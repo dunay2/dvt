@@ -1,0 +1,31 @@
+---
+id: R-20260413-AR-A12-A-CONTRACT-PACK-RESET
+title: >
+  Downstream consumers may still reference retired engine contract-pack aliases or mixed-generation
+  paths
+status: Open
+date: 2026-04-13
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - docs
+severity: Medium
+probability: Low
+context: >
+  `AR-A12-A` resets the active engine-runtime contract pack to one live `v1` line, removes the
+  `RunEventCatalog` alias path, renames the run-event schema entrypoints onto the `v1` line, and
+  retires mixed-generation contract files from the active docs tree.
+risk: >
+  Any downstream documentation, scripts, or consumers that still point at retired `v2`, alias, or
+  parallel contract-pack paths can fail to resolve the canonical contract entrypoints or can
+  continue teaching the wrong active read order.
+mitigations:
+  - 'The engine-runtime registries and generated contract index now publish only the canonical `v1`
+    line for the touched topics.'
+  - 'Active references that still named `RunEventCatalog` were updated to point at `RunEvents.v1`.'
+  - 'Dead generator branches for the retired alias and decision-log filenames were removed to avoid
+    reintroducing mixed-generation labels in generated surfaces.'
+  - 'ARC-2 evidence captures the validation baseline run against the shipped slice, including
+    `arc-check`, `doc-check`, and `verify:prepush`.'
+review_after: 2026-06-30
+---
