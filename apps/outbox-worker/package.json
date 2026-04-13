@@ -20,7 +20,7 @@
     "@dvt/delivery": "workspace:*",
     "@dvt/state-store": "workspace:*",
     "pg": "^8.12.0",
-    "pino": "^9.0.0",
+    "pino": "^10.3.1",
     "zod": "^3.0.0"
   },
   "devDependencies": {
