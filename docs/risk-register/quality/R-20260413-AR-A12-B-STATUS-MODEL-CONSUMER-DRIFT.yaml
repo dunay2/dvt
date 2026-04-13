@@ -1,0 +1,30 @@
+---
+id: R-20260413-AR-A12-B-STATUS-MODEL-CONSUMER-DRIFT
+title:
+  Downstream consumers may still depend on retired status helper exports or mixed status semantics
+status: Open
+date: 2026-04-13
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - apps/web
+severity: Medium
+probability: Low
+context: >
+  `AR-A12-B` removes `RunStatusSnapshot` from the active shared-contract line and retires
+  `AdapterScopedSubstatus` from public exports. The shipped model now reserves `CanonicalRunStatus`
+  for DVT-owned lifecycle authority, `ProviderRunStatusView` for provider-native diagnostics, and
+  `RunStatusEnrichment` for optional derived read-side data.
+risk: >
+  Any downstream consumer that still imports the retired helper types or treats `providerSubstatus`
+  as canonical lifecycle state can fail to compile or render incorrect run state after upgrade.
+mitigations:
+  - 'Web overlay and plugin runtime consumers now read `CanonicalRunStatus` for lifecycle state and
+    keep provider-native strings only inside `ProviderRunStatusView`.'
+  - 'Contracts and engine public-surface tests now fail if `AdapterScopedSubstatus` reappears on the
+    active exported line.'
+  - 'The AR-A12-B review, closeout, and reference docs now describe the
+    canonical/provider/enrichment split explicitly.'
+  - 'Targeted contracts, engine, web, and verify:prepush validation ran against the shipped slice.'
+review_after: 2026-06-30
+---
