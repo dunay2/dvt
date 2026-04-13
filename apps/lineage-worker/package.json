@@ -18,7 +18,7 @@
     "@dvt/adapter-postgres": "workspace:*",
     "@dvt/delivery": "workspace:*",
     "@dvt/traceability-service": "workspace:*",
-    "pino": "^9.0.0",
+    "pino": "^10.3.1",
     "zod": "^3.0.0"
   },
   "devDependencies": {
