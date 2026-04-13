@@ -5,6 +5,7 @@ import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
+import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import {
   usePlansService,
   useRunsService,
@@ -37,6 +38,7 @@ export function useCanvasController() {
   const runsService = useRunsService();
   const sessionContext = useSessionContext();
   const shellFeedback = useShellFeedback();
+  const workspaceBootstrapConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const navigationActions = useCanvasNavigationActions();
 
   const store = useCanvasStoreFacade();
@@ -88,6 +90,7 @@ export function useCanvasController() {
   const executionActions = useCanvasExecutionActions({
     plansService,
     runsService,
+    workspaceService,
     canonicalNodes: graphModel.canonicalNodes,
     canonicalEdges: graphModel.canonicalEdges,
     selectedNodeIds: store.selectedNodeIds,
@@ -96,6 +99,7 @@ export function useCanvasController() {
     canRun: store.userPermissions.canRun,
     sessionContext,
     shellFeedback,
+    previewProvenanceConfig: workspaceBootstrapConfig,
     consolePanelVisible: store.consolePanelVisible,
     currentPlan: store.currentPlan as ExecutionPlan | null,
     setCurrentPlan: store.setCurrentPlan,

@@ -1,18 +1,25 @@
+import { sha256HexUtf8 } from '@dvt/contracts';
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 
-import type { IPlansPort } from '../../ports/plans';
+import type { IPlansPort, PlanPreviewProvenance } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
-import type { SessionContextPort } from '../../ports/sessionContext';
+import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type { IWorkspacePort } from '../../ports/workspace';
+import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ExecutionPlan } from '../../types/dbt';
 import type { PlanRef } from '../../types/engine';
-import { buildPreviewGraphSource } from './previewGraphSource';
+import {
+  buildPreviewDesignGraphArtifactContent,
+  buildPreviewGraphSource,
+} from './previewGraphSource';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
 type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
+  workspaceService: IWorkspacePort;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds: string[];
@@ -21,6 +28,10 @@ type UseCanvasExecutionActionsParams = {
   canRun: boolean;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
+  previewProvenanceConfig: Pick<
+    WorkspaceBootstrapConfig,
+    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
+  >;
   consolePanelVisible: boolean;
   currentPlan: ExecutionPlan | null;
   setCurrentPlan: (plan: ExecutionPlan | null) => void;
@@ -38,6 +49,152 @@ type UseCanvasExecutionActionsResult = {
   handlePlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
 };
+
+type PreviewProvenanceResolution =
+  | { ok: true; provenance?: PlanPreviewProvenance }
+  | { ok: false; message: string };
+
+function normalizeGitRef(branch: string): string {
+  return branch.startsWith('refs/') ? branch : `refs/heads/${branch}`;
+}
+
+function hasExplicitGitRevision({
+  gitBranch,
+  gitSha,
+}: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha'>): boolean {
+  const normalizedBranch = gitBranch.trim();
+  const normalizedSha = gitSha.trim();
+
+  return (
+    normalizedBranch.length > 0 &&
+    normalizedBranch !== 'detached' &&
+    normalizedBranch !== 'unknown' &&
+    normalizedSha.length > 0 &&
+    normalizedSha !== 'unknown'
+  );
+}
+
+function resolveScopedTransformNode(
+  nodes: readonly CanonicalNode[],
+  scopedNodeIds: readonly string[]
+): CanonicalNode | undefined {
+  const scopedNodeIdSet = new Set(scopedNodeIds);
+  return nodes.find((node) => scopedNodeIdSet.has(node.id) && node.role === 'transform');
+}
+
+function resolvePreviewArtifactContext(scope: WorkspaceScope): {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+} {
+  return {
+    tenantId: scope.tenantId,
+    projectId: scope.projectId,
+    environmentId: scope.environmentId,
+  };
+}
+
+async function resolvePreviewProvenance({
+  canonicalNodes,
+  canonicalEdges,
+  scopedNodeIds,
+  workspaceService,
+  workspaceScope,
+  previewProvenanceConfig,
+  required,
+}: {
+  canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
+  scopedNodeIds: readonly string[];
+  workspaceService: IWorkspacePort;
+  workspaceScope: WorkspaceScope;
+  previewProvenanceConfig: Pick<
+    WorkspaceBootstrapConfig,
+    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
+  >;
+  required: boolean;
+}): Promise<PreviewProvenanceResolution> {
+  const transformNode = resolveScopedTransformNode(canonicalNodes, scopedNodeIds);
+  if (!transformNode?.path) {
+    if (!required) {
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      message:
+        'Preview provenance requires one SQL transform node with a workspace file path before planning.',
+    };
+  }
+
+  const { gitRepo, graphArtifactPath, gitBranch, gitSha } = previewProvenanceConfig;
+  if (!gitRepo || !graphArtifactPath) {
+    if (!required) {
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      message:
+        'Preview provenance is not configured for this workspace. Set the Git repo and graph artifact path before planning.',
+    };
+  }
+  if (!hasExplicitGitRevision({ gitBranch, gitSha })) {
+    if (!required) {
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      message:
+        'Preview provenance requires an explicit Git branch and commit before planning.',
+    };
+  }
+
+  try {
+    const sqlArtifactFile = await workspaceService.getFileContent(transformNode.path);
+    const sqlArtifact = {
+      repo: gitRepo,
+      path: transformNode.path,
+      ref: normalizeGitRef(gitBranch),
+      commitSha: gitSha,
+      contentSha256: sha256HexUtf8(sqlArtifactFile.content),
+    } satisfies PlanPreviewProvenance['sqlArtifact'];
+    const graphArtifactContent = buildPreviewDesignGraphArtifactContent({
+      nodes: canonicalNodes,
+      edges: canonicalEdges,
+      scopedNodeIds,
+      sqlArtifact,
+      context: resolvePreviewArtifactContext(workspaceScope),
+    });
+    const graphArtifactFile = await workspaceService.saveFileContent(
+      graphArtifactPath,
+      graphArtifactContent
+    );
+
+    return {
+      ok: true,
+      provenance: {
+        graphArtifact: {
+          repo: gitRepo,
+          path: graphArtifactPath,
+          ref: normalizeGitRef(gitBranch),
+          commitSha: gitSha,
+          contentSha256: sha256HexUtf8(graphArtifactFile.content),
+        },
+        sqlArtifact,
+      },
+    };
+  } catch (error) {
+    if (!required) {
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Preview provenance could not be resolved from the workspace files.',
+    };
+  }
+}
 
 export function resolvePlanRefForStartRun(plan: ExecutionPlan): PlanRef | null {
   return plan.planRef ?? null;
@@ -80,6 +237,7 @@ function hasPlanRefHashMismatch(plan: ExecutionPlan | null): boolean {
 export function useCanvasExecutionActions({
   plansService,
   runsService,
+  workspaceService,
   canonicalNodes,
   canonicalEdges,
   selectedNodeIds,
@@ -88,6 +246,7 @@ export function useCanvasExecutionActions({
   canRun,
   sessionContext,
   shellFeedback,
+  previewProvenanceConfig,
   consolePanelVisible,
   currentPlan,
   setCurrentPlan,
@@ -149,11 +308,26 @@ export function useCanvasExecutionActions({
     try {
       const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
       const graphSource = buildPreviewGraphSource(canonicalNodes, canonicalEdges, selectedForPlan);
+      const context = sessionContext.buildRunContext(`run_ui_${Date.now()}`);
+      const previewProvenance = await resolvePreviewProvenance({
+        canonicalNodes,
+        canonicalEdges,
+        scopedNodeIds: selectedForPlan,
+        workspaceService,
+        workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
+        previewProvenanceConfig,
+        required: true,
+      });
+      if (!previewProvenance.ok) {
+        shellFeedback.error(previewProvenance.message);
+        return;
+      }
       const plan = await plansService.previewPlan({
-        previewProfile: 'planner-generic-v1',
+        previewProfile: 'transformation-sql-first-v1',
         graphSource,
         selectedNodeIds: selectedForPlan,
-        context: sessionContext.buildRunContext(`run_ui_${Date.now()}`),
+        context,
+        ...(previewProvenance.provenance ? { provenance: previewProvenance.provenance } : {}),
         persist: true,
       });
       setCurrentPlan(plan);
@@ -169,6 +343,7 @@ export function useCanvasExecutionActions({
     canonicalEdges,
     canonicalNodes,
     plansService,
+    previewProvenanceConfig,
     selectedNodeIds,
     sessionContext,
     setCurrentPlan,
@@ -176,6 +351,7 @@ export function useCanvasExecutionActions({
     transformationValidation.draftSignature,
     transformationValidation.summary,
     transformationValidation.valid,
+    workspaceService,
     workspaceNodeIds,
   ]);
 

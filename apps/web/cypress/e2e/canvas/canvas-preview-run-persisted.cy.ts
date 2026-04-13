@@ -178,6 +178,11 @@ function stubCanvasRuntimeApis(): void {
           tags: ['source'],
           status: 'idle',
           dependencies: [],
+          config: {
+            schema: 'raw',
+            table: 'orders',
+            alias: 'orders',
+          },
         },
         {
           id: 'model_orders',
@@ -188,6 +193,9 @@ function stubCanvasRuntimeApis(): void {
           tags: ['transform'],
           status: 'idle',
           dependencies: ['src_orders'],
+          config: {
+            dialect: 'postgres',
+          },
         },
         {
           id: 'orders_dashboard',
@@ -198,6 +206,12 @@ function stubCanvasRuntimeApis(): void {
           tags: ['output'],
           status: 'idle',
           dependencies: ['model_orders'],
+          config: {
+            schema: 'analytics',
+            table: 'orders_dashboard',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
         },
       ],
       edges: [
@@ -216,16 +230,67 @@ function stubCanvasRuntimeApis(): void {
       ],
     },
   }).as('getWorkspaceGraph');
+
+  cy.intercept('POST', '**/workspace/files/pipelines%2Fsales_pipeline.yaml*', (req) => {
+    expect(req.body.content).to.contain('executionTarget: "postgres"');
+    expect(req.body.content).to.contain('type: "source"');
+    expect(req.body.content).to.contain('type: "sql_transform"');
+    expect(req.body.content).to.contain('type: "sink"');
+    expect(req.body.content).to.contain('schema: "raw"');
+    expect(req.body.content).to.contain('table: "orders_dashboard"');
+    expect(req.body.content).to.contain('entrypoint: "models/analytics/model_orders.sql"');
+    req.reply({
+      statusCode: 200,
+      body: {
+        path: 'pipelines/sales_pipeline.yaml',
+        name: 'sales_pipeline.yaml',
+        language: 'yaml',
+        content: req.body.content,
+        lastModified: '2026-04-08T00:00:00.000Z',
+      },
+    });
+  }).as('saveGraphArtifact');
+
+  cy.intercept('GET', '**/workspace/files/models%2Fanalytics%2Fmodel_orders.sql*', {
+    statusCode: 200,
+    body: {
+      path: 'models/analytics/model_orders.sql',
+      name: 'model_orders.sql',
+      language: 'sql',
+      content: ['select *', 'from raw.orders'].join('\n'),
+      lastModified: '2026-04-08T00:00:00.000Z',
+    },
+  }).as('getSqlArtifact');
 }
 
 function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions): void {
   cy.intercept('POST', '**/plans/preview', (req) => {
     expect(req.body.persist).to.equal(true);
+    expect(req.body.previewProfile).to.equal('transformation-sql-first-v1');
     expect(req.body.selectedNodeIds).to.deep.equal([
       'src_orders',
       'model_orders',
       'orders_dashboard',
     ]);
+    expect(req.body.graphSource).to.include({
+      kind: 'generic-graph-v1',
+      sourceFamily: 'transformation-design-graph',
+      sourceVersion: 'transformation-sql-first-v1',
+    });
+    expect(req.body.provenance.graphArtifact).to.deep.include({
+      repo: 'dunay2/dvt',
+      path: 'pipelines/sales_pipeline.yaml',
+      ref: 'refs/heads/main',
+      commitSha: 'local',
+    });
+    expect(req.body.provenance.graphArtifact.contentSha256).to.match(/^[0-9a-f]{64}$/);
+    expect(req.body.provenance.sqlArtifact).to.deep.include({
+      repo: 'dunay2/dvt',
+      path: 'models/analytics/model_orders.sql',
+      ref: 'refs/heads/main',
+      commitSha: 'local',
+    });
+    expect(req.body.provenance.sqlArtifact.contentSha256).to.match(/^[0-9a-f]{64}$/);
 
     req.reply({
       statusCode: 200,
@@ -300,6 +365,8 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.wait('@saveGraphArtifact');
+    cy.wait('@getSqlArtifact');
     cy.wait('@previewPlan');
 
     cy.contains('Execution Plan Preview').should('be.visible');
@@ -333,6 +400,8 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.wait('@saveGraphArtifact');
+    cy.wait('@getSqlArtifact');
     cy.wait('@previewPlan');
 
     cy.contains('Execution Plan Preview').should('be.visible');

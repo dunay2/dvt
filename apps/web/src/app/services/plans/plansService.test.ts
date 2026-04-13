@@ -6,8 +6,8 @@ import { createPlansService } from './plansService';
 
 const VALID_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
-  sourceFamily: 'canvas-canonical-graph',
-  sourceVersion: 'planner-generic-v1',
+  sourceFamily: 'transformation-design-graph',
+  sourceVersion: 'transformation-sql-first-v1',
   nodes: [{ nodeId: 'node_1', stepKind: 'CANVAS_TRANSFORM', dependsOn: [] }],
 } as const;
 

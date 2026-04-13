@@ -37,6 +37,12 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
@@ -172,8 +178,10 @@ function mapContractPlanToUi(
     capabilities: [],
     ...(preview ? { preview } : {}),
     steps: contractPlan.steps.map((step: ContractExecutionPlan['steps'][number]) => {
+      const stepRecord = asRecord(step);
       const config = (step.stepTypeConfig ?? {}) as Record<string, unknown>;
       const policyBag = (config.policies ?? config.policy ?? {}) as Record<string, unknown>;
+      const retryPolicy = asRecord(stepRecord?.retryPolicy);
       const rawNodes = config.nodeIds;
       const nodes = Array.isArray(rawNodes)
         ? rawNodes.filter((value): value is string => typeof value === 'string')
@@ -186,8 +194,8 @@ function mapContractPlanToUi(
         nodes,
         policies: {
           retries:
-            typeof step.retryPolicy?.maxAttempts === 'number'
-              ? Math.max(step.retryPolicy.maxAttempts - 1, 0)
+            typeof retryPolicy?.maxAttempts === 'number'
+              ? Math.max(retryPolicy.maxAttempts - 1, 0)
               : undefined,
           timeout:
             asNumber(policyBag.timeoutSec) ??

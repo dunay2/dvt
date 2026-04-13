@@ -3,6 +3,19 @@ import type { GenericGraphSourceV1 } from '@dvt/contracts';
 import type { ExecutionPlan } from '../types/dbt';
 import type { PlanRef, RunContext } from '../types/engine';
 
+export type GitArtifactRef = {
+  repo: string;
+  path: string;
+  ref: string;
+  commitSha: string;
+  contentSha256: string;
+};
+
+export type PlanPreviewProvenance = {
+  graphArtifact: GitArtifactRef;
+  sqlArtifact: GitArtifactRef;
+};
+
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the plans domain
 // ---------------------------------------------------------------------------
@@ -13,6 +26,7 @@ export type PlanPreviewInput = {
   selectedNodeIds: string[];
   context: RunContext;
   planName?: string;
+  provenance?: PlanPreviewProvenance;
   persist: true;
 };
 
