@@ -1,4 +1,4 @@
-import path from 'path';
+import { fileURLToPath, URL } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
@@ -7,6 +7,11 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const proxyTarget = env.VITE_API_BASE_URL?.trim() || 'http://127.0.0.1:3000';
+  const allowedHosts =
+    env.VITE_ALLOWED_HOSTS
+      ?.split(',')
+      .map((host) => host.trim())
+      .filter((host) => host.length > 0) ?? ['host.docker.internal'];
 
   return {
     plugins: [
@@ -17,12 +22,11 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        // Alias @ to the src directory
-        '@': path.resolve(__dirname, './src'),
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
     server: {
-      allowedHosts: ['host.docker.internal'],
+      allowedHosts,
       proxy: {
         '/api': {
           target: proxyTarget,
@@ -32,7 +36,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     preview: {
-      allowedHosts: ['host.docker.internal'],
+      allowedHosts,
     },
 
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
