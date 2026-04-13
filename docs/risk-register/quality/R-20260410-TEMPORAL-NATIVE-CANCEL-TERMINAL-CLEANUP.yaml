@@ -1,29 +1,24 @@
 ---
 id: R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP
-title: Temporal native cancellation cleanup and provider-status race remain coupled
-status: Open
+title: Temporal native cancellation cleanup can regress provider-status convergence
+status: Closed
 date: 2026-04-10
 owners:
   - packages/@dvt/adapter-temporal
 severity: Low
 probability: Medium
 context: >
-  AR-C6 fixes Temporal cancellation semantics by switching adapter-level cancellation to
-  `WorkflowHandle.cancel()` and completing terminal event emission through non-cancellable local
-  activities inside RunPlanWorkflow. The adapter still exposes provider-live `describe()` status as
-  diagnostics, while canonical caller-visible status stays event-log-backed.
+  AR-C6 now preserves ordered canonical cancel events and rethrows native cancellation after
+  non-cancellable finalization so Temporal converges its provider-live terminal status on
+  `CANCELLED`.
 risk: >
-  If Temporal SDK or workflow-cancellation behaviour changes around local activity completion, the
-  workflow could regress in its ability to persist RunCancelRequested and RunCancelled in the
-  intended order after provider-native cancellation is requested. Late native cancellation requests
-  can also race with provider-live observation, leaving `describe()` transiently on `RUNNING` or
-  ultimately on `COMPLETED` even after canonical cancellation events are recorded.
+  A future refactor could revert the workflow to normal completion after native cancellation
+  cleanup, reintroducing the mismatch where canonical status reaches `CANCELLED` but
+  `handle.describe()` settles on `COMPLETED`.
 mitigations:
   - Unit coverage asserts that TemporalAdapter.cancelRun() calls native cancel instead of signal.
-  - Time-skipping integration coverage exercises signal cancellation, native cancellation, and
-    finalization races while asserting the canonical event-log ordering instead of treating
-    provider-live status as authoritative.
-  - EnginePolicies and implementation diagrams now record the expected cancellation ownership and
-    provider-status limitations explicitly for future regression review.
-review_after: 2026-06-15
+  - Time-skipping integration coverage now proves native cancellation converges to provider status
+    `CANCELLED` while preserving canonical event ordering.
+  - EnginePolicies records native and cooperative cancellation as distinct paths with explicit
+    provider-status semantics.
 ---

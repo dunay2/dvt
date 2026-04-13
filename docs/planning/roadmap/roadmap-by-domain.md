@@ -48,12 +48,11 @@ flowchart LR
   [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
-  Near-term target: close the remaining `WE-HX` hardening waves, keep the
-  provider-native `AR-C6` runtime follow-through narrow, and keep `TF-C2`
-  moving for the PostgreSQL executor path and caller-visible runtime evidence,
-  while the broader contract-pack reset and shared-kernel ownership cleanup
-  continue under the Planner and Contracts lane, the delivery runtime harness
-  extraction (`AR-A7`) stays sequenced behind that boundary work, and
+  Near-term target: close the remaining `WE-HX` hardening waves and keep
+  `TF-C2` moving for the PostgreSQL executor path and caller-visible runtime
+  evidence, while the broader contract-pack reset and shared-kernel ownership
+  cleanup continue under the Planner and Contracts lane, the delivery runtime
+  harness extraction (`AR-A7`) stays sequenced behind that boundary work, and
   Conductor cleanup stays scoped as truthfulness debt (`AR-A8`) rather than a
   second-provider phase.
 - `API and Admission`

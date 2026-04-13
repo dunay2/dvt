@@ -47,9 +47,13 @@ Primary implementation references:
   response shape, but unknown future Temporal status tokens are preserved as
   provider diagnostics instead of breaking enriched reads.
 - In native-cancel cleanup races, `describe()` may still report `RUNNING` while
-  workflow-local terminal cancellation events are being persisted, and may
-  later settle on `COMPLETED` because the Temporal workflow returns normally
-  after recording canonical `RunCancelRequested` / `RunCancelled`.
+  workflow-local terminal cancellation events are being persisted, but the
+  workflow now rethrows native cancellation after non-cancellable terminal
+  event finalization so Temporal eventually settles on provider status
+  `CANCELLED`.
+- Cooperative `signal(CANCEL)` remains a distinct workflow-owned path and may
+  still end with provider token `COMPLETED` because it does not request
+  provider-native workflow cancellation.
 - Temporal workflow runtime still exposes an internal `runtimeState` query for workflow-local visibility/debugging, but it is no longer the adapter's published provider-status boundary.
 - The provider view is intentionally narrower than the canonical read model:
   Temporal-native runtime statuses such as `RUNNING`, `FAILED`,
@@ -126,10 +130,11 @@ Contract-pack reset tracked under `AR-A12-A`:
 - The workflow currently flips in-memory status before terminal cancellation
   events are persisted, so ordered lifecycle truth still belongs to the
   event-log-backed read path rather than the live workflow query.
-- Late native cancellation can therefore produce a temporary or final mismatch
-  between provider-live status and canonical event-log-backed status; that is a
-  current implementation reality, not a contract violation, because provider
-  status remains enrichment only.
+- Late native cancellation can still produce a transient mismatch while
+  terminal cancellation events are being written, but native provider status
+  now converges to `CANCELLED` after finalization. Cooperative
+  `signal(CANCEL)` remains a separate path whose provider token may complete
+  normally even though canonical status closes as cancelled.
 - During pause, workflow blocks with `condition(() => !state.paused || state.cancelRequested)`.
 - On pause/resume transitions, lifecycle events are emitted via activities (`RunPaused`, `RunResumed`).
 - Step execution emits `StepStarted` and either `StepCompleted` or (`StepFailed` + `RunFailed`).
