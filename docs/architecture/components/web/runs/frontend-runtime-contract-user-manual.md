@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract User Manual
 status: Review
 owner: Frontend / Product
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-13
 domain: frontend
 ---
 
@@ -53,6 +53,10 @@ flowchart LR
 - single snapshot authority is `GET /runs/:runId`
 - the same snapshot may carry persisted plan identity and authoring provenance
   for the run
+- completed snapshots show executor identity, sink table, rows written, and
+  started or completed timestamps from persisted snapshot fields
+- failed snapshots show executor identity, failed-step attribution, failure
+  reason or message, and failed-at timestamp from persisted snapshot fields
 - when only snapshot data is available, the UI shows a runtime snapshot state;
 - when events are available, timeline appears in the same run workspace context;
 - the route never invents step, artifact, or metrics detail from empty

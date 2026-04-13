@@ -9,6 +9,7 @@ import { createMockRunsService } from './runsService.mock';
 // to importing from '../../ports/runs' or '../../ports' directly.
 export type {
   MaterializationEvidence,
+  RunExecutor,
   RunAuthoringProvenance,
   RunExecutionEvidence,
   RunFailureEvidence,

@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-13
 domain: frontend
 ---
 
@@ -257,11 +257,18 @@ Rules:
 
 1. `RunWorkspaceStateView` may render materialization evidence only when
    `snapshot.status = completed`.
-2. Failed snapshots render failure diagnostics without materialization
+2. Completed snapshots may render top-level executor identity plus sink target,
+   row count, and started or completed timestamps only from persisted snapshot
+   fields.
+3. Failed snapshots render top-level executor identity and failure diagnostics
+   only from persisted snapshot fields, without materialization
    evidence, even if an older internal projector or payload still carries stale
    sink metadata.
-3. Running, paused, and cancelled snapshots render snapshot truth without
+4. Running, paused, and cancelled snapshots render snapshot truth without
    result-evidence claims.
+5. Timeline events remain chronology-only support for `/runs/:runId`; they must
+   not be used to infer executor, rows written, sink target, or failed-step
+   outcome when the snapshot does not already carry that evidence.
 
 ## Provenance Linkage Rendering Rule
 

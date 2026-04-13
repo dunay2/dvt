@@ -63,16 +63,17 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `UI / Frontend`
 
-- Current objective: close the explicit transformation
-  `Design -> Plan -> Run -> Result` loop on governed contracts and
-  backend-owned evidence.
-- Active task IDs: `TF-E1`, `TF-E1-A`, `TF-E1-C`, `F-23`
+- Current objective: keep the first SQL-first transformation
+  `Design -> Plan -> Run -> Result` loop code-grounded in Lane E while the
+  parent vertical remains open on upstream Lane A and Lane C dependency truth.
+- Active task IDs: `TF-E1`, `F-23`, `F-24`, `F-25`
 - Roadmap lane affected: [UI and Frontend lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the first persisted transformation preview and start-run
-  handoff is now closed under `TF-E1-B`, including explicit fail-closed
-  preview provenance gating plus `DesignGraphDraft` graph-artifact binding to
-  the actual authoring payload; the remaining frontend vertical closure sits in
-  `TF-E1-C`, while `F-23` still waits on `F-06` and `F-17-B`.
+- Primary blockers: Lane E now ships the authoring, persisted preview or
+  start-run handoff, and result UX pieces for the first operator loop, but the
+  parent vertical still depends on open Lane A or Lane C closure under `TF-A1`
+  and `TF-C1`. Broader UI work also remains: `F-23` still waits on `F-06` and
+  `F-17-B`, while `F-24` and `F-25` continue the workbench and plugin
+  professionalization chain.
 
 ### `Traceability`
 

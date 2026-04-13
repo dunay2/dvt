@@ -286,6 +286,7 @@ describe('RunStates', () => {
       snapshot: {
         runId: 'run_123',
         status: 'completed',
+        executor: 'postgres',
         startedAt: '2026-03-28T10:00:00.000Z',
         completedAt: '2026-03-28T10:00:30.000Z',
         environment: 'dev',
@@ -313,6 +314,7 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Materialization evidence');
+    expect(container.textContent).toContain('Executor');
     expect(container.textContent).toContain('postgres');
     expect(container.textContent).toContain('analytics.orders_daily');
     expect(container.textContent).toContain('42');
@@ -323,6 +325,7 @@ describe('RunStates', () => {
       snapshot: {
         runId: 'run_123',
         status: 'failed',
+        executor: 'postgres',
         startedAt: '2026-03-28T10:00:00.000Z',
         completedAt: '2026-03-28T10:00:30.000Z',
         environment: 'dev',
@@ -360,6 +363,8 @@ describe('RunStates', () => {
       'Result evidence is not available yet for this run snapshot.'
     );
     expect(container.textContent).not.toContain('analytics.orders_daily');
+    expect(container.textContent).toContain('Executor');
+    expect(container.textContent).toContain('postgres');
     expect(container.textContent).toContain('Failure diagnostics');
     expect(container.textContent).toContain('step-transform');
     expect(container.textContent).toContain('STEP_FAILURE');

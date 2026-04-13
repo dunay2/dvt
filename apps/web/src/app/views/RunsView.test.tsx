@@ -115,6 +115,103 @@ describe('RunsView', () => {
     expect(mounted.container.textContent).toContain('run_404');
   });
 
+  it('renders completed result evidence on the run detail route', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          runsService: buildRunsService({
+            getRunSnapshot: async () => ({
+              runId: 'run_completed',
+              status: 'completed',
+              executor: 'postgres',
+              startedAt: '2026-04-07T00:00:00.000Z',
+              completedAt: '2026-04-07T00:00:10.000Z',
+              execution: {
+                materialization: {
+                  executor: 'postgres',
+                  environmentId: 'env-1',
+                  sinkTable: 'analytics.orders_daily',
+                  rowsWritten: 42,
+                  startedAt: '2026-04-07T00:00:01.000Z',
+                  completedAt: '2026-04-07T00:00:10.000Z',
+                  durationMs: 9000,
+                },
+              },
+            }),
+            listRunEvents: async () => ({ events: [] }),
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_completed']}>
+          <Routes>
+            <Route path="/runs/:runId" element={<RunsView />} />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Materialization evidence') ?? false,
+      { description: 'run detail materialization evidence' }
+    );
+
+    expect(mounted.container.textContent).toContain('Run run_completed');
+    expect(mounted.container.textContent).toContain('Materialization evidence');
+    expect(mounted.container.textContent).toContain('postgres');
+    expect(mounted.container.textContent).toContain('analytics.orders_daily');
+    expect(mounted.container.textContent).toContain('42');
+  });
+
+  it('renders failed result diagnostics on the run detail route', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          mode: 'mock',
+          runsService: buildRunsService({
+            getRunSnapshot: async () => ({
+              runId: 'run_failed',
+              status: 'failed',
+              executor: 'postgres',
+              startedAt: '2026-04-07T00:00:00.000Z',
+              completedAt: '2026-04-07T00:00:10.000Z',
+              failedStepId: 'step-transform',
+              errorReason: 'STEP_FAILURE',
+              execution: {
+                failure: {
+                  stepId: 'step-transform',
+                  reason: 'STEP_FAILURE',
+                  failedAt: '2026-04-07T00:00:08.000Z',
+                },
+              },
+            }),
+            listRunEvents: async () => ({ events: [] }),
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_failed']}>
+          <Routes>
+            <Route path="/runs/:runId" element={<RunsView />} />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Failure diagnostics') ?? false,
+      { description: 'run detail failure diagnostics' }
+    );
+
+    expect(mounted.container.textContent).toContain('Run run_failed');
+    expect(mounted.container.textContent).toContain('Failure diagnostics');
+    expect(mounted.container.textContent).toContain('Executor');
+    expect(mounted.container.textContent).toContain('postgres');
+    expect(mounted.container.textContent).toContain('step-transform');
+    expect(mounted.container.textContent).toContain('STEP_FAILURE');
+  });
+
   it('renders the governed list error state for /runs when the summaries query fails', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
