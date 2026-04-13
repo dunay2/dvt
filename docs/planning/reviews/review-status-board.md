@@ -119,6 +119,13 @@ Additional active rationale:
   - status: `done`
   - progress: `100%`
 
+- [20260413 DVT+ architectural audit review](./architecture-and-governance/20260413-dvt-plus-architectural-audit-review.md)
+  - domain: `architecture-and-governance`
+  - role: principal/staff architectural audit and recommendation baseline
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
 Additional active QA:
 
 - [20260407 Execution plan and policy hard QA review](./architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
