@@ -17,14 +17,15 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `Execution Runtime`
 
-- Current objective: finish the PostgreSQL-backed transformation runtime
-  vertical and remaining `WE-HX` hardening without regressing runtime
-  semantics.
-- Active task IDs: `WE-HX`, `WE-HX-5`, `WE-HX-6`, `TF-C2`, `TF-C2-A`
+- Current objective: keep the shipped PostgreSQL-backed transformation runtime
+  vertical stable while finishing `WE-HX` hardening and the remaining runtime
+  observability or operations follow-through.
+- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the delivery runtime harness extraction and final
-  runtime-vertical acceptance still sit ahead of full closure; `TF-C2-B` and
-  `AR-C6` are now accepted.
+- Primary blockers: the first PostgreSQL runtime vertical is now accepted, but
+  dashboard and alert evidence for runtime SLAs still remain under
+  `AR-C2-T2/T3`, and broader boundary hardening continues under `WE-HX` while
+  repeatable proof reset discipline stays open in Lane D under `TF-D1`.
 
 ### `API and Admission`
 

@@ -12,6 +12,7 @@ const composeFile = path.resolve(
 const containerName = 'dvt-postgres';
 const defaultPgUrl = 'postgresql://dvt:dvt@localhost:5432/dvt';
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+let composeCommandCache = null;
 
 function sleep(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -57,12 +58,52 @@ function inspectHealth() {
   return result.stdout.trim();
 }
 
+function resolveComposeCommand() {
+  if (composeCommandCache) {
+    return composeCommandCache;
+  }
+
+  const dockerComposeV2 = spawnSync('docker', ['compose', 'version'], {
+    stdio: 'ignore',
+  });
+  if (!dockerComposeV2.error && dockerComposeV2.status === 0) {
+    composeCommandCache = {
+      command: 'docker',
+      prefixArgs: ['compose'],
+      shell: false,
+    };
+    return composeCommandCache;
+  }
+
+  const dockerComposeV1 = spawnSync('docker-compose', ['--version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  });
+  if (!dockerComposeV1.error && dockerComposeV1.status === 0) {
+    composeCommandCache = {
+      command: 'docker-compose',
+      prefixArgs: [],
+      shell: process.platform === 'win32',
+    };
+    return composeCommandCache;
+  }
+
+  throw new Error(
+    'Neither "docker compose" nor "docker-compose" is available for the Temporal Postgres proof wrapper.'
+  );
+}
+
 function composeDown() {
-  spawnSync('docker', ['compose', '-f', composeFile, 'down', '-v'], { stdio: 'inherit' });
+  const { command, prefixArgs, shell } = resolveComposeCommand();
+  spawnSync(command, [...prefixArgs, '-f', composeFile, 'down', '-v'], {
+    stdio: 'inherit',
+    shell,
+  });
 }
 
 function composeUp() {
-  run('docker', ['compose', '-f', composeFile, 'up', '-d']);
+  const { command, prefixArgs, shell } = resolveComposeCommand();
+  run(command, [...prefixArgs, '-f', composeFile, 'up', '-d'], { shell });
 }
 
 function waitForHealthy(timeoutMs = 60000) {

@@ -2,7 +2,7 @@
 title: Temporal Postgres Proof Environment
 status: Active
 owner: Runtime / Delivery / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-13
 ---
 
 # Temporal Postgres Proof Environment
@@ -59,6 +59,10 @@ postgresql://dvt:dvt@localhost:5432/dvt
 
 If you already have a different local DSN, set `DVT_PG_URL` or `DATABASE_URL`
 before invoking the command and the wrapper will reuse it.
+
+The wrapper prefers `docker compose` when the Docker CLI exposes the Compose v2
+subcommand and falls back to `docker-compose` when only the standalone Compose
+binary is available.
 
 ## Primary Anchors
 
