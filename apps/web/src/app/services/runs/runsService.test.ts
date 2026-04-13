@@ -167,6 +167,7 @@ describe('runsService runtime contract', () => {
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_completed',
       status: 'COMPLETED',
+      executor: 'postgres',
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
       execution: {
@@ -188,6 +189,7 @@ describe('runsService runtime contract', () => {
 
     expect(snapshot).toMatchObject({
       runId: 'run_completed',
+      executor: 'postgres',
       execution: {
         activeStepId: 'step_transform',
         materialization: {

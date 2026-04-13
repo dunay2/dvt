@@ -1748,7 +1748,7 @@ tasks:
       outcome and materialization evidence.
     complexity: M
     effort_points: 5
-    progress_pct: 65
+    progress_pct: 85
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
@@ -1759,11 +1759,13 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
     status_reason: >-
-      Lane E now ships explicit transformation authoring mode in Canvas, persisted-preview gating
-      before `Start run`, and snapshot-owned result evidence rendering in run detail. The parent
-      slice remains open until Lane A finishes the transformation contract pack and Lane C publishes
-      the runtime-side materialization and failure evidence needed for full end-to-end closure.
-    last_verified: '2026-04-08'
+      Lane E now ships the full frontend operator loop for the first SQL-first transformation
+      vertical: constrained Canvas authoring, persisted preview with the real `PlanRef`, governed
+      `Start run` handoff, and run-detail rendering of executor identity, sink evidence, row counts,
+      timestamps, and failed-step diagnostics from the snapshot read model. The parent slice remains
+      open because its declared Lane A and Lane C dependencies (`TF-A1`, `TF-C1`) are not yet closed
+      in the registry.
+    last_verified: '2026-04-13'
   - task_id: TF-E1-A
     priority: P0
     status: review
@@ -1795,7 +1797,7 @@ tasks:
       keeping the one-source/one-transform/one-sink guards active at composition, connection, and
       preview time. Remaining work sits in downstream preview or runtime slices rather than in the
       authoring surface itself.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: TF-E1-B
     priority: P0
     status: done
@@ -1830,7 +1832,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: TF-E1-C
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       implement the result UX that shows executor identity, sink materialization evidence, and
       failed-step diagnostics.
@@ -1840,20 +1842,26 @@ tasks:
       attribution so operators can decide what happened without backend log inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
+      - apps/web/src/app/services/runs/runsService.api.ts
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/RunsView.test.tsx
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
       - apps/web/src/app/views/runs/RunStates.test.tsx
       - apps/web/src/app/views/runs/runStatesCopy.ts
+      - apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts
     status_reason: >-
-      Run detail now consumes result evidence and failure diagnostics only from the governed
-      snapshot read model, leaving timeline events for chronology and artifact refs instead of
-      frontend-side outcome inference. TF-C2-B now provides the runtime evidence payloads on the
-      read surface, and TF-E1-B now proves the persisted transformation preview plus start-run
-      handoff; remaining closure is the final result UX proof under `TF-E1-C`.
+      Run detail now preserves top-level executor identity from `GET /runs/:runId`, renders
+      success-only sink materialization evidence plus timestamps from the snapshot read model, and
+      shows failed-step attribution plus failure reason without inferring outcome from timeline
+      events. Route tests, presentation tests, and the runtime-contract Cypress lane now prove the
+      completed and failed result UX on the governed read surface.
     last_verified: '2026-04-13'
 dependency_notes:
   - >-

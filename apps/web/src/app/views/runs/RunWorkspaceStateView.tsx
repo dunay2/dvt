@@ -1,7 +1,7 @@
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
-import type { MaterializationEvidence } from '../../ports/runs';
+import type { MaterializationEvidence, RunExecutor } from '../../ports/runs';
 import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
 import { buildRunEventPresentationModel } from '../../services/runs/runEventPresentationModel';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
@@ -93,6 +93,10 @@ function deriveMaterializationEvidence(
   }
 
   return workspace.snapshot.materialization ?? workspace.snapshot.execution?.materialization;
+}
+
+function deriveExecutor(workspace: RunWorkspaceViewModel): RunExecutor | undefined {
+  return workspace.snapshot.executor;
 }
 
 function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
@@ -190,6 +194,7 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
 
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
+  const executor = deriveExecutor(workspace);
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
   const planProvenance = snapshot.provenance;
   const authoringArtifacts = deriveAuthoringArtifacts(workspace);
@@ -234,6 +239,12 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
               <div>
                 <span className="text-slate-400">{copy.environmentLabel}</span>
                 <div>{snapshot.environment}</div>
+              </div>
+            ) : null}
+            {executor ? (
+              <div>
+                <span className="text-slate-400">{copy.executorLabel}</span>
+                <div>{executor}</div>
               </div>
             ) : null}
             {isKnownRunField(snapshot.gitSha) ? (

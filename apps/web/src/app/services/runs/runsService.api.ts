@@ -11,6 +11,7 @@ import { createSessionContextPort } from '../session/sessionContextPort';
 import type {
   RunAuthoringProvenance,
   MaterializationEvidence,
+  RunExecutor,
   RunExecutionEvidence,
   RunFailureEvidence,
   RunGitArtifactRef,
@@ -37,6 +38,10 @@ function asFiniteInteger(value: unknown): number | undefined {
   }
 
   return value;
+}
+
+function parseRunExecutor(value: unknown): RunExecutor | undefined {
+  return value === 'postgres' || value === 'dbt' ? value : undefined;
 }
 
 function parseMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
@@ -229,6 +234,7 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     return null;
   }
 
+  const executor = parseRunExecutor(candidate.executor);
   const currentStepId = asString(candidate.currentStepId);
   const failedStepId = asString(candidate.failedStepId);
   const errorReason = asString(candidate.errorReason);
@@ -238,6 +244,7 @@ function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
     runId,
     planId: asString(candidate.planId),
     status: mapContractStatusToUi(asString(candidate.status)),
+    ...(executor ? { executor } : {}),
     environment: asString(candidate.environmentId) ?? asString(candidate.environment),
     gitSha: asString(candidate.gitSha),
     startedAt:

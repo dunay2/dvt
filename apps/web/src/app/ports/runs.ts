@@ -10,9 +10,10 @@ export type StartRunInput = {
 };
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type RunExecutor = 'postgres' | 'dbt';
 
 export type MaterializationEvidence = {
-  executor: 'postgres' | 'dbt';
+  executor: RunExecutor;
   environmentId: string;
   sinkTable: string;
   rowsWritten: number;
@@ -78,6 +79,7 @@ export type RunSnapshot = {
   runId: string;
   planId?: string;
   status: UiRunStatus;
+  executor?: RunExecutor;
   environment?: string;
   gitSha?: string;
   startedAt: string;
