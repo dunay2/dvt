@@ -206,13 +206,19 @@ type DesignGraphDraft = {
     projectId: string;
     environmentId: string;
     executionTarget: 'postgres';
-    graphArtifact: GitArtifactRef;
     requestedBy?: string;
   };
   nodes: DesignNode[];
   edges: DesignEdge[];
 };
 ```
+
+Rule:
+
+- the materialized `DesignGraphDraft` artifact does not embed its own
+  `graphArtifact: GitArtifactRef` self-reference
+- request-side `provenance.graphArtifact` remains the canonical external
+  identity envelope for that saved authoring artifact
 
 ## V1 invariants
 
