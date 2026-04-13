@@ -1,34 +1,15 @@
-import type { GenericGraphSourceV1 } from '@dvt/contracts';
+import type { GitArtifactRef, PlanPreviewProvenance, PlanPreviewRequest } from '@dvt/contracts';
 
 import type { ExecutionPlan } from '../types/dbt';
 import type { PlanRef, RunContext } from '../types/engine';
 
-export type GitArtifactRef = {
-  repo: string;
-  path: string;
-  ref: string;
-  commitSha: string;
-  contentSha256: string;
-};
-
-export type PlanPreviewProvenance = {
-  graphArtifact: GitArtifactRef;
-  sqlArtifact: GitArtifactRef;
-};
+export type { GitArtifactRef, PlanPreviewProvenance };
 
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the plans domain
 // ---------------------------------------------------------------------------
 
-export type PlanPreviewInput = {
-  previewProfile: 'planner-generic-v1' | 'transformation-sql-first-v1';
-  graphSource: GenericGraphSourceV1;
-  selectedNodeIds: string[];
-  context: RunContext;
-  planName?: string;
-  provenance?: PlanPreviewProvenance;
-  persist: true;
-};
+export type PlanPreviewInput = PlanPreviewRequest;
 
 // ---------------------------------------------------------------------------
 // Plans port — presentation-layer contract for plan operations

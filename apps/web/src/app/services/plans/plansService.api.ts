@@ -1,5 +1,6 @@
 import {
   parseExecutionPlan,
+  parsePlanPreviewPersistResponse,
   parsePlanRef,
   type ExecutionPlan as ContractExecutionPlan,
 } from '@dvt/contracts';
@@ -216,12 +217,24 @@ export function createApiPlansService(apiClient: ApiClient): PlansService {
   return {
     previewPlan: async (input: PlanPreviewInput) => {
       const payload = await apiClient.postJson<PlanPreviewInput, unknown>('/plans/preview', input);
-      const { contractPlan, planRef, planSummary, persisted, provenance } =
-        parseContractPlanPayload(payload);
-      return mapContractPlanToUi(contractPlan, planRef, {
-        ...(planSummary ? { summary: planSummary } : {}),
-        ...(persisted ? { persisted } : {}),
-        ...(provenance ? { provenance } : {}),
+      const preview = parsePlanPreviewPersistResponse(payload);
+      return mapContractPlanToUi(preview.plan, preview.planRef, {
+        ...(preview.planSummary
+          ? {
+              summary: {
+                executor: preview.planSummary.executor,
+                nodeCount: preview.planSummary.nodeCount,
+                stepCount: preview.planSummary.stepCount,
+                sourceTables: [...preview.planSummary.sourceTables],
+                sinkTables: [...preview.planSummary.sinkTables],
+              },
+            }
+          : {}),
+        persisted: {
+          planRecordId: preview.persisted.planRecordId,
+          canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
+        },
+        ...(preview.provenance ? { provenance: preview.provenance } : {}),
       });
     },
     importPlan: async (planRef: PlanRef, context: RunContext) => {

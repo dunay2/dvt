@@ -43,6 +43,39 @@ export type {
   VersionedExecutionPlan,
   VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v1.js';
+export { PREVIEW_PROFILE } from './contracts/planner/TransformationFlowPreview.v1.js';
+export type {
+  PlanPreviewPersistedRecord,
+  PlanPreviewPersistResponse,
+  PlanPreviewRequest,
+  PlanPreviewSummary,
+  PlanPreviewValidation,
+  PreviewProfile,
+  TransformationSqlFirstPlanPreviewPersistResponse,
+  TransformationSqlFirstPlanPreviewRequest,
+} from './contracts/planner/TransformationFlowPreview.v1.js';
+export {
+  TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY,
+  TRANSFORMATION_EXECUTION_TARGET,
+  TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
+  DesignGraphDraftSchema,
+  GitArtifactRefSchema,
+  PlanPreviewProvenanceSchema,
+} from './contracts/planner/TransformationFlowDesignGraph.v1.js';
+export type {
+  DesignGraphContext,
+  DesignGraphDraft,
+  DesignGraphEdge,
+  DesignGraphNode,
+  DesignGraphSinkNode,
+  DesignGraphSourceNode,
+  DesignGraphSqlTransformNode,
+  DesignNodeType,
+  GitArtifactRef,
+  PlanPreviewProvenance,
+  TransformationExecutionTarget,
+  TransformationSqlFirstGraphSourceV1,
+} from './contracts/planner/TransformationFlowDesignGraph.v1.js';
 export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,

@@ -2028,7 +2028,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: TF-A1
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       formalize the SQL-first transformation contract pack for the v1 design graph, preview-persist
       boundary, and graph-to-plan compiler so execution-first work starts from a stable doc set
@@ -2040,20 +2040,24 @@ tasks:
       deterministic compiler mapping into a persisted immutable plan with `PlanRef`.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 50
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/contracts/planner/index.md
+      - docs/contracts/planner/TransformationFlowPreview.v1.md
+      - docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md
       - docs/architecture/components/planner/index.md
     status_reason: >-
-      The proposal set now freezes the SQL-first execution model, but the contracts and compiler
-      boundary still need executable Lane A slices.
-    last_verified: '2026-04-05'
+      `TF-A1-A` now lands the shared SQL-first design-graph and preview-persist boundary in
+      `@dvt/contracts`, plus the first consumer adoption in `api` and `web`. The remaining Lane A
+      closure is `TF-A1-B`, which still needs to freeze the deterministic compiler mapping into the
+      persisted immutable plan shape.
+    last_verified: '2026-04-13'
   - task_id: TF-A1-A
     priority: P0
-    status: queued
+    status: done
     objective: >-
       freeze the design-graph contract, node vocabulary, invariants, and preview request or response
       surface for the first SQL-first vertical.
@@ -2064,15 +2068,20 @@ tasks:
       UI work.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/contracts/planner/index.md
+      - docs/contracts/planner/TransformationFlowPreview.v1.md
+      - docs/evidence/ED-20260413-tf-a1-a-preview-contract-freeze.md
+      - docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md
     status_reason: >-
-      The graph and preview contract are now described, but not yet separated into an executable
-      Lane A implementation slice with explicit negative-path expectations.
-    last_verified: '2026-04-05'
+      Lane A now ships the governed `DesignGraphDraft`, Git-first preview provenance, explicit
+      `previewProfile`, negative-path validation, and the persisted preview response envelope from
+      `@dvt/contracts`, with `api` and `web` consuming the shared surface instead of route-local DTO
+      copies.
+    last_verified: '2026-04-13'
   - task_id: TF-A1-B
     priority: P0
     status: queued
@@ -2172,11 +2181,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-10'
+  verified_on: '2026-04-13'
   total_tasks: 86
   total_effort_points: 297
-  completed_weighted_points: 180.14
-  lane_progress_pct: 61
+  completed_weighted_points: 185.64
+  lane_progress_pct: 63
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
