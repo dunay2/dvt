@@ -67,6 +67,6 @@ If RunStarted emission retries (e.g., Temporal activity retry), the adapter MUST
 
 ## Related
 
-- RunEvents.v2 lifecycle semantics
+- RunEvents.v1 lifecycle semantics
 - Engine boundary contracts (IWorkflowEngine)
 - ADR-0003/ADR-0004 (execution model and state authority)

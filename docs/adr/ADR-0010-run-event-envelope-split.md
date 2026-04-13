@@ -84,7 +84,7 @@ Reference:
 > **⚠ SUPERSEDED (partial) — 2026-02-21**
 >
 > The inclusion of `payload` in the hash preimage specified below is **superseded**
-> by RunEvents v2.0.1 and `IdempotencyKeyBuilder` v1.0.0.
+> by the active `RunEvents.v1` contract and `IdempotencyKeyBuilder` v1.0.0.
 >
 > **Authoritative formula (run events):**
 > `SHA256(runId | stepIdOrRUN | logicalAttemptId | eventType | planId | planVersion)`
@@ -108,7 +108,7 @@ The idempotencyKey MUST be derived from canonical serialization of:
 - planId
 - planVersion
 
-~~payload (recursively canonicalized)~~ — **excluded per RunEvents v2.0.1**
+~~payload (recursively canonicalized)~~ — **excluded per RunEvents.v1**
 
 The following MUST NOT participate:
 

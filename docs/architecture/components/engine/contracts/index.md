@@ -14,16 +14,17 @@ Read these first for the active runtime boundary:
 
 1. [Contracts registry](./README.md)
 2. [Workflow engine interface](./engine/IWorkflowEngine.v1.md)
-3. [Run enrichment service](./engine/IRunEnrichmentService.v1.md)
-4. [Provider adapter contract](./engine/IProviderAdapter.v1.md)
-5. [Run events](./engine/RunEvents.v1.md)
-6. [Execution semantics](./engine/ExecutionSemantics.v1.md)
-7. [Signals and authorization](./engine/SignalsAndAuth.v1.md)
-8. [Versioning policy](./VERSIONING.md)
+3. [Provider adapter contract](./engine/IProviderAdapter.v1.md)
+4. [Run events](./engine/RunEvents.v1.md)
+5. [Execution semantics](./engine/ExecutionSemantics.v1.md)
+6. [Signals and authorization](./engine/SignalsAndAuth.v1.md)
+7. [Versioning policy](./VERSIONING.md)
 
 ## Companion entrypoints
 
 - [Engine runtime contracts index](./engine/index.md)
+- [Run enrichment service](./engine/IRunEnrichmentService.v1.md)
+- [Event schemas](./engine/events/index.md)
 - [Capabilities contracts](./capabilities/README.md)
 - [State store docs](./state-store/README.md)
 - [Security contracts](./security/IAuthorization.v1.md)

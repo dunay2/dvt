@@ -1498,7 +1498,7 @@ tasks:
     last_verified: '2026-04-12'
   - task_id: AR-A12
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       reset the active engine-runtime contract pack and run-status read boundary so the repository
       stops layering architecture fixes on top of a mixed active contract line.
@@ -1509,20 +1509,25 @@ tasks:
       convergence required to make that boundary real.
     complexity: L
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md
+      - docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
+      - docs/evidence/ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md
     status_reason: >-
-      The reset line is now documented and executing against the live tree: the contract pack,
-      registries, and planning posture are being collapsed into one canonical `v1` direction and no
-      longer depend on a parallel `AR-C6-A` contract-pack track.
-    last_verified: '2026-04-10'
+      Completed. The engine-runtime pack now publishes one canonical `v1` line, canonical status is
+      split from provider-live diagnostics, and the engine/API read boundary convergence slice has
+      already removed enrichment from the engine facade; the generated contract sources now align to
+      `ExecutionSemantics.v1.ts` / `RunEvents.v1.ts`; and the reset is true across contracts,
+      companion entrypoints, and current implementation docs.
+    last_verified: '2026-04-13'
   - task_id: AR-A12-A
     parent_task: AR-A12
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       collapse the active engine-runtime contract pack to one canonical `v1` line and remove the
       mixed `v2`, `v1.1`, redirect, and `reference` reading paths from the active tree.
@@ -1535,16 +1540,20 @@ tasks:
       active tree to present a second contract truth for the same topic.
     complexity: L
     effort_points: 5
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/architecture/components/engine/contracts/VERSIONING.md
+      - docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md
     status_reason: >-
-      This slice is now executing as the first atomic reset step because the engine-runtime contract
-      pack, registries, contributor guidance, and companion entrypoints had to be collapsed together
-      for the new one-line policy to become true immediately.
-    last_verified: '2026-04-10'
+      Completed. The active pack now reads `IWorkflowEngine`, `IProviderAdapter`, `RunEvents`,
+      `ExecutionSemantics`, and `SignalsAndAuth` only; `IRunEnrichmentService` is demoted to a
+      companion page; the `RunEventCatalog` alias, generated-code `v2` contract filenames, and the
+      glossary/run-event `v2` siblings were removed from the active tree; and registries, companion
+      entrypoints, contributor guidance, ADR references, and workflow references all expose the same
+      one-line `v1` policy.
+    last_verified: '2026-04-13'
   - task_id: AR-A12-B
     parent_task: AR-A12
     priority: P0

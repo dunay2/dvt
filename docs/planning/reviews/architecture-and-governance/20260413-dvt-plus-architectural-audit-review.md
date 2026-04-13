@@ -106,7 +106,7 @@ Yes at 100 tenants. Probably at 1000 with disciplined projector sharding. Above 
 1. **`CanonicalRunStatus` has an optional `execution?: RunExecutionEvidence` field.** "Evidence" is a vague bucket that will grow. Define what it contains or drop it.
 2. **`recoverRun` takes a `planRef`**, which means the caller (API) decides whether to re-plan. That is a sovereignty decision that should be documented in the contract, not inferred. Add a MUST/MUST NOT about re-planning.
 3. **`signal` returns `Promise<void>`.** No receipt, no idempotent ack. Under network retry, the caller cannot distinguish "accepted twice" from "accepted once." Either return `{ accepted: boolean, signalId: string }` or document the idempotency derivation.
-4. **No `listRuns` / `queryRuns`.** The contract is intentionally narrow, which is correct, but read models for multi-run queries (UI list pages) have no contract — they will be built ad-hoc against Postgres views and become a second read surface competing with `getRunStatus`.
+4. **Read-side contracts outside the engine are the real gap — not a defect of `IWorkflowEngine`.** The contract correctly narrows the engine facade to commands plus canonical single-run read (aligned with ADR-0015 and the AR-A12-B/AR-A12-C closure that split canonical status from enrichment and pushed enrichment behind `IRunEnrichmentService`). Multi-run queries (UI list pages, fleet dashboards, cost dashboards) do **not** belong on `IWorkflowEngine`. The gap is the **absence of a separate governed read-side contract family** (e.g., `IRunListQuery`, fleet/cost read models) outside the engine package. Without that, UI teams will read raw Postgres views and manufacture a shadow second read surface. Reframe: engine boundary is correct; what is missing is the sibling read-contract family.
 
 **Temporal-first strategy — wise?**
 
@@ -381,33 +381,105 @@ Assumptions: 1000+ tenants, thousands of concurrent runs, 1000-node dbt projects
 
 ## 11. Strategic Recommendations
 
-### 11.1 Three structural changes
+> Routing principle (corrects v1 of this review): this document is **diagnostic**, not a task registry. Per `AGENTS.md` §"Planning State Rule" task assignments live in `docs/planning/state/agent-lane-*.yaml`. Recommendations below are expressed as either (a) confirmation that an existing lane task already owns the finding, or (b) a proposal for a new lane slice when no task exists. No parallel `T1.x`/`T2.x` taxonomy.
 
-1. **De-Temporalize the canonical plan.** Replace `ExecutionStepRetryPolicyV1.initialInterval: ${number}s` and `maximumInterval` with structured `{ valueMs: number }` (or a `Duration` value object). Translate at the adapter boundary. Remove the "because current adapter is the only production runtime" comment.
-2. **Promote `compiledCodeRef` and any widely-used `stepTypeConfig` keys to typed `ExecutionStepV1` fields.** Keep `stepTypeConfig` only for genuinely adapter-specific provider params. ADR-0032 already acknowledges this as tech debt; close it.
-3. **Build the Adapter Contract Conformance Suite** (`packages/@dvt/engine-conformance`) — a test kit any `IProviderAdapter` implementation must pass. Without this, "engine-agnostic" is a claim, not a property.
+### 11.1 Structural changes — all already governed in Lane A
 
-### 11.2 Three clarifications needed (write ADRs)
+1. **Retry/backoff ownership in the canonical plan.** Governed and **closed** by `AR-A11` (agent-lane-a.yaml:1478). `ExecutionStep.retryPolicy` is the canonical location and the Temporal adapter consumes it directly. Residual concern from this review is narrower: the _shape_ of `initialInterval`/`maximumInterval` as `` `${number}s` `` duration strings still carries Temporal flavour. That is a follow-up to AR-A11, not a new slice — propose it as an AR-A11-FU under Lane A if the team agrees the flavour leak matters (recommendation: it does).
+2. **`compiledCodeRef` → typed first-class artifact ref.** Governed and active in Lane A around the `StepArtifactRef` generalization (agent-lane-a.yaml:1197 — "generalize compiledCodeRef to StepArtifactRef"). Closes the ADR-0032 tech-debt note. No new task needed; track under that existing slice.
+3. **Engine read-boundary purity.** Governed and **closed** by `AR-A12-A`/`AR-A12-B`/`AR-A12-C` (agent-lane-a.yaml:1499+). `IWorkflowEngine` is narrowed to commands + canonical single-run read; enrichment lives behind `IRunEnrichmentService`. No new engine-side work needed here.
 
-1. **Snapshot staleness SLO** — numeric budget (e.g., p99 < 2s) + caller contract (API returns `snapshotLagMs`). ADR-0015 gave the separation; this ADR gives the SLO.
-2. **Retention & archival policy per table, per tenant tier** — events, snapshots, outbox, lineage outbox, DLQ. ADR-0037 is the start; add a concrete TTL matrix + purge runbook.
-3. **Recovery provenance contract** — when `recoverRun` re-plans, the new plan MUST embed `recoveryFrom: {sourceRunId, sourcePlanHash}` in metadata. Prevents silent plan substitution.
+### 11.2 Clarifications — partially governed, residual gaps identified
 
-### 11.3 Three things to freeze immediately
+| Finding                                                                                | Existing lane coverage                                                                                                                                                    | Residual gap (proposal)                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Snapshot staleness SLO + caller-visible staleness field                                | Lane C "snapshot staleness in API" (agent-lane-c.yaml:191, done) + "staleness SLO" follow-up (agent-lane-c.yaml:208)                                                      | Confirm numeric budget is published in an ADR, not only in evidence. If absent, propose a Lane C slice `AR-C-STALENESS-SLO-ADR` that elevates the accepted evidence to an ADR.                              |
+| Retention/archival per table per tenant tier                                           | Lane D "run event log retention + TTL" (done), "tenant-configurable retention" (agent-lane-d.yaml:295), `AR-D8` default-retention health alerting (agent-lane-d.yaml:394) | Retention governance is live. Gap is **restore drill cadence** — not covered by current Lane D tasks. Propose `AR-D-RESTORE-DRILL` (Lane D, ARC-1): quarterly dry-run + evidence doc, referencing ADR-0037. |
+| Recovery re-planning provenance (`recoveryFrom: {sourceRunId, sourcePlanHash}`)        | Not in current lanes                                                                                                                                                      | Propose a new slice on Lane A: `AR-A-RECOVER-PROVENANCE` (ARC-2). Adds `recoveryFrom` to plan metadata + `IWorkflowEngine.recoverRun` MUST/MUST NOT rule. Governed by ADR-0014, IWorkflowEngine.v1.         |
+| Read-side contract family outside the engine (`IRunListQuery`, fleet/cost read models) | Not in current lanes                                                                                                                                                      | Propose a new slice: `AR-A-READSIDE-CONTRACTS` (Lane A, ARC-2) — define a sibling read-contract package so UI/fleet/cost surfaces stop reading raw Postgres views. Governed by ADR-0034 (bounded contexts). |
+| Adapter contract conformance suite                                                     | Not a current lane task. ADR-0019 acknowledges adapter equivalence                                                                                                        | Propose `AR-A-CONFORMANCE-SUITE` (Lane A, ARC-2). Gate any future non-Temporal adapter behind it. This is the precondition for honestly claiming "engine-agnostic".                                         |
+| Adapter backpressure → API                                                             | Lane C "Temporal → API backpressure" + dependent slice (agent-lane-c.yaml:555)                                                                                            | Already governed; do not duplicate.                                                                                                                                                                         |
+| `stepTypeConfig` semantic validation per StepKind                                      | Lane A "harden stored-plan admission by validating `stepTypeConfig` semantically per `StepKind`" (agent-lane-a.yaml:790)                                                  | Already governed; do not duplicate. This closes the review's R10 concern.                                                                                                                                   |
+| Plan determinism on Windows + Node matrix                                              | Not in current lanes                                                                                                                                                      | Propose `AR-A-DETERMINISM-CI-MATRIX` (Lane A, ARC-1). Ensures `inputHashSha256` is stable across Linux/Windows and Node 20/22.                                                                              |
+| Cross-tenant isolation continuous property test                                        | ADR-0031 accepted; no continuous-property-test slice in lanes                                                                                                             | Propose `AR-C-TENANT-ISOLATION-PROPERTY` (Lane C, ARC-2). Generator-based test that no tenant A data is reachable by tenant B across every read path.                                                       |
 
-1. **Planner public contract (ADR-0035).** Any new field is ADR-gated. No more policy contracts without a committed roadmap use-case.
-2. **`IWorkflowEngine` v1.** No additions to the method surface. Signals are governed; step-retry and run-recovery are already separate use-cases per ADR-0048/0049. Hold the line.
-3. **Event envelope fields.** `runSeq`, `idempotencyKey`, `engineAttemptId`, `logicalAttemptId`, `(runId, idempotencyKey)` dedup. These are load-bearing — any change is a migration event.
+### 11.3 Things to freeze — confirm existing freeze gates
 
-### 11.4 Three things to delay (do not build now)
+These are freeze statements, not new work. All already implicit in the active contract pack:
 
-1. **Second engine adapter.** Do not start Conductor/other until the conformance suite exists and the Temporal-leak in the plan is fixed. You will regret it.
-2. **Pre-execution hard cost gating.** Keep cost as estimate + post-run reconciliation. Hard budgeting in front of Snowflake is a product liability.
-3. **Multi-workflow-family planning beyond dbt.** Seven policy contracts already exist for this; do not add more until at least one non-dbt family ships end-to-end.
+1. **`IWorkflowEngine` v1 method surface** — locked by AR-A12-C closure. No additions.
+2. **Event envelope mandatory fields** (`runSeq`, `idempotencyKey`, `engineAttemptId`, `logicalAttemptId`, `(runId, idempotencyKey)` dedup) — load-bearing; any change is an ADR-gated migration event (ADR-0004, ADR-0010).
+3. **Planner public contract** — locked by ADR-0035. Any new field is an ADR-gated slice on Lane A.
+
+### 11.4 Things to delay
+
+1. **Second engine adapter.** Blocked on the conformance suite (proposed `AR-A-CONFORMANCE-SUITE`) and on the retry-shape follow-up to AR-A11. Without both, any Conductor-like adapter will either fail silently or force a plan-contract break.
+2. **Pre-execution hard cost gating.** Keep cost as estimate + post-run reconciliation. Hard budgeting in front of Snowflake is a product liability — cost is a post-hoc reconciliation problem.
+3. **Multi-workflow-family planning beyond dbt.** Seven planner policy contracts already exist; do not add more until at least one non-dbt step-kind family ships end-to-end.
 
 ---
 
-## 12. Action Plan — scoped tasks per lane
+## 12. Findings → Lane Mapping
+
+This section replaces the v1 parallel `T1.x`/`T2.x`/`T3.x` table. It is the canonical routing of every finding in this review onto existing or proposed lane tasks. **Source of truth for execution remains `docs/planning/state/agent-lane-*.yaml`; this table is diagnostic cross-reference only.**
+
+### 12.1 Already governed — do not duplicate
+
+| Review finding                                       | Governing lane task                                           | Status                             |
+| ---------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------- |
+| Retry/backoff in canonical plan                      | `AR-A11` (agent-lane-a.yaml:1478)                             | Done                               |
+| `compiledCodeRef` → `StepArtifactRef` generalization | Lane A slice at agent-lane-a.yaml:1197                        | Active                             |
+| Engine facade narrowed; enrichment split             | `AR-A12-A`/`AR-A12-B`/`AR-A12-C` (agent-lane-a.yaml:1499+)    | A/B/C done; parent in_progress     |
+| Canonical status vs provider-live diagnostics split  | `AR-A12-B` (agent-lane-a.yaml:1548)                           | Done                               |
+| `stepTypeConfig` semantic validation per StepKind    | Lane A slice at agent-lane-a.yaml:790                         | Active                             |
+| Snapshot staleness caller surface                    | Lane C slices at agent-lane-c.yaml:191, 208                   | Surface done; SLO follow-up active |
+| Temporal → API backpressure                          | Lane C slices at agent-lane-c.yaml:555                        | Active                             |
+| Run event retention + TTL                            | Lane D `run event log retention + TTL` (agent-lane-d.yaml:71) | Done                               |
+| Per-tenant retention configuration                   | Lane D slice at agent-lane-d.yaml:295                         | Active                             |
+| Default retention + health alerting                  | Lane D `AR-D8` (agent-lane-d.yaml:394)                        | Active                             |
+| Adapter equivalence principle                        | ADR-0019                                                      | Accepted                           |
+
+### 12.2 Residual gaps — propose new lane slices
+
+These are genuinely absent from the current lane YAMLs. Each is proposed as a single slice to be added to the relevant `agent-lane-*.yaml` via the format in `how-to-add-tasks.md`. The review does **not** add them; lane owners decide.
+
+| Proposed task id                 | Lane | ARC   | Objective                                                                                                                                                                                         | Depends on                           | Governing source                       |
+| -------------------------------- | ---- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------- |
+| `AR-A-RETRY-DURATION-SHAPE`      | A    | ARC-2 | Replace Temporal-flavoured `` `${number}s` `` duration strings in `ExecutionStepRetryPolicyV1` with structured `{ valueMs }` or `Duration` value object; adapter translates. Follow-up to AR-A11. | `AR-A11` (done)                      | ADR-0003, ADR-0017, ADR-0036           |
+| `AR-A-READSIDE-CONTRACTS`        | A    | ARC-2 | Define sibling read-side contract family outside `IWorkflowEngine` (`IRunListQuery`, fleet/cost read models) so UI does not read raw Postgres views.                                              | `AR-A12-C` (done)                    | ADR-0034                               |
+| `AR-A-RECOVER-PROVENANCE`        | A    | ARC-2 | Add `recoveryFrom: {sourceRunId, sourcePlanHash}` to plan metadata and MUST/MUST NOT rule on re-planning in `recoverRun`.                                                                         | `AR-A12-C` (done)                    | ADR-0014, IWorkflowEngine.v1           |
+| `AR-A-CONFORMANCE-SUITE`         | A    | ARC-2 | `@dvt/engine-conformance`: adapter-agnostic contract conformance suite. Gate any future non-Temporal adapter behind it.                                                                           | `AR-A-RETRY-DURATION-SHAPE`          | ADR-0003, ADR-0019                     |
+| `AR-A-DETERMINISM-CI-MATRIX`     | A    | ARC-1 | CI matrix proving `inputHashSha256` stable across Linux/Windows and Node 20/22.                                                                                                                   | none                                 | ADR-0004, execution-model §determinism |
+| `AR-C-STALENESS-SLO-ADR`         | C    | ARC-2 | Promote accepted staleness evidence into a numeric ADR (p99 budget, caller contract). Prevents SLO from drifting as living-evidence only.                                                         | Lane C staleness tasks (done/active) | ADR-0015                               |
+| `AR-C-TENANT-ISOLATION-PROPERTY` | C    | ARC-2 | Generator-based property test asserting tenant A data is unreachable by tenant B across every read path, continuously in CI.                                                                      | ADR-0031                             | ADR-0031                               |
+| `AR-D-RESTORE-DRILL`             | D    | ARC-1 | Quarterly archive restore drill + evidence doc; closes ADR-0037 operational gap.                                                                                                                  | Retention tasks (done)               | ADR-0037                               |
+
+### 12.3 Recommendations explicitly ruled out in this cycle
+
+- **Second engine adapter PoC** — rejected until `AR-A-CONFORMANCE-SUITE` exists.
+- **Pre-execution hard cost gating** — rejected on design grounds (Snowflake cost is a post-hoc reconciliation problem).
+- **Planner policy contract expansion** — frozen per ADR-0035 until a non-dbt workflow family is committed.
+
+### 12.4 Dependency graph of proposed slices
+
+```mermaid
+flowchart LR
+    A11[AR-A11 done]
+    A12C[AR-A12-C done]
+    RDS[AR-A-RETRY-DURATION-SHAPE]
+    RSC[AR-A-READSIDE-CONTRACTS]
+    RP[AR-A-RECOVER-PROVENANCE]
+    CS[AR-A-CONFORMANCE-SUITE]
+    DCM[AR-A-DETERMINISM-CI-MATRIX]
+    SLO[AR-C-STALENESS-SLO-ADR]
+    TIP[AR-C-TENANT-ISOLATION-PROPERTY]
+    RD[AR-D-RESTORE-DRILL]
+
+    A11 --> RDS
+    RDS --> CS
+    A12C --> RSC
+    A12C --> RP
+```
 
 Lane mapping follows `AGENTS.md` §"Planning State Rule". Each task below is sized to one slice, includes governing sources, and carries an ARC level.
 
@@ -495,10 +567,28 @@ flowchart LR
 
 ## 13. Closeout
 
-**Governing sources used:** AGENTS.md, governance inventory, execution-model spec, IWorkflowEngine.v1 contract, ExecutionPlan.v1 source, IRunStateStore.v1 source, ADRs 0003/0004/0010/0013/0015/0017/0031/0032/0033/0034/0035/0036/0037.
+**Governing sources used:** AGENTS.md, governance inventory, execution-model spec, IWorkflowEngine.v1 contract, ExecutionPlan.v1 source, IRunStateStore.v1 source, `agent-lane-a.yaml`, `agent-lane-c.yaml`, `agent-lane-d.yaml`, ADRs 0003/0004/0010/0013/0014/0015/0017/0019/0031/0032/0033/0034/0035/0036/0037.
 
-**What this review is:** a point-in-time architectural assessment. It is not a substitute for ADRs, evidence docs, or risk-register entries — each recommendation in §11 and each task in §12 requires its own ARC-gated slice to land.
+**What this review is:** a point-in-time architectural **diagnosis**. Its value is in naming `stepTypeConfig` drift, Temporal semantic leakage into the canonical plan, snapshot staleness as a caller-contract gap, missing read-side contract family outside the engine, and the conformance-suite gap. The review is **not** an execution registry.
 
-**What this review is not:** a polished roadmap. Tasks are scoped but not estimated. Prioritization is based on risk severity × likelihood, not on team capacity.
+**What this review is not:** a parallel roadmap. The v1 of this document created a `T1.x`/`T2.x`/`T3.x` taxonomy that competed with the canonical lane YAMLs. That was wrong per `AGENTS.md` §"Planning State Rule". §11 and §12 now express findings as (a) confirmation that an existing lane task already owns the work (with file:line pointers into `agent-lane-*.yaml`) or (b) proposed new lane slices that lane owners can accept, reject, or re-scope.
 
-**Honest scoring:** DVT+ is a 6.1/10 architecture carried by an 8/10 governance process. If the operational gaps in §8 land cleanly, the architecture score moves to 7.5+. If `stepTypeConfig` drift + Temporal leak are not closed, it slides to 5.5 as soon as a second adapter or a second step-kind family is attempted.
+**Execution source of truth remains the lane YAMLs.** Any slice proposed in §12.2 must be added to the relevant `agent-lane-*.yaml` via `docs/planning/state/how-to-add-tasks.md` — this review does not perform that write.
+
+**Honest scoring:** DVT+ is a 6.1/10 architecture carried by an 8/10 governance process. Scoring is unchanged from v1 because the underlying code/contracts are unchanged; what changed is the routing of the recommendations. If the §12.2 residual gaps land cleanly on their lanes, architecture score moves to 7.5+. If the retry-shape leak and read-side contract gap are ignored, it slides to 5.5 the moment a second adapter or a non-dbt step-kind family is attempted.
+
+**Known overlaps already closed** (corrected from v1 of this review):
+
+- Retry/backoff governance in the plan → `AR-A11` (done), not a new task.
+- Status/read boundary split → `AR-A12-B`/`AR-A12-C` (done), not a defect.
+- `stepTypeConfig` semantic validation per StepKind → Lane A active slice at agent-lane-a.yaml:790, not a new task.
+- `compiledCodeRef` → `StepArtifactRef` generalization → Lane A active slice at agent-lane-a.yaml:1197, not a new task.
+- Snapshot staleness caller surface → Lane C done; remaining residual is the ADR promotion, not the surface itself.
+- Retention/TTL → Lane D done; residual is the restore drill cadence, not the policy itself.
+
+**v1 → v2 change log of this review**
+
+- §3 bullet 4 reframed: read-side contracts are a sibling-package gap, not an `IWorkflowEngine` defect.
+- §11 restructured: each recommendation is either a pointer to an existing lane task or a single proposed slice. No parallel taxonomy.
+- §12 rewritten: replaced `T1.x`/`T2.x`/`T3.x` table with (a) "already governed" cross-reference table and (b) proposed new slices table using `AR-*` id shape consistent with existing lanes.
+- §13 records the reframing explicitly so readers of v2 understand why v1's plan section was wrong.

@@ -7,7 +7,7 @@ Summarizes workflow-centric references for the engine component map.
 ## Canonical workflow references
 
 - [WorkflowEngine subsystem context](./workflow-engine-subsystem-context.md)
-- [Run event catalog](../contracts/engine/RunEventCatalog.v1.md)
+- [Run events contract](../contracts/engine/RunEvents.v1.md)
 - [Signals and auth](../contracts/engine/SignalsAndAuth.v1.md)
 - [Workflow engine interface](../contracts/engine/IWorkflowEngine.v1.md)
 - [Execution semantics](../contracts/engine/ExecutionSemantics.v1.md)

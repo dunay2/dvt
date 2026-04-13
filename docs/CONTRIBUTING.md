@@ -290,6 +290,18 @@ pre-stable reset policy (see `../../VERSIONING.md`):
 For the active engine-runtime pack, do not create a second file generation
 while the repository remains pre-stable.
 
+Canonical read order for that pack is:
+
+- `IWorkflowEngine.v1.md`
+- `IProviderAdapter.v1.md`
+- `RunEvents.v1.md`
+- `ExecutionSemantics.v1.md`
+- `SignalsAndAuth.v1.md`
+
+Companion docs such as `IRunEnrichmentService.v1.md`, event schemas, or
+capabilities guidance MAY exist, but they MUST NOT become alternate normative
+entrypoints for the same engine-runtime topic.
+
 Quick reference:
 
 | Change Type                        | File Action                                                                                                      |

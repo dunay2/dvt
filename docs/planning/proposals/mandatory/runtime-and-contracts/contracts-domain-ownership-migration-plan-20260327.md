@@ -376,7 +376,7 @@ Conteo de archivos que referencian cada contrato principal:
 - root publication cleanup:
   - `packages/@dvt/contracts/src/index.ts` no longer re-exports
     `IPlanFetcher` or `IPlanIntegrityValidator`
-  - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v2.ts`
+  - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
     no longer re-exports `IClock`, `IIdempotencyKeyBuilder`, `IPlanFetcher`, or
     `IPlanIntegrityValidator`
 - residual-import closure:
