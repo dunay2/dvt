@@ -54,17 +54,17 @@ GET  /db/ready         → { ok }
 ### 2.3 Estado de alineación de tipos
 
 `types/engine.ts` ya **re-exporta directamente de `@dvt/contracts`**:
-`PlanRef`, `RunContext`, `RunStatus`, `RunStatusSnapshot`, `RunEvent`, `EngineRunRef`
+`PlanRef`, `RunContext`, `RunStatus`, `CanonicalRunStatus`, `RunEvent`, `EngineRunRef`
 están alineados con el engine. Los tipos de input (`StartRunInput`, `PlanPreviewInput`)
 usan estos contratos correctamente.
 
 **Gap restante — tipos de respuesta (DTO mismatch latente):**
 
-| Servicio                     | Respuesta actual                    | Debería ser                                 |
-| ---------------------------- | ----------------------------------- | ------------------------------------------- |
-| `runsService.listRuns()`     | `Run[]` (tipo dbt frontend)         | `RunStatusSnapshot[]` + mapper a view-model |
-| `plansService.previewPlan()` | `ExecutionPlan` (tipo dbt frontend) | Tipo de respuesta del engine + mapper       |
-| `runsService.getRun()`       | `Run \| null` (tipo dbt)            | `RunStatusSnapshot` + mapper                |
+| Servicio                     | Respuesta actual                    | Debería ser                                  |
+| ---------------------------- | ----------------------------------- | -------------------------------------------- |
+| `runsService.listRuns()`     | `Run[]` (tipo dbt frontend)         | `CanonicalRunStatus[]` + mapper a view-model |
+| `plansService.previewPlan()` | `ExecutionPlan` (tipo dbt frontend) | Tipo de respuesta del engine + mapper        |
+| `runsService.getRun()`       | `Run \| null` (tipo dbt)            | `CanonicalRunStatus` + mapper                |
 
 Estos tipos son compatibles en `mock` mode porque los mocks están construidos con los tipos
 dbt. Cuando el backend real responda, la shape será diferente y no habrá error de compilación
@@ -139,7 +139,7 @@ Ver §5 para la estrategia SSE → polling fallback.
 
 ```
 GET /runs?tenantId=X&projectId=Y&status=running&limit=50
-→ 200 { items: RunStatusSnapshot[], nextCursor }
+→ 200 { items: CanonicalRunStatus[], nextCursor }
 ```
 
 #### P5 — Plan preview (servidor o planner externo)
@@ -174,7 +174,7 @@ export interface RunContext {
 
 export type RunStatus = 'queued' | 'running' | 'success' | 'failed' | 'cancelled';
 
-export interface RunStatusSnapshot {
+export interface CanonicalRunStatus {
   runId: string;
   status: RunStatus;
   substatus?: string;
@@ -433,7 +433,7 @@ Los items de Nivel C aparecen en la navegación solo cuando:
 - [ ] Visual cleanup: remover headers redundantes en sidebars
 - [ ] Consolidar controles secundarios del TopBar en menú contextual
 - [x] Tipos alineados con backend — `types/engine.ts` re-exporta de `@dvt/contracts` directamente.
-- [ ] Capa de mapeo DTO: `RunStatusSnapshot → Run` (view-model) y respuesta plan → `ExecutionPlan`.
+- [ ] Capa de mapeo DTO: `CanonicalRunStatus → Run` (view-model) y respuesta plan → `ExecutionPlan`.
 - [ ] `createApiClient` con inyección de contexto de sesión
 - [ ] Documentar modo operación (mock vs api)
 

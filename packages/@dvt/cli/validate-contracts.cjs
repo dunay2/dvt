@@ -9,7 +9,7 @@ const {
   parseRunContext,
   parseSignalRequest,
   parseEngineRunRef,
-  parseRunStatusSnapshot,
+  parseCanonicalRunStatus,
   parseCanonicalEngineEvent,
   parseRunSnapshot,
   ContractValidationError,
@@ -121,8 +121,8 @@ function validatePlanFile(filePath) {
   );
 
   checks.push(
-    runCheck('RunStatusSnapshot schema', () => {
-      parseRunStatusSnapshot({
+    runCheck('CanonicalRunStatus schema', () => {
+      parseCanonicalRunStatus({
         runId: 'run-1',
         status: 'RUNNING',
         substatus: 'RETRYING',

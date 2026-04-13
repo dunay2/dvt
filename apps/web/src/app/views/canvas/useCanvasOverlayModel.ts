@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { asIsoUtcString, asNonBlankString } from '@dvt/contracts';
+import {
+  asIsoUtcString,
+  asNonBlankString,
+  type CanonicalRunStatus,
+} from '@dvt/contracts';
 
 import { buildNodeDecorations, buildOverlayContext } from './canvasOverlayContext';
 import {
@@ -9,7 +13,6 @@ import {
 } from '../../plugins/registry';
 import type { CanonicalNode, CanonicalRun } from '../../types/canonical';
 import type { NodeCostData } from '../../plugins/contracts/PluginServices';
-import type { RunStatusSnapshot } from '../../types/engine';
 import type { Edge } from '@xyflow/react';
 
 function buildRunStatusByNodeId(canonicalRun: CanonicalRun | null): ReadonlyMap<string, string> {
@@ -26,12 +29,12 @@ function buildRunStatusByNodeId(canonicalRun: CanonicalRun | null): ReadonlyMap<
   return runStatusByNodeId;
 }
 
-function toRunStatusSnapshot(canonicalRun: CanonicalRun | null): RunStatusSnapshot | null {
+function toCanonicalRunStatus(canonicalRun: CanonicalRun | null): CanonicalRunStatus | null {
   if (!canonicalRun) {
     return null;
   }
 
-  const statusMap: Record<CanonicalRun['status'], RunStatusSnapshot['status']> = {
+  const statusMap: Record<CanonicalRun['status'], CanonicalRunStatus['status']> = {
     pending: 'PENDING',
     running: 'RUNNING',
     completed: 'COMPLETED',
@@ -68,8 +71,8 @@ export function useCanvasOverlayModel({
     () => (currentRun ? mapRunToCanonical(currentRun, capabilities) : null),
     [capabilities, currentRun]
   );
-  const activeRunSnapshot = useMemo(
-    () => toRunStatusSnapshot(activeCanonicalRun),
+  const activeRunStatus = useMemo(
+    () => toCanonicalRunStatus(activeCanonicalRun),
     [activeCanonicalRun]
   );
   const activeRunId = activeCanonicalRun?.runId ?? null;
@@ -109,11 +112,11 @@ export function useCanvasOverlayModel({
 
   const overlayDecorations = useMemo(() => {
     const activeExclusiveOverlayId =
-      exclusiveOverlayMode === 'runtime' && activeRunSnapshot == null ? null : exclusiveOverlayMode;
+      exclusiveOverlayMode === 'runtime' && activeRunStatus == null ? null : exclusiveOverlayMode;
     const overlayCtx = buildOverlayContext(
       edges,
       selectedNodeIds,
-      activeRunSnapshot,
+      activeRunStatus,
       runStatusByNodeId,
       costByNodeId
     );
@@ -124,7 +127,7 @@ export function useCanvasOverlayModel({
       overlayCtx
     );
   }, [
-    activeRunSnapshot,
+    activeRunStatus,
     capabilities,
     canonicalNodes,
     costByNodeId,

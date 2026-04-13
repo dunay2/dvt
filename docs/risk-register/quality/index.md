@@ -27,6 +27,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)
+- [Downstream consumers may still depend on retired status helper exports or mixed status semantics](R-20260413-AR-A12-B-STATUS-MODEL-CONSUMER-DRIFT.yaml)
 - [Empty temporal taskQueue values can re-enter provider-ref runtime state](R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE.yaml)
 - [Engine-owned plan verification increases adapter payload size and replay pressure](R-20260407-ENGINE-ENTRYPOINT-PLAN-PAYLOAD.yaml)
 - [Envelope boundary gating can drift if payloadVersion checks stay implicit](R-20260402-S05-ENVELOPE-BOUNDARY-GATING.yaml)

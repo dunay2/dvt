@@ -24,13 +24,13 @@ Estos ítems ya están implementados y se pueden dar por cerrados:
 
 **Pendiente de Sprint 1 (completar antes de avanzar):**
 
-| #   | Tarea                               | Criterio de aceptación                                                                                                         |
-| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1.1 | Definir tipos alineados con backend | `PlanRef`, `RunContext`, `RunStatus`, `RunStatusSnapshot`, `RunEvent` en `types/engine.ts`. Sin duplicar con `@dvt/contracts`. |
-| 1.2 | `createApiClient` con sesión        | Headers `X-Tenant-Id` / `X-Project-Id` inyectados desde `sessionStore`. Manejo de `401/403/5xx` con `ApiError` tipado.         |
-| 1.3 | Separación `mock \| api`            | `VITE_DATA_SOURCE=mock\|api`. Service layer base en `services/runs/`, `services/plans/`. Vistas no importan mock directo.      |
-| 1.4 | Visual cleanup shell                | Remover headers redundantes en sidebars. Controles secundarios del TopBar a menú contextual.                                   |
-| 1.5 | Documentar modo operación           | README actualizado con instrucciones para correr en modo mock vs api real.                                                     |
+| #   | Tarea                               | Criterio de aceptación                                                                                                          |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1 | Definir tipos alineados con backend | `PlanRef`, `RunContext`, `RunStatus`, `CanonicalRunStatus`, `RunEvent` en `types/engine.ts`. Sin duplicar con `@dvt/contracts`. |
+| 1.2 | `createApiClient` con sesión        | Headers `X-Tenant-Id` / `X-Project-Id` inyectados desde `sessionStore`. Manejo de `401/403/5xx` con `ApiError` tipado.          |
+| 1.3 | Separación `mock \| api`            | `VITE_DATA_SOURCE=mock\|api`. Service layer base en `services/runs/`, `services/plans/`. Vistas no importan mock directo.       |
+| 1.4 | Visual cleanup shell                | Remover headers redundantes en sidebars. Controles secundarios del TopBar a menú contextual.                                    |
+| 1.5 | Documentar modo operación           | README actualizado con instrucciones para correr en modo mock vs api real.                                                      |
 
 **Riesgos Sprint 1:**
 

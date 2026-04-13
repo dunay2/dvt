@@ -1,5 +1,4 @@
 export type {
-  AdapterScopedSubstatus,
   CanonicalRunStatus,
   EngineRunRef,
   IsoUtcString,

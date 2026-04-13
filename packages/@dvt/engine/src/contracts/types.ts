@@ -6,7 +6,6 @@
  * @date 2026-03-03
  */
 export type {
-  AdapterScopedSubstatus,
   CanonicalRunStatus,
   EngineRunRef,
   IsoUtcString,
@@ -18,7 +17,6 @@ export type {
   RunContext,
   RunStatusEnrichment,
   RunStatus,
-  RunStatusSnapshot,
   RunSubstatus,
   SignalRequest,
   SignalType,

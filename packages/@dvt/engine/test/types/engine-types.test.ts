@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
 import {
-  AdapterScopedSubstatus,
   CanonicalRunStatus,
   ProviderRunStatusView,
   RunStatus,
@@ -51,13 +50,13 @@ describe('engine-types', () => {
 
   it('ProviderRunStatusView accepts diagnostic provider fields', () => {
     const providerView: ProviderRunStatusView = {
-      provider: 'mock',
+      provider: 'temporal',
       providerStatus: 'RUNNING',
-      providerSubstatus: 'RETRYING',
+      providerSubstatus: 'temporal/WORKFLOW_TASK_BACKLOG',
       message: 'simulated runtime state',
     };
-    expect(providerView.provider).toBe('mock');
-    expect(providerView.providerSubstatus).toBe('RETRYING');
+    expect(providerView.provider).toBe('temporal');
+    expect(providerView.providerSubstatus).toBe('temporal/WORKFLOW_TASK_BACKLOG');
   });
 
   it('RunStatusEnrichment composes canonical and provider views', () => {
@@ -73,11 +72,6 @@ describe('engine-types', () => {
     };
     expect(enrichment.canonical.status).toBe('RUNNING');
     expect(enrichment.providerView.providerStatus).toBe('RUNNING');
-  });
-
-  it('AdapterScopedSubstatus accepts adapter/value format', () => {
-    const sub: AdapterScopedSubstatus = 'temporal/WORKFLOW_TASK_BACKLOG';
-    expect(sub.startsWith('temporal/')).toBe(true);
   });
 
   it('RunStatus accepts all valid values', () => {

@@ -186,18 +186,6 @@ export const RunExecutionEvidenceSchema = z
   })
   .strict();
 
-export const RunStatusSnapshotSchema = z.object({
-  runId: NonBlankStringSchema,
-  status: RunStatusSchema,
-  substatus: z
-    .union([RunSubstatusSchema, z.string().regex(/^(temporal|conductor|mock)\/.+$/)])
-    .optional(),
-  message: z.string().optional(),
-  startedAt: IsoUtcStringSchema.optional(),
-  completedAt: IsoUtcStringSchema.optional(),
-  execution: RunExecutionEvidenceSchema.optional(),
-});
-
 export const CanonicalRunStatusSchema = z
   .object({
     runId: NonBlankStringSchema,
@@ -1111,7 +1099,6 @@ export type RecoverRunCommandSchemaT = z.infer<typeof RecoverRunCommandSchema>;
 export type CanonicalRunStatusSchemaT = z.infer<typeof CanonicalRunStatusSchema>;
 export type ProviderRunStatusViewSchemaT = z.infer<typeof ProviderRunStatusViewSchema>;
 export type RunStatusEnrichmentSchemaT = z.infer<typeof RunStatusEnrichmentSchema>;
-export type RunStatusSnapshotSchemaT = z.infer<typeof RunStatusSnapshotSchema>;
 export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;
 
 export type ArtifactRefSchemaT = z.infer<typeof ArtifactRefSchema>;

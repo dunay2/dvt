@@ -18,7 +18,6 @@ import {
   parseRunExecutionContextRef,
   parseEngineRunRef,
   parseRunEventWrite,
-  parseRunStatusSnapshot,
   parseRecoverRunCommand,
   parseResolvedRunContext,
   parseRunContext,
@@ -165,8 +164,8 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
-  it('parses RunStatusSnapshot with TF-C2-B result evidence fields', () => {
-    const snapshot = parseRunStatusSnapshot({
+  it('parses CanonicalRunStatus with TF-C2-B result evidence fields', () => {
+    const status = parseCanonicalRunStatus({
       runId: 'run-1',
       status: 'COMPLETED',
       execution: {
@@ -189,15 +188,15 @@ describe('contracts: validation helpers', () => {
       },
     });
 
-    expect(snapshot.execution?.activeStepId).toBe('step-evidence');
-    expect(snapshot.execution?.failure?.stepId).toBe('step-transform');
-    expect(snapshot.execution?.materialization?.sinkTable).toBe('analytics.orders_daily');
-    expect(snapshot.execution?.materialization?.rowsWritten).toBe(42);
+    expect(status.execution?.activeStepId).toBe('step-evidence');
+    expect(status.execution?.failure?.stepId).toBe('step-transform');
+    expect(status.execution?.materialization?.sinkTable).toBe('analytics.orders_daily');
+    expect(status.execution?.materialization?.rowsWritten).toBe(42);
   });
 
-  it('rejects RunStatusSnapshot when failure.failedAt is only whitespace', () => {
+  it('rejects CanonicalRunStatus when failure.failedAt is only whitespace', () => {
     expect(() =>
-      parseRunStatusSnapshot({
+      parseCanonicalRunStatus({
         runId: 'run-1',
         status: 'FAILED',
         execution: {
@@ -211,9 +210,9 @@ describe('contracts: validation helpers', () => {
     ).toThrow(ContractValidationError);
   });
 
-  it('rejects RunStatusSnapshot when failure.failedAt is not strict ISO UTC', () => {
+  it('rejects CanonicalRunStatus when failure.failedAt is not strict ISO UTC', () => {
     expect(() =>
-      parseRunStatusSnapshot({
+      parseCanonicalRunStatus({
         runId: 'run-1',
         status: 'FAILED',
         execution: {
@@ -223,6 +222,16 @@ describe('contracts: validation helpers', () => {
             failedAt: '2026-02-30T10:00:00.000Z',
           },
         },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('rejects CanonicalRunStatus when substatus is provider-scoped instead of canonical', () => {
+    expect(() =>
+      parseCanonicalRunStatus({
+        runId: 'run-1',
+        status: 'RUNNING',
+        substatus: 'temporal/WORKFLOW_TASK_BACKLOG',
       })
     ).toThrow(ContractValidationError);
   });

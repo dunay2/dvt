@@ -1,10 +1,10 @@
 import type { PlanPreviewInput as ShellPlanPreviewInput } from '../../ports/plans';
 import type {
+  CanonicalRunStatus,
   EngineRunRef,
   PlanRef,
   RunContext,
   RunEvent,
-  RunStatusSnapshot,
 } from '../../types/engine';
 import type { ExecutionPlan } from '../../types/dbt';
 import type { NodeBadgeContribution, NodeRendererRegistration } from './NodeRendering';
@@ -24,7 +24,7 @@ export interface RunObserveOptions {
   afterSeq?: number;
   onEvent: (event: RunEvent) => void;
   onError: (error: Error) => void;
-  onStatusChange?: (status: RunStatusSnapshot) => void;
+  onStatusChange?: (status: CanonicalRunStatus) => void;
 }
 
 export interface RunObserveHandle {

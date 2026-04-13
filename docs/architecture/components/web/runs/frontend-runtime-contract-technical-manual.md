@@ -79,9 +79,9 @@ Retired from active route consumers:
 
 - `listRuns(): Promise<Run[]>`
 - `getRun(runId): Promise<Run | null>`
-- `getRunStatus(runId): Promise<RunStatusSnapshot>`
+- `getRunStatus(runId): Promise<CanonicalRunStatus>`
 
-No compatibility mapping is allowed from snapshot payloads to a fake full
+No compatibility mapping is allowed from canonical-status payloads to a fake full
 `Run` aggregate in the active Runs route.
 
 ### Implemented Route Contract Map

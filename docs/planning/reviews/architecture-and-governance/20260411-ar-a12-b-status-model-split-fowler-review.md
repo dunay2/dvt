@@ -1,8 +1,8 @@
 ---
 title: AR-A12-B status model split Fowler review
-status: Active
+status: Complete
 owner: Architecture / Engine / Contracts / Docs
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-13
 planning_type: review
 ---
 
@@ -48,28 +48,34 @@ A Fowler-style boundary does not let one DTO represent:
 
 Those are different responsibilities with different authority.
 
-## Current smells
+## Reviewed smells
 
-### `F1` High - one status DTO still carries three jobs
+This review originally captured three pre-cutover smells:
 
-The current contracts and code still reuse `RunStatusSnapshot` for:
+### `F1` High - one status DTO carried three jobs
 
-- `WorkflowEngine.getRunStatus()`
-- `WorkflowEngine.enrichRunStatus()`
-- `IProviderAdapter.getRunStatus()`
+Before the cutover, `RunStatusSnapshot` was reused across canonical status,
+provider-backed enrichment, and provider-live observation.
 
-That is a boundary smell, not a convenience.
+### `F2` High - the provider method was named from the wrong authority plane
 
-### `F2` High - the provider method is named from the wrong authority plane
+Before the cutover, the adapter boundary exposed provider-live observation
+through `getRunStatus()`, which read like canonical caller-visible truth.
 
-`getRunStatus()` on the adapter reads like canonical truth, but the method is
-really provider-live observation.
+### `F3` Medium - the enrichment path was compositionally invisible
 
-### `F3` Medium - the enrichment path is compositionally invisible
+Before the cutover, callers could not tell from the public contract whether
+they were reading canonical status or an enriched composed view.
 
-The current engine contract returns the same type from both read methods, so a
-caller cannot tell from the contract whether it is reading canonical truth or a
-composed view.
+## Closure status
+
+These reviewed smells are now resolved in the active tree:
+
+- `RunStatusSnapshot` is removed from the active shared contract surface
+- the adapter boundary now exposes `getProviderStatusView()`
+- the enrichment path is explicit on `IRunEnrichmentService.getRunEnrichment()`
+- active docs and planning surfaces describe the split as canonical status,
+  provider diagnostics, and enrichment
 
 ## Chosen architecture
 
@@ -99,17 +105,19 @@ Mature workflow and event-sourced systems keep these concerns separate:
 They do not usually make provider-local observation masquerade as the same
 semantic object as public lifecycle truth.
 
-## Realistic plan
+## Executed plan
 
-1. rewrite the active contract docs to expose the three objects explicitly
-2. update glossary and execution semantics so the authority split is defined in
-   one place
-3. keep current read-subsystem docs honest about the as-is code path
-4. converge code and current diagrams later under `AR-A12-C`
+1. rewrote the active contract docs to expose the three objects explicitly
+2. updated execution semantics and related docs so the authority split is
+   defined in one place
+3. removed the legacy shared-kernel status alias from active public exports and
+   live consumers
+4. aligned planning and closeout surfaces so the slice can be tracked as done
 
 ## Acceptance
 
 - explicit status objects exist in the active contract pack
 - the provider boundary no longer uses canonical-status naming
-- current docs distinguish between contract target and current implementation
-- `AR-A12-B` is trackable as its own architecture slice
+- current docs distinguish between canonical status, provider diagnostics, and
+  enrichment
+- `AR-A12-B` is trackable as its own closed architecture slice
