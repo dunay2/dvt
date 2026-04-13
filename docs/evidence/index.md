@@ -47,6 +47,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260412 Ar A11 Step Retry Policy Governance](ED-20260412-ar-a11-step-retry-policy-governance.md)
 - [ED 20260412 Ar A12 C5 Read Boundary Purity Closeout](ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md)
 - [ED 20260412 Tf C2 B Success Only Materialization Reads](ED-20260412-tf-c2-b-success-only-materialization-reads.md)
+- [ED 20260413 Ar A12 B Status Model Split](ED-20260413-ar-a12-b-status-model-split.md)
 - [ED 20260413 Temporal Sdk 1 16 Adapter Upgrade](ED-20260413-temporal-sdk-1-16-adapter-upgrade.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
