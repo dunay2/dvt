@@ -1,0 +1,36 @@
+---
+id: R-20260414-CONTRACT-SCHEMA-PACK-LINT-COMPAT
+title: >
+  Contract schema-pack refactor depends on an ESLint 10 compatibility shim for import-order linting
+status: Open
+date: 2026-04-14
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - packages/@dvt/engine
+severity: Medium
+probability: Low
+context: >
+  The repository now runs `eslint@10.2.0`, while `eslint-plugin-import` is still adapted through
+  `@eslint/compat` so `import/order` and related rules can execute without crashing. The same slice
+  also refactors `@dvt/contracts` schema ownership into internal schema packs behind the existing
+  `schemas.ts` facade.
+risk: >
+  A future ESLint or plugin change can invalidate the compatibility wrapper and break lint execution
+  again, which would mask regressions in import ordering or delay delivery of changes that touch
+  governed contract and runtime paths.
+mitigations:
+  - >
+    `eslint.config.cjs` wraps `eslint-plugin-import` through `fixupPluginRules`, restoring repo-wide
+    lint execution under ESLint 10.
+  - >
+    `pnpm lint` now completes across the monorepo and the surfaced findings in API, engine, web, and
+    adapter tests were fixed in the same slice.
+  - >
+    `schemas.ts` remains the public facade so consumers do not need to adopt the internal
+    schema-pack file layout directly.
+  - >
+    The repo can pin or roll back the lint stack independently if upstream native ESLint 10 support
+    is delayed further.
+review_after: 2026-06-30
+---

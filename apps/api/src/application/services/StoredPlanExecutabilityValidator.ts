@@ -47,7 +47,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     const stepTypeRegistry = this.deps.stepTypeRegistry ?? createDefaultStepTypeRegistry();
 
     let plan: ExecutionPlan;
-    let artifactExecutionPolicy: RunExecutionPolicy = {};
+    let artifactExecutionPolicy: RunExecutionPolicy | undefined;
     try {
       const artifact = await this.deps.fetcher.fetchForValidation(validatedRef);
       artifactExecutionPolicy = artifact.executionPolicy;
@@ -96,7 +96,7 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
 
     const requiredCapabilities = dedupeCapabilities([
       ...collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps),
-      ...(artifactExecutionPolicy.requiresCapabilities ?? []),
+      ...(artifactExecutionPolicy?.requiresCapabilities ?? []),
     ]);
     const declaredCapabilities = adapter.capabilities?.();
     if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {

@@ -11,7 +11,13 @@ const schemaPrefix = `dvt_transform_it_${Date.now()}`;
 const createdSchemas = new Set<string>();
 let schemaCounter = 0;
 
-function runtimeContext(environmentId = 'env-it') {
+function runtimeContext(environmentId = 'env-it'): {
+  executionIdentity: {
+    tenantId: string;
+    environmentId: string;
+    runId: string;
+  };
+} {
   return {
     executionIdentity: {
       tenantId: 't-it',

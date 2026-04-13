@@ -1,3 +1,4 @@
+import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
@@ -5,7 +6,6 @@ import {
   RunAlreadyExistsError,
   UnsupportedPlanVersionError,
 } from '@dvt/engine';
-import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';

@@ -1,4 +1,5 @@
 // @ts-check
+const { fixupPluginRules } = require('@eslint/compat');
 const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
@@ -49,7 +50,7 @@ module.exports = [
     },
     plugins: {
       '@typescript-eslint': tseslint,
-      import: importPlugin,
+      import: fixupPluginRules(importPlugin),
     },
     settings: {
       'import/resolver': {

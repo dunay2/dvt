@@ -58,7 +58,7 @@ function parseExecutablePlan(bytes: Uint8Array): ExecutionPlan {
     return parseExecutionPlan(input);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(`INVALID_EXECUTABLE_PLAN: ${reason}`);
+    throw new Error(`INVALID_EXECUTABLE_PLAN: ${reason}`, { cause: error });
   }
 }
 

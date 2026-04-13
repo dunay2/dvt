@@ -72,7 +72,7 @@ function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unkno
   } as const;
 }
 
-function buildValidPlanRef() {
+function buildValidPlanRef(): ReturnType<typeof makePlanRef> {
   return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     sha256: 'b'.repeat(64),
@@ -82,7 +82,9 @@ function buildValidPlanRef() {
   });
 }
 
-function buildValidPreviewPayload(overrides: Readonly<Record<string, unknown>> = {}) {
+function buildValidPreviewPayload(
+  overrides: Readonly<Record<string, unknown>> = {}
+): Readonly<Record<string, unknown>> {
   return {
     previewProfile: 'transformation-sql-first-v1',
     plan: buildValidContractPlan(),
