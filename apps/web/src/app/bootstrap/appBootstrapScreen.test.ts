@@ -21,7 +21,7 @@ function mountBootstrapDom(): void {
         <li data-bootstrap-step="health" data-status="pending"><span data-bootstrap-detail></span></li>
         <li data-bootstrap-step="route" data-status="pending"><span data-bootstrap-detail></span></li>
       </ul>
-      <ol id="app-loading-log"></ol>
+      <div id="app-loading-progress"></div>
     </div>
   `;
 }
@@ -54,11 +54,8 @@ describe('appBootstrapScreen', () => {
     expect(document.getElementById('app-loading-title')?.textContent).toBe(
       'Raven is waiting for startup prerequisites'
     );
-    expect(document.getElementById('app-loading-log')?.textContent).toContain(
-      'Bootstrap started. Waiting for startup modules.'
-    );
-    expect(document.getElementById('app-loading-log')?.textContent).toContain(
-      'Preparing initial route: Backend readiness is still blocked.'
+    expect(document.getElementById('app-loading-progress')?.textContent).toContain(
+      '4/5 startup steps settled. Waiting on a required prerequisite.'
     );
 
     setBootstrapStepStatus('route', 'complete');

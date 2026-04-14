@@ -1,3 +1,5 @@
+import { renderBootstrapProgress } from './bootstrapProgressBar';
+
 type BootstrapStep = 'hydrate' | 'services' | 'capabilities' | 'health' | 'route';
 type BootstrapStepStatus = 'pending' | 'complete' | 'degraded' | 'blocked' | 'error';
 type BootstrapScreenState = 'loading' | 'blocked' | 'error' | 'complete';
@@ -5,8 +7,8 @@ type BootstrapScreenState = 'loading' | 'blocked' | 'error' | 'complete';
 const LOADING_SCREEN_ID = 'app-loading-screen';
 const TITLE_ID = 'app-loading-title';
 const MESSAGE_ID = 'app-loading-message';
-const LOG_ID = 'app-loading-log';
-const MAX_LOG_ENTRIES = 12;
+const VERSION_ID = 'app-loading-version';
+const BUILD_DATE_ID = 'app-loading-build-date';
 
 type BootstrapStepConfig = {
   label: string;
@@ -16,14 +18,6 @@ type BootstrapStepConfig = {
 
 type BootstrapStepState = {
   status: BootstrapStepStatus;
-  detail: string;
-};
-
-type BootstrapLogEntry = {
-  id: number;
-  timestamp: string;
-  step: BootstrapStep | 'system';
-  status: BootstrapStepStatus | 'info';
   detail: string;
 };
 
@@ -66,8 +60,6 @@ const STEP_CONFIG: Record<BootstrapStep, BootstrapStepConfig> = {
 };
 
 let bootstrapStepState = createInitialStepState();
-let bootstrapLogEntries: BootstrapLogEntry[] = [];
-let bootstrapLogSequence = 0;
 
 function createInitialStepState(): Record<BootstrapStep, BootstrapStepState> {
   return STEP_ORDER.reduce<Record<BootstrapStep, BootstrapStepState>>((state, step) => {
@@ -85,10 +77,6 @@ function getLoadingScreen(): HTMLElement | null {
 
 function getStepNode(step: BootstrapStep): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-bootstrap-step="${step}"]`);
-}
-
-function getLogNode(): HTMLOListElement | null {
-  return document.getElementById(LOG_ID) as HTMLOListElement | null;
 }
 
 function updateBootstrapText(id: string, text: string): void {
@@ -128,52 +116,6 @@ function writeStepStateToDom(step: BootstrapStep): void {
   }
 }
 
-function renderBootstrapLog(): void {
-  const logNode = getLogNode();
-  if (!logNode) {
-    return;
-  }
-
-  logNode.innerHTML = '';
-  bootstrapLogEntries.forEach((entry) => {
-    const item = document.createElement('li');
-    item.dataset.logStatus = entry.status;
-
-    const time = document.createElement('span');
-    time.className = 'app-loading-log-time';
-    time.textContent = entry.timestamp;
-
-    const message = document.createElement('span');
-    message.className = 'app-loading-log-message';
-    message.textContent =
-      entry.step === 'system'
-        ? entry.detail
-        : `${STEP_CONFIG[entry.step].label}: ${entry.detail}`;
-
-    item.append(time, message);
-    logNode.append(item);
-  });
-}
-
-function appendBootstrapLog(
-  step: BootstrapStep | 'system',
-  status: BootstrapStepStatus | 'info',
-  detail: string
-): void {
-  bootstrapLogSequence += 1;
-  bootstrapLogEntries = [
-    ...bootstrapLogEntries.slice(-(MAX_LOG_ENTRIES - 1)),
-    {
-      id: bootstrapLogSequence,
-      timestamp: new Date().toISOString().slice(11, 19),
-      step,
-      status,
-      detail,
-    },
-  ];
-  renderBootstrapLog();
-}
-
 function findLatestStepDetail(status: BootstrapStepStatus): string | null {
   for (let index = STEP_ORDER.length - 1; index >= 0; index -= 1) {
     const step = STEP_ORDER[index];
@@ -190,6 +132,46 @@ function findLatestStepDetail(status: BootstrapStepStatus): string | null {
   return null;
 }
 
+function getStepProgressUnits(status: BootstrapStepStatus): number {
+  switch (status) {
+    case 'complete':
+    case 'degraded':
+      return 1;
+    case 'blocked':
+    case 'error':
+      return 0.85;
+    case 'pending':
+    default:
+      return 0;
+  }
+}
+
+function renderBootstrapProgressState(state: BootstrapScreenState): void {
+  const settledSteps = STEP_ORDER.filter((step) => {
+    const stepStatus = bootstrapStepState[step].status;
+    return stepStatus === 'complete' || stepStatus === 'degraded';
+  }).length;
+
+  const progressValue = STEP_ORDER.reduce((total, step) => {
+    return total + getStepProgressUnits(bootstrapStepState[step].status);
+  }, 0);
+
+  let label = `${settledSteps}/${STEP_ORDER.length} startup steps settled`;
+  if (state === 'blocked') {
+    label = `${label}. Waiting on a required prerequisite.`;
+  }
+  if (state === 'error') {
+    label = `${label}. A startup error needs attention.`;
+  }
+
+  renderBootstrapProgress({
+    value: state === 'complete' ? STEP_ORDER.length : progressValue,
+    max: STEP_ORDER.length,
+    tone: state,
+    label,
+  });
+}
+
 function setBootstrapScreenState(
   state: BootstrapScreenState,
   title: string,
@@ -203,6 +185,7 @@ function setBootstrapScreenState(
   screen.dataset.state = state;
   updateBootstrapText(TITLE_ID, title);
   updateBootstrapText(MESSAGE_ID, message);
+  renderBootstrapProgressState(state);
 }
 
 function syncBootstrapScreenState(): void {
@@ -230,14 +213,31 @@ function canCompleteBootstrap(): boolean {
   });
 }
 
+function formatBuildDate(isoString: string): string {
+  const parsedDate = new Date(isoString);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return isoString;
+  }
+
+  const canonicalIso = parsedDate.toISOString();
+  return `${canonicalIso.slice(0, 10)} ${canonicalIso.slice(11, 16)} UTC`;
+}
+
+function updateBootstrapBuildMeta(): void {
+  const appVersion = import.meta.env.VITE_APP_VERSION?.trim() || '0.0.0';
+  const rawBuildDate = import.meta.env.VITE_APP_BUILD_DATE?.trim() || '';
+  const buildDate = rawBuildDate.length > 0 ? formatBuildDate(rawBuildDate) : 'unknown';
+
+  updateBootstrapText(VERSION_ID, `Version ${appVersion}`);
+  updateBootstrapText(BUILD_DATE_ID, `Build ${buildDate}`);
+}
+
 export function startBootstrapScreen(): void {
   if (!getLoadingScreen()) {
     return;
   }
 
   bootstrapStepState = createInitialStepState();
-  bootstrapLogEntries = [];
-  bootstrapLogSequence = 0;
 
   setBootstrapScreenState('loading', PREPARING_TITLE, PREPARING_MESSAGE);
 
@@ -245,8 +245,7 @@ export function startBootstrapScreen(): void {
     writeStepStateToDom(step);
   });
 
-  renderBootstrapLog();
-  appendBootstrapLog('system', 'info', 'Bootstrap started. Waiting for startup modules.');
+  updateBootstrapBuildMeta();
 }
 
 export function isBootstrapScreenVisible(): boolean {
@@ -276,7 +275,6 @@ export function setBootstrapStepStatus(
   };
 
   writeStepStateToDom(step);
-  appendBootstrapLog(step, status, resolvedDetail);
   syncBootstrapScreenState();
 }
 

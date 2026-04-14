@@ -66,9 +66,7 @@ export default function CanvasShell({
               nodes={explorerNodes}
               canEditGraph={userPermissions.canEditEdges}
               onHide={onHideExplorer}
-              onOpenDataRegistry={
-                userPermissions.canEditEdges ? () => setDataRegistryOpen(true) : undefined
-              }
+              onOpenDataRegistry={() => setDataRegistryOpen(true)}
             />
           </ResizablePanel>
           <ResizableHandle />
@@ -88,7 +86,7 @@ export default function CanvasShell({
       >
         <div className="h-full flex flex-col bg-slate-950">
           <CanvasToolbar
-            onOpenDataRegistry={() => setDataRegistryOpen(true)}
+            placement="top-bar"
             onAutoLayout={onAutoLayout}
             onToggleCostOverlay={onToggleCostOverlay}
             onToggleImpact={onToggleImpact}

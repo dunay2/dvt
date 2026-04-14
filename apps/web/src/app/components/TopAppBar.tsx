@@ -86,7 +86,15 @@ export function ShellTopBar({
           </div>
         ) : null}
 
-        <div className="flex-1" />
+        {location.pathname.startsWith('/canvas') ? (
+          <div
+            id="shell-top-bar-canvas-controls"
+            data-slot="shell-top-bar-canvas-controls"
+            className="ml-1 flex min-w-0 flex-1 items-center justify-end gap-2 overflow-hidden"
+          />
+        ) : (
+          <div className="flex-1" />
+        )}
 
         <ShellConnectionStatus
           isConnectionChecking={isConnectionChecking}
