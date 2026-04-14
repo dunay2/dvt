@@ -25,6 +25,13 @@ import type {
 } from '../domain/platformHealthTypes';
 
 const OPTIONAL_ENDPOINT_NOT_ENABLED_STATUS = new Set([403, 404, 405]);
+const OPTIONAL_PLATFORM_HEALTH_PROBE_KEYS = ['readyz', 'version', 'dbReady'] as const;
+
+type OptionalPlatformHealthProbeKey = (typeof OPTIONAL_PLATFORM_HEALTH_PROBE_KEYS)[number];
+
+const DEFAULT_OPTIONAL_PLATFORM_HEALTH_PROBES = new Set<OptionalPlatformHealthProbeKey>(
+  OPTIONAL_PLATFORM_HEALTH_PROBE_KEYS
+);
 
 export class PlatformHealthInfrastructureError extends Error {
   readonly endpoint: string;
@@ -127,6 +134,58 @@ function mapDbReadyDto(dto: DbReadyDto): PlatformDatabaseReadiness {
   };
 }
 
+function createNotEnabledProbe<TData>(endpoint: string): OptionalEndpointProbe<TData> {
+  return {
+    endpoint,
+    availability: 'not_enabled',
+    statusCode: null,
+    latencyMs: null,
+    data: null,
+    error: null,
+  };
+}
+
+function normalizeOptionalProbeToken(value: string): OptionalPlatformHealthProbeKey | 'all' | null {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  switch (normalized) {
+    case 'all':
+      return 'all';
+    case 'readyz':
+      return 'readyz';
+    case 'version':
+      return 'version';
+    case 'dbready':
+      return 'dbReady';
+    default:
+      return null;
+  }
+}
+
+function resolveOptionalPlatformHealthProbes(
+  value = import.meta.env.VITE_PLATFORM_HEALTH_OPTIONAL_PROBES
+): ReadonlySet<OptionalPlatformHealthProbeKey> {
+  if (typeof value !== 'string') {
+    return DEFAULT_OPTIONAL_PLATFORM_HEALTH_PROBES;
+  }
+
+  const configuredProbes = new Set<OptionalPlatformHealthProbeKey>();
+
+  for (const token of value.split(',')) {
+    const normalized = normalizeOptionalProbeToken(token);
+
+    if (normalized === 'all') {
+      return DEFAULT_OPTIONAL_PLATFORM_HEALTH_PROBES;
+    }
+
+    if (normalized !== null) {
+      configuredProbes.add(normalized);
+    }
+  }
+
+  return configuredProbes;
+}
+
 function handleRequestError(error: unknown, endpoint: string): never {
   throw new PlatformHealthInfrastructureError({
     endpoint,
@@ -226,7 +285,9 @@ export type HttpPlatformHealthClient = {
 
 export function createHttpPlatformHealthClient(
   apiClient: ApiClient = createApiClient(resolveApiBaseUrl()),
-  dataSourceMode: DataSourceMode = getRuntimeDataSourceMode()
+  dataSourceMode: DataSourceMode = getRuntimeDataSourceMode(),
+  optionalProbeKeys: ReadonlySet<OptionalPlatformHealthProbeKey> =
+    resolveOptionalPlatformHealthProbes()
 ): HttpPlatformHealthClient {
   const requestRaw = (path: string) =>
     apiClient.requestRaw(path, {
@@ -242,13 +303,27 @@ export function createHttpPlatformHealthClient(
         mapHealthzDto
       );
       const [readyz, version, dbReady] = await Promise.all([
-        fetchOptionalProbe<ReadyzDto, PlatformReadinessInfo>(requestRaw, '/readyz', mapReadyzDto),
-        fetchOptionalProbe<VersionDto, PlatformVersionInfo>(requestRaw, '/version', mapVersionDto),
-        fetchOptionalProbe<DbReadyDto, PlatformDatabaseReadiness>(
-          requestRaw,
-          '/db/ready',
-          mapDbReadyDto
-        ),
+        optionalProbeKeys.has('readyz')
+          ? fetchOptionalProbe<ReadyzDto, PlatformReadinessInfo>(
+              requestRaw,
+              '/readyz',
+              mapReadyzDto
+            )
+          : Promise.resolve(createNotEnabledProbe<PlatformReadinessInfo>('/readyz')),
+        optionalProbeKeys.has('version')
+          ? fetchOptionalProbe<VersionDto, PlatformVersionInfo>(
+              requestRaw,
+              '/version',
+              mapVersionDto
+            )
+          : Promise.resolve(createNotEnabledProbe<PlatformVersionInfo>('/version')),
+        optionalProbeKeys.has('dbReady')
+          ? fetchOptionalProbe<DbReadyDto, PlatformDatabaseReadiness>(
+              requestRaw,
+              '/db/ready',
+              mapDbReadyDto
+            )
+          : Promise.resolve(createNotEnabledProbe<PlatformDatabaseReadiness>('/db/ready')),
       ]);
 
       return {

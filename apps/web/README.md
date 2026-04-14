@@ -174,6 +174,7 @@ Optional environment variables:
 
 - `VITE_DATA_SOURCE=mock|api`
 - `VITE_API_BASE_URL=http://localhost:3000` (or your backend URL)
+- `VITE_PLATFORM_HEALTH_OPTIONAL_PROBES=readyz,version,dbReady`
 
 Examples:
 
@@ -186,6 +187,8 @@ VITE_DATA_SOURCE=api VITE_API_BASE_URL=http://localhost:3000 pnpm --filter @dvt/
 ```
 
 If `VITE_DATA_SOURCE` is not provided, the app falls back to `mock`.
+If `VITE_PLATFORM_HEALTH_OPTIONAL_PROBES` is omitted, the client probes all optional
+platform-health endpoints. Set it to an empty string to query only `/healthz`.
 
 ```bash
 pnpm install

@@ -52,6 +52,21 @@ describe('createHttpPlatformHealthClient', () => {
         )
       ).toBe(true);
     });
+
+    it('skips optional probes that are disabled in runtime configuration', async () => {
+      const recorder = createApiRequestRecorder((endpoint) => mockEndpointResponse(endpoint));
+
+      const client = createHttpPlatformHealthClient(
+        createApiClientStub(recorder.requestRaw),
+        'api',
+        new Set()
+      );
+
+      await client.loadSnapshot();
+
+      expect(recorder.requests).toHaveLength(1);
+      expect(recorder.requests[0]?.endpoint).toBe('/healthz');
+    });
   });
 
   describe('loadSnapshot', () => {
