@@ -1,3 +1,4 @@
+import { asNonBlankString } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
   type IRunStateStoreRead,
@@ -5,7 +6,6 @@ import {
   type PlanRef,
   type RunContext,
 } from '@dvt/engine';
-import { asNonBlankString } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { IRecoverRunUseCase, RecoverRunCommand, RecoverRunResult } from '../ports/runtime.js';
@@ -66,14 +66,20 @@ function toEngineRunContext(
   sourceProvider: 'temporal' | 'conductor' | 'mock'
 ): RunContext {
   const targetAdapter = command.targetAdapter ?? sourceProvider;
-  return {
+  const runContext: RunContext = {
     tenantId: asNonBlankString(tenantId),
     projectId: asNonBlankString(projectId),
     environmentId: asNonBlankString(environmentId),
     runId: asNonBlankString(command.recoveryRunId),
     targetAdapter,
-    ...(command.runExecutionContextRef !== undefined
-      ? { runExecutionContextRef: command.runExecutionContextRef }
-      : {}),
+  };
+
+  if (command.runExecutionContextRef === undefined) {
+    return runContext;
+  }
+
+  return {
+    ...runContext,
+    runExecutionContextRef: command.runExecutionContextRef,
   };
 }

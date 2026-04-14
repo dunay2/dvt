@@ -8,14 +8,29 @@ import type {
 import {
   collectRequiredCapabilitiesForSteps,
   createDefaultStepTypeRegistry,
+  isStepKindSupportedByAdapter,
   parsePlanRef,
 } from '@dvt/contracts';
-import { isStepKindSupportedByAdapter } from '@dvt/contracts';
 import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
 
 import type { IStoredPlanValidationReader } from '../ports/storedPlan.js';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
+
+type ExecutabilityValidationError = Extract<
+  ExecutabilityValidationResult,
+  { status: 'ERROR' }
+>;
+
+type LoadedPlanForValidation = {
+  readonly artifactExecutionPolicy: RunExecutionPolicy | undefined;
+  readonly plan: ExecutionPlan;
+};
+
+type ExecutabilityValidationContext = {
+  readonly adapterId: string;
+  readonly validatedRef: PlanRefSchemaT;
+};
 
 export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValidator {
   public constructor(
@@ -30,108 +45,186 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     planRef: PlanRefSchemaT,
     adapterId: string
   ): Promise<ExecutabilityValidationResult> {
-    const validatedRef = parsePlanRef(planRef);
-    const adapter = this.deps.adapters.get(adapterId as EngineRunRef['provider']);
-    if (!adapter) {
-      return {
-        status: 'ERROR',
-        planId: validatedRef.planId,
-        adapterId,
-        code: 'REJECTED',
-        degradable: false,
-        reason: `Adapter is not configured: ${adapterId}`,
-        cause: 'adapter',
-      };
-    }
-
-    const stepTypeRegistry = this.deps.stepTypeRegistry ?? createDefaultStepTypeRegistry();
-
-    let plan: ExecutionPlan;
-    let artifactExecutionPolicy: RunExecutionPolicy = {};
-    try {
-      const artifact = await this.deps.fetcher.fetchForValidation(validatedRef);
-      artifactExecutionPolicy = artifact.executionPolicy;
-      plan = parseStoredExecutablePlan(artifact.bytes, {
-        stepTypeRegistry,
-      });
-    } catch (error) {
-      return {
-        status: 'ERROR',
-        planId: validatedRef.planId,
-        adapterId,
-        code: 'REJECTED',
-        degradable: false,
-        reason: toErrorMessage(error),
-        cause: 'plan_fetch',
-      };
-    }
-
-    const metadataMismatch = validatePlanRefAlignment(plan, validatedRef);
-    if (metadataMismatch) {
-      return {
-        status: 'ERROR',
-        planId: validatedRef.planId,
-        adapterId,
-        code: 'REJECTED',
-        degradable: false,
-        reason: metadataMismatch,
-        cause: 'plan_ref',
-      };
-    }
-
-    const unsupportedStep = plan.steps.find(
-      (step) => !isStepKindSupportedByAdapter(stepTypeRegistry, step.kind, adapterId)
-    );
-    if (unsupportedStep !== undefined) {
-      return {
-        status: 'ERROR',
-        planId: validatedRef.planId,
-        adapterId,
-        code: 'INVALID_STEP_KIND',
-        degradable: false,
-        reason: `Step kind ${unsupportedStep.kind} is not executable on adapter ${adapterId}`,
-        cause: unsupportedStep.kind,
-      };
-    }
-
-    const requiredCapabilities = dedupeCapabilities([
-      ...collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps),
-      ...(artifactExecutionPolicy.requiresCapabilities ?? []),
-    ]);
-    const declaredCapabilities = adapter.capabilities?.();
-    if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {
-      return {
-        status: 'ERROR',
-        planId: validatedRef.planId,
-        adapterId,
-        code: 'REJECTED',
-        degradable: false,
-        reason: 'Adapter does not declare capabilities required for executability validation',
-        cause: 'capabilities',
-      };
-    }
-    if (declaredCapabilities !== undefined) {
-      const supported = new Set(declaredCapabilities);
-      const missing = requiredCapabilities.find((capability) => !supported.has(capability));
-      if (missing) {
-        return {
-          status: 'ERROR',
-          planId: validatedRef.planId,
-          adapterId,
-          code: 'MISSING_CAPABILITY',
-          degradable: false,
-          reason: `Missing adapter capability: ${missing}`,
-          cause: missing,
-        };
-      }
-    }
-
-    return {
-      status: 'OK',
-      planId: validatedRef.planId,
+    const validationContext: ExecutabilityValidationContext = {
       adapterId,
+      validatedRef: parsePlanRef(planRef),
     };
+    const adapter = resolveAdapter(this.deps.adapters, validationContext);
+    if ('status' in adapter) {
+      return adapter;
+    }
+    const stepTypeRegistry = this.deps.stepTypeRegistry ?? createDefaultStepTypeRegistry();
+    const loadedPlan = await loadPlanForValidation(
+      this.deps.fetcher,
+      validationContext,
+      stepTypeRegistry
+    );
+    if ('status' in loadedPlan) {
+      return loadedPlan;
+    }
+    const planAlignmentError = validatePlanAlignment(loadedPlan.plan, validationContext);
+    if (planAlignmentError !== undefined) {
+      return planAlignmentError;
+    }
+    const unsupportedStepError = findUnsupportedStepError(
+      loadedPlan.plan,
+      validationContext,
+      stepTypeRegistry
+    );
+    if (unsupportedStepError !== undefined) {
+      return unsupportedStepError;
+    }
+    const capabilityError = validateRequiredCapabilities(
+      loadedPlan,
+      adapter,
+      validationContext,
+      stepTypeRegistry
+    );
+    if (capabilityError !== undefined) {
+      return capabilityError;
+    }
+
+    return buildOkResult(validationContext);
   }
+}
+
+function resolveAdapter(
+  adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>,
+  validationContext: ExecutabilityValidationContext
+): IProviderAdapter | ExecutabilityValidationError {
+  const adapter = adapters.get(validationContext.adapterId as EngineRunRef['provider']);
+  if (adapter !== undefined) {
+    return adapter;
+  }
+
+  return buildValidationError(
+    validationContext,
+    'REJECTED',
+    `Adapter is not configured: ${validationContext.adapterId}`,
+    'adapter'
+  );
+}
+
+async function loadPlanForValidation(
+  fetcher: IStoredPlanValidationReader,
+  validationContext: ExecutabilityValidationContext,
+  stepTypeRegistry: IStepTypeRegistry
+): Promise<LoadedPlanForValidation | ExecutabilityValidationError> {
+  try {
+    const artifact = await fetcher.fetchForValidation(validationContext.validatedRef);
+    return {
+      artifactExecutionPolicy: artifact.executionPolicy,
+      plan: parseStoredExecutablePlan(artifact.bytes, {
+        stepTypeRegistry,
+      }),
+    };
+  } catch (error) {
+    return buildValidationError(
+      validationContext,
+      'REJECTED',
+      toErrorMessage(error),
+      'plan_fetch'
+    );
+  }
+}
+
+function validatePlanAlignment(
+  plan: ExecutionPlan,
+  validationContext: ExecutabilityValidationContext
+): ExecutabilityValidationError | undefined {
+  const metadataMismatch = validatePlanRefAlignment(plan, validationContext.validatedRef);
+  if (metadataMismatch === null) {
+    return undefined;
+  }
+
+  return buildValidationError(validationContext, 'REJECTED', metadataMismatch, 'plan_ref');
+}
+
+function findUnsupportedStepError(
+  plan: ExecutionPlan,
+  validationContext: ExecutabilityValidationContext,
+  stepTypeRegistry: IStepTypeRegistry
+): ExecutabilityValidationError | undefined {
+  const unsupportedStep = plan.steps.find(
+    (step) =>
+      isStepKindSupportedByAdapter(
+        stepTypeRegistry,
+        step.kind,
+        validationContext.adapterId
+      ) === false
+  );
+  if (unsupportedStep === undefined) {
+    return undefined;
+  }
+
+  return buildValidationError(
+    validationContext,
+    'INVALID_STEP_KIND',
+    `Step kind ${unsupportedStep.kind} is not executable on adapter ${validationContext.adapterId}`,
+    unsupportedStep.kind
+  );
+}
+
+function validateRequiredCapabilities(
+  loadedPlan: LoadedPlanForValidation,
+  adapter: IProviderAdapter,
+  validationContext: ExecutabilityValidationContext,
+  stepTypeRegistry: IStepTypeRegistry
+): ExecutabilityValidationError | undefined {
+  const requiredCapabilities = dedupeCapabilities([
+    ...collectRequiredCapabilitiesForSteps(stepTypeRegistry, loadedPlan.plan.steps),
+    ...(loadedPlan.artifactExecutionPolicy?.requiresCapabilities ?? []),
+  ]);
+  const declaredCapabilities = adapter.capabilities?.();
+  if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {
+    return buildValidationError(
+      validationContext,
+      'REJECTED',
+      'Adapter does not declare capabilities required for executability validation',
+      'capabilities'
+    );
+  }
+  if (declaredCapabilities !== undefined) {
+    const supported = new Set(declaredCapabilities);
+    const missing = requiredCapabilities.find((capability) => supported.has(capability) === false);
+    if (missing !== undefined) {
+      return buildValidationError(
+        validationContext,
+        'MISSING_CAPABILITY',
+        `Missing adapter capability: ${missing}`,
+        missing
+      );
+    }
+  }
+
+  return undefined;
+}
+
+function buildOkResult(
+  validationContext: ExecutabilityValidationContext
+): ExecutabilityValidationResult {
+  return {
+    status: 'OK',
+    planId: validationContext.validatedRef.planId,
+    adapterId: validationContext.adapterId,
+  };
+}
+
+function buildValidationError(
+  validationContext: ExecutabilityValidationContext,
+  code: ExecutabilityValidationError['code'],
+  reason: string,
+  cause: string
+): ExecutabilityValidationError {
+  return {
+    status: 'ERROR',
+    planId: validationContext.validatedRef.planId,
+    adapterId: validationContext.adapterId,
+    code,
+    degradable: false,
+    reason,
+    cause,
+  };
 }
 
 function validatePlanRefAlignment(plan: ExecutionPlan, planRef: PlanRefSchemaT): string | null {

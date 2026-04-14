@@ -1,3 +1,4 @@
+import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
@@ -5,7 +6,6 @@ import {
   RunAlreadyExistsError,
   UnsupportedPlanVersionError,
 } from '@dvt/engine';
-import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';
@@ -139,12 +139,16 @@ describe('EngineStartRunUseCase', () => {
       schemaVersion: PLAN_REF.schemaVersion,
       planId: PLAN_REF.planId,
       planVersion: PLAN_REF.planVersion,
-      ...(PLAN_REF.sizeBytes !== undefined ? { sizeBytes: PLAN_REF.sizeBytes } : {}),
-      ...(PLAN_REF.expiresAt !== undefined ? { expiresAt: PLAN_REF.expiresAt } : {}),
       pluginCompatibilityFingerprint:
         '1111111111111111111111111111111111111111111111111111111111111111',
       requiresCapabilities: ['basic-execution'],
     };
+    if (PLAN_REF.sizeBytes !== undefined) {
+      noisyPlanRef.sizeBytes = PLAN_REF.sizeBytes;
+    }
+    if (PLAN_REF.expiresAt !== undefined) {
+      noisyPlanRef.expiresAt = PLAN_REF.expiresAt;
+    }
     await useCase.execute(
       {
         ...mkCommand(),

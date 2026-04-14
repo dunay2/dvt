@@ -53,6 +53,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260413 Temporal Sdk 1 16 Adapter Upgrade](ED-20260413-temporal-sdk-1-16-adapter-upgrade.md)
 - [ED 20260413 Tf A1 A Preview Contract Freeze](ED-20260413-tf-a1-a-preview-contract-freeze.md)
 - [ED 20260413 Tf C2 Runtime Vertical Acceptance](ED-20260413-tf-c2-runtime-vertical-acceptance.md)
+- [ED 20260414 Contract Schema Packs And Eslint10 Compat](ED-20260414-contract-schema-packs-and-eslint10-compat.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

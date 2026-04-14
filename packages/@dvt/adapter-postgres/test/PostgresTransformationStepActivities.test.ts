@@ -11,7 +11,13 @@ const schemaPrefix = `dvt_transform_it_${Date.now()}`;
 const createdSchemas = new Set<string>();
 let schemaCounter = 0;
 
-function runtimeContext(environmentId = 'env-it') {
+function runtimeContext(environmentId = 'env-it'): {
+  executionIdentity: {
+    tenantId: string;
+    environmentId: string;
+    runId: string;
+  };
+} {
   return {
     executionIdentity: {
       tenantId: 't-it',
@@ -62,12 +68,12 @@ describe('PostgresRelationalExecutionCapability', () => {
         /POSTGRES_CONNECTION_STRING_REQUIRED/
       );
     } finally {
-      if (typeof previousPgUrl === 'undefined') {
+      if (previousPgUrl === undefined) {
         delete process.env.DVT_PG_URL;
       } else {
         process.env.DVT_PG_URL = previousPgUrl;
       }
-      if (typeof previousDatabaseUrl === 'undefined') {
+      if (previousDatabaseUrl === undefined) {
         delete process.env.DATABASE_URL;
       } else {
         process.env.DATABASE_URL = previousDatabaseUrl;
@@ -95,8 +101,11 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
       expect(prepare).toBeDefined();
       expect(transform).toBeDefined();
       expect(capture).toBeDefined();
+      if (prepare === undefined || transform === undefined || capture === undefined) {
+        throw new Error('expected postgres step activities to be registered');
+      }
 
-      const prepareResult = await prepare!.execute(
+      const prepareResult = await prepare.execute(
         {
           stepId: 'prepare-1',
           kind: 'PREPARE_POSTGRES_TRANSFORM',
@@ -109,7 +118,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
       );
       expect(prepareResult).toEqual({ stepId: 'prepare-1', status: 'COMPLETED' });
 
-      const transformResult = await transform!.execute(
+      const transformResult = await transform.execute(
         {
           stepId: 'transform-1',
           kind: 'POSTGRES_SQL_TRANSFORM',
@@ -126,7 +135,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
       );
       expect(transformResult).toEqual({ stepId: 'transform-1', status: 'COMPLETED' });
 
-      const captureResult = await capture!.execute(
+      const captureResult = await capture.execute(
         {
           stepId: 'capture-1',
           kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
@@ -170,8 +179,13 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
     try {
       const prepare = capability.stepActivitiesByKind.get('PREPARE_POSTGRES_TRANSFORM');
       const transform = capability.stepActivitiesByKind.get('POSTGRES_SQL_TRANSFORM');
+      expect(prepare).toBeDefined();
+      expect(transform).toBeDefined();
+      if (prepare === undefined || transform === undefined) {
+        throw new Error('expected postgres transform activities to be registered');
+      }
 
-      await prepare!.execute(
+      await prepare.execute(
         {
           stepId: 'prepare-invalid-sql',
           kind: 'PREPARE_POSTGRES_TRANSFORM',
@@ -183,7 +197,7 @@ describeIfPg('PostgresRelationalExecutionCapability integration', () => {
         runtimeContext()
       );
 
-      const result = await transform!.execute(
+      const result = await transform.execute(
         {
           stepId: 'transform-invalid-sql',
           kind: 'POSTGRES_SQL_TRANSFORM',
