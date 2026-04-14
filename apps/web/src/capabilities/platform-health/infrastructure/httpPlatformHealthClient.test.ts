@@ -53,7 +53,7 @@ describe('createHttpPlatformHealthClient', () => {
     });
 
     it('skips optional probes that are disabled in runtime configuration', async () => {
-      const recorder = createApiRequestRecorder(mockEndpointResponse);
+      const recorder = createApiRequestRecorder((endpoint) => mockEndpointResponse(endpoint));
 
       const client = createHttpPlatformHealthClient(
         createApiClientStub(recorder.requestRaw),
