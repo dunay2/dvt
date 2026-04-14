@@ -31,6 +31,7 @@ import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure
 import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
+import { ArtifactBackedRunExecutionContextResolver } from '../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import type { Env } from '../plugins/env.js';
@@ -153,6 +154,9 @@ export async function buildProtectedRuntimeModule(
     stepTypeRegistry,
   });
   const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
+  const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
+    nodeEnv: env.NODE_ENV,
+  });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
@@ -179,6 +183,7 @@ export async function buildProtectedRuntimeModule(
       stateStoreWrite: stateStoreRoles.write,
       intentStore,
       planFetcher: planStore,
+      runExecutionContextResolver,
     },
     runtime: { adapters },
     infrastructure: {

@@ -45,7 +45,7 @@ flowchart LR
   P2 --> P3[Phase 3 relational execution seam]
   P3 --> P4[Phase 4 Canvas operator flow]
   P4 --> P5[Phase 5 evidence and environment closure]
-  P5 --> P6[Phase 6 dbt executor mode]
+  P5 --> P6[Phase 6 plugin-backed dbt mode]
 ```
 
 ## Lane critical path
@@ -66,15 +66,15 @@ flowchart TD
 
 ## Phase summary
 
-| Phase | Goal                                             | Primary lanes               |
-| ----- | ------------------------------------------------ | --------------------------- |
-| 0     | freeze decisions and document set                | E plus planning surfaces    |
-| 1     | freeze graph, contract, and compiler model       | A and B                     |
-| 2     | implement validate-plus-persist preview boundary | C with A and B dependencies |
-| 3     | execute plans through the first relational seam  | C and D                     |
-| 4     | close operator flow in Canvas and result views   | E with C dependency         |
-| 5     | close evidence, reset, and repeatability         | B, C, D, E                  |
-| 6     | add dbt executor mode behind the same contract   | C and E                     |
+| Phase | Goal                                                | Primary lanes               |
+| ----- | --------------------------------------------------- | --------------------------- |
+| 0     | freeze decisions and document set                   | E plus planning surfaces    |
+| 1     | freeze graph, contract, and compiler model          | A and B                     |
+| 2     | implement validate-plus-persist preview boundary    | C with A and B dependencies |
+| 3     | execute plans through the first relational seam     | C and D                     |
+| 4     | close operator flow in Canvas and result views      | E with C dependency         |
+| 5     | close evidence, reset, and repeatability            | B, C, D, E                  |
+| 6     | add plugin-backed dbt mode behind the same contract | C and E                     |
 
 ## Task matrix
 
@@ -98,8 +98,8 @@ flowchart TD
 | `TF-E1-A` | E    | Canvas graph authoring and inline validation                 | `TF-A1-A`            |
 | `TF-E1-B` | E    | preview/start UX with real `PlanRef`                         | `TF-C1-B`, `TF-E1-A` |
 | `TF-E1-C` | E    | result UX with success and failure evidence                  | `TF-C2-B`, `TF-E1-B` |
-| `TF-C3`   | C    | dbt executor phase-2 umbrella                                | `TF-C2`              |
-| `TF-C3-A` | C    | dbt executor mode under same preview and run contract        | `TF-C2-B`            |
+| `TF-C3`   | C    | plugin-backed dbt phase-2 umbrella                           | `TF-C2`              |
+| `TF-C3-A` | C    | plugin-backed dbt mode under same preview and run contract   | `TF-C2-B`            |
 
 ## Phase 0. Document and decision freeze
 
@@ -281,11 +281,11 @@ Close the outcome loop so the operator can trust the result and rerun it.
 2. repeated acceptance runs do not accumulate ambiguous leftover state
 3. success and failure outcomes are equally legible
 
-## Phase 6. dbt executor mode
+## Phase 6. plugin-backed dbt mode
 
 ### Objective
 
-Add dbt as a runtime mode without replacing the outer product loop.
+Add dbt as a plugin-backed runtime mode without replacing the outer product loop.
 
 ### Tasks by lane
 
@@ -294,14 +294,15 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 ### Required outputs
 
-- dbt preview profile and executor behind the same preview and run boundary
+- dbt preview profile and plugin-backed execution path behind the same preview and run boundary
 - `executor: dbt` visible in result surfaces
 - no second product flow for dbt users
+- no kernel-owned dbt semantics in engine core
 
 ### Validation expectation
 
 - contract compatibility tests
-- runtime executor selection tests
+- runtime plugin-host or executor selection tests
 - UI executor-label tests
 
 ### Exit criteria
@@ -310,6 +311,7 @@ Add dbt as a runtime mode without replacing the outer product loop.
 2. the UI loop stays `design -> plan -> run -> result`
 3. each persisted plan still binds a single provider profile
 4. the product does not fork into two unrelated execution paths
+5. dbt-specific runtime behavior stays in plugin or adapter-owned execution paths, not engine-kernel logic
 
 ## Test plan by area
 

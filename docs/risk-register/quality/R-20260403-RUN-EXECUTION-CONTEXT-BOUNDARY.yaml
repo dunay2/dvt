@@ -20,12 +20,15 @@ mitigations:
     alignment.
   - API mapping to deterministic planRejected response with explicit cause.
   - Contract and runtime tests for acceptance and mismatch paths.
+  - Protected runtime now wires an artifact-backed resolver for `file://` non-production and `s3://`
+    production run execution context artifacts, with `sha256` verification and contract parsing
+    before adapter dispatch.
 
 monitoring:
   - Track `RUN_EXECUTION_CONTEXT_REJECTED` occurrences.
   - Audit planRejected responses with cause `run_execution_context`.
 
 follow_up:
-  - Wire production resolver implementation behind artifacts-owned IRunExecutionContextReader in
-    composition roots.
+  - Project the resolved dbt-oriented run execution context into provider-runtime execution so
+    `TF-C3` can move from admission-ready artifacts to real dbt dispatch.
   - Keep S08-5-C compatibility fingerprint work isolated from this boundary slice.

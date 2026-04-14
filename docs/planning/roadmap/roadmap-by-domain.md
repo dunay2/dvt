@@ -50,7 +50,8 @@ flowchart LR
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: keep the landed `TF-C2` PostgreSQL runtime vertical stable,
   close the remaining `WE-HX` hardening waves, and carry the runtime follow-up
-  into `TF-C3` phase-2 dbt mode, while the broader contract-pack reset and
+  into `TF-C3` phase-2 plugin-backed dbt dispatch, while the broader
+  contract-pack reset and
   shared-kernel ownership cleanup continue under the Planner and Contracts
   lane, the delivery runtime harness extraction (`AR-A7`) stays sequenced
   behind that boundary work, and Conductor cleanup stays scoped as truthfulness
@@ -59,11 +60,14 @@ flowchart LR
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Closeout: TF-C3 runExecutionContext resolver slice](../closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md),
   [Closeout: TF-C1 preview-persist convergence](../closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md),
   [Closeout: TF-C1-B preview profile contract](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
   Near-term target: keep the now-closed preview-persist boundary truthful as
-  the fixed protected ingress and sequence phase-2 dbt executor expansion under
-  `TF-C3` without reopening caller-profile or `PlanRef` drift.
+  the fixed protected ingress, close the `runExecutionContext` artifact-wiring
+  prerequisite already started under `TF-C3`, and then sequence phase-2
+  plugin-backed dbt expansion without reopening caller-profile or `PlanRef`
+  drift or pushing dbt semantics into the kernel.
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),

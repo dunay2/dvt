@@ -74,17 +74,17 @@ This overview document remains the entry point for the set.
 
 ## Locked direction at a glance
 
-| Topic                   | Locked choice                                        | Explicitly not chosen for v1   |
-| ----------------------- | ---------------------------------------------------- | ------------------------------ |
-| Product value           | execute a real transformation                        | generic authoring breadth      |
-| Authoring surface       | basic Canvas graph `source -> sql_transform -> sink` | open-ended workbench           |
-| Executable payload      | SQL tracked in Git                                   | autonomous SQL generation      |
-| Planning input          | derived from the design graph                        | dbt-only input surface         |
-| Preview behavior        | validate and persist immutable plan                  | ephemeral preview              |
-| Runtime start           | `PlanRef`                                            | raw client-supplied plan bytes |
-| First execution target  | Postgres as first relational executor implementation | multi-target first release     |
-| First proof environment | Docker PostgreSQL                                    | cloud-only acceptance          |
-| Future extension        | dbt executor in phase 2                              | separate dbt product fork      |
+| Topic                   | Locked choice                                        | Explicitly not chosen for v1                       |
+| ----------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| Product value           | execute a real transformation                        | generic authoring breadth                          |
+| Authoring surface       | basic Canvas graph `source -> sql_transform -> sink` | open-ended workbench                               |
+| Executable payload      | SQL tracked in Git                                   | autonomous SQL generation                          |
+| Planning input          | derived from the design graph                        | dbt-only input surface                             |
+| Preview behavior        | validate and persist immutable plan                  | ephemeral preview                                  |
+| Runtime start           | `PlanRef`                                            | raw client-supplied plan bytes                     |
+| First execution target  | Postgres as first relational executor implementation | multi-target first release                         |
+| First proof environment | Docker PostgreSQL                                    | cloud-only acceptance                              |
+| Future extension        | plugin-backed dbt path in phase 2                    | separate dbt product fork or kernel-owned dbt path |
 
 ## Reading order
 

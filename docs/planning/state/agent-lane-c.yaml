@@ -812,8 +812,8 @@ tasks:
       The first PostgreSQL-backed execution-first runtime vertical is now accepted: persisted
       `PlanRef` execution, the canonical Docker proof wrapper, and caller-visible runtime evidence
       are all code-grounded and acceptance-backed. Remaining follow-through stays explicit in
-      downstream tasks such as `TF-D1` repeatability/reset discipline and `TF-C3` phase-2 dbt mode,
-      not in the parent runtime vertical itself.
+      downstream tasks such as `TF-D1` repeatability/reset discipline and `TF-C3` phase-2
+      plugin-backed dbt dispatch, not in the parent runtime vertical itself.
     last_verified: '2026-04-13'
   - task_id: TF-C2-A
     priority: P0
@@ -925,46 +925,53 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: TF-C3
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
-      add phase-2 dbt engine integration behind the same preview-persist-run contract so dbt becomes
-      an execution mode instead of a second product path.
+      add phase-2 dbt plugin-backed execution behind the same preview-persist-run contract so dbt
+      stays out of engine-kernel semantics instead of becoming a second product path.
     dependency: TF-C2
     target: >-
-      dbt-backed execution reuses the same `POST /plans/preview` and `POST /runs/start` boundary,
-      executor identity is caller-visible, and the roadmap does not fork into a separate outer
-      product loop.
+      plugin-backed dbt execution reuses the same `POST /plans/preview` and `POST /runs/start`
+      boundary, executor identity is caller-visible, and the roadmap does not fork into a separate
+      outer product loop or push dbt semantics into the engine kernel.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
     status_reason: >-
-      Phase 2 is now explicitly sequenced after the PostgreSQL execution-first closure and must be
-      tracked as the next runtime mode, not as an ambiguous future idea.
-    last_verified: '2026-04-05'
+      Phase 2 is now active. The first executable slice closes the composition-root gap left by the
+      governed `runExecutionContextRef` boundary: protected runtime wiring is adding a real
+      artifact-backed resolver so dbt mode can reuse the existing start-run contract instead of
+      opening a second outer path. The remaining work is plugin-backed dbt dispatch and result
+      semantics, not moving dbt logic into the engine kernel.
+    last_verified: '2026-04-14'
   - task_id: TF-C3-A
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
-      add the dbt executor mode under the same preview-persist-run contract without creating a
-      second product loop.
+      add the dbt plugin-backed execution mode under the same preview-persist-run contract without
+      creating a second product loop or a kernel-owned dbt path.
     dependency: TF-C2-B
     target: >-
-      Runtime can dispatch eligible persisted plans to a dbt-backed executor while preserving the
+      Runtime can dispatch eligible persisted plans to a plugin-backed dbt path while preserving the
       same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
     status_reason: >-
-      Phase 2 is now product-scoped, but the dbt execution mode still needs its own explicit Lane C
-      slice instead of remaining a generic future note.
-    last_verified: '2026-04-05'
+      Work has started on the first prerequisite slice: protected runtime now needs a concrete
+      `runExecutionContextRef` resolver so dbt-specific immutable artifacts can pass admission
+      through the same `PlanRef` path. Actual plugin-backed dbt dispatch remains open after this
+      composition-root closure.
+    last_verified: '2026-04-14'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
@@ -1005,27 +1012,29 @@ dependency_notes:
     `MW-C1`, `TF-C2-A`, `TF-C2-B`, and `AR-C6` now contribute accepted dispatcher, Postgres proof,
     caller-visible runtime evidence, and converged native-cancel provider semantics. `TF-C2` is now
     accepted as the first PostgreSQL-backed runtime vertical; downstream work has shifted to
-    repeatability discipline under `TF-D1`, phase-2 dbt mode under `TF-C3`, and broader runtime
-    boundary hardening rather than missing executor or read-surface behavior.
+    repeatability discipline under `TF-D1`, phase-2 plugin-backed dbt dispatch under `TF-C3`, and
+    broader runtime boundary hardening rather than missing executor or read-surface behavior.
   - >-
     `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
     follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
     stale ADR and contract surfaces.
   - >-
-    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
-    subtasks so runtime closure can progress in smaller slices without losing the same outer
-    contract.
+    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2
+    plugin-backed dbt subtasks so runtime closure can progress in smaller slices without losing the
+    same outer contract.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-13'
   total_tasks: 37
   total_effort_points: 137
-  completed_weighted_points: 75.85
-  lane_progress_pct: 55
+  completed_weighted_points: 77.95
+  lane_progress_pct: 57
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
     dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
     queued-only posture. `TF-C2` is now closed with parent-level acceptance evidence, so remaining
-    runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 executor expansion
-    (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
+    runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 plugin-backed dbt
+    dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
+    `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice,
+    while provider-runtime dbt dispatch still remains open.
