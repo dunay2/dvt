@@ -12,6 +12,8 @@
       "@dvt/artifacts/*": ["../../../packages/@dvt/artifacts/dist/*"],
       "@dvt/contracts": ["../../../packages/@dvt/contracts/dist/index.d.ts"],
       "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"],
+      "@dvt/crypto": ["../../../packages/@dvt/canonical/dist/index.d.ts"],
+      "@dvt/crypto/*": ["../../../packages/@dvt/canonical/dist/*"],
       "@dvt/engine": ["../../../packages/@dvt/engine/dist/index.d.ts"],
       "@dvt/engine/*": ["../../../packages/@dvt/engine/dist/*"],
       "@dvt/dsl": ["../../../packages/@dvt/dsl/dist/index.d.ts"],

@@ -4,10 +4,10 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
 import type { PlansService } from './plans/plansService';
-import type { RunsService } from './runs/runsService';
 import type { WorkspaceService } from './workspace/workspaceService';
 import {
   AppServicesProvider,
@@ -28,7 +28,7 @@ describe('AppServicesProvider', () => {
   const captured: {
     mode: ReturnType<typeof useAppDataSourceMode> | null;
     workspaceService: WorkspaceService | null;
-    runsService: RunsService | null;
+    runsService: IRunsPort | null;
     plansService: PlansService | null;
     capabilitiesPort: CapabilitiesPort | null;
     sessionContext: ReturnType<typeof useSessionContext> | null;

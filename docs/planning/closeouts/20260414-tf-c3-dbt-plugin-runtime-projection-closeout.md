@@ -66,6 +66,17 @@ But those seams are not connected. The engine boundary stops at validation, and
 the Temporal adapter still treats DBT step execution as an internal activity
 detail instead of an adapter-owned plugin-runtime handoff.
 
+The same slice also accumulated two local monoliths that hid that boundary in
+practice:
+
+- `stepActivities.ts` mixed activity contracts, validation, gateway behavior,
+  DBT runtime projection, dispatch, and factory composition.
+- `integration.time-skipping.shared.ts` mixed workflow artifact lookups, fake
+  state-store wiring, plan builders, activity harnesses, and wait utilities.
+
+That violated SRP and made the new DBT path harder to verify without smearing
+runtime concerns back into shared helpers.
+
 ### Constraints and invariants
 
 - `AGENTS.md`: inventory first, no hidden debt, no fake completeness, and no
@@ -104,12 +115,15 @@ truth with a real provider-boundary handoff.
 
 - Mode: Narrow implementation slice
 - Scope:
-  - `packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`
+  - `packages/@dvt/adapter-temporal/src/activities/*.ts`
   - `packages/@dvt/adapter-temporal/src/index.ts`
   - `packages/@dvt/adapter-temporal/package.json`
   - `packages/@dvt/adapter-temporal/tsconfig.json`
+  - `packages/@dvt/adapter-temporal/vitest.config.ts`
   - `packages/@dvt/adapter-temporal/test/activities.test.ts`
+  - `packages/@dvt/adapter-temporal/test/helpers/integration/*.ts`
   - `packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts`
+  - `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
   - `packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts`
   - planning and ARC evidence docs for `TF-C3`
 - Expected outcome:
@@ -146,25 +160,68 @@ truth with a real provider-boundary handoff.
   is missing.
 - Added a result-integrity guard so a plugin runner cannot claim success for a
   different `stepId` than the one being executed.
-- Updated unit and transformation integration tests to inject deterministic
-  fake readers and plugin-backed runners instead of relying on the older DBT
-  no-op truth.
+- Split the old `stepActivities.ts` monolith into focused modules for failure
+  mapping, shared activity types, gateway evaluation, DBT runtime projection,
+  dispatch, validation, and activity factory composition while preserving the
+  public import path through a barrel.
+- Split the old `integration.time-skipping.shared.ts` monolith into targeted
+  integration helpers for workflow artifacts, runtime state, test plans,
+  test activities, DBT runtime fixtures, and wait utilities while preserving
+  the shared import path through a barrel.
+- Updated unit and integration tests to inject deterministic fake readers and
+  plugin-backed runners explicitly. The baseline time-skipping lane now
+  provisions DBT runtime context through dedicated fixtures instead of leaning
+  on the older implicit no-op truth.
+- Hardened those DBT test fixtures so the synthetic `runExecutionContextRef`
+  is now run-scoped and hashed from canonical `RunExecutionContext` bytes, and
+  the fake reader resolves only explicitly registered refs instead of returning
+  one ambient context for every run on the same worker.
+- Hardened the same fixture seam so plan fetches are keyed by the registered
+  `PlanRef` instead of one worker-global blob, and bindings now fail closed if
+  a precomputed `runExecutionContextRef` no longer matches the plan registered
+  for that run.
+- Tightened the fixture identity rules so optional `PlanRef.sizeBytes` no
+  longer participates in the lookup key, and synthetic DBT
+  `runExecutionContextRef.sha256` values are derived from RFC-8785/JCS
+  canonical bytes instead of property-order-sensitive `JSON.stringify(...)`.
+- Replaced the old overloaded multi-run fixture entry point with an explicit
+  multi-run helper that requires per-binding `planBytes`, so same-worker tests
+  cannot silently fall back to a shared blob when registering multiple plans.
+- Wired DBT fixture canonicalization through the public `@dvt/crypto` package
+  boundary and local Vitest alias instead of importing sibling package source
+  files directly.
+- Added a focused TDD regression test for the fixture seam and updated the
+  local cancellation integration lane to prove two runs on the same worker
+  resolve distinct DBT project-bundle refs.
+- Tightened `DbtStepActivity` error translation so engine-side
+  `RunExecutionContextRejectedError` preserves the underlying rejection reason
+  instead of collapsing to the engine message key.
 - Added the `@dvt/artifacts` workspace dependency and local TS path mapping so
   the adapter build can compile the reader seam without depending on ambient
   workspace state.
+- Added the `@dvt/crypto` workspace dependency plus aligned TS/Vitest package
+  resolution so DBT fixture hashing uses the public package boundary instead of
+  reaching into sibling source files.
+- Rebuilt the DBT fixture `RunExecutionContext` through the governed contract
+  parser and added `typecheck:test` to the package so branded contract drift in
+  test helpers is caught by package-level validation instead of surfacing only
+  as editor noise.
 
 ## Validation Run
 
-- `pnpm exec eslint --max-warnings 0 packages/@dvt/adapter-temporal/src/activities/stepActivities.ts packages/@dvt/adapter-temporal/src/index.ts packages/@dvt/adapter-temporal/test/activities.test.ts packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts`
+- `pnpm exec eslint --max-warnings 0 packages/@dvt/adapter-temporal/src/activities/*.ts packages/@dvt/adapter-temporal/src/index.ts packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts packages/@dvt/adapter-temporal/test/helpers/integration/*.ts packages/@dvt/adapter-temporal/test/helpers/testExecutors.ts packages/@dvt/adapter-temporal/test/activities.test.ts packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts`
+- `pnpm --filter @dvt/adapter-temporal exec vitest run test/dbtRuntimeFixtures.test.ts`
+- `pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts --testNamePattern "dbt step|runExecutionContext"`
 - `pnpm --filter @dvt/adapter-temporal build`
 - `pnpm --filter @dvt/adapter-temporal test`
+- `pnpm --filter @dvt/adapter-temporal test:integration:local`
 - `pnpm --filter @dvt/adapter-temporal test:integration:transformation`
-- `$env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs > arc.json`
-- `$env:ARC_JSON='arc.json'; node tools/ci/doc-check.mjs`
+- `pnpm docs:status:generate`
 - `pnpm docs:workboard:generate`
-- `pnpm docs:sync`
+- `$env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; $json = node tools/ci/arc-check.mjs; $enc = New-Object System.Text.UTF8Encoding($false); [System.IO.File]::WriteAllLines((Join-Path (Get-Location) 'arc.json'), $json, $enc)`
+- `$env:ARC_JSON='arc.json'; node tools/ci/doc-check.mjs`
 - `pnpm docs:gov:links:changed`
-- `pnpm exec markdownlint-cli2 "docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md" "docs/planning/state/domain-status-board.md" "docs/planning/domains/api-and-admission.md" "docs/planning/roadmap/roadmap-by-domain.md" "docs/architecture/system-delivery-status.md" "docs/evidence/ED-20260414-tf-c3-dbt-plugin-runtime-projection.md" --config .markdownlint-cli2.jsonc`
+- `pnpm lint:md:changed`
 - `pnpm verify:prepush`
 
 ## Residuals

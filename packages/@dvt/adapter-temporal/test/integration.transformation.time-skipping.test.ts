@@ -7,13 +7,7 @@
  * @consequence Temporal baseline stays provider-agnostic while transformation semantics keep dedicated coverage
  */
 
-import type {
-  MaterializationEvidence,
-  PlanRef,
-  ResolvedRunContext,
-  RunExecutionContext,
-} from '@dvt/contracts';
-import { parseRunExecutionContextRef } from '@dvt/contracts';
+import type { MaterializationEvidence, ResolvedRunContext } from '@dvt/contracts';
 import { ApplicationFailure } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
@@ -27,6 +21,7 @@ import {
 } from '../src/index.js';
 
 import {
+  createDbtActivityDeps,
   INTEGRATION_TEST_TIMEOUT,
   RunId,
   TestOutbox,
@@ -34,52 +29,16 @@ import {
   TestStateStore,
   WORKFLOW_PATH,
   assertWorkflowArtifactPresentInCi,
-  createActivityDeps,
   createPlanRef,
   createRunContext,
   mkLinearThreeStepPlan,
   mkPermanentFailurePlan,
   waitForCondition,
   withTransformationRuntimeBinding,
+  withDbtRunExecutionContext,
 } from './integration.time-skipping.shared.js';
 
 assertWorkflowArtifactPresentInCi();
-
-function makeTransformationRunExecutionContext(
-  ctx: ResolvedRunContext,
-  planRef: PlanRef
-): RunExecutionContext {
-  return {
-    schemaVersion: 'v1.0',
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
-    planSha256: planRef.sha256,
-    tenantId: ctx.tenantId,
-    projectId: ctx.projectId,
-    environmentId: ctx.environmentId,
-    targetAdapter: ctx.targetAdapter,
-    createdAtIso: '2026-04-14T00:00:00.000Z',
-    createdBy: 'integration-test',
-    pluginContexts: {
-      dbt: {
-        projectBundleRef: `artifacts://runs/${ctx.runId}/project.tgz`,
-        targetProfile: 'dbt-dev',
-      },
-    },
-  };
-}
-
-function makeRunExecutionContextRef(
-  planRef: PlanRef
-): ReturnType<typeof parseRunExecutionContextRef> {
-  return parseRunExecutionContextRef({
-    uri: `s3://bucket/runctx/${planRef.planId}.json`,
-    sha256: 'b'.repeat(64),
-    schemaVersion: 'v1.0',
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
-  });
-}
 
 describe('temporal integration (transformation runtime)', () => {
   /**
@@ -109,11 +68,9 @@ describe('temporal integration (transformation runtime)', () => {
 
       const planRef = createPlanRef('it-plan-linear-3', planBytes);
       const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-linear-3')),
+        ...withDbtRunExecutionContext(createRunContext(RunId.of('run-it-linear-3')), planRef),
         tenantId: 't-it',
-        runExecutionContextRef: makeRunExecutionContextRef(planRef),
       };
-      const runExecutionContext = makeTransformationRunExecutionContext(ctx, planRef);
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -127,23 +84,16 @@ describe('temporal integration (transformation runtime)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes, {
-          runExecutionContextReader: {
-            async resolve() {
-              return runExecutionContext;
-            },
-          },
-          dbtPluginRunner: {
-            async execute(input) {
-              if (input.step.stepId === 's-3') {
-                return {
-                  stepId: input.step.stepId,
-                  status: 'COMPLETED',
-                  resultEvidence,
-                };
-              }
-              return { stepId: input.step.stepId, status: 'COMPLETED' };
-            },
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef, {
+          async execute(input) {
+            if (input.step.stepId === 's-3') {
+              return {
+                stepId: input.step.stepId,
+                status: 'COMPLETED',
+                resultEvidence,
+              };
+            }
+            return { stepId: input.step.stepId, status: 'COMPLETED' };
           },
         }),
         stepExecutors: DEFAULT_STEP_EXECUTORS,
@@ -218,11 +168,12 @@ describe('temporal integration (transformation runtime)', () => {
 
       const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
       const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-permanent-failure')),
+        ...withDbtRunExecutionContext(
+          createRunContext(RunId.of('run-it-permanent-failure')),
+          planRef
+        ),
         tenantId: 't-it',
-        runExecutionContextRef: makeRunExecutionContextRef(planRef),
       };
-      const runExecutionContext = makeTransformationRunExecutionContext(ctx, planRef);
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -236,20 +187,13 @@ describe('temporal integration (transformation runtime)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes, {
-          runExecutionContextReader: {
-            async resolve() {
-              return runExecutionContext;
-            },
-          },
-          dbtPluginRunner: {
-            async execute(input) {
-              throw ApplicationFailure.create({
-                type: 'PermanentStepError',
-                message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
-                nonRetryable: true,
-              });
-            },
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef, {
+          async execute(input) {
+            throw ApplicationFailure.create({
+              type: 'PermanentStepError',
+              message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
+              nonRetryable: true,
+            });
           },
         }),
         stepExecutors: DEFAULT_STEP_EXECUTORS,

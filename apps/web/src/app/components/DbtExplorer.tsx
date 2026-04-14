@@ -39,7 +39,7 @@ export default function DbtExplorer({
   onNodeDragStart,
   onHide,
   onOpenDataRegistry,
-}: DbtExplorerProps) {
+}: Readonly<DbtExplorerProps>) {
   const hasDbtNodes = nodes.some((node) => node.pluginId === 'dbt');
 
   const groupedNodes = useMemo(() => {

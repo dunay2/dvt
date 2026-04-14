@@ -10,8 +10,9 @@ probability: Medium
 context: >
   `TF-C3` now projects immutable `RunExecutionContext` data into a DBT plugin-backed runner at the
   Temporal adapter boundary. Unit and integration tests prove the seam with deterministic fake
-  readers and runners, but the production plugin host that will own the real DBT runtime has not yet
-  been composed.
+  readers and runners. The test fixture seam is now keyed by run-scoped `runExecutionContextRef`
+  values instead of one ambient fake context, but the production plugin host that will own the real
+  DBT runtime has not yet been composed.
 risk: >
   If production worker composition wires the reader or DBT plugin host incorrectly, persisted DBT
   runs can fail closed or drift from the tested adapter behavior, delaying closure of the shared
@@ -21,6 +22,18 @@ mitigations:
     wiring, missing `pluginContexts.dbt`, or mismatched plugin runner results.'
   - 'Adapter-temporal unit and transformation integration tests now prove the
     reader-to-plugin-runner handoff explicitly.'
+  - 'The DBT integration fixtures now bind `runExecutionContextRef.sha256` to canonical context
+    bytes and reject unregistered refs, so same-worker multi-run tests cannot silently reuse one
+    fake context.'
+  - 'The same fixture seam now registers plan bytes per `PlanRef`, rejects stale
+    `runExecutionContextRef` to plan bindings up front, and preserves engine rejection reasons when
+    DBT step execution fails closed.'
+  - 'Fixture lookup no longer depends on optional `PlanRef.sizeBytes`, and synthetic DBT runtime
+    refs now hash RFC-8785/JCS canonical bytes so harmless property-order churn cannot masquerade as
+    execution-context drift.'
+  - 'The DBT multi-run fixture path now requires per-binding `planBytes` and uses the public
+    `@dvt/crypto` package boundary, so tests no longer rely on sibling source imports or a silent
+    worker-global blob fallback when multiple plans share one worker.'
   - 'Lane C keeps the remaining production plugin-host composition work visible under `TF-C3`
     instead of treating this slice as full closure.'
 review_after: 2026-06-15

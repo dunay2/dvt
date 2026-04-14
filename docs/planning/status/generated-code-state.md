@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-04-14.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 822   |
-| Total test files             | 327   |
+| Total source files           | 832   |
+| Total test files             | 334   |
 | Workspaces with build script | 23/23 |
 | Workspaces with test script  | 22/23 |
 
@@ -28,9 +28,9 @@ Generated automatically from repository code on 2026-04-14.
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 20         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 302       | 75         | yes   | yes  | yes       | -                       |
+| @dvt/web                  | `apps/web`                           | 305       | 75         | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 49        | 29         | yes   | yes  | yes       | 24                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 19         | yes   | yes  | no        | 17                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 22        | 26         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |

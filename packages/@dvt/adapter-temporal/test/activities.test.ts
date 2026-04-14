@@ -1,6 +1,6 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import type { PlanRef, ResolvedRunContext, RunExecutionContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/engine';
+import { RunExecutionContextRejectedError, type RunStateCommandPort } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -14,8 +14,8 @@ import {
   type StepInput,
 } from '../src/activities/stepActivities.js';
 import type {
-  EventInput,
   EventEnvelope,
+  EventInput,
   EventType,
   IIdempotencyKeyBuilder,
   RunMetadata,
@@ -103,6 +103,7 @@ const EXPECTED_ERRORS = {
   pluginRuntimeNotConfigured: 'DBT_PLUGIN_RUNTIME_NOT_CONFIGURED:s1',
   dbtPluginContextRequired: 'DBT_PLUGIN_CONTEXT_REQUIRED:s1',
   dbtPluginResultInvalid: 'DBT_PLUGIN_RESULT_INVALID: stepId_mismatch:s1:other-step',
+  runExecutionContextRejected: 'RUN_EXECUTION_CONTEXT_REJECTED_BY_FIXTURE',
 } as const;
 
 class TestClock {
@@ -281,13 +282,10 @@ function buildDeps(
     appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
   };
 
-  const runExecutionContextReader = Object.prototype.hasOwnProperty.call(
-    overrides,
-    'runExecutionContextReader'
-  )
+  const runExecutionContextReader = Object.hasOwn(overrides, 'runExecutionContextReader')
     ? overrides.runExecutionContextReader
     : new FakeRunExecutionContextReader();
-  const dbtPluginRunner = Object.prototype.hasOwnProperty.call(overrides, 'dbtPluginRunner')
+  const dbtPluginRunner = Object.hasOwn(overrides, 'dbtPluginRunner')
     ? overrides.dbtPluginRunner
     : new RecordingDbtPluginRunner();
 
@@ -678,6 +676,23 @@ describe('stepActivities', () => {
           ctx: CTX,
         })
       ).rejects.toThrow(EXPECTED_ERRORS.dbtPluginContextRequired);
+    });
+
+    it('maps rejected runExecutionContext reads into a permanent step failure', async () => {
+      const { acts } = setupActivities(undefined, undefined, undefined, {
+        runExecutionContextReader: {
+          async resolve() {
+            throw new RunExecutionContextRejectedError('RUN_EXECUTION_CONTEXT_REJECTED_BY_FIXTURE');
+          },
+        },
+      });
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.runExecutionContextRejected);
     });
 
     it('rejects invalid plugin runner results instead of accepting mismatched step ids', async () => {

@@ -25,6 +25,8 @@ import {
 } from '../src/index.js';
 
 import {
+  createDbtActivityDeps,
+  createMultiRunDbtActivityDeps,
   INTEGRATION_TEST_TIMEOUT,
   type RunStatusValue,
   type WaitForConditionFn,
@@ -34,11 +36,11 @@ import {
   TestStateStore,
   WORKFLOW_PATH,
   assertWorkflowArtifactPresentInCi,
-  createActivityDeps,
   createPlanRef,
   createRunContext,
   mkLinearThreeStepPlan,
   waitForCondition,
+  withDbtRunExecutionContext,
 } from './integration.time-skipping.shared.js';
 
 assertWorkflowArtifactPresentInCi();
@@ -66,7 +68,7 @@ interface CancelScenarioRequest {
   adapter: TemporalAdapter;
   plan: Parameters<TemporalAdapter['startRun']>[0];
   planRef: PlanRef;
-  runId: RunId;
+  runContext: ResolvedRunContext;
   store: TestStateStore;
   waitForCondition: WaitForConditionFn;
 }
@@ -76,23 +78,23 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   cancelledCount: number;
   eventTypes: string[];
 }> {
-  const runCtx = createRunContext(args.runId);
-  const runRef = await args.adapter.startRun(args.plan, args.planRef, runCtx);
+  const runRef = await args.adapter.startRun(args.plan, args.planRef, args.runContext);
+  const runId = RunId.of(args.runContext.runId);
   await args.waitForCondition(
-    () => args.store.listRunEvents(args.runId),
+    () => args.store.listRunEvents(runId),
     (events) => events.some((event) => event.eventType === 'StepStarted'),
     { timeoutMs: 30_000 }
   );
 
   if (args.mode === 'signal') {
-    await args.adapter.signal(runRef, { signalId: `s-${args.runId.value}`, type: 'CANCEL' });
+    await args.adapter.signal(runRef, { signalId: `s-${args.runContext.runId}`, type: 'CANCEL' });
   } else {
     await args.adapter.cancelRun(runRef);
   }
 
   const status = await waitForTerminalStatus(args.adapter, runRef, args.waitForCondition);
   await args.waitForCondition(
-    () => args.store.listRunEvents(args.runId),
+    () => args.store.listRunEvents(runId),
     (events) => events.some((event) => event.eventType === 'RunCancelled'),
     { timeoutMs: 30_000 }
   );
@@ -218,7 +220,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = createRunContext(RunId.of('run-it-1'));
+      const ctx = withDbtRunExecutionContext(createRunContext(RunId.of('run-it-1')), planRef);
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -232,7 +234,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
       });
 
       await worker.start(env.nativeConnection); // ? usa env.nativeConnection
@@ -282,7 +284,10 @@ describe('temporal integration (time-skipping)', () => {
       const planRef = createPlanRef('it-plan-linear-3', planBytes, {
         uri: 'dvt-plan://stored/it-plan-linear-3',
       });
-      const ctx = createRunContext(RunId.of('run-it-stored-plan-temporal'));
+      const ctx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-stored-plan-temporal')),
+        planRef
+      );
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -296,7 +301,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
       });
 
       await worker.start(env.nativeConnection);
@@ -341,6 +346,15 @@ describe('temporal integration (time-skipping)', () => {
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
       const planRef = createPlanRef('it-plan', planBytes);
+      const signalCtx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-cancel-1')),
+        planRef
+      );
+      const cancelCtx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-cancel-2')),
+        planRef
+      );
+      const observedProjectBundles: string[] = [];
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -354,7 +368,20 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createMultiRunDbtActivityDeps(
+          store,
+          outbox,
+          [
+            { ctx: signalCtx, planRef, planBytes },
+            { ctx: cancelCtx, planRef, planBytes },
+          ],
+          {
+            async execute(input) {
+              observedProjectBundles.push(input.pluginContext.projectBundleRef);
+              return { stepId: input.step.stepId, status: 'COMPLETED' };
+            },
+          }
+        ),
       });
 
       await worker.start(env.nativeConnection);
@@ -370,7 +397,7 @@ describe('temporal integration (time-skipping)', () => {
           adapter,
           plan,
           planRef,
-          runId: RunId.of('run-it-cancel-1'),
+          runContext: signalCtx,
           store,
           waitForCondition,
         });
@@ -386,7 +413,7 @@ describe('temporal integration (time-skipping)', () => {
           adapter,
           plan,
           planRef,
-          runId: RunId.of('run-it-cancel-2'),
+          runContext: cancelCtx,
           store,
           waitForCondition,
         });
@@ -398,6 +425,12 @@ describe('temporal integration (time-skipping)', () => {
         );
 
         expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
+        expect(observedProjectBundles).toEqual(
+          expect.arrayContaining([
+            'artifacts://runs/run-it-cancel-1/project.tgz',
+            'artifacts://runs/run-it-cancel-2/project.tgz',
+          ])
+        );
       } finally {
         await worker.shutdown();
         await env.teardown();
@@ -418,6 +451,10 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
       const planRef = createPlanRef('it-plan', planBytes);
       const blocker = createBlockingExecutor('s-1');
+      const ctx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-cancel-finalization-1')),
+        planRef
+      );
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -431,7 +468,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
         stepExecutors: [blocker.executor, ...DEFAULT_STEP_EXECUTORS],
       });
 
@@ -445,8 +482,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const runId = RunId.of('run-it-cancel-finalization-1');
-        const runRef = await adapter.startRun(plan, planRef, createRunContext(runId));
+        const runRef = await adapter.startRun(plan, planRef, ctx);
 
         await blocker.waitUntilExecuting;
         await adapter.cancelRun(runRef);
@@ -483,7 +519,10 @@ describe('temporal integration (time-skipping)', () => {
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
       const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = createRunContext(RunId.of('run-it-native-cancel-1'));
+      const ctx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-native-cancel-1')),
+        planRef
+      );
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -497,7 +536,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
       });
 
       await worker.start(env.nativeConnection);
@@ -551,10 +590,13 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-gateway-skip', planBytes);
-      const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-gateway-skip')),
-        tenantId: 't-it',
-      };
+      const ctx: ResolvedRunContext = withDbtRunExecutionContext(
+        {
+          ...createRunContext(RunId.of('run-it-gateway-skip')),
+          tenantId: 't-it',
+        },
+        planRef
+      );
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -568,7 +610,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
       });
 
       await worker.start(env.nativeConnection);
@@ -629,7 +671,10 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = createRunContext(RunId.of('run-it-crash-recovery'));
+      const ctx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-crash-recovery')),
+        planRef
+      );
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -644,7 +689,7 @@ describe('temporal integration (time-skipping)', () => {
             taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
           },
           workflowsPath: WORKFLOW_PATH,
-          activityDeps: createActivityDeps(store, outbox, planBytes),
+          activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
         });
 
       const adapter = new TemporalAdapter({
@@ -699,6 +744,10 @@ describe('temporal integration (time-skipping)', () => {
       const planRef = createPlanRef('it-plan-pause-signal-id-dedupe', planBytes);
       const blocker1 = createBlockingExecutor('s-1');
       const blocker2 = createBlockingExecutor('s-2');
+      const runCtx = withDbtRunExecutionContext(
+        createRunContext(RunId.of('run-it-pause-signal-id-dedupe-1')),
+        planRef
+      );
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -712,7 +761,7 @@ describe('temporal integration (time-skipping)', () => {
           taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, runCtx, planRef),
         stepExecutors: [blocker1.executor, blocker2.executor, ...DEFAULT_STEP_EXECUTORS],
       });
 
@@ -724,8 +773,8 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const runId = RunId.of('run-it-pause-signal-id-dedupe-1');
-        const runRef = await adapter.startRun(plan, planRef, createRunContext(runId));
+        const runId = RunId.of(runCtx.runId);
+        const runRef = await adapter.startRun(plan, planRef, runCtx);
 
         await blocker1.waitUntilExecuting;
         await adapter.signal(runRef, { signalId: 'sig-pause-1', type: 'PAUSE' });

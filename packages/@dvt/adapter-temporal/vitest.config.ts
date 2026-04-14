@@ -8,6 +8,7 @@ const adapterPostgresDistEntry = path.resolve(
   repoPackageRoot,
   '../adapter-postgres/dist/index.js'
 );
+const cryptoDistEntry = path.resolve(repoPackageRoot, '../canonical/dist/index.js');
 
 export default defineConfig({
   resolve: {
@@ -16,6 +17,9 @@ export default defineConfig({
       // Resolve the workspace package to that built entry so the proof lane does not
       // depend on a workspace install having materialized a package symlink first.
       '@dvt/adapter-postgres': adapterPostgresDistEntry,
+      // DBT fixture tests must exercise the public crypto package boundary rather than
+      // reaching into sibling package sources.
+      '@dvt/crypto': cryptoDistEntry,
     },
   },
   test: {
