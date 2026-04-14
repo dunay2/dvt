@@ -10,10 +10,10 @@
 import type { PlanRef, RunContext } from '../../types/contracts.js';
 
 import type { ExecutionPlan, GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
+import type { TransformationSqlFirstCompilerGraphSourceV1 } from './TransformationFlowCompiler.v1.js';
 import {
   TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
   type PlanPreviewProvenance,
-  type TransformationSqlFirstGraphSourceV1,
 } from './TransformationFlowDesignGraph.v1.js';
 
 export const PREVIEW_PROFILE = {
@@ -33,9 +33,12 @@ export interface PlanPreviewRequest {
   persist: true;
 }
 
-export interface TransformationSqlFirstPlanPreviewRequest extends PlanPreviewRequest {
+export interface TransformationSqlFirstPlanPreviewRequest extends Omit<
+  PlanPreviewRequest,
+  'previewProfile' | 'graphSource' | 'provenance'
+> {
   previewProfile: typeof PREVIEW_PROFILE.transformationSqlFirstV1;
-  graphSource: TransformationSqlFirstGraphSourceV1;
+  graphSource: TransformationSqlFirstCompilerGraphSourceV1;
   provenance: PlanPreviewProvenance;
 }
 

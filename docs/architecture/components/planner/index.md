@@ -11,11 +11,12 @@ last_reviewed: 2026-04-10
 
 1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
 2. [Planner contracts](../../../contracts/planner/index.md)
-3. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
-4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
-5. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
-6. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-7. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+3. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
+4. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
+5. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+6. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
+7. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 
@@ -28,6 +29,9 @@ last_reviewed: 2026-04-10
 - public boundary: `PlannerFacade`
 - public envelope: `PlannerInputEnvelopeV1`
 - canonical input source: `graphSource`
+- the first SQL-first preview profile now freezes one compiler-governed
+  `graphSource` mapping into `PREPARE_POSTGRES_TRANSFORM ->
+POSTGRES_SQL_TRANSFORM -> CAPTURE_MATERIALIZATION_EVIDENCE`
 - source-native adaptation happens before planner admission
 - canonical plan artifact: `ExecutionPlan.v1.ts`
 - canonical per-step retry ownership: `ExecutionStep.retryPolicy`
@@ -37,6 +41,8 @@ last_reviewed: 2026-04-10
 ## Target truth
 
 - `graphSource` remains the canonical typed planner input boundary
+- the SQL-first transformation profile is expressed as a typed compiler mapping
+  inside `graphSource`, not as a second planner ingress
 - source-native refs such as DBT manifest artifacts stay outside the planner
   package and do not appear in the canonical planner ingress
 - planner component pages stay summary-only and point back to canonical planner docs

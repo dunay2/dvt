@@ -1,55 +1,16 @@
 import { z } from 'zod';
 
+import { KNOWN_STEP_KINDS } from '../contracts/planner/StepKindRegistry.v1.js';
 import type { Provider } from '../types/contracts.js';
 
-const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
+import { createBuiltInStepTypeEntries } from './BuiltInStepTypeEntries.js';
 
-export const CompiledCodeRefSchema = z
-  .object({
-    sha256: HexSha256Schema,
-    storageUri: z.string().min(1),
-    sizeBytes: z.number().int().nonnegative(),
-    encoding: z.literal('utf-8').optional(),
-  })
-  .strict();
-
-export const StepArtifactRefSchema = z
-  .object({
-    artifactKind: z.string().min(1),
-    sha256: HexSha256Schema,
-    storageUri: z.string().min(1),
-    sizeBytes: z.number().int().nonnegative(),
-    encoding: z.literal('utf-8').optional(),
-  })
-  .strict();
-
-export interface DbtStepTypeConfig extends Record<string, unknown> {
-  stepTimeoutMs?: number;
-  concurrency?: {
-    maxInFlight: number;
-  };
-  custom?: Record<string, unknown>;
-  compiledCodeRef?: {
-    sha256: string;
-    storageUri: string;
-    sizeBytes: number;
-    encoding?: 'utf-8';
-  };
-}
-
-export const DbtStepTypeConfigSchema = z
-  .object({
-    stepTimeoutMs: z.number().positive().optional(),
-    concurrency: z
-      .object({
-        maxInFlight: z.number().int().positive(),
-      })
-      .strict()
-      .optional(),
-    custom: z.record(z.string(), z.unknown()).optional(),
-    compiledCodeRef: CompiledCodeRefSchema.optional(),
-  })
-  .strict();
+export {
+  CompiledCodeRefSchema,
+  DbtStepTypeConfigSchema,
+  StepArtifactRefSchema,
+} from './DbtStepTypeConfig.js';
+export type { DbtStepTypeConfig } from './DbtStepTypeConfig.js';
 
 export type StepTypeValidationResult =
   | { success: true; data: Record<string, unknown> }
@@ -167,21 +128,17 @@ export class StepTypeRegistry implements IStepTypeRegistry {
   }
 }
 
-export const DBT_MODEL = 'DBT_MODEL';
-export const DBT_TEST = 'DBT_TEST';
-export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
-
-const DEFAULT_ENTRIES = new Map<string, StepKindRegistryEntry>([
-  [DBT_MODEL, { schema: DbtStepTypeConfigSchema, profile: DEFAULT_PROFILE }],
-  [DBT_TEST, { schema: DbtStepTypeConfigSchema, profile: DEFAULT_PROFILE }],
-  [DBT_SNAPSHOT, { schema: DbtStepTypeConfigSchema, profile: DEFAULT_PROFILE }],
-]);
+export const DBT_MODEL = KNOWN_STEP_KINDS.DBT_MODEL;
+export const DBT_TEST = KNOWN_STEP_KINDS.DBT_TEST;
+export const DBT_SNAPSHOT = KNOWN_STEP_KINDS.DBT_SNAPSHOT;
 
 export function createDefaultStepTypeRegistry(
   extensions?: ReadonlyMap<string, z.ZodType>,
   extensionProfiles?: ReadonlyMap<string, StepKindExecutionProfile>
 ): IStepTypeRegistry {
-  const entries = new Map(DEFAULT_ENTRIES);
+  const entries = new Map<string, StepKindRegistryEntry>(
+    createBuiltInStepTypeEntries(DEFAULT_PROFILE)
+  );
   if (extensions !== undefined) {
     for (const [kind, schema] of extensions) {
       entries.set(kind, {

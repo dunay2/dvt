@@ -1,0 +1,28 @@
+---
+id: R-20260414-TF-A1-C-SRP-HARDENING-DRIFT
+title: SQL-first seam hardening can regress into local convenience modules as new profiles land
+status: Open
+date: 2026-04-14
+owners:
+  - '@dvt/contracts'
+  - dvt-api
+  - '@dvt/web'
+severity: Medium
+probability: Medium
+context: >
+  TF-A1-C splits the frozen SQL-first transformation pack into smaller shared-kernel, API-boundary,
+  and web-presentation seams. Future work such as new preview profiles, additional step families, or
+  alternative sinks could reintroduce local convenience modules that duplicate step-kind authority,
+  compiler rules, or route-side policy.
+risk: >
+  If future slices bypass the narrowed seams and add profile-specific logic directly in
+  StepTypeRegistry, previewGraphSource, useCanvasExecutionActions, or planRoutes, the repo can
+  regress back to mixed authority and coupled reasons-to-change even though the public contract
+  remains nominally frozen.
+mitigations:
+  - Keep canonical step-kind authority in StepKindRegistry and extracted planner contract seams.
+  - Preserve dedicated Canvas preview/execution helpers instead of re-growing facade modules.
+  - Preserve route helper seams for scope, guard, binder, and response projection.
+  - Require contract, API, and web validation together on slices that touch the SQL-first pack.
+review_after: 2026-06-01
+---

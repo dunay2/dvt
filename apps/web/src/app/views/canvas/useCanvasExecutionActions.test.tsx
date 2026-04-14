@@ -631,8 +631,14 @@ describe('resolvePlanRefForStartRun', () => {
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'source-node',
-              stepKind: 'CANVAS_SOURCE',
+              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
               dependsOn: [],
+              stepTypeConfig: expect.objectContaining({
+                targetSchema: 'analytics',
+                sourceSchema: 'raw',
+                sourceTable: 'orders',
+                sourceAlias: 'orders',
+              }),
               metadata: expect.objectContaining({
                 displayName: 'Source',
                 tags: {
@@ -644,10 +650,19 @@ describe('resolvePlanRefForStartRun', () => {
             }),
             expect.objectContaining({
               nodeId: 'transform-node',
-              stepKind: 'CANVAS_TRANSFORM',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
               dependsOn: ['source-node'],
+              stepTypeConfig: expect.objectContaining({
+                dialect: 'postgres',
+                entrypoint: 'models/transform.sql',
+                sinkSchema: 'analytics',
+                sinkTable: 'orders_dashboard',
+                sql: 'select * from analytics.orders',
+                writeMode: 'replace',
+              }),
               metadata: expect.objectContaining({
                 displayName: 'Transform',
+                sourceRef: 'models/transform.sql',
                 tags: {
                   pluginId: 'dvt',
                   role: 'transform',
@@ -657,8 +672,14 @@ describe('resolvePlanRefForStartRun', () => {
             }),
             expect.objectContaining({
               nodeId: 'sink-node',
-              stepKind: 'CANVAS_SINK',
+              stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
               dependsOn: ['transform-node'],
+              stepTypeConfig: expect.objectContaining({
+                sinkSchema: 'analytics',
+                sinkTable: 'orders_dashboard',
+                materialization: 'table',
+                writeMode: 'replace',
+              }),
               metadata: expect.objectContaining({
                 displayName: 'Sink',
                 tags: {
@@ -675,6 +696,14 @@ describe('resolvePlanRefForStartRun', () => {
           tenantId: 'tenant',
           projectId: 'project',
           environmentId: 'env',
+        }),
+        provenance: expect.objectContaining({
+          graphArtifact: expect.objectContaining({
+            path: 'pipelines/sales_pipeline.yaml',
+          }),
+          sqlArtifact: expect.objectContaining({
+            path: 'models/transform.sql',
+          }),
         }),
         persist: true,
       })
@@ -859,7 +888,7 @@ describe('resolvePlanRefForStartRun', () => {
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'transform-node',
-              stepKind: 'CANVAS_TRANSFORM',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
             }),
           ]),
         },
@@ -941,7 +970,7 @@ describe('resolvePlanRefForStartRun', () => {
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'transform-node',
-              stepKind: 'DBT_MODEL',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
               metadata: expect.objectContaining({
                 displayName: 'Transform renamed',
                 sourceRef: 'models/transform.sql',

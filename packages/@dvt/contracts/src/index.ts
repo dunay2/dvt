@@ -77,6 +77,24 @@ export type {
   TransformationSqlFirstGraphSourceV1,
 } from './contracts/planner/TransformationFlowDesignGraph.v1.js';
 export {
+  CaptureMaterializationEvidenceStepTypeConfigSchema,
+  PostgresSqlTransformStepTypeConfigSchema,
+  PreparePostgresTransformStepTypeConfigSchema,
+  TRANSFORMATION_STEP_KIND,
+  TransformationCompilerGraphNodeV1Schema,
+  TransformationSqlFirstCompilerGraphSourceSchema,
+  summarizeTransformationSqlFirstPlan,
+} from './contracts/planner/TransformationFlowCompiler.v1.js';
+export type {
+  CaptureMaterializationEvidenceStepTypeConfig,
+  PostgresSqlTransformStepTypeConfig,
+  PreparePostgresTransformStepTypeConfig,
+  TransformationCompilerGraphNodeV1,
+  TransformationSqlFirstCompilerGraphSourceV1,
+  TransformationSqlFirstPlanSummary,
+  TransformationStepKind,
+} from './contracts/planner/TransformationFlowCompiler.v1.js';
+export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,
   PlannerPolicyClassSetSchema,

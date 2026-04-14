@@ -78,6 +78,87 @@ const VALID_PREVIEW_PROVENANCE = {
   },
 } as const;
 
+const VALID_TRANSFORMATION_GRAPH_SOURCE = {
+  kind: 'generic-graph-v1',
+  sourceFamily: 'transformation-design-graph',
+  sourceVersion: 'transformation-sql-first-v1',
+  nodes: [
+    {
+      nodeId: 'source-node',
+      stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+      dependsOn: [],
+      stepTypeConfig: {
+        targetSchema: 'analytics',
+        sourceSchema: 'raw',
+        sourceTable: 'orders',
+        sourceAlias: 'orders_src',
+      },
+    },
+    {
+      nodeId: 'transform-node',
+      stepKind: 'POSTGRES_SQL_TRANSFORM',
+      dependsOn: ['source-node'],
+      stepTypeConfig: {
+        dialect: 'postgres',
+        entrypoint: 'models/model.sql',
+        sql: 'select * from raw.orders',
+        sqlArtifact: VALID_PREVIEW_PROVENANCE.sqlArtifact,
+        sourceSchema: 'raw',
+        sourceTable: 'orders',
+        sourceAlias: 'orders_src',
+        sinkSchema: 'analytics',
+        sinkTable: 'orders_daily',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+    {
+      nodeId: 'sink-node',
+      stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+      dependsOn: ['transform-node'],
+      stepTypeConfig: {
+        sinkSchema: 'analytics',
+        sinkTable: 'orders_daily',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+  ],
+} as const;
+
+function buildTransformationStoredPlan(): Record<string, unknown> {
+  return {
+    metadata: {
+      planId: VALID_PLAN_REF.planId,
+      planVersion: VALID_PLAN_REF.planVersion,
+      schemaVersion: VALID_PLAN_REF.schemaVersion,
+      contractVersion: '1.0.0',
+      inputHashSha256: VALID_PLAN_REF.sha256,
+      createdAtIso: '2026-04-05T00:00:00.000Z',
+    },
+    steps: [
+      {
+        stepId: 'source-node',
+        kind: 'PREPARE_POSTGRES_TRANSFORM',
+        dependsOn: [],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[0].stepTypeConfig,
+      },
+      {
+        stepId: 'transform-node',
+        kind: 'POSTGRES_SQL_TRANSFORM',
+        dependsOn: ['source-node'],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[1].stepTypeConfig,
+      },
+      {
+        stepId: 'sink-node',
+        kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+        dependsOn: ['transform-node'],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[2].stepTypeConfig,
+      },
+    ],
+  } as const;
+}
+
 function buildStoredPlan(): {
   readonly metadata: {
     readonly planId: string;
@@ -739,7 +820,7 @@ describe('planRoutes', () => {
 
   it('forwards preview provenance into planner observability extra payload', async () => {
     const reply = createReply();
-    const plan = buildStoredPlan();
+    const plan = buildTransformationStoredPlan();
     const buildPlan = vi.fn(async () => ({
       plan,
       canonicalPlanJson: '{}',
@@ -775,13 +856,8 @@ describe('planRoutes', () => {
             targetAdapter: 'mock',
           },
           previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-          selectedNodeIds: ['node_1'],
-          graphSource: {
-            kind: 'generic-graph-v1',
-            sourceFamily: 'dbt',
-            sourceVersion: 'manifest-v10',
-            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
-          },
+          selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
           provenance: VALID_PREVIEW_PROVENANCE,
         },
         log: { error: vi.fn() },
@@ -798,10 +874,10 @@ describe('planRoutes', () => {
         planRef: VALID_PLAN_REF,
         planSummary: {
           executor: 'postgres',
-          nodeCount: 1,
-          stepCount: 0,
-          sourceTables: [],
-          sinkTables: [],
+          nodeCount: 3,
+          stepCount: 3,
+          sourceTables: ['raw.orders'],
+          sinkTables: ['analytics.orders_daily'],
         },
         persisted: {
           planRecordId: VALID_PLAN_REF.planId,
