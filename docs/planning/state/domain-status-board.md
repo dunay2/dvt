@@ -30,13 +30,15 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `API and Admission`
 
-- Current objective: keep `POST /plans/preview` truthful as the
-  preview-persist boundary and converge callers onto the real `PlanRef`
-  contract.
-- Active task IDs: `TF-C1`, `TF-C1-A`, `TF-C1-B`
+- Current objective: keep the shipped preview-persist boundary truthful and use
+  it as the fixed ingress while the next runtime mode is sequenced behind the
+  same contract.
+- Active task IDs: `TF-C3`, `TF-C3-A`
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: Lane A or B contract formalization and
-  transformation-profile caller adoption are still open.
+- Primary blockers: the SQL-first preview-persist boundary is now closed in
+  code and planning, so the remaining blockers are phase-2 dbt executor
+  expansion under `TF-C3` and the broader runtime-boundary hardening tracked in
+  `WE-HX`.
 
 ### `Planner and Contracts`
 
@@ -65,16 +67,15 @@ For full task-level tracking use the lane YAML registry linked from
 ### `UI / Frontend`
 
 - Current objective: keep the first SQL-first transformation
-  `Design -> Plan -> Run -> Result` loop code-grounded in Lane E while the
-  parent vertical remains open on upstream Lane A and Lane C dependency truth.
+  `Design -> Plan -> Run -> Result` loop stable now that the upstream Lane A
+  and Lane C contract dependencies are closed, while broader frontend
+  professionalization continues.
 - Active task IDs: `TF-E1`, `F-23`, `F-24`, `F-25`
 - Roadmap lane affected: [UI and Frontend lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: Lane E now ships the authoring, persisted preview or
-  start-run handoff, and result UX pieces for the first operator loop, but the
-  parent vertical still depends on open Lane A or Lane C closure under `TF-A1`
-  and `TF-C1`. Broader UI work also remains: `F-23` still waits on `F-06` and
-  `F-17-B`, while `F-24` and `F-25` continue the workbench and plugin
-  professionalization chain.
+  start-run handoff, and result UX pieces for the first operator loop; the
+  remaining work is parent closeout consolidation for `TF-E1` plus the broader
+  UI follow-through under `F-23`, `F-24`, and `F-25`.
 
 ### `Traceability`
 

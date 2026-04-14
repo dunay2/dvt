@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-10'
+last_reviewed: '2026-04-14'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -698,7 +698,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: TF-C1
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       implement the SQL-first `POST /plans/preview` boundary so design-graph input is validated,
       canonical plan bytes are persisted with Git provenance, and callers receive the real `PlanRef`
@@ -710,23 +710,30 @@ tasks:
       `PlanRef` used by `POST /runs/start`.
     complexity: M
     effort_points: 5
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - docs/planning/closeouts/20260414-tf-a1-c-srp-hardening-closeout.md
+      - docs/planning/closeouts/20260414-tf-a1-d-web-plan-anti-corruption-closeout.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/api/src/entrypoints/http/planRoutes.ts
       - apps/api/src/entrypoints/http/previewProfilePolicy.ts
       - apps/api/src/entrypoints/http/previewProvenanceParser.ts
     status_reason: >-
-      The protected preview boundary now validates explicit `previewProfile` intent, enforces
-      request-boundary graph and provenance rules, persists canonical plan bytes, and returns the
-      real runtime-safe `PlanRef`. Remaining closure is to finish Lane A or B contract adoption for
-      the transformation profile so the generic preview caller and SQL-first persisted path stop
-      diverging operationally.
-    last_verified: '2026-04-08'
+      Closed. The protected preview boundary now validates explicit `previewProfile` intent,
+      enforces request-boundary graph and provenance rules, persists canonical plan bytes, and
+      returns the real runtime-safe `PlanRef`, while the downstream convergence that kept the parent
+      open is now landed through the Lane A and B adoption chain: the active Canvas caller emits the
+      governed `transformation-sql-first-v1` request plus required Git provenance, the anti-
+      corruption layer preserves the persisted-plan contract at the web boundary, and the first
+      caller-visible provenance chain is already accepted. The next runtime-mode expansion now moves
+      to `TF-C3`, not back into `TF-C1`.
+    last_verified: '2026-04-14'
   - task_id: TF-C1-A
     priority: P0
     status: done

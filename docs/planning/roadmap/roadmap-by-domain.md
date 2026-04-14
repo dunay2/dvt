@@ -59,10 +59,11 @@ flowchart LR
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Closeout: TF-C1 preview-persist convergence](../closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md),
   [Closeout: TF-C1-B preview profile contract](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
-  Near-term target: keep preview-persist truthful on the protected route while
-  converging callers onto explicit preview profiles, provenance rules, and the
-  real persisted `PlanRef` path.
+  Near-term target: keep the now-closed preview-persist boundary truthful as
+  the fixed protected ingress and sequence phase-2 dbt executor expansion under
+  `TF-C3` without reopening caller-profile or `PlanRef` drift.
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),
@@ -95,9 +96,11 @@ flowchart LR
   [UI / Visualization Domain](../../architecture/domain-ui.md),
   [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: keep Lane E aligned around explicit transformation
+  Near-term target: keep the first SQL-first operator loop stable now that
   authoring, persisted preview-to-run handoff, and snapshot-owned result
-  surfaces while runtime evidence work catches up.
+  surfaces are live, while the remaining Lane E work shifts to parent
+  acceptance consolidation plus broader workbench and plugin
+  professionalization.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
   [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md),
