@@ -71,7 +71,7 @@ describe('DbtExplorer', () => {
     expect(draggableNode?.className).toContain('cursor-move');
   });
 
-  it('removes drag affordances and import guidance when graph edits are gated', async () => {
+  it('removes drag affordances and disables import action when graph edits are gated', async () => {
     await act(async () => {
       root.render(
         <DbtExplorer
@@ -84,9 +84,13 @@ describe('DbtExplorer', () => {
     });
 
     const draggableNode = container.querySelector('[draggable="false"]');
+    const addDataButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Add data')
+    );
 
     expect(container.textContent).toContain('Inspect available project resources');
-    expect(container.textContent).not.toContain('Add data');
+    expect(addDataButton).not.toBeNull();
+    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
     expect(draggableNode?.getAttribute('draggable')).toBe('false');
     expect(draggableNode?.className).toContain('cursor-default');
   });

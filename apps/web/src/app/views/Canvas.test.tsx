@@ -141,6 +141,10 @@ describe('Canvas route', () => {
   const mockedUseCanvasController = vi.mocked(useCanvasController);
 
   beforeEach(() => {
+    const topBarCanvasControls = document.createElement('div');
+    topBarCanvasControls.id = 'shell-top-bar-canvas-controls';
+    document.body.appendChild(topBarCanvasControls);
+
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -157,6 +161,7 @@ describe('Canvas route', () => {
     act(() => {
       root.unmount();
     });
+    document.getElementById('shell-top-bar-canvas-controls')?.remove();
     container.remove();
   });
 
@@ -172,8 +177,6 @@ describe('Canvas route', () => {
       root.render(<Canvas />);
     });
 
-    expect(container.textContent).toContain('SQL flow');
-    expect(container.textContent).toContain('Plan required');
     expect(container.textContent).toContain('Loading canvas');
     expect(container.querySelector('[data-slot="canvas-loading-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
@@ -248,7 +251,6 @@ describe('Canvas route', () => {
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
     const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
     const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
     const runButton = buttons.find((button) => button.textContent?.includes('Run'));
@@ -259,8 +261,7 @@ describe('Canvas route', () => {
     expect(canvasRouteState.explorerProps).toMatchObject({
       canEditGraph: false,
     });
-    expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeUndefined();
-    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
+    expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeTypeOf('function');
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
@@ -280,7 +281,6 @@ describe('Canvas route', () => {
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
     const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
     const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
     const runButton = buttons.find((button) => button.textContent?.includes('Run'));
@@ -289,7 +289,6 @@ describe('Canvas route', () => {
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
     expect(container.textContent).toContain('Backend not ready');
     expect(container.textContent).toContain('Readiness not satisfied: database_not_configured.');
-    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();

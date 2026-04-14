@@ -143,7 +143,7 @@ describe('CanvasShell', () => {
     expect(shellState.dbtExplorerProps).toMatchObject({
       canEditGraph: false,
     });
-    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
   });
 
   it('keeps explorer import affordances wired when graph edits are allowed', async () => {

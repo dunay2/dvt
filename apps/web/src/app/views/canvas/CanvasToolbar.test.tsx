@@ -48,7 +48,6 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          onOpenDataRegistry={vi.fn()}
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
@@ -82,7 +81,6 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          onOpenDataRegistry={vi.fn()}
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
@@ -121,7 +119,6 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          onOpenDataRegistry={vi.fn()}
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
@@ -146,12 +143,10 @@ describe('CanvasToolbar', () => {
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
     const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
     const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
     const runButton = buttons.find((button) => button.textContent?.includes('Run'));
 
-    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
