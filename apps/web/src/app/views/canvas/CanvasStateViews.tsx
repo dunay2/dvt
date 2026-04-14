@@ -50,12 +50,18 @@ function CanvasSurfaceStateCard({
   );
 }
 
-export function CanvasLoadingStateView() {
+export function CanvasLoadingStateView({
+  title = canvasViewCopy.routeLoadingTitle,
+  message = canvasViewCopy.routeLoadingMessage,
+}: {
+  title?: string;
+  message?: string;
+}) {
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-loading-state"
-      title={canvasViewCopy.routeLoadingTitle}
-      message={canvasViewCopy.routeLoadingMessage}
+      title={title}
+      message={message}
     />
   );
 }
@@ -75,6 +81,17 @@ export function CanvasErrorStateView({ message }: { message: string }) {
     <CanvasSurfaceStateCard
       dataSlot="canvas-error-state"
       title={canvasViewCopy.routeErrorTitle}
+      message={message}
+      tone="danger"
+    />
+  );
+}
+
+export function CanvasBlockedStateView({ message }: { message: string }) {
+  return (
+    <CanvasSurfaceStateCard
+      dataSlot="canvas-blocked-state"
+      title={canvasViewCopy.backendBlockedTitle}
       message={message}
       tone="danger"
     />

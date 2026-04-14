@@ -2,6 +2,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 
 import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
 import {
+  CanvasBlockedStateView,
   CanvasEmptyStateView,
   CanvasErrorStateView,
   CanvasLoadingStateView,
@@ -22,9 +23,39 @@ function CanvasContent() {
     isLoadingGraph: controller.isLoadingGraph,
     graphErrorMessage: controller.graphErrorMessage,
   });
-  const readOnlyState = getCanvasReadOnlyState(controller.userPermissions);
+  const shouldBlockCanvasInApiMode = controller.dataSourceMode === 'api' && !controller.backendReady;
+  const shouldDisableCanvasInteractions = shouldBlockCanvasInApiMode || controller.isBackendCheckPending;
+  const isCanvasRuntimeBlocked = shouldDisableCanvasInteractions;
+  const effectiveUserPermissions = shouldDisableCanvasInteractions
+    ? {
+        ...controller.userPermissions,
+        canPlan: false,
+        canRun: false,
+        canEditEdges: false,
+      }
+    : controller.userPermissions;
+  const readOnlyState = isCanvasRuntimeBlocked
+    ? null
+    : getCanvasReadOnlyState(effectiveUserPermissions);
 
   function renderCenterSurface() {
+    if (controller.dataSourceMode === 'api' && controller.isBackendCheckPending) {
+      return (
+        <CanvasLoadingStateView
+          title={canvasViewCopy.backendLoadingTitle}
+          message={canvasViewCopy.backendLoadingMessage}
+        />
+      );
+    }
+
+    if (shouldBlockCanvasInApiMode) {
+      return (
+        <CanvasBlockedStateView
+          message={controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage}
+        />
+      );
+    }
+
     switch (workbenchState.kind) {
       case 'loading':
         return <CanvasLoadingStateView />;
@@ -51,7 +82,7 @@ function CanvasContent() {
         inspectorNode={controller.inspectorNode}
         activeRunId={controller.activeRunId}
         registeredPlugins={controller.registeredPlugins}
-        userPermissions={controller.userPermissions}
+        userPermissions={effectiveUserPermissions}
         canvasAuthoringMode={controller.canvasAuthoringMode}
         nodesWithImpact={controller.nodesWithImpact}
         edges={controller.edges}

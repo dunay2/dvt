@@ -47,6 +47,10 @@ type CanvasController = ReturnType<typeof useCanvasController>;
 
 function buildController(overrides?: Partial<CanvasController>): CanvasController {
   return {
+    dataSourceMode: 'mock',
+    isBackendCheckPending: false,
+    backendReady: true,
+    backendBlockMessage: null,
     isLoadingGraph: false,
     graphErrorMessage: null,
     focusMode: false,
@@ -228,6 +232,35 @@ describe('Canvas route', () => {
       canEditGraph: false,
     });
     expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  });
+
+  it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        dataSourceMode: 'api',
+        backendReady: false,
+        backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
+      })
+    );
+
+    await act(async () => {
+      root.render(<Canvas />);
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+
+    expect(container.querySelector('[data-slot="canvas-blocked-state"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(container.textContent).toContain('Backend not ready');
+    expect(container.textContent).toContain('Readiness not satisfied: database_not_configured.');
     expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
