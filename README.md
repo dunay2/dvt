@@ -36,6 +36,31 @@ migrations), Vitest (testing).
 
 Run these commands from the repository root.
 
+### Frontend + Backend
+
+```bash
+# Start the local API and web app together
+pnpm dev:app
+
+# Start both apps, wait for readiness, and stop them again
+pnpm dev:app:test
+```
+
+Default local endpoints:
+
+- API: `http://127.0.0.1:3000`
+- API health: `http://127.0.0.1:3000/healthz`
+- Web: `http://127.0.0.1:5173/`
+
+The wrapper script accepts optional flags:
+
+```bash
+node scripts/run-dev-stack.cjs --api-port 3001 --web-port 5174 --host 127.0.0.1
+```
+
+It starts the API and frontend together, waits until both are reachable, and
+cleans them up on exit.
+
 ### Documentation And Zensical
 
 ```bash
