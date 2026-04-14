@@ -1,0 +1,36 @@
+---
+id: R-20260414-TF-A1-B-COMPILER-MAPPING-DRIFT
+title: SQL-first compiler mapping consumers may drift from the frozen canonical contract
+status: Open
+date: 2026-04-14
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+  - packages/@dvt/planner
+severity: Medium
+probability: Low
+context: >
+  `TF-A1-B` freezes the SQL-first compiler mapping in the shared planner contract line: one
+  canonical step chain, one required stepTypeConfig shape, and one summary derivation path from
+  persisted immutable plans. The touched `web` and `api` consumers now adopt that line, but
+  additional downstream consumers and future executor modes remain.
+risk: >
+  Future planner, API, UI, or runtime consumers can reintroduce route-local preview kinds, omit
+  required SQL-first step config fields, or derive plan-summary truth from request-local assumptions
+  instead of the persisted governed plan shape.
+mitigations:
+  - >
+    `TransformationFlowCompiler.v1.ts` now publishes the canonical step chain, config schemas, and
+    shared summary helper from `@dvt/contracts`.
+  - >
+    `schemas.ts` and `validation.ts` fail closed for malformed `transformation-sql-first-v1`
+    compiler graph sources and response summaries.
+  - >
+    `apps/web` now emits the canonical compiler graph source instead of preview-only local step
+    kinds.
+  - >
+    `apps/api` now validates the preview request through the shared parser and derives `planSummary`
+    from the governed persisted plan shape.
+review_after: 2026-06-30
+---

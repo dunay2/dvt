@@ -1,7 +1,6 @@
 import { ReactFlowProvider } from '@xyflow/react';
 
 import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
-import type { ExecutionPlan } from '../types/dbt';
 import {
   CanvasEmptyStateView,
   CanvasErrorStateView,
@@ -96,7 +95,7 @@ function CanvasContent() {
       <PlanPreviewModal
         open={controller.planModalOpen}
         onClose={() => controller.setPlanModalOpen(false)}
-        plan={controller.currentPlan as ExecutionPlan | null}
+        plan={controller.currentPlan}
         startRunDisabled={!controller.canStartRun}
         startRunMessage={controller.planStatusSummary}
         onStartRun={() => {

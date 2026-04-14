@@ -1,7 +1,7 @@
 import type { GitArtifactRef, PlanPreviewProvenance, PlanPreviewRequest } from '@dvt/contracts';
 
-import type { ExecutionPlan } from '../types/dbt';
 import type { PlanRef, RunContext } from '../types/engine';
+import type { PlanViewModel } from '../types/plans';
 
 export type { GitArtifactRef, PlanPreviewProvenance };
 
@@ -22,6 +22,6 @@ export type PlanPreviewInput = PlanPreviewRequest;
  * in the composition root. Views and hooks depend only on this interface.
  */
 export interface IPlansPort {
-  previewPlan: (input: PlanPreviewInput) => Promise<ExecutionPlan>;
-  importPlan: (planRef: PlanRef, context: RunContext) => Promise<ExecutionPlan>;
+  previewPlan: (input: PlanPreviewInput) => Promise<PlanViewModel>;
+  importPlan: (planRef: PlanRef, context: RunContext) => Promise<PlanViewModel>;
 }

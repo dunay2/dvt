@@ -22,6 +22,8 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260414 TF-A1-C SRP Hardening Closeout](./20260414-tf-a1-c-srp-hardening-closeout.md)
+- [20260414 TF-A1-B Compiler Mapping Closeout](./20260414-tf-a1-b-compiler-mapping-closeout.md)
 - [20260413 TF-D1 Proof Environment Lifecycle Closeout](./20260413-tf-d1-proof-environment-lifecycle-closeout.md)
 - [20260404 AR-C2 SLA and Manuals Closeout](./20260404-ar-c2-sla-and-manuals-closeout.md)
 - [20260403 API Current To Target Architecture Closeout](./20260403-api-current-to-target-architecture-closeout.md)

@@ -4,14 +4,71 @@ import type { ApiClient } from '../api/createApiClient';
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { createPlansService } from './plansService';
 
-const VALID_GRAPH_SOURCE = {
+const VALID_TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
   sourceFamily: 'transformation-design-graph',
   sourceVersion: 'transformation-sql-first-v1',
-  nodes: [{ nodeId: 'node_1', stepKind: 'CANVAS_TRANSFORM', dependsOn: [] }],
+  nodes: [
+    {
+      nodeId: 'source-node',
+      stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+      dependsOn: [],
+      stepTypeConfig: {
+        targetSchema: 'analytics',
+        sourceSchema: 'raw',
+        sourceTable: 'orders',
+        sourceAlias: 'orders_src',
+      },
+    },
+    {
+      nodeId: 'transform-node',
+      stepKind: 'POSTGRES_SQL_TRANSFORM',
+      dependsOn: ['source-node'],
+      stepTypeConfig: {
+        dialect: 'postgres',
+        entrypoint: 'sql/orders.sql',
+        sql: 'select * from raw.orders',
+        sqlArtifact: {
+          repo: 'dunay2/dvt',
+          path: 'sql/orders.sql',
+          ref: 'refs/heads/main',
+          commitSha: 'commit-sql-1',
+          contentSha256: 'e'.repeat(64),
+        },
+        sourceSchema: 'raw',
+        sourceTable: 'orders',
+        sourceAlias: 'orders_src',
+        sinkSchema: 'analytics',
+        sinkTable: 'orders_daily',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+    {
+      nodeId: 'sink-node',
+      stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+      dependsOn: ['transform-node'],
+      stepTypeConfig: {
+        sinkSchema: 'analytics',
+        sinkTable: 'orders_daily',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+  ],
 } as const;
 
-function buildValidContractPlan(): Readonly<Record<string, unknown>> {
+const VALID_GENERIC_GRAPH_SOURCE = {
+  kind: 'generic-graph-v1',
+  sourceFamily: 'dbt',
+  sourceVersion: 'manifest-v10',
+  nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+} as const;
+
+const VALID_TRANSFORMATION_SELECTION = ['source-node', 'transform-node', 'sink-node'] as const;
+const VALID_GENERIC_SELECTION = ['node_1'] as const;
+
+function buildValidTransformationPlan(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
@@ -21,7 +78,26 @@ function buildValidContractPlan(): Readonly<Record<string, unknown>> {
       planId: 'b'.repeat(64),
       createdAtIso: '2026-04-03T00:00:00.000Z',
     },
-    steps: [],
+    steps: [
+      {
+        stepId: 'source-node',
+        kind: 'PREPARE_POSTGRES_TRANSFORM',
+        dependsOn: [],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[0].stepTypeConfig,
+      },
+      {
+        stepId: 'transform-node',
+        kind: 'POSTGRES_SQL_TRANSFORM',
+        dependsOn: ['source-node'],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[1].stepTypeConfig,
+      },
+      {
+        stepId: 'sink-node',
+        kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+        dependsOn: ['transform-node'],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[2].stepTypeConfig,
+      },
+    ],
     observability: {
       tags: {
         adapter: 'temporal',
@@ -33,7 +109,14 @@ function buildValidContractPlan(): Readonly<Record<string, unknown>> {
 
 function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
   return {
-    ...buildValidContractPlan(),
+    metadata: {
+      planVersion: '1.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256: 'a'.repeat(64),
+      planId: 'b'.repeat(64),
+      createdAtIso: '2026-04-03T00:00:00.000Z',
+    },
     steps: [
       {
         stepId: 'step_1',
@@ -51,12 +134,25 @@ function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
         },
       },
     ],
+    observability: {
+      tags: {
+        adapter: 'temporal',
+        environmentId: 'dev',
+      },
+    },
   } as const;
 }
 
 function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unknown>> {
   return {
-    ...buildValidContractPlan(),
+    metadata: {
+      planVersion: '1.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256: 'a'.repeat(64),
+      planId: 'b'.repeat(64),
+      createdAtIso: '2026-04-03T00:00:00.000Z',
+    },
     steps: [
       {
         stepId: 'step_1',
@@ -69,6 +165,12 @@ function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unkno
         },
       },
     ],
+    observability: {
+      tags: {
+        adapter: 'temporal',
+        environmentId: 'dev',
+      },
+    },
   } as const;
 }
 
@@ -82,17 +184,17 @@ function buildValidPlanRef(): ReturnType<typeof makePlanRef> {
   });
 }
 
-function buildValidPreviewPayload(
+function buildTransformationPreviewPayload(
   overrides: Readonly<Record<string, unknown>> = {}
-): Readonly<Record<string, unknown>> {
+): Record<string, unknown> {
   return {
     previewProfile: 'transformation-sql-first-v1',
-    plan: buildValidContractPlan(),
+    plan: buildValidTransformationPlan(),
     planRef: buildValidPlanRef(),
     planSummary: {
       executor: 'postgres',
       nodeCount: 3,
-      stepCount: 2,
+      stepCount: 3,
       sourceTables: ['raw.orders'],
       sinkTables: ['analytics.orders_daily'],
     },
@@ -124,6 +226,24 @@ function buildValidPreviewPayload(
   } as const;
 }
 
+function buildGenericPreviewPayload(
+  plan: Readonly<Record<string, unknown>> = buildContractPlanWithRetryPolicy()
+): Record<string, unknown> {
+  return {
+    previewProfile: 'planner-generic-v1',
+    plan,
+    planRef: buildValidPlanRef(),
+    persisted: {
+      planRecordId: 'plan-record-1',
+      canonicalPlanSha256: 'c'.repeat(64),
+    },
+    validation: {
+      valid: true,
+      warnings: [],
+    },
+  } as const;
+}
+
 function buildApiClientStub(overrides: Partial<ApiClient> = {}): ApiClient {
   const base: ApiClient = {
     baseUrl: 'http://localhost:3000',
@@ -144,8 +264,8 @@ describe('createPlansService', () => {
 
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
-      graphSource: VALID_GRAPH_SOURCE,
-      selectedNodeIds: ['node_1'],
+      graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -160,7 +280,7 @@ describe('createPlansService', () => {
   });
 
   it('routes to api implementation in api mode', async () => {
-    const postJsonMock = vi.fn(async () => buildValidPreviewPayload());
+    const postJsonMock = vi.fn(async () => buildTransformationPreviewPayload());
     const service = createPlansService(
       'api',
       buildApiClientStub({
@@ -170,8 +290,8 @@ describe('createPlansService', () => {
 
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
-      graphSource: VALID_GRAPH_SOURCE,
-      selectedNodeIds: ['node_1'],
+      graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -182,6 +302,11 @@ describe('createPlansService', () => {
     });
 
     expect(plan.planRef).toEqual(buildValidPlanRef());
+    expect(plan.steps.map((step) => step.type)).toEqual([
+      'PREPARE_POSTGRES_TRANSFORM',
+      'POSTGRES_SQL_TRANSFORM',
+      'CAPTURE_MATERIALIZATION_EVIDENCE',
+    ]);
     expect(plan.preview).toMatchObject({
       summary: {
         executor: 'postgres',
@@ -205,16 +330,54 @@ describe('createPlansService', () => {
       '/plans/preview',
       expect.objectContaining({
         previewProfile: 'transformation-sql-first-v1',
-        graphSource: VALID_GRAPH_SOURCE,
-        selectedNodeIds: ['node_1'],
+        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
         persist: true,
       })
     );
   });
 
+  it('prefers scoped environment tags when projecting the UI target', async () => {
+    const postJsonMock = vi.fn(async () =>
+      buildTransformationPreviewPayload({
+        plan: {
+          ...buildValidTransformationPlan(),
+          observability: {
+            tags: {
+              adapter: 'temporal',
+              environmentId: 'legacy-env',
+              'dvt.scope.environmentId': 'scoped-env',
+            },
+          },
+        },
+      })
+    );
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.target).toBe('scoped-env');
+  });
+
   it('rejects api payloads that do not include planRef', async () => {
     const postJsonMock = vi.fn(async () => {
-      const payload = { ...buildValidPreviewPayload() } as Record<string, unknown>;
+      const payload = { ...buildTransformationPreviewPayload() } as Record<string, unknown>;
       delete payload.planRef;
       return payload;
     });
@@ -228,8 +391,8 @@ describe('createPlansService', () => {
     await expect(
       service.previewPlan({
         previewProfile: 'transformation-sql-first-v1',
-        graphSource: VALID_GRAPH_SOURCE,
-        selectedNodeIds: ['node_1'],
+        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
         persist: true,
         context: makeRunContext('run-1', {
           tenantId: 't1',
@@ -243,7 +406,7 @@ describe('createPlansService', () => {
 
   it('maps importPlan responses from backend-owned planRef payloads', async () => {
     const postJsonMock = vi.fn(async () => ({
-      plan: buildValidContractPlan(),
+      plan: buildValidTransformationPlan(),
       planRef: {
         ...buildValidPlanRef(),
         uri: 'dvt-plan://plans/backend-owned-import-ref',
@@ -275,11 +438,7 @@ describe('createPlansService', () => {
   });
 
   it('maps step retryPolicy into UI retry counts from the canonical field only', async () => {
-    const postJsonMock = vi.fn(async () =>
-      buildValidPreviewPayload({
-        plan: buildContractPlanWithRetryPolicy(),
-      })
-    );
+    const postJsonMock = vi.fn(async () => buildGenericPreviewPayload());
     const service = createPlansService(
       'api',
       buildApiClientStub({
@@ -288,9 +447,9 @@ describe('createPlansService', () => {
     );
 
     const plan = await service.previewPlan({
-      previewProfile: 'transformation-sql-first-v1',
-      graphSource: VALID_GRAPH_SOURCE,
-      selectedNodeIds: ['node_1'],
+      previewProfile: 'planner-generic-v1',
+      graphSource: VALID_GENERIC_GRAPH_SOURCE,
+      selectedNodeIds: [...VALID_GENERIC_SELECTION],
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -302,6 +461,7 @@ describe('createPlansService', () => {
 
     expect(plan.steps[0]).toMatchObject({
       id: 'step_1',
+      type: 'DBT_MODEL',
       name: 'customers',
       nodes: ['model.analytics.customers'],
       policies: {
@@ -312,9 +472,7 @@ describe('createPlansService', () => {
 
   it('does not read legacy retry counts from stepTypeConfig', async () => {
     const postJsonMock = vi.fn(async () =>
-      buildValidPreviewPayload({
-        plan: buildContractPlanWithLegacyRetryConfig(),
-      })
+      buildGenericPreviewPayload(buildContractPlanWithLegacyRetryConfig())
     );
     const service = createPlansService(
       'api',
@@ -324,9 +482,9 @@ describe('createPlansService', () => {
     );
 
     const plan = await service.previewPlan({
-      previewProfile: 'transformation-sql-first-v1',
-      graphSource: VALID_GRAPH_SOURCE,
-      selectedNodeIds: ['node_1'],
+      previewProfile: 'planner-generic-v1',
+      graphSource: VALID_GENERIC_GRAPH_SOURCE,
+      selectedNodeIds: [...VALID_GENERIC_SELECTION],
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -345,7 +503,7 @@ describe('createPlansService', () => {
 
   it('rejects import payloads that do not include planRef', async () => {
     const postJsonMock = vi.fn(async () => ({
-      plan: buildValidContractPlan(),
+      plan: buildValidTransformationPlan(),
     }));
     const service = createPlansService(
       'api',

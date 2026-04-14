@@ -2028,7 +2028,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: TF-A1
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       formalize the SQL-first transformation contract pack for the v1 design graph, preview-persist
       boundary, and graph-to-plan compiler so execution-first work starts from a stable doc set
@@ -2040,21 +2040,23 @@ tasks:
       deterministic compiler mapping into a persisted immutable plan with `PlanRef`.
     complexity: M
     effort_points: 5
-    progress_pct: 50
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/contracts/planner/index.md
       - docs/contracts/planner/TransformationFlowPreview.v1.md
+      - docs/contracts/planner/TransformationFlowCompiler.v1.md
       - docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md
+      - docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md
+      - docs/evidence/ED-20260414-tf-a1-b-compiler-mapping-freeze.md
       - docs/architecture/components/planner/index.md
     status_reason: >-
-      `TF-A1-A` now lands the shared SQL-first design-graph and preview-persist boundary in
-      `@dvt/contracts`, plus the first consumer adoption in `api` and `web`. The remaining Lane A
-      closure is `TF-A1-B`, which still needs to freeze the deterministic compiler mapping into the
-      persisted immutable plan shape.
-    last_verified: '2026-04-13'
+      Completed. `TF-A1-A` froze the shared SQL-first design-graph and preview-persist boundary, and
+      `TF-A1-B` now freezes the deterministic compiler mapping, canonical step vocabulary, and
+      persisted-plan summary derivation across `@dvt/contracts`, `api`, and `web`.
+    last_verified: '2026-04-14'
   - task_id: TF-A1-A
     priority: P0
     status: done
@@ -2084,7 +2086,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: TF-A1-B
     priority: P0
-    status: queued
+    status: done
     objective: >-
       define the deterministic compiler mapping from the three-node design graph into canonical
       execution steps and persisted plan metadata.
@@ -2094,15 +2096,183 @@ tasks:
       that convert the design graph into a persisted immutable plan consumed by runtime.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/contracts/planner/TransformationFlowCompiler.v1.md
       - docs/architecture/components/planner/index.md
+      - docs/evidence/ED-20260414-tf-a1-b-compiler-mapping-freeze.md
+      - docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md
     status_reason: >-
-      The delivery plan now names the ordered step model, but the compiler boundary is not yet
-      isolated as a concrete Lane A task.
-    last_verified: '2026-04-05'
+      Completed. The shared planner contract pack now publishes the SQL-first compiler mapping, web
+      emits the canonical step chain and required `stepTypeConfig`, the preview route validates the
+      request through shared parser logic, and the response summary is derived from the persisted
+      immutable plan shape instead of placeholders.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-C
+    priority: P0
+    status: done
+    objective: >-
+      harden the frozen SQL-first transformation pack into SRP-correct seams so step-kind authority,
+      compiler validation, preview graph assembly, execution actions, and preview-route
+      orchestration stop drifting across `contracts`, `web`, and `api`.
+    dependency: TF-A1-B
+    target: >-
+      Step-kind authority is single-sourced, `StepTypeRegistry` is family-neutral, compiler shape
+      and summary projection are split, Canvas preview or execution seams are decomposed, and the
+      preview-route entrypoint no longer mixes transport, policy, binding, and projection.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+      - docs/contracts/planner/TransformationFlowPreview.v1.md
+      - docs/contracts/planner/TransformationFlowCompiler.v1.md
+      - docs/evidence/ED-20260414-tf-a1-c-srp-hardening.md
+      - docs/planning/closeouts/20260414-tf-a1-c-srp-hardening-closeout.md
+      - docs/risk-register/quality/R-20260414-TF-A1-C-SRP-HARDENING-DRIFT.yaml
+      - packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts
+      - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
+    status_reason: >-
+      Completed. The SQL-first hardening follow-up now single-sources step-kind authority through
+      `KNOWN_STEP_KINDS`, splits compiler graph/config/summary seams in `@dvt/contracts`, decomposes
+      Canvas preview and execution orchestration into smaller helpers, and composes the preview
+      route through dedicated scope, guard, binder, and response-mapper seams without changing the
+      frozen SQL-first semantics.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-C1
+    parent_task: TF-A1-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      make step-kind authority single-sourced and reduce the shared-kernel `StepTypeRegistry` to a
+      family-neutral registry seam.
+    dependency: TF-A1-B
+    target: >-
+      `KNOWN_STEP_KINDS` is the only authority for canonical kinds, dbt-specific config lives
+      outside the registry core, and transformation default registrations no longer redefine kind
+      authority inside the registry implementation.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+      - packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts
+      - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
+    status_reason: >-
+      Completed. DBT config and built-in registration now live outside the registry core, and the
+      default registry consumes canonical kind authority instead of redeclaring it locally.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-C2
+    parent_task: TF-A1-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      split `TransformationFlowCompiler.v1` into explicit seams for graph shape, step-type config,
+      and plan-summary derivation.
+    dependency: TF-A1-C1
+    target: >-
+      The compiler contract remains semantically frozen, but graph schema, step config schema, and
+      summary projection no longer change together inside one shared-kernel module.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+      - docs/contracts/planner/TransformationFlowCompiler.v1.md
+    status_reason: >-
+      Completed. Compiler graph shape, step-config schemas, and plan-summary derivation now live in
+      separate `TransformationFlow*` seams while preserving the frozen SQL-first contract.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-C3
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      split `previewGraphSource.ts` into smaller seams for compiler mapping, draft signature,
+      design-graph draft building, and artifact serialization.
+    dependency: TF-A1-C2
+    target: >-
+      The Canvas preview builder no longer mixes compiler graph assembly, stale detection, design
+      artifact construction, and YAML serialization in one module.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+      - apps/web/src/app/views/canvas/previewGraphSource.ts
+    status_reason: >-
+      Completed. Canvas preview graph assembly now delegates compiler mapping, signature,
+      design-graph draft construction, and artifact serialization through dedicated modules.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-C4
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      decompose `useCanvasExecutionActions.ts` into provenance, readiness, preview, and run-start
+      seams.
+    dependency: TF-A1-C3
+    target: >-
+      Canvas execution actions stop mixing workspace provenance, plan readiness policy, preview
+      orchestration, run-start orchestration, and shell UI side effects in one hook.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+    status_reason: >-
+      Completed. Canvas execution actions now compose provenance, readiness, preview planning, and
+      run-start dispatch through dedicated seams instead of one convenience hook.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-C5
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      split `planRoutes.ts` so preview and import routes compose transport, policy, binding, and
+      response projection through smaller seams.
+    dependency: TF-A1-C4
+    target: >-
+      The preview or import route entrypoint no longer owns transport parsing, scope-policy,
+      planner-envelope binding, ownership checks, and response projection in one file.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+      - apps/api/src/entrypoints/http/planRoutes.ts
+    status_reason: >-
+      Completed. The preview route now composes route-scope parsing, preview-contract guarding,
+      planner-envelope binding, ownership checks, and response projection through dedicated helper
+      seams.
+    last_verified: '2026-04-14'
+  - task_id: TF-A1-D
+    priority: P1
+    status: done
+    objective: >-
+      introduce a web planning anti-corruption layer so plan ports, canvas flows, and modal/store
+      state stop depending on the dbt-centric `ExecutionPlan` DTO.
+    dependency: TF-A1-C
+    target: >-
+      `IPlansPort` returns a web-local planning view model, canonical step kinds survive transport
+      mapping without `DBT_*` coercion, and the active preview/run path no longer depends on
+      `apps/web/src/app/types/dbt.ts` for plan semantics.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260414-tf-a1-d-web-plan-anti-corruption-closeout.md
+      - apps/web/src/app/types/plans.ts
+      - apps/web/src/app/services/plans/plansService.api.ts
+    status_reason: >-
+      Completed. The active web plan flow now crosses an anti-corruption layer through
+      `apps/web/src/app/types/plans.ts`, the plans port and API adapter preserve canonical step
+      kinds instead of coercing them into `DBT_*`, and the canvas/store/modal/plugin preview path no
+      longer depends on `types/dbt.ts` for plan semantics.
+    last_verified: '2026-04-14'
 dependency_notes:
   - >-
     `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the

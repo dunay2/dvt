@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { PlatformConnectionState } from '../../capabilities/platform-health';
 
-import { Run, ExecutionPlan } from '../types/dbt';
+import { Run } from '../types/dbt';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import type { PlanViewModel } from '../types/plans';
 import { useSessionStore } from './sessionStore';
 import { useUiLayoutStore } from './uiLayoutStore';
 import { useCanvasInteractionStore } from './canvasInteractionStore';
@@ -73,7 +74,7 @@ interface AppState {
   connectionStatus: PlatformConnectionState;
 
   // Current execution plan & run (delegated to executionStore)
-  currentPlan: ExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   currentRun: Run | null;
 
   // Inspector node (delegated to canvasInteractionStore)
@@ -110,7 +111,7 @@ interface AppState {
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   setConnectionStatus: (status: Partial<PlatformConnectionState>) => void;
-  setCurrentPlan: (plan: ExecutionPlan | null) => void;
+  setCurrentPlan: (plan: PlanViewModel | null) => void;
   setCurrentRun: (run: Run | null) => void;
   setInspectorNode: (nodeId: string | null) => void;
 }

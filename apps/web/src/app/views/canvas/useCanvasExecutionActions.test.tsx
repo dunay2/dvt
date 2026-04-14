@@ -14,6 +14,7 @@ import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import { makeMockRunRef, makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { PlanViewModel } from '../../types/plans';
 import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
 import { resolvePlanRefForStartRun, useCanvasExecutionActions } from './useCanvasExecutionActions';
 
@@ -97,7 +98,7 @@ function HookHost({
 }: Readonly<{
   plansService: IPlansPort;
   runsService: IRunsPort;
-  currentPlan: typeof mockExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
@@ -156,7 +157,7 @@ function HookHost({
   );
 }
 
-function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
+function buildPersistedPreviewPlan(): PlanViewModel {
   const persistedSha = 'c'.repeat(64);
 
   return {
@@ -176,7 +177,7 @@ function buildPersistedPreviewPlan(): typeof mockExecutionPlan {
   };
 }
 
-function createPlansServiceMock(plan: typeof mockExecutionPlan = mockExecutionPlan): IPlansPort {
+function createPlansServiceMock(plan: PlanViewModel = mockExecutionPlan): IPlansPort {
   return {
     previewPlan: vi.fn(async () => plan),
     importPlan: vi.fn(async () => plan),
@@ -217,7 +218,7 @@ function StatefulHookHost({
 }: Readonly<{
   plansService: IPlansPort;
   runsService: IRunsPort;
-  initialPlan: typeof mockExecutionPlan | null;
+  initialPlan: PlanViewModel | null;
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
@@ -230,9 +231,7 @@ function StatefulHookHost({
   canPlan?: boolean;
   canRun?: boolean;
 }>): React.JSX.Element {
-  const [currentPlan, setCurrentPlan] = React.useState<typeof mockExecutionPlan | null>(
-    initialPlan
-  );
+  const [currentPlan, setCurrentPlan] = React.useState<PlanViewModel | null>(initialPlan);
   const hook = useCanvasExecutionActions({
     plansService,
     runsService,
@@ -631,8 +630,14 @@ describe('resolvePlanRefForStartRun', () => {
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'source-node',
-              stepKind: 'CANVAS_SOURCE',
+              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
               dependsOn: [],
+              stepTypeConfig: expect.objectContaining({
+                targetSchema: 'analytics',
+                sourceSchema: 'raw',
+                sourceTable: 'orders',
+                sourceAlias: 'orders',
+              }),
               metadata: expect.objectContaining({
                 displayName: 'Source',
                 tags: {
@@ -644,10 +649,19 @@ describe('resolvePlanRefForStartRun', () => {
             }),
             expect.objectContaining({
               nodeId: 'transform-node',
-              stepKind: 'CANVAS_TRANSFORM',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
               dependsOn: ['source-node'],
+              stepTypeConfig: expect.objectContaining({
+                dialect: 'postgres',
+                entrypoint: 'models/transform.sql',
+                sinkSchema: 'analytics',
+                sinkTable: 'orders_dashboard',
+                sql: 'select * from analytics.orders',
+                writeMode: 'replace',
+              }),
               metadata: expect.objectContaining({
                 displayName: 'Transform',
+                sourceRef: 'models/transform.sql',
                 tags: {
                   pluginId: 'dvt',
                   role: 'transform',
@@ -657,8 +671,14 @@ describe('resolvePlanRefForStartRun', () => {
             }),
             expect.objectContaining({
               nodeId: 'sink-node',
-              stepKind: 'CANVAS_SINK',
+              stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
               dependsOn: ['transform-node'],
+              stepTypeConfig: expect.objectContaining({
+                sinkSchema: 'analytics',
+                sinkTable: 'orders_dashboard',
+                materialization: 'table',
+                writeMode: 'replace',
+              }),
               metadata: expect.objectContaining({
                 displayName: 'Sink',
                 tags: {
@@ -675,6 +695,14 @@ describe('resolvePlanRefForStartRun', () => {
           tenantId: 'tenant',
           projectId: 'project',
           environmentId: 'env',
+        }),
+        provenance: expect.objectContaining({
+          graphArtifact: expect.objectContaining({
+            path: 'pipelines/sales_pipeline.yaml',
+          }),
+          sqlArtifact: expect.objectContaining({
+            path: 'models/transform.sql',
+          }),
         }),
         persist: true,
       })
@@ -859,7 +887,7 @@ describe('resolvePlanRefForStartRun', () => {
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'transform-node',
-              stepKind: 'CANVAS_TRANSFORM',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
             }),
           ]),
         },
@@ -941,7 +969,7 @@ describe('resolvePlanRefForStartRun', () => {
           nodes: expect.arrayContaining([
             expect.objectContaining({
               nodeId: 'transform-node',
-              stepKind: 'DBT_MODEL',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
               metadata: expect.objectContaining({
                 displayName: 'Transform renamed',
                 sourceRef: 'models/transform.sql',

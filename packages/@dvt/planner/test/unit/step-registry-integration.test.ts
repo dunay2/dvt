@@ -3,7 +3,7 @@
  *
  * Covers the validateStepConfigs() path added in Planner.ts:
  *  - INVALID_STEP_CONFIG is thrown for known kinds with invalid config
- *  - Unknown kinds pass through (fail-open per ADR-0006)
+ *  - Unknown kinds are rejected at the registry boundary
  *  - Custom registry can be injected via PlannerOptions.stepTypeRegistry
  */
 import { StepTypeRegistry, type IStepTypeRegistry } from '@dvt/contracts';
@@ -86,21 +86,20 @@ describe('Planner â†’ IStepTypeRegistry: known-kind rejection', () => {
 
 // â”€â”€ Fail-open for unknown kinds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('Planner â†’ IStepTypeRegistry: unknown-kind fail-open', () => {
-  it('accepts any stepTypeConfig for an unregistered kind', async () => {
-    const { plan } = await buildPlanWithSingleStep('FUTURE_SPARK_JOB', {
-      arbitraryField: 'anything',
-      nested: { x: 1 },
-    });
-
-    expect(plan.steps[0]).toMatchObject({
-      kind: 'FUTURE_SPARK_JOB',
-      stepTypeConfig: { arbitraryField: 'anything' },
-    });
+describe('Planner â†’ IStepTypeRegistry: unknown-kind rejection', () => {
+  it('rejects arbitrary stepTypeConfig for an unregistered kind', async () => {
+    await expect(
+      buildPlanWithSingleStep('FUTURE_SPARK_JOB', {
+        arbitraryField: 'anything',
+        nested: { x: 1 },
+      })
+    ).rejects.toMatchObject(invalidStepConfigExpectation('FUTURE_SPARK_JOB'));
   });
 
-  it('accepts missing stepTypeConfig for an unregistered kind', async () => {
-    await expect(buildPlanWithSingleStep('BARE_KIND')).resolves.toBeDefined();
+  it('rejects missing stepTypeConfig for an unregistered kind', async () => {
+    await expect(buildPlanWithSingleStep('BARE_KIND')).rejects.toMatchObject(
+      invalidStepConfigExpectation('BARE_KIND')
+    );
   });
 });
 
@@ -122,11 +121,10 @@ describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
     ).rejects.toMatchObject(invalidStepConfigExpectation('SPARK_JOB'));
   });
 
-  it('fails-open for DBT_MODEL when custom registry does not register it', async () => {
-    // customRegistry only knows SPARK_JOB, so DBT_MODEL is unknown â†’ fail-open
+  it('rejects DBT_MODEL when custom registry does not register it', async () => {
     await expect(
       buildPlanWithSingleStep('DBT_MODEL', { rogueField: 'ignored by registry' }, customRegistry)
-    ).resolves.toBeDefined();
+    ).rejects.toMatchObject(invalidStepConfigExpectation('DBT_MODEL'));
   });
 
   it('projects required capabilities from step-kind execution profile into executionPolicy', async () => {

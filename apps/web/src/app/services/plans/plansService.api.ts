@@ -5,30 +5,12 @@ import {
   type ExecutionPlan as ContractExecutionPlan,
 } from '@dvt/contracts';
 
-import type { ExecutionPlan, ExecutionStep } from '../../types/dbt';
 import type { PlanRef, RunContext } from '../../types/engine';
+import type { PlanViewModel } from '../../types/plans';
 import type { ApiClient } from '../api/createApiClient';
 import type { PlanPreviewInput, PlansService } from './plansService';
 
-type ExecutionPlanPreview = NonNullable<ExecutionPlan['preview']>;
-
-function mapStepKindToUiType(kind: string): ExecutionStep['type'] {
-  const normalized = kind.trim().toUpperCase();
-  if (normalized.includes('COMPILE')) {
-    return 'DBT_COMPILE';
-  }
-  if (normalized.includes('TEST')) {
-    return 'DBT_TEST';
-  }
-  if (
-    normalized.includes('RUN') ||
-    normalized.includes('MODEL') ||
-    normalized.includes('SNAPSHOT')
-  ) {
-    return 'DBT_RUN';
-  }
-  return 'CUSTOM_PLUGIN_STEP';
-}
+type PlanPreviewView = NonNullable<PlanViewModel['preview']>;
 
 function asNumber(value: unknown): number | undefined {
   return typeof value === 'number' ? value : undefined;
@@ -84,9 +66,9 @@ function parseArtifactRef(value: unknown):
 function parseContractPlanPayload(payload: unknown): {
   contractPlan: ContractExecutionPlan;
   planRef: PlanRef;
-  planSummary?: ExecutionPlanPreview['summary'];
-  persisted?: ExecutionPlanPreview['persisted'];
-  provenance?: ExecutionPlanPreview['provenance'];
+  planSummary?: PlanPreviewView['summary'];
+  persisted?: PlanPreviewView['persisted'];
+  provenance?: PlanPreviewView['provenance'];
 } {
   if (payload === null || typeof payload !== 'object') {
     throw new Error('Invalid plans payload: expected object envelope');
@@ -158,12 +140,13 @@ function parseContractPlanPayload(payload: unknown): {
 function mapContractPlanToUi(
   contractPlan: ContractExecutionPlan,
   planRef: PlanRef,
-  preview?: ExecutionPlanPreview
-): ExecutionPlan {
+  preview?: PlanPreviewView
+): PlanViewModel {
   const tags = contractPlan.observability?.tags ?? {};
   const extra = contractPlan.observability?.extra ?? {};
   const adapter = asString(tags.adapter) ?? 'unknown';
-  const target = asString(tags.environmentId) ?? 'default';
+  const target =
+    asString(tags['dvt.scope.environmentId']) ?? asString(tags.environmentId) ?? 'default';
   const estimatedCost =
     asNumber((extra as Record<string, unknown>)?.estimatedCost) ??
     asNumber((extra as Record<string, unknown>)?.costUsd);
@@ -190,7 +173,7 @@ function mapContractPlanToUi(
 
       return {
         id: step.stepId,
-        type: mapStepKindToUiType(step.kind),
+        type: step.kind,
         name: asString(config.name) ?? step.kind,
         nodes,
         policies: {

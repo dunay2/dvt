@@ -6,7 +6,7 @@ import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
 import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 
 type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
@@ -17,7 +17,7 @@ export type CanvasHarnessState = {
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   overlayDecorations: Map<string, OverlayDecoration>;
-  currentPlan: ExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   services: {
     workspaceService: IWorkspacePort;
     plansService: IPlansPort;
@@ -65,7 +65,7 @@ export type CanvasHarnessMocks = {
 };
 
 export function createDefaultCanvasHarnessState(): CanvasHarnessState {
-  const currentPlan: ExecutionPlan = {
+  const currentPlan: PlanViewModel = {
     planId: 'plan_1',
     planVersion: '1',
     generatedAt: '2026-03-28T00:00:00Z',

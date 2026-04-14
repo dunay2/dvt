@@ -2,7 +2,7 @@
 title: Transformation flow preview and design graph v1
 status: Active
 owner: docs
-last_reviewed: 2026-04-13
+last_reviewed: 2026-04-14
 ---
 
 # Transformation flow preview and design graph v1
@@ -17,6 +17,7 @@ from `@dvt/contracts`.
 
 ## Normative sources
 
+- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
@@ -68,6 +69,8 @@ For `transformation-sql-first-v1`:
 - `selectedNodeIds` is non-empty and duplicate-free
 - `graphSource.sourceFamily` is `transformation-design-graph`
 - `graphSource.sourceVersion` is `transformation-sql-first-v1`
+- `graphSource` must satisfy the canonical compiler mapping documented in the
+  companion compiler contract
 - provenance is required
 
 ## Preview response
@@ -92,12 +95,19 @@ For `transformation-sql-first-v1` it additionally requires:
 
 - `web` must consume the shared request and response contracts instead of local
   DTO copies.
+- `web` preview and execution orchestration must stay composed through the
+  dedicated Canvas seams introduced by `TF-A1-C`, rather than route-local or
+  hook-local shadow DTO builders.
 - `api` must validate preview provenance against the shared contract instead of
   route-local parsers.
-- downstream compiler work in `TF-A1-B` must treat this boundary as fixed.
+- `api` preview routes must keep using dedicated route-scope, guard, binder,
+  and response-mapper helpers instead of inlining the boundary logic again.
+- the SQL-first compiler mapping is now frozen in the companion compiler
+  contract and must not be redefined in route-local code.
 
 ## Related
 
 - [Planner contracts index](./index.md)
+- [Transformation flow compiler mapping v1](./TransformationFlowCompiler.v1.md)
 - [Transformation flow architecture and contracts](../../planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation flow product decisions](../../planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md)

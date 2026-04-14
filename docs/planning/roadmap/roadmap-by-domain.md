@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-13
+last_reviewed: 2026-04-14
 planning_type: proposal
 ---
 
@@ -71,14 +71,15 @@ flowchart LR
   [20260411 AR-A12-B status model split Fowler review](../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md),
   [Contract pack and read boundary reset plan 2026-04-10](../proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md),
   [AR-A12-B status model split plan 2026-04-11](../proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md),
+  [TF-A1-C SRP and extensibility hardening plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md),
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
-  Near-term target: reset the active engine-runtime contract pack to one
-  canonical `v1` line, execute the explicit split between canonical run
-  status, provider-live diagnostics, and engine-owned enrichment, and then
-  freeze the first `DesignGraphDraft`, `GitArtifactRef`, and compiler mapping
-  so downstream API, runtime, and UI work stop depending on local
-  assumptions, while `S05-TRUTH-SYNC` keeps payload-version closure truth
-  aligned across planning and status surfaces.
+  Near-term target: keep the now-frozen first SQL-first transformation contract
+  pack (`DesignGraphDraft`, `GitArtifactRef`, preview-persist boundary, and
+  deterministic compiler mapping) stable now that `TF-A1-C` has closed the
+  step-kind authority and direct API/UI seam hardening, and continue the
+  remaining shared-kernel and plan-record hardening under `RC-G1` and `S08`,
+  while `S05-TRUTH-SYNC` keeps payload-version closure truth aligned across
+  planning and status surfaces.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),
