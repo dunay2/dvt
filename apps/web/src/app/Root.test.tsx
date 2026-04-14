@@ -13,6 +13,7 @@ import {
 } from '../capabilities/platform-health/testing/platformHealthFixtures';
 import { queryKeys } from './queries/queryKeys';
 import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHarness';
+import AppProviders from './AppProviders';
 import Root, { RootShell } from './Root';
 import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
@@ -389,15 +390,17 @@ describe('RootShell platform health UX', () => {
 });
 
 describe('Root integration guard', () => {
-  it('keeps service wiring available when Root owns the app-services provider', async () => {
+  it('keeps service wiring available when app-level providers wrap the routed shell', async () => {
     const mounted = await withTestQueryClient(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route element={<Root />} path="/">
-            <Route element={<RootServicesProbe />} index />
-          </Route>
-        </Routes>
-      </MemoryRouter>
+      <AppProviders>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route element={<Root />} path="/">
+              <Route element={<RootServicesProbe />} index />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </AppProviders>
     );
 
     try {
