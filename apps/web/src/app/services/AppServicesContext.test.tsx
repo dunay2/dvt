@@ -25,6 +25,10 @@ function clearStableContextKey(): void {
     globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
     '__dvtAppServicesContext'
   );
+  Reflect.deleteProperty(
+    globalThis as typeof globalThis & { __dvtAppServicesContext__?: unknown },
+    '__dvtAppServicesContext__'
+  );
 }
 
 describe('AppServicesProvider', () => {
@@ -239,28 +243,26 @@ describe('AppServicesProvider', () => {
     expect(captured.shellFeedback).toBe(shellFeedback);
   });
 
-  it('reuses the same context across module reloads so HMR consumers keep the provider binding', async () => {
+  it('reuses the same context across module reevaluation in dev', async () => {
     clearStableContextKey();
     vi.resetModules();
-
-    const firstModule = await import('./AppServicesContext');
+    const firstLoad = await import('./AppServicesContext');
     vi.resetModules();
-    const secondModule = await import('./AppServicesContext');
-    let observedMode: ReturnType<typeof secondModule.useAppDataSourceMode> | null = null;
+    const secondLoad = await import('./AppServicesContext');
 
-    function ProbeFromReloadedModule(): null {
-      observedMode = secondModule.useAppDataSourceMode();
+    function CrossReloadProbe(): null {
+      captured.mode = secondLoad.useAppDataSourceMode();
       return null;
     }
 
     await act(async () => {
       root.render(
-        <firstModule.AppServicesProvider overrides={{ mode: 'mock' }}>
-          <ProbeFromReloadedModule />
-        </firstModule.AppServicesProvider>
+        <firstLoad.AppServicesProvider overrides={{ mode: 'mock' }}>
+          <CrossReloadProbe />
+        </firstLoad.AppServicesProvider>
       );
     });
 
-    expect(observedMode).toBe('mock');
+    expect(captured.mode).toBe('mock');
   });
 });
