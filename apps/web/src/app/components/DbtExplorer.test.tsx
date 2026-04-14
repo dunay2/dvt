@@ -94,4 +94,19 @@ describe('DbtExplorer', () => {
     expect(draggableNode?.getAttribute('draggable')).toBe('false');
     expect(draggableNode?.className).toContain('cursor-default');
   });
+
+  it('keeps Add data action visible even with an empty workspace', async () => {
+    await act(async () => {
+      root.render(
+        <DbtExplorer nodes={[]} canEditGraph={true} onHide={vi.fn()} onOpenDataRegistry={vi.fn()} />
+      );
+    });
+
+    const addDataButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Add data')
+    );
+
+    expect(addDataButton).not.toBeNull();
+    expect(addDataButton?.getAttribute('disabled')).toBeNull();
+  });
 });

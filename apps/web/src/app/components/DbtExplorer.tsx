@@ -40,8 +40,6 @@ export default function DbtExplorer({
   onHide,
   onOpenDataRegistry,
 }: DbtExplorerProps) {
-  const hasDbtNodes = nodes.some((node) => node.pluginId === 'dbt');
-
   const groupedNodes = useMemo(() => {
     const groups: Record<string, CanonicalNode[]> = {};
 
@@ -99,7 +97,7 @@ export default function DbtExplorer({
           )}
         </div>
 
-        {hasDbtNodes && onOpenDataRegistry && (
+        {onOpenDataRegistry && (
           <div className="mt-2 space-y-2">
             <p className="text-[11px] leading-5 text-slate-400">
               Explore project nodes, discover dependencies, and add new objects to this workspace.
