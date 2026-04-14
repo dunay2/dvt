@@ -24,7 +24,8 @@
     "@dvt/engine": "workspace:*",
     "@dvt/dsl": "workspace:*",
     "@dvt/observability": "workspace:*",
-    "@dvt/plan-interpreter": "workspace:*"
+    "@dvt/plan-interpreter": "workspace:*",
+    "tar": "^7.5.2"
   },
   "scripts": {
     "build:runtime-deps": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal",

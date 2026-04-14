@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createActivities,
+  DEFAULT_STEP_ACTIVITY_REGISTRY,
   type Activities,
   type ActivityDeps,
   type DbtPluginExecutionInput,
@@ -660,6 +661,20 @@ describe('stepActivities', () => {
           ctx: CTX,
         })
       ).rejects.toThrow(EXPECTED_ERRORS.pluginRuntimeNotConfigured);
+    });
+
+    it('rebuilds DBT activity wiring from runtime deps even when the default registry is passed explicitly', async () => {
+      const runner = new RecordingDbtPluginRunner();
+      const { acts } = setupActivities(undefined, undefined, DEFAULT_STEP_ACTIVITY_REGISTRY, {
+        dbtPluginRunner: runner,
+      });
+
+      await acts.executeStep({
+        step: { stepId: 's1', kind: 'DBT_TEST' },
+        ctx: CTX,
+      });
+
+      expect(runner.invocations).toHaveLength(1);
     });
 
     it('fails closed when resolved context omits the dbt plugin payload', async () => {

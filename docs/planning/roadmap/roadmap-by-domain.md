@@ -60,16 +60,17 @@ flowchart LR
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
+  [Closeout: TF-C3 production plugin host composition](../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md),
   [Closeout: TF-C3 dbt plugin runtime projection slice](../closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md),
   [Closeout: TF-C3 runExecutionContext resolver slice](../closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md),
   [Closeout: TF-C1 preview-persist convergence](../closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md),
   [Closeout: TF-C1-B preview profile contract](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
   Near-term target: keep the now-closed preview-persist boundary truthful as
   the fixed protected ingress, build on the landed `runExecutionContext`
-  artifact wiring and adapter-temporal DBT runtime projection already started
-  under `TF-C3`, and then sequence production plugin-host composition without
-  reopening caller-profile or `PlanRef` drift or pushing DBT semantics into
-  the kernel.
+  artifact wiring, the standalone `apps/temporal-worker` composition root, and
+  the adapter-owned DBT CLI host already landed under `TF-C3`, and then
+  sequence rollout acceptance and canary evidence without reopening
+  caller-profile or `PlanRef` drift or pushing DBT semantics into the kernel.
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),

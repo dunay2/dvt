@@ -936,23 +936,26 @@ tasks:
       outer product loop or push dbt semantics into the engine kernel.
     complexity: M
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 85
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
     status_reason: >-
-      Phase 2 now spans two landed slices. Protected runtime already wires the governed
-      `runExecutionContextRef` boundary through an artifact-backed resolver, and
-      `@dvt/adapter-temporal` now projects immutable `pluginContexts.dbt` payloads into an
-      adapter-owned DBT runner without pushing semantics into the engine kernel. Remaining work is
-      production plugin-host composition and rollout hardening, not a second outer product path.
+      Phase 2 now spans four concrete slices. Protected runtime already wires the governed
+      `runExecutionContextRef` boundary through shared artifact-backed readers, the standalone
+      `apps/temporal-worker` composition root now owns `TemporalWorkerHost` lifecycle and ops
+      endpoints, and the adapter now runs DBT through an adapter-owned CLI host without pushing
+      semantics into the engine kernel. Remaining work is rollout acceptance and environment proof,
+      not missing in-repo host topology or a second outer product path.
     last_verified: '2026-04-14'
   - task_id: TF-C3-A
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       add the dbt plugin-backed execution mode under the same preview-persist-run contract without
       creating a second product loop or a kernel-owned dbt path.
@@ -962,17 +965,122 @@ tasks:
       same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
     status_reason: >-
-      The adapter-temporal runtime path now resolves immutable DBT execution context through
-      `IRunExecutionContextReader` and hands `pluginContexts.dbt` to an adapter-owned runner,
-      failing closed when the ref, payload, or runtime wiring is absent. Actual production plugin
-      host composition remains open after this provider-boundary projection slice.
+      Runtime can now dispatch eligible persisted plans through the same outer `PlanRef` flow into a
+      plugin-backed DBT path: shared artifact readers resolve immutable execution inputs,
+      `apps/temporal-worker` composes the production-style worker host, and DBT runs through the
+      adapter-owned CLI host while failing closed when wiring or payloads are invalid.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-B
+    parent_task: TF-C3
+    priority: P1
+    status: done
+    objective: >-
+      converge the artifact-backed execution-context and DBT bundle readers under `@dvt/artifacts`
+      so API ingress and the Temporal worker consume one governed artifact boundary instead of
+      divergent local implementations.
+    dependency: TF-C1
+    target: >-
+      `ArtifactBackedRunExecutionContextReader` and `ArtifactBackedDbtProjectBundleReader` live in
+      `@dvt/artifacts`, support the governed `file://` or `s3://` rules, and `apps/api` consumes the
+      shared execution-context reader through the existing resolver boundary.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
+      - packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+    status_reason: >-
+      The shared artifact package now owns both runtime readers, enforces the governed URI posture,
+      and `apps/api` has been reduced to a thin rejection-mapping wrapper instead of carrying a
+      second artifact-loading implementation.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-C
+    parent_task: TF-C3
+    priority: P1
+    status: done
+    objective: >-
+      create the canonical standalone Temporal worker composition root so worker lifecycle,
+      readiness, and DBT host wiring are owned outside `apps/api`.
+    dependency: TF-C3-B
+    target: >-
+      `apps/temporal-worker` exists with validated env loading, worker-host bootstrap, clean
+      shutdown, and operational endpoints for `/healthz`, `/readyz`, and `/metrics`.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - apps/temporal-worker/src/server.ts
+      - apps/temporal-worker/src/host/runTemporalWorkerHost.ts
+      - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+    status_reason: >-
+      The repo now contains a real worker composition root with explicit env parsing, runtime
+      lifecycle ownership, operational endpoints, and shutdown semantics; the missing topology is no
+      longer hypothetical or test-only.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-D
+    parent_task: TF-C3
+    priority: P1
+    status: done
+    objective: >-
+      run DBT through an adapter-owned CLI host behind `DbtPluginRunner` so DBT execution stays out
+      of engine semantics while using real artifact-backed project bundles.
+    dependency: TF-C3-C
+    target: >-
+      `DbtCliPluginRunner` materializes the DBT bundle, maps DBT step kinds to CLI subcommands, runs
+      `dbt` under worker policy, and returns governed `StepResult` values without changing the
+      engine contract.
+    complexity: M
+    effort_points: 8
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
+      - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
+      - packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
+    status_reason: >-
+      The adapter now owns a concrete DBT CLI host, the worker injects it through the real
+      composition path, and the activity registry can no longer accidentally retain dep-less DBT
+      handlers from the default registry path.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-E
+    parent_task: TF-C3
+    priority: P1
+    status: in_progress
+    objective: >-
+      close rollout, runbook, and acceptance truth for the standalone Temporal worker so the repo
+      not only contains the host topology but also tells operators how to validate and deploy it.
+    dependency: TF-C3-D
+    target: >-
+      The worker ships a canonical runbook and aligned planning surfaces, and the remaining gap is
+      limited to environment rollout or canary evidence rather than missing code topology.
+    complexity: S
+    effort_points: 3
+    progress_pct: 60
+    evidence_refs:
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+    status_reason: >-
+      The in-repo worker now has a runbook baseline and aligned planning truth, but rollout
+      acceptance and environment-level canary evidence still remain outside this implementation
+      slice.
     last_verified: '2026-04-14'
 dependency_notes:
   - >-
@@ -1030,8 +1138,8 @@ verification_summary:
   verified_on: '2026-04-13'
   total_tasks: 37
   total_effort_points: 137
-  completed_weighted_points: 79.15
-  lane_progress_pct: 58
+  completed_weighted_points: 78.25
+  lane_progress_pct: 57
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
     dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
@@ -1039,5 +1147,5 @@ verification_summary:
     runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 plugin-backed dbt
     dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
     `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice
-    plus adapter-temporal runtime projection, while production plugin-host composition still remains
-    open.
+    plus adapter-temporal DBT seam and fixture hardening, while production plugin-host composition
+    still remains open.

@@ -59,6 +59,7 @@ export {
   StepActivityDispatcher,
   UnsupportedStepKindError,
 } from './activities/stepActivities.js';
+export { DbtCliPluginRunner, assertDbtCliAvailable } from './plugins/dbt/DbtCliPluginRunner.js';
 
 // PR-2: Workflow types (workflow function itself is loaded by Worker bundler)
 export type { RunPlanWorkflowInput, RunPlanWorkflowResult } from './workflows/RunPlanWorkflow.js';

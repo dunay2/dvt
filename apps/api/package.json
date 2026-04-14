@@ -21,6 +21,7 @@
     "@aws-sdk/client-s3": "^3.940.0",
     "@dvt/adapter-postgres": "workspace:*",
     "@dvt/adapter-temporal": "workspace:*",
+    "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
     "@dvt/delivery": "workspace:*",
     "@dvt/engine": "workspace:*",

@@ -1,5 +1,5 @@
 ---
-title: Closeout - TF-C3 dbt plugin runtime projection slice
+title: Closeout - TF-C3 dbt adapter seam and fixture hardening slice
 status: Review
 owner: Runtime / Adapters / Docs
 last_reviewed: 2026-04-14
@@ -7,7 +7,7 @@ planning_type: closeout
 slice: TF-C3-dbt-plugin-runtime-projection
 ---
 
-# Closeout: TF-C3 dbt plugin runtime projection slice
+# Closeout: TF-C3 dbt adapter seam and fixture hardening slice
 
 ## Think-First Analysis
 
@@ -109,7 +109,8 @@ Implement the projection in `@dvt/adapter-temporal`, not in the engine:
    explicit non-retryable step failure instead of fake success.
 
 This keeps dbt semantics out of kernel code while replacing the current no-op
-truth with a real provider-boundary handoff.
+truth with a fail-closed adapter seam and testable handoff contract.
+Production host composition remains a follow-on.
 
 ## Pre-Implementation Brief
 
@@ -206,6 +207,9 @@ truth with a real provider-boundary handoff.
   parser and added `typecheck:test` to the package so branded contract drift in
   test helpers is caught by package-level validation instead of surfacing only
   as editor noise.
+- This slice stops at the adapter-owned seam and its tests. It does not add an
+  in-repo production Temporal worker bootstrap or a composed production DBT
+  plugin host.
 
 ## Validation Run
 
@@ -226,9 +230,10 @@ truth with a real provider-boundary handoff.
 
 ## Residuals
 
-- `TF-C3` remains open. The Temporal adapter can now project immutable DBT
-  plugin context into an adapter-owned runner, but production composition of a
-  real plugin host still remains to be wired.
+- `TF-C3` remains open. The Temporal adapter now exposes a fail-closed DBT
+  projection seam and hardened fixtures, but this repo still does not wire an
+  in-repo production Temporal worker/bootstrap that supplies the real plugin
+  host runtime.
 - This slice keeps DBT out of kernel semantics, but it does not yet implement
   a marketplace, sandbox lifecycle, or rollout controls for a production DBT
   plugin runtime.

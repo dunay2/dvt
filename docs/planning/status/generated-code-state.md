@@ -14,11 +14,11 @@ Generated automatically from repository code on 2026-04-14.
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
-| Total workspaces             | 23    |
-| Total source files           | 832   |
-| Total test files             | 334   |
-| Workspaces with build script | 23/23 |
-| Workspaces with test script  | 22/23 |
+| Total workspaces             | 24    |
+| Total source files           | 844   |
+| Total test files             | 340   |
+| Workspaces with build script | 24/24 |
+| Workspaces with test script  | 23/24 |
 
 ## Workspace Matrix
 
@@ -28,10 +28,11 @@ Generated automatically from repository code on 2026-04-14.
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 20         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
+| dvt-temporal-worker       | `apps/temporal-worker`               | 6         | 4          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 305       | 75         | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 49        | 29         | yes   | yes  | yes       | 24                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 22        | 26         | yes   | yes  | no        | 17                      |
-| @dvt/artifacts            | `packages/@dvt/artifacts`            | 12        | 1          | yes   | yes  | no        | 11                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 23        | 27         | yes   | yes  | no        | 18                      |
+| @dvt/artifacts            | `packages/@dvt/artifacts`            | 17        | 2          | yes   | yes  | no        | 15                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/contracts            | `packages/@dvt/contracts`            | 72        | 22         | yes   | yes  | no        | 46                      |

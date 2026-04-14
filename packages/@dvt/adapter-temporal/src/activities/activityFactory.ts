@@ -15,6 +15,7 @@ import type {
   StepInput,
   StepResult,
 } from './activityTypes.js';
+import { DbtStepActivity } from './dbtStepActivity.js';
 import { GatewayStepActivity } from './gatewayStepActivity.js';
 import {
   createDefaultStepActivityRegistry,
@@ -30,12 +31,15 @@ import {
 export function createActivities(
   deps: ActivityDeps,
   stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS,
-  stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry(deps)
+  stepActivitiesByKind?: StepActivityRegistry
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
 } {
-  const dispatcher = new StepActivityDispatcher(new GatewayStepActivity(), stepActivitiesByKind);
+  const dispatcher = new StepActivityDispatcher(
+    new GatewayStepActivity(),
+    resolveStepActivityRegistry(deps, stepActivitiesByKind)
+  );
 
   return {
     async executeStep(input: StepInput): Promise<StepResult> {
@@ -93,6 +97,25 @@ export function createActivities(
       await deps.runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
   };
+}
+
+function resolveStepActivityRegistry(
+  deps: ActivityDeps,
+  overrides?: StepActivityRegistry
+): StepActivityRegistry {
+  const runtimeRegistry = new Map(createDefaultStepActivityRegistry(deps));
+  if (overrides === undefined) {
+    return runtimeRegistry;
+  }
+
+  for (const [stepKind, activity] of overrides.entries()) {
+    if (DbtStepActivity.SUPPORTED_STEP_KINDS.has(stepKind)) {
+      continue;
+    }
+    runtimeRegistry.set(stepKind, activity);
+  }
+
+  return runtimeRegistry;
 }
 
 export type Activities = ReturnType<typeof createActivities>;

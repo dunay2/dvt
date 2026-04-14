@@ -1,6 +1,6 @@
 ---
 id: R-20260414-TF-C3-DBT-PLUGIN-RUNTIME-PROJECTION
-title: TF-C3 dbt runtime projection can drift from production host wiring
+title: TF-C3 rollout can drift from the validated in-repo Temporal worker host
 status: Open
 date: 2026-04-14
 owners:
@@ -8,20 +8,22 @@ owners:
 severity: Medium
 probability: Medium
 context: >
-  `TF-C3` now projects immutable `RunExecutionContext` data into a DBT plugin-backed runner at the
-  Temporal adapter boundary. Unit and integration tests prove the seam with deterministic fake
-  readers and runners. The test fixture seam is now keyed by run-scoped `runExecutionContextRef`
-  values instead of one ambient fake context, but the production plugin host that will own the real
-  DBT runtime has not yet been composed.
+  `TF-C3` now includes the in-repo worker topology that phase 2 needed: shared artifact-backed
+  runtime readers, a standalone `apps/temporal-worker` composition root, and an adapter-owned
+  `DbtCliPluginRunner`. Unit, package, and worker-level tests now prove the host composition and the
+  DBT runtime handoff. The remaining risk is no longer missing topology; it is rollout drift between
+  this validated in-repo host and environment wiring outside the repo.
 risk: >
-  If production worker composition wires the reader or DBT plugin host incorrectly, persisted DBT
-  runs can fail closed or drift from the tested adapter behavior, delaying closure of the shared
-  preview-persist-run product loop while preserving the right admission contract.
+  If deployment or canary rollout wires the worker, DBT binary, or artifact locators differently
+  from the validated in-repo composition, persisted DBT runs can fail closed or exhibit environment-
+  specific drift even though the repo-level host topology is now correct.
 mitigations:
   - '`DbtStepActivity` now fails closed for missing `runExecutionContextRef`, missing runtime
     wiring, missing `pluginContexts.dbt`, or mismatched plugin runner results.'
-  - 'Adapter-temporal unit and transformation integration tests now prove the
-    reader-to-plugin-runner handoff explicitly.'
+  - 'The repo now contains a canonical `apps/temporal-worker` composition root instead of relying on
+    test-only host wiring.'
+  - 'Adapter-temporal unit and worker-composition tests now prove the reader-to-plugin-runner
+    handoff explicitly.'
   - 'The DBT integration fixtures now bind `runExecutionContextRef.sha256` to canonical context
     bytes and reject unregistered refs, so same-worker multi-run tests cannot silently reuse one
     fake context.'
@@ -34,7 +36,9 @@ mitigations:
   - 'The DBT multi-run fixture path now requires per-binding `planBytes` and uses the public
     `@dvt/crypto` package boundary, so tests no longer rely on sibling source imports or a silent
     worker-global blob fallback when multiple plans share one worker.'
-  - 'Lane C keeps the remaining production plugin-host composition work visible under `TF-C3`
-    instead of treating this slice as full closure.'
+  - 'The worker now ships `/healthz`, `/readyz`, `/metrics`, and a canonical runbook so operability
+    is part of the repo truth instead of a follow-up guess.'
+  - 'Lane C keeps the remaining rollout-acceptance work visible under `TF-C3-E` instead of treating
+    code topology alone as full closure.'
 review_after: 2026-06-15
 ---
