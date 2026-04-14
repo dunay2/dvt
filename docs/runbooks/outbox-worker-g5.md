@@ -2,7 +2,7 @@
 title: Outbox Worker Runbook
 status: Active
 owner: sre
-last_reviewed: 2026-03-12
+last_reviewed: 2026-04-14
 ---
 
 # Outbox Worker Runbook
@@ -12,6 +12,16 @@ Operational baseline for `apps/outbox-worker` during `G5`.
 ## Purpose
 
 Use this worker as the single active owner of outbox polling and downstream event publication for controlled environments.
+
+Cross-domain guarantee note:
+
+- canonical run-state mutation and outbox enqueue are atomic inside Postgres;
+- downstream publication remains asynchronous after that commit;
+- this worker therefore provides at-least-once delivery, not exactly-once delivery.
+
+Canonical reference:
+
+- [Distributed consistency model](../architecture/system/distributed-consistency-model.md)
 
 ## Ownership mode
 
@@ -157,3 +167,4 @@ Example:
 - Downstream consumers are required to be idempotent at that boundary, using the existing envelope `eventId` and/or `idempotencyKey` to absorb redelivery.
 - Ownership mode is now explicit and required in the standalone host, but full environment cutover still depends on deployment wiring outside the repo.
 - Startup advisory-lock fencing now exists on dedicated sessions, and lock-loss now forces host shutdown; concurrent-worker proof and rollout wiring remain pending outside this slice.
+- Exactly-once downstream delivery is not a goal of this worker; delivery remains at-least-once by design.

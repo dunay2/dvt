@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-13
+last_reviewed: 2026-04-14
 planning_type: status
 ---
 
@@ -81,12 +81,13 @@ For full task-level tracking use the lane YAML registry linked from
 ### `Traceability`
 
 - Current objective: keep the first transformation vertical caller-visible and
-  shift the remaining Lane B attention back to append-boundary, consistency,
-  and determinism hardening.
-- Active task IDs: `AR-B1`, `AR-B1-E`, `AR-B2`, `AR-B3`
+  shift the remaining Lane B attention back to append-boundary closeout and
+  determinism hardening after making the consistency story explicit.
+- Active task IDs: `AR-B1`, `AR-B1-E`, `AR-B3`
 - Roadmap lane affected: [Planner and Contracts lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the first SQL-first provenance chain is now caller-visible,
-  but broader Lane B work still has open consistency and determinism closure.
+- Primary blockers: the first SQL-first provenance chain is now caller-visible
+  and the distributed consistency model is now documented, but append-boundary
+  closeout and determinism hardening still remain.
 
 ### `CI / Infrastructure`
 

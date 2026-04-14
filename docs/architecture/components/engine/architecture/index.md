@@ -2,7 +2,7 @@
 title: Engine architecture pack
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-14
 ---
 
 # Engine architecture pack
@@ -19,6 +19,7 @@ Use it when the question is:
 ## Primary pages
 
 - [Core responsibilities](./core.md)
+- [Distributed consistency model](../../../system/distributed-consistency-model.md)
 - [Workflow references](./workflows.md)
 - [C4 engine](./c4-engine.md)
 - [Workflow engine subsystem context](./workflow-engine-subsystem-context.md)

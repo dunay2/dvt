@@ -2,7 +2,7 @@
 title: System Architecture
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-14
 ---
 
 # System Architecture
@@ -65,6 +65,7 @@ flowchart TB
 ## Current Active Routes
 
 - [Canonical run lifecycle subsystem](./subsystems/canonical-run-lifecycle/index.md)
+- [Distributed consistency model](./distributed-consistency-model.md)
 - [Subsystem Architecture](./subsystems/index.md)
 - [DVT Component Map](../component-map.md)
 - [DVT Domain Map](../domain-map.md)
