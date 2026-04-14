@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-08'
+last_reviewed: '2026-04-13'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -408,7 +408,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: TF-D1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       define the repeatable Docker PostgreSQL proof-environment lifecycle, cleanup rules, and
       retention or reset baseline for transformation execution acceptance.
@@ -419,14 +419,19 @@ tasks:
       artifacts.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md
+      - docs/runbooks/temporal-postgres-proof-environment.md
+      - scripts/run-temporal-postgres-proof.cjs
+      - scripts/run-temporal-postgres-proof.test.cjs
     status_reason: >-
-      The delivery plan now requires a repeatable PostgreSQL proof environment, but reset and
-      retention behavior are not yet owned as a concrete Lane D slice.
-    last_verified: '2026-04-05'
+      The canonical proof wrapper now distinguishes destructive reset from warm cleanup, verifies
+      the seeded Docker PostgreSQL baseline after reset, documents the transient proof-schema
+      policy, and supports repeatable reruns without ambiguous retained sink state.
+    last_verified: '2026-04-13'
   - task_id: first enterprise pilot
     priority: P3
     status: blocked
@@ -506,17 +511,18 @@ dependency_notes:
     `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2)
     and worker routing model by step kind (P2, depends on MW-C1).
   - >-
-    `TF-D1` is the transformation-vertical repeatability slice: it owns Docker PostgreSQL reset,
-    cleanup, and retention discipline so the first proof environment is rerunnable rather than
-    one-shot.
+    `TF-D1` is now closed: the transformation proof environment has a canonical reset, cleanup, and
+    rerun lifecycle, so remaining Lane D work shifts back to default retention hardening (`AR-D8`)
+    and broader scale slices.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
+  verified_on: '2026-04-13'
   total_tasks: 26
   total_effort_points: 135
-  completed_weighted_points: 30
-  lane_progress_pct: 22
+  completed_weighted_points: 33
+  lane_progress_pct: 24
   notes: >-
-    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    Weighted progress uses effort_points. `TF-D1` now contributes accepted proof-environment
+    lifecycle closure, so Lane D's remaining near-term work is default retention enforcement and
+    scale hardening rather than rerun discipline for the first PostgreSQL proof path.

@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-13
 planning_type: proposal
 ---
 
@@ -48,13 +48,13 @@ flowchart LR
   [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
-  Near-term target: close the remaining `WE-HX` hardening waves and keep
-  `TF-C2` moving for the PostgreSQL executor path and caller-visible runtime
-  evidence, while the broader contract-pack reset and shared-kernel ownership
-  cleanup continue under the Planner and Contracts lane, the delivery runtime
-  harness extraction (`AR-A7`) stays sequenced behind that boundary work, and
-  Conductor cleanup stays scoped as truthfulness debt (`AR-A8`) rather than a
-  second-provider phase.
+  Near-term target: keep the landed `TF-C2` PostgreSQL runtime vertical stable,
+  close the remaining `WE-HX` hardening waves, and carry the runtime follow-up
+  into `TF-C3` phase-2 dbt mode, while the broader contract-pack reset and
+  shared-kernel ownership cleanup continue under the Planner and Contracts
+  lane, the delivery runtime harness extraction (`AR-A7`) stays sequenced
+  behind that boundary work, and Conductor cleanup stays scoped as truthfulness
+  debt (`AR-A8`) rather than a second-provider phase.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
@@ -83,9 +83,10 @@ flowchart LR
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: keep the shipped retention baseline explicit while adding a
-  repeatable Docker PostgreSQL reset/cleanup lifecycle for transformation proof
-  runs.
+  Near-term target: keep the shipped retention baseline explicit now that the
+  repeatable Docker PostgreSQL reset/cleanup lifecycle is canonical, and shift
+  the remaining operational follow-through to default-retention enforcement and
+  health alerts under `AR-D8`.
 - `UI and Frontend`
   Current sources: [web component](../../architecture/components/web/index.md),
   [Read subsystem](../../architecture/system/subsystems/read/index.md),

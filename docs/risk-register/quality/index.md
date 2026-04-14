@@ -90,6 +90,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Temporal native cancellation cleanup can regress provider-status convergence](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift](R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY.yaml)
+- [TF-C2 local Postgres proof can drift from workspace and Docker CLI compatibility assumptions](R-20260413-TF-C2-LOCAL-POSTGRES-PROOF-COMPATIBILITY.yaml)
 - [TF-C2-B canonical contract docs can drift from the shipped execution read surface](R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml)
 - [TF-C2-B failed-run materialization semantics drift](R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml)
 - [TF-C2-B runtime outcome evidence could drift between events, snapshots, and API reads](R-20260408-TF-C2-B-READ-SURFACE-EVIDENCE-DRIFT.yaml)

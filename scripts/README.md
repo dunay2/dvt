@@ -104,7 +104,9 @@ Usage:
 
 ```bash
 node scripts/run-temporal-postgres-proof.cjs up
+node scripts/run-temporal-postgres-proof.cjs test
 node scripts/run-temporal-postgres-proof.cjs reset
+node scripts/run-temporal-postgres-proof.cjs cleanup
 node scripts/run-temporal-postgres-proof.cjs test --reset
 node scripts/run-temporal-postgres-proof.cjs down
 ```
@@ -112,10 +114,15 @@ node scripts/run-temporal-postgres-proof.cjs down
 Behavior:
 
 - manages `infra/docker/postgres/docker-compose.yml`
+- prefers `docker compose` and falls back to `docker-compose` when only the
+  standalone Compose binary is available
 - waits for the `dvt-postgres` container healthcheck
+- verifies the seeded proof baseline after destructive reset
+- can drop transient proof schemas (`it_runtime_*`, `dvt_transform_it_*`)
+  without deleting the Docker volume
 - exports `DVT_PG_INTEGRATION=1`
-- exports the canonical local DSN as `DVT_PG_URL` and `DATABASE_URL` unless
-  already set
+- always exports the canonical local Docker DSN as `DVT_PG_URL` and
+  `DATABASE_URL`
 - runs the `@dvt/adapter-temporal` Postgres capability integration lane
 
 ### `check-changed.cjs`

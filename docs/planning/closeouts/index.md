@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260413 TF-D1 Proof Environment Lifecycle Closeout](./20260413-tf-d1-proof-environment-lifecycle-closeout.md)
 - [20260404 AR-C2 SLA and Manuals Closeout](./20260404-ar-c2-sla-and-manuals-closeout.md)
 - [20260403 API Current To Target Architecture Closeout](./20260403-api-current-to-target-architecture-closeout.md)
 - [20260331 MVP-A1 Contractual Inventory Closeout](./20260331-mvp-a1-contractual-inventory-closeout.md)

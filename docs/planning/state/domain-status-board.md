@@ -17,14 +17,16 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `Execution Runtime`
 
-- Current objective: finish the PostgreSQL-backed transformation runtime
-  vertical and remaining `WE-HX` hardening without regressing runtime
-  semantics.
-- Active task IDs: `WE-HX`, `WE-HX-5`, `WE-HX-6`, `TF-C2`, `TF-C2-A`
+- Current objective: keep the shipped PostgreSQL-backed transformation runtime
+  vertical stable while finishing `WE-HX` hardening and the remaining runtime
+  observability or operations follow-through.
+- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the delivery runtime harness extraction and final
-  runtime-vertical acceptance still sit ahead of full closure; `TF-C2-B` and
-  `AR-C6` are now accepted.
+- Primary blockers: the first PostgreSQL runtime vertical is now accepted, but
+  dashboard and alert evidence for runtime SLAs still remain under
+  `AR-C2-T2/T3`, and broader boundary hardening continues under `WE-HX` while
+  Lane D now owns only post-vertical retention follow-through rather than basic
+  proof repeatability.
 
 ### `API and Admission`
 
@@ -52,14 +54,15 @@ For full task-level tracking use the lane YAML registry linked from
 
 ### `Event Lifecycle and Retention`
 
-- Current objective: add repeatable PostgreSQL proof-environment reset
-  discipline without regressing the shipped retention baseline.
-- Active task IDs: `run event log retention + TTL`, `AR-D8`, `TF-D1`
+- Current objective: keep the shipped retention baseline explicit and move the
+  remaining focus to default-retention enforcement after the proof lifecycle
+  closure.
+- Active task IDs: `AR-D8`
 - Roadmap lane affected:
   [Event Lifecycle and Retention lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the canonical proof wrapper is landed, but reset
-  discipline and default-retention health alerts still need end-to-end
-  closure.
+- Primary blockers: the canonical proof wrapper now owns reset, cleanup, and
+  rerun discipline, but default-retention health alerts and mandatory
+  retention-by-default posture still remain open under `AR-D8`.
 
 ### `UI / Frontend`
 
