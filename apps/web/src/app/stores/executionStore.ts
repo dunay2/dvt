@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { ExecutionPlan, Run } from '../types/dbt';
+import type { Run } from '../types/dbt';
+import type { PlanViewModel } from '../types/plans';
 
 interface ExecutionState {
-  currentPlan: ExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   currentRun: Run | null;
 
   userPermissions: {
@@ -13,7 +14,7 @@ interface ExecutionState {
     canManageRBAC: boolean;
   };
 
-  setCurrentPlan: (plan: ExecutionPlan | null) => void;
+  setCurrentPlan: (plan: PlanViewModel | null) => void;
   setCurrentRun: (run: Run | null) => void;
 }
 

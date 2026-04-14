@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import { isKnownStepKind } from '../src/contracts/planner/StepKindRegistry.v1.js';
 import {
   collectRequiredCapabilitiesForSteps,
   createDefaultStepTypeRegistry,
@@ -74,9 +75,17 @@ describe('createDefaultStepTypeRegistry', () => {
     expect(registry.isKnown(DBT_SNAPSHOT)).toBe(true);
   });
 
-  it('passes any config for unknown kinds (planner-level fail-open)', () => {
-    expect(registry.validate('UNKNOWN_KIND', { anything: 'goes' }).success).toBe(true);
-    expect(registry.validate('FUTURE_KIND', undefined).success).toBe(true);
+  it('rejects unknown kinds at the registry boundary', () => {
+    expect(registry.validate('UNKNOWN_KIND', { anything: 'goes' })).toEqual({
+      success: false,
+      error:
+        'UNKNOWN_STEP_KIND[UNKNOWN_KIND]: step kind is not registered in the canonical registry.',
+    });
+    expect(registry.validate('FUTURE_KIND', undefined)).toEqual({
+      success: false,
+      error:
+        'UNKNOWN_STEP_KIND[FUTURE_KIND]: step kind is not registered in the canonical registry.',
+    });
   });
 
   it('rejects invalid config for known kinds', () => {
@@ -85,6 +94,19 @@ describe('createDefaultStepTypeRegistry', () => {
     if (!result.success) {
       expect(result.error).toContain('INVALID_STEP_TYPE_CONFIG[DBT_MODEL]');
     }
+  });
+});
+
+describe('isKnownStepKind', () => {
+  it('accepts canonical step kind values only', () => {
+    expect(isKnownStepKind(DBT_MODEL)).toBe(true);
+    expect(isKnownStepKind('PREPARE_POSTGRES_TRANSFORM')).toBe(true);
+  });
+
+  it('rejects inherited property names and arbitrary strings', () => {
+    expect(isKnownStepKind('toString')).toBe(false);
+    expect(isKnownStepKind('constructor')).toBe(false);
+    expect(isKnownStepKind('UNKNOWN_KIND')).toBe(false);
   });
 });
 

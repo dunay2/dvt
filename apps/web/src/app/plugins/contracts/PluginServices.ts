@@ -6,7 +6,7 @@ import type {
   RunContext,
   RunEvent,
 } from '../../types/engine';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 import type { NodeBadgeContribution, NodeRendererRegistration } from './NodeRendering';
 import type { CanvasOverlayContribution } from './NodeRendering';
 import type { LocalizableString } from './PluginManifest';
@@ -47,7 +47,7 @@ export interface RunOperations {
 export type PlanPreviewInput = ShellPlanPreviewInput;
 
 export interface PlanOperations {
-  preview?: (input: PlanPreviewInput) => Promise<ExecutionPlan>;
+  preview?: (input: PlanPreviewInput) => Promise<PlanViewModel>;
 }
 
 // ---------------------------------------------------------------------------

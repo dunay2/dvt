@@ -3,7 +3,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { buildPreviewGraphSource } from './previewGraphSource';
@@ -17,7 +17,7 @@ type CanvasPlanActionFailure = {
 type CanvasPlanActionSuccess = {
   ok: true;
   draftSignature: string;
-  plan: ExecutionPlan;
+  plan: PlanViewModel;
 };
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;

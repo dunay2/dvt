@@ -1,6 +1,6 @@
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 
 import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
 
@@ -28,7 +28,7 @@ export async function executeCanvasRunStartAction({
   sessionContext,
 }: {
   canRun: boolean;
-  currentPlan: ExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   hasPersistedPlanForRun: boolean;
   isCurrentPlanStale: boolean;
   runsService: IRunsPort;

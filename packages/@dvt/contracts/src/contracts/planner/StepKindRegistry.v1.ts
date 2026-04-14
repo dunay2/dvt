@@ -62,6 +62,8 @@ export const KNOWN_STEP_KINDS = {
   CAPTURE_MATERIALIZATION_EVIDENCE: 'CAPTURE_MATERIALIZATION_EVIDENCE',
 } as const;
 
+const KNOWN_STEP_KIND_VALUES = new Set<string>(Object.values(KNOWN_STEP_KINDS));
+
 /**
  * Union type of all canonical step kinds.
  *
@@ -81,7 +83,7 @@ export type KnownStepKind = (typeof KNOWN_STEP_KINDS)[keyof typeof KNOWN_STEP_KI
  * kind is only bridge-registered.
  */
 export function isKnownStepKind(kind: string): kind is KnownStepKind {
-  return kind in KNOWN_STEP_KINDS;
+  return KNOWN_STEP_KIND_VALUES.has(kind);
 }
 
 // ── Bridge registry ───────────────────────────────────────────────────────────

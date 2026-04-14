@@ -8,7 +8,8 @@ import {
   Download,
 } from 'lucide-react';
 
-import { ExecutionPlan, DbtEdge } from '../types/dbt';
+import type { DbtEdge } from '../types/dbt';
+import type { PlanViewModel } from '../types/plans';
 
 import {
   AlertDialog,
@@ -36,7 +37,7 @@ import { ScrollArea } from './ui/scroll-area';
 interface PlanPreviewModalProps {
   open: boolean;
   onClose: () => void;
-  plan: ExecutionPlan | null;
+  plan: PlanViewModel | null;
   startRunDisabled?: boolean;
   startRunMessage?: string;
   onStartRun: () => void;

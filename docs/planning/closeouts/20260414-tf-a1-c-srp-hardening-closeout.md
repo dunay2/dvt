@@ -152,6 +152,11 @@ module can change.
   - `planPreviewEnvelopeBinder.ts`
   - `planPreviewResponseMapper.ts`
     and cut `planRoutes.ts` over to those helpers.
+- Closed the QA follow-up drift in the same slice:
+  - `KnownStepKind` now checks canonical values without prototype leakage
+  - `StepTypeRegistry` now rejects unknown kinds at the registry boundary
+  - the web plans mapper now prefers `dvt.scope.environmentId` over the legacy
+    tag when projecting the UI target
 - Updated planning/status surfaces so `TF-A1-C` closes as the structural
   hardening follow-up to the frozen SQL-first contract pack.
 
@@ -159,8 +164,10 @@ module can change.
 
 - `pnpm --filter @dvt/contracts build` - PASS
 - `pnpm --filter @dvt/contracts test -- step-registry.test.ts validation.test.ts` - PASS
+- `pnpm --filter @dvt/planner test -- step-registry-integration.test.ts` - PASS
 - `pnpm exec eslint --max-warnings 0 packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompilerSummary.v1.ts packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts packages/@dvt/contracts/src/schema-packs/plan-preview.ts packages/@dvt/contracts/src/schema-packs/plan-preview-profile.ts packages/@dvt/contracts/src/schema-packs/plan-preview-request.ts packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts packages/@dvt/contracts/src/step-registry/BuiltInStepTypeEntries.ts packages/@dvt/contracts/src/step-registry/DbtStepTypeConfig.ts packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts apps/api/src/entrypoints/http/planRoutes.ts apps/api/src/entrypoints/http/planPreviewContractGuard.ts apps/api/src/entrypoints/http/planPreviewEnvelopeBinder.ts apps/api/src/entrypoints/http/planPreviewResponseMapper.ts apps/api/src/entrypoints/http/planRouteScope.ts apps/web/src/app/views/canvas/previewGraphSource.ts apps/web/src/app/views/canvas/previewCompilerGraphSource.ts apps/web/src/app/views/canvas/previewGraphNodePayloads.ts apps/web/src/app/views/canvas/previewGraphSignature.ts apps/web/src/app/views/canvas/previewDesignGraphArtifact.ts apps/web/src/app/views/canvas/canvasPreviewProvenance.ts apps/web/src/app/views/canvas/canvasPlanReadiness.ts apps/web/src/app/views/canvas/canvasPlanAction.ts apps/web/src/app/views/canvas/canvasRunStartAction.ts apps/web/src/app/views/canvas/useCanvasExecutionActions.ts` - PASS
 - `pnpm exec eslint --max-warnings 0 packages/@dvt/contracts/test/validation.test.ts packages/@dvt/contracts/test/validation/signal-and-error.ts packages/@dvt/contracts/test/validation/run-lifecycle.ts packages/@dvt/contracts/test/validation/execution-plan.ts packages/@dvt/contracts/test/validation/execution-context.ts packages/@dvt/contracts/test/validation/planner-graph.ts packages/@dvt/contracts/test/validation/plan-records.ts packages/@dvt/contracts/test/validation/preview.ts` - PASS
+- `pnpm exec eslint --max-warnings 0 packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts packages/@dvt/contracts/test/step-registry.test.ts packages/@dvt/planner/src/domain/Planner.ts packages/@dvt/planner/test/unit/step-registry-integration.test.ts apps/web/src/app/services/plans/plansService.api.ts apps/web/src/app/services/plans/plansService.test.ts` - PASS
 - `pnpm --filter dvt-api build` - PASS
 - `pnpm --filter dvt-api test -- planRoutes.test.ts` - PASS
 - `pnpm --filter @dvt/web typecheck` - PASS
@@ -171,9 +178,6 @@ module can change.
 
 ## Residuals
 
-- `StepTypeRegistry.validate()` still preserves the preexisting fail-open
-  behavior for unknown kinds; `TF-A1-C` narrowed authority and composition but
-  did not yet execute the policy change to a strict fail-closed runtime gate.
 - ARC diff-gated commands such as `arc-check.mjs` against `origin/main...HEAD`
   do not yet see this slice because the work remains uncommitted in the current
   worktree.

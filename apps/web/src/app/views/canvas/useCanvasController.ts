@@ -13,7 +13,6 @@ import {
   useShellFeedback,
   useWorkspaceService,
 } from '../../services/AppServicesContext';
-import type { ExecutionPlan } from '../../types/dbt';
 import { buildNodesWithImpact } from './canvasImpactOverlay';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
@@ -101,7 +100,7 @@ export function useCanvasController() {
     shellFeedback,
     previewProvenanceConfig: workspaceBootstrapConfig,
     consolePanelVisible: store.consolePanelVisible,
-    currentPlan: store.currentPlan as ExecutionPlan | null,
+    currentPlan: store.currentPlan,
     setCurrentPlan: store.setCurrentPlan,
     setConsolePanelHeight: store.setConsolePanelHeight,
     toggleConsolePanel: store.toggleConsolePanel,
@@ -213,7 +212,7 @@ export function useCanvasController() {
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
-    currentPlan: store.currentPlan as ExecutionPlan | null,
+    currentPlan: store.currentPlan,
     confirmEdgeModal: graphHandlers.confirmEdgeModal,
     setConfirmEdgeModal: graphHandlers.setConfirmEdgeModal,
     confirmEdgeCreation: graphHandlers.confirmEdgeCreation,

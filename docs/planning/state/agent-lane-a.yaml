@@ -2249,6 +2249,30 @@ tasks:
       planner-envelope binding, ownership checks, and response projection through dedicated helper
       seams.
     last_verified: '2026-04-14'
+  - task_id: TF-A1-D
+    priority: P1
+    status: done
+    objective: >-
+      introduce a web planning anti-corruption layer so plan ports, canvas flows, and modal/store
+      state stop depending on the dbt-centric `ExecutionPlan` DTO.
+    dependency: TF-A1-C
+    target: >-
+      `IPlansPort` returns a web-local planning view model, canonical step kinds survive transport
+      mapping without `DBT_*` coercion, and the active preview/run path no longer depends on
+      `apps/web/src/app/types/dbt.ts` for plan semantics.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260414-tf-a1-d-web-plan-anti-corruption-closeout.md
+      - apps/web/src/app/types/plans.ts
+      - apps/web/src/app/services/plans/plansService.api.ts
+    status_reason: >-
+      Completed. The active web plan flow now crosses an anti-corruption layer through
+      `apps/web/src/app/types/plans.ts`, the plans port and API adapter preserve canonical step
+      kinds instead of coercing them into `DBT_*`, and the canvas/store/modal/plugin preview path no
+      longer depends on `types/dbt.ts` for plan semantics.
+    last_verified: '2026-04-14'
 dependency_notes:
   - >-
     `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the

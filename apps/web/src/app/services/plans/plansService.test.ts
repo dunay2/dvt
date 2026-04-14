@@ -302,6 +302,11 @@ describe('createPlansService', () => {
     });
 
     expect(plan.planRef).toEqual(buildValidPlanRef());
+    expect(plan.steps.map((step) => step.type)).toEqual([
+      'PREPARE_POSTGRES_TRANSFORM',
+      'POSTGRES_SQL_TRANSFORM',
+      'CAPTURE_MATERIALIZATION_EVIDENCE',
+    ]);
     expect(plan.preview).toMatchObject({
       summary: {
         executor: 'postgres',
@@ -330,6 +335,44 @@ describe('createPlansService', () => {
         persist: true,
       })
     );
+  });
+
+  it('prefers scoped environment tags when projecting the UI target', async () => {
+    const postJsonMock = vi.fn(async () =>
+      buildTransformationPreviewPayload({
+        plan: {
+          ...buildValidTransformationPlan(),
+          observability: {
+            tags: {
+              adapter: 'temporal',
+              environmentId: 'legacy-env',
+              'dvt.scope.environmentId': 'scoped-env',
+            },
+          },
+        },
+      })
+    );
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.target).toBe('scoped-env');
   });
 
   it('rejects api payloads that do not include planRef', async () => {
@@ -418,6 +461,7 @@ describe('createPlansService', () => {
 
     expect(plan.steps[0]).toMatchObject({
       id: 'step_1',
+      type: 'DBT_MODEL',
       name: 'customers',
       nodes: ['model.analytics.customers'],
       policies: {

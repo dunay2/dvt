@@ -1,11 +1,11 @@
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 import type { PlanRef } from '../../types/engine';
 
-export function resolvePlanRefForStartRun(plan: ExecutionPlan): PlanRef | null {
+export function resolvePlanRefForStartRun(plan: PlanViewModel): PlanRef | null {
   return plan.planRef ?? null;
 }
 
-export function hasPersistedPreviewProof(plan: ExecutionPlan | null): boolean {
+export function hasPersistedPreviewProof(plan: PlanViewModel | null): boolean {
   if (!plan?.preview?.persisted || !plan.planRef) {
     return false;
   }
@@ -20,7 +20,7 @@ export function hasPersistedPreviewProof(plan: ExecutionPlan | null): boolean {
   return plan.preview.persisted.canonicalPlanSha256 === plan.planRef.sha256;
 }
 
-export function hasPlanRefHashMismatch(plan: ExecutionPlan | null): boolean {
+export function hasPlanRefHashMismatch(plan: PlanViewModel | null): boolean {
   if (!plan?.planRef || !hasPersistedPreviewRecord(plan)) {
     return false;
   }
@@ -35,7 +35,7 @@ export function hasPlanRefHashMismatch(plan: ExecutionPlan | null): boolean {
 
 export function buildPlanStatusSummary(args: {
   canRun: boolean;
-  currentPlan: ExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   isCurrentPlanStale: boolean;
   planRefHashMismatch: boolean;
   hasPersistedPlanForRun: boolean;
@@ -61,7 +61,7 @@ export function buildPlanStatusSummary(args: {
   return 'Preview is current and ready to run.';
 }
 
-function hasPersistedPreviewRecord(plan: ExecutionPlan | null): boolean {
+function hasPersistedPreviewRecord(plan: PlanViewModel | null): boolean {
   return Boolean(
     plan?.preview?.persisted?.planRecordId && plan.preview?.persisted?.canonicalPlanSha256
   );

@@ -59,13 +59,6 @@ function isStepKindRegistryEntry(value: unknown): value is StepKindRegistryEntry
   );
 }
 
-function normalizeConfig(config: unknown): Record<string, unknown> {
-  if (config !== null && typeof config === 'object' && !Array.isArray(config)) {
-    return config as Record<string, unknown>;
-  }
-  return {};
-}
-
 function normalizeProfile(profile: StepKindExecutionProfile | undefined): StepKindExecutionProfile {
   if (profile === undefined) return DEFAULT_PROFILE;
   return {
@@ -101,7 +94,10 @@ export class StepTypeRegistry implements IStepTypeRegistry {
   validate(kind: string, config: unknown): StepTypeValidationResult {
     const entry = this.entries.get(kind);
     if (entry === undefined) {
-      return { success: true, data: normalizeConfig(config) };
+      return {
+        success: false,
+        error: `UNKNOWN_STEP_KIND[${kind}]: step kind is not registered in the canonical registry.`,
+      };
     }
 
     const result = entry.schema.safeParse(config ?? {});

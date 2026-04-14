@@ -7,7 +7,7 @@ import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import {
   buildPlanStatusSummary,
@@ -37,8 +37,8 @@ type UseCanvasExecutionActionsParams = {
     'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
   >;
   consolePanelVisible: boolean;
-  currentPlan: ExecutionPlan | null;
-  setCurrentPlan: (plan: ExecutionPlan | null) => void;
+  currentPlan: PlanViewModel | null;
+  setCurrentPlan: (plan: PlanViewModel | null) => void;
   setConsolePanelHeight: (height: number) => void;
   toggleConsolePanel: () => void;
   onRunStarted: (runId: string) => void;
