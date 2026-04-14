@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-13
+last_reviewed: 2026-04-14
 ---
 
 # Current Status
@@ -61,7 +61,7 @@ Scope-specific adapter-temporal verification commands:
 
 ## Snapshot
 
-- Review date: 2026-04-09
+- Review date: 2026-04-14
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
 - Active workspaces: 23
@@ -112,7 +112,10 @@ direction.
   `providerRef`, provider-ref reconciliation is constrained to a typed
   validated `saveProviderRef(...)` seam, and current hardening work is focused
   on the `WE-HX` boundary split plus recent signal-transition and
-  stale-snapshot guard tightening.
+  stale-snapshot guard tightening. The cross-domain consistency story for
+  `startRun`, snapshot freshness, outbox delivery, and reconciler repair is
+  now explicit in the system architecture surfaces instead of being implicit
+  across reviews and runbooks.
 
 - `Temporal adapter` — packages: `@dvt/adapter-temporal` — status:
   `Closed for Phase 1`

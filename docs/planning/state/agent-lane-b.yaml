@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-10'
+last_reviewed: '2026-04-14'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -402,7 +402,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: AR-B2
     priority: P1
-    status: queued
+    status: done
     objective: >-
       document the distributed consistency model: map all eventual consistency windows (event append
       to snapshot, bootstrap to adapter start, outbox enqueue to delivery), their maximum expected
@@ -413,13 +413,17 @@ tasks:
       failure mode, and monitoring signal; referenced from operational runbooks.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/architecture/system/distributed-consistency-model.md
+      - docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md
+      - docs/planning/closeouts/20260414-ar-b2-distributed-consistency-model-closeout.md
     status_reason: >-
-      Implicit consistency assumptions become production incidents at scale; no unified document
-      exists mapping all eventual consistency windows.
-    last_verified: '2026-04-02'
+      The cross-domain consistency story is now explicit: one canonical architecture document maps
+      start-run, snapshot, enrichment, outbox, and reconciler windows to current code anchors,
+      threshold sources, failure modes, and operator runbooks.
+    last_verified: '2026-04-14'
   - task_id: AR-B3
     priority: P1
     status: queued

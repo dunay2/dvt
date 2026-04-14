@@ -2,7 +2,7 @@
 title: Backend MVP Control-Plane Runbook
 status: Review
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-14
 ---
 
 # Backend MVP Control-Plane Runbook
@@ -192,6 +192,19 @@ Out of scope for this runbook:
 
 Use dedicated lane-D runbooks/procedures when those slices are promoted.
 
+## Distributed consistency reference
+
+Use the system consistency model for questions such as:
+
+- which subsystem is authoritative during `startRun` partial failure;
+- when `STALE` or `UNKNOWN` freshness is still a valid canonical response;
+- which guarantee applies between outbox commit and downstream delivery;
+- which incidents are repair windows rather than semantic corruption.
+
+Canonical reference:
+
+- [Distributed consistency model](../architecture/system/distributed-consistency-model.md)
+
 ## Validation Baseline
 
 ```bash
@@ -207,3 +220,4 @@ For runtime latency, freshness, outbox drain, and alert thresholds, use:
 
 - [API Runtime SLA Canonical](./api-runtime-sla-canonical-20260404.md)
 - [Read-Your-Writes Freshness SLO](./read-your-writes-freshness-slo-20260330.md)
+- [Distributed consistency model](../architecture/system/distributed-consistency-model.md)
