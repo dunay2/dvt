@@ -1,4 +1,8 @@
 import { isRouteErrorResponse, useRouteError } from 'react-router';
+import {
+  isBootstrapScreenVisible,
+  showBootstrapFailure,
+} from './bootstrap/appBootstrapScreen';
 
 function getErrorMessage(error: unknown): string {
   if (isRouteErrorResponse(error)) {
@@ -19,6 +23,11 @@ function getErrorMessage(error: unknown): string {
 export default function AppRouteErrorBoundary() {
   const error = useRouteError();
   const message = getErrorMessage(error);
+
+  if (isBootstrapScreenVisible()) {
+    showBootstrapFailure(message);
+    return null;
+  }
 
   return (
     <div

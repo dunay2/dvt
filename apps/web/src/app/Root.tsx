@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
@@ -11,7 +11,10 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
-import ShellBootstrapScreen from './components/shell/ShellBootstrapScreen';
+import {
+  completeBootstrapScreen,
+  setBootstrapStepStatus,
+} from './bootstrap/appBootstrapScreen';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
@@ -21,6 +24,7 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
+  const location = useLocation();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
@@ -40,8 +44,6 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   });
   const isInitialCapabilitiesBootstrapPending =
     capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
-  const shouldHoldShellBootstrap =
-    shellHealth.isInitialHealthCheckPending || isInitialCapabilitiesBootstrapPending;
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {
@@ -58,9 +60,73 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     setConnectionStatus(shellHealth.connectionState);
   }, [connectionStatus, setConnectionStatus, shellHealth.connectionState]);
 
-  if (shouldHoldShellBootstrap) {
-    return <ShellBootstrapScreen />;
-  }
+  useEffect(() => {
+    if (isInitialCapabilitiesBootstrapPending) {
+      setBootstrapStepStatus('capabilities', 'pending');
+      return;
+    }
+
+    if (capabilitiesQuery.isError) {
+      setBootstrapStepStatus(
+        'capabilities',
+        'error',
+        'Capabilities could not be loaded. Using the fallback shell configuration.'
+      );
+      return;
+    }
+
+    setBootstrapStepStatus('capabilities', 'complete');
+  }, [
+    capabilitiesQuery.isError,
+    capabilitiesQuery.isPending,
+    capabilitiesQuery.data,
+    isInitialCapabilitiesBootstrapPending,
+  ]);
+
+  useEffect(() => {
+    if (shellHealth.isInitialHealthCheckPending) {
+      setBootstrapStepStatus('health', 'pending');
+      return;
+    }
+
+    if (platformHealth.isError) {
+      setBootstrapStepStatus(
+        'health',
+        'error',
+        shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
+      );
+      return;
+    }
+
+    setBootstrapStepStatus(
+      'health',
+      'complete',
+      shellHealth.connectionDetail ?? 'Platform health settled.'
+    );
+  }, [
+    platformHealth.isError,
+    shellHealth.connectionDetail,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/canvas')) {
+      setBootstrapStepStatus('route', 'pending', 'Preparing canvas workspace');
+      return;
+    }
+
+    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+  }, [
+    isInitialCapabilitiesBootstrapPending,
+    location.pathname,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
+
+  useEffect(() => {
+    if (!isInitialCapabilitiesBootstrapPending && !shellHealth.isInitialHealthCheckPending) {
+      completeBootstrapScreen();
+    }
+  }, [isInitialCapabilitiesBootstrapPending, shellHealth.isInitialHealthCheckPending]);
 
   return (
     <AppShellFrame

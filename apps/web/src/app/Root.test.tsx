@@ -19,6 +19,16 @@ import { AppServicesProvider, useAppDataSourceMode } from './services/AppService
 import { useAppStore } from './stores/appStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 
+const bootstrapScreenMocks = vi.hoisted(() => ({
+  completeBootstrapScreen: vi.fn(),
+  setBootstrapStepStatus: vi.fn(),
+}));
+
+vi.mock('./bootstrap/appBootstrapScreen', () => ({
+  completeBootstrapScreen: bootstrapScreenMocks.completeBootstrapScreen,
+  setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
+}));
+
 function createRootShellNode(
   capability: PlatformHealthCapabilityApi,
   initialEntries: string[] = ['/'],
@@ -92,13 +102,15 @@ describe('RootShell platform health UX', () => {
     localStorage.clear();
     resetAppStore();
     resetUiLayoutStore();
+    bootstrapScreenMocks.completeBootstrapScreen.mockReset();
+    bootstrapScreenMocks.setBootstrapStepStatus.mockReset();
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it('keeps the startup screen visible while the first platform health query is still pending', async () => {
+  it('keeps health bootstrap pending until the first platform health query settles', async () => {
     const capability: PlatformHealthCapabilityApi = {
       loadSnapshot: vi.fn().mockImplementation(
         () =>
@@ -113,17 +125,19 @@ describe('RootShell platform health UX', () => {
       const view = within(mounted.container);
 
       await waitFor(() => {
-        expect(view.getByText('Preparing workspace shell')).toBeTruthy();
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'health',
+          'pending'
+        );
       });
-      expect(mounted.container.querySelector('[data-slot="shell-bootstrap-screen"]')).not.toBeNull();
-      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).toBeNull();
-      expect(view.queryByText('Workspace route')).toBeNull();
+      expect(view.getByText('Checking')).toBeTruthy();
+      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
     } finally {
       await mounted.cleanup();
     }
   });
 
-  it('keeps the startup screen visible while capabilities are still bootstrapping', async () => {
+  it('keeps capabilities bootstrap pending until runtime capabilities settle', async () => {
     const capability: PlatformHealthCapabilityApi = {
       loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
     };
@@ -140,14 +154,13 @@ describe('RootShell platform health UX', () => {
     );
 
     try {
-      const view = within(mounted.container);
-
       await waitFor(() => {
-        expect(view.getByText('Preparing workspace shell')).toBeTruthy();
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'capabilities',
+          'pending'
+        );
       });
-      expect(mounted.container.querySelector('[data-slot="shell-bootstrap-screen"]')).not.toBeNull();
-      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).toBeNull();
-      expect(view.queryByText('Workspace route')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
     } finally {
       await mounted.cleanup();
     }

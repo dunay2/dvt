@@ -1,6 +1,11 @@
+import { useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 
 import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
+import {
+  completeBootstrapScreen,
+  setBootstrapStepStatus,
+} from '../bootstrap/appBootstrapScreen';
 import {
   CanvasBlockedStateView,
   CanvasEmptyStateView,
@@ -37,6 +42,57 @@ function CanvasContent() {
   const readOnlyState = isCanvasRuntimeBlocked
     ? null
     : getCanvasReadOnlyState(effectiveUserPermissions);
+  const isCanvasStartupPending =
+    controller.isBackendCheckPending || workbenchState.kind === 'loading';
+  const workbenchErrorMessage =
+    workbenchState.kind === 'error' ? workbenchState.message : null;
+
+  useEffect(() => {
+    if (isCanvasStartupPending) {
+      setBootstrapStepStatus(
+        'route',
+        'pending',
+        controller.isBackendCheckPending
+          ? 'Checking backend readiness for canvas'
+          : 'Loading workspace graph for canvas'
+      );
+      return;
+    }
+
+    if (workbenchState.kind === 'error') {
+      setBootstrapStepStatus(
+        'route',
+        'error',
+        workbenchErrorMessage || canvasViewCopy.routeErrorFallbackMessage
+      );
+      completeBootstrapScreen();
+      return;
+    }
+
+    if (shouldBlockCanvasInApiMode) {
+      setBootstrapStepStatus(
+        'route',
+        'complete',
+        controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage
+      );
+      completeBootstrapScreen();
+      return;
+    }
+
+    setBootstrapStepStatus(
+      'route',
+      'complete',
+      workbenchState.kind === 'empty' ? 'Canvas is ready with no graph content yet' : 'Canvas is ready'
+    );
+    completeBootstrapScreen();
+  }, [
+    controller.backendBlockMessage,
+    controller.isBackendCheckPending,
+    isCanvasStartupPending,
+    shouldBlockCanvasInApiMode,
+    workbenchErrorMessage,
+    workbenchState.kind,
+  ]);
 
   function renderCenterSurface() {
     if (controller.dataSourceMode === 'api' && controller.isBackendCheckPending) {
