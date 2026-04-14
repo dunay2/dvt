@@ -4,6 +4,7 @@ import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
 } from '../contracts/planner/ExecutionPlan.v1.js';
+import type { ExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type { PlanAdmissionLink } from '../contracts/planner/PlanAdmissionLink.v1.js';
 import type {
   PlanExecutabilityRecord,
@@ -51,81 +52,116 @@ export const PlanRecordShapeSchema: z.ZodType<PlanRecord> = z.discriminatedUnion
 
 export const PlanRecordSchema: z.ZodType<PlanRecord> = PlanRecordShapeSchema.superRefine(
   (record, ctx) => {
-    let canonicalPlanInput: unknown;
-
-    try {
-      canonicalPlanInput = JSON.parse(record.canonicalPlanJson);
-    } catch {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['canonicalPlanJson'],
-        message: 'canonicalPlanJson must contain valid JSON',
-      });
+    const canonicalPlan = parseCanonicalPlan(record, ctx);
+    if (canonicalPlan === null) {
       return;
     }
-
-    const canonicalPlanResult = ExecutionPlanSchema.safeParse(canonicalPlanInput);
-    if (!canonicalPlanResult.success) {
-      for (const issue of canonicalPlanResult.error.issues) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['canonicalPlanJson', ...issue.path],
-          message: issue.message,
-        });
-      }
+    if (hasCanonicalPlanJsonMismatch(record, canonicalPlan, ctx)) {
       return;
     }
-
-    const canonicalPlan = canonicalPlanResult.data;
-    const expectedCanonicalPlanJson = jcsCanonicalize(canonicalPlan);
-    if (record.canonicalPlanJson !== expectedCanonicalPlanJson) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['canonicalPlanJson'],
-        message: 'canonicalPlanJson must equal JCS(canonical ExecutionPlan)',
-      });
-      return;
-    }
-
-    if (record.canonicalHash !== sha256HexUtf8(record.canonicalPlanJson)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['canonicalHash'],
-        message: 'canonicalHash must match sha256(canonicalPlanJson)',
-      });
-    }
-
-    const canonicalMetadata = canonicalPlan.metadata;
-    if (record.planId !== canonicalMetadata.planId) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['planId'],
-        message: 'planId must match canonicalPlanJson.metadata.planId',
-      });
-    }
-    if (record.planVersion !== canonicalMetadata.planVersion) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['planVersion'],
-        message: 'planVersion must match canonicalPlanJson.metadata.planVersion',
-      });
-    }
-    if (record.schemaVersion !== canonicalMetadata.schemaVersion) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['schemaVersion'],
-        message: 'schemaVersion must match canonicalPlanJson.metadata.schemaVersion',
-      });
-    }
-    if (record.contractVersion !== canonicalMetadata.contractVersion) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['contractVersion'],
-        message: 'contractVersion must match canonicalPlanJson.metadata.contractVersion',
-      });
-    }
+    validateCanonicalHash(record, ctx);
+    validateCanonicalMetadata(record, canonicalPlan, ctx);
   }
 );
+
+function parseCanonicalPlan(record: PlanRecord, ctx: z.RefinementCtx): ExecutionPlan | null {
+  let canonicalPlanInput: unknown;
+
+  try {
+    canonicalPlanInput = JSON.parse(record.canonicalPlanJson);
+  } catch {
+    addPlanRecordIssue(ctx, ['canonicalPlanJson'], 'canonicalPlanJson must contain valid JSON');
+    return null;
+  }
+
+  const canonicalPlanResult = ExecutionPlanSchema.safeParse(canonicalPlanInput);
+  if (canonicalPlanResult.success) {
+    return canonicalPlanResult.data;
+  }
+
+  for (const issue of canonicalPlanResult.error.issues) {
+    addPlanRecordIssue(ctx, ['canonicalPlanJson', ...issue.path], issue.message);
+  }
+  return null;
+}
+
+function hasCanonicalPlanJsonMismatch(
+  record: PlanRecord,
+  canonicalPlan: ExecutionPlan,
+  ctx: z.RefinementCtx
+): boolean {
+  const expectedCanonicalPlanJson = jcsCanonicalize(canonicalPlan);
+  if (record.canonicalPlanJson === expectedCanonicalPlanJson) {
+    return false;
+  }
+
+  addPlanRecordIssue(
+    ctx,
+    ['canonicalPlanJson'],
+    'canonicalPlanJson must equal JCS(canonical ExecutionPlan)'
+  );
+  return true;
+}
+
+function validateCanonicalHash(record: PlanRecord, ctx: z.RefinementCtx): void {
+  if (record.canonicalHash === sha256HexUtf8(record.canonicalPlanJson)) {
+    return;
+  }
+
+  addPlanRecordIssue(ctx, ['canonicalHash'], 'canonicalHash must match sha256(canonicalPlanJson)');
+}
+
+function validateCanonicalMetadata(
+  record: PlanRecord,
+  canonicalPlan: ExecutionPlan,
+  ctx: z.RefinementCtx
+): void {
+  const metadata = canonicalPlan.metadata;
+  const checks = [
+    {
+      actual: record.planId,
+      expected: metadata.planId,
+      message: 'planId must match canonicalPlanJson.metadata.planId',
+      path: ['planId'],
+    },
+    {
+      actual: record.planVersion,
+      expected: metadata.planVersion,
+      message: 'planVersion must match canonicalPlanJson.metadata.planVersion',
+      path: ['planVersion'],
+    },
+    {
+      actual: record.schemaVersion,
+      expected: metadata.schemaVersion,
+      message: 'schemaVersion must match canonicalPlanJson.metadata.schemaVersion',
+      path: ['schemaVersion'],
+    },
+    {
+      actual: record.contractVersion,
+      expected: metadata.contractVersion,
+      message: 'contractVersion must match canonicalPlanJson.metadata.contractVersion',
+      path: ['contractVersion'],
+    },
+  ] as const;
+
+  for (const check of checks) {
+    if (check.actual !== check.expected) {
+      addPlanRecordIssue(ctx, [...check.path], check.message);
+    }
+  }
+}
+
+function addPlanRecordIssue(
+  ctx: z.RefinementCtx,
+  path: readonly PropertyKey[],
+  message: string
+): void {
+  ctx.addIssue({
+    code: 'custom',
+    path: path.map((segment) => (typeof segment === 'symbol' ? String(segment) : segment)),
+    message,
+  });
+}
 
 export const PlanExecutabilityStateSchema = z.enum(['PENDING', 'VALID', 'INVALID']);
 
