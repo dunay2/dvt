@@ -48,7 +48,16 @@ export function createDbtRunExecutionContext(
     createdBy: 'integration-test',
     pluginContexts: {
       dbt: {
-        projectBundleRef: `artifacts://runs/${ctx.runId}/project.tgz`,
+        projectBundleRef: {
+          uri: `artifacts://runs/${ctx.runId}/project.tgz`,
+          kind: 'dbt-project-bundle',
+          sha256: sha256Hex(
+            Buffer.from(
+              `dbt-project-bundle:${ctx.runId}:${planRef.planId}:${planRef.planVersion}`,
+              'utf8'
+            )
+          ),
+        },
         targetProfile: 'dbt-dev',
       },
     },

@@ -18,6 +18,7 @@ export interface ReadArtifactBytesOptions extends ArtifactReadRuntimeOptions {
 }
 
 const DEFAULT_NODE_ENV = 'development';
+let defaultS3Client: S3LikeClient | undefined;
 
 export async function readArtifactBytes(
   uri: string,
@@ -25,7 +26,7 @@ export async function readArtifactBytes(
 ): Promise<Uint8Array> {
   const parsedUri = parseArtifactUri(uri, options.uriLabel);
   const nodeEnv = options.nodeEnv ?? process.env['NODE_ENV'] ?? DEFAULT_NODE_ENV;
-  const s3Client = options.s3Client ?? new S3Client({});
+  const s3Client = options.s3Client ?? getDefaultS3Client();
   const scheme = normalizeScheme(parsedUri.protocol);
 
   if (scheme === 's3') {
@@ -47,6 +48,11 @@ export async function readArtifactBytes(
     'ARTIFACT_URI_UNSUPPORTED',
     `unsupported ${options.uriLabel} URI scheme: ${scheme}`
   );
+}
+
+function getDefaultS3Client(): S3LikeClient {
+  defaultS3Client ??= new S3Client({});
+  return defaultS3Client;
 }
 
 function parseArtifactUri(uri: string, uriLabel: string): URL {

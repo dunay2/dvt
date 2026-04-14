@@ -43,7 +43,7 @@ describe('@dvt/artifacts runtime readers', () => {
       })
     );
 
-    expect(resolved.pluginContexts.dbt.projectBundleRef).toBe('file:///tmp/project.tgz');
+    expect(resolved.pluginContexts.dbt?.projectBundleRef.uri).toBe('file:///tmp/project.tgz');
   });
 
   it('rejects file:// runExecutionContext artifacts in production', async () => {
@@ -74,18 +74,47 @@ describe('@dvt/artifacts runtime readers', () => {
       s3Client: new FakeS3Client(bundleBytes) as never,
     });
 
-    await expect(reader.read('s3://bundle-bucket/dbt/project.tgz')).resolves.toEqual(
-      Uint8Array.from(bundleBytes)
-    );
+    await expect(
+      reader.read({
+        uri: 's3://bundle-bucket/dbt/project.tgz',
+        kind: 'dbt-project-bundle',
+        sha256: sha256Hex(bundleBytes),
+      })
+    ).resolves.toEqual(Uint8Array.from(bundleBytes));
   });
 
   it('rejects DBT project file:// bundles in production', async () => {
     const fileUrl = writeTempFixture('project.tgz', 'bundle');
     const reader = new ArtifactBackedDbtProjectBundleReader({ nodeEnv: 'production' });
 
-    await expect(reader.read(fileUrl)).rejects.toMatchObject({
+    await expect(
+      reader.read({
+        uri: fileUrl,
+        kind: 'dbt-project-bundle',
+        sha256: sha256Hex('bundle'),
+      })
+    ).rejects.toMatchObject({
       name: 'ArtifactReadError',
       message: 'file:// dbt project bundle is not allowed in production',
+    });
+  });
+
+  it('rejects DBT project bundles when the bytes do not match the declared sha256', async () => {
+    const bundleBytes = Buffer.from('fake bundle');
+    const reader = new ArtifactBackedDbtProjectBundleReader({
+      nodeEnv: 'production',
+      s3Client: new FakeS3Client(bundleBytes) as never,
+    });
+
+    await expect(
+      reader.read({
+        uri: 's3://bundle-bucket/dbt/project.tgz',
+        kind: 'dbt-project-bundle',
+        sha256: '0'.repeat(64),
+      })
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message: 'dbt project bundle artifact integrity mismatch',
     });
   });
 });
@@ -104,13 +133,17 @@ function makeRunExecutionContextArtifact(): string {
     createdBy: 'test',
     pluginContexts: {
       dbt: {
-        projectBundleRef: 'file:///tmp/project.tgz',
+        projectBundleRef: {
+          uri: 'file:///tmp/project.tgz',
+          kind: 'dbt-project-bundle',
+          sha256: 'b'.repeat(64),
+        },
       },
     },
   });
 }
 
-function sha256Hex(input: string): string {
+function sha256Hex(input: string | Uint8Array): string {
   return createHash('sha256').update(input).digest('hex');
 }
 

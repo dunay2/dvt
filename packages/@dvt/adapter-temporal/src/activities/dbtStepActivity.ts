@@ -1,4 +1,4 @@
-import type { RunExecutionContext } from '@dvt/contracts';
+import { parseDbtPluginContext, type RunExecutionContext } from '@dvt/contracts';
 import { RunExecutionContextRejectedError } from '@dvt/engine';
 
 import { ActivityErrorCode, createPermanentStepFailure } from './activityFailures.js';
@@ -44,7 +44,12 @@ export class DbtStepActivity implements StepActivity {
       throw error;
     }
 
-    const pluginContext = runExecutionContext.pluginContexts['dbt'];
+    const pluginContextInput = runExecutionContext.pluginContexts['dbt'];
+    if (pluginContextInput === undefined) {
+      throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
+    }
+
+    const pluginContext = parseDbtPluginContext(pluginContextInput);
     if (pluginContext === undefined || Object.keys(pluginContext).length === 0) {
       throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
     }

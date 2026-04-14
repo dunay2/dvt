@@ -23,6 +23,13 @@ This worker owns:
 - DBT CLI host wiring when `DVT_TEMPORAL_DBT_ENABLED=true`
 - `/healthz`, `/readyz`, and `/metrics`
 
+DBT bundle rule:
+
+- `pluginContexts.dbt.projectBundleRef` must be an immutable bundle ref with
+  `kind=dbt-project-bundle` and a required `sha256`
+- the worker verifies bundle bytes against that `sha256` before materializing
+  the project directory
+
 This worker does not own:
 
 - HTTP ingress or protected runtime route mounting
@@ -159,6 +166,7 @@ Most likely causes:
 - DBT binary missing or not executable
 - invalid `DVT_DBT_WORKDIR_ROOT`
 - artifact-backed `RunExecutionContext` or bundle read failure
+- DBT bundle integrity mismatch (`projectBundleRef.sha256` does not match bytes)
 - worker runtime entered `failing`
 
 ### `/metrics` shows `dvt_temporal_worker_dbt_enabled 0`

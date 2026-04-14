@@ -40,8 +40,8 @@ describe('dbtRuntimeFixtures', () => {
       projectId: runExecutionContext.projectId,
       pluginContexts: {
         dbt: {
-          targetProfile: runExecutionContext.pluginContexts.dbt.targetProfile,
-          projectBundleRef: runExecutionContext.pluginContexts.dbt.projectBundleRef,
+          targetProfile: runExecutionContext.pluginContexts.dbt?.targetProfile,
+          projectBundleRef: runExecutionContext.pluginContexts.dbt?.projectBundleRef,
         },
       },
       schemaVersion: runExecutionContext.schemaVersion,
@@ -81,8 +81,8 @@ describe('dbtRuntimeFixtures', () => {
       planRef
     );
 
-    expect(firstResolved.pluginContexts.dbt.projectBundleRef).toContain('/run-1/');
-    expect(secondResolved.pluginContexts.dbt.projectBundleRef).toContain('/run-2/');
+    expect(firstResolved.pluginContexts.dbt?.projectBundleRef.uri).toContain('/run-1/');
+    expect(secondResolved.pluginContexts.dbt?.projectBundleRef.uri).toContain('/run-2/');
     await expect(reader.resolve(unregisteredContext.runExecutionContextRef!)).rejects.toThrow(
       'RUN_EXECUTION_CONTEXT_NOT_REGISTERED'
     );

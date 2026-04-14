@@ -31,13 +31,21 @@ const INPUT = {
     createdBy: 'test',
     pluginContexts: {
       dbt: {
-        projectBundleRef: 's3://bundle/run-1/project.tgz',
+        projectBundleRef: {
+          uri: 's3://bundle/run-1/project.tgz',
+          kind: 'dbt-project-bundle',
+          sha256: 'b'.repeat(64),
+        },
         targetProfile: 'analytics',
       },
     },
   },
   pluginContext: {
-    projectBundleRef: 's3://bundle/run-1/project.tgz',
+    projectBundleRef: {
+      uri: 's3://bundle/run-1/project.tgz',
+      kind: 'dbt-project-bundle',
+      sha256: 'b'.repeat(64),
+    },
     targetProfile: 'analytics',
   },
 } as const;
@@ -97,7 +105,11 @@ describe('DbtCliPluginRunner', () => {
       ...INPUT,
       step: { stepId: 'test.analytics.orders', kind: 'DBT_TEST', dependsOn: [] },
       pluginContext: {
-        projectBundleRef: 's3://bundle/run-1/project.tgz',
+        projectBundleRef: {
+          uri: 's3://bundle/run-1/project.tgz',
+          kind: 'dbt-project-bundle',
+          sha256: 'b'.repeat(64),
+        },
       },
     });
 

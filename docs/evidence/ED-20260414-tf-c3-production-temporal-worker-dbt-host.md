@@ -19,20 +19,27 @@ code_refs:
   - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
 evidence:
   tests:
-    - pnpm install
+    - pnpm --filter @dvt/contracts build
+    - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/artifacts build
     - pnpm --filter @dvt/artifacts test
+    - pnpm --filter @dvt/adapter-temporal typecheck:test
     - pnpm --filter @dvt/adapter-temporal build
     - pnpm --filter @dvt/adapter-temporal test
-    - pnpm --filter @dvt/adapter-temporal exec vitest run test/DbtCliPluginRunner.test.ts test/activities.test.ts
+    - pnpm --filter @dvt/adapter-temporal test:integration:local
+    - pnpm --filter @dvt/adapter-temporal exec vitest run test/DbtCliPluginRunner.test.ts test/activities.test.ts test/dbtRuntimeFixtures.test.ts test/integration.time-skipping.test.ts
+    - pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts
+    - pnpm --filter @dvt/engine test
     - pnpm --filter dvt-temporal-worker typecheck
-    - pnpm --filter dvt-temporal-worker build
-    - pnpm --filter dvt-temporal-worker test
     - pnpm --filter dvt-api typecheck
-    - pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts test/modules.test.ts
+    - pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     - pnpm --filter dvt-api test
-    - pnpm exec eslint --max-warnings 0 apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts packages/@dvt/artifacts/src/**/*.ts packages/@dvt/artifacts/test/runExecutionContextReaders.test.ts packages/@dvt/adapter-temporal/src/**/*.ts packages/@dvt/adapter-temporal/test/activities.test.ts packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts apps/temporal-worker/src/**/*.ts apps/temporal-worker/test/**/*.ts
+    - pnpm exec eslint --max-warnings 0 apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts packages/@dvt/adapter-temporal/src/activities/activityTypes.ts packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts packages/@dvt/adapter-temporal/test/activities.test.ts packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts packages/@dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts packages/@dvt/artifacts/src/ports/IDbtProjectBundleReader.ts packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts packages/@dvt/artifacts/test/runExecutionContextReaders.test.ts packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts packages/@dvt/contracts/src/schema-packs/common.ts packages/@dvt/contracts/src/types/artifacts.ts packages/@dvt/contracts/src/types/contracts.ts packages/@dvt/contracts/src/validation.ts packages/@dvt/contracts/src/validation/runtime.ts packages/@dvt/contracts/test/validation/execution-context.ts packages/@dvt/engine/test/core/WorkflowEngine.test.ts packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.test.ts
     - $env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs
+    - $env:ARC_JSON='arc.json'; node tools/ci/doc-check.mjs
+    - pnpm docs:gov:links:changed
+    - pnpm lint:md:changed
+    - pnpm verify:prepush
 ---
 
 ## Summary
@@ -64,6 +71,12 @@ explicit, testable, and operable.
    path through `/healthz`, `/readyz`, and `/metrics`.
 5. The worker has a canonical runbook baseline, so the new topology is not only
    code but also operator-facing truth.
+6. `pluginContexts.dbt.projectBundleRef` is now an immutable content-addressed
+   bundle reference with `sha256`, so the worker no longer executes mutable
+   bundle bytes behind a stable URI.
+7. Runtime artifact readers no longer create a fresh S3 client per read; the
+   hot path now uses a long-lived client instance/fallback instead of
+   read-scoped churn.
 
 ## What remains open
 

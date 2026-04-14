@@ -18,6 +18,7 @@
 export type ArtifactKind =
   | 'execution-plan'
   | 'compiled-sql'
+  | 'dbt-project-bundle'
   | 'dbt-manifest'
   | 'dbt-catalog'
   | 'dbt-run-results'
@@ -26,10 +27,19 @@ export type ArtifactKind =
 export interface ArtifactRef {
   uri: string;
   kind: ArtifactKind;
-  sha256?: string;
-  sizeBytes?: number;
-  expiresAt?: string;
-  tenantId?: string; // optional for now; will become required after full migration
+  sha256?: string | undefined;
+  sizeBytes?: number | undefined;
+  expiresAt?: string | undefined;
+  tenantId?: string | undefined; // optional for now; will become required after full migration
+}
+
+export interface DbtProjectBundleRef extends ArtifactRef {
+  uri: string;
+  kind: 'dbt-project-bundle';
+  sha256: string;
+  sizeBytes?: number | undefined;
+  expiresAt?: string | undefined;
+  tenantId?: string | undefined;
 }
 
 /**

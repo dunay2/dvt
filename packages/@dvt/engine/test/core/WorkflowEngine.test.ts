@@ -268,7 +268,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdBy: 'test',
             pluginContexts: {
               dbt: {
-                projectBundleRef: 'artifacts://run/project.tgz',
+                projectBundleRef: {
+                  uri: 'artifacts://run/project.tgz',
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                },
               },
             },
           };

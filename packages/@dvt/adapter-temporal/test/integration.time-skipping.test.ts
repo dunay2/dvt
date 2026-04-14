@@ -377,7 +377,7 @@ describe('temporal integration (time-skipping)', () => {
           ],
           {
             async execute(input) {
-              observedProjectBundles.push(input.pluginContext.projectBundleRef);
+              observedProjectBundles.push(input.pluginContext.projectBundleRef.uri);
               return { stepId: input.step.stepId, status: 'COMPLETED' };
             },
           }

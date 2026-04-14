@@ -1,5 +1,6 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import type {
+  DbtPluginContext,
   MaterializationEvidence,
   PlanRef,
   ResolvedRunContext,
@@ -40,7 +41,7 @@ export interface DbtPluginExecutionInput {
   executionIdentity: StepExecutionIdentity;
   runContext: ResolvedRunContext;
   runExecutionContext: RunExecutionContext;
-  pluginContext: Record<string, string>;
+  pluginContext: DbtPluginContext;
 }
 
 export interface DbtPluginRunner {

@@ -1,3 +1,5 @@
+import type { DbtProjectBundleRef } from '@dvt/contracts';
+
 /**
  * Read-side bundle port owned by the Artifacts bounded context.
  *
@@ -5,5 +7,5 @@
  * referenced from runExecutionContext plugin payloads.
  */
 export interface IDbtProjectBundleReader {
-  read(projectBundleRef: string): Promise<Uint8Array>;
+  read(projectBundleRef: DbtProjectBundleRef): Promise<Uint8Array>;
 }

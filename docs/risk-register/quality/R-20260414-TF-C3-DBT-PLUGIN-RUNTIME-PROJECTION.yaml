@@ -24,12 +24,17 @@ mitigations:
     test-only host wiring.'
   - 'Adapter-temporal unit and worker-composition tests now prove the reader-to-plugin-runner
     handoff explicitly.'
+  - 'The DBT runtime no longer dereferences a mutable string-only bundle URI: `projectBundleRef` is
+    now a typed immutable bundle ref with `kind=dbt-project-bundle` and required `sha256`, and the
+    worker verifies the bytes before execution.'
   - 'The DBT integration fixtures now bind `runExecutionContextRef.sha256` to canonical context
     bytes and reject unregistered refs, so same-worker multi-run tests cannot silently reuse one
     fake context.'
   - 'The same fixture seam now registers plan bytes per `PlanRef`, rejects stale
     `runExecutionContextRef` to plan bindings up front, and preserves engine rejection reasons when
     DBT step execution fails closed.'
+  - 'Artifact runtime reads no longer instantiate a fresh S3 client per fetch; the runtime now uses
+    a long-lived client path so bundle/context reads do not pay read-scoped SDK churn.'
   - 'Fixture lookup no longer depends on optional `PlanRef.sizeBytes`, and synthetic DBT runtime
     refs now hash RFC-8785/JCS canonical bytes so harmless property-order churn cannot masquerade as
     execution-context drift.'

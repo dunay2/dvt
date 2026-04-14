@@ -219,6 +219,7 @@ export const EngineRunRefSchema = z.discriminatedUnion('provider', [
 export const ArtifactKindSchema = z.enum([
   'execution-plan',
   'compiled-sql',
+  'dbt-project-bundle',
   'dbt-manifest',
   'dbt-catalog',
   'dbt-run-results',

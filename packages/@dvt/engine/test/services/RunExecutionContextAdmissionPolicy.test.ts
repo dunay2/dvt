@@ -63,7 +63,11 @@ function makeRunExecutionContext(overrides?: Partial<RunExecutionContext>): RunE
     createdBy: 'tests',
     pluginContexts: {
       dbt: {
-        projectBundleRef: 'artifacts://plans/run-1/project.tgz',
+        projectBundleRef: {
+          uri: 'artifacts://plans/run-1/project.tgz',
+          kind: 'dbt-project-bundle',
+          sha256: 'b'.repeat(64),
+        },
       },
     },
     ...overrides,

@@ -24,6 +24,28 @@ const Sha256HexStringSchema = NonBlankStringSchema.refine((value) => isSha256Hex
 }).brand<'Sha256HexString'>();
 
 const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
+export const DbtProjectBundleRefSchema = z
+  .object({
+    uri: NonBlankStringSchema,
+    kind: z.literal('dbt-project-bundle'),
+    sha256: Sha256HexStringSchema,
+    sizeBytes: z.number().int().nonnegative().optional(),
+    expiresAt: IsoUtcStringSchema.optional(),
+    tenantId: NonBlankStringSchema.optional(),
+  })
+  .strict();
+
+export const PluginContextValueSchema = z.union([NonBlankStringSchema, DbtProjectBundleRefSchema]);
+export const GenericPluginContextSchema = z
+  .record(z.string().min(1), PluginContextValueSchema)
+  .refine((ctx) => Object.keys(ctx).length > 0, 'Plugin context must include at least one key');
+export const DbtPluginContextSchema = z
+  .object({
+    projectBundleRef: DbtProjectBundleRefSchema,
+    targetProfile: NonBlankStringSchema.optional(),
+  })
+  .strict();
+export type DbtPluginContextSchemaT = z.infer<typeof DbtPluginContextSchema>;
 
 export const RunExecutionContextRefSchema = z
   .object({
@@ -49,14 +71,25 @@ export const RunExecutionContextSchema = z
     targetAdapter: ProviderSchema,
     createdAtIso: IsoUtcStringSchema,
     createdBy: NonBlankStringSchema,
-    pluginContexts: z.record(
-      z.string().min(1),
-      z
-        .record(z.string().min(1), NonBlankStringSchema)
-        .refine(
-          (ctx) => Object.keys(ctx).length > 0,
-          'Plugin context must include at least one key'
-        )
-    ),
+    pluginContexts: z.record(z.string().min(1), GenericPluginContextSchema),
+  })
+  .superRefine((input, ctx) => {
+    const dbtContext = input.pluginContexts['dbt'];
+    if (dbtContext === undefined) {
+      return;
+    }
+
+    const result = DbtPluginContextSchema.safeParse(dbtContext);
+    if (result.success) {
+      return;
+    }
+
+    for (const issue of result.error.issues) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: issue.message,
+        path: ['pluginContexts', 'dbt', ...issue.path],
+      });
+    }
   })
   .strict();

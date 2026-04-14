@@ -82,6 +82,11 @@ owned". This slice closes that by moving the DBT path onto:
 - Added `ArtifactBackedRunExecutionContextReader` and
   `ArtifactBackedDbtProjectBundleReader` to `@dvt/artifacts`, with governed
   `file://` and `s3://` handling.
+- Hardened `pluginContexts.dbt.projectBundleRef` from a mutable URI string into
+  a content-addressed bundle ref carrying `kind` and `sha256`, and verified the
+  bundle bytes before DBT execution.
+- Removed read-scoped S3 client construction from artifact runtime reads so the
+  DBT/runtime hot path no longer creates a fresh SDK client per artifact fetch.
 - Reduced `apps/api` to a thin wrapper that maps shared artifact-reader errors
   onto the existing `RunExecutionContextRejectedError` boundary.
 - Added `DbtCliPluginRunner` in `@dvt/adapter-temporal` so DBT execution now

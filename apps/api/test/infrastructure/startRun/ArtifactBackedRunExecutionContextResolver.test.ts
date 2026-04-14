@@ -46,7 +46,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
       pluginCompatibilityFingerprint: FINGERPRINT,
       pluginContexts: {
         dbt: {
-          projectBundleRef: 'artifacts://runs/run-1/project.tgz',
+          projectBundleRef: {
+            uri: 'artifacts://runs/run-1/project.tgz',
+            kind: 'dbt-project-bundle',
+            sha256: 'b'.repeat(64),
+          },
         },
       },
     });
@@ -255,7 +259,7 @@ function makeRunExecutionContextArtifact(
     createdAtIso: string;
     createdBy: string;
     pluginCompatibilityFingerprint: string;
-    pluginContexts: Record<string, Record<string, string>>;
+    pluginContexts: Record<string, Record<string, unknown>>;
   }>
 ): string {
   return JSON.stringify({
@@ -272,7 +276,11 @@ function makeRunExecutionContextArtifact(
     createdBy: 'planner-runtime',
     pluginContexts: {
       dbt: {
-        projectBundleRef: 'artifacts://runs/run-1/project.tgz',
+        projectBundleRef: {
+          uri: 'artifacts://runs/run-1/project.tgz',
+          kind: 'dbt-project-bundle',
+          sha256: 'b'.repeat(64),
+        },
       },
     },
     ...overrides,

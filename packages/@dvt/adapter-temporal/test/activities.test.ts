@@ -72,7 +72,11 @@ const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
   createdBy: 'test',
   pluginContexts: {
     dbt: {
-      projectBundleRef: 'artifacts://runs/run-1/project.tgz',
+      projectBundleRef: {
+        uri: 'artifacts://runs/run-1/project.tgz',
+        kind: 'dbt-project-bundle',
+        sha256: 'b'.repeat(64),
+      },
       targetProfile: 'dbt-dev',
     },
   },
@@ -625,7 +629,11 @@ describe('stepActivities', () => {
           runId: CTX.runId,
         },
         pluginContext: {
-          projectBundleRef: 'artifacts://runs/run-1/project.tgz',
+          projectBundleRef: {
+            uri: 'artifacts://runs/run-1/project.tgz',
+            kind: 'dbt-project-bundle',
+            sha256: 'b'.repeat(64),
+          },
           targetProfile: 'dbt-dev',
         },
         runExecutionContext: {

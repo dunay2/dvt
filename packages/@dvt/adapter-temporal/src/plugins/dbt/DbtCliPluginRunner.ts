@@ -59,11 +59,6 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
   }
 
   public async execute(input: DbtPluginExecutionInput): Promise<StepResult> {
-    const projectBundleRef = input.pluginContext['projectBundleRef'];
-    if (typeof projectBundleRef !== 'string' || projectBundleRef.trim().length === 0) {
-      return buildFailedStepResult(input.step.stepId, 'DBT_PROJECT_BUNDLE_REF_REQUIRED');
-    }
-
     const project = await this.materialize(input);
     if ('failure' in project) {
       return project.failure;
@@ -98,7 +93,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
       const args = buildDbtCliArgs(
         input.step.kind,
         input.step.stepId,
-        input.pluginContext['targetProfile']
+        input.pluginContext.targetProfile
       );
       await this.runCommand(this.dbtBin, args, { cwd: project.projectDir });
       return {
@@ -158,11 +153,7 @@ async function materializeDbtProject(
   bundleReader: IDbtProjectBundleReader,
   workdirRoot: string
 ): Promise<MaterializedDbtProject> {
-  const projectBundleRef = input.pluginContext['projectBundleRef'];
-  if (projectBundleRef === undefined) {
-    throw new Error('DBT_PROJECT_BUNDLE_REF_REQUIRED');
-  }
-
+  const projectBundleRef = input.pluginContext.projectBundleRef;
   const bundleBytes = await bundleReader.read(projectBundleRef);
   await mkdir(workdirRoot, { recursive: true });
   const workingDirectory = await mkdtemp(

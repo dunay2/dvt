@@ -44,6 +44,7 @@ export {
 } from './validation/planner.js';
 export {
   parseCanonicalRunStatus,
+  parseDbtPluginContext,
   parseEngineRunRef,
   parseProviderRunStatusView,
   parseRecoverRunCommand,
