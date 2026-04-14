@@ -2,11 +2,11 @@ import { Fragment, Suspense, createElement, type ComponentType, type ReactNode }
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
+import { getAllViews } from './plugins/registry';
 import Root from './Root';
 import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import PluginsView from './views/PluginsView';
-import { getAllViews } from './plugins/registry';
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;

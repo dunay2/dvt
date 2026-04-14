@@ -295,7 +295,7 @@ export function completeBootstrapScreen(): void {
   }
 
   setBootstrapScreenState('complete', 'Raven is ready', 'Opening the workspace.');
-  window.setTimeout(() => {
+  globalThis.setTimeout(() => {
     if (screen.dataset.state === 'complete') {
       screen.remove();
     }

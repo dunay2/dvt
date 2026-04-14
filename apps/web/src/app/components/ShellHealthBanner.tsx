@@ -34,12 +34,12 @@ export default function ShellHealthBanner({
       return undefined;
     }
 
-    const timer = window.setInterval(() => {
+    const timer = globalThis.setInterval(() => {
       setNow(Date.now());
     }, 1_000);
 
     return () => {
-      window.clearInterval(timer);
+      globalThis.clearInterval(timer);
     };
   }, [connectionState]);
 
@@ -67,7 +67,7 @@ export default function ShellHealthBanner({
 
   return (
     <div
-      className="border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-3 py-1.5"
+      className="border-b border-(--border-default) bg-(--surface-shell) px-3 py-1.5"
       data-testid="shell-health-banner"
     >
       <div
@@ -83,7 +83,7 @@ export default function ShellHealthBanner({
         ) : (
           <AlertTriangle className="size-4 shrink-0" />
         )}
-        <span className="font-semibold text-[var(--text-strong)]">{headline}</span>
+        <span className="font-semibold text-(--text-strong)">{headline}</span>
         <span className="min-w-0 flex-1 truncate text-[11px] leading-5 opacity-80" title={detail}>
           {detail}
         </span>

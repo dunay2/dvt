@@ -33,19 +33,18 @@ function mockEndpointResponse(endpoint: string): Response {
 describe('createHttpPlatformHealthClient', () => {
   describe('transport contract', () => {
     it('uses GET requests without session headers for every probe', async () => {
-      const recorder = createApiRequestRecorder((endpoint) => mockEndpointResponse(endpoint));
+      const recorder = createApiRequestRecorder(mockEndpointResponse);
 
       const client = createHttpPlatformHealthClient(createApiClientStub(recorder.requestRaw));
 
       await client.loadSnapshot();
 
       expect(recorder.requests).toHaveLength(4);
-      expect(recorder.requests.map((entry) => entry.endpoint).sort()).toEqual([
-        '/db/ready',
-        '/healthz',
-        '/readyz',
-        '/version',
-      ]);
+      expect(
+        recorder.requests
+          .map((entry) => entry.endpoint)
+          .sort((left, right) => left.localeCompare(right))
+      ).toEqual(['/db/ready', '/healthz', '/readyz', '/version']);
       expect(
         recorder.requests.every(
           (entry) => entry.init?.method === 'GET' && entry.init?.includeSessionHeaders === false
@@ -54,7 +53,7 @@ describe('createHttpPlatformHealthClient', () => {
     });
 
     it('skips optional probes that are disabled in runtime configuration', async () => {
-      const recorder = createApiRequestRecorder((endpoint) => mockEndpointResponse(endpoint));
+      const recorder = createApiRequestRecorder(mockEndpointResponse);
 
       const client = createHttpPlatformHealthClient(
         createApiClientStub(recorder.requestRaw),
@@ -71,7 +70,7 @@ describe('createHttpPlatformHealthClient', () => {
 
   describe('loadSnapshot', () => {
     it('loads a full healthy snapshot from the backend endpoints', async () => {
-      const requestRaw = vi.fn(async (endpoint: string) => mockEndpointResponse(endpoint));
+      const requestRaw = vi.fn((endpoint: string) => Promise.resolve(mockEndpointResponse(endpoint)));
 
       const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
       const snapshot = await client.loadSnapshot();

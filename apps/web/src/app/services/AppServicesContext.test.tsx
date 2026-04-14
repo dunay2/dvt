@@ -5,10 +5,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { IPlansPort } from '../ports/plans';
+import type { IRunsPort } from '../ports/runs';
+import type { IWorkspacePort } from '../ports/workspace';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
-import type { PlansService } from './plans/plansService';
-import type { RunsService } from './runs/runsService';
-import type { WorkspaceService } from './workspace/workspaceService';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -20,6 +20,13 @@ import {
   useWorkspaceService,
 } from './AppServicesContext';
 
+function clearStableContextKey(): void {
+  Reflect.deleteProperty(
+    globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
+    '__dvtAppServicesContext'
+  );
+}
+
 describe('AppServicesProvider', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -27,9 +34,9 @@ describe('AppServicesProvider', () => {
 
   const captured: {
     mode: ReturnType<typeof useAppDataSourceMode> | null;
-    workspaceService: WorkspaceService | null;
-    runsService: RunsService | null;
-    plansService: PlansService | null;
+    workspaceService: IWorkspacePort | null;
+    runsService: IRunsPort | null;
+    plansService: IPlansPort | null;
     capabilitiesPort: CapabilitiesPort | null;
     sessionContext: ReturnType<typeof useSessionContext> | null;
     shellFeedback: ReturnType<typeof useShellFeedback> | null;
@@ -42,13 +49,6 @@ describe('AppServicesProvider', () => {
     sessionContext: null,
     shellFeedback: null,
   };
-
-  function clearStableContextKey(): void {
-    Reflect.deleteProperty(
-      globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
-      '__dvtAppServicesContext'
-    );
-  }
 
   function Probe(): null {
     captured.mode = useAppDataSourceMode();

@@ -146,7 +146,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
           isFetching={shellHealth.isFetching}
           lastSettledAtMs={shellHealth.lastSettledAtMs}
           onRetry={() => {
-            void platformHealth.refetch();
+            platformHealth.refetch().catch(() => undefined);
           }}
         />
       }
