@@ -1,5 +1,6 @@
-import { Columns, FileCheck, GitBranch, LayoutGrid, Play, Target, Upload } from 'lucide-react';
+import { Columns, DollarSign, FileCheck, LayoutGrid, Play, Target, Upload } from 'lucide-react';
 
+import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
@@ -28,6 +29,39 @@ type CanvasToolbarProps = {
   readonly edgeCount: number;
 };
 
+function resolveModeLabel(canvasAuthoringMode: 'transformation' | 'dbt'): string {
+  return canvasAuthoringMode === 'transformation' ? 'SQL flow' : 'dbt graph';
+}
+
+function resolveValidationLabel(
+  transformationValidation: TransformationGraphValidationResult
+): string {
+  if (transformationValidation.valid) {
+    return 'Preview ready';
+  }
+
+  if (
+    transformationValidation.summary ===
+    'Plan requires exactly 3 nodes: source, sql_transform, and sink.'
+  ) {
+    return 'Need source, transform, sink';
+  }
+
+  return transformationValidation.summary;
+}
+
+function resolvePlanLabel(planStatusSummary: string, canStartRun: boolean): string {
+  if (canStartRun) {
+    return 'Run ready';
+  }
+
+  if (planStatusSummary === 'Preview required before running.') {
+    return 'Plan required';
+  }
+
+  return planStatusSummary;
+}
+
 export default function CanvasToolbar({
   onOpenDataRegistry,
   onAutoLayout,
@@ -51,18 +85,14 @@ export default function CanvasToolbar({
   edgeCount,
 }: CanvasToolbarProps) {
   const canPlanTransformation = transformationValidation.valid;
-  const modeSummary =
-    canvasAuthoringMode === 'transformation'
-      ? 'Mode: source -> sql_transform -> sink'
-      : 'Mode: dbt graph';
+  const modeLabel = resolveModeLabel(canvasAuthoringMode);
+  const validationLabel = resolveValidationLabel(transformationValidation);
+  const planLabel = resolvePlanLabel(planStatusSummary, canStartRun);
+  const graphStatsLabel = `${nodeCount}N / ${edgeCount}E`;
 
   return (
     <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="hidden text-[11px] font-medium uppercase tracking-[0.16em] text-slate-300 lg:block">
-          Graph Tools
-        </div>
-
         <Button
           type="button"
           variant="outline"
@@ -126,33 +156,56 @@ export default function CanvasToolbar({
               exclusiveOverlayMode === 'cost' && 'bg-slate-700 text-white'
             )}
           >
-            <GitBranch className="size-4" />
+            <DollarSign className="size-4" />
             Cost
           </Button>
         )}
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-300 select-none tabular-nums">
-          <span className="text-cyan-300">{modeSummary}</span>
-          <span className="text-slate-400">|</span>
-          <span>
-            {nodeCount} node{nodeCount !== 1 ? 's' : ''}
-          </span>
-          <span className="text-slate-400">|</span>
-          <span>
-            {edgeCount} edge{edgeCount !== 1 ? 's' : ''}
-          </span>
-          <span className="text-slate-400">|</span>
-          <span className={cn(canPlanTransformation ? 'text-emerald-300' : 'text-amber-300')}>
-            {transformationValidation.summary}
-          </span>
-          <span className="text-slate-400">|</span>
-          <span className={cn(canStartRun ? 'text-emerald-300' : 'text-slate-300')}>
-            {planStatusSummary}
-          </span>
+        <div className="hidden items-center gap-1.5 xl:flex">
+          <Badge
+            variant="outline"
+            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-cyan-200"
+            title={
+              canvasAuthoringMode === 'transformation'
+                ? 'Mode: source -> sql_transform -> sink'
+                : 'Mode: dbt graph'
+            }
+          >
+            {modeLabel}
+          </Badge>
+          <Badge
+            variant="outline"
+            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-slate-200"
+            title={`${nodeCount} node${nodeCount !== 1 ? 's' : ''} and ${edgeCount} edge${
+              edgeCount !== 1 ? 's' : ''
+            }`}
+          >
+            {graphStatsLabel}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
+              canPlanTransformation ? 'text-emerald-200' : 'text-amber-200'
+            )}
+            title={transformationValidation.summary}
+          >
+            {validationLabel}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              'h-7 max-w-[15rem] border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
+              canStartRun ? 'text-emerald-200' : 'text-slate-200'
+            )}
+            title={planStatusSummary}
+          >
+            <span className="truncate">{planLabel}</span>
+          </Badge>
         </div>
-        <Separator orientation="vertical" className="h-5 bg-slate-700" />
+        <Separator orientation="vertical" className="hidden h-5 bg-slate-700 xl:block" />
         <Button
           type="button"
           variant="outline"

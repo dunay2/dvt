@@ -172,10 +172,13 @@ flowchart LR
 
 ### UX Target
 
-1. Keep navigation icon-only with tooltips, no persistent sidebar labels or headers.
+1. Keep primary navigation compact and free of redundant headers; label treatment follows the
+   active workbench navigation contract rather than ad hoc shell rules.
 2. Move secondary top-bar controls into one contextual menu.
-3. Leave only primary operational context visible in top bar.
-4. Recover visible vertical space for canvas/work area.
+3. Leave only primary global context visible in top bar and use compact active-surface cues where
+   useful.
+4. Render degraded and offline health as a compact status strip and recover visible vertical space
+   for canvas or work area.
 
 ### Architecture Target
 

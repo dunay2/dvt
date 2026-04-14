@@ -1,17 +1,13 @@
 export type ShellTopBarCopy = {
   readonly shell: string;
-  readonly workspaceControls: string;
+  readonly workspacePanels: string;
+  readonly viewOptions: string;
   readonly explorerPanel: string;
   readonly inspectorPanel: string;
   readonly consolePanel: string;
   readonly focusMode: string;
   readonly gridSize: string;
-  readonly quickActions: string;
-  readonly notifications: string;
-  readonly profileSettings: string;
-  readonly apiKeys: string;
-  readonly documentation: string;
-  readonly signOut: string;
+  readonly resetGrid: string;
   readonly gitTooltip: string;
   readonly checking: string;
   readonly checkingTooltip: string;
@@ -22,19 +18,15 @@ export type ShellTopBarCopy = {
 };
 
 const EN_COPY: ShellTopBarCopy = {
-  shell: 'Shell',
-  workspaceControls: 'Workspace controls',
+  shell: 'View',
+  workspacePanels: 'Panels',
+  viewOptions: 'View options',
   explorerPanel: 'Explorer Panel',
   inspectorPanel: 'Inspector Panel',
   consolePanel: 'Console',
   focusMode: 'Focus Mode',
   gridSize: 'Grid size',
-  quickActions: 'Quick actions',
-  notifications: 'Notifications',
-  profileSettings: 'Profile Settings',
-  apiKeys: 'API Keys',
-  documentation: 'Documentation',
-  signOut: 'Sign Out',
+  resetGrid: 'Reset grid to 20px',
   gitTooltip: 'Current Git branch and commit SHA',
   checking: 'Checking',
   checkingTooltip: 'Checking platform health endpoints',
@@ -45,19 +37,15 @@ const EN_COPY: ShellTopBarCopy = {
 };
 
 const ES_COPY: ShellTopBarCopy = {
-  shell: 'Shell',
-  workspaceControls: 'Controles del workspace',
+  shell: 'Vista',
+  workspacePanels: 'Paneles',
+  viewOptions: 'Opciones de vista',
   explorerPanel: 'Panel explorador',
   inspectorPanel: 'Panel inspector',
   consolePanel: 'Consola',
   focusMode: 'Modo foco',
   gridSize: 'Tama\u00f1o de rejilla',
-  quickActions: 'Acciones r\u00e1pidas',
-  notifications: 'Notificaciones',
-  profileSettings: 'Configuraci\u00f3n de perfil',
-  apiKeys: 'Claves API',
-  documentation: 'Documentaci\u00f3n',
-  signOut: 'Cerrar sesi\u00f3n',
+  resetGrid: 'Restablecer rejilla a 20px',
   gitTooltip: 'Rama Git y SHA del commit actual',
   checking: 'Comprobando',
   checkingTooltip: 'Comprobando endpoints de salud de plataforma',

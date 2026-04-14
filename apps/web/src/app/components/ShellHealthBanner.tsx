@@ -2,8 +2,8 @@ import { AlertTriangle, RefreshCw, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PlatformConnectionState } from '../../capabilities/platform-health';
 
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Button } from './ui/button';
+import { cn } from './ui/utils';
 
 type ShellHealthBannerProps = {
   readonly autoRefreshIntervalMs: number;
@@ -50,52 +50,58 @@ export default function ShellHealthBanner({
   const isOffline = connectionState.rest === 'offline';
   const nextRefreshInMs =
     lastSettledAtMs > 0 ? Math.max(lastSettledAtMs + autoRefreshIntervalMs - now, 0) : null;
-  const countdownMessage = isFetching
-    ? 'Refreshing platform health now.'
-    : nextRefreshInMs === null
-      ? 'Auto-refresh is waiting for the first completed health check.'
-      : nextRefreshInMs === 0
-        ? 'Auto-refresh is due now.'
-        : `Auto-refresh in ${formatRemainingSeconds(nextRefreshInMs)}.`;
+  let countdownMessage = 'Auto-refresh is waiting for the first completed health check.';
+  if (isFetching) {
+    countdownMessage = 'Refreshing platform health now.';
+  } else if (nextRefreshInMs === 0) {
+    countdownMessage = 'Auto-refresh is due now.';
+  } else if (nextRefreshInMs !== null) {
+    countdownMessage = `Auto-refresh in ${formatRemainingSeconds(nextRefreshInMs)}.`;
+  }
+  const headline = isOffline ? 'Backend offline' : 'Backend degraded';
+  const detail =
+    detailMessage ??
+    (isOffline
+      ? 'Unable to reach the platform health endpoints.'
+      : 'The platform health snapshot reports degraded service.');
 
   return (
     <div
-      className="border-b border-slate-800 bg-slate-950/95 px-4 py-3"
+      className="border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-3 py-1.5"
       data-testid="shell-health-banner"
     >
-      <Alert
-        className={
+      <div
+        className={cn(
+          'flex min-h-9 flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-1.5 text-xs',
           isOffline
-            ? 'border-red-500/40 bg-red-950/30 text-red-50 [&_[data-slot=alert-description]]:text-red-100/85'
-            : 'border-amber-500/40 bg-amber-950/30 text-amber-50 [&_[data-slot=alert-description]]:text-amber-100/85'
-        }
-        variant={isOffline ? 'destructive' : 'default'}
+            ? 'border-red-500/40 bg-red-950/25 text-red-100'
+            : 'border-amber-500/40 bg-amber-950/25 text-amber-100'
+        )}
       >
-        {isOffline ? <WifiOff /> : <AlertTriangle />}
-        <AlertTitle>{isOffline ? 'Backend offline' : 'Backend degraded'}</AlertTitle>
-        <AlertDescription>
-          <p>
-            {detailMessage ??
-              (isOffline
-                ? 'Unable to reach the platform health endpoints.'
-                : 'The platform health snapshot reports degraded service.')}
-          </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <span className="text-xs font-medium uppercase tracking-wide">{countdownMessage}</span>
-            <Button
-              className="h-8"
-              disabled={isFetching}
-              onClick={onRetry}
-              size="sm"
-              type="button"
-              variant={isOffline ? 'destructive' : 'secondary'}
-            >
-              <RefreshCw className={isFetching ? 'animate-spin' : ''} />
-              Retry now
-            </Button>
-          </div>
-        </AlertDescription>
-      </Alert>
+        {isOffline ? (
+          <WifiOff className="size-4 shrink-0" />
+        ) : (
+          <AlertTriangle className="size-4 shrink-0" />
+        )}
+        <span className="font-semibold text-[var(--text-strong)]">{headline}</span>
+        <span className="min-w-0 flex-1 truncate text-[11px] leading-5 opacity-80" title={detail}>
+          {detail}
+        </span>
+        <span className="text-[11px] font-medium uppercase tracking-wide opacity-80">
+          {countdownMessage}
+        </span>
+        <Button
+          className="h-7 px-2.5 text-[11px]"
+          disabled={isFetching}
+          onClick={onRetry}
+          size="sm"
+          type="button"
+          variant={isOffline ? 'destructive' : 'secondary'}
+        >
+          <RefreshCw className={isFetching ? 'animate-spin' : ''} />
+          Retry now
+        </Button>
+      </div>
     </div>
   );
 }

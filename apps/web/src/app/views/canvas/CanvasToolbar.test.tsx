@@ -72,7 +72,10 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(container.textContent).toContain('Mode: source -> sql_transform -> sink');
+    expect(container.textContent).toContain('SQL flow');
+    expect(container.textContent).toContain('3N / 2E');
+    expect(container.textContent).toContain('Preview ready');
+    expect(container.textContent).toContain('Plan required');
   });
 
   it('disables Plan button when transformation validation is invalid', async () => {
@@ -111,9 +114,7 @@ describe('CanvasToolbar', () => {
     );
     expect(planButton).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(container.textContent).toContain(
-      'Plan requires exactly 3 nodes: source, sql_transform, and sink.'
-    );
+    expect(container.textContent).toContain('Need source, transform, sink');
   });
 
   it('disables mutation buttons when route permissions gate graph edits and run controls', async () => {
@@ -154,5 +155,6 @@ describe('CanvasToolbar', () => {
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(container.textContent).toContain('Run ready');
   });
 });

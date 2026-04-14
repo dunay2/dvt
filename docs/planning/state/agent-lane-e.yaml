@@ -166,24 +166,36 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: F-01
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
-      clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify
-      secondary controls into a contextual menu.
+      clean up shell chrome so the top bar keeps only global context, the Canvas toolbar uses
+      compact signals instead of verbose prose, and secondary controls live in a contextual menu.
     dependency: none
     target: >-
-      Shell navigation is icon-only with tooltips. No persistent sidebar text labels. TopBar
-      secondary controls are collapsed into a single contextual menu. Canvas area gains visible
-      vertical space.
+      TopBar exposes global context, active surface context, health, and real view controls only.
+      Canvas toolbar uses compact operational chips plus plan and run actions without long helper
+      prose. Degraded and offline shell health render as a compact status strip. Canvas area gains
+      visible vertical space.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
+      - docs/architecture/components/web/iconography-and-design-tokens-contract.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason:
-      Shell cleanup is still a planned lane-E slice with no implementation evidence in this pass.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260414-shell-chrome-signal-compaction-closeout.md
+      - apps/web/src/app/components/TopAppBar.tsx
+      - apps/web/src/app/components/ShellHealthBanner.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+    status_reason: >-
+      The shell cleanup slice is now active with docs-first rationale and a first implementation
+      pass: fake shell-menu actions were removed, the top bar now exposes route context plus real
+      view controls, the global health banner is compact, and the Canvas toolbar status line is
+      reduced to compact operational chips. Remaining work is left-rail convergence and broader
+      route-toolbar extraction under shared workbench primitives.
+    last_verified: '2026-04-14'
   - task_id: F-02
     priority: P0
     status: done

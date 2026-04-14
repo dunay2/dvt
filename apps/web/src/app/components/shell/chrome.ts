@@ -9,6 +9,10 @@ export const topAppBarClasses = {
   gitRefIcon: 'size-3.5 text-[var(--text-subtle)]',
   gitRefSeparator: 'text-[var(--text-subtle)]',
   gitRefSha: 'text-xs text-[var(--text-strong)]',
+  contextChip:
+    'hidden h-8 items-center gap-2 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)] xl:flex',
+  contextChipIcon: 'size-3.5 text-[var(--text-subtle)]',
+  contextChipLabel: 'text-[var(--text-strong)]',
   smallStatusText: 'flex cursor-default items-center gap-1.5 px-1 text-[11px]',
   menuButton:
     'h-8 gap-1.5 px-2 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
