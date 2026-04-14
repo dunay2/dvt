@@ -1,6 +1,7 @@
 import { Fragment, Suspense, createElement, type ComponentType, type ReactNode } from 'react';
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 
+import AppRouteErrorBoundary from './AppRouteErrorBoundary';
 import Root from './Root';
 import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
@@ -49,29 +50,34 @@ function createPluginRoute(pluginId: string, component: ComponentType): RouteObj
   );
 }
 
-const pluginRoutes = getAllViews().map<RouteObject>((view) => ({
-  path: normalizeChildPath(view.path),
-  element: createPluginRoute(view.pluginId, view.component),
-}));
+export function createAppRoutes(): RouteObject[] {
+  const pluginRoutes = getAllViews().map<RouteObject>((view) => ({
+    path: normalizeChildPath(view.path),
+    element: createPluginRoute(view.pluginId, view.component),
+  }));
+  const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));
+  const shellRoutes: RouteObject[] = [
+    { path: 'plugins', Component: PluginsView },
+    { path: 'admin', Component: AdminView },
+  ].filter((route) => !pluginRoutePaths.has(route.path));
 
-const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));
+  return [
+    {
+      path: '/',
+      Component: Root,
+      errorElement: createElement(AppRouteErrorBoundary),
+      children: [
+        {
+          index: true,
+          element: createElement(DefaultCoreRouteRedirect),
+        },
+        ...pluginRoutes,
+        ...shellRoutes,
+      ],
+    },
+  ];
+}
 
-const shellRoutes: RouteObject[] = [
-  { path: 'plugins', Component: PluginsView },
-  { path: 'admin', Component: AdminView },
-].filter((route) => !pluginRoutePaths.has(route.path));
-
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    Component: Root,
-    children: [
-      {
-        index: true,
-        element: createElement(DefaultCoreRouteRedirect),
-      },
-      ...pluginRoutes,
-      ...shellRoutes,
-    ],
-  },
-]);
+export function createAppRouter() {
+  return createBrowserRouter(createAppRoutes());
+}
