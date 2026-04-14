@@ -178,8 +178,8 @@ export default function CanvasToolbar({
           <Badge
             variant="outline"
             className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-slate-200"
-            title={`${nodeCount} node${nodeCount !== 1 ? 's' : ''} and ${edgeCount} edge${
-              edgeCount !== 1 ? 's' : ''
+            title={`${nodeCount} node${nodeCount === 1 ? '' : 's'} and ${edgeCount} edge${
+              edgeCount === 1 ? '' : 's'
             }`}
           >
             {graphStatsLabel}
@@ -197,7 +197,7 @@ export default function CanvasToolbar({
           <Badge
             variant="outline"
             className={cn(
-              'h-7 max-w-[15rem] border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
+              'h-7 max-w-60 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
               canStartRun ? 'text-emerald-200' : 'text-slate-200'
             )}
             title={planStatusSummary}

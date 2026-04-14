@@ -1,10 +1,10 @@
+import { Card } from '../../components/ui/card';
+import { cn } from '../../components/ui/utils';
 import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
 import { WorkbenchReadOnlyState } from '../../components/workbench/state/WorkbenchStates';
-import { Card } from '../../components/ui/card';
-import { cn } from '../../components/ui/utils';
 import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { canvasViewCopy } from './copy';
 
@@ -13,12 +13,12 @@ function CanvasSurfaceStateCard({
   title,
   message,
   tone = 'default',
-}: {
+}: Readonly<{
   dataSlot: string;
   title: string;
   message: string;
   tone?: 'default' | 'danger';
-}) {
+}>) {
   return (
     <div data-slot={`${dataSlot}-frame`} className="flex flex-1 items-center justify-center p-6">
       <Card
@@ -26,13 +26,13 @@ function CanvasSurfaceStateCard({
         className={cn(
           routeWorkbenchPanelClassName,
           'w-full max-w-xl p-6',
-          tone === 'danger' && 'border-[color:var(--status-danger)] bg-[var(--surface-elevated)]'
+          tone === 'danger' && 'border-(--status-danger) bg-(--surface-elevated)'
         )}
       >
         <h2
           className={cn(
             'mb-2 text-base font-semibold',
-            tone === 'danger' && 'text-[var(--status-danger)]'
+            tone === 'danger' && 'text-(--status-danger)'
           )}
         >
           {title}
@@ -40,7 +40,7 @@ function CanvasSurfaceStateCard({
         <p
           className={cn(
             'text-sm',
-            tone === 'danger' ? 'text-[var(--text-default)]' : routeWorkbenchMutedTextClassName
+            tone === 'danger' ? 'text-(--text-default)' : routeWorkbenchMutedTextClassName
           )}
         >
           {message}
@@ -50,14 +50,14 @@ function CanvasSurfaceStateCard({
   );
 }
 
-export function CanvasLoadingStateView() {
-  return (
-    <CanvasSurfaceStateCard
-      dataSlot="canvas-loading-state"
-      title={canvasViewCopy.routeLoadingTitle}
-      message={canvasViewCopy.routeLoadingMessage}
-    />
-  );
+export function CanvasLoadingStateView({
+  title = canvasViewCopy.routeLoadingTitle,
+  message = canvasViewCopy.routeLoadingMessage,
+}: Readonly<{
+  title?: string;
+  message?: string;
+}>) {
+  return <CanvasSurfaceStateCard dataSlot="canvas-loading-state" title={title} message={message} />;
 }
 
 export function CanvasEmptyStateView() {
@@ -70,7 +70,7 @@ export function CanvasEmptyStateView() {
   );
 }
 
-export function CanvasErrorStateView({ message }: { message: string }) {
+export function CanvasErrorStateView({ message }: Readonly<{ message: string }>) {
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-error-state"
@@ -81,7 +81,18 @@ export function CanvasErrorStateView({ message }: { message: string }) {
   );
 }
 
-export function CanvasReadOnlyBannerView({ state }: { state: CanvasReadOnlyState }) {
+export function CanvasBlockedStateView({ message }: Readonly<{ message: string }>) {
+  return (
+    <CanvasSurfaceStateCard
+      dataSlot="canvas-blocked-state"
+      title={canvasViewCopy.backendBlockedTitle}
+      message={message}
+      tone="danger"
+    />
+  );
+}
+
+export function CanvasReadOnlyBannerView({ state }: Readonly<{ state: CanvasReadOnlyState }>) {
   if (state == null) {
     return null;
   }

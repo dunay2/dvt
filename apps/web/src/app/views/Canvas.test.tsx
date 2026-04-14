@@ -10,6 +10,10 @@ import { useCanvasController } from './canvas/useCanvasController';
 const canvasRouteState = vi.hoisted(() => ({
   explorerProps: null as null | Record<string, unknown>,
 }));
+const bootstrapScreenMocks = vi.hoisted(() => ({
+  completeBootstrapScreen: vi.fn(),
+  setBootstrapStepStatus: vi.fn(),
+}));
 
 vi.mock('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -17,6 +21,11 @@ vi.mock('@xyflow/react', () => ({
 
 vi.mock('./canvas/useCanvasController', () => ({
   useCanvasController: vi.fn(),
+}));
+
+vi.mock('../bootstrap/appBootstrapScreen', () => ({
+  completeBootstrapScreen: bootstrapScreenMocks.completeBootstrapScreen,
+  setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
 }));
 
 vi.mock('../components/DbtExplorer', () => ({
@@ -47,6 +56,10 @@ type CanvasController = ReturnType<typeof useCanvasController>;
 
 function buildController(overrides?: Partial<CanvasController>): CanvasController {
   return {
+    dataSourceMode: 'mock',
+    isBackendCheckPending: false,
+    backendReady: true,
+    backendBlockMessage: null,
     isLoadingGraph: false,
     graphErrorMessage: null,
     focusMode: false,
@@ -136,6 +149,8 @@ describe('Canvas route', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
     mockedUseCanvasController.mockReset();
     canvasRouteState.explorerProps = null;
+    bootstrapScreenMocks.completeBootstrapScreen.mockReset();
+    bootstrapScreenMocks.setBootstrapStepStatus.mockReset();
   });
 
   afterEach(() => {
@@ -162,6 +177,11 @@ describe('Canvas route', () => {
     expect(container.textContent).toContain('Loading canvas');
     expect(container.querySelector('[data-slot="canvas-loading-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'pending',
+      'Loading workspace graph for canvas'
+    );
   });
 
   it('renders a governed empty state when the workspace graph has no nodes', async () => {
@@ -178,6 +198,12 @@ describe('Canvas route', () => {
     expect(container.textContent).toContain('No graph content loaded');
     expect(container.querySelector('[data-slot="canvas-empty-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'complete',
+      'Canvas is ready with no graph content yet'
+    );
+    expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
   });
 
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {
@@ -196,6 +222,12 @@ describe('Canvas route', () => {
     expect(container.textContent).toContain('workspace graph unavailable');
     expect(container.querySelector('[data-slot="canvas-error-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'error',
+      'workspace graph unavailable'
+    );
+    expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
   });
 
   it('keeps the viewport visible and shows a read-only banner when mutations are gated', async () => {
@@ -232,5 +264,40 @@ describe('Canvas route', () => {
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  });
+
+  it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        dataSourceMode: 'api',
+        backendReady: false,
+        backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
+      })
+    );
+
+    await act(async () => {
+      root.render(<Canvas />);
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const addDataButton = buttons.find((button) => button.textContent?.includes('Add data'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+
+    expect(container.querySelector('[data-slot="canvas-blocked-state"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(container.textContent).toContain('Backend not ready');
+    expect(container.textContent).toContain('Readiness not satisfied: database_not_configured.');
+    expect(addDataButton?.getAttribute('disabled')).not.toBeNull();
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'blocked',
+      'Readiness not satisfied: database_not_configured.'
+    );
+    expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
   });
 });
