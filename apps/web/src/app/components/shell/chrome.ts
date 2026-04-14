@@ -19,14 +19,15 @@ export const topAppBarClasses = {
 };
 
 export const leftNavigationRailClasses = {
-  rail: 'h-full w-16 shrink-0 border-r border-[color:var(--border-default)] bg-[var(--surface-shell)]',
-  nav: 'flex h-full flex-col items-center gap-3.5 overflow-y-auto py-4',
-  link: 'flex size-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-[var(--text-subtle)] transition-colors',
+  rail: 'h-full w-36 shrink-0 border-r border-[color:var(--border-default)] bg-[var(--surface-shell)]',
+  nav: 'flex h-full flex-col items-stretch gap-2 overflow-y-auto px-2 py-4',
+  link: 'grid h-10 w-full shrink-0 grid-cols-[18px_1fr] items-center gap-2 rounded-xl border border-transparent px-3 text-[var(--text-subtle)] transition-colors',
   linkInteractive:
     'hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-shell)]',
   linkActive:
     'border-[color:var(--status-running)] bg-[var(--surface-selected)] text-[var(--text-strong)]',
-  icon: 'size-[18px] shrink-0',
+  icon: 'size-[18px] shrink-0 justify-self-start',
+  caption: 'block max-w-full truncate text-left text-[11px] leading-none text-inherit',
 };
 
 export const bottomConsoleDrawerClasses = {

@@ -1,11 +1,16 @@
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 
 import { useShellRuntime } from '../shell/useShellRuntime';
 import { leftNavigationRailClasses } from './shell/chrome';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
 
+function isNavigationItemActive(pathname: string, targetPath: string): boolean {
+  return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
+}
+
 export function LeftNavigationRail() {
+  const location = useLocation();
   const {
     navigationModel: { primaryItems, footerItems },
   } = useShellRuntime();
@@ -21,16 +26,21 @@ export function LeftNavigationRail() {
                 <TooltipTrigger asChild>
                   <NavLink
                     to={item.to}
-                    className={({ isActive }) =>
-                      cn(
-                        leftNavigationRailClasses.link,
-                        leftNavigationRailClasses.linkInteractive,
-                        isActive && leftNavigationRailClasses.linkActive
-                      )
-                    }
+                    className={cn(
+                      leftNavigationRailClasses.link,
+                      leftNavigationRailClasses.linkInteractive,
+                      isNavigationItemActive(location.pathname, item.to) &&
+                        leftNavigationRailClasses.linkActive
+                    )}
                     data-slot="left-navigation-link"
                   >
                     <Icon className={leftNavigationRailClasses.icon} />
+                    <span
+                      data-slot="left-navigation-caption"
+                      className={leftNavigationRailClasses.caption}
+                    >
+                      {item.label}
+                    </span>
                   </NavLink>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -47,16 +57,21 @@ export function LeftNavigationRail() {
               <TooltipTrigger asChild>
                 <NavLink
                   to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      leftNavigationRailClasses.link,
-                      leftNavigationRailClasses.linkInteractive,
-                      isActive && leftNavigationRailClasses.linkActive
-                    )
-                  }
+                  className={cn(
+                    leftNavigationRailClasses.link,
+                    leftNavigationRailClasses.linkInteractive,
+                    isNavigationItemActive(location.pathname, item.to) &&
+                      leftNavigationRailClasses.linkActive
+                  )}
                   data-slot="left-navigation-link"
                 >
                   <item.icon className={leftNavigationRailClasses.icon} />
+                  <span
+                    data-slot="left-navigation-caption"
+                    className={leftNavigationRailClasses.caption}
+                  >
+                    {item.label}
+                  </span>
                 </NavLink>
               </TooltipTrigger>
               <TooltipContent side="right">

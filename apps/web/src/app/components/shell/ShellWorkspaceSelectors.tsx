@@ -6,20 +6,16 @@ type ShellWorkspaceSelectorsProps = {
   readonly workspaceBootstrap: WorkspaceBootstrapConfig;
   readonly selectedTenant: string;
   readonly selectedProject: string;
-  readonly selectedEnvironment: string;
   readonly setSelectedTenant: (tenantId: string) => void;
   readonly setSelectedProject: (projectId: string) => void;
-  readonly setSelectedEnvironment: (environmentId: string) => void;
 };
 
 export function ShellWorkspaceSelectors({
   workspaceBootstrap,
   selectedTenant,
   selectedProject,
-  selectedEnvironment,
   setSelectedTenant,
   setSelectedProject,
-  setSelectedEnvironment,
 }: ShellWorkspaceSelectorsProps) {
   return (
     <div data-slot="shell-workspace-selectors" className="contents">
@@ -44,19 +40,6 @@ export function ShellWorkspaceSelectors({
           {workspaceBootstrap.projectOptions.map((projectOption) => (
             <SelectItem key={projectOption.value} value={projectOption.value}>
               {projectOption.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={selectedEnvironment} onValueChange={setSelectedEnvironment}>
-        <SelectTrigger className={`w-[104px] ${topAppBarClasses.selectTrigger}`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {workspaceBootstrap.environmentOptions.map((environmentOption) => (
-            <SelectItem key={environmentOption.value} value={environmentOption.value}>
-              {environmentOption.label}
             </SelectItem>
           ))}
         </SelectContent>
