@@ -8,14 +8,21 @@
  * @version 1.1.0
  * @date 2026-03-07
  */
+import type { IRunExecutionContextReader } from '@dvt/artifacts';
+import type {
+  MaterializationEvidence,
+  PlanRef,
+  ResolvedRunContext,
+  RunExecutionContext,
+} from '@dvt/contracts';
 import {
   asStepId,
   parsePlanRef,
   parseResolvedRunContext,
   RUN_EVENT_PAYLOAD_VERSION,
 } from '@dvt/contracts';
-import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
+import { RunExecutionContextRejectedError } from '@dvt/engine';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
 import type {
@@ -35,6 +42,10 @@ const ActivityErrorCode = {
   INVALID_STEP_SCHEMA: 'INVALID_STEP_SCHEMA',
   INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
   UNSUPPORTED_STEP_KIND: 'UNSUPPORTED_STEP_KIND',
+  RUN_EXECUTION_CONTEXT_REQUIRED: 'RUN_EXECUTION_CONTEXT_REQUIRED',
+  DBT_PLUGIN_RUNTIME_NOT_CONFIGURED: 'DBT_PLUGIN_RUNTIME_NOT_CONFIGURED',
+  DBT_PLUGIN_CONTEXT_REQUIRED: 'DBT_PLUGIN_CONTEXT_REQUIRED',
+  DBT_PLUGIN_RESULT_INVALID: 'DBT_PLUGIN_RESULT_INVALID',
   TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
   PERMANENT_STEP_ERROR: 'PERMANENT_STEP_ERROR',
 } as const;
@@ -58,7 +69,23 @@ export interface RunBootstrapperDeps {
 }
 
 /** Full dependency container (union of role interfaces). Injected at Worker creation time. */
-export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {}
+export interface DbtPluginExecutionInput {
+  step: ExecutionPlan['steps'][number];
+  executionIdentity: StepExecutionIdentity;
+  runContext: ResolvedRunContext;
+  runExecutionContext: RunExecutionContext;
+  pluginContext: Record<string, string>;
+}
+
+export interface DbtPluginRunner {
+  execute(input: DbtPluginExecutionInput): Promise<StepResult>;
+}
+
+/** Full dependency container (union of role interfaces). Injected at Worker creation time. */
+export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {
+  runExecutionContextReader?: IRunExecutionContextReader;
+  dbtPluginRunner?: DbtPluginRunner;
+}
 
 // ---------------------------------------------------------------------------
 // Activity input / output types
@@ -100,6 +127,7 @@ export interface EmitEventInput {
 
 export interface StepExecutionContext {
   executionIdentity: StepExecutionIdentity;
+  runContext: ResolvedRunContext;
   gatewayContext?: Record<string, unknown>;
 }
 
@@ -154,25 +182,84 @@ class GatewayStepActivity implements StepActivity {
 export class DbtStepActivity implements StepActivity {
   static readonly SUPPORTED_STEP_KINDS = new Set(['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT']);
 
+  constructor(
+    private readonly deps?: Pick<ActivityDeps, 'runExecutionContextReader' | 'dbtPluginRunner'>
+  ) {}
+
   async execute(
     step: ExecutionPlan['steps'][number],
-    _context: StepExecutionContext
+    context: StepExecutionContext
   ): Promise<StepResult> {
-    return { stepId: step.stepId, status: 'COMPLETED' };
+    const ref = context.runContext.runExecutionContextRef;
+    if (ref === undefined) {
+      throw this.reject(`${ActivityErrorCode.RUN_EXECUTION_CONTEXT_REQUIRED}:${step.stepId}`);
+    }
+
+    const reader = this.deps?.runExecutionContextReader;
+    if (reader === undefined) {
+      throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_RUNTIME_NOT_CONFIGURED}:${step.stepId}`);
+    }
+
+    const runner = this.deps?.dbtPluginRunner;
+    if (runner === undefined) {
+      throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_RUNTIME_NOT_CONFIGURED}:${step.stepId}`);
+    }
+
+    let runExecutionContext: RunExecutionContext;
+    try {
+      runExecutionContext = await reader.resolve(ref);
+    } catch (error) {
+      if (error instanceof RunExecutionContextRejectedError) {
+        throw this.reject(error.message);
+      }
+      throw error;
+    }
+
+    const pluginContext = runExecutionContext.pluginContexts['dbt'];
+    if (pluginContext === undefined || Object.keys(pluginContext).length === 0) {
+      throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
+    }
+
+    const result = await runner.execute({
+      step,
+      executionIdentity: context.executionIdentity,
+      runContext: context.runContext,
+      runExecutionContext,
+      pluginContext,
+    });
+    if (result.stepId !== step.stepId) {
+      throw this.reject(
+        `${ActivityErrorCode.DBT_PLUGIN_RESULT_INVALID}: stepId_mismatch:${step.stepId}:${result.stepId}`
+      );
+    }
+    return result;
+  }
+
+  private reject(message: string): ApplicationFailure {
+    return ApplicationFailure.create({
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message,
+      nonRetryable: true,
+    });
   }
 }
 
-const DEFAULT_DBT_STEP_ACTIVITY = new DbtStepActivity();
+function buildDefaultStepActivityEntries(
+  deps?: Pick<ActivityDeps, 'runExecutionContextReader' | 'dbtPluginRunner'>
+): ReadonlyArray<readonly [string, StepActivity]> {
+  const dbtStepActivity = new DbtStepActivity(deps);
+  return Object.freeze(
+    Array.from(
+      DbtStepActivity.SUPPORTED_STEP_KINDS,
+      (stepKind) => [stepKind, dbtStepActivity] as const
+    )
+  );
+}
 
-const DEFAULT_STEP_ACTIVITY_ENTRIES = Object.freeze(
-  Array.from(
-    DbtStepActivity.SUPPORTED_STEP_KINDS,
-    (stepKind) => [stepKind, DEFAULT_DBT_STEP_ACTIVITY] as const
-  )
-);
-
-export function createDefaultStepActivityRegistry(): StepActivityRegistry {
-  return new Map(DEFAULT_STEP_ACTIVITY_ENTRIES);
+export function createDefaultStepActivityRegistry(
+  deps?: Pick<ActivityDeps, 'runExecutionContextReader' | 'dbtPluginRunner'>
+): StepActivityRegistry {
+  return new Map(buildDefaultStepActivityEntries(deps));
 }
 
 export const DEFAULT_STEP_ACTIVITY_REGISTRY: StepActivityRegistry =
@@ -238,7 +325,7 @@ export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [];
 export function createActivities(
   deps: ActivityDeps,
   stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS,
-  stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry()
+  stepActivitiesByKind: StepActivityRegistry = createDefaultStepActivityRegistry(deps)
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
@@ -255,6 +342,7 @@ export function createActivities(
         input.step,
         {
           executionIdentity: toStepExecutionIdentity(input.ctx),
+          runContext: input.ctx,
           gatewayContext: input.gatewayContext,
         },
         stepExecutors

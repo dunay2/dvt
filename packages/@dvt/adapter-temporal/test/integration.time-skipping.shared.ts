@@ -12,10 +12,11 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { RunStateCommandPort } from '@dvt/engine';
 
-import type { ActivityDeps } from '../src/activities/stepActivities.js';
+import type { ActivityDeps, DbtPluginRunner } from '../src/activities/stepActivities.js';
 import type {
   EventEnvelope as TemporalEventEnvelope,
   EventIdempotencyInput,
@@ -460,6 +461,8 @@ export function createActivityDeps(
   planBytes: Uint8Array,
   options?: {
     onFetch?: (planRef: PlanRef) => void;
+    runExecutionContextReader?: IRunExecutionContextReader;
+    dbtPluginRunner?: DbtPluginRunner;
   }
 ): ActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
@@ -471,6 +474,10 @@ export function createActivityDeps(
     runStateCommandPort,
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
+    ...(options?.runExecutionContextReader === undefined
+      ? {}
+      : { runExecutionContextReader: options.runExecutionContextReader }),
+    ...(options?.dbtPluginRunner === undefined ? {} : { dbtPluginRunner: options.dbtPluginRunner }),
     fetcher: {
       fetch: async (planRef) => {
         options?.onFetch?.(planRef);

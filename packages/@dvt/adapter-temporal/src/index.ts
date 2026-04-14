@@ -42,6 +42,8 @@ export { TemporalPolicyMapper } from './TemporalPolicyMapper.js';
 export type {
   ActivityDeps,
   Activities,
+  DbtPluginExecutionInput,
+  DbtPluginRunner,
   EmitEventInput,
   StepActivity,
   StepActivityRegistry,

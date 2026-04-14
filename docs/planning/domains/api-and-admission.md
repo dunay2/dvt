@@ -42,6 +42,7 @@ archived planning inputs rather than active proposal authorities.
 - [20260321 Planner-Backed StartRun QA Review](../reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md)
 - [20260316 API Start Run Adapter Config Closeout](../closeouts/20260316-api-start-run-adapter-config-closeout.md)
 - [20260320 API Runtime Query Integration Closeout](../closeouts/20260320-api-runtime-query-integration-closeout.md)
+- [20260414 TF-C3 dbt plugin runtime projection slice closeout](../closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
 - [20260414 TF-C3 runExecutionContext resolver slice closeout](../closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md)
 - [20260414 TF-C1 preview-persist convergence closeout](../closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md)
 - [20260408 TF-C1-B preview profile contract closeout](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)

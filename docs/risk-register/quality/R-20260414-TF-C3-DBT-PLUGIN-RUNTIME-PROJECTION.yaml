@@ -1,0 +1,29 @@
+---
+id: R-20260414-TF-C3-DBT-PLUGIN-RUNTIME-PROJECTION
+title:
+  TF-C3 dbt plugin runtime projection can drift between tested adapter wiring and production host
+  composition
+status: Open
+date: 2026-04-14
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Medium
+context: >
+  `TF-C3` now projects immutable `RunExecutionContext` data into a DBT plugin-backed runner at the
+  Temporal adapter boundary. Unit and integration tests prove the seam with deterministic fake
+  readers and runners, but the production plugin host that will own the real DBT runtime has not yet
+  been composed.
+risk: >
+  If production worker composition wires the reader or DBT plugin host incorrectly, persisted DBT
+  runs can fail closed or drift from the tested adapter behavior, delaying closure of the shared
+  preview-persist-run product loop while preserving the right admission contract.
+mitigations:
+  - '`DbtStepActivity` now fails closed for missing `runExecutionContextRef`, missing runtime
+    wiring, missing `pluginContexts.dbt`, or mismatched plugin runner results.'
+  - 'Adapter-temporal unit and transformation integration tests now prove the
+    reader-to-plugin-runner handoff explicitly.'
+  - 'Lane C keeps the remaining production plugin-host composition work visible under `TF-C3`
+    instead of treating this slice as full closure.'
+review_after: 2026-06-15
+---

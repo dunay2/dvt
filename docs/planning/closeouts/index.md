@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260414 TF-C3 Dbt Plugin Runtime Projection Slice Closeout](./20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
 - [20260414 TF-C3 RunExecutionContext Resolver Slice Closeout](./20260414-tf-c3-run-execution-context-resolver-closeout.md)
 - [20260414 TF-C1 Preview-Persist Convergence Closeout](./20260414-tf-c1-preview-persist-convergence-closeout.md)
 - [20260414 Dev Stack Local Postgres Bootstrap Hotfix Closeout](./20260414-hotfix-dev-stack-local-postgres-bootstrap-closeout.md)

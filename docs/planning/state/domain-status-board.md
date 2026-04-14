@@ -37,10 +37,11 @@ For full task-level tracking use the lane YAML registry linked from
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the SQL-first preview-persist boundary is now closed in
   code and planning. The first `TF-C3` slice now wires real
-  `runExecutionContextRef` resolution in protected runtime, so the remaining
-  blockers are plugin-host or provider-runtime dbt dispatch after
-  admission-ready artifact loading, plus the broader runtime-boundary hardening
-  tracked in `WE-HX`.
+  `runExecutionContextRef` resolution in protected runtime, and the second
+  slice now projects immutable DBT plugin payloads at the Temporal adapter
+  boundary, so the remaining blockers are production plugin-host composition
+  after admission-ready artifact loading plus the broader runtime-boundary
+  hardening tracked in `WE-HX`.
 
 ### `Planner and Contracts`
 

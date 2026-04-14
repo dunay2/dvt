@@ -936,18 +936,19 @@ tasks:
       outer product loop or push dbt semantics into the engine kernel.
     complexity: M
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
     status_reason: >-
-      Phase 2 is now active. The first executable slice closes the composition-root gap left by the
-      governed `runExecutionContextRef` boundary: protected runtime wiring is adding a real
-      artifact-backed resolver so dbt mode can reuse the existing start-run contract instead of
-      opening a second outer path. The remaining work is plugin-backed dbt dispatch and result
-      semantics, not moving dbt logic into the engine kernel.
+      Phase 2 now spans two landed slices. Protected runtime already wires the governed
+      `runExecutionContextRef` boundary through an artifact-backed resolver, and
+      `@dvt/adapter-temporal` now projects immutable `pluginContexts.dbt` payloads into an
+      adapter-owned DBT runner without pushing semantics into the engine kernel. Remaining work is
+      production plugin-host composition and rollout hardening, not a second outer product path.
     last_verified: '2026-04-14'
   - task_id: TF-C3-A
     priority: P1
@@ -961,16 +962,17 @@ tasks:
       same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
     complexity: S
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
     status_reason: >-
-      Work has started on the first prerequisite slice: protected runtime now needs a concrete
-      `runExecutionContextRef` resolver so dbt-specific immutable artifacts can pass admission
-      through the same `PlanRef` path. Actual plugin-backed dbt dispatch remains open after this
-      composition-root closure.
+      The adapter-temporal runtime path now resolves immutable DBT execution context through
+      `IRunExecutionContextReader` and hands `pluginContexts.dbt` to an adapter-owned runner,
+      failing closed when the ref, payload, or runtime wiring is absent. Actual production plugin
+      host composition remains open after this provider-boundary projection slice.
     last_verified: '2026-04-14'
 dependency_notes:
   - >-
@@ -1028,13 +1030,14 @@ verification_summary:
   verified_on: '2026-04-13'
   total_tasks: 37
   total_effort_points: 137
-  completed_weighted_points: 77.95
-  lane_progress_pct: 57
+  completed_weighted_points: 79.15
+  lane_progress_pct: 58
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
     dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
     queued-only posture. `TF-C2` is now closed with parent-level acceptance evidence, so remaining
     runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 plugin-backed dbt
     dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
-    `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice,
-    while provider-runtime dbt dispatch still remains open.
+    `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice
+    plus adapter-temporal runtime projection, while production plugin-host composition still remains
+    open.
