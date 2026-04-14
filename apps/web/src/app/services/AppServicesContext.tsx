@@ -11,13 +11,15 @@ import { buildAppServices } from './composition/appServices';
 
 const AppServicesContext = createContext<AppServices | null>(null);
 
+export type AppServicesProviderProps = Readonly<{
+  children: ReactNode;
+  overrides?: AppServicesOverrides;
+}>;
+
 export function AppServicesProvider({
   children,
   overrides,
-}: Readonly<{
-  children: ReactNode;
-  overrides?: AppServicesOverrides;
-}>) {
+}: AppServicesProviderProps) {
   const value = useMemo(
     () => buildAppServices(overrides),
     [

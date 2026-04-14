@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Outlet } from 'react-router';
 import {
@@ -12,18 +11,8 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
-import { AppServicesProvider } from './services/AppServicesContext';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
 
 type RootShellProps = {
   readonly platformHealthCapability?: PlatformHealthCapabilityApi;
@@ -94,11 +83,5 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 }
 
 export default function Root() {
-  return (
-    <AppServicesProvider>
-      <QueryClientProvider client={queryClient}>
-        <RootShell />
-      </QueryClientProvider>
-    </AppServicesProvider>
-  );
+  return <RootShell />;
 }

@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260414 Frontend AppServicesProvider Startup Hotfix Closeout](./20260414-hotfix-frontend-app-services-provider-startup-closeout.md)
 - [20260414 TF-A1-C SRP Hardening Closeout](./20260414-tf-a1-c-srp-hardening-closeout.md)
 - [20260414 TF-A1-B Compiler Mapping Closeout](./20260414-tf-a1-b-compiler-mapping-closeout.md)
 - [20260413 TF-D1 Proof Environment Lifecycle Closeout](./20260413-tf-d1-proof-environment-lifecycle-closeout.md)
