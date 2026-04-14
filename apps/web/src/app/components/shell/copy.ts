@@ -19,12 +19,6 @@ export type ShellTopBarCopy = {
   readonly degradedTooltipFallback: string;
 };
 
-export type ShellBootstrapCopy = {
-  readonly title: string;
-  readonly progressLabel: string;
-  readonly message: string;
-};
-
 const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   shell: { key: 'shell.view', fallback: 'View' },
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
@@ -53,16 +47,6 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   },
 };
 
-const BOOTSTRAP_COPY_BY_KEY: Record<keyof ShellBootstrapCopy, LocalizableString> = {
-  title: { key: 'shell.bootstrapTitle', fallback: 'Preparing workspace shell' },
-  progressLabel: { key: 'shell.bootstrapProgressLabel', fallback: 'Loading startup context' },
-  message: {
-    key: 'shell.bootstrapMessage',
-    fallback:
-      'Shell status, workspace capabilities, and route context are still loading. The workspace will open once startup settles.',
-  },
-};
-
 export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
   return {
     shell: resolveString(COPY_BY_KEY.shell, locale),
@@ -81,13 +65,5 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     offlineTooltipFallback: resolveString(COPY_BY_KEY.offlineTooltipFallback, locale),
     degraded: resolveString(COPY_BY_KEY.degraded, locale),
     degradedTooltipFallback: resolveString(COPY_BY_KEY.degradedTooltipFallback, locale),
-  };
-}
-
-export function resolveShellBootstrapCopy(locale?: string): ShellBootstrapCopy {
-  return {
-    title: resolveString(BOOTSTRAP_COPY_BY_KEY.title, locale),
-    progressLabel: resolveString(BOOTSTRAP_COPY_BY_KEY.progressLabel, locale),
-    message: resolveString(BOOTSTRAP_COPY_BY_KEY.message, locale),
   };
 }
