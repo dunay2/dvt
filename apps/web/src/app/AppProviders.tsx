@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
+import { setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import {
   AppServicesProvider,
   type AppServicesProviderProps,
@@ -30,6 +31,10 @@ export default function AppProviders({
 }: AppProvidersProps) {
   const [ownedQueryClient] = useState(createAppQueryClient);
   const resolvedQueryClient = queryClient ?? ownedQueryClient;
+
+  useEffect(() => {
+    setBootstrapStepStatus('services', 'complete', 'App services and query client ready');
+  }, []);
 
   return (
     <AppServicesProvider overrides={overrides}>

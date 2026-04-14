@@ -65,17 +65,15 @@ function CanvasContent() {
         'error',
         workbenchErrorMessage || canvasViewCopy.routeErrorFallbackMessage
       );
-      completeBootstrapScreen();
       return;
     }
 
     if (shouldBlockCanvasInApiMode) {
       setBootstrapStepStatus(
         'route',
-        'complete',
+        'blocked',
         controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage
       );
-      completeBootstrapScreen();
       return;
     }
 

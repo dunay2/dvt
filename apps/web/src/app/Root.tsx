@@ -69,7 +69,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     if (capabilitiesQuery.isError) {
       setBootstrapStepStatus(
         'capabilities',
-        'error',
+        'degraded',
         'Capabilities could not be loaded. Using the fallback shell configuration.'
       );
       return;
@@ -89,10 +89,10 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       return;
     }
 
-    if (platformHealth.isError) {
+    if (platformHealth.isError || shellHealth.connectionState?.rest !== 'ok') {
       setBootstrapStepStatus(
         'health',
-        'error',
+        'degraded',
         shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
       );
       return;
@@ -111,22 +111,28 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
   useEffect(() => {
     if (location.pathname.startsWith('/canvas')) {
-      setBootstrapStepStatus('route', 'pending', 'Preparing canvas workspace');
+      setBootstrapStepStatus('route', 'pending', 'Handing startup to the Canvas workbench');
       return;
     }
 
     setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
   }, [
-    isInitialCapabilitiesBootstrapPending,
     location.pathname,
-    shellHealth.isInitialHealthCheckPending,
   ]);
 
   useEffect(() => {
-    if (!isInitialCapabilitiesBootstrapPending && !shellHealth.isInitialHealthCheckPending) {
-      completeBootstrapScreen();
-    }
-  }, [isInitialCapabilitiesBootstrapPending, shellHealth.isInitialHealthCheckPending]);
+    completeBootstrapScreen();
+  }, [
+    capabilitiesQuery.isError,
+    capabilitiesQuery.isPending,
+    capabilitiesQuery.data,
+    isInitialCapabilitiesBootstrapPending,
+    location.pathname,
+    platformHealth.isError,
+    shellHealth.connectionDetail,
+    shellHealth.connectionState,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
 
   return (
     <AppShellFrame

@@ -179,6 +179,9 @@ flowchart LR
    useful.
 4. Render degraded and offline health as a compact status strip and recover visible vertical space
    for canvas or work area.
+5. Keep one Raven startup surface active until critical shell bootstrap settles, with an ordered
+   startup log that explains what is loading, what is degraded, and what is blocking first-route
+   handoff.
 
 ### Architecture Target
 
@@ -186,6 +189,8 @@ flowchart LR
 2. Explicit `VITE_DATA_SOURCE=mock|api` boundary (`F-04`).
 3. Domain stores by responsibility (`shell/session/graph/run/status`) (`F-05`).
 4. Query orchestration through TanStack Query (`F-06`).
+5. Startup bootstrap is composition-owned rather than distributed across route shells, route views,
+   and fallback boundaries.
 
 ```mermaid
 flowchart LR
@@ -211,6 +216,49 @@ flowchart LR
   Services --> ClientApi
   Services --> MockAdapter
   ClientApi --> Backend
+```
+
+### Startup Bootstrap Target
+
+The shell startup experience is part of the shell contract, not an afterthought owned by individual
+routes.
+
+Target rules:
+
+1. `index.html` owns one Raven bootstrap surface from first paint until the initial route is
+   operable.
+2. Bootstrap steps are explicit and ordered: `hydrate -> services -> capabilities -> health ->
+route`.
+3. Startup copy acts as an event log, not as a second error page or a static checklist.
+4. The active workbench remains hidden while any critical startup step is still `pending`,
+   `blocked`, or `error`.
+5. `degraded` startup outcomes remain visible and truthful, but they do not open the route unless
+   the route itself is operable.
+
+Current problematic ownership:
+
+```mermaid
+flowchart TD
+  Index["Static Raven loading screen"] --> Root["Root updates some startup steps"]
+  Root --> Canvas["Canvas updates route state separately"]
+  Root --> ErrorBoundary["Route error boundary can replace startup flow"]
+  Canvas --> Board["Canvas board may render behind readiness failures"]
+  ErrorBoundary --> SecondScreen["Second error surface"]
+```
+
+Target ownership:
+
+```mermaid
+flowchart TD
+  Bootstrap["Bootstrap policy"] --> Screen["One Raven startup surface"]
+  Screen --> Log["Ordered startup event log"]
+  Bootstrap --> Hydrate["Hydrate"]
+  Bootstrap --> Services["Services"]
+  Bootstrap --> Capabilities["Capabilities"]
+  Bootstrap --> Health["Health"]
+  Bootstrap --> Route["Route"]
+  Route -->|"complete or accepted degraded"| Shell["Open shell"]
+  Route -->|"pending, blocked, or error"| Screen
 ```
 
 ## Rationale

@@ -16,10 +16,12 @@ function mountBootstrapDom(): void {
       <p id="app-loading-message"></p>
       <ul id="app-loading-steps">
         <li data-bootstrap-step="hydrate" data-status="pending"><span data-bootstrap-detail></span></li>
+        <li data-bootstrap-step="services" data-status="pending"><span data-bootstrap-detail></span></li>
         <li data-bootstrap-step="capabilities" data-status="pending"><span data-bootstrap-detail></span></li>
         <li data-bootstrap-step="health" data-status="pending"><span data-bootstrap-detail></span></li>
         <li data-bootstrap-step="route" data-status="pending"><span data-bootstrap-detail></span></li>
       </ul>
+      <ol id="app-loading-log"></ol>
     </div>
   `;
 }
@@ -35,15 +37,29 @@ describe('appBootstrapScreen', () => {
     document.body.innerHTML = '';
   });
 
-  it('keeps the original Raven loading screen stateful until every step is settled', () => {
+  it('keeps the Raven startup surface visible until every critical step reaches an allowed terminal state', () => {
     startBootstrapScreen();
 
     setBootstrapStepStatus('hydrate', 'complete');
-    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus('services', 'complete');
+    setBootstrapStepStatus('capabilities', 'degraded', 'Capabilities settled in fallback mode.');
     setBootstrapStepStatus('health', 'complete');
+    setBootstrapStepStatus('route', 'blocked', 'Backend readiness is still blocked.');
 
     completeBootstrapScreen();
     expect(document.getElementById('app-loading-screen')).not.toBeNull();
+    expect(document.getElementById('app-loading-screen')?.getAttribute('data-state')).toBe(
+      'blocked'
+    );
+    expect(document.getElementById('app-loading-title')?.textContent).toBe(
+      'Raven is waiting for startup prerequisites'
+    );
+    expect(document.getElementById('app-loading-log')?.textContent).toContain(
+      'Bootstrap started. Waiting for startup modules.'
+    );
+    expect(document.getElementById('app-loading-log')?.textContent).toContain(
+      'Preparing initial route: Backend readiness is still blocked.'
+    );
 
     setBootstrapStepStatus('route', 'complete');
     completeBootstrapScreen();

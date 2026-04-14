@@ -198,6 +198,12 @@ describe('Canvas route', () => {
     expect(container.textContent).toContain('No graph content loaded');
     expect(container.querySelector('[data-slot="canvas-empty-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'complete',
+      'Canvas is ready with no graph content yet'
+    );
+    expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
   });
 
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {
@@ -216,6 +222,12 @@ describe('Canvas route', () => {
     expect(container.textContent).toContain('workspace graph unavailable');
     expect(container.querySelector('[data-slot="canvas-error-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'error',
+      'workspace graph unavailable'
+    );
+    expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
   });
 
   it('keeps the viewport visible and shows a read-only banner when mutations are gated', async () => {
@@ -281,6 +293,11 @@ describe('Canvas route', () => {
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
-    expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'route',
+      'blocked',
+      'Readiness not satisfied: database_not_configured.'
+    );
+    expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
   });
 });
