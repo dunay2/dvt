@@ -51,6 +51,8 @@ function createRootShellNode(
           <Route element={<RootShell platformHealthCapability={capability} />} path="/">
             <Route element={<div>Workspace route</div>} index />
             <Route element={<div>Canvas route</div>} path="canvas" />
+            <Route element={<div>Runs route</div>} path="runs" />
+            <Route element={<div>Run detail route</div>} path="runs/:runId" />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -276,9 +278,6 @@ describe('RootShell platform health UX', () => {
       const appShellOutlet = mounted.container.querySelector('[data-slot="app-shell-outlet"]');
       const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
       const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
-      const shellActiveSurface = mounted.container.querySelector(
-        '[data-slot="shell-active-surface"]'
-      );
       const shellWorkspaceSelectors = mounted.container.querySelector(
         '[data-slot="shell-workspace-selectors"]'
       );
@@ -302,8 +301,6 @@ describe('RootShell platform health UX', () => {
       expect(shellTopBar?.textContent).toContain('View');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
       expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
-      expect(shellActiveSurface?.textContent).toContain('Canvas');
-      expect(shellActiveSurface?.className).not.toContain('hidden');
       expect(shellTopBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
       expect(shellTopBar?.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
@@ -323,6 +320,40 @@ describe('RootShell platform health UX', () => {
         '/plugins',
         '/admin',
       ]);
+      const leftNavigationCaptions = [
+        ...mounted.container.querySelectorAll<HTMLElement>('[data-slot="left-navigation-caption"]'),
+      ].map((node) => node.textContent?.trim());
+      const canvasNavigationLink = leftNavigationLinks.find(
+        (link) => link.getAttribute('href') === '/canvas'
+      );
+      expect(leftNavigationCaptions).toContain('Runs');
+      expect(leftNavigationCaptions).toContain('Canvas');
+      expect(canvasNavigationLink?.className).toContain('grid-cols-[18px_1fr]');
+      expect(canvasNavigationLink?.className).toContain('border-[color:var(--status-running)]');
+      expect(canvasNavigationLink?.className).not.toContain('isActive');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps the runs navigation item active for run detail routes', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(capability, ['/runs/run_123'])
+    );
+
+    try {
+      await waitForShellBootstrapSurface(mounted);
+
+      const runsNavigationLink = [
+        ...mounted.container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
+      ].find((link) => link.getAttribute('href') === '/runs');
+
+      expect(mounted.container.textContent).toContain('Run detail route');
+      expect(runsNavigationLink?.className).toContain('border-[color:var(--status-running)]');
+      expect(runsNavigationLink?.className).not.toContain('isActive');
     } finally {
       await mounted.cleanup();
     }

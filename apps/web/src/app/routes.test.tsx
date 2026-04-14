@@ -97,9 +97,11 @@ describe('app routes', () => {
 
     expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
     expect(container.textContent).not.toContain('Unexpected Application Error!');
-    expect(container.querySelector('[data-slot="shell-active-surface"]')?.textContent).toContain(
-      'Canvas'
-    );
+    expect(container.querySelector('[data-slot="shell-active-surface"]')).toBeNull();
+    const leftNavigationCaptions = [
+      ...container.querySelectorAll<HTMLElement>('[data-slot="left-navigation-caption"]'),
+    ].map((node) => node.textContent?.trim());
+    expect(leftNavigationCaptions).toContain('Canvas');
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 });
