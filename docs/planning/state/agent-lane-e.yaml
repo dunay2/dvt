@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-08'
+last_reviewed: '2026-04-14'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -1763,7 +1763,7 @@ tasks:
       outcome and materialization evidence.
     complexity: M
     effort_points: 5
-    progress_pct: 85
+    progress_pct: 90
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
@@ -1777,10 +1777,11 @@ tasks:
       Lane E now ships the full frontend operator loop for the first SQL-first transformation
       vertical: constrained Canvas authoring, persisted preview with the real `PlanRef`, governed
       `Start run` handoff, and run-detail rendering of executor identity, sink evidence, row counts,
-      timestamps, and failed-step diagnostics from the snapshot read model. The parent slice remains
-      open because its declared Lane A and Lane C dependencies (`TF-A1`, `TF-C1`) are not yet closed
-      in the registry.
-    last_verified: '2026-04-13'
+      timestamps, and failed-step diagnostics from the snapshot read model. The former upstream
+      dependency blocker is now cleared because `TF-A1` and `TF-C1` are closed in the registry; the
+      remaining parent work is acceptance and closeout consolidation for the Lane E umbrella rather
+      than missing authoring, preview, or result behavior.
+    last_verified: '2026-04-14'
   - task_id: TF-E1-A
     priority: P0
     status: done
