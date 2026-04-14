@@ -6,7 +6,7 @@ import {
   type AppServicesProviderProps,
 } from './services/AppServicesContext';
 
-export function createAppQueryClient(): QueryClient {
+function createAppQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
