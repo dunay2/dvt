@@ -11,6 +11,8 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
+import ShellBootstrapScreen from './components/shell/ShellBootstrapScreen';
+import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
 
@@ -24,6 +26,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
   const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
   const setConnectionStatus = useUiLayoutStore((state) => state.setConnectionStatus);
+  const capabilitiesQuery = useCapabilitiesQuery();
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
   const shellHealth = buildShellHealthPresentationModel({
     data: platformHealth.data,
@@ -35,6 +38,10 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
+  const isInitialCapabilitiesBootstrapPending =
+    capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
+  const shouldHoldShellBootstrap =
+    shellHealth.isInitialHealthCheckPending || isInitialCapabilitiesBootstrapPending;
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {
@@ -50,6 +57,10 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
     setConnectionStatus(shellHealth.connectionState);
   }, [connectionStatus, setConnectionStatus, shellHealth.connectionState]);
+
+  if (shouldHoldShellBootstrap) {
+    return <ShellBootstrapScreen />;
+  }
 
   return (
     <AppShellFrame

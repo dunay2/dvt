@@ -21,9 +21,10 @@ import { useUiLayoutStore } from './stores/uiLayoutStore';
 
 function createRootShellNode(
   capability: PlatformHealthCapabilityApi,
-  initialEntries: string[] = ['/']
+  initialEntries: string[] = ['/'],
+  capabilitiesPort?: CapabilitiesPort
 ): JSX.Element {
-  const capabilitiesPort: CapabilitiesPort = {
+  const defaultCapabilitiesPort: CapabilitiesPort = {
     loadCapabilities: vi.fn().mockResolvedValue({
       apiVersion: '1.0.0',
       minFrontendVersion: '1.0.0',
@@ -32,7 +33,9 @@ function createRootShellNode(
   };
 
   return (
-    <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+    <AppServicesProvider
+      overrides={{ mode: 'mock', capabilitiesPort: capabilitiesPort ?? defaultCapabilitiesPort }}
+    >
       <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route element={<RootShell platformHealthCapability={capability} />} path="/">
@@ -76,6 +79,14 @@ function RootServicesProbe(): JSX.Element {
   return <div data-testid="root-services-probe">mode:{mode}</div>;
 }
 
+async function waitForShellBootstrapSurface(
+  mounted: Awaited<ReturnType<typeof withTestQueryClient>>
+): Promise<void> {
+  await waitFor(() => {
+    expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
+  });
+}
+
 describe('RootShell platform health UX', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -87,7 +98,7 @@ describe('RootShell platform health UX', () => {
     vi.useRealTimers();
   });
 
-  it('does not falsely show ok while the first platform health query is still pending', async () => {
+  it('keeps the startup screen visible while the first platform health query is still pending', async () => {
     const capability: PlatformHealthCapabilityApi = {
       loadSnapshot: vi.fn().mockImplementation(
         () =>
@@ -102,11 +113,41 @@ describe('RootShell platform health UX', () => {
       const view = within(mounted.container);
 
       await waitFor(() => {
-        expect(view.getByText('Checking')).toBeTruthy();
+        expect(view.getByText('Preparing workspace shell')).toBeTruthy();
       });
-      expect(view.queryByText('Backend offline')).toBeNull();
-      expect(view.queryByText('Backend degraded')).toBeNull();
-      expect(mounted.container.textContent).not.toContain('REST API: ok');
+      expect(mounted.container.querySelector('[data-slot="shell-bootstrap-screen"]')).not.toBeNull();
+      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).toBeNull();
+      expect(view.queryByText('Workspace route')).toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps the startup screen visible while capabilities are still bootstrapping', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const pendingCapabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockImplementation(
+        () =>
+          new Promise(() => {
+            // Intentionally unresolved for the initial pending state.
+          })
+      ),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(capability, ['/'], pendingCapabilitiesPort)
+    );
+
+    try {
+      const view = within(mounted.container);
+
+      await waitFor(() => {
+        expect(view.getByText('Preparing workspace shell')).toBeTruthy();
+      });
+      expect(mounted.container.querySelector('[data-slot="shell-bootstrap-screen"]')).not.toBeNull();
+      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).toBeNull();
+      expect(view.queryByText('Workspace route')).toBeNull();
     } finally {
       await mounted.cleanup();
     }
@@ -211,14 +252,7 @@ describe('RootShell platform health UX', () => {
     const mounted = await withTestQueryClient(createRootShellNode(capability, ['/canvas']));
 
     try {
-      await waitForReactQuery(
-        () =>
-          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
-          'success',
-        {
-          description: 'healthy platform health query',
-        }
-      );
+      await waitForShellBootstrapSurface(mounted);
 
       const appShellFrame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
       const appShellBody = mounted.container.querySelector('[data-slot="app-shell-body"]');
@@ -289,14 +323,7 @@ describe('RootShell platform health UX', () => {
     const mounted = await withTestQueryClient(createRootShellNode(capability));
 
     try {
-      await waitForReactQuery(
-        () =>
-          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
-          'success',
-        {
-          description: 'healthy platform health query',
-        }
-      );
+      await waitForShellBootstrapSurface(mounted);
 
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
       expect(mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]')).toBeNull();
@@ -314,14 +341,7 @@ describe('RootShell platform health UX', () => {
     const mounted = await withTestQueryClient(createRootShellNode(capability));
 
     try {
-      await waitForReactQuery(
-        () =>
-          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
-          'success',
-        {
-          description: 'healthy platform health query',
-        }
-      );
+      await waitForShellBootstrapSurface(mounted);
 
       const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
       const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
