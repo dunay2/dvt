@@ -19,7 +19,10 @@ import { AppServicesProvider, useAppDataSourceMode } from './services/AppService
 import { useAppStore } from './stores/appStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 
-function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
+function createRootShellNode(
+  capability: PlatformHealthCapabilityApi,
+  initialEntries: string[] = ['/']
+): JSX.Element {
   const capabilitiesPort: CapabilitiesPort = {
     loadCapabilities: vi.fn().mockResolvedValue({
       apiVersion: '1.0.0',
@@ -30,10 +33,11 @@ function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Eleme
 
   return (
     <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route element={<RootShell platformHealthCapability={capability} />} path="/">
             <Route element={<div>Workspace route</div>} index />
+            <Route element={<div>Canvas route</div>} path="canvas" />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -204,7 +208,7 @@ describe('RootShell platform health UX', () => {
     const capability: PlatformHealthCapabilityApi = {
       loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
     };
-    const mounted = await withTestQueryClient(createRootShellNode(capability));
+    const mounted = await withTestQueryClient(createRootShellNode(capability, ['/canvas']));
 
     try {
       await waitForReactQuery(
@@ -225,6 +229,9 @@ describe('RootShell platform health UX', () => {
       const appShellOutlet = mounted.container.querySelector('[data-slot="app-shell-outlet"]');
       const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
       const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
+      const shellActiveSurface = mounted.container.querySelector(
+        '[data-slot="shell-active-surface"]'
+      );
       const shellWorkspaceSelectors = mounted.container.querySelector(
         '[data-slot="shell-workspace-selectors"]'
       );
@@ -243,11 +250,13 @@ describe('RootShell platform health UX', () => {
       expect(appShellLeftNavigation?.parentElement).toBe(appShellBody);
       expect(appShellMain?.parentElement).toBe(appShellBody);
       expect(appShellOutlet?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
-      expect(appShellOutlet?.textContent).toContain('Workspace route');
+      expect(appShellOutlet?.textContent).toContain('Canvas route');
       expect(shellTopBar?.textContent).toContain('Raven');
       expect(shellTopBar?.textContent).toContain('View');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
       expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
+      expect(shellActiveSurface?.textContent).toContain('Canvas');
+      expect(shellActiveSurface?.className).not.toContain('hidden');
       expect(shellTopBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
       expect(shellTopBar?.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');

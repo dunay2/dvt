@@ -1,3 +1,5 @@
+import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
+
 export type ShellTopBarCopy = {
   readonly shell: string;
   readonly workspacePanels: string;
@@ -17,54 +19,51 @@ export type ShellTopBarCopy = {
   readonly degradedTooltipFallback: string;
 };
 
-const EN_COPY: ShellTopBarCopy = {
-  shell: 'View',
-  workspacePanels: 'Panels',
-  viewOptions: 'View options',
-  explorerPanel: 'Explorer Panel',
-  inspectorPanel: 'Inspector Panel',
-  consolePanel: 'Console',
-  focusMode: 'Focus Mode',
-  gridSize: 'Grid size',
-  resetGrid: 'Reset grid to 20px',
-  gitTooltip: 'Current Git branch and commit SHA',
-  checking: 'Checking',
-  checkingTooltip: 'Checking platform health endpoints',
-  offline: 'Offline',
-  offlineTooltipFallback: 'Unable to reach /healthz',
-  degraded: 'Degraded',
-  degradedTooltipFallback: 'Platform in degraded state',
+const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
+  shell: { key: 'shell.view', fallback: 'View' },
+  workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
+  viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
+  explorerPanel: { key: 'shell.explorerPanel', fallback: 'Explorer Panel' },
+  inspectorPanel: { key: 'shell.inspectorPanel', fallback: 'Inspector Panel' },
+  consolePanel: { key: 'shell.consolePanel', fallback: 'Console' },
+  focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
+  gridSize: { key: 'shell.gridSize', fallback: 'Grid size' },
+  resetGrid: { key: 'shell.resetGrid', fallback: 'Reset grid to 20px' },
+  gitTooltip: { key: 'shell.gitTooltip', fallback: 'Current Git branch and commit SHA' },
+  checking: { key: 'shell.checking', fallback: 'Checking' },
+  checkingTooltip: {
+    key: 'shell.checkingTooltip',
+    fallback: 'Checking platform health endpoints',
+  },
+  offline: { key: 'shell.offline', fallback: 'Offline' },
+  offlineTooltipFallback: {
+    key: 'shell.offlineTooltipFallback',
+    fallback: 'Unable to reach /healthz',
+  },
+  degraded: { key: 'shell.degraded', fallback: 'Degraded' },
+  degradedTooltipFallback: {
+    key: 'shell.degradedTooltipFallback',
+    fallback: 'Platform in degraded state',
+  },
 };
 
-const ES_COPY: ShellTopBarCopy = {
-  shell: 'Vista',
-  workspacePanels: 'Paneles',
-  viewOptions: 'Opciones de vista',
-  explorerPanel: 'Panel explorador',
-  inspectorPanel: 'Panel inspector',
-  consolePanel: 'Consola',
-  focusMode: 'Modo foco',
-  gridSize: 'Tama\u00f1o de rejilla',
-  resetGrid: 'Restablecer rejilla a 20px',
-  gitTooltip: 'Rama Git y SHA del commit actual',
-  checking: 'Comprobando',
-  checkingTooltip: 'Comprobando endpoints de salud de plataforma',
-  offline: 'Offline',
-  offlineTooltipFallback: 'No se pudo alcanzar /healthz',
-  degraded: 'Degradado',
-  degradedTooltipFallback: 'Plataforma en estado degradado',
-};
-
-function detectBrowserLocale(): string {
-  if (typeof navigator === 'undefined') {
-    return 'en';
-  }
-  return navigator.language || 'en';
-}
-
-export function resolveShellTopBarCopy(locale = detectBrowserLocale()): ShellTopBarCopy {
-  if (locale.toLowerCase().startsWith('es')) {
-    return ES_COPY;
-  }
-  return EN_COPY;
+export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
+  return {
+    shell: resolveString(COPY_BY_KEY.shell, locale),
+    workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
+    viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
+    explorerPanel: resolveString(COPY_BY_KEY.explorerPanel, locale),
+    inspectorPanel: resolveString(COPY_BY_KEY.inspectorPanel, locale),
+    consolePanel: resolveString(COPY_BY_KEY.consolePanel, locale),
+    focusMode: resolveString(COPY_BY_KEY.focusMode, locale),
+    gridSize: resolveString(COPY_BY_KEY.gridSize, locale),
+    resetGrid: resolveString(COPY_BY_KEY.resetGrid, locale),
+    gitTooltip: resolveString(COPY_BY_KEY.gitTooltip, locale),
+    checking: resolveString(COPY_BY_KEY.checking, locale),
+    checkingTooltip: resolveString(COPY_BY_KEY.checkingTooltip, locale),
+    offline: resolveString(COPY_BY_KEY.offline, locale),
+    offlineTooltipFallback: resolveString(COPY_BY_KEY.offlineTooltipFallback, locale),
+    degraded: resolveString(COPY_BY_KEY.degraded, locale),
+    degradedTooltipFallback: resolveString(COPY_BY_KEY.degradedTooltipFallback, locale),
+  };
 }
