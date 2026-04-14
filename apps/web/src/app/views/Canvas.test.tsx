@@ -157,7 +157,8 @@ describe('Canvas route', () => {
       root.render(<Canvas />);
     });
 
-    expect(container.textContent).toContain('Graph Tools');
+    expect(container.textContent).toContain('SQL flow');
+    expect(container.textContent).toContain('Plan required');
     expect(container.textContent).toContain('Loading canvas');
     expect(container.querySelector('[data-slot="canvas-loading-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();

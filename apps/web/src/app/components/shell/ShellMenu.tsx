@@ -1,14 +1,12 @@
 import {
-  Bell,
+  Grid2X2,
   Maximize2,
-  Menu,
   Minimize2,
   PanelLeftClose,
   PanelRightClose,
+  SlidersHorizontal,
   TerminalSquare,
-  User,
 } from 'lucide-react';
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -69,12 +67,12 @@ export function ShellMenu({
           size="sm"
           className={topAppBarClasses.menuButton}
         >
-          <Menu className="size-4" />
+          <SlidersHorizontal className="size-4" />
           {copy.shell}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>{copy.workspaceControls}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
         <DropdownMenuCheckboxItem
           checked={explorerPanelVisible}
           onCheckedChange={toggleExplorerPanel}
@@ -106,6 +104,7 @@ export function ShellMenu({
         </DropdownMenuCheckboxItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
+            <Grid2X2 className="mr-2 size-4" />
             {copy.gridSize}: {gridSize}px
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
@@ -118,25 +117,8 @@ export function ShellMenu({
         </DropdownMenuSub>
 
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>{copy.quickActions}</DropdownMenuLabel>
-        <DropdownMenuItem>
-          <Bell className="mr-2 size-4" />
-          {copy.notifications}
-          <Badge className="ml-auto flex size-4 items-center justify-center bg-[var(--status-danger)] p-0 text-[10px] text-[var(--text-strong)]">
-            3
-          </Badge>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>john.doe@company.com</DropdownMenuLabel>
-        <DropdownMenuItem>
-          <User className="mr-2 size-4" />
-          {copy.profileSettings}
-        </DropdownMenuItem>
-        <DropdownMenuItem>{copy.apiKeys}</DropdownMenuItem>
-        <DropdownMenuItem>{copy.documentation}</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>{copy.signOut}</DropdownMenuItem>
+        <DropdownMenuLabel>{copy.viewOptions}</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => setGridSize(20)}>{copy.resetGrid}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

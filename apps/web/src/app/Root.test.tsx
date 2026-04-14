@@ -245,7 +245,7 @@ describe('RootShell platform health UX', () => {
       expect(appShellOutlet?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
       expect(appShellOutlet?.textContent).toContain('Workspace route');
       expect(shellTopBar?.textContent).toContain('Raven');
-      expect(shellTopBar?.textContent).toContain('Shell');
+      expect(shellTopBar?.textContent).toContain('View');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
       expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
       expect(shellTopBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
@@ -253,7 +253,7 @@ describe('RootShell platform health UX', () => {
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
       expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
       expect(shellWorkspaceSelectors).toBeTruthy();
-      expect(shellMenuTrigger?.textContent).toContain('Shell');
+      expect(shellMenuTrigger?.textContent).toContain('View');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
       expect(leftNavigationRail?.className).toContain('h-full');
       expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual([

@@ -1,6 +1,9 @@
+import { useLocation } from 'react-router';
+
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { useShellRuntime } from '../shell/useShellRuntime';
 import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
 import { resolveShellTopBarCopy } from './shell/copy';
@@ -13,11 +16,16 @@ import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
+function matchesSurfacePath(pathname: string, itemPath: string): boolean {
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+}
+
 export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
 }: ShellTopBarProps) {
+  const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
@@ -37,6 +45,13 @@ export function ShellTopBar({
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy();
+  const {
+    navigationModel: { primaryItems, footerItems },
+  } = useShellRuntime();
+  const activeSurface = [...primaryItems, ...footerItems].find((item) =>
+    matchesSurfacePath(location.pathname, item.to)
+  );
+  const ActiveSurfaceIcon = activeSurface?.icon;
 
   return (
     <TooltipProvider>
@@ -60,6 +75,16 @@ export function ShellTopBar({
           gitSha={workspaceBootstrap.gitSha}
           copy={copy}
         />
+        {activeSurface && ActiveSurfaceIcon ? (
+          <div
+            data-slot="shell-active-surface"
+            className={topAppBarClasses.contextChip}
+            title={activeSurface.label}
+          >
+            <ActiveSurfaceIcon className={topAppBarClasses.contextChipIcon} />
+            <span className={topAppBarClasses.contextChipLabel}>{activeSurface.label}</span>
+          </div>
+        ) : null}
 
         <div className="flex-1" />
 
