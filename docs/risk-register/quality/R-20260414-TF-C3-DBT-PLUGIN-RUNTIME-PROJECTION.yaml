@@ -1,8 +1,6 @@
 ---
 id: R-20260414-TF-C3-DBT-PLUGIN-RUNTIME-PROJECTION
-title:
-  'TF-C3 dbt plugin runtime projection can drift between tested adapter wiring and production host
-  composition'
+title: TF-C3 dbt runtime projection can drift from production host wiring
 status: Open
 date: 2026-04-14
 owners:
