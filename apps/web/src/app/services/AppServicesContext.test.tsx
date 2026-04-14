@@ -2,13 +2,13 @@
 
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { IPlansPort } from '../ports/plans';
+import type { IRunsPort } from '../ports/runs';
+import type { IWorkspacePort } from '../ports/workspace';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
-import type { PlansService } from './plans/plansService';
-import type { RunsService } from './runs/runsService';
-import type { WorkspaceService } from './workspace/workspaceService';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -20,6 +20,17 @@ import {
   useWorkspaceService,
 } from './AppServicesContext';
 
+function clearStableContextKey(): void {
+  Reflect.deleteProperty(
+    globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
+    '__dvtAppServicesContext'
+  );
+  Reflect.deleteProperty(
+    globalThis as typeof globalThis & { __dvtAppServicesContext__?: unknown },
+    '__dvtAppServicesContext__'
+  );
+}
+
 describe('AppServicesProvider', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -27,9 +38,9 @@ describe('AppServicesProvider', () => {
 
   const captured: {
     mode: ReturnType<typeof useAppDataSourceMode> | null;
-    workspaceService: WorkspaceService | null;
-    runsService: RunsService | null;
-    plansService: PlansService | null;
+    workspaceService: IWorkspacePort | null;
+    runsService: IRunsPort | null;
+    plansService: IPlansPort | null;
     capabilitiesPort: CapabilitiesPort | null;
     sessionContext: ReturnType<typeof useSessionContext> | null;
     shellFeedback: ReturnType<typeof useShellFeedback> | null;
@@ -82,6 +93,9 @@ describe('AppServicesProvider', () => {
     } else {
       globalObject.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
     }
+
+    clearStableContextKey();
+    vi.resetModules();
   });
 
   it('builds services from mode and exposes them through hooks', async () => {
@@ -227,5 +241,28 @@ describe('AppServicesProvider', () => {
     expect(captured.capabilitiesPort).toBe(capabilitiesPort);
     expect(captured.sessionContext).toBe(sessionContext);
     expect(captured.shellFeedback).toBe(shellFeedback);
+  });
+
+  it('reuses the same context across module reevaluation in dev', async () => {
+    clearStableContextKey();
+    vi.resetModules();
+    const firstLoad = await import('./AppServicesContext');
+    vi.resetModules();
+    const secondLoad = await import('./AppServicesContext');
+
+    function CrossReloadProbe(): null {
+      captured.mode = secondLoad.useAppDataSourceMode();
+      return null;
+    }
+
+    await act(async () => {
+      root.render(
+        <firstLoad.AppServicesProvider overrides={{ mode: 'mock' }}>
+          <CrossReloadProbe />
+        </firstLoad.AppServicesProvider>
+      );
+    });
+
+    expect(captured.mode).toBe('mock');
   });
 });

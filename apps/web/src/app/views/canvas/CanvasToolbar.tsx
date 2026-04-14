@@ -1,4 +1,6 @@
-import { Columns, DollarSign, FileCheck, LayoutGrid, Play, Target, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Columns, DollarSign, FileCheck, LayoutGrid, Play, Target } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -7,7 +9,7 @@ import { cn } from '../../components/ui/utils';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 type CanvasToolbarProps = {
-  readonly onOpenDataRegistry: () => void;
+  readonly placement?: 'inline' | 'top-bar';
   readonly onAutoLayout: () => void;
   readonly onToggleCostOverlay: () => void;
   readonly onToggleImpact: () => void;
@@ -63,7 +65,7 @@ function resolvePlanLabel(planStatusSummary: string, canStartRun: boolean): stri
 }
 
 export default function CanvasToolbar({
-  onOpenDataRegistry,
+  placement = 'inline',
   onAutoLayout,
   onToggleCostOverlay,
   onToggleImpact,
@@ -84,26 +86,68 @@ export default function CanvasToolbar({
   nodeCount,
   edgeCount,
 }: CanvasToolbarProps) {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (placement !== 'top-bar' || typeof document === 'undefined') {
+      setPortalTarget(null);
+      return;
+    }
+
+    setPortalTarget(document.getElementById('shell-top-bar-canvas-controls'));
+  }, [placement]);
+
   const canPlanTransformation = transformationValidation.valid;
   const modeLabel = resolveModeLabel(canvasAuthoringMode);
   const validationLabel = resolveValidationLabel(transformationValidation);
   const planLabel = resolvePlanLabel(planStatusSummary, canStartRun);
   const graphStatsLabel = `${nodeCount}N / ${edgeCount}E`;
 
-  return (
-    <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onOpenDataRegistry}
-          disabled={!canEditEdges}
-          className="h-8 gap-1.5 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
-        >
-          <Upload className="size-3.5" />
-          Add data
-        </Button>
+  const content = (
+    <div className="flex min-w-0 items-center gap-2">
+        <div className="hidden items-center gap-1.5 xl:flex">
+          <Badge
+            variant="outline"
+            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-cyan-200"
+            title={
+              canvasAuthoringMode === 'transformation'
+                ? 'Mode: source -> sql_transform -> sink'
+                : 'Mode: dbt graph'
+            }
+          >
+            {modeLabel}
+          </Badge>
+          <Badge
+            variant="outline"
+            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-slate-200"
+            title={`${nodeCount} node${nodeCount !== 1 ? 's' : ''} and ${edgeCount} edge${
+              edgeCount !== 1 ? 's' : ''
+            }`}
+          >
+            {graphStatsLabel}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
+              canPlanTransformation ? 'text-emerald-200' : 'text-amber-200'
+            )}
+            title={transformationValidation.summary}
+          >
+            {validationLabel}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              'h-7 max-w-[15rem] border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
+              canStartRun ? 'text-emerald-200' : 'text-slate-200'
+            )}
+            title={planStatusSummary}
+          >
+            <span className="truncate">{planLabel}</span>
+          </Badge>
+          <Separator orientation="vertical" className="h-5 bg-slate-700" />
+        </div>
 
         <Button
           type="button"
@@ -160,52 +204,7 @@ export default function CanvasToolbar({
             Cost
           </Button>
         )}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <div className="hidden items-center gap-1.5 xl:flex">
-          <Badge
-            variant="outline"
-            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-cyan-200"
-            title={
-              canvasAuthoringMode === 'transformation'
-                ? 'Mode: source -> sql_transform -> sink'
-                : 'Mode: dbt graph'
-            }
-          >
-            {modeLabel}
-          </Badge>
-          <Badge
-            variant="outline"
-            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-slate-200"
-            title={`${nodeCount} node${nodeCount !== 1 ? 's' : ''} and ${edgeCount} edge${
-              edgeCount !== 1 ? 's' : ''
-            }`}
-          >
-            {graphStatsLabel}
-          </Badge>
-          <Badge
-            variant="outline"
-            className={cn(
-              'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
-              canPlanTransformation ? 'text-emerald-200' : 'text-amber-200'
-            )}
-            title={transformationValidation.summary}
-          >
-            {validationLabel}
-          </Badge>
-          <Badge
-            variant="outline"
-            className={cn(
-              'h-7 max-w-[15rem] border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
-              canStartRun ? 'text-emerald-200' : 'text-slate-200'
-            )}
-            title={planStatusSummary}
-          >
-            <span className="truncate">{planLabel}</span>
-          </Badge>
-        </div>
-        <Separator orientation="vertical" className="hidden h-5 bg-slate-700 xl:block" />
+        <Separator orientation="vertical" className="h-5 bg-slate-700" />
         <Button
           type="button"
           variant="outline"
@@ -229,6 +228,15 @@ export default function CanvasToolbar({
           Run
         </Button>
       </div>
+  );
+
+  if (placement === 'top-bar') {
+    return portalTarget ? createPortal(content, portalTarget) : null;
+  }
+
+  return (
+    <div className="flex h-10 shrink-0 items-center justify-end gap-3 border-b border-slate-700 bg-slate-900 px-3">
+      {content}
     </div>
   );
 }

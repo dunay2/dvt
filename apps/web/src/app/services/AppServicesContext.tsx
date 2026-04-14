@@ -9,7 +9,17 @@ import type { IWorkspacePort } from '../ports/workspace';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
 
-const AppServicesContext = createContext<AppServices | null>(null);
+type GlobalWithAppServicesContext = typeof globalThis & {
+  __dvtAppServicesContext__?: ReturnType<typeof createContext<AppServices | null>>;
+};
+
+function getAppServicesContext() {
+  const globalObject = globalThis as GlobalWithAppServicesContext;
+  globalObject.__dvtAppServicesContext__ ??= createContext<AppServices | null>(null);
+  return globalObject.__dvtAppServicesContext__;
+}
+
+const AppServicesContext = getAppServicesContext();
 
 export type AppServicesProviderProps = Readonly<{
   children: ReactNode;

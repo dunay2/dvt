@@ -125,6 +125,31 @@ Behavior:
   `DATABASE_URL`
 - runs the `@dvt/adapter-temporal` Postgres capability integration lane
 
+### `run-dev-stack.cjs`
+
+Canonical local wrapper for coordinated backend + frontend startup.
+
+Usage:
+
+```bash
+node scripts/run-dev-stack.cjs
+node scripts/run-dev-stack.cjs --test-only
+node scripts/run-dev-stack.cjs --skip-postgres
+```
+
+Behavior:
+
+- starts `dvt-api` and `@dvt/web` together with coordinated shutdown
+- injects `DVT_READYZ_ENABLED=true` into the API process
+- injects `VITE_API_BASE_URL` into the web dev server
+- if `DATABASE_URL` is not already configured, bootstraps the canonical local
+  Docker Postgres proof environment before starting the API
+- exports the canonical local proof DSN as `DATABASE_URL` to the API when local
+  bootstrap is used
+- enables `/db/ready` and waits for that probe before declaring the API ready
+- `--skip-postgres` leaves database bootstrap disabled and preserves the old
+  degraded-local behavior when no `DATABASE_URL` is set
+
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by

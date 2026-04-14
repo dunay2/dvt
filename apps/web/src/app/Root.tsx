@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
@@ -11,6 +11,11 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
+import {
+  completeBootstrapScreen,
+  setBootstrapStepStatus,
+} from './bootstrap/appBootstrapScreen';
+import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
 
@@ -19,11 +24,13 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
+  const location = useLocation();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
   const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
   const setConnectionStatus = useUiLayoutStore((state) => state.setConnectionStatus);
+  const capabilitiesQuery = useCapabilitiesQuery();
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
   const shellHealth = buildShellHealthPresentationModel({
     data: platformHealth.data,
@@ -35,6 +42,8 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
+  const isInitialCapabilitiesBootstrapPending =
+    capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {
@@ -51,6 +60,80 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     setConnectionStatus(shellHealth.connectionState);
   }, [connectionStatus, setConnectionStatus, shellHealth.connectionState]);
 
+  useEffect(() => {
+    if (isInitialCapabilitiesBootstrapPending) {
+      setBootstrapStepStatus('capabilities', 'pending');
+      return;
+    }
+
+    if (capabilitiesQuery.isError) {
+      setBootstrapStepStatus(
+        'capabilities',
+        'degraded',
+        'Capabilities could not be loaded. Using the fallback shell configuration.'
+      );
+      return;
+    }
+
+    setBootstrapStepStatus('capabilities', 'complete');
+  }, [
+    capabilitiesQuery.isError,
+    capabilitiesQuery.isPending,
+    capabilitiesQuery.data,
+    isInitialCapabilitiesBootstrapPending,
+  ]);
+
+  useEffect(() => {
+    if (shellHealth.isInitialHealthCheckPending) {
+      setBootstrapStepStatus('health', 'pending');
+      return;
+    }
+
+    if (platformHealth.isError || shellHealth.connectionState?.rest !== 'ok') {
+      setBootstrapStepStatus(
+        'health',
+        'degraded',
+        shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
+      );
+      return;
+    }
+
+    setBootstrapStepStatus(
+      'health',
+      'complete',
+      shellHealth.connectionDetail ?? 'Platform health settled.'
+    );
+  }, [
+    platformHealth.isError,
+    shellHealth.connectionDetail,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/canvas')) {
+      setBootstrapStepStatus('route', 'pending', 'Handing startup to the Canvas workbench');
+      return;
+    }
+
+    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+  }, [
+    location.pathname,
+  ]);
+
+  useEffect(() => {
+    completeBootstrapScreen();
+  }, [
+    capabilitiesQuery.isError,
+    capabilitiesQuery.isPending,
+    capabilitiesQuery.data,
+    isInitialCapabilitiesBootstrapPending,
+    location.pathname,
+    platformHealth.isError,
+    shellHealth.connectionDetail,
+    shellHealth.connectionState,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
+
   return (
     <AppShellFrame
       bottomDrawer={<BottomConsoleDrawer />}
@@ -63,7 +146,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
           isFetching={shellHealth.isFetching}
           lastSettledAtMs={shellHealth.lastSettledAtMs}
           onRetry={() => {
-            void platformHealth.refetch();
+            platformHealth.refetch().catch(() => undefined);
           }}
         />
       }

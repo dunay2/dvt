@@ -1,4 +1,4 @@
-import { PanelLeftClose } from 'lucide-react';
+import { PanelLeftClose, Upload } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
@@ -40,8 +40,6 @@ export default function DbtExplorer({
   onHide,
   onOpenDataRegistry,
 }: DbtExplorerProps) {
-  const hasDbtNodes = nodes.some((node) => node.pluginId === 'dbt');
-
   const groupedNodes = useMemo(() => {
     const groups: Record<string, CanonicalNode[]> = {};
 
@@ -99,11 +97,23 @@ export default function DbtExplorer({
           )}
         </div>
 
-        {canEditGraph && hasDbtNodes && onOpenDataRegistry && (
-          <p className="mt-2 text-[11px] leading-5 text-slate-400">
-            Use <span className="font-medium text-slate-200">Add data</span> in the graph toolbar to
-            register new objects in this workspace.
-          </p>
+        {onOpenDataRegistry && (
+          <div className="mt-2 space-y-2">
+            <p className="text-[11px] leading-5 text-slate-400">
+              Explore project nodes, discover dependencies, and add new objects to this workspace.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenDataRegistry}
+              disabled={!canEditGraph}
+              className="h-8 w-full justify-start gap-1.5 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
+            >
+              <Upload className="size-3.5" />
+              Add data
+            </Button>
+          </div>
         )}
       </div>
 

@@ -7,6 +7,8 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const proxyTarget = env.VITE_API_BASE_URL?.trim() || 'http://127.0.0.1:3000';
+  const appVersion = process.env.npm_package_version?.trim() || '0.0.0';
+  const appBuildDate = new Date().toISOString();
   const allowedHosts =
     env.VITE_ALLOWED_HOSTS
       ?.split(',')
@@ -56,6 +58,10 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+    },
+    define: {
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+      'import.meta.env.VITE_APP_BUILD_DATE': JSON.stringify(appBuildDate),
     },
   };
 });

@@ -92,6 +92,16 @@ Optional route exposure flags:
    - `POST /runs/start`
    - `GET /runs`
 
+### Local dev-stack shortcut
+
+For local shell + API startup, `pnpm dev:app` now bootstraps the canonical local
+Docker Postgres proof environment automatically when `DATABASE_URL` is not
+already set in the caller environment. It also enables `/db/ready` for the API
+process and waits for that probe before reporting the stack ready.
+
+Use `pnpm dev:app -- --skip-postgres` only when you intentionally want the old
+behavior and are providing database posture yourself.
+
 ## Bootstrap Failure Shortcuts
 
 - If startup fails with OIDC/runtime wiring errors: re-check the required env

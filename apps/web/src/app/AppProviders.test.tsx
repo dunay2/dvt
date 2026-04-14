@@ -8,6 +8,14 @@ import { waitForReactQuery } from '../testing/reactQueryHarness';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import AppProviders from './AppProviders';
 
+const bootstrapScreenMocks = vi.hoisted(() => ({
+  setBootstrapStepStatus: vi.fn(),
+}));
+
+vi.mock('./bootstrap/appBootstrapScreen', () => ({
+  setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
+}));
+
 describe('AppProviders', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -20,6 +28,7 @@ describe('AppProviders', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    bootstrapScreenMocks.setBootstrapStepStatus.mockReset();
   });
 
   afterEach(() => {
@@ -70,5 +79,10 @@ describe('AppProviders', () => {
     );
 
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+      'services',
+      'complete',
+      'App services and query client ready'
+    );
   });
 });
