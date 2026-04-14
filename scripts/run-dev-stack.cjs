@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 const { spawn } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const { once } = require('node:events');
 const http = require('node:http');
 const https = require('node:https');
+const path = require('node:path');
 const readline = require('node:readline');
+const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 
 const DEFAULT_API_PORT = 3000;
 const DEFAULT_WEB_PORT = 5173;
@@ -12,6 +15,7 @@ const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
 
 function parseArgs(argv) {
   const parsed = {
@@ -20,6 +24,7 @@ function parseArgs(argv) {
     host: DEFAULT_HOST,
     readyTimeoutMs: DEFAULT_READY_TIMEOUT_MS,
     pollIntervalMs: DEFAULT_POLL_INTERVAL_MS,
+    skipPostgres: false,
     testOnly: false,
   };
 
@@ -51,6 +56,9 @@ function parseArgs(argv) {
         parsed.pollIntervalMs = parsePositiveInt(next, '--poll-interval-ms');
         index += 1;
         break;
+      case '--skip-postgres':
+        parsed.skipPostgres = true;
+        break;
       case '--test-only':
         parsed.testOnly = true;
         break;
@@ -60,6 +68,10 @@ function parseArgs(argv) {
   }
 
   return parsed;
+}
+
+function readNonEmptyEnv(value) {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
 
 function parsePositiveInt(value, flagName) {
@@ -73,6 +85,52 @@ function parsePositiveInt(value, flagName) {
   }
 
   return parsed;
+}
+
+function resolveDatabaseUrl(options, env = process.env) {
+  return readNonEmptyEnv(env.DATABASE_URL) ?? (options.skipPostgres ? undefined : defaultPgUrl);
+}
+
+function shouldBootstrapLocalPostgres(options, env = process.env) {
+  return !options.skipPostgres && readNonEmptyEnv(env.DATABASE_URL) === undefined;
+}
+
+function buildApiEnv(options, env = process.env) {
+  const databaseUrl = resolveDatabaseUrl(options, env);
+
+  return {
+    ...env,
+    HOST: options.host,
+    PORT: String(options.apiPort),
+    DVT_READYZ_ENABLED: 'true',
+    ...(databaseUrl === undefined
+      ? {}
+      : {
+          DATABASE_URL: databaseUrl,
+          DVT_DB_READY_ENABLED: 'true',
+        }),
+  };
+}
+
+function ensureLocalPostgresReady(options, env = process.env) {
+  if (!shouldBootstrapLocalPostgres(options, env)) {
+    return;
+  }
+
+  console.log('[dev-stack] DATABASE_URL not set; bootstrapping local Docker Postgres proof stack');
+  const result = spawnSync(process.execPath, [POSTGRES_BOOTSTRAP_SCRIPT, 'up'], {
+    stdio: 'inherit',
+    env,
+    windowsHide: true,
+  });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    throw new Error(`Local Postgres bootstrap failed with exit code ${result.status}`);
+  }
 }
 
 function pipePrefixedOutput(stream, prefix) {
@@ -171,15 +229,14 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const apiBaseUrl = `http://${options.host}:${options.apiPort}`;
   const webBaseUrl = `http://${options.host}:${options.webPort}`;
+  const apiEnv = buildApiEnv(options);
 
   console.log(`[dev-stack] Starting API on ${apiBaseUrl}`);
   console.log(`[dev-stack] Starting Web on ${webBaseUrl}`);
 
-  const api = spawnProcess('api', ['--filter', 'dvt-api', 'dev'], {
-    HOST: options.host,
-    PORT: String(options.apiPort),
-    DVT_READYZ_ENABLED: 'true',
-  });
+  ensureLocalPostgresReady(options);
+
+  const api = spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv);
   const web = spawnProcess(
     'web',
     [
@@ -240,6 +297,15 @@ async function main() {
       options.pollIntervalMs,
       'API healthz'
     );
+    if (apiEnv.DATABASE_URL) {
+      await waitForUrl(
+        `${apiBaseUrl}/db/ready`,
+        (response) => response.statusCode === 200,
+        options.readyTimeoutMs,
+        options.pollIntervalMs,
+        'API db/ready'
+      );
+    }
     await waitForUrl(
       `${webBaseUrl}/`,
       (response) => (response.statusCode ?? 500) < 500,
@@ -266,7 +332,16 @@ async function main() {
   await Promise.all(exitWatchers);
 }
 
-main().catch(async (error) => {
-  console.error(`[dev-stack] Fatal error: ${error.message}`);
-  process.exit(1);
-});
+module.exports = {
+  parseArgs,
+  resolveDatabaseUrl,
+  shouldBootstrapLocalPostgres,
+  buildApiEnv,
+};
+
+if (require.main === module) {
+  main().catch(async (error) => {
+    console.error(`[dev-stack] Fatal error: ${error.message}`);
+    process.exit(1);
+  });
+}

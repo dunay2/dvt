@@ -22,6 +22,8 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260414 Dev Stack Local Postgres Bootstrap Hotfix Closeout](./20260414-hotfix-dev-stack-local-postgres-bootstrap-closeout.md)
+- [20260414 App Services Context HMR Stability Hotfix Closeout](./20260414-hotfix-app-services-context-hmr-stability-closeout.md)
 - [20260414 Frontend AppServicesProvider Startup Hotfix Closeout](./20260414-hotfix-frontend-app-services-provider-startup-closeout.md)
 - [20260414 TF-A1-C SRP Hardening Closeout](./20260414-tf-a1-c-srp-hardening-closeout.md)
 - [20260414 TF-A1-B Compiler Mapping Closeout](./20260414-tf-a1-b-compiler-mapping-closeout.md)

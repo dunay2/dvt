@@ -2,7 +2,7 @@
 
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
@@ -43,6 +43,13 @@ describe('AppServicesProvider', () => {
     shellFeedback: null,
   };
 
+  function clearStableContextKey(): void {
+    Reflect.deleteProperty(
+      globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
+      '__dvtAppServicesContext'
+    );
+  }
+
   function Probe(): null {
     captured.mode = useAppDataSourceMode();
     captured.workspaceService = useWorkspaceService();
@@ -82,6 +89,9 @@ describe('AppServicesProvider', () => {
     } else {
       globalObject.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
     }
+
+    clearStableContextKey();
+    vi.resetModules();
   });
 
   it('builds services from mode and exposes them through hooks', async () => {
@@ -227,5 +237,30 @@ describe('AppServicesProvider', () => {
     expect(captured.capabilitiesPort).toBe(capabilitiesPort);
     expect(captured.sessionContext).toBe(sessionContext);
     expect(captured.shellFeedback).toBe(shellFeedback);
+  });
+
+  it('reuses the same context across module reloads so HMR consumers keep the provider binding', async () => {
+    clearStableContextKey();
+    vi.resetModules();
+
+    const firstModule = await import('./AppServicesContext');
+    vi.resetModules();
+    const secondModule = await import('./AppServicesContext');
+    let observedMode: ReturnType<typeof secondModule.useAppDataSourceMode> | null = null;
+
+    function ProbeFromReloadedModule(): null {
+      observedMode = secondModule.useAppDataSourceMode();
+      return null;
+    }
+
+    await act(async () => {
+      root.render(
+        <firstModule.AppServicesProvider overrides={{ mode: 'mock' }}>
+          <ProbeFromReloadedModule />
+        </firstModule.AppServicesProvider>
+      );
+    });
+
+    expect(observedMode).toBe('mock');
   });
 });

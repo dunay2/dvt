@@ -9,7 +9,24 @@ import type { IWorkspacePort } from '../ports/workspace';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
 
-const AppServicesContext = createContext<AppServices | null>(null);
+const APP_SERVICES_CONTEXT_KEY = '__dvtAppServicesContext';
+
+function getOrCreateAppServicesContext(): ReturnType<typeof createContext<AppServices | null>> {
+  const globalScope = globalThis as typeof globalThis & {
+    [APP_SERVICES_CONTEXT_KEY]?: ReturnType<typeof createContext<AppServices | null>>;
+  };
+
+  if (!globalScope[APP_SERVICES_CONTEXT_KEY]) {
+    globalScope[APP_SERVICES_CONTEXT_KEY] = createContext<AppServices | null>(null);
+  }
+
+  return globalScope[APP_SERVICES_CONTEXT_KEY];
+}
+
+// Keep a stable context identity across Vite HMR reloads. Without this,
+// AppProviders can hold the old provider instance while hot-reloaded consumers
+// read from a new context object and incorrectly observe `null`.
+const AppServicesContext = getOrCreateAppServicesContext();
 
 export type AppServicesProviderProps = Readonly<{
   children: ReactNode;
