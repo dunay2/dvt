@@ -47,9 +47,10 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
       pluginContexts: {
         dbt: {
           projectBundleRef: {
-            uri: 'artifacts://runs/run-1/project.tgz',
+            uri: `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`,
             kind: 'dbt-project-bundle',
             sha256: 'b'.repeat(64),
+            tenantId: 'tenant-1',
           },
         },
       },
@@ -274,12 +275,13 @@ function makeRunExecutionContextArtifact(
     targetAdapter: 'temporal',
     createdAtIso: '2026-04-14T10:00:00.000Z',
     createdBy: 'planner-runtime',
-    pluginContexts: {
-      dbt: {
-        projectBundleRef: {
-          uri: 'artifacts://runs/run-1/project.tgz',
-          kind: 'dbt-project-bundle',
-          sha256: 'b'.repeat(64),
+        pluginContexts: {
+          dbt: {
+            projectBundleRef: {
+          uri: `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`,
+              kind: 'dbt-project-bundle',
+              sha256: 'b'.repeat(64),
+              tenantId: 'tenant-1',
         },
       },
     },

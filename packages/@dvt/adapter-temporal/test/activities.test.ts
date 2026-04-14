@@ -73,9 +73,10 @@ const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
   pluginContexts: {
     dbt: {
       projectBundleRef: {
-        uri: 'artifacts://runs/run-1/project.tgz',
+        uri: `s3://bundle-bucket/tenants/${CTX.tenantId}/${'b'.repeat(64)}`,
         kind: 'dbt-project-bundle',
         sha256: 'b'.repeat(64),
+        tenantId: CTX.tenantId,
       },
       targetProfile: 'dbt-dev',
     },
@@ -630,9 +631,10 @@ describe('stepActivities', () => {
         },
         pluginContext: {
           projectBundleRef: {
-            uri: 'artifacts://runs/run-1/project.tgz',
+            uri: `s3://bundle-bucket/tenants/${CTX.tenantId}/${'b'.repeat(64)}`,
             kind: 'dbt-project-bundle',
             sha256: 'b'.repeat(64),
+            tenantId: CTX.tenantId,
           },
           targetProfile: 'dbt-dev',
         },

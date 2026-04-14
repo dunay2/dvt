@@ -1,4 +1,10 @@
-import type { EngineRunRef, PlanRef, ResolvedRunContext, RunExecutionPolicy } from '@dvt/contracts';
+import type {
+  EngineRunRef,
+  ExecutionPlan,
+  PlanRef,
+  ResolvedRunContext,
+  RunExecutionPolicy,
+} from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
@@ -35,13 +41,14 @@ export class StartRunAdmissionGuard {
   }
 
   async assertExecutionPolicyAllowed(
+    plan: ExecutionPlan,
     planRef: PlanRef,
     executionPolicy: RunExecutionPolicy,
     context: ResolvedRunContext,
     adapter: IProviderAdapter
   ): Promise<void> {
     this.validationPolicy.validateCapabilitiesOrThrow(executionPolicy, adapter);
-    await this.runExecutionContextPolicy.assertAllowed(planRef, executionPolicy, context);
+    await this.runExecutionContextPolicy.assertAllowed(plan, planRef, executionPolicy, context);
   }
 
   resolveAdapter(context: ResolvedRunContext): IProviderAdapter {

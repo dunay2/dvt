@@ -26,7 +26,7 @@ describe('createTemporalWorkerRuntime', () => {
         connectionFactory: async () => fixture.connection,
         dbtAvailabilityProbe: probe,
         bundleReaderFactory: () => ({
-          read: vi.fn(async () => new Uint8Array()),
+          read: vi.fn(async (_ref, _options) => new Uint8Array()),
         }),
         dbtPluginRunnerFactory: () => runner,
         hostFactory: (config) => {

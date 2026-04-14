@@ -1,4 +1,5 @@
 import type {
+  ExecutionPlan,
   PlanRef,
   ResolvedRunContext,
   RunExecutionContext,
@@ -23,6 +24,24 @@ function makeExecutionPolicy(overrides?: Partial<RunExecutionPolicy>): RunExecut
     pluginCompatibilityFingerprint:
       '1111111111111111111111111111111111111111111111111111111111111111',
     ...overrides,
+  };
+}
+
+function makePlan(stepKinds: readonly string[] = ['DBT_MODEL']): ExecutionPlan {
+  return {
+    metadata: {
+      planId: 'plan-1',
+      planVersion: '1.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256: 'c'.repeat(64),
+      createdAtIso: '2026-04-14T00:00:00.000Z',
+    },
+    steps: stepKinds.map((kind, index) => ({
+      stepId: `step-${index + 1}`,
+      kind,
+      dependsOn: [],
+    })),
   };
 }
 
@@ -64,9 +83,10 @@ function makeRunExecutionContext(overrides?: Partial<RunExecutionContext>): RunE
     pluginContexts: {
       dbt: {
         projectBundleRef: {
-          uri: 'artifacts://plans/run-1/project.tgz',
+          uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
           kind: 'dbt-project-bundle',
           sha256: 'b'.repeat(64),
+          tenantId: 'tenant-a',
         },
       },
     },
@@ -83,14 +103,38 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     });
 
     await expect(
-      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
     ).resolves.toBeUndefined();
+  });
+
+  it('accepts non-DBT plans without a runExecutionContextRef', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy();
+
+    await expect(
+      policy.assertAllowed(
+        makePlan(['POSTGRES_SQL_TRANSFORM']),
+        makePlanRef(),
+        makeExecutionPolicy(),
+        { ...makeContext(), runExecutionContextRef: undefined }
+      )
+    ).resolves.toBeUndefined();
+  });
+
+  it('rejects DBT-bearing plans when runExecutionContextRef is missing', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy();
+
+    await expect(
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), {
+        ...makeContext(),
+        runExecutionContextRef: undefined,
+      })
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
   it('rejects when runExecutionContextRef is provided without resolver', async () => {
     const policy = new RunExecutionContextAdmissionPolicy();
     await expect(
-      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
@@ -110,7 +154,44 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     });
 
     await expect(
-      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+  });
+
+  it('rejects DBT-bearing plans when the resolved context omits pluginContexts.dbt', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      async resolve() {
+        return makeRunExecutionContext({
+          pluginContexts: {},
+        });
+      },
+    });
+
+    await expect(
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+  });
+
+  it('rejects DBT-bearing plans when bundle tenantId mismatches the run context', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      async resolve() {
+        return makeRunExecutionContext({
+          pluginContexts: {
+            dbt: {
+              projectBundleRef: {
+                uri: `s3://bundle-bucket/tenants/tenant-b/${'b'.repeat(64)}`,
+                kind: 'dbt-project-bundle',
+                sha256: 'b'.repeat(64),
+                tenantId: 'tenant-b',
+              },
+            },
+          },
+        });
+      },
+    });
+
+    await expect(
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
@@ -125,7 +206,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     });
 
     await expect(
-      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
@@ -139,7 +220,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     });
 
     await expect(
-      policy.assertAllowed(makePlanRef(), makeExecutionPolicy(), makeContext())
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
@@ -155,6 +236,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
     await expect(
       policy.assertAllowed(
+        makePlan(),
         makePlanRef(),
         makeExecutionPolicy({ pluginCompatibilityFingerprint: undefined }),
         makeContext()

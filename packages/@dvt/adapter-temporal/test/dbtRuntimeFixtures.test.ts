@@ -81,8 +81,12 @@ describe('dbtRuntimeFixtures', () => {
       planRef
     );
 
-    expect(firstResolved.pluginContexts.dbt?.projectBundleRef.uri).toContain('/run-1/');
-    expect(secondResolved.pluginContexts.dbt?.projectBundleRef.uri).toContain('/run-2/');
+    expect(firstResolved.pluginContexts.dbt?.projectBundleRef.uri).toMatch(
+      /^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/
+    );
+    expect(secondResolved.pluginContexts.dbt?.projectBundleRef.uri).toMatch(
+      /^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/
+    );
     await expect(reader.resolve(unregisteredContext.runExecutionContextRef!)).rejects.toThrow(
       'RUN_EXECUTION_CONTEXT_NOT_REGISTERED'
     );

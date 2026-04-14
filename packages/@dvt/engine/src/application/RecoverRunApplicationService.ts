@@ -167,6 +167,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
       this.deps.planFetcher
     );
     await guard.assertExecutionPolicyAllowed(
+      verifiedArtifact.plan,
       planRef,
       verifiedArtifact.executionPolicy,
       preflightContext,

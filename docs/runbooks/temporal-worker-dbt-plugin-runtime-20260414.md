@@ -26,9 +26,20 @@ This worker owns:
 DBT bundle rule:
 
 - `pluginContexts.dbt.projectBundleRef` must be an immutable bundle ref with
-  `kind=dbt-project-bundle` and a required `sha256`
+  `kind=dbt-project-bundle`, a required `sha256`, and a required `tenantId`
+- the bundle locator itself must be tenant-scoped and canonical:
+  `s3://<bucket>/tenants/<tenantId>/<sha256>` or
+  `file://.../tenants/<tenantId>/<sha256>`
 - the worker verifies bundle bytes against that `sha256` before materializing
   the project directory
+- the worker rejects bundles whose `tenantId` does not match the run tenant
+
+DBT admission rule:
+
+- DBT-bearing runs must arrive with a `runExecutionContextRef`
+- the resolved `RunExecutionContext` must contain `pluginContexts.dbt`
+- admission rejects the run before queueing when that DBT bundle context is
+  missing or tenant-mismatched
 
 This worker does not own:
 

@@ -154,7 +154,9 @@ async function materializeDbtProject(
   workdirRoot: string
 ): Promise<MaterializedDbtProject> {
   const projectBundleRef = input.pluginContext.projectBundleRef;
-  const bundleBytes = await bundleReader.read(projectBundleRef);
+  const bundleBytes = await bundleReader.read(projectBundleRef, {
+    expectedTenantId: input.runExecutionContext.tenantId,
+  });
   await mkdir(workdirRoot, { recursive: true });
   const workingDirectory = await mkdtemp(
     join(

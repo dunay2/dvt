@@ -160,16 +160,17 @@ export function registerValidationExecutionContextSuite(): void {
         pluginContexts: {
           dbt: {
             projectBundleRef: {
-              uri: 'artifacts://runs/run-1/dbt-project.tgz',
+              uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
               kind: 'dbt-project-bundle',
               sha256: 'b'.repeat(64),
+              tenantId: 'tenant-a',
             },
           },
         },
       });
 
-      expect(runExecutionContext.pluginContexts.dbt?.projectBundleRef.uri).toContain(
-        'artifacts://'
+      expect(runExecutionContext.pluginContexts.dbt?.projectBundleRef.uri).toBe(
+        `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`
       );
       expect(runExecutionContext.pluginCompatibilityFingerprint).toHaveLength(64);
     });
@@ -189,8 +190,10 @@ export function registerValidationExecutionContextSuite(): void {
           pluginContexts: {
             dbt: {
               projectBundleRef: {
-                uri: 'artifacts://x',
+                uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
                 kind: 'dbt-project-bundle',
+                sha256: 'b'.repeat(64),
+                tenantId: 'tenant-a',
               },
             },
           },

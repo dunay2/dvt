@@ -32,9 +32,10 @@ const INPUT = {
     pluginContexts: {
       dbt: {
         projectBundleRef: {
-          uri: 's3://bundle/run-1/project.tgz',
+          uri: `s3://bundle/tenants/tenant-1/${'b'.repeat(64)}`,
           kind: 'dbt-project-bundle',
           sha256: 'b'.repeat(64),
+          tenantId: 'tenant-1',
         },
         targetProfile: 'analytics',
       },
@@ -42,9 +43,10 @@ const INPUT = {
   },
   pluginContext: {
     projectBundleRef: {
-      uri: 's3://bundle/run-1/project.tgz',
+      uri: `s3://bundle/tenants/tenant-1/${'b'.repeat(64)}`,
       kind: 'dbt-project-bundle',
       sha256: 'b'.repeat(64),
+      tenantId: 'tenant-1',
     },
     targetProfile: 'analytics',
   },
@@ -63,7 +65,7 @@ describe('DbtCliPluginRunner', () => {
     }));
     const runner = new DbtCliPluginRunner({
       bundleReader: {
-        read: vi.fn(async () => new Uint8Array()),
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
       },
       materializeProject,
       runCommand,
@@ -91,7 +93,7 @@ describe('DbtCliPluginRunner', () => {
     }));
     const runner = new DbtCliPluginRunner({
       bundleReader: {
-        read: vi.fn(async () => new Uint8Array()),
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
       },
       materializeProject: async () => ({
         projectDir: '/tmp/dbt-project',
@@ -106,9 +108,10 @@ describe('DbtCliPluginRunner', () => {
       step: { stepId: 'test.analytics.orders', kind: 'DBT_TEST', dependsOn: [] },
       pluginContext: {
         projectBundleRef: {
-          uri: 's3://bundle/run-1/project.tgz',
+          uri: `s3://bundle/tenants/tenant-1/${'b'.repeat(64)}`,
           kind: 'dbt-project-bundle',
           sha256: 'b'.repeat(64),
+          tenantId: 'tenant-1',
         },
       },
     });
@@ -126,7 +129,7 @@ describe('DbtCliPluginRunner', () => {
     });
     const runner = new DbtCliPluginRunner({
       bundleReader: {
-        read: vi.fn(async () => new Uint8Array()),
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
       },
       materializeProject: async () => ({
         projectDir: '/tmp/dbt-project',
@@ -154,7 +157,7 @@ describe('DbtCliPluginRunner', () => {
     });
     const runner = new DbtCliPluginRunner({
       bundleReader: {
-        read: vi.fn(async () => new Uint8Array()),
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
       },
       materializeProject: async () => ({
         projectDir: '/tmp/dbt-project',

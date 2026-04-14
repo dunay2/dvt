@@ -425,10 +425,11 @@ describe('temporal integration (time-skipping)', () => {
         );
 
         expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
+        expect(observedProjectBundles).toHaveLength(2);
         expect(observedProjectBundles).toEqual(
           expect.arrayContaining([
-            'artifacts://runs/run-it-cancel-1/project.tgz',
-            'artifacts://runs/run-it-cancel-2/project.tgz',
+            expect.stringMatching(/^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/),
+            expect.stringMatching(/^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/),
           ])
         );
       } finally {

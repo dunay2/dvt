@@ -72,11 +72,16 @@ explicit, testable, and operable.
 5. The worker has a canonical runbook baseline, so the new topology is not only
    code but also operator-facing truth.
 6. `pluginContexts.dbt.projectBundleRef` is now an immutable content-addressed
-   bundle reference with `sha256`, so the worker no longer executes mutable
-   bundle bytes behind a stable URI.
+   bundle reference with `sha256`, and its locator is constrained to the
+   canonical tenant-scoped artifact path, so the worker no longer executes
+   mutable bundle bytes behind a stable URI.
 7. Runtime artifact readers no longer create a fresh S3 client per read; the
    hot path now uses a long-lived client instance/fallback instead of
    read-scoped churn.
+8. DBT-bearing runs are now rejected at admission when
+   `runExecutionContextRef` is missing or when the resolved
+   `pluginContexts.dbt.projectBundleRef` does not align to the run tenant or
+   canonical tenant-scoped bundle locator.
 
 ## What remains open
 

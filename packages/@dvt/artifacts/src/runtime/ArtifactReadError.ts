@@ -6,6 +6,7 @@ export type ArtifactReadErrorCode =
   | 'ARTIFACT_NOT_FOUND'
   | 'ARTIFACT_PAYLOAD_INVALID'
   | 'ARTIFACT_INTEGRITY_MISMATCH'
+  | 'ARTIFACT_TENANT_MISMATCH'
   | 'ARTIFACT_REF_MISMATCH';
 
 export class ArtifactReadError extends Error {

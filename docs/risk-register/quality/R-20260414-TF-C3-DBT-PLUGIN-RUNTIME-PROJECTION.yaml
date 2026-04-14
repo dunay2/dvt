@@ -25,8 +25,12 @@ mitigations:
   - 'Adapter-temporal unit and worker-composition tests now prove the reader-to-plugin-runner
     handoff explicitly.'
   - 'The DBT runtime no longer dereferences a mutable string-only bundle URI: `projectBundleRef` is
-    now a typed immutable bundle ref with `kind=dbt-project-bundle` and required `sha256`, and the
-    worker verifies the bytes before execution.'
+    now a typed immutable bundle ref with `kind=dbt-project-bundle`, required `sha256`, required
+    `tenantId`, and a canonical tenant-scoped locator, and the worker verifies both tenant alignment
+    and bytes before execution.'
+  - 'Start-run admission now rejects DBT-bearing plans before queueing when `runExecutionContextRef`
+    is missing, `pluginContexts.dbt` is absent, or the resolved DBT bundle tenant or canonical
+    locator does not match the run tenant.'
   - 'The DBT integration fixtures now bind `runExecutionContextRef.sha256` to canonical context
     bytes and reject unregistered refs, so same-worker multi-run tests cannot silently reuse one
     fake context.'

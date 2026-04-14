@@ -49,7 +49,12 @@ export function createDbtRunExecutionContext(
     pluginContexts: {
       dbt: {
         projectBundleRef: {
-          uri: `artifacts://runs/${ctx.runId}/project.tgz`,
+          uri: `s3://bundle-bucket/tenants/${ctx.tenantId}/${sha256Hex(
+            Buffer.from(
+              `dbt-project-bundle:${ctx.runId}:${planRef.planId}:${planRef.planVersion}`,
+              'utf8'
+            )
+          )}`,
           kind: 'dbt-project-bundle',
           sha256: sha256Hex(
             Buffer.from(
@@ -57,6 +62,7 @@ export function createDbtRunExecutionContext(
               'utf8'
             )
           ),
+          tenantId: ctx.tenantId,
         },
         targetProfile: 'dbt-dev',
       },

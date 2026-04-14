@@ -5,7 +5,10 @@
 //
 
 export type { ICompiledCodeStorage } from './ports/ICompiledCodeStorage.js';
-export type { IDbtProjectBundleReader } from './ports/IDbtProjectBundleReader.js';
+export type {
+  DbtProjectBundleReadOptions,
+  IDbtProjectBundleReader,
+} from './ports/IDbtProjectBundleReader.js';
 export type { IPlanStoreReader } from './ports/IPlanStoreReader.js';
 export type { IPlanStoreWriter } from './ports/IPlanStoreWriter.js';
 export type { IRunExecutionContextReader } from './ports/IRunExecutionContextReader.js';

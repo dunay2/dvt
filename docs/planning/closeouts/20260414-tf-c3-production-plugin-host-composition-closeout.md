@@ -83,8 +83,12 @@ owned". This slice closes that by moving the DBT path onto:
   `ArtifactBackedDbtProjectBundleReader` to `@dvt/artifacts`, with governed
   `file://` and `s3://` handling.
 - Hardened `pluginContexts.dbt.projectBundleRef` from a mutable URI string into
-  a content-addressed bundle ref carrying `kind` and `sha256`, and verified the
-  bundle bytes before DBT execution.
+  a content-addressed bundle ref carrying `kind` and `sha256`, constrained the
+  locator to the canonical tenant-scoped artifact path, and verified the bundle
+  bytes before DBT execution.
+- Tightened start-run admission so DBT-bearing plans now fail before queueing
+  when `runExecutionContextRef` is missing, `pluginContexts.dbt` is absent, or
+  the DBT bundle ref tenant or canonical locator does not match the run tenant.
 - Removed read-scoped S3 client construction from artifact runtime reads so the
   DBT/runtime hot path no longer creates a fresh SDK client per artifact fetch.
 - Reduced `apps/api` to a thin wrapper that maps shared artifact-reader errors

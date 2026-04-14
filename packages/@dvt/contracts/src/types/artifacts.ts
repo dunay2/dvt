@@ -37,9 +37,9 @@ export interface DbtProjectBundleRef extends ArtifactRef {
   uri: string;
   kind: 'dbt-project-bundle';
   sha256: string;
+  tenantId: string;
   sizeBytes?: number | undefined;
   expiresAt?: string | undefined;
-  tenantId?: string | undefined;
 }
 
 /**

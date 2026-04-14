@@ -1,3 +1,5 @@
+import { URL } from 'node:url';
+
 import { z } from 'zod';
 
 import {
@@ -29,9 +31,23 @@ export const DbtProjectBundleRefSchema = z
     uri: NonBlankStringSchema,
     kind: z.literal('dbt-project-bundle'),
     sha256: Sha256HexStringSchema,
+    tenantId: NonBlankStringSchema,
     sizeBytes: z.number().int().nonnegative().optional(),
     expiresAt: IsoUtcStringSchema.optional(),
-    tenantId: NonBlankStringSchema.optional(),
+  })
+  .superRefine((input, ctx) => {
+    const locatorError = getDbtProjectBundleLocatorValidationError(
+      input.uri,
+      input.tenantId,
+      input.sha256
+    );
+    if (locatorError !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['uri'],
+        message: locatorError,
+      });
+    }
   })
   .strict();
 
@@ -93,3 +109,49 @@ export const RunExecutionContextSchema = z
     }
   })
   .strict();
+
+export function getDbtProjectBundleLocatorValidationError(
+  uri: string,
+  tenantId: string,
+  sha256: string
+): string | undefined {
+  let parsedUri: URL;
+  try {
+    parsedUri = new URL(uri);
+  } catch {
+    return 'DBT project bundle URI must be a valid file:// or s3:// locator';
+  }
+
+  const scheme = parsedUri.protocol.replace(/:$/, '').toLowerCase();
+  if (scheme === 's3') {
+    const actualKey = decodeURIComponent(parsedUri.pathname.replace(/^\/+/, ''));
+    const expectedKey = buildCanonicalDbtBundleKey(tenantId, sha256);
+    if (actualKey !== expectedKey) {
+      return `DBT project bundle URI must resolve to s3://${parsedUri.hostname}/${expectedKey}`;
+    }
+    return undefined;
+  }
+
+  if (scheme === 'file') {
+    const actualPath = normalizePath(decodedPathname(parsedUri));
+    const expectedSuffix = normalizePath(`tenants/${tenantId}/${sha256}`);
+    if (!actualPath.endsWith(expectedSuffix)) {
+      return `DBT project bundle file URI must end with /${expectedSuffix}`;
+    }
+    return undefined;
+  }
+
+  return 'DBT project bundle URI must use file:// or s3://';
+}
+
+function decodedPathname(uri: URL): string {
+  return decodeURIComponent(uri.pathname);
+}
+
+function normalizePath(value: string): string {
+  return value.replace(/\\/g, '/').replace(/^\/+/, '');
+}
+
+function buildCanonicalDbtBundleKey(tenantId: string, sha256: string): string {
+  return `tenants/${tenantId}/${sha256}`;
+}

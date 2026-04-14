@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, URL } from 'node:url';
 
 import { parseRunExecutionContextRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
@@ -29,7 +29,8 @@ class FakeS3Client {
 
 describe('@dvt/artifacts runtime readers', () => {
   it('resolves runExecutionContext artifacts from file:// outside production', async () => {
-    const content = makeRunExecutionContextArtifact();
+    const bundleFileUrl = writeCanonicalBundleFixture('bundle');
+    const content = makeRunExecutionContextArtifact(bundleFileUrl);
     const fileUrl = writeTempFixture('runctx.json', content);
     const reader = new ArtifactBackedRunExecutionContextReader({ nodeEnv: 'test' });
 
@@ -43,11 +44,11 @@ describe('@dvt/artifacts runtime readers', () => {
       })
     );
 
-    expect(resolved.pluginContexts.dbt?.projectBundleRef.uri).toBe('file:///tmp/project.tgz');
+    expect(resolved.pluginContexts.dbt?.projectBundleRef.uri).toBe(bundleFileUrl);
   });
 
   it('rejects file:// runExecutionContext artifacts in production', async () => {
-    const content = makeRunExecutionContextArtifact();
+    const content = makeRunExecutionContextArtifact(writeCanonicalBundleFixture('bundle'));
     const fileUrl = writeTempFixture('runctx-prod.json', content);
     const reader = new ArtifactBackedRunExecutionContextReader({ nodeEnv: 'production' });
 
@@ -73,29 +74,68 @@ describe('@dvt/artifacts runtime readers', () => {
       nodeEnv: 'production',
       s3Client: new FakeS3Client(bundleBytes) as never,
     });
+    const bundleSha = sha256Hex(bundleBytes);
 
     await expect(
-      reader.read({
-        uri: 's3://bundle-bucket/dbt/project.tgz',
-        kind: 'dbt-project-bundle',
-        sha256: sha256Hex(bundleBytes),
-      })
+      reader.read(
+        {
+          uri: `s3://bundle-bucket/tenants/tenant-1/${bundleSha}`,
+          kind: 'dbt-project-bundle',
+          sha256: bundleSha,
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
     ).resolves.toEqual(Uint8Array.from(bundleBytes));
   });
 
   it('rejects DBT project file:// bundles in production', async () => {
-    const fileUrl = writeTempFixture('project.tgz', 'bundle');
+    const fileUrl = writeCanonicalBundleFixture('bundle');
     const reader = new ArtifactBackedDbtProjectBundleReader({ nodeEnv: 'production' });
 
     await expect(
-      reader.read({
-        uri: fileUrl,
-        kind: 'dbt-project-bundle',
-        sha256: sha256Hex('bundle'),
-      })
+      reader.read(
+        {
+          uri: fileUrl,
+          kind: 'dbt-project-bundle',
+          sha256: sha256Hex('bundle'),
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
     ).rejects.toMatchObject({
       name: 'ArtifactReadError',
       message: 'file:// dbt project bundle is not allowed in production',
+    });
+  });
+
+  it('rejects DBT project bundles when the bundle tenant does not match the expected tenant', async () => {
+    const bundleBytes = Buffer.from('fake bundle');
+    const reader = new ArtifactBackedDbtProjectBundleReader({
+      nodeEnv: 'production',
+      s3Client: new FakeS3Client(bundleBytes) as never,
+    });
+    const bundleSha = sha256Hex(bundleBytes);
+
+    await expect(
+      reader.read(
+        {
+          uri: `s3://bundle-bucket/tenants/tenant-2/${bundleSha}`,
+          kind: 'dbt-project-bundle',
+          sha256: bundleSha,
+          tenantId: 'tenant-2',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message: 'dbt project bundle artifact tenant mismatch: expected=tenant-1 actual=tenant-2',
     });
   });
 
@@ -107,19 +147,52 @@ describe('@dvt/artifacts runtime readers', () => {
     });
 
     await expect(
-      reader.read({
-        uri: 's3://bundle-bucket/dbt/project.tgz',
-        kind: 'dbt-project-bundle',
-        sha256: '0'.repeat(64),
-      })
+      reader.read(
+        {
+          uri: `s3://bundle-bucket/tenants/tenant-1/${'0'.repeat(64)}`,
+          kind: 'dbt-project-bundle',
+          sha256: '0'.repeat(64),
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
     ).rejects.toMatchObject({
       name: 'ArtifactReadError',
       message: 'dbt project bundle artifact integrity mismatch',
     });
   });
+
+  it('rejects DBT project bundles when the locator is not tenant-scoped canonically', async () => {
+    const bundleBytes = Buffer.from('fake bundle');
+    const bundleSha = sha256Hex(bundleBytes);
+    const reader = new ArtifactBackedDbtProjectBundleReader({
+      nodeEnv: 'production',
+      s3Client: new FakeS3Client(bundleBytes) as never,
+    });
+
+    await expect(
+      reader.read(
+        {
+          uri: `s3://bundle-bucket/runs/run-1/${bundleSha}`,
+          kind: 'dbt-project-bundle',
+          sha256: bundleSha,
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message: `DBT project bundle URI must resolve to s3://bundle-bucket/tenants/tenant-1/${bundleSha}`,
+    });
+  });
 });
 
-function makeRunExecutionContextArtifact(): string {
+function makeRunExecutionContextArtifact(projectBundleUri: string): string {
+  const projectBundleSha = readTerminalPathSegment(projectBundleUri);
   return JSON.stringify({
     schemaVersion: 'v1.0',
     planId: 'plan-1',
@@ -134,9 +207,10 @@ function makeRunExecutionContextArtifact(): string {
     pluginContexts: {
       dbt: {
         projectBundleRef: {
-          uri: 'file:///tmp/project.tgz',
+          uri: projectBundleUri,
           kind: 'dbt-project-bundle',
-          sha256: 'b'.repeat(64),
+          sha256: projectBundleSha,
+          tenantId: 'tenant-1',
         },
       },
     },
@@ -152,4 +226,22 @@ function writeTempFixture(filename: string, content: string): string {
   const filePath = join(directory, filename);
   writeFileSync(filePath, content, 'utf8');
   return pathToFileURL(filePath).href;
+}
+
+function writeCanonicalBundleFixture(content: string, tenantId = 'tenant-1'): string {
+  const sha = sha256Hex(content);
+  const rootDirectory = mkdtempSync(join(tmpdir(), 'dvt-artifacts-bundle-'));
+  const filePath = join(rootDirectory, 'tenants', tenantId, sha);
+  mkdirSync(join(rootDirectory, 'tenants', tenantId), { recursive: true });
+  writeFileSync(filePath, content, 'utf8');
+  return pathToFileURL(filePath).href;
+}
+
+function readTerminalPathSegment(uri: string): string {
+  const pathname = decodeURIComponent(new URL(uri).pathname).replace(/\/+$/, '');
+  const segment = pathname.split('/').at(-1);
+  if (typeof segment !== 'string' || segment.length === 0) {
+    throw new Error(`INVALID_BUNDLE_URI:${uri}`);
+  }
+  return segment;
 }
