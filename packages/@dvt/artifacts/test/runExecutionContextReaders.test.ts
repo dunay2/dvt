@@ -29,7 +29,7 @@ class FakeS3Client {
 
 describe('@dvt/artifacts runtime readers', () => {
   it('resolves runExecutionContext artifacts from file:// outside production', async () => {
-    const bundleFileUrl = writeCanonicalBundleFixture('bundle');
+    const { fileUrl: bundleFileUrl } = writeCanonicalBundleFixture('bundle');
     const content = makeRunExecutionContextArtifact(bundleFileUrl);
     const fileUrl = writeTempFixture('runctx.json', content);
     const reader = new ArtifactBackedRunExecutionContextReader({ nodeEnv: 'test' });
@@ -48,7 +48,8 @@ describe('@dvt/artifacts runtime readers', () => {
   });
 
   it('rejects file:// runExecutionContext artifacts in production', async () => {
-    const content = makeRunExecutionContextArtifact(writeCanonicalBundleFixture('bundle'));
+    const { fileUrl: bundleFileUrl } = writeCanonicalBundleFixture('bundle');
+    const content = makeRunExecutionContextArtifact(bundleFileUrl);
     const fileUrl = writeTempFixture('runctx-prod.json', content);
     const reader = new ArtifactBackedRunExecutionContextReader({ nodeEnv: 'production' });
 
@@ -73,6 +74,10 @@ describe('@dvt/artifacts runtime readers', () => {
     const reader = new ArtifactBackedDbtProjectBundleReader({
       nodeEnv: 'production',
       s3Client: new FakeS3Client(bundleBytes) as never,
+      bundleStore: {
+        kind: 's3',
+        bucket: 'bundle-bucket',
+      },
     });
     const bundleSha = sha256Hex(bundleBytes);
 
@@ -92,8 +97,14 @@ describe('@dvt/artifacts runtime readers', () => {
   });
 
   it('rejects DBT project file:// bundles in production', async () => {
-    const fileUrl = writeCanonicalBundleFixture('bundle');
-    const reader = new ArtifactBackedDbtProjectBundleReader({ nodeEnv: 'production' });
+    const { fileUrl, rootDirectory } = writeCanonicalBundleFixture('bundle');
+    const reader = new ArtifactBackedDbtProjectBundleReader({
+      nodeEnv: 'production',
+      bundleStore: {
+        kind: 'file',
+        rootPath: rootDirectory,
+      },
+    });
 
     await expect(
       reader.read(
@@ -109,8 +120,20 @@ describe('@dvt/artifacts runtime readers', () => {
       )
     ).rejects.toMatchObject({
       name: 'ArtifactReadError',
-      message: 'file:// dbt project bundle is not allowed in production',
     });
+    await expect(
+      reader.read(
+        {
+          uri: fileUrl,
+          kind: 'dbt-project-bundle',
+          sha256: sha256Hex('bundle'),
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
+    ).rejects.toThrow(/file:\/\/ dbt project bundle is not allowed in production/);
   });
 
   it('rejects DBT project bundles when the bundle tenant does not match the expected tenant', async () => {
@@ -118,6 +141,10 @@ describe('@dvt/artifacts runtime readers', () => {
     const reader = new ArtifactBackedDbtProjectBundleReader({
       nodeEnv: 'production',
       s3Client: new FakeS3Client(bundleBytes) as never,
+      bundleStore: {
+        kind: 's3',
+        bucket: 'bundle-bucket',
+      },
     });
     const bundleSha = sha256Hex(bundleBytes);
 
@@ -144,6 +171,10 @@ describe('@dvt/artifacts runtime readers', () => {
     const reader = new ArtifactBackedDbtProjectBundleReader({
       nodeEnv: 'production',
       s3Client: new FakeS3Client(bundleBytes) as never,
+      bundleStore: {
+        kind: 's3',
+        bucket: 'bundle-bucket',
+      },
     });
 
     await expect(
@@ -170,6 +201,10 @@ describe('@dvt/artifacts runtime readers', () => {
     const reader = new ArtifactBackedDbtProjectBundleReader({
       nodeEnv: 'production',
       s3Client: new FakeS3Client(bundleBytes) as never,
+      bundleStore: {
+        kind: 's3',
+        bucket: 'bundle-bucket',
+      },
     });
 
     await expect(
@@ -187,6 +222,70 @@ describe('@dvt/artifacts runtime readers', () => {
     ).rejects.toMatchObject({
       name: 'ArtifactReadError',
       message: `DBT project bundle URI must resolve to s3://bundle-bucket/tenants/tenant-1/${bundleSha}`,
+    });
+  });
+
+  it('rejects DBT project bundles when the bucket does not match the configured artifact store', async () => {
+    const bundleBytes = Buffer.from('fake bundle');
+    const bundleSha = sha256Hex(bundleBytes);
+    const reader = new ArtifactBackedDbtProjectBundleReader({
+      nodeEnv: 'production',
+      s3Client: new FakeS3Client(bundleBytes) as never,
+      bundleStore: {
+        kind: 's3',
+        bucket: 'canonical-bundle-bucket',
+      },
+    });
+
+    await expect(
+      reader.read(
+        {
+          uri: `s3://foreign-bucket/tenants/tenant-1/${bundleSha}`,
+          kind: 'dbt-project-bundle',
+          sha256: bundleSha,
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message:
+        'dbt project bundle artifact bucket mismatch: expected=canonical-bundle-bucket actual=foreign-bucket',
+    });
+  });
+
+  it('rejects DBT project bundles when a file locator redirects to another subtree inside the root', async () => {
+    const content = 'bundle';
+    const bundleSha = sha256Hex(content);
+    const rootDirectory = mkdtempSync(join(tmpdir(), 'dvt-artifacts-bundle-root-'));
+    const redirectedPath = join(rootDirectory, 'other-subtree', 'tenants', 'tenant-1', bundleSha);
+    mkdirSync(join(rootDirectory, 'other-subtree', 'tenants', 'tenant-1'), { recursive: true });
+    writeFileSync(redirectedPath, content, 'utf8');
+    const reader = new ArtifactBackedDbtProjectBundleReader({
+      nodeEnv: 'test',
+      bundleStore: {
+        kind: 'file',
+        rootPath: rootDirectory,
+      },
+    });
+
+    await expect(
+      reader.read(
+        {
+          uri: pathToFileURL(redirectedPath).href,
+          kind: 'dbt-project-bundle',
+          sha256: bundleSha,
+          tenantId: 'tenant-1',
+        },
+        {
+          expectedTenantId: 'tenant-1',
+        }
+      )
+    ).rejects.toMatchObject({
+      name: 'ArtifactReadError',
+      message: `dbt project bundle artifact path mismatch: expected=${join(rootDirectory, 'tenants', 'tenant-1', bundleSha)} actual=${redirectedPath}`,
     });
   });
 });
@@ -228,13 +327,19 @@ function writeTempFixture(filename: string, content: string): string {
   return pathToFileURL(filePath).href;
 }
 
-function writeCanonicalBundleFixture(content: string, tenantId = 'tenant-1'): string {
+function writeCanonicalBundleFixture(
+  content: string,
+  tenantId = 'tenant-1'
+): { fileUrl: string; rootDirectory: string } {
   const sha = sha256Hex(content);
   const rootDirectory = mkdtempSync(join(tmpdir(), 'dvt-artifacts-bundle-'));
   const filePath = join(rootDirectory, 'tenants', tenantId, sha);
   mkdirSync(join(rootDirectory, 'tenants', tenantId), { recursive: true });
   writeFileSync(filePath, content, 'utf8');
-  return pathToFileURL(filePath).href;
+  return {
+    fileUrl: pathToFileURL(filePath).href,
+    rootDirectory,
+  };
 }
 
 function readTerminalPathSegment(uri: string): string {

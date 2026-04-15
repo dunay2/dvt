@@ -12,6 +12,7 @@ import {
 import {
   ArtifactBackedDbtProjectBundleReader,
   ArtifactBackedRunExecutionContextReader,
+  type DbtProjectBundleArtifactStore,
   type IDbtProjectBundleReader,
   type IRunExecutionContextReader,
 } from '@dvt/artifacts';
@@ -97,6 +98,7 @@ export async function createTemporalWorkerRuntime(
       options.bundleReaderFactory?.(env) ??
       new ArtifactBackedDbtProjectBundleReader({
         nodeEnv: env.NODE_ENV,
+        bundleStore: resolveDbtBundleArtifactStore(env),
       });
 
     const availabilityProbe =
@@ -183,6 +185,20 @@ export async function createTemporalWorkerRuntime(
       });
       await stopPromise;
     },
+  };
+}
+
+function resolveDbtBundleArtifactStore(env: Env): DbtProjectBundleArtifactStore {
+  if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3') {
+    return {
+      kind: 's3',
+      bucket: env.DVT_DBT_BUNDLE_S3_BUCKET as string,
+    };
+  }
+
+  return {
+    kind: 'file',
+    rootPath: env.DVT_DBT_BUNDLE_FILE_ROOT as string,
   };
 }
 

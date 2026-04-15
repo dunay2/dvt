@@ -45,6 +45,7 @@ export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
 export * from './ports/IProjector.js';
 export * from './ports/IRunExecutionContextResolver.js';
+export * from './ports/IRunExecutionContextBindingPolicy.js';
 export * from './adapters/IProviderAdapter.js';
 export * from './domain/IRunRecoveryService.js';
 export * from './domain/IRunHealthService.js';

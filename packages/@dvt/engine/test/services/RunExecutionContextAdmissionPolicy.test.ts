@@ -9,6 +9,10 @@ import { describe, expect, it } from 'vitest';
 
 import { RunExecutionContextAdmissionPolicy } from '../../src/services/startRun/RunExecutionContextAdmissionPolicy.js';
 
+const allowBindingPolicy = {
+  assertDbtProjectBundleRefAllowed() {},
+};
+
 function makePlanRef(): PlanRef {
   return {
     uri: 'https://example.com/plan',
@@ -97,9 +101,12 @@ function makeRunExecutionContext(overrides?: Partial<RunExecutionContext>): RunE
 describe('RunExecutionContextAdmissionPolicy', () => {
   it('accepts aligned plan/context/runExecutionContext', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return makeRunExecutionContext();
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext();
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -138,6 +145,20 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
+  it('rejects DBT-bearing plans when bundle binding policy is not configured', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext();
+        },
+      },
+    });
+
+    await expect(
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+  });
+
   it.each([
     ['tenantId', makeRunExecutionContext({ tenantId: 'tenant-b' })],
     ['projectId', makeRunExecutionContext({ projectId: 'project-b' })],
@@ -148,9 +169,12 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ['targetAdapter', makeRunExecutionContext({ targetAdapter: 'conductor' })],
   ])('rejects %s mismatch', async (_field, runExecutionContext) => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return runExecutionContext;
+      resolver: {
+        async resolve() {
+          return runExecutionContext;
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -160,11 +184,14 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
   it('rejects DBT-bearing plans when the resolved context omits pluginContexts.dbt', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return makeRunExecutionContext({
-          pluginContexts: {},
-        });
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext({
+            pluginContexts: {},
+          });
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -174,20 +201,23 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
   it('rejects DBT-bearing plans when bundle tenantId mismatches the run context', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return makeRunExecutionContext({
-          pluginContexts: {
-            dbt: {
-              projectBundleRef: {
-                uri: `s3://bundle-bucket/tenants/tenant-b/${'b'.repeat(64)}`,
-                kind: 'dbt-project-bundle',
-                sha256: 'b'.repeat(64),
-                tenantId: 'tenant-b',
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext({
+            pluginContexts: {
+              dbt: {
+                projectBundleRef: {
+                  uri: `s3://bundle-bucket/tenants/tenant-b/${'b'.repeat(64)}`,
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                  tenantId: 'tenant-b',
+                },
               },
             },
-          },
-        });
+          });
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -197,12 +227,15 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
   it('rejects pluginCompatibilityFingerprint mismatch against executionPolicy', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return makeRunExecutionContext({
-          pluginCompatibilityFingerprint:
-            '2222222222222222222222222222222222222222222222222222222222222222',
-        });
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext({
+            pluginCompatibilityFingerprint:
+              '2222222222222222222222222222222222222222222222222222222222222222',
+          });
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -212,11 +245,14 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
   it('rejects compatibility-checked plan when resolved context omits fingerprint', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return makeRunExecutionContext({
-          pluginCompatibilityFingerprint: undefined,
-        });
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext({
+            pluginCompatibilityFingerprint: undefined,
+          });
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -226,12 +262,15 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
   it('ignores context fingerprints when executionPolicy has no compatibility fingerprint', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
-      async resolve() {
-        return makeRunExecutionContext({
-          pluginCompatibilityFingerprint:
-            '2222222222222222222222222222222222222222222222222222222222222222',
-        });
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext({
+            pluginCompatibilityFingerprint:
+              '2222222222222222222222222222222222222222222222222222222222222222',
+          });
+        },
       },
+      bindingPolicy: allowBindingPolicy,
     });
 
     await expect(
@@ -242,5 +281,31 @@ describe('RunExecutionContextAdmissionPolicy', () => {
         makeContext()
       )
     ).resolves.toBeUndefined();
+  });
+
+  it('rejects DBT-bearing plans when the bundle binding policy rejects the locator', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      resolver: {
+        async resolve() {
+          return makeRunExecutionContext();
+        },
+      },
+      bindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {
+          throw new Error(
+            'dbt project bundle artifact bucket mismatch: expected=canonical actual=foreign'
+          );
+        },
+      },
+    });
+
+    await expect(
+      policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
+    ).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+      messageParams: {
+        reason: 'dbt project bundle artifact bucket mismatch: expected=canonical actual=foreign',
+      },
+    });
   });
 });

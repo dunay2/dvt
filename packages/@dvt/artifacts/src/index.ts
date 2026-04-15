@@ -18,6 +18,10 @@ export {
   type ArtifactBackedDbtProjectBundleReaderOptions,
 } from './runtime/ArtifactBackedDbtProjectBundleReader.js';
 export {
+  assertDbtProjectBundleBinding,
+  type DbtProjectBundleArtifactStore,
+} from './runtime/assertDbtProjectBundleBinding.js';
+export {
   ArtifactBackedRunExecutionContextReader,
   type ArtifactBackedRunExecutionContextReaderOptions,
 } from './runtime/ArtifactBackedRunExecutionContextReader.js';

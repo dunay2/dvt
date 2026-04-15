@@ -317,6 +317,9 @@ describe('WorkflowEngine (basic failure modes)', () => {
           };
         },
       },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {},
+      },
     });
 
     const contextWithRunExecutionContextRef = {
@@ -354,6 +357,72 @@ describe('WorkflowEngine (basic failure modes)', () => {
       engine.startRun(planRef, makeContext('dbt-missing-runctx-1'))
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+    });
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it('rejects DBT-bearing runs when the bundle locator is not allowed by admission binding policy', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const plan = makeDbtBearingPlan();
+    const planRef = makePlanRefForPlan(plan);
+    const runExecutionContextRef = {
+      uri: 'dvt-runctx://t/dbt-store-mismatch-1',
+      sha256: 'ctxsha',
+      schemaVersion: 'v1.0',
+      planId: planRef.planId,
+      planVersion: planRef.planVersion,
+    };
+    const { engine } = createWorkflowEngineFixture({
+      adapter: makeTemporalAdapter({ startRun }),
+      planFetcher: makePlanFetcherForPlan(plan),
+      runExecutionContextResolver: {
+        async resolve() {
+          return {
+            schemaVersion: 'v1.0',
+            planId: planRef.planId,
+            planVersion: planRef.planVersion,
+            planSha256: planRef.sha256,
+            tenantId: 't',
+            projectId: 'p',
+            environmentId: 'dev',
+            targetAdapter: 'temporal',
+            createdAtIso: '2026-04-03T00:00:00.000Z',
+            createdBy: 'test',
+            pluginContexts: {
+              dbt: {
+                projectBundleRef: {
+                  uri: `s3://foreign-bucket/tenants/t/${'b'.repeat(64)}`,
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                  tenantId: 't',
+                },
+              },
+            },
+          };
+        },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {
+          throw new Error(
+            'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
+          );
+        },
+      },
+    });
+
+    await expect(
+      engine.startRun(planRef, {
+        ...makeContext('dbt-store-mismatch-1'),
+        runExecutionContextRef,
+      })
+    ).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+      messageParams: {
+        reason:
+          'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
+      },
     });
     expect(startRun).not.toHaveBeenCalled();
   });

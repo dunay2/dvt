@@ -30,6 +30,8 @@ DBT bundle rule:
 - the bundle locator itself must be tenant-scoped and canonical:
   `s3://<bucket>/tenants/<tenantId>/<sha256>` or
   `file://.../tenants/<tenantId>/<sha256>`
+- the worker binds DBT bundle reads to the configured artifact-store bucket or
+  file root; the payload cannot redirect reads to another store
 - the worker verifies bundle bytes against that `sha256` before materializing
   the project directory
 - the worker rejects bundles whose `tenantId` does not match the run tenant
@@ -39,7 +41,7 @@ DBT admission rule:
 - DBT-bearing runs must arrive with a `runExecutionContextRef`
 - the resolved `RunExecutionContext` must contain `pluginContexts.dbt`
 - admission rejects the run before queueing when that DBT bundle context is
-  missing or tenant-mismatched
+  missing, tenant-mismatched, or not bound to the configured artifact store
 
 This worker does not own:
 
@@ -90,6 +92,9 @@ availability before the worker enters the ready state.
 
 - `DVT_DBT_BIN` default `dbt`
 - `DVT_DBT_WORKDIR_ROOT` default OS temp path under `dvt/temporal-worker`
+- `DVT_DBT_BUNDLE_STORE_BACKEND` required: `s3` or `file`
+- `DVT_DBT_BUNDLE_S3_BUCKET` required when backend is `s3`
+- `DVT_DBT_BUNDLE_FILE_ROOT` required when backend is `file`
 
 DBT mode rule:
 

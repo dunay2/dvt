@@ -75,13 +75,16 @@ explicit, testable, and operable.
    bundle reference with `sha256`, and its locator is constrained to the
    canonical tenant-scoped artifact path, so the worker no longer executes
    mutable bundle bytes behind a stable URI.
-7. Runtime artifact readers no longer create a fresh S3 client per read; the
+7. The DBT bundle reader now binds reads to the configured artifact-store
+   bucket/root in the worker runtime, so payloads cannot redirect the worker
+   to a foreign store while preserving the same tenant-scoped key shape.
+8. Runtime artifact readers no longer create a fresh S3 client per read; the
    hot path now uses a long-lived client instance/fallback instead of
    read-scoped churn.
-8. DBT-bearing runs are now rejected at admission when
+9. DBT-bearing runs are now rejected at admission when
    `runExecutionContextRef` is missing or when the resolved
-   `pluginContexts.dbt.projectBundleRef` does not align to the run tenant or
-   canonical tenant-scoped bundle locator.
+   `pluginContexts.dbt.projectBundleRef` does not align to the run tenant,
+   canonical tenant-scoped bundle locator, or configured artifact store.
 
 ## What remains open
 

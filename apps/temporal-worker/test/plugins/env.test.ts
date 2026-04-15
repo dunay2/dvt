@@ -17,6 +17,44 @@ describe('temporal worker env', () => {
     expect(env.DVT_DBT_BIN).toBe('dbt');
   });
 
+  it('requires bundle store config when DBT mode is enabled', () => {
+    expect(() =>
+      loadEnv({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+        DVT_TEMPORAL_DBT_ENABLED: 'true',
+      })
+    ).toThrow(/DVT_DBT_BUNDLE_STORE_BACKEND/);
+  });
+
+  it('requires bundle bucket when DBT S3 store mode is enabled', () => {
+    expect(() =>
+      loadEnv({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+        DVT_TEMPORAL_DBT_ENABLED: 'true',
+        DVT_DBT_BUNDLE_STORE_BACKEND: 's3',
+      })
+    ).toThrow(/DVT_DBT_BUNDLE_S3_BUCKET/);
+  });
+
+  it('requires bundle file root when DBT file store mode is enabled', () => {
+    expect(() =>
+      loadEnv({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+        DVT_TEMPORAL_DBT_ENABLED: 'true',
+        DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
+      })
+    ).toThrow(/DVT_DBT_BUNDLE_FILE_ROOT/);
+  });
+
   it('requires DATABASE_URL', () => {
     expect(() =>
       loadEnv({

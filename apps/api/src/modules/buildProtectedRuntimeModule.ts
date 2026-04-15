@@ -32,6 +32,7 @@ import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/Fi
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
 import { ArtifactBackedRunExecutionContextResolver } from '../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
+import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import type { Env } from '../plugins/env.js';
@@ -57,6 +58,24 @@ function requireDatabaseUrl(env: Env): string {
 
 function resolveBackpressureFallbackPath(env: Env): string {
   return join(tmpdir(), 'dvt', `${env.SERVICE_NAME}-start-run-backpressure-fallback.json`);
+}
+
+function resolveDbtBundleArtifactStore(env: Env) {
+  if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3') {
+    return {
+      kind: 's3' as const,
+      bucket: env.DVT_DBT_BUNDLE_S3_BUCKET as string,
+    };
+  }
+
+  if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 'file') {
+    return {
+      kind: 'file' as const,
+      rootPath: env.DVT_DBT_BUNDLE_FILE_ROOT as string,
+    };
+  }
+
+  return undefined;
 }
 
 export async function buildProtectedRuntimeModule(
@@ -157,6 +176,9 @@ export async function buildProtectedRuntimeModule(
   const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
     nodeEnv: env.NODE_ENV,
   });
+  const runExecutionContextBindingPolicy = new ArtifactStoreDbtProjectBundleBindingPolicy({
+    bundleStore: resolveDbtBundleArtifactStore(env),
+  });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
@@ -184,6 +206,7 @@ export async function buildProtectedRuntimeModule(
       intentStore,
       planFetcher: planStore,
       runExecutionContextResolver,
+      runExecutionContextBindingPolicy,
     },
     runtime: { adapters },
     infrastructure: {

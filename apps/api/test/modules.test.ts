@@ -141,6 +141,10 @@ describe('modules', () => {
     expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
       'new ArtifactBackedRunExecutionContextResolver'
     );
+    expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+      'new ArtifactStoreDbtProjectBundleBindingPolicy'
+    );
     expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextResolver,');
+    expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextBindingPolicy,');
   });
 });

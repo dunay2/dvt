@@ -32,6 +32,7 @@ import {
   type EngineRunRef,
   type ExecutionPlan,
   type IProviderAdapter,
+  type IRunExecutionContextBindingPolicy,
   type IRunExecutionContextResolver,
   type RunEventInput,
 } from '@dvt/engine';
@@ -122,6 +123,7 @@ function createStack(
   enginePlan: ExecutionPlan,
   options?: {
     runExecutionContextResolver?: IRunExecutionContextResolver;
+    runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
   }
 ): EngineTestStack {
   const store = new InMemoryTxStore();
@@ -155,6 +157,9 @@ function createStack(
       ...(options?.runExecutionContextResolver === undefined
         ? {}
         : { runExecutionContextResolver: options.runExecutionContextResolver }),
+      ...(options?.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : { runExecutionContextBindingPolicy: options.runExecutionContextBindingPolicy }),
     }),
     stateStoreRead: store,
     stateStoreWrite: store,
@@ -192,6 +197,9 @@ function createStack(
     ...(options?.runExecutionContextResolver === undefined
       ? {}
       : { runExecutionContextResolver: options.runExecutionContextResolver }),
+    ...(options?.runExecutionContextBindingPolicy === undefined
+      ? {}
+      : { runExecutionContextBindingPolicy: options.runExecutionContextBindingPolicy }),
   });
   const engine = buildWorkflowEngineFacade({
     startRunApplicationService,
@@ -386,6 +394,9 @@ describe('planner -> engine contract', () => {
           expect(ref).toEqual(runExecutionContextRef);
           return runExecutionContext;
         },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {},
       },
     });
     const runRef = await engine.startRun(planRef, runContext);

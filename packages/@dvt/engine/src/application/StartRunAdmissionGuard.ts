@@ -8,6 +8,7 @@ import type {
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
+import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type { IRunStateStoreRead } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
@@ -19,6 +20,7 @@ export interface StartRunAdmissionGuardDeps {
   stateStoreRead: IRunStateStoreRead;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
 }
 
 export class StartRunAdmissionGuard {
@@ -30,9 +32,14 @@ export class StartRunAdmissionGuard {
       policy: deps.policy,
       stateStoreRead: deps.stateStoreRead,
     });
-    this.runExecutionContextPolicy = new RunExecutionContextAdmissionPolicy(
-      deps.runExecutionContextResolver
-    );
+    this.runExecutionContextPolicy = new RunExecutionContextAdmissionPolicy({
+      ...(deps.runExecutionContextResolver === undefined
+        ? {}
+        : { resolver: deps.runExecutionContextResolver }),
+      ...(deps.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : { bindingPolicy: deps.runExecutionContextBindingPolicy }),
+    });
   }
 
   async assertStartRunAllowed(planRef: PlanRef, context: ResolvedRunContext): Promise<void> {

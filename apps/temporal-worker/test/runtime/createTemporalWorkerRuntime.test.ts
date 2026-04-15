@@ -19,6 +19,8 @@ describe('createTemporalWorkerRuntime', () => {
       createEnv({
         DVT_TEMPORAL_DBT_ENABLED: true,
         DVT_TEMPORAL_WORKER_RUN_MIGRATIONS: true,
+        DVT_DBT_BUNDLE_STORE_BACKEND: 's3',
+        DVT_DBT_BUNDLE_S3_BUCKET: 'bundle-bucket',
       }),
       { info() {}, error() {} },
       {
@@ -155,6 +157,9 @@ function buildBaseEnv(): {
   DVT_TEMPORAL_DBT_ENABLED: boolean;
   DVT_DBT_BIN: string;
   DVT_DBT_WORKDIR_ROOT: string;
+  DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
+  DVT_DBT_BUNDLE_S3_BUCKET: string | undefined;
+  DVT_DBT_BUNDLE_FILE_ROOT: string | undefined;
 } {
   return {
     NODE_ENV: 'test' as const,
@@ -178,6 +183,9 @@ function buildBaseEnv(): {
     DVT_TEMPORAL_DBT_ENABLED: false,
     DVT_DBT_BIN: 'dbt',
     DVT_DBT_WORKDIR_ROOT: '/tmp/dvt',
+    DVT_DBT_BUNDLE_STORE_BACKEND: undefined,
+    DVT_DBT_BUNDLE_S3_BUCKET: undefined,
+    DVT_DBT_BUNDLE_FILE_ROOT: undefined,
   };
 }
 

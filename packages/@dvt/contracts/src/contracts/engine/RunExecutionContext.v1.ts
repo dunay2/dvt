@@ -125,7 +125,7 @@ export function getDbtProjectBundleLocatorValidationError(
   const scheme = parsedUri.protocol.replace(/:$/, '').toLowerCase();
   if (scheme === 's3') {
     const actualKey = decodeURIComponent(parsedUri.pathname.replace(/^\/+/, ''));
-    const expectedKey = buildCanonicalDbtBundleKey(tenantId, sha256);
+    const expectedKey = buildCanonicalDbtProjectBundleRelativePath(tenantId, sha256);
     if (actualKey !== expectedKey) {
       return `DBT project bundle URI must resolve to s3://${parsedUri.hostname}/${expectedKey}`;
     }
@@ -134,7 +134,9 @@ export function getDbtProjectBundleLocatorValidationError(
 
   if (scheme === 'file') {
     const actualPath = normalizePath(decodedPathname(parsedUri));
-    const expectedSuffix = normalizePath(`tenants/${tenantId}/${sha256}`);
+    const expectedSuffix = normalizePath(
+      buildCanonicalDbtProjectBundleRelativePath(tenantId, sha256)
+    );
     if (!actualPath.endsWith(expectedSuffix)) {
       return `DBT project bundle file URI must end with /${expectedSuffix}`;
     }
@@ -152,6 +154,9 @@ function normalizePath(value: string): string {
   return value.replace(/\\/g, '/').replace(/^\/+/, '');
 }
 
-function buildCanonicalDbtBundleKey(tenantId: string, sha256: string): string {
+export function buildCanonicalDbtProjectBundleRelativePath(
+  tenantId: string,
+  sha256: string
+): string {
   return `tenants/${tenantId}/${sha256}`;
 }

@@ -51,6 +51,9 @@ const EnvSchema = z.object({
   TEMPORAL_REQUEST_TIMEOUT_MS: z.string().optional(),
   TEMPORAL_MAX_START_PAYLOAD_BYTES: z.string().optional(),
   TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: z.string().optional(),
+  DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),
+  DVT_DBT_BUNDLE_S3_BUCKET: z.string().optional(),
+  DVT_DBT_BUNDLE_FILE_ROOT: z.string().optional(),
   // OIDC / auth -- all three required together when auth is enabled
   OIDC_JWKS_URI: z.string().optional(),
   OIDC_ISSUER: z.string().optional(),
